@@ -20,57 +20,79 @@ DEMO_COVER_TILT = 'cover.living_room_window'
 CONFIG = {
     'cover': [
         {'platform': 'demo'},
-        {'platform':
-            'multicover',
-            'covers': {
-                'test_multicover': {
-                    'friendly_name': "Test Multicover",
-                    'entity_id': [
-                        DEMO_COVER, DEMO_COVER_POS, DEMO_COVER_TILT,
-                        'cover.test', 'cover.test_multicover'
-                    ],
-                }
-            }}
+        {'platform': 'multicover',
+         'covers': {
+             'test_multicover': {
+                 'friendly_name': "Test Multicover",
+                 'entity_id': [
+                     DEMO_COVER, DEMO_COVER_POS, DEMO_COVER_TILT,
+                     'cover.test', 'cover.test_multicover', 'demo.demo'
+                 ],
+             }
+         }}
+    ]
+}
+
+CONFIG_REGEX_MISC = {
+    'cover': [
+        {'platform': 'demo'},
+        {'platform': 'multicover',
+         'covers': {
+             'test_multicover': {
+                 'friendly_name': "Test Multicover",
+                 'entity_id': [DEMO_COVER, DEMO_COVER_TILT],
+                 'entity_id_regex': DEMO_COVER_POS,
+             }
+         }}
+    ]
+}
+
+CONFIG_REGEX = {
+    'cover': [
+        {'platform': 'demo'},
+        {'platform': 'multicover',
+         'covers': {
+             'test_multicover': {
+                 'friendly_name': "Test Multicover",
+                 'entity_id_regex': "(cover+\\.[\\w]+)",
+             }
+         }}
     ]
 }
 
 CONFIG_TILT = {
     'cover': [
         {'platform': 'demo'},
-        {'platform':
-            'multicover',
-            'covers': {
-                'test_multicover': {
-                    'friendly_name': "Test Multicover",
-                    'tilt': True,
-                    'entity_id': [
-                        DEMO_COVER, DEMO_COVER_POS,
-                        DEMO_COVER_TILT, 'cover.tilt_demo'
-                    ],
-                }
-            }}
+        {'platform': 'multicover',
+         'covers': {
+             'test_multicover': {
+                 'friendly_name': "Test Multicover",
+                 'tilt': True,
+                 'entity_id': [
+                     DEMO_COVER, DEMO_COVER_POS,
+                     DEMO_COVER_TILT, 'cover.tilt_demo'
+                 ],
+             }
+         }}
     ]
 }
 
 CONFIG_WINTERPROTECTION = {
     'cover': [
         {'platform': 'demo'},
-        {'platform':
-            'multicover',
-            'covers': {
-                'test_multicover': {
-                    'friendly_name': "Test Multicover",
-                    'winter_protection': {
-                        'close_position': 10,
-                        'open_position': 90,
-                        'temperature': 5,
-                        'temperature_sensor': 'sensor.temperature',
-                    },
-                    'entity_id': [
-                        DEMO_COVER, DEMO_COVER_POS, DEMO_COVER_TILT
-                    ],
-                }
-            }}
+        {'platform': 'multicover',
+         'covers': {
+             'test_multicover': {
+                 'friendly_name': "Test Multicover",
+                 'winter_protection': {
+                     'close_position': 10,
+                     'open_position': 90,
+                     'temperature': 5,
+                     'temperature_sensor': 'sensor.temperature',
+                 },
+                 'entity_id': [DEMO_COVER, DEMO_COVER_POS, DEMO_COVER_TILT],
+             }
+         }}
     ]
 }
 
@@ -111,6 +133,72 @@ class TestMultiCover(unittest.TestCase):
         self.assertEqual(attr.get('supported_features'), 255)
         self.assertTrue(attr.get('assumed_state'))
 
+    def test_entity_id_and_regex(self):
+        """Test setup with entity_id and entity_id_regex."""
+        with assert_setup_component(2, 'cover'):
+            assert setup.setup_component(self.hass, 'cover', CONFIG_REGEX_MISC)
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(MULTICOVER)
+        attr = state.attributes
+
+        self.assertEqual(state.state, 'open')
+        self.assertEqual(attr.get('current_position'), 100)
+
+        cover.open_cover(self.hass, MULTICOVER)
+        self.hass.block_till_done()
+        for _ in range(10):
+            future = dt_util.utcnow() + timedelta(seconds=1)
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get(MULTICOVER)
+        attr = state.attributes
+
+        self.assertEqual(state.state, 'open')
+        self.assertEqual(attr.get('current_position'), 100)
+
+        self.assertEqual(self.hass.states.get(DEMO_COVER).state, 'open')
+        self.assertEqual(self.hass.states.get(DEMO_COVER_POS)
+                         .attributes.get('current_position'), 100)
+        self.assertEqual(self.hass.states.get(DEMO_COVER_TILT)
+                         .attributes.get('current_position'), 100)
+
+    def test_entity_id_regex(self):
+        """Test setup with only entity_id_regex."""
+        with assert_setup_component(2, 'cover'):
+            assert setup.setup_component(self.hass, 'cover', CONFIG_REGEX)
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(MULTICOVER)
+        attr = state.attributes
+
+        self.assertEqual(state.state, 'open')
+        self.assertEqual(attr.get('current_position'), 100)
+
+        cover.open_cover(self.hass, MULTICOVER)
+        self.hass.block_till_done()
+        for _ in range(10):
+            future = dt_util.utcnow() + timedelta(seconds=1)
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get(MULTICOVER)
+        attr = state.attributes
+
+        self.assertEqual(state.state, 'open')
+        self.assertEqual(attr.get('current_position'), 100)
+
+        self.assertEqual(self.hass.states.get(DEMO_COVER).state, 'open')
+        self.assertEqual(self.hass.states.get(DEMO_COVER_POS)
+                         .attributes.get('current_position'), 100)
+        self.assertEqual(self.hass.states.get(DEMO_COVER_TILT)
+                         .attributes.get('current_position'), 100)
+
     def test_current_cover_position(self):
         """Test different current cover positions."""
         with assert_setup_component(2, 'cover'):
@@ -131,7 +219,7 @@ class TestMultiCover(unittest.TestCase):
         self.assertEqual(self.hass.states.get(MULTICOVER)
                          .attributes.get('current_position'), 70)
 
-    def test_current_cover_tilt_position(self):
+    def test_current_tilt_position(self):
         """Test different current cover tilt positions."""
         with assert_setup_component(2, 'cover'):
             assert setup.setup_component(self.hass, 'cover', CONFIG_TILT)
