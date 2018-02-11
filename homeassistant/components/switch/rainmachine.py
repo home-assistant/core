@@ -197,8 +197,8 @@ class RainMachineProgram(RainMachineEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_program_{1}'.format(self.device_mac.replace(':', ''),
-                                        self.rainmachine_entity_id)
+        return '{0}_program_{1}'.format(
+            self.device_mac.replace(':', ''), self.rainmachine_entity_id)
 
     def turn_off(self, **kwargs) -> None:
         """Turn the program off."""
@@ -209,8 +209,7 @@ class RainMachineProgram(RainMachineEntity):
         except exceptions.BrokenAPICall:
             _LOGGER.error('programs.stop currently broken in remote API')
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error('Unable to turn off program "%s"',
-                          self.rainmachine_entity_id)
+            _LOGGER.error('Unable to turn off program "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def turn_on(self, **kwargs) -> None:
@@ -222,8 +221,7 @@ class RainMachineProgram(RainMachineEntity):
         except exceptions.BrokenAPICall:
             _LOGGER.error('programs.start currently broken in remote API')
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error('Unable to turn on program "%s"',
-                          self.rainmachine_entity_id)
+            _LOGGER.error('Unable to turn on program "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def _update(self) -> None:
@@ -235,7 +233,7 @@ class RainMachineProgram(RainMachineEntity):
                 self.rainmachine_entity_id)
         except exceptions.HTTPError as exc_info:
             _LOGGER.error('Unable to update info for program "%s"',
-                          self.rainmachine_entity_id)
+                          self.unique_id)
             _LOGGER.debug(exc_info)
 
 
@@ -265,8 +263,8 @@ class RainMachineZone(RainMachineEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_zone_{1}'.format(self.device_mac.replace(':', ''),
-                                     self.rainmachine_entity_id)
+        return '{0}_zone_{1}'.format(
+            self.device_mac.replace(':', ''), self.rainmachine_entity_id)
 
     def turn_off(self, **kwargs) -> None:
         """Turn the zone off."""
@@ -275,8 +273,7 @@ class RainMachineZone(RainMachineEntity):
         try:
             self._client.zones.stop(self.rainmachine_entity_id)
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error('Unable to turn off zone "%s"',
-                          self.rainmachine_entity_id)
+            _LOGGER.error('Unable to turn off zone "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def turn_on(self, **kwargs) -> None:
@@ -287,8 +284,7 @@ class RainMachineZone(RainMachineEntity):
             self._client.zones.start(self.rainmachine_entity_id,
                                      self._run_time)
         except exceptions.HTTPError as exc_info:
-            _LOGGER.error('Unable to turn on zone "%s"',
-                          self.rainmachine_entity_id)
+            _LOGGER.error('Unable to turn on zone "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def _update(self) -> None:
@@ -300,5 +296,5 @@ class RainMachineZone(RainMachineEntity):
                 self.rainmachine_entity_id)
         except exceptions.HTTPError as exc_info:
             _LOGGER.error('Unable to update info for zone "%s"',
-                          self.rainmachine_entity_id)
+                          self.unique_id)
             _LOGGER.debug(exc_info)
