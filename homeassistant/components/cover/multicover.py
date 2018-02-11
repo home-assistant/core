@@ -6,6 +6,7 @@ https://home-assistant.io/components/cover.multicover/
 """
 import asyncio
 import logging
+import re
 
 import voluptuous as vol
 
@@ -30,7 +31,9 @@ COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | \
 TILT_FEATURES = SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | \
                 SUPPORT_STOP_TILT | SUPPORT_SET_TILT_POSITION
 
-TILT_SUPPORT = 'tilt'
+
+CONF_ENTITY_ID_REGEX = 'entity_id_regex'
+CONF_TILT = 'tilt'
 CONF_WINTER_PROTECTION = 'winter_protection'
 CONF_CLOSE_POSITION = 'close_position'
 CONF_OPEN_POSITION = 'open_position'
@@ -47,12 +50,13 @@ WINTER_PROTECTION_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_TEMPERATURE_SENSOR): cv.entity_id,
 }), cv.has_at_least_one_key(CONF_CLOSE_POSITION, CONF_OPEN_POSITION))
 
-COVER_SCHEMA = vol.Schema({
+COVER_SCHEMA = vol.All(vol.Schema({
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-    vol.Optional(TILT_SUPPORT): cv.boolean,
+    CONF_ENTITY_ID: cv.entity_ids,
+    CONF_ENTITY_ID_REGEX: cv.string,
+    vol.Optional(CONF_TILT): cv.boolean,
     vol.Optional(CONF_WINTER_PROTECTION): WINTER_PROTECTION_SCHEMA,
-})
+}), cv.has_at_least_one_key(CONF_ENTITY_ID, CONF_ENTITY_ID_REGEX))
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
@@ -66,8 +70,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for device, device_config in config[CONF_COVERS].items():
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
-        entity_ids = device_config.get(CONF_ENTITY_ID)
-        tilt = device_config.get(TILT_SUPPORT, False)
+        entity_ids = device_config.get(CONF_ENTITY_ID, [])
+        entity_ids_regex = device_config.get(CONF_ENTITY_ID_REGEX)
+        tilt = device_config.get(CONF_TILT, False)
 
         winter_config = device_config.get(CONF_WINTER_PROTECTION, {})
         close_position = winter_config.get(CONF_CLOSE_POSITION)
@@ -75,8 +80,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         temp = winter_config.get(CONF_TEMPERATURE, 3)
         temp_sensor = winter_config.get(CONF_TEMPERATURE_SENSOR)
         covers.append(
-            MultiCover(hass, device, friendly_name, entity_ids, tilt,
-                       close_position, open_position, temp, temp_sensor)
+            MultiCover(
+                hass, device, friendly_name, entity_ids, entity_ids_regex,
+                tilt, close_position, open_position, temp, temp_sensor)
         )
 
     if not covers:
@@ -90,7 +96,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MultiCover(CoverDevice):
     """Representation of a MultiCover."""
 
-    def __init__(self, hass, device_id, friendly_name, entity_ids, tilt,
+    def __init__(self, hass, device_id, friendly_name,
+                 entity_ids, entity_ids_regex, tilt,
                  close_position, open_position, temp, temp_sensor):
         """Initialize a multicover entity."""
         self.hass = hass
@@ -99,11 +106,13 @@ class MultiCover(CoverDevice):
         self._device_id = device_id
         self._name = friendly_name
         self._entities = set(entity_ids)
+        self._entity_ids_regex = entity_ids_regex
         self._tilt = tilt
         self._close_position = close_position
         self._open_position = open_position
         self._temp = temp
         self._temp_sensor = temp_sensor
+        self.matched_entities = set()
         self.covers = {'open_close': set(), 'stop': set(), 'position': set()}
         self.tilts = {'open_close': set(), 'stop': set(), 'position': set()}
         self.winter_protection = False
@@ -112,6 +121,21 @@ class MultiCover(CoverDevice):
                       self._device_id, tilt, temp, temp_sensor,
                       close_position, open_position)
 
+    def match_entities(self):
+        """Return all matched entities based on regex if not matched before."""
+        if self._entity_ids_regex is None:
+            return False
+
+        pattern = re.compile(self._entity_ids_regex, re.I | re.M)
+        all_entities = ', '.join(self.hass.states.async_entity_ids('cover'))
+        match_all = set(re.findall(pattern, all_entities))
+
+        for match in match_all:
+            if match not in self.matched_entities:
+                self._entities.add(match)
+
+        self.matched_entities = self.matched_entities.union(match_all)
+
     def check_supported_features(self):
         """Iterate through entity list and check supported features."""
         all_entities = set()
@@ -119,6 +143,11 @@ class MultiCover(CoverDevice):
             if entity == self.entity_id:
                 _LOGGER.warning("%s: The entity_id of this component \"%s\" "
                                 "is not allowed.", self._device_id, entity)
+                self._entities.remove(entity)
+                continue
+            if entity.split('.')[0] != 'cover':
+                _LOGGER.warning("%s: Only cover entities are allowed. Please "
+                                "remove: \"%s\".", self._device_id, entity)
                 self._entities.remove(entity)
                 continue
             state = self.hass.states.get(entity)
@@ -171,6 +200,7 @@ class MultiCover(CoverDevice):
         def multicover_startup(event):
             """Update MultiCover after startup."""
             # Check entity features and add state change listeners.
+            self.match_entities()
             entities = self.check_supported_features()
             async_track_state_change(
                 self.hass, entities, multicover_state_listener)
@@ -187,6 +217,7 @@ class MultiCover(CoverDevice):
         @callback
         def multicover_zwave_startup(event):
             """Update MultiCover after ZWave Network startup."""
+            self.match_entities()
             entities = self.check_supported_features()
             async_track_state_change(
                 self.hass, entities, multicover_state_listener)
