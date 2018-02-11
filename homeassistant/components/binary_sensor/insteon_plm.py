@@ -27,11 +27,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         address = deviceInfo['address']
         device = plm.devices[address]
         stateKey = deviceInfo['stateKey']
-        subplatform = deviceInfo['subplatform']
         newnames = deviceInfo['newnames']
        
-        _LOGGER.info('Registered device %s state %s with binary_sensor platform %s', device.address, device.states[stateKey].name, subplatform)
-        state_list.append(InsteonPLMBinarySensor( hass, device, stateKey, subplatform, newnames))
+        _LOGGER.info('Registered device %s state %s with binary_sensor platform %s', device.address, device.states[stateKey].name)
+        state_list.append(InsteonPLMBinarySensor( hass, device, stateKey, newnames))
 
 
     async_add_devices(state_list)
@@ -40,12 +39,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class InsteonPLMBinarySensor(BinarySensorDevice):
     """A Class for an Insteon device state."""
 
-    def __init__(self, hass, device, stateKey, sensorType, newnames):
+    def __init__(self, hass, device, stateKey, newnames):
         """Initialize the binarysensor."""
         self._hass = hass
         self._state = device.states[stateKey]
         self._device = device 
-        self._sensor_type = sensorType
+        self._sensor_type = self._stateName_to_sensor_type(self._state.name)
         self._newnames = newnames
 
         self._state.register_updates(self.async_binarysensor_update)
@@ -99,3 +98,15 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
         sensorstate = self._state.value
         _LOGGER.info("Sensor for device %s state %s is %s", self.id, self._state.name, sensorstate)
         return bool(sensorstate)
+
+    def _stateName_to_sensor_type(self, stateName):
+        if stateName == 'openClosedSensor   ':
+            return 'opening'
+        elif stateName == 'motionSensor':
+            return 'motion'
+        elif stateName == 'doorSensor':
+            return 'door'
+        elif stateName == 'leakSensor':
+            return 'moisture'
+        else:
+            return ""

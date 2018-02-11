@@ -19,7 +19,7 @@ from homeassistant.helpers import discovery
 from insteonplm.constants import *
 from insteonplm.states.onOff import (OnOffSwitch, OnOffSwitch_OutletTop, OnOffSwitch_OutletBottom, OpenClosedRelay)
 from insteonplm.states.dimmable import (DimmableSwitch, DimmableSwitch_Fan)
-from insteonplm.states.sensor import (VariableSensor, MotionSensor, SmokeCO2Sensor, IoLincSensor)
+from insteonplm.states.sensor import (VariableSensor, OnOffSensor, SmokeCO2Sensor, IoLincSensor)
 
 REQUIREMENTS = ['insteonplm==0.8.1']
 
@@ -66,7 +66,6 @@ def async_setup(hass, config):
         for stateKey in device.states:
             platformInfo = ipdb[device.states[stateKey]] 
             platform = platformInfo.platform
-            subplatform = platformInfo.subplatform
             if platform is not None:
                 _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
                               device.address, 
@@ -75,8 +74,7 @@ def async_setup(hass, config):
                 hass.async_add_job(
                     discovery.async_load_platform(
                         hass, platform, DOMAIN, discovered=[{'address':device.address.hex, 
-                                                             'stateKey':stateKey, 
-                                                             'subplatform':subplatform,
+                                                             'stateKey':stateKey,
                                                              'newnames': use_newnames}],
                         hass_config=config))
 
@@ -125,24 +123,24 @@ def common_attributes(entity, state):
     return attributes
 
 
-State = collections.namedtuple('Product', 'stateType platform subplatform')
+State = collections.namedtuple('Product', 'stateType platform')
 
 class IPDB(object):
     """Embodies the INSTEON Product Database static data and access methods."""
 
     states = [
-        State(OnOffSwitch_OutletTop, 'switch', 'onOff'),
-        State(OnOffSwitch_OutletBottom,'switch', 'onOff'),
-        State(OpenClosedRelay, 'switch', 'openClosed'),
-        State(OnOffSwitch, 'switch', 'onOff'),
+        State(OnOffSwitch_OutletTop, 'switch'),
+        State(OnOffSwitch_OutletBottom,'switch'),
+        State(OpenClosedRelay, 'switch'),
+        State(OnOffSwitch, 'switch'),
 
-        State(MotionSensor, 'binary_sensor', 'motion'),
-        State(SmokeCO2Sensor, 'sensor', None),
-        State(IoLincSensor, 'binary_sensor', 'opening'),
-        State(VariableSensor, 'sensor', None),
+        States(IoLincSensor, 'binary_sensor'),
+        State(SmokeCO2Sensor, 'sensor'),
+        State(OnOffSensor, 'binary_sensor'),
+        State(VariableSensor, 'sensor'),
 
-        State(DimmableSwitch_Fan, 'fan', None),
-        State(DimmableSwitch, 'light', None)
+        State(DimmableSwitch_Fan, 'fan'),
+        State(DimmableSwitch, 'light')
         ]
 
     def __init__(self):

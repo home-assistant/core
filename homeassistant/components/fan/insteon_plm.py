@@ -31,7 +31,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         address = deviceInfo['address']
         device = plm.devices[address]
         stateKey = deviceInfo['stateKey']
-        subplatform = deviceInfo['subplatform']
         newnames = deviceInfo['newnames']
        
         state_list.append(InsteonPLMFan( hass, device, stateKey, newnames, SUPPORT_SET_SPEED))

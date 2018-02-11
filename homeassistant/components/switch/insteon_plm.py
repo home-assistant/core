@@ -27,12 +27,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         address = deviceInfo['address']
         device = plm.devices[address]
         stateKey = deviceInfo['stateKey']
-        subplatform = deviceInfo['subplatform']
         newnames = deviceInfo['newnames']
+
+        stateName = device[stateKey].name
        
-        if subplatform == 'onOff':
+        if stateName in ['lightOnOff', 'outletTopOnOff', 'outletBottomOnOff']:
             state_list.append(InsteonPLMSwitchDevice( hass, device, stateKey, newnames))
-        elif subplatform == 'openClosed':
+        elif stateName == 'openClosedRelay':
             state_list.append(InsteonPLMOpenClosedDevice( hass, device, stateKey, newnames))
 
     async_add_devices(state_list)
