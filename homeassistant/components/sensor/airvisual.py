@@ -19,7 +19,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pyairvisual==1.0.0']
-
 _LOGGER = getLogger(__name__)
 
 ATTR_CITY = 'city'
