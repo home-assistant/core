@@ -40,19 +40,19 @@ class EntityComponent(object):
         self.config = None
 
         self._platforms = {
-            'core': EntityPlatform(
+            domain: EntityPlatform(
                 hass=hass,
                 logger=logger,
                 domain=domain,
-                platform_name='core',
+                platform_name=domain,
                 scan_interval=self.scan_interval,
                 parallel_updates=0,
                 entity_namespace=None,
                 async_entities_added_callback=self._async_update_group,
             )
         }
-        self.async_add_entities = self._platforms['core'].async_add_entities
-        self.add_entities = self._platforms['core'].add_entities
+        self.async_add_entities = self._platforms[domain].async_add_entities
+        self.add_entities = self._platforms[domain].add_entities
 
     @property
     def entities(self):
@@ -190,7 +190,7 @@ class EntityComponent(object):
             yield from asyncio.wait(tasks, loop=self.hass.loop)
 
         self._platforms = {
-            'core': self._platforms['core']
+            self.domain: self._platforms[self.domain]
         }
         self.config = None
 

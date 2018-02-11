@@ -11,10 +11,12 @@ After initializing, call EntityRegistry.async_ensure_loaded to load the data
 from disk.
 """
 import asyncio
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict
 from itertools import chain
 import logging
 import os
+
+import attr
 
 from ..core import callback, split_entity_id
 from ..util import ensure_unique_string, slugify
@@ -22,9 +24,22 @@ from ..util.yaml import load_yaml, save_yaml
 
 PATH_REGISTRY = 'entity_registry.yaml'
 SAVE_DELAY = 10
-Entry = namedtuple('EntityRegistryEntry',
-                   'entity_id,unique_id,platform,domain')
 _LOGGER = logging.getLogger(__name__)
+
+
+@attr.s(slots=True, frozen=True)
+class RegistryEntry:
+    """Entity Registry Entry."""
+
+    entity_id = attr.ib(type=str)
+    unique_id = attr.ib(type=str)
+    platform = attr.ib(type=str)
+    name = attr.ib(type=str, default=None)
+    domain = attr.ib(type=str, default=None, init=False, repr=False)
+
+    def __attrs_post_init__(self):
+        """Computed properties."""
+        object.__setattr__(self, "domain", split_entity_id(self.entity_id)[0])
 
 
 class EntityRegistry:
@@ -65,11 +80,10 @@ class EntityRegistry:
 
         entity_id = self.async_generate_entity_id(
             domain, suggested_object_id or '{}_{}'.format(platform, unique_id))
-        entity = Entry(
+        entity = RegistryEntry(
             entity_id=entity_id,
             unique_id=unique_id,
             platform=platform,
-            domain=domain,
         )
         self.entities[entity_id] = entity
         _LOGGER.info('Registered new %s.%s entity: %s',
@@ -98,11 +112,11 @@ class EntityRegistry:
             data = yield from self.hass.async_add_job(load_yaml, path)
 
             for entity_id, info in data.items():
-                entities[entity_id] = Entry(
-                    domain=split_entity_id(entity_id)[0],
+                entities[entity_id] = RegistryEntry(
                     entity_id=entity_id,
                     unique_id=info['unique_id'],
-                    platform=info['platform']
+                    platform=info['platform'],
+                    name=info.get('name')
                 )
 
         self.entities = entities
