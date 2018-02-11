@@ -43,7 +43,7 @@ def get_scanner(hass, config):
     """Validate the configuration and return a Nmap scanner."""
     scanner = NmapDeviceScanner(config[DOMAIN])
 
-    return scanner if scanner.success_init else None
+    return scanner
 
 
 Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
@@ -76,7 +76,6 @@ class NmapDeviceScanner(DeviceScanner):
         self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(minutes=minutes)
 
-        self.success_init = self._update_info()
         _LOGGER.info("Scanner initialized")
 
     def scan_devices(self):
