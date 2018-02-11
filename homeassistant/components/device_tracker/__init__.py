@@ -622,16 +622,16 @@ class DeviceScanner(object):
         """
         return self.hass.async_add_job(self.scan_devices)
 
-    def get_device_name(self, mac: str) -> str:
-        """Get device name from mac."""
+    def get_device_name(self, device: str) -> str:
+        """Get the name of a device."""
         raise NotImplementedError()
 
-    def async_get_device_name(self, mac: str) -> Any:
-        """Get device name from mac.
+    def async_get_device_name(self, device: str) -> Any:
+        """Get the name of a device.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.get_device_name, mac)
+        return self.hass.async_add_job(self.get_device_name, device)
 
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
