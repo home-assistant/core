@@ -209,6 +209,10 @@ class EntityPlatform(object):
             else:
                 suggested_object_id = entity.name
 
+            if self.entity_namespace is not None:
+                suggested_object_id = '{} {}'.format(
+                    self.entity_namespace, suggested_object_id)
+
             entry = registry.async_get_or_create(
                 self.domain, self.platform_name, entity.unique_id,
                 suggested_object_id=suggested_object_id)
