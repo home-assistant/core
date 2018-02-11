@@ -77,7 +77,7 @@ class ZhaFan(zha.Entity, FanEntity):
         return self._state != SPEED_OFF
 
     @asyncio.coroutine
-    def async_turn_on(self, speed: str=None) -> None:
+    def async_turn_on(self, speed: str=None, **kwargs) -> None:
         """Turn the entity on."""
         if speed is None:
             speed = SPEED_MEDIUM
@@ -85,7 +85,7 @@ class ZhaFan(zha.Entity, FanEntity):
         yield from self.async_set_speed(speed)
 
     @asyncio.coroutine
-    def async_turn_off(self, speed: str=None) -> None:
+    def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
         yield from self.async_set_speed(SPEED_OFF)
 
@@ -102,7 +102,7 @@ class ZhaFan(zha.Entity, FanEntity):
     def async_update(self):
         """Retrieve latest state."""
         result = yield from zha.safe_read(self._endpoint.fan, ['fan_mode'])
-        value = result.get('fan_mode', self._state)
+        value = result.get('fan_mode', SPEED_TO_VALUE[self._state])
         self._state = VALUE_TO_SPEED.get(value, STATE_UNKNOWN)
 
     @property
