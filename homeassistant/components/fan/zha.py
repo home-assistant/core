@@ -95,7 +95,7 @@ class ZhaFan(zha.Entity, FanEntity):
     @asyncio.coroutine
     def async_update(self):
         result = yield from zha.safe_read(self._endpoint.fan, ['fan_mode'])
-        self._state = result.get('fan_mode', self._state)
+        self._state = VALUE_TO_SPEED.get(result.get('fan_mode', self._state), STATE_UNKNOWN)
 
     @property
     def should_poll(self) -> bool:
