@@ -401,10 +401,16 @@ def test_lock(hass):
     assert appliance['friendlyName'] == "Test lock"
     assert_endpoint_capabilities(appliance, 'Alexa.LockController')
 
-    yield from assert_request_calls_service(
+    _, msg = yield from assert_request_calls_service(
         'Alexa.LockController', 'Lock', 'lock#test',
         'lock.lock',
         hass)
+
+    # always return LOCKED for now
+    properties = msg['context']['properties'][0]
+    assert properties['name'] == 'lockState'
+    assert properties['namespace'] == 'Alexa.LockController'
+    assert properties['value'] == 'LOCKED'
 
 
 @asyncio.coroutine
