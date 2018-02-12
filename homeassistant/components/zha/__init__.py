@@ -253,9 +253,9 @@ class ApplicationListener:
                     self._config,
                 )
 
-    def register_entity(self, ieee, entity):
+    def register_entity(self, ieee, entity_obj):
         """Record the creation of a hass entity associated with ieee."""
-        self._device_registry[ieee].append(entity)
+        self._device_registry[ieee].append(entity_obj)
 
 
 class Entity(entity.Entity):
