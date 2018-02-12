@@ -358,7 +358,7 @@ class MockModule(object):
         if async_setup is not None:
             self.async_setup = async_setup
 
-        if not setup and not async_setup:
+        if setup is None and async_setup is None:
             self.async_setup = mock_coro_func(True)
 
 
@@ -381,7 +381,7 @@ class MockPlatform(object):
         if async_setup_platform is not None:
             self.async_setup_platform = async_setup_platform
 
-        if not setup_platform and not async_setup_platform:
+        if setup_platform is None and async_setup_platform is None:
             self.async_setup_platform = mock_coro_func()
 
 
