@@ -182,7 +182,7 @@ class MultiCover(CoverDevice):
                 self.tilts[KEY_STOP].add(entity)
             if features & 128:
                 self.tilts[KEY_POSITION].add(entity)
-        if len(self._entities) > 0:
+        if self._entities != set():
             _LOGGER.debug("%s: Entities not found: %s",
                           self._device_id, self._entities)
         return all_entities
@@ -260,7 +260,7 @@ class MultiCover(CoverDevice):
     @property
     def is_closed(self):
         """Return if all covers in group are closed."""
-        if len(self.covers[KEY_OPEN_CLOSE]) == 0:
+        if self.covers[KEY_OPEN_CLOSE] == []:
             return False
         for entity_id in self.covers[KEY_OPEN_CLOSE]:
             state = self.hass.states.get(entity_id)
@@ -287,8 +287,8 @@ class MultiCover(CoverDevice):
 
         if position != -1:
             return position
-        else:
-            return 0 if self.is_closed else 100
+
+        return 0 if self.is_closed else 100
 
     @property
     def current_cover_tilt_position(self):
@@ -312,8 +312,8 @@ class MultiCover(CoverDevice):
 
         if position != -1:
             return position
-        else:
-            return 100
+
+        return 100
 
     @property
     def state_attributes(self):
