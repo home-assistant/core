@@ -401,10 +401,16 @@ def test_lock(hass):
     assert appliance['friendlyName'] == "Test lock"
     assert_endpoint_capabilities(appliance, 'Alexa.LockController')
 
-    yield from assert_request_calls_service(
+    _, msg = yield from assert_request_calls_service(
         'Alexa.LockController', 'Lock', 'lock#test',
         'lock.lock',
         hass)
+
+    # always return LOCKED for now
+    properties = msg['context']['properties'][0]
+    assert properties['name'] == 'lockState'
+    assert properties['namespace'] == 'Alexa.LockController'
+    assert properties['value'] == 'LOCKED'
 
 
 @asyncio.coroutine
@@ -511,14 +517,14 @@ def test_media_player(hass):
         'Alexa.StepSpeaker', 'AdjustVolume', 'media_player#test',
         'media_player.volume_set',
         hass,
-        payload={'volume': 20})
+        payload={'volumeSteps': 20})
     assert call.data['volume_level'] == 0.95
 
     call, _ = yield from assert_request_calls_service(
         'Alexa.StepSpeaker', 'AdjustVolume', 'media_player#test',
         'media_player.volume_set',
         hass,
-        payload={'volume': -20})
+        payload={'volumeSteps': -20})
     assert call.data['volume_level'] == 0.55
 
 
@@ -1096,6 +1102,23 @@ def test_report_lock_state(hass):
 
 
 @asyncio.coroutine
+def test_report_dimmable_light_state(hass):
+    """Test BrightnessController reports brightness correctly."""
+    hass.states.async_set(
+        'light.test_on', 'on', {'friendly_name': "Test light On",
+                                'brightness': 128, 'supported_features': 1})
+    hass.states.async_set(
+        'light.test_off', 'off', {'friendly_name': "Test light Off",
+                                  'supported_features': 1})
+
+    properties = yield from reported_properties(hass, 'light.test_on')
+    properties.assert_equal('Alexa.BrightnessController', 'brightness', 50)
+
+    properties = yield from reported_properties(hass, 'light.test_off')
+    properties.assert_equal('Alexa.BrightnessController', 'brightness', 0)
+
+
+@asyncio.coroutine
 def reported_properties(hass, endpoint):
     """Use ReportState to get properties and return them.
 
@@ -1118,7 +1141,7 @@ class _ReportedProperties(object):
         for prop in self.properties:
             if prop['namespace'] == namespace and prop['name'] == name:
                 assert prop['value'] == value
-            return prop
+                return prop
 
         assert False, 'property %s:%s not in %r' % (
             namespace,
