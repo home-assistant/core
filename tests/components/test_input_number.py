@@ -123,8 +123,8 @@ class TestInputNumber(unittest.TestCase):
         state = self.hass.states.get(entity_id)
         self.assertEqual(49, float(state.state))
 
-    def test_mode(self):
-        """Test mode settings."""
+    def test_mode_and_display_state(self):
+        """Test mode and display_state settings."""
         self.assertTrue(
             setup_component(self.hass, DOMAIN, {DOMAIN: {
                 'test_default_slider': {
@@ -135,25 +135,30 @@ class TestInputNumber(unittest.TestCase):
                     'min': 0,
                     'max': 100,
                     'mode': 'box',
+                    'display_state': 'true',
                 },
                 'test_explicit_slider': {
                     'min': 0,
                     'max': 100,
                     'mode': 'slider',
+                    'display_state': 'false',
                 },
             }}))
 
         state = self.hass.states.get('input_number.test_default_slider')
         assert state
         self.assertEqual('slider', state.attributes['mode'])
+        self.assertTrue(state.attributes['display_state'])
 
         state = self.hass.states.get('input_number.test_explicit_box')
         assert state
         self.assertEqual('box', state.attributes['mode'])
+        self.assertTrue(state.attributes['display_state'])
 
         state = self.hass.states.get('input_number.test_explicit_slider')
         assert state
         self.assertEqual('slider', state.attributes['mode'])
+        self.assertFalse(state.attributes['display_state'])
 
 
 @asyncio.coroutine
@@ -188,6 +193,7 @@ def test_restore_state(hass):
 
 
 @asyncio.coroutine
+# pylint: disable=invalid-name
 def test_initial_state_overrules_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(hass, (
@@ -221,6 +227,7 @@ def test_initial_state_overrules_restore_state(hass):
 
 
 @asyncio.coroutine
+# pylint: disable=invalid-name
 def test_no_initial_state_and_no_restore_state(hass):
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting

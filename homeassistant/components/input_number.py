@@ -26,6 +26,7 @@ CONF_INITIAL = 'initial'
 CONF_MIN = 'min'
 CONF_MAX = 'max'
 CONF_STEP = 'step'
+CONF_DISPLAY_STATE = 'display_state'
 
 MODE_SLIDER = 'slider'
 MODE_BOX = 'box'
@@ -35,6 +36,7 @@ ATTR_MIN = 'min'
 ATTR_MAX = 'max'
 ATTR_STEP = 'step'
 ATTR_MODE = 'mode'
+ATTR_DISPLAY_STATE = 'display_state'
 
 SERVICE_SET_VALUE = 'set_value'
 SERVICE_INCREMENT = 'increment'
@@ -77,6 +79,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_MODE, default=MODE_SLIDER):
                 vol.In([MODE_BOX, MODE_SLIDER]),
+            vol.Optional(CONF_DISPLAY_STATE): cv.boolean,
         }, _cv_input_number)
     })
 }, required=True, extra=vol.ALLOW_EXTRA)
@@ -136,10 +139,11 @@ def async_setup(hass, config):
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
         mode = cfg.get(CONF_MODE)
+        display_state = cfg.get(CONF_DISPLAY_STATE, True)
 
         entities.append(InputNumber(
             object_id, name, initial, minimum, maximum, step, icon, unit,
-            mode))
+            mode, display_state))
 
     if not entities:
         return False
@@ -175,7 +179,7 @@ class InputNumber(Entity):
     """Representation of a slider."""
 
     def __init__(self, object_id, name, initial, minimum, maximum, step, icon,
-                 unit, mode):
+                 unit, mode, display_state):
         """Initialize an input number."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
@@ -186,6 +190,7 @@ class InputNumber(Entity):
         self._icon = icon
         self._unit = unit
         self._mode = mode
+        self._display_state = display_state
 
     @property
     def should_poll(self):
@@ -220,6 +225,7 @@ class InputNumber(Entity):
             ATTR_MAX: self._maximum,
             ATTR_STEP: self._step,
             ATTR_MODE: self._mode,
+            ATTR_DISPLAY_STATE: self._display_state
         }
 
     @asyncio.coroutine
