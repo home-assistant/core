@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 import asyncio
+import collections
 import enum
 import logging
 
@@ -55,12 +56,17 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 ATTR_DURATION = 'duration'
+ATTR_IEEE = 'ieee_address'
 
 SERVICE_PERMIT = 'permit'
+SERVICE_REMOVE = 'remove'
 SERVICE_SCHEMAS = {
     SERVICE_PERMIT: vol.Schema({
         vol.Optional(ATTR_DURATION, default=60):
             vol.All(vol.Coerce(int), vol.Range(1, 254)),
+    }),
+    SERVICE_REMOVE: vol.Schema({
+        vol.Required(ATTR_IEEE): cv.string,
     }),
 }
 
@@ -116,6 +122,18 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, SERVICE_PERMIT, permit,
                                  schema=SERVICE_SCHEMAS[SERVICE_PERMIT])
 
+    @asyncio.coroutine
+    def remove(service):
+        """Remove a node from the network."""
+        from bellows.types import EmberEUI64, uint8_t
+        ieee = service.data.get(ATTR_IEEE)
+        ieee = EmberEUI64([uint8_t(p, base=16) for p in ieee.split(':')])
+        _LOGGER.info("Removing node %s", ieee)
+        yield from APPLICATION_CONTROLLER.remove(ieee)
+
+    hass.services.async_register(DOMAIN, SERVICE_REMOVE, remove,
+                                 schema=SERVICE_SCHEMAS[SERVICE_REMOVE])
+
     return True
 
 
@@ -126,6 +144,7 @@ class ApplicationListener:
         """Initialize the listener."""
         self._hass = hass
         self._config = config
+        self._device_registry = collections.defaultdict(list)
         hass.data[DISCOVERY_KEY] = hass.data.get(DISCOVERY_KEY, {})
 
     def device_joined(self, device):
@@ -147,7 +166,8 @@ class ApplicationListener:
 
     def device_removed(self, device):
         """Handle device being removed from the network."""
-        pass
+        for device_entity in self._device_registry[device.ieee]:
+            self._hass.async_add_job(device_entity.async_remove())
 
     @asyncio.coroutine
     def async_device_initialized(self, device, join):
@@ -189,6 +209,7 @@ class ApplicationListener:
                                 for c in profile_clusters[1]
                                 if c in endpoint.out_clusters]
                 discovery_info = {
+                    'application_listener': self,
                     'endpoint': endpoint,
                     'in_clusters': {c.cluster_id: c for c in in_clusters},
                     'out_clusters': {c.cluster_id: c for c in out_clusters},
@@ -214,6 +235,7 @@ class ApplicationListener:
 
                 component = zha_const.SINGLE_CLUSTER_DEVICE_CLASS[cluster_type]
                 discovery_info = {
+                    'application_listener': self,
                     'endpoint': endpoint,
                     'in_clusters': {cluster.cluster_id: cluster},
                     'out_clusters': {},
@@ -231,6 +253,10 @@ class ApplicationListener:
                     self._config,
                 )
 
+    def register_entity(self, ieee, entity_obj):
+        """Record the creation of a hass entity associated with ieee."""
+        self._device_registry[ieee].append(entity_obj)
+
 
 class Entity(entity.Entity):
     """A base class for ZHA entities."""
@@ -238,12 +264,11 @@ class Entity(entity.Entity):
     _domain = None  # Must be overridden by subclasses
 
     def __init__(self, endpoint, in_clusters, out_clusters, manufacturer,
-                 model, **kwargs):
+                 model, application_listener, **kwargs):
         """Init ZHA entity."""
         self._device_state_attributes = {}
-        ieeetail = ''.join([
-            '%02x' % (o, ) for o in endpoint.device.ieee[-4:]
-        ])
+        ieee = endpoint.device.ieee
+        ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
         if manufacturer and model is not None:
             self.entity_id = '%s.%s_%s_%s_%s' % (
                 self._domain,
@@ -270,6 +295,8 @@ class Entity(entity.Entity):
         self._in_clusters = in_clusters
         self._out_clusters = out_clusters
         self._state = ha_const.STATE_UNKNOWN
+
+        application_listener.register_entity(ieee, self)
 
     def attribute_updated(self, attribute, value):
         """Handle an attribute updated on this cluster."""
