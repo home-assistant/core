@@ -10,7 +10,8 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD)
+from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD,
+                                 CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -20,19 +21,32 @@ REQUIREMENTS = ['sense_energy==0.3.0']
 _LOGGER = logging.getLogger(__name__)
 
 ACTIVE_NAME = "Energy"
-DAILY_NAME = "Daily"
-WEEKLY_NAME = "Weekly"
-MONTHLY_NAME = "Monthly"
-YEARLY_NAME = "Yearly"
-
 PRODUCTION_NAME = "Production"
 CONSUMPTION_NAME = "Usage"
 
 ACTIVE_TYPE = 'active'
-DAILY_TYPE = 'DAY'
-WEEKLY_TYPE = 'WEEK'
-MONTHLY_TYPE = 'MONTH'
-YEARLY_TYPE = 'YEAR'
+
+class SensorConfig(object):
+    """ Data structure holding sensor config"""
+    def __init__(self, name, sensor_type):
+        """ Sensor name and type to pass to API """
+        self.name = name,
+        self.type = sensor_type
+
+# Sensor types/ranges
+SENSOR_TYPES = {'active'  : SensorConfig(ACTIVE_NAME, ACTIVE_TYPE),
+                'daily'   : SensorConfig('Daily', 'DAY'),
+                'weekly'  : SensorConfig('Weekly', 'WEEK'),
+                'monthly' : SensorConfig('Monthly', 'MONTH'),
+                'yearly'  : SensorConfig('Yearly', 'YEAR')}
+
+# Production/consumption variants
+SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
+
+# Valid sensors for configuration
+VALID_SENSORS = ['%s_%s' % (typ, var)
+                 for typ in SENSOR_TYPES.keys()
+                 for var in SENSOR_VARIANTS]
 
 ICON = 'mdi:flash'
 
@@ -41,7 +55,9 @@ MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,    
+    vol.Required(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(VALID_SENSORS)]),
 })
 
 
@@ -64,23 +80,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         """Update the active power usage."""
         data.get_realtime()
 
-    add_devices([
-        # Active power usage/production
-        Sense(data, ACTIVE_NAME, ACTIVE_TYPE, False, update_active),
-        Sense(data, ACTIVE_NAME, ACTIVE_TYPE, True, update_active),
-        # Daily Power
-        Sense(data, DAILY_NAME, DAILY_TYPE, False, update_trends),
-        Sense(data, DAILY_NAME, DAILY_TYPE, True, update_trends),
-        # Weekly Power
-        Sense(data, WEEKLY_NAME, WEEKLY_TYPE, False, update_trends),
-        Sense(data, WEEKLY_NAME, WEEKLY_TYPE, True, update_trends),
-        # Monthly Power
-        Sense(data, MONTHLY_NAME, MONTHLY_TYPE, False, update_trends),
-        Sense(data, MONTHLY_NAME, MONTHLY_TYPE, True, update_trends),
-        # Yearly Power
-        Sense(data, YEARLY_NAME, YEARLY_TYPE, False, update_trends),
-        Sense(data, YEARLY_NAME, YEARLY_TYPE, True, update_trends),
-        ])
+    devices = []
+    for sensor in config.get(CONF_MONITORED_CONDITIONS):
+        config_name, prod = sensor.rsplit('_', 1)
+        name = SENSOR_TYPES[config_name].name
+        sensor_type = SENSOR_TYPES[config_name].sensor_type
+        is_production = prod == PRODUCTION_NAME.lower()
+        if name == ACTIVE_NAME.lower():
+            update_call = update_active
+        else: 
+            update_call = update_trends            
+        devices.append(Sense(data, name, sensor_type, is_production, update_call))
+
+    add_devices(devices)
 
 
 class Sense(Entity):
