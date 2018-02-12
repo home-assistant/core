@@ -14,6 +14,7 @@ from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, SOURCE_TYPE_GPS)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_scanner(hass, config: dict, see, discovery_info=None):
+def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
     """Set up the scanner."""
     scanner = GoogleMapsScanner(hass, config, see)
     return scanner if scanner.success_init else None
@@ -41,7 +42,7 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
 class GoogleMapsScanner(object):
     """Representation of an Google Maps location sharing account."""
 
-    def __init__(self, hass, config: dict, see) -> None:
+    def __init__(self, hass, config: ConfigType, see) -> None:
         """Initialize the scanner."""
         from locationsharinglib import Service
         from locationsharinglib.locationsharinglibexceptions import InvalidUser
@@ -54,11 +55,11 @@ class GoogleMapsScanner(object):
         try:
             # Check if we already have cached credentials
             if os.path.isfile(CREDENTIALS_FILE):
-                _LOGGER.info('Authenticating with credentials file.')
+                _LOGGER.debug('Authenticating with credentials file.')
                 self.service = Service(self.username, self.password,
                                        CREDENTIALS_FILE)
             else:
-                _LOGGER.info('Authenticating with username and password.')
+                _LOGGER.debug('Authenticating with username and password.')
                 self.service = Service(self.username, self.password)
                 self.service.export_session('.')
 
