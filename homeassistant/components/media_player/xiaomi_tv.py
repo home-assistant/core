@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_XIAOMI_TV = SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | \
                     SUPPORT_TURN_OFF
 
-"""No host is needed for configuration, however it can be set."""
+# No host is needed for configuration, however it can be set.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME): cv.string,
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class XiaomiTV(MediaPlayerDevice):
 
     def __init__(self, ip, name="Xiaomi TV"):
-        """Import pymitv library."""
+        # Import pymitv library.
         from pymitv import TV
 
         # Initialize the Xiaomi TV.
