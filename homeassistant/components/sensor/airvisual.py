@@ -37,6 +37,12 @@ VOLUME_MICROGRAMS_PER_CUBIC_METER = 'µg/m3'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
+SENSOR_TYPES = [
+    ('AirPollutionLevelSensor', 'Air Pollution Level', 'mdi:scale'),
+    ('AirQualityIndexSensor', 'Air Quality Index', 'mdi:format-list-numbers'),
+    ('MainPollutantSensor', 'Main Pollutant', 'mdi:chemical-weapon'),
+]
+
 POLLUTANT_LEVEL_MAPPING = [
     {'label': 'Good', 'minimum': 0, 'maximum': 50},
     {'label': 'Moderate', 'minimum': 51, 'maximum': 100},
@@ -74,7 +80,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Configure the platform and add the sensors."""
     from zlib import adler32
+
     import pyairvisual as pav
+
+    classes = {
+        'AirPollutionLevelSensor': AirPollutionLevelSensor,
+        'AirQualityIndexSensor': AirQualityIndexSensor,
+        'MainPollutantSensor': MainPollutantSensor
+    }
 
     api_key = config.get(CONF_API_KEY)
     monitored_locales = config.get(CONF_MONITORED_CONDITIONS)
@@ -101,13 +114,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             pav.Client(api_key), latitude=latitude, longitude=longitude,
             radius=radius, show_on_map=show_on_map)
 
-    entity_id = adler32(location.encode('utf-8'))
-
     data.update()
+
     sensors = []
     for locale in monitored_locales:
         for sensor_class, name, icon in SENSOR_TYPES:
-            sensors.append(sensor_class(data, name, icon, locale, entity_id))
+            sensors.append(classes[sensor_class](
+                data,
+                name,
+                icon,
+                locale,
+                adler32(location.encode('utf-8'))
+            ))
 
     add_devices(sensors, True)
 
@@ -281,10 +299,3 @@ class AirVisualData(object):
                           self.__dict__)
             _LOGGER.debug(exc_info)
             self.pollution_info = {}
-
-
-SENSOR_TYPES = [
-    (AirPollutionLevelSensor, 'Air Pollution Level', 'mdi:scale'),
-    (AirQualityIndexSensor, 'Air Quality Index', 'mdi:format-list-numbers'),
-    (MainPollutantSensor, 'Main Pollutant', 'mdi:chemical-weapon'),
-]
