@@ -18,7 +18,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT, TEMP_CELSIUS, LENGTH_INCHES, LENGTH_KILOMETERS,
     LENGTH_MILES, LENGTH_FEET, STATE_UNKNOWN, ATTR_ATTRIBUTION)
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -663,7 +663,7 @@ class WUndergroundSensor(Entity):
         self._entity_picture = None
         self._unit_of_measurement = self._cfg_expand("unit_of_measurement")
         self.rest.request_feature(SENSOR_TYPES[condition].feature)
-        self.entity_id = async_generate_entity_id(
+        self.entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, "pws_" + condition, hass=hass)
 
     def _cfg_expand(self, what, default=None):
