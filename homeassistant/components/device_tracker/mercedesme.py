@@ -49,22 +49,26 @@ class MercedesMEDeviceTracker(object):
     def update_info(self, now=None):
         """Update the device info."""
         for device in self.data.cars:
-            if device['services'].get('VEHICLE_FINDER', False):
-                location = self.data.get_location(device["vin"])
-                if location is not None:
-                    dev_id = device["vin"]
-                    name = device["license"]
+            if not device['services'].get('VEHICLE_FINDER', False):
+                continue
 
-                    lat = location['positionLat']['value']
-                    lon = location['positionLong']['value']
-                    attrs = {
-                        'trackr_id': dev_id,
-                        'id': dev_id,
-                        'name': name
-                    }
-                    self.see(
-                        dev_id=dev_id, host_name=name,
-                        gps=(lat, lon), attributes=attrs
-                    )
+            location = self.data.get_location(device["vin"])
+            if location is None:
+                continue
+
+            dev_id = device["vin"]
+            name = device["license"]
+
+            lat = location['positionLat']['value']
+            lon = location['positionLong']['value']
+            attrs = {
+                'trackr_id': dev_id,
+                'id': dev_id,
+                'name': name
+            }
+            self.see(
+                dev_id=dev_id, host_name=name,
+                gps=(lat, lon), attributes=attrs
+            )
 
         return True
