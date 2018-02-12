@@ -9,7 +9,7 @@ import homeassistant.loader as loader
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import (
     EntityComponent, DEFAULT_SCAN_INTERVAL)
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import entity_platform, entity_registry
 
 import homeassistant.util.dt as dt_util
 
@@ -19,6 +19,32 @@ from tests.common import (
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
+
+
+class MockEntityPlatform(entity_platform.EntityPlatform):
+    """Mock class with some mock defaults."""
+
+    def __init__(
+        self, *, hass,
+        logger=None,
+        domain='test',
+        platform_name='test_platform',
+        scan_interval=timedelta(seconds=15),
+        parallel_updates=0,
+        entity_namespace=None,
+        async_entities_added_callback=lambda: None
+    ):
+        """Initialize a mock entity platform."""
+        super().__init__(
+            hass=hass,
+            logger=logger,
+            domain=domain,
+            platform_name=platform_name,
+            scan_interval=scan_interval,
+            parallel_updates=parallel_updates,
+            entity_namespace=entity_namespace,
+            async_entities_added_callback=async_entities_added_callback,
+        )
 
 
 class TestHelpersEntityPlatform(unittest.TestCase):
@@ -433,3 +459,34 @@ def test_entity_with_name_and_entity_id_getting_registered(hass):
         MockEntity(unique_id='1234', name='bla',
                    entity_id='test_domain.world')])
     assert 'test_domain.world' in hass.states.async_entity_ids()
+
+
+@asyncio.coroutine
+def test_overriding_name_from_registry(hass):
+    """Test that we can override a name via the Entity Registry."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    mock_registry(hass, {
+        'test_domain.world': entity_registry.RegistryEntry(
+            entity_id='test_domain.world',
+            unique_id='1234',
+            # Using component.async_add_entities is equal to platform "domain"
+            platform='test_domain',
+            name='Overridden'
+        )
+    })
+    yield from component.async_add_entities([
+        MockEntity(unique_id='1234', name='Device Name')])
+
+    state = hass.states.get('test_domain.world')
+    assert state is not None
+    assert state.name == 'Overridden'
+
+
+@asyncio.coroutine
+def test_registry_respect_entity_namespace(hass):
+    """Test that the registry respects entity namespace."""
+    mock_registry(hass)
+    platform = MockEntityPlatform(hass=hass, entity_namespace='ns')
+    entity = MockEntity(unique_id='1234', name='Device Name')
+    yield from platform.async_add_entities([entity])
+    assert entity.entity_id == 'test.ns_device_name'

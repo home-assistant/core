@@ -209,10 +209,15 @@ class EntityPlatform(object):
             else:
                 suggested_object_id = entity.name
 
+            if self.entity_namespace is not None:
+                suggested_object_id = '{} {}'.format(
+                    self.entity_namespace, suggested_object_id)
+
             entry = registry.async_get_or_create(
                 self.domain, self.platform_name, entity.unique_id,
                 suggested_object_id=suggested_object_id)
             entity.entity_id = entry.entity_id
+            entity.registry_name = entry.name
 
         # We won't generate an entity ID if the platform has already set one
         # We will however make sure that platform cannot pick a registered ID
@@ -239,8 +244,12 @@ class EntityPlatform(object):
             raise HomeAssistantError(
                 'Invalid entity id: {}'.format(entity.entity_id))
         elif entity.entity_id in component_entities:
+            msg = 'Entity id already exists: {}'.format(entity.entity_id)
+            if entity.unique_id is not None:
+                msg += '. Platform {} does not generate unique IDs'.format(
+                    self.platform_name)
             raise HomeAssistantError(
-                'Entity id already exists: {}'.format(entity.entity_id))
+                msg)
 
         self.entities[entity.entity_id] = entity
         component_entities.add(entity.entity_id)

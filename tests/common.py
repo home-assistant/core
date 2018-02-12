@@ -317,10 +317,10 @@ def mock_component(hass, component):
     hass.config.components.add(component)
 
 
-def mock_registry(hass):
+def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
-    registry.entities = {}
+    registry.entities = mock_entries or {}
     hass.data[entity_platform.DATA_REGISTRY] = registry
     return registry
 
