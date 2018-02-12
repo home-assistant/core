@@ -31,25 +31,13 @@ CONF_SYMBOL = 'symbol'
 CONF_SYMBOLS = 'symbols'
 CONF_TO = 'to'
 
-DEFAULT_SYMBOL = {
-    CONF_CURRENCY: 'USD',
-    CONF_NAME: 'Google',
-    CONF_SYMBOL: 'GOOGL',
-}
-
-DEFAULT_CURRENCY = {
-    CONF_FROM: 'BTC',
-    CONF_NAME: 'Bitcon',
-    CONF_TO: 'USD',
-}
-
 ICONS = {
     'BTC': 'mdi:currency-btc',
     'EUR': 'mdi:currency-eur',
     'GBP': 'mdi:currency-gbp',
     'INR': 'mdi:currency-inr',
     'RUB': 'mdi:currency-rub',
-    'TRY': 'mdi: currency-try',
+    'TRY': 'mdi:currency-try',
     'USD': 'mdi:currency-usd',
 }
 
@@ -69,9 +57,9 @@ CURRENCY_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_FOREIGN_EXCHANGE, default=[DEFAULT_CURRENCY]):
+    vol.Optional(CONF_FOREIGN_EXCHANGE):
         vol.All(cv.ensure_list, [CURRENCY_SCHEMA]),
-    vol.Optional(CONF_SYMBOLS, default=[DEFAULT_SYMBOL]):
+    vol.Optional(CONF_SYMBOLS):
         vol.All(cv.ensure_list, [SYMBOL_SCHEMA]),
 })
 
@@ -83,6 +71,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     api_key = config.get(CONF_API_KEY)
     symbols = config.get(CONF_SYMBOLS)
+    conversions = config.get(CONF_FOREIGN_EXCHANGE)
+
+    if not symbols and not conversions:
+        msg = 'Warning: No symbols or currencies configured.'
+        hass.components.persistent_notification.create(
+            msg, 'Sensor alpha_vantage')
+        _LOGGER.warning(msg)
+        return
 
     timeseries = TimeSeries(key=api_key)
 
@@ -98,7 +94,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(AlphaVantageSensor(timeseries, symbol))
 
     forex = ForeignExchange(key=api_key)
-    for conversion in config.get(CONF_FOREIGN_EXCHANGE):
+    for conversion in conversions:
         from_cur = conversion.get(CONF_FROM)
         to_cur = conversion.get(CONF_TO)
         try:
