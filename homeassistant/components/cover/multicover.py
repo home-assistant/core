@@ -10,16 +10,23 @@ import re
 
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.core import (callback, split_entity_id)
 from homeassistant.components.cover import (
+    ENTITY_ID_FORMAT, DOMAIN, PLATFORM_SCHEMA, CoverDevice,
     ATTR_POSITION, ATTR_TILT_POSITION, ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION, ENTITY_ID_FORMAT, PLATFORM_SCHEMA,
-    SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP, SUPPORT_SET_POSITION,
-    SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT,
-    SUPPORT_SET_TILT_POSITION, CoverDevice)
+    ATTR_CURRENT_TILT_POSITION, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP,
+    SUPPORT_SET_POSITION, SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT,
+    SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION)
 from homeassistant.components.zwave.const import EVENT_NETWORK_READY
 from homeassistant.const import (
-    CONF_COVERS, CONF_ENTITY_ID, CONF_FRIENDLY_NAME, EVENT_HOMEASSISTANT_START)
+    CONF_COVERS, CONF_ENTITY_ID, CONF_FRIENDLY_NAME,
+    EVENT_HOMEASSISTANT_START, EVENT_CALL_SERVICE,
+    STATE_CLOSED, STATE_UNKNOWN, ATTR_SUPPORTED_FEATURES,
+    SERVICE_CLOSE_COVER, SERVICE_CLOSE_COVER_TILT,
+    SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT,
+    SERVICE_SET_COVER_POSITION, SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_STOP_COVER, SERVICE_STOP_COVER_TILT,
+    ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
@@ -37,8 +44,11 @@ CONF_TILT = 'tilt'
 CONF_WINTER_PROTECTION = 'winter_protection'
 CONF_CLOSE_POSITION = 'close_position'
 CONF_OPEN_POSITION = 'open_position'
-CONF_TEMPERATURE = 'temperature'
 CONF_TEMPERATURE_SENSOR = 'temperature_sensor'
+
+KEY_OPEN_CLOSE = 'open_close'
+KEY_STOP = 'stop'
+KEY_POSITION = 'position'
 
 
 WINTER_PROTECTION_SCHEMA = vol.All(vol.Schema({
@@ -46,7 +56,7 @@ WINTER_PROTECTION_SCHEMA = vol.All(vol.Schema({
         vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
     CONF_OPEN_POSITION:
         vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
-    vol.Required(CONF_TEMPERATURE): vol.Coerce(int),
+    vol.Required(ATTR_TEMPERATURE): vol.Coerce(int),
     vol.Required(CONF_TEMPERATURE_SENSOR): cv.entity_id,
 }), cv.has_at_least_one_key(CONF_CLOSE_POSITION, CONF_OPEN_POSITION))
 
@@ -77,7 +87,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         winter_config = device_config.get(CONF_WINTER_PROTECTION, {})
         close_position = winter_config.get(CONF_CLOSE_POSITION)
         open_position = winter_config.get(CONF_OPEN_POSITION)
-        temp = winter_config.get(CONF_TEMPERATURE, 3)
+        temp = winter_config.get(ATTR_TEMPERATURE, 3)
         temp_sensor = winter_config.get(CONF_TEMPERATURE_SENSOR)
         covers.append(
             MultiCover(
@@ -113,8 +123,10 @@ class MultiCover(CoverDevice):
         self._temp = temp
         self._temp_sensor = temp_sensor
         self.matched_entities = set()
-        self.covers = {'open_close': set(), 'stop': set(), 'position': set()}
-        self.tilts = {'open_close': set(), 'stop': set(), 'position': set()}
+        self.covers = {KEY_OPEN_CLOSE: set(), KEY_STOP: set(),
+                       KEY_POSITION: set()}
+        self.tilts = {KEY_OPEN_CLOSE: set(), KEY_STOP: set(),
+                      KEY_POSITION: set()}
         self.winter_protection = False
         _LOGGER.debug("%s: {tilt: %s, temp: %s, temp_sensor: %s, "
                       "close_position: %s, open_position: %s}",
@@ -127,7 +139,7 @@ class MultiCover(CoverDevice):
             return False
 
         pattern = re.compile(self._entity_ids_regex, re.I | re.M)
-        all_entities = ', '.join(self.hass.states.async_entity_ids('cover'))
+        all_entities = ', '.join(self.hass.states.async_entity_ids(DOMAIN))
         match_all = set(re.findall(pattern, all_entities))
 
         for match in match_all:
@@ -145,7 +157,7 @@ class MultiCover(CoverDevice):
                                 "is not allowed.", self._device_id, entity)
                 self._entities.remove(entity)
                 continue
-            if entity.split('.')[0] != 'cover':
+            if split_entity_id(entity)[0] != DOMAIN:
                 _LOGGER.warning("%s: Only cover entities are allowed. Please "
                                 "remove: \"%s\".", self._device_id, entity)
                 self._entities.remove(entity)
@@ -155,21 +167,21 @@ class MultiCover(CoverDevice):
                 continue
             all_entities.add(entity)
             self._entities.remove(entity)
-            features = state.attributes['supported_features']
+            features = state.attributes[ATTR_SUPPORTED_FEATURES]
             # Supported features for covers
             if features & 1 and features & 2:
-                self.covers['open_close'].add(entity)
+                self.covers[KEY_OPEN_CLOSE].add(entity)
             if features & 4:
-                self.covers['position'].add(entity)
+                self.covers[KEY_POSITION].add(entity)
             if features & 8:
-                self.covers['stop'].add(entity)
+                self.covers[KEY_STOP].add(entity)
             # Supported features for tilts
             if features & 16 and features & 32:
-                self.tilts['open_close'].add(entity)
+                self.tilts[KEY_OPEN_CLOSE].add(entity)
             if features & 64:
-                self.tilts['stop'].add(entity)
+                self.tilts[KEY_STOP].add(entity)
             if features & 128:
-                self.tilts['position'].add(entity)
+                self.tilts[KEY_POSITION].add(entity)
         if len(self._entities) > 0:
             _LOGGER.debug("%s: Entities not found: %s",
                           self._device_id, self._entities)
@@ -178,7 +190,7 @@ class MultiCover(CoverDevice):
     def temp_state_change(self, state):
         """Update winter_protection based on state change."""
         self.winter_protection = bool(
-            state is not None and state.state != 'unknown' and
+            state is not None and state.state != STATE_UNKNOWN and
             float(state.state) < self._temp)
         _LOGGER.debug("%s: Winter protection enabled: %s",
                       self._device_id, self.winter_protection)
@@ -248,11 +260,11 @@ class MultiCover(CoverDevice):
     @property
     def is_closed(self):
         """Return if all covers in group are closed."""
-        if len(self.covers['open_close']) == 0:
+        if len(self.covers[KEY_OPEN_CLOSE]) == 0:
             return False
-        for entity_id in self.covers['open_close']:
+        for entity_id in self.covers[KEY_OPEN_CLOSE]:
             state = self.hass.states.get(entity_id)
-            if state is None or state.state != 'closed':
+            if state is None or state.state != STATE_CLOSED:
                 return False
         return True
 
@@ -264,7 +276,7 @@ class MultiCover(CoverDevice):
         Else 0 if closed or 100 is fully open.
         """
         position = -1
-        for entity_id in self.covers['position']:
+        for entity_id in self.covers[KEY_POSITION]:
             state = self.hass.states.get(entity_id)
             pos = state.attributes.get(ATTR_CURRENT_POSITION)
             if position == -1:
@@ -289,7 +301,7 @@ class MultiCover(CoverDevice):
             return None
 
         position = -1
-        for entity_id in self.tilts['position']:
+        for entity_id in self.tilts[KEY_POSITION]:
             state = self.hass.states.get(entity_id)
             pos = state.attributes.get(ATTR_CURRENT_TILT_POSITION)
             if position == -1:
@@ -334,20 +346,20 @@ class MultiCover(CoverDevice):
         _LOGGER.debug("Open covers called")
         if self.winter_protection and self._open_position:
             self.hass.bus.async_fire(
-                'call_service', {
-                    'domain': 'cover', 'service': 'open_cover',
-                    'service_data': {'entity_id': self.covers['open_close'] -
-                                                  self.covers['position']}})
+                EVENT_CALL_SERVICE, {
+                    'domain': DOMAIN, 'service': SERVICE_OPEN_COVER,
+                    'service_data': {'entity_id': self.covers[KEY_OPEN_CLOSE] -
+                                                  self.covers[KEY_POSITION]}})
             self.hass.bus.async_fire(
-                'call_service', {
-                    'domain': 'cover', 'service': 'set_cover_position',
-                    'service_data': {'position': self._open_position,
-                                     'entity_id': self.covers['position']}})
+                EVENT_CALL_SERVICE, {
+                    'domain': DOMAIN, 'service': SERVICE_SET_COVER_POSITION,
+                    'service_data': {'entity_id': self.covers[KEY_POSITION],
+                                     ATTR_POSITION: self._open_position}})
         else:
-            covers = self.covers['open_close'].union(self.covers['position'])
+            covers = self.covers['open_close'].union(self.covers[KEY_POSITION])
             self.hass.bus.async_fire(
-                'call_service', {
-                    'domain': 'cover', 'service': 'open_cover',
+                EVENT_CALL_SERVICE, {
+                    'domain': DOMAIN, 'service': SERVICE_OPEN_COVER,
                     'service_data': {'entity_id': covers}})
 
     @asyncio.coroutine
@@ -356,20 +368,21 @@ class MultiCover(CoverDevice):
         _LOGGER.debug("Close covers called")
         if self.winter_protection and self._close_position:
             self.hass.bus.async_fire(
-                'call_service', {
-                    'domain': 'cover', 'service': 'close_cover',
-                    'service_data': {'entity_id': self.covers['open_close'] -
-                                                  self.covers['position']}})
+                EVENT_CALL_SERVICE, {
+                    'domain': DOMAIN, 'service': SERVICE_CLOSE_COVER,
+                    'service_data': {'entity_id': self.covers[KEY_OPEN_CLOSE] -
+                                                  self.covers[KEY_POSITION]}})
             self.hass.bus.async_fire(
-                'call_service', {
-                    'domain': 'cover', 'service': 'set_cover_position',
-                    'service_data': {'position': self._close_position,
-                                     'entity_id': self.covers['position']}})
+                EVENT_CALL_SERVICE, {
+                    'domain': DOMAIN, 'service': SERVICE_SET_COVER_POSITION,
+                    'service_data': {'entity_id': self.covers[KEY_POSITION],
+                                     ATTR_POSITION: self._close_position}})
         else:
-            covers = self.covers['open_close'].union(self.covers['position'])
+            covers = \
+                self.covers[KEY_OPEN_CLOSE].union(self.covers[KEY_POSITION])
             self.hass.bus.async_fire(
-                'call_service', {
-                    'domain': 'cover', 'service': 'close_cover',
+                EVENT_CALL_SERVICE, {
+                    'domain': DOMAIN, 'service': SERVICE_CLOSE_COVER,
                     'service_data': {'entity_id': covers}})
 
     @asyncio.coroutine
@@ -377,55 +390,55 @@ class MultiCover(CoverDevice):
         """Fire the stop action."""
         _LOGGER.debug("Stop covers called")
         self.hass.bus.async_fire(
-            'call_service', {
-                'domain': 'cover', 'service': 'stop_cover',
-                'service_data': {'entity_id': self.covers['stop']}})
+            EVENT_CALL_SERVICE, {
+                'domain': DOMAIN, 'service': SERVICE_STOP_COVER,
+                'service_data': {'entity_id': self.covers[KEY_STOP]}})
 
     @asyncio.coroutine
     def async_set_cover_position(self, **kwargs):
         """Set covers position."""
         position = kwargs[ATTR_POSITION]
-        _LOGGER.debug("Set cover position called: %s", position)
+        _LOGGER.debug("Set cover position called: %d", position)
         self.hass.bus.async_fire(
-            'call_service', {
-                'domain': 'cover', 'service': 'set_cover_position',
-                'service_data': {'position': position,
-                                 'entity_id': self.covers['position']}})
+            EVENT_CALL_SERVICE, {
+                'domain': DOMAIN, 'service': SERVICE_SET_COVER_POSITION,
+                'service_data': {'entity_id': self.covers[KEY_POSITION],
+                                 ATTR_POSITION: position}})
 
     @asyncio.coroutine
     def async_open_cover_tilt(self, **kwargs):
         """Tilt covers open."""
         _LOGGER.debug("Open tilts called")
         self.hass.bus.async_fire(
-            'call_service', {
-                'domain': 'cover', 'service': 'open_cover_tilt',
-                'service_data': {'entity_id': self.tilts['open_close']}})
+            EVENT_CALL_SERVICE, {
+                'domain': DOMAIN, 'service': SERVICE_OPEN_COVER_TILT,
+                'service_data': {'entity_id': self.tilts[KEY_OPEN_CLOSE]}})
 
     @asyncio.coroutine
     def async_close_cover_tilt(self, **kwargs):
         """Tilt covers closed."""
         _LOGGER.debug("Close tilts called")
         self.hass.bus.async_fire(
-            'call_service', {
-                'domain': 'cover', 'service': 'close_cover_tilt',
-                'service_data': {'entity_id': self.tilts['open_close']}})
+            EVENT_CALL_SERVICE, {
+                'domain': DOMAIN, 'service': SERVICE_CLOSE_COVER_TILT,
+                'service_data': {'entity_id': self.tilts[KEY_OPEN_CLOSE]}})
 
     @asyncio.coroutine
     def async_stop_cover_tilt(self, **kwargs):
         """Stop cover tilt."""
         _LOGGER.debug("Stop tilts called")
         self.hass.bus.async_fire(
-            'call_service', {
-                'domain': 'cover', 'service': 'stop_cover_tilt',
-                'service_data': {'entity_id': self.tilts['stop']}})
+            EVENT_CALL_SERVICE, {
+                'domain': DOMAIN, 'service': SERVICE_STOP_COVER_TILT,
+                'service_data': {'entity_id': self.tilts[KEY_STOP]}})
 
     @asyncio.coroutine
     def async_set_cover_tilt_position(self, **kwargs):
         """Set tilt position."""
         tilt_position = kwargs[ATTR_TILT_POSITION]
-        _LOGGER.debug("Set tilt position called: %s", tilt_position)
+        _LOGGER.debug("Set tilt position called: %d", tilt_position)
         self.hass.bus.async_fire(
-            'call_service', {
-                'domain': 'cover', 'service': 'set_cover_tilt_position',
-                'service_data': {'tilt_position': tilt_position,
-                                 'entity_id': self.tilts['position']}})
+            EVENT_CALL_SERVICE, {
+                'domain': DOMAIN, 'service': SERVICE_SET_COVER_TILT_POSITION,
+                'service_data': {'entity_id': self.tilts[KEY_POSITION],
+                                 ATTR_TILT_POSITION: tilt_position}})
