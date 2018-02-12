@@ -99,8 +99,8 @@ class UnifiScanner(DeviceScanner):
 
         # Filter clients to provided SSID list
         if self._ssid_filter:
-            clients = filter(lambda x: x['essid'] in self._ssid_filter,
-                             clients)
+            clients = [client for client in clients
+                       if client['essid'] in self._ssid_filter]
 
         self._clients = {
             client['mac']: client
