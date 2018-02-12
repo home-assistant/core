@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Configure the platform and add the sensors."""
     from zlib import adler32
 
-    import pyairvisual as pav
+    from pyairvisual import Client
 
     classes = {
         'AirPollutionLevelSensor': AirPollutionLevelSensor,
@@ -104,14 +104,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Using city, state, and country: %s, %s, %s", city, state, country)
         location = ','.join((city, state, country))
         data = AirVisualData(
-            pav.Client(api_key), city=city, state=state, country=country,
+            Client(api_key), city=city, state=state, country=country,
             show_on_map=show_on_map)
     else:
         _LOGGER.debug(
             "Using latitude and longitude: %s, %s", latitude, longitude)
         location = ','.join((str(latitude), str(longitude)))
         data = AirVisualData(
-            pav.Client(api_key), latitude=latitude, longitude=longitude,
+            Client(api_key), latitude=latitude, longitude=longitude,
             radius=radius, show_on_map=show_on_map)
 
     data.update()
@@ -274,7 +274,7 @@ class AirVisualData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update with new AirVisual data."""
-        import pyairvisual.exceptions as exceptions
+        from pyairvisual.exceptions import HTTPError
 
         try:
             if self.city and self.state and self.country:
@@ -294,7 +294,7 @@ class AirVisualData(object):
                 ATTR_REGION: resp.get('state'),
                 ATTR_COUNTRY: resp.get('country')
             }
-        except exceptions.HTTPError as exc_info:
+        except HTTPError as exc_info:
             _LOGGER.error("Unable to retrieve data on this location: %s",
                           self.__dict__)
             _LOGGER.debug(exc_info)
