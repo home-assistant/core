@@ -45,10 +45,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the available BloomSky weather sensors."""
-    # Protect against people having setup the bloomsky platforms
-    if discovery_info is None:
-        return
-
     bloomsky = get_component('bloomsky')
     # Default needed in case of discovery
     sensors = config.get(CONF_MONITORED_CONDITIONS, SENSOR_TYPES)
