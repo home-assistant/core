@@ -63,6 +63,7 @@ _IP_NEIGH_REGEX = re.compile(
     r'\w+\s'
     r'(\w+\s(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))))?\s'
     r'\s?(router)?'
+    r'\s?(nud)?'
     r'(?P<status>(\w+))')
 
 _ARP_CMD = 'arp -n'
@@ -211,6 +212,9 @@ class AsusWrtDeviceScanner(DeviceScanner):
         result = _parse_lines(lines, _IP_NEIGH_REGEX)
         devices = {}
         for device in result:
+            status = device['status']
+            if status is None or status.upper() != 'REACHABLE':
+                continue
             if device['mac'] is not None:
                 mac = device['mac'].upper()
                 old_device = cur_devices.get(mac)
@@ -225,7 +229,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
         result = _parse_lines(lines, _ARP_REGEX)
         devices = {}
         for device in result:
-            if device['mac']:
+            if device['mac'] is not None:
                 mac = device['mac'].upper()
                 devices[mac] = Device(mac, device['ip'], None)
         return devices
