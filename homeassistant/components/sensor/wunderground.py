@@ -11,14 +11,14 @@ import re
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
     TEMP_FAHRENHEIT, TEMP_CELSIUS, LENGTH_INCHES, LENGTH_KILOMETERS,
-    LENGTH_MILES, LENGTH_FEET, STATE_UNKNOWN, ATTR_ATTRIBUTION,
-    ATTR_FRIENDLY_NAME)
+    LENGTH_MILES, LENGTH_FEET, STATE_UNKNOWN, ATTR_ATTRIBUTION)
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -637,7 +637,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_LANG), latitude, longitude)
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        sensors.append(WUndergroundSensor(rest, variable))
+        sensors.append(WUndergroundSensor(hass, rest, variable))
 
     rest.update()
     if not rest.data:
@@ -651,7 +651,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class WUndergroundSensor(Entity):
     """Implementing the WUnderground sensor."""
 
-    def __init__(self, rest, condition):
+    def __init__(self, hass: HomeAssistantType, rest, condition):
         """Initialize the sensor."""
         self.rest = rest
         self._condition = condition
@@ -663,6 +663,8 @@ class WUndergroundSensor(Entity):
         self._entity_picture = None
         self._unit_of_measurement = self._cfg_expand("unit_of_measurement")
         self.rest.request_feature(SENSOR_TYPES[condition].feature)
+        self.entity_id = generate_entity_id(
+            ENTITY_ID_FORMAT, "pws_" + condition, hass=hass)
 
     def _cfg_expand(self, what, default=None):
         """Parse and return sensor data."""
@@ -684,9 +686,6 @@ class WUndergroundSensor(Entity):
         """Parse and update device state attributes."""
         attrs = self._cfg_expand("device_state_attributes", {})
 
-        self._attributes[ATTR_FRIENDLY_NAME] = self._cfg_expand(
-            "friendly_name")
-
         for (attr, callback) in attrs.items():
             if callable(callback):
                 try:
@@ -701,7 +700,7 @@ class WUndergroundSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "PWS_" + self._condition
+        return self._cfg_expand("friendly_name")
 
     @property
     def state(self):
