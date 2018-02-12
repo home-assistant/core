@@ -1,13 +1,13 @@
 """
-This platform adds support for Xiaomi TVs
+Add support for the Xiaomi TVs.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/xiaomi_tv/
 """
 
 import logging
-import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_TURN_OFF, MediaPlayerDevice, PLATFORM_SCHEMA,
@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Xiaomi TV platform."""
+    """Set up the Xiaomi TV platform."""
     from pymitv import Discover
 
     # If a hostname is set. Discovery is skipped.
@@ -54,8 +54,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class XiaomiTV(MediaPlayerDevice):
+    """Represent the Xiaomi TV for Home Assistant."""
 
     def __init__(self, ip, name="Xiaomi TV"):
+        """Receive IP address and name to construct class."""
         # Import pymitv library.
         from pymitv import TV
 
@@ -82,7 +84,9 @@ class XiaomiTV(MediaPlayerDevice):
 
     def turn_off(self):
         """
-        Instruct the TV to turn sleep. This is done instead of turning off,
+        Instruct the TV to turn sleep.
+
+        This is done instead of turning off,
         because the TV won't accept any input when turned off. Thus, the user
         would be unable to turn the TV back on, unless it's done manually.
         """
