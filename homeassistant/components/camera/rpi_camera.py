@@ -26,6 +26,7 @@ CONF_IMAGE_WIDTH = 'image_width'
 CONF_TIMELAPSE = 'timelapse'
 CONF_VERTICAL_FLIP = 'vertical_flip'
 
+DEFAULT_FILE_PATH = ''
 DEFAULT_HORIZONTAL_FLIP = 0
 DEFAULT_IMAGE_HEIGHT = 480
 DEFAULT_IMAGE_QUALITY = 7
@@ -36,7 +37,7 @@ DEFAULT_TIMELAPSE = 1000
 DEFAULT_VERTICAL_FLIP = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FILE_PATH): cv.string,
+    vol.Optional(CONF_FILE_PATH, default=DEFAULT_FILE_PATH): cv.string,
     vol.Optional(CONF_HORIZONTAL_FLIP, default=DEFAULT_HORIZONTAL_FLIP):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=1)),
     vol.Optional(CONF_IMAGE_HEIGHT, default=DEFAULT_IMAGE_HEIGHT):
@@ -86,9 +87,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, kill_raspistill)
 
     try:
+
+        file_path = setup_config[CONF_FILE_PATH]
+
+        # Check whether the file path has been whitelisted
+        if not hass.config.is_allowed_path(file_path):
+            _LOGGER.error("'%s' is not a whitelisted directory", file_path)
+            return False
+
         # Try to create an empty file (or open existing) to ensure we have
         # proper permissions.
-        open(setup_config[CONF_FILE_PATH], 'a').close()
+        open(file_path, 'a').close()
 
         add_devices([RaspberryCamera(setup_config)])
     except PermissionError:
