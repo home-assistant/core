@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_component import DATA_REGISTRY
+from homeassistant.helpers.entity_platform import DATA_REGISTRY
 from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['pydeconz==28']
