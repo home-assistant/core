@@ -289,6 +289,28 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
                 color_temp, self.max_mireds,
                 self.min_mireds, CCT_MIN, CCT_MAX)
 
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            percent_brightness = ceil(100 * brightness / 255.0)
+
+        if ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP in kwargs:
+            _LOGGER.debug(
+                "Setting brightness and color temperature: "
+                "%s %s%%, %s mireds, %s%% cct",
+                brightness, percent_brightness,
+                color_temp, percent_color_temp)
+
+            result = yield from self._try_command(
+                "Setting brightness and color temperature failed: "
+                "%s bri, %s cct",
+                self._light.set_brightness_and_color_temperature,
+                percent_brightness, percent_color_temp)
+
+            if result:
+                self._color_temp = color_temp
+                self._brightness = brightness
+
+        elif ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
                 "Setting color temperature: "
                 "%s mireds, %s%% cct",
@@ -301,7 +323,7 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
             if result:
                 self._color_temp = color_temp
 
-        if ATTR_BRIGHTNESS in kwargs:
+        elif ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             percent_brightness = ceil(100 * brightness / 255.0)
 
@@ -316,8 +338,9 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
             if result:
                 self._brightness = brightness
 
-        self._state = yield from self._try_command(
-            "Turning the light on failed.", self._light.on)
+        else:
+            self._state = yield from self._try_command(
+                "Turning the light on failed.", self._light.on)
 
     @asyncio.coroutine
     def async_update(self):
