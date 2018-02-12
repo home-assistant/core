@@ -119,24 +119,27 @@ class WazeTravelTime(Entity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        self.waze_data.update()
-        if self.type in self.waze_data.data:
-            if self.type == 'route':
-                self._state = self.waze_data.data[self.type]
-                _LOGGER.debug(
-                    "Retreived route is %s = %s %s",
-                    self.type,
-                    self._state
-                    )
-            else:
-                self._state = round(
-                    self.waze_data.data[self.type], self._resolution)
-                _LOGGER.debug(
-                    "Retreived route is %s = %s %s",
-                    self.type,
-                    self._state,
-                    self._unit_of_measurement
-                    )
+        try:
+            self.waze_data.update()
+            if self.type in self.waze_data.data:
+                if self.type == 'route':
+                    self._state = self.waze_data.data[self.type]
+                    _LOGGER.debug(
+                        "Retreived route is %s = %s %s",
+                        self.type,
+                        self._state
+                        )
+                else:
+                    self._state = round(
+                        self.waze_data.data[self.type], self._resolution)
+                    _LOGGER.debug(
+                        "Retreived route is %s = %s %s",
+                        self.type,
+                        self._state,
+                        self._unit_of_measurement
+                        )
+        except KeyError:
+            _LOGGER.error("Error retreiving data from server")
 
 
 class WazeRouteData(object):
