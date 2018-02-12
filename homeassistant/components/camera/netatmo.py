@@ -67,8 +67,6 @@ class NetatmoCamera(Camera):
         self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
             camera=camera_name
             )
-        self._unique_id = data.camera_data.cameraByName(
-            camera=camera_name, home=home)['id']
         self._cameratype = camera_type
 
     def camera_image(self):
@@ -112,8 +110,3 @@ class NetatmoCamera(Camera):
         elif self._cameratype == "NACamera":
             return "Welcome"
         return None
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this camera."""
-        return self._unique_id
