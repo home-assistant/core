@@ -17,10 +17,6 @@ DEPENDENCIES = ['bloomsky']
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up access to BloomSky cameras."""
-    # Protect against people having setup the bloomsky platforms
-    if discovery_info is None:
-        return
-
     bloomsky = get_component('bloomsky')
     for device in bloomsky.BLOOMSKY.devices.values():
         add_devices([BloomSkyCamera(bloomsky.BLOOMSKY, device)])
