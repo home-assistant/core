@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.google_maps/
 """
 import logging
-import os
 
 import voluptuous as vol
 
@@ -19,13 +18,12 @@ from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['locationsharinglib==0.2.1']
+REQUIREMENTS = ['locationsharinglib==0.3.0']
 
 CONF_IGNORED_DEVICES = 'ignored_devices'
 CONF_ACCOUNTNAME = 'account_name'
 
-# CREDENTIALS_FILE = 'google_maps_location_sharing.conf'
-CREDENTIALS_FILE = 'cookies.pickle'
+CREDENTIALS_FILE = 'google_maps_location_sharing.conf'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -53,16 +51,8 @@ class GoogleMapsScanner(object):
         self.password = config[CONF_PASSWORD]
 
         try:
-            # Check if we already have cached credentials
-            if os.path.isfile(CREDENTIALS_FILE):
-                _LOGGER.debug('Authenticating with credentials file.')
-                self.service = Service(self.username, self.password,
-                                       CREDENTIALS_FILE)
-            else:
-                _LOGGER.debug('Authenticating with username and password.')
-                self.service = Service(self.username, self.password)
-                self.service.export_session('.')
-
+            self.service = Service(self.username, self.password,
+                                   CREDENTIALS_FILE)
             self._update_info()
 
             track_utc_time_change(
