@@ -136,7 +136,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             datas[data_key],
             params,
             name,
-            icon
+            icon,
+            config[CONF_ZIP_CODE]
         ))
 
     add_devices(sensors, True)
@@ -154,7 +155,7 @@ def calculate_trend(list_of_nums):
 class BaseSensor(Entity):
     """Define a base class for all of our sensors."""
 
-    def __init__(self, data, data_params, name, icon):
+    def __init__(self, data, data_params, name, icon, zip_code):
         """Initialize the sensor."""
         self._attrs = {}
         self._icon = icon
@@ -162,6 +163,7 @@ class BaseSensor(Entity):
         self._data_params = data_params
         self._state = None
         self._unit = None
+        self._zip_code = zip_code
         self.data = data
 
     @property
@@ -193,6 +195,11 @@ class BaseSensor(Entity):
 
 class AllergyAverageSensor(BaseSensor):
     """Define a sensor to show allergy average information."""
+
+    @property
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return '{0}_pollution_level'.format(self._unique_id)
 
     def update(self):
         """Update the status of the sensor."""
