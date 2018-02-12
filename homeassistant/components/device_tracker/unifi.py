@@ -21,11 +21,13 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
 CONF_SITE_ID = 'site_id'
 CONF_DETECTION_TIME = 'detection_time'
+CONF_SSID_FILTER = 'ssid_filter'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8443
 DEFAULT_VERIFY_SSL = True
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
+DEFAULT_SSID_FILTER = None
 
 NOTIFICATION_ID = 'unifi_notification'
 NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
@@ -39,7 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): vol.Any(
         cv.boolean, cv.isfile),
     vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
-        cv.time_period, cv.positive_timedelta)
+        cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_SSID_FILTER, default=DEFAULT_SSID_FILTER): vol.All(
+        cv.ensure_list, [cv.string])
 })
 
 
@@ -54,6 +58,7 @@ def get_scanner(hass, config):
     port = config[DOMAIN].get(CONF_PORT)
     verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
     detection_time = config[DOMAIN].get(CONF_DETECTION_TIME)
+    ssid_filter = config[DOMAIN].get(CONF_SSID_FILTER)
 
     try:
         ctrl = Controller(host, username, password, port, version='v4',
@@ -69,16 +74,18 @@ def get_scanner(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    return UnifiScanner(ctrl, detection_time)
+    return UnifiScanner(ctrl, detection_time, ssid_filter)
 
 
 class UnifiScanner(DeviceScanner):
     """Provide device_tracker support from Unifi WAP client data."""
 
-    def __init__(self, controller, detection_time: timedelta) -> None:
+    def __init__(self, controller, detection_time: timedelta,
+                 ssid_filter) -> None:
         """Initialize the scanner."""
         self._detection_time = detection_time
         self._controller = controller
+        self._ssid_filter = ssid_filter
         self._update()
 
     def _update(self):
@@ -89,6 +96,11 @@ class UnifiScanner(DeviceScanner):
         except APIError as ex:
             _LOGGER.error("Failed to scan clients: %s", ex)
             clients = []
+
+        # Filter clients to provided SSID list
+        if self._ssid_filter:
+            clients = filter(lambda x: x['essid'] in self._ssid_filter,
+                             clients)
 
         self._clients = {
             client['mac']: client
