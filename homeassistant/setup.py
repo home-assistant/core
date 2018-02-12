@@ -206,7 +206,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
         return platform
 
     try:
-        yield from _process_deps_reqs(hass, config, platform_name, platform)
+        yield from _process_deps_reqs(hass, config, platform_path, platform)
     except HomeAssistantError as err:
         log_error(str(err))
         return None
