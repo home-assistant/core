@@ -56,11 +56,6 @@ POLLUTANT_MAPPING = {
 }
 
 SENSOR_LOCALES = {'cn': 'Chinese', 'us': 'U.S.'}
-SENSOR_TYPES = [
-    ('AirPollutionLevelSensor', 'Air Pollution Level', 'mdi:scale'),
-    ('AirQualityIndexSensor', 'Air Quality Index', 'mdi:format-list-numbers'),
-    ('MainPollutantSensor', 'Main Pollutant', 'mdi:chemical-weapon'),
-]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -112,12 +107,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for locale in monitored_locales:
         for sensor_class, name, icon in SENSOR_TYPES:
-            sensors.append(globals()[sensor_class](
-                data,
-                name,
-                icon,
-                locale,
-                unique_id))
+            sensors.append(sensor_class(data, name, icon, locale, unique_id))
 
     add_devices(sensors, True)
 
@@ -291,3 +281,10 @@ class AirVisualData(object):
                           self.__dict__)
             _LOGGER.debug(exc_info)
             self.pollution_info = {}
+
+
+SENSOR_TYPES = [
+    (AirPollutionLevelSensor, 'Air Pollution Level', 'mdi:scale'),
+    (AirQualityIndexSensor, 'Air Quality Index', 'mdi:format-list-numbers'),
+    (MainPollutantSensor, 'Main Pollutant', 'mdi:chemical-weapon'),
+]
