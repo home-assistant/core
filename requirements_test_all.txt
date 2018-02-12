@@ -3,7 +3,7 @@
 # make new things fail. Manually update these pins when pulling in a
 # new version
 flake8==3.5
-pylint==1.6.5
+pylint==1.8.2
 mypy==0.560
 pydocstyle==1.1.1
 coveralls==1.2.0
@@ -56,9 +56,6 @@ evohomeclient==0.2.5
 # homeassistant.components.sensor.geo_rss_events
 feedparser==5.2.1
 
-# homeassistant.components.conversation
-fuzzywuzzy==0.16.0
-
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
 
@@ -75,7 +72,7 @@ hbmqtt==0.9.1
 holidays==0.9.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180209.0
+home-assistant-frontend==20180211.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb

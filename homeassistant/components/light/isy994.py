@@ -29,10 +29,6 @@ def setup_platform(hass, config: ConfigType,
 class ISYLightDevice(ISYDevice, Light):
     """Representation of an ISY994 light device."""
 
-    def __init__(self, node: object) -> None:
-        """Initialize the ISY994 light device."""
-        super().__init__(node)
-
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 light is on."""
@@ -48,6 +44,7 @@ class ISYLightDevice(ISYDevice, Light):
         if not self._node.off():
             _LOGGER.debug("Unable to turn off light")
 
+    # pylint: disable=arguments-differ
     def turn_on(self, brightness=None, **kwargs) -> None:
         """Send the turn on command to the ISY994 light device."""
         if not self._node.on(val=brightness):

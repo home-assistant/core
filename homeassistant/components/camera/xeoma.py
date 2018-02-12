@@ -42,7 +42,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-# pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Discover and setup Xeoma Cameras."""
     from pyxeoma.xeoma import Xeoma, XeomaError
@@ -69,6 +68,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         ]
 
         for cam in config[CONF_CAMERAS]:
+            # https://github.com/PyCQA/pylint/issues/1830
+            # pylint: disable=stop-iteration-return
             camera = next(
                 (dc for dc in discovered_cameras
                  if dc[CONF_IMAGE_NAME] == cam[CONF_IMAGE_NAME]), None)

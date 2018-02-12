@@ -90,10 +90,8 @@ class WorldTidesInfoSensor(Entity):
                 tidetime = time.strftime('%I:%M %p', time.localtime(
                     self.data['extremes'][0]['dt']))
                 return "Low tide at %s" % (tidetime)
-            else:
-                return STATE_UNKNOWN
-        else:
             return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     def update(self):
         """Get the latest data from WorldTidesInfo API."""

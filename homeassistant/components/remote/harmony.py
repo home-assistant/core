@@ -207,6 +207,7 @@ class HarmonyRemote(remote.RemoteDevice):
         """Start the PowerOff activity."""
         self._client.power_off()
 
+    # pylint: disable=arguments-differ
     def send_command(self, commands, **kwargs):
         """Send a list of commands to one device."""
         device = kwargs.get(ATTR_DEVICE)

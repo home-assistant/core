@@ -70,7 +70,7 @@ class IHCBinarySensor(IHCDevice, BinarySensorDevice):
 
     def __init__(self, ihc_controller, name, ihc_id: int, info: bool,
                  sensor_type: str, inverting: bool,
-                 product: Element=None) -> None:
+                 product: Element = None) -> None:
         """Initialize the IHC binary sensor."""
         super().__init__(ihc_controller, name, ihc_id, info, product)
         self._state = None

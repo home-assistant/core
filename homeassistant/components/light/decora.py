@@ -37,7 +37,7 @@ def retry(method):
     @wraps(method)
     def wrapper_retry(device, *args, **kwargs):
         """Try send command and retry on error."""
-        # pylint: disable=import-error
+        # pylint: disable=import-error, no-member
         import decora
         import bluepy
 
@@ -75,7 +75,7 @@ class DecoraLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        # pylint: disable=import-error
+        # pylint: disable=import-error, no-member
         import decora
 
         self._name = device['name']

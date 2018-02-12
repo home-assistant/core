@@ -210,8 +210,7 @@ class XiaomiMiioRemote(RemoteDevice):
         """Hide remote by default."""
         if self._is_hidden:
             return {'hidden': 'true'}
-        else:
-            return
+        return
 
     # pylint: disable=R0201
     @asyncio.coroutine
@@ -226,7 +225,6 @@ class XiaomiMiioRemote(RemoteDevice):
         _LOGGER.error("Device does not support turn_off, " +
                       "please use 'remote.send_command' to send commands.")
 
-    # pylint: enable=R0201
     def _send_command(self, payload):
         """Send a command."""
         from miio import DeviceException
