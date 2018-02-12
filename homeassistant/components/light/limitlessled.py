@@ -118,7 +118,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 group_conf.get(CONF_NUMBER),
                 group_conf.get(CONF_NAME),
                 group_conf.get(CONF_TYPE, DEFAULT_LED_TYPE))
-            lights.append(LimitlessLEDGroup.factory(group, {
+            lights.append(LimitlessLEDGroup(group, {
                 'fade': group_conf[CONF_FADE]
             }))
     add_devices(lights)
@@ -162,10 +162,23 @@ class LimitlessLEDGroup(Light):
 
     def __init__(self, group, config):
         """Initialize a group."""
+        from limitlessled.group.rgbw import RgbwGroup
+        from limitlessled.group.white import WhiteGroup
+        from limitlessled.group.rgbww import RgbwwGroup
+        if isinstance(group, WhiteGroup):
+            self._supported = SUPPORT_LIMITLESSLED_WHITE
+        elif isinstance(group, RgbwGroup):
+            self._supported = SUPPORT_LIMITLESSLED_RGB
+        elif isinstance(group, RgbwwGroup):
+            self._supported = SUPPORT_LIMITLESSLED_RGBWW
+
         self.group = group
         self.repeating = False
         self._is_on = False
         self._brightness = None
+        self._temperature = None
+        self._color = None
+
         self.config = config
 
     @asyncio.coroutine
@@ -175,19 +188,8 @@ class LimitlessLEDGroup(Light):
         if state:
             self._is_on = (state.state == STATE_ON)
             self._brightness = state.attributes.get('brightness')
-
-    @staticmethod
-    def factory(group, config):
-        """Produce LimitlessLEDGroup objects."""
-        from limitlessled.group.rgbw import RgbwGroup
-        from limitlessled.group.white import WhiteGroup
-        from limitlessled.group.rgbww import RgbwwGroup
-        if isinstance(group, WhiteGroup):
-            return LimitlessLEDWhiteGroup(group, config)
-        elif isinstance(group, RgbwGroup):
-            return LimitlessLEDRGBWGroup(group, config)
-        elif isinstance(group, RgbwwGroup):
-            return LimitlessLEDRGBWWGroup(group, config)
+            self._temperature = state.attributes.get('color_temp')
+            self._color = state.attributes.get('rgb_color')
 
     @property
     def should_poll(self):
@@ -214,6 +216,21 @@ class LimitlessLEDGroup(Light):
         """Return the brightness property."""
         return self._brightness
 
+    @property
+    def color_temp(self):
+        """Return the temperature property."""
+        return self._temperature
+
+    @property
+    def rgb_color(self):
+        """Return the color property."""
+        return self._color
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return self._supported
+
     # pylint: disable=arguments-differ
     @state(False)
     def turn_off(self, transition_time, pipeline, **kwargs):
@@ -222,189 +239,48 @@ class LimitlessLEDGroup(Light):
             pipeline.transition(transition_time, brightness=0.0)
         pipeline.off()
 
-
-class LimitlessLEDWhiteGroup(LimitlessLEDGroup):
-    """Representation of a LimitlessLED White group."""
-
-    def __init__(self, group, config):
-        """Initialize White group."""
-        super().__init__(group, config)
-        self._temperature = None
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Called when entity is about to be added to hass."""
-        yield from super().async_added_to_hass()
-
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if state:
-            self._temperature = state.attributes.get('color_temp')
-
-    @property
-    def color_temp(self):
-        """Return the temperature property."""
-        return self._temperature
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_LIMITLESSLED_WHITE
-
     # pylint: disable=arguments-differ
     @state(True)
     def turn_on(self, transition_time, pipeline, **kwargs):
         """Turn on (or adjust property of) a group."""
-
+        from limitlessled.presets import COLORLOOP
         # Set up transition.
         args = {}
         if self.config[CONF_FADE] and not self.is_on and self._brightness:
             args['brightness'] = _from_hass_brightness(self._brightness)
+
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             args['brightness'] = _from_hass_brightness(self._brightness)
+
+        if ATTR_RGB_COLOR in kwargs and self._supported & SUPPORT_RGB_COLOR:
+            self._color = kwargs[ATTR_RGB_COLOR]
+            # White is a special case.
+            if min(self._color) > 256 - RGB_BOUNDARY:
+                pipeline.white()
+                self._color = WHITE
+            else:
+                args['color'] = _from_hass_color(self._color)
+
         if ATTR_COLOR_TEMP in kwargs:
-            self._temperature = kwargs[ATTR_COLOR_TEMP]
-            args['temperature'] = _from_hass_temperature(self._temperature)
-        pipeline.transition(transition_time, **args)
-
-
-class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
-    """Representation of a LimitlessLED RGBW group."""
-
-    def __init__(self, group, config):
-        """Initialize RGBW group."""
-        super().__init__(group, config)
-        # Initialize group with known values.
-        self._color = None
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Called when entity is about to be added to hass."""
-        yield from super().async_added_to_hass()
-
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if state:
-            self._color = state.attributes.get('rgb_color')
-
-    @property
-    def rgb_color(self):
-        """Return the color property."""
-        return self._color
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_LIMITLESSLED_RGB
-
-    # pylint: disable=arguments-differ
-    @state(True)
-    def turn_on(self, transition_time, pipeline, **kwargs):
-        """Turn on (or adjust property of) a group."""
-        from limitlessled.presets import COLORLOOP
-
-        # Set up transition.
-        args = {}
-        if self.config[CONF_FADE] and not self.is_on and self._brightness:
-            args['brightness'] = _from_hass_brightness(self._brightness)
-        if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
-            args['brightness'] = _from_hass_brightness(self._brightness)
-        if ATTR_RGB_COLOR in kwargs:
-            self._color = kwargs[ATTR_RGB_COLOR]
-            # White is a special case.
-            if min(self._color) > 256 - RGB_BOUNDARY:
+            if self._supported & SUPPORT_RGB_COLOR:
                 pipeline.white()
-                self._color = WHITE
-            else:
-                args['color'] = _from_hass_color(self._color)
-        pipeline.transition(transition_time, **args)
-
-        # Flash.
-        if ATTR_FLASH in kwargs:
-            duration = 0
-            if kwargs[ATTR_FLASH] == FLASH_LONG:
-                duration = 1
-            pipeline.flash(duration=duration)
-        # Add effects.
-        if ATTR_EFFECT in kwargs:
-            if kwargs[ATTR_EFFECT] == EFFECT_COLORLOOP:
-                self.repeating = True
-                pipeline.append(COLORLOOP)
-            if kwargs[ATTR_EFFECT] == EFFECT_WHITE:
-                pipeline.white()
-                self._color = WHITE
-
-
-class LimitlessLEDRGBWWGroup(LimitlessLEDGroup):
-    """Representation of a LimitlessLED RGBWW group."""
-
-    def __init__(self, group, config):
-        """Initialize RGBWW group."""
-        super().__init__(group, config)
-        # Initialize group with known values.
-        self._color = None
-        self._temperature = None
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Called when entity is about to be added to hass."""
-        yield from super().async_added_to_hass()
-
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if state:
-            self._color = state.attributes.get('rgb_color')
-            self._temperature = state.attributes.get('color_temp')
-
-    @property
-    def rgb_color(self):
-        """Return the color property."""
-        return self._color
-
-    @property
-    def color_temp(self):
-        """Return the temperature property."""
-        return self._temperature
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_LIMITLESSLED_RGBWW
-
-    # pylint: disable=arguments-differ
-    @state(True)
-    def turn_on(self, transition_time, pipeline, **kwargs):
-        """Turn on (or adjust property of) a group."""
-        from limitlessled.presets import COLORLOOP
-        # Set up transition.
-        args = {}
-        if self.config[CONF_FADE] and not self.is_on and self._brightness:
-            args['brightness'] = _from_hass_brightness(self._brightness)
-        if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
-            args['brightness'] = _from_hass_brightness(self._brightness)
-        if ATTR_RGB_COLOR in kwargs:
-            self._color = kwargs[ATTR_RGB_COLOR]
-            # White is a special case.
-            if min(self._color) > 256 - RGB_BOUNDARY:
-                pipeline.white()
-                self._color = WHITE
-            else:
-                args['color'] = _from_hass_color(self._color)
-        elif ATTR_COLOR_TEMP in kwargs:
-            pipeline.white()
             self._color = WHITE
-            self._temperature = kwargs[ATTR_COLOR_TEMP]
-            args['temperature'] = _from_hass_temperature(self._temperature)
+            if self._supported & SUPPORT_COLOR_TEMP:
+                self._temperature = kwargs[ATTR_COLOR_TEMP]
+                args['temperature'] = _from_hass_temperature(self._temperature)
+
         pipeline.transition(transition_time, **args)
 
         # Flash.
-        if ATTR_FLASH in kwargs:
+        if ATTR_FLASH in kwargs and self._supported & SUPPORT_FLASH:
             duration = 0
             if kwargs[ATTR_FLASH] == FLASH_LONG:
                 duration = 1
             pipeline.flash(duration=duration)
+
         # Add effects.
-        if ATTR_EFFECT in kwargs:
+        if ATTR_EFFECT in kwargs and self._supported & SUPPORT_EFFECT:
             if kwargs[ATTR_EFFECT] == EFFECT_COLORLOOP:
                 self.repeating = True
                 pipeline.append(COLORLOOP)
