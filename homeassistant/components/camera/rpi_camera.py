@@ -4,7 +4,6 @@ Camera platform that has a Raspberry Pi camera.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.rpi_camera/
 """
-import os
 import subprocess
 import logging
 import shutil
@@ -26,7 +25,6 @@ CONF_IMAGE_WIDTH = 'image_width'
 CONF_TIMELAPSE = 'timelapse'
 CONF_VERTICAL_FLIP = 'vertical_flip'
 
-DEFAULT_FILE_PATH = ''
 DEFAULT_HORIZONTAL_FLIP = 0
 DEFAULT_IMAGE_HEIGHT = 480
 DEFAULT_IMAGE_QUALITY = 7
@@ -37,7 +35,7 @@ DEFAULT_TIMELAPSE = 1000
 DEFAULT_VERTICAL_FLIP = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FILE_PATH, default=DEFAULT_FILE_PATH): cv.isfile,
+    vol.Optional(CONF_FILE_PATH): cv.isfile,
     vol.Optional(CONF_HORIZONTAL_FLIP, default=DEFAULT_HORIZONTAL_FLIP):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=1)),
     vol.Optional(CONF_IMAGE_HEIGHT, default=DEFAULT_IMAGE_HEIGHT):
@@ -79,8 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             CONF_HORIZONTAL_FLIP: config.get(CONF_HORIZONTAL_FLIP),
             CONF_VERTICAL_FLIP: config.get(CONF_VERTICAL_FLIP),
             CONF_FILE_PATH: config.get(CONF_FILE_PATH,
-                                       os.path.join(os.path.dirname(__file__),
-                                                    'image.jpg'))
+                                       hass.config.path('image.jpg'))
         }
     )
 
