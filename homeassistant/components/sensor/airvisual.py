@@ -73,7 +73,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Configure the platform and add the sensors."""
-    from ctypes import c_size_t
+    from zlib import adler32
     import pyairvisual as pav
 
     api_key = config.get(CONF_API_KEY)
@@ -89,25 +89,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if city and state and country:
         _LOGGER.debug(
             "Using city, state, and country: %s, %s, %s", city, state, country)
-        location_id = city + state + country
+        location = ','.join((city, state, country))
         data = AirVisualData(
             pav.Client(api_key), city=city, state=state, country=country,
             show_on_map=show_on_map)
     else:
         _LOGGER.debug(
             "Using latitude and longitude: %s, %s", latitude, longitude)
-        location_id = latitude + longitude
+        location = ','.join((str(latitude), str(longitude)))
         data = AirVisualData(
             pav.Client(api_key), latitude=latitude, longitude=longitude,
             radius=radius, show_on_map=show_on_map)
 
-    unique_id = c_size_t(hash(location_id)).value
+    entity_id = adler32(location.encode('utf-8'))
 
     data.update()
     sensors = []
     for locale in monitored_locales:
         for sensor_class, name, icon in SENSOR_TYPES:
-            sensors.append(sensor_class(data, name, icon, locale, unique_id))
+            sensors.append(sensor_class(data, name, icon, locale, entity_id))
 
     add_devices(sensors, True)
 
@@ -115,7 +115,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AirVisualBaseSensor(Entity):
     """Define a base class for all of our sensors."""
 
-    def __init__(self, data, name, icon, locale, unique_id):
+    def __init__(self, data, name, icon, locale, entity_id):
         """Initialize the sensor."""
         self.data = data
         self._attrs = {}
@@ -123,7 +123,7 @@ class AirVisualBaseSensor(Entity):
         self._locale = locale
         self._name = name
         self._state = None
-        self._unique_id = unique_id
+        self._entity_id = entity_id
         self._unit = None
 
     @property
@@ -164,7 +164,7 @@ class AirPollutionLevelSensor(AirVisualBaseSensor):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_pollution_level'.format(self._unique_id)
+        return '{0}_pollution_level'.format(self._entity_id)
 
     def update(self):
         """Update the status of the sensor."""
@@ -189,7 +189,7 @@ class AirQualityIndexSensor(AirVisualBaseSensor):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_aqi'.format(self._unique_id)
+        return '{0}_aqi'.format(self._entity_id)
 
     @property
     def unit_of_measurement(self):
@@ -207,16 +207,16 @@ class AirQualityIndexSensor(AirVisualBaseSensor):
 class MainPollutantSensor(AirVisualBaseSensor):
     """Define a sensor to the main pollutant of an area."""
 
-    def __init__(self, data, name, icon, locale, unique_id):
+    def __init__(self, data, name, icon, locale, entity_id):
         """Initialize the sensor."""
-        super().__init__(data, name, icon, locale, unique_id)
+        super().__init__(data, name, icon, locale, entity_id)
         self._symbol = None
         self._unit = None
 
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_main_pollutant'.format(self._unique_id)
+        return '{0}_main_pollutant'.format(self._entity_id)
 
     def update(self):
         """Update the status of the sensor."""
