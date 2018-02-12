@@ -249,41 +249,31 @@ class TestWundergroundSetup(unittest.TestCase):
                                     None)
         for device in self.DEVICES:
             device.update()
-            entity_id = device.entity_id
-            friendly_name = device.name
-            self.assertTrue(entity_id.startswith('sensor.pws_'))
-            if entity_id == 'sensor.pws_weather':
+            self.assertTrue(str(device.name).startswith('PWS_'))
+            if device.name == 'PWS_weather':
                 self.assertEqual(HTTPS_ICON_URL, device.entity_picture)
                 self.assertEqual(WEATHER, device.state)
                 self.assertIsNone(device.unit_of_measurement)
-                self.assertEqual("Weather Summary", friendly_name)
-            elif entity_id == 'sensor.pws_alerts':
+            elif device.name == 'PWS_alerts':
                 self.assertEqual(1, device.state)
                 self.assertEqual(ALERT_MESSAGE,
                                  device.device_state_attributes['Message'])
                 self.assertEqual(ALERT_ICON, device.icon)
                 self.assertIsNone(device.entity_picture)
-                self.assertEqual('Alerts', friendly_name)
-            elif entity_id == 'sensor.pws_location':
+            elif device.name == 'PWS_location':
                 self.assertEqual('Holly Springs, NC', device.state)
-                self.assertEqual('Location', friendly_name)
-            elif entity_id == 'sensor.pws_elevation':
+            elif device.name == 'PWS_elevation':
                 self.assertEqual('413', device.state)
-                self.assertEqual('Elevation', friendly_name)
-            elif entity_id == 'sensor.pws_feelslike_c':
+            elif device.name == 'PWS_feelslike_c':
                 self.assertIsNone(device.entity_picture)
                 self.assertEqual(FEELS_LIKE, device.state)
                 self.assertEqual(TEMP_CELSIUS, device.unit_of_measurement)
-                self.assertEqual("Feels Like", friendly_name)
-            elif entity_id == 'sensor.pws_weather_1d_metric':
+            elif device.name == 'PWS_weather_1d_metric':
                 self.assertEqual(FORECAST_TEXT, device.state)
-                self.assertEqual('Tuesday', friendly_name)
             else:
-                self.assertEqual(entity_id, 'sensor.pws_precip_1d_in')
+                self.assertEqual(device.name, 'PWS_precip_1d_in')
                 self.assertEqual(PRECIP_IN, device.state)
                 self.assertEqual(LENGTH_INCHES, device.unit_of_measurement)
-                self.assertEqual('Precipitation Intensity Today',
-                                 friendly_name)
 
     @unittest.mock.patch('requests.get',
                          side_effect=ConnectionError('test exception'))
