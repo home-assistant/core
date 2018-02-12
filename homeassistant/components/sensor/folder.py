@@ -34,7 +34,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the folder sensor."""
-    folder = Folder(config.get(CONF_FOLDER_PATHS), config.get(CONF_FILTER))
+    path = config.get(CONF_FOLDER_PATHS)
+
+    if not hass.config.is_allowed_path(path):
+        _LOGGER.error("folder {} is not valid or allowed".format(path))
+        return
+
+    folder = Folder(path, config.get(CONF_FILTER))
     add_devices([folder], True)
 
 
@@ -50,11 +56,9 @@ class Folder(Entity):
         self._filter_term = filter_term
         self._sorted_files_list = []
         self._number_of_files = None
-        self._recent_modified_file = ''
-        self._last_updated = ''
+        self._recent_modified_file = None
+        self._last_updated = None
         self._name = folder_path.split("/")[-2]
-        self._unit_of_measurement = ''
-        self.update()
 
     def update(self):
         """Update the sensor."""
@@ -65,7 +69,6 @@ class Folder(Entity):
 
         self._last_updated = self.get_last_updated(
             self._recent_modified_file)
-        return
 
     def get_sorted_files_list(self, folder_path, filter_term):
         """Return the sorted list of files, applying filter."""
@@ -98,15 +101,11 @@ class Folder(Entity):
     @property
     def device_state_attributes(self):
         """Return other details about the sensor state."""
-        attrs = {}
-        attrs['folder'] = self._folder_path
-        attrs['filter'] = self._filter_term
-        attrs['modified_file'] = self._recent_modified_file.split('/')[-1]
-        attrs['number_of_files'] = len(self._sorted_files_list)
-        attrs['files'] = [f.split('/')[-1] for f in self._sorted_files_list]
-        return attrs
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+        attr = {
+            'folder': self._folder_path,
+            'filter': self._filter_term,
+            'modified_file': self._recent_modified_file.split('/')[-1],
+            'number_of_files': len(self._sorted_files_list),
+            'files': [f.split('/')[-1] for f in self._sorted_files_list]
+            }
+        return attr
