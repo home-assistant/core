@@ -345,11 +345,11 @@ class MultiCover(CoverDevice):
         """Move the covers up."""
         _LOGGER.debug("Open covers called")
         if self.winter_protection and self._open_position:
+            covers = self.covers[KEY_OPEN_CLOSE] - self.covers[KEY_POSITION]
             self.hass.bus.async_fire(
                 EVENT_CALL_SERVICE, {
                     'domain': DOMAIN, 'service': SERVICE_OPEN_COVER,
-                    'service_data': {'entity_id': self.covers[KEY_OPEN_CLOSE] -
-                                                  self.covers[KEY_POSITION]}})
+                    'service_data': {'entity_id': covers}})
             self.hass.bus.async_fire(
                 EVENT_CALL_SERVICE, {
                     'domain': DOMAIN, 'service': SERVICE_SET_COVER_POSITION,
@@ -367,11 +367,11 @@ class MultiCover(CoverDevice):
         """Move the covers down."""
         _LOGGER.debug("Close covers called")
         if self.winter_protection and self._close_position:
+            covers = self.covers[KEY_OPEN_CLOSE] - self.covers[KEY_POSITION]
             self.hass.bus.async_fire(
                 EVENT_CALL_SERVICE, {
                     'domain': DOMAIN, 'service': SERVICE_CLOSE_COVER,
-                    'service_data': {'entity_id': self.covers[KEY_OPEN_CLOSE] -
-                                                  self.covers[KEY_POSITION]}})
+                    'service_data': {'entity_id': covers}})
             self.hass.bus.async_fire(
                 EVENT_CALL_SERVICE, {
                     'domain': DOMAIN, 'service': SERVICE_SET_COVER_POSITION,
