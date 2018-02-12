@@ -331,7 +331,7 @@ def test_parallel_updates_async_platform_with_constant(hass):
 @asyncio.coroutine
 def test_parallel_updates_sync_platform(hass):
     """Warn we log when platform setup takes a long time."""
-    platform = MockPlatform()
+    platform = MockPlatform(setup_platform=lambda *args: None)
 
     loader.set_component('test_domain.platform', platform)
 
