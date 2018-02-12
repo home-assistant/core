@@ -31,7 +31,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for key, value in sorted(SENSORS.items()):
             if car['availabilities'].get(key, 'INVALID') == 'VALID':
                 devices.append(
-                    MercedesMESensor(data, key, value[0], car["vin"], value[1]))
+                    MercedesMESensor(
+                        data, key, value[0], car["vin"], value[1]))
             else:
                 _LOGGER.warning(FEATURE_NOT_AVAILABLE, key, car["license"])
 

@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     data, key, value[0], car["vin"], None))
             else:
                 _LOGGER.warning(FEATURE_NOT_AVAILABLE, key, car["license"])
-                
+
     add_devices(devices, True)
 
 
