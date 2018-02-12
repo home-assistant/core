@@ -116,6 +116,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Configure the platform and add the sensors."""
     from zlib import adler32
+
     from pypollencom import Client
 
     _LOGGER.debug('Configuration data: %s', config)
