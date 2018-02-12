@@ -113,17 +113,11 @@ class NetAtmoSensor(Entity):
         module_id = self.netatmo_data.\
             station_data.moduleByName(module=module_name)['_id']
         self.module_id = module_id[1]
-        self._unique_id = '{}-{}'.format(self.module_id, self.type)
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this sensor."""
-        return self._unique_id
 
     @property
     def icon(self):
