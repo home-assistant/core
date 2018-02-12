@@ -241,7 +241,8 @@ class ApplicationListener:
                     'in_clusters': {cluster.cluster_id: cluster},
                     'out_clusters': {},
                     'new_join': join,
-                    'unique_id': '%s-%s-%s' % (device.ieee, endpoint_id, cluster_id),
+                    'unique_id': '%s-%s-%s' % (device.ieee, endpoint_id,
+                                               cluster_id),
                 }
                 discovery_info.update(discovered_info)
                 cluster_key = '%s-%s' % (device_key, cluster_id)
