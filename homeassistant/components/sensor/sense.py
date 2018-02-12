@@ -89,7 +89,7 @@ class Sense(Entity):
     def __init__(self, data, name, sensor_type, is_production, update_call):
         """Initialize the sensor."""
         name_type = PRODUCTION_NAME if is_production else CONSUMPTION_NAME
-        self._name = name+" "+name_type
+        self._name = "%s %s" % (name, name_type)
         self._data = data
         self._sensor_type = sensor_type
         self.update_sensor = update_call
