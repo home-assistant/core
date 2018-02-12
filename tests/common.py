@@ -331,6 +331,12 @@ class MockModule(object):
         if setup is None and async_setup is None:
             self.async_setup = mock_coro_func(True)
 
+        if async_setup_entry is not None:
+            self.async_setup_entry = async_setup_entry
+
+        if async_unload_entry is not None:
+            self.async_unload_entry = async_unload_entry
+
 
 class MockPlatform(object):
     """Provide a fake platform."""
