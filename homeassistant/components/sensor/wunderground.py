@@ -7,10 +7,10 @@ https://home-assistant.io/components/sensor.wunderground/
 import asyncio
 from datetime import timedelta
 import logging
+import re
 
 import aiohttp
 import async_timeout
-import re
 import voluptuous as vol
 
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType

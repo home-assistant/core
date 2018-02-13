@@ -1,13 +1,13 @@
 """The tests for the WUnderground platform."""
 import asyncio
-
 import aiohttp
+
+from pytest import raises
+
 from homeassistant.core import callback
 from homeassistant.components.sensor import wunderground
 from homeassistant.const import TEMP_CELSIUS, LENGTH_INCHES, STATE_UNKNOWN
 from homeassistant.exceptions import PlatformNotReady
-from pytest import raises
-
 from tests.common import load_fixture
 
 VALID_CONFIG_PWS = {
@@ -93,37 +93,37 @@ def test_sensor(hass, aioclient_mock):
         friendly_name = device.name
 
         if entity_id == 'sensor.pws_weather':
-            assert 'https://icons.wxug.com/i/c/k/clear.gif' == \
-                   device.entity_picture
-            assert 'Clear' == device.state
+            assert device.entity_picture == \
+                'https://icons.wxug.com/i/c/k/clear.gif'
+            assert device.state == 'Clear'
             assert device.unit_of_measurement is None
-            assert "Weather Summary" == friendly_name
+            assert friendly_name == "Weather Summary"
         elif entity_id == 'sensor.pws_alerts':
-            assert 1 == device.state
-            assert 'This is a test alert message' == \
-                   device.device_state_attributes['Message']
-            assert 'mdi:alert-circle-outline' == device.icon
+            assert device.state == 1
+            assert device.device_state_attributes['Message'] == \
+                'This is a test alert message'
+            assert device.icon == 'mdi:alert-circle-outline'
             assert device.entity_picture is None
-            assert 'Alerts' == friendly_name
+            assert friendly_name == 'Alerts'
         elif entity_id == 'sensor.pws_location':
-            assert 'Holly Springs, NC' == device.state
-            assert 'Location' == friendly_name
+            assert device.state == 'Holly Springs, NC'
+            assert friendly_name == 'Location'
         elif entity_id == 'sensor.pws_elevation':
-            assert '413' == device.state
-            assert 'Elevation' == friendly_name
+            assert device.state == '413'
+            assert friendly_name == 'Elevation'
         elif entity_id == 'sensor.pws_feelslike_c':
             assert device.entity_picture is None
-            assert '40' == device.state
-            assert TEMP_CELSIUS == device.unit_of_measurement
-            assert "Feels Like" == friendly_name
+            assert device.state == '40'
+            assert device.unit_of_measurement == TEMP_CELSIUS
+            assert friendly_name == "Feels Like"
         elif entity_id == 'sensor.pws_weather_1d_metric':
-            assert 'Mostly Cloudy. Fog overnight.' == device.state
-            assert 'Tuesday' == friendly_name
+            assert device.state == 'Mostly Cloudy. Fog overnight.'
+            assert friendly_name == 'Tuesday'
         else:
-            assert 'sensor.pws_precip_1d_in' == entity_id
-            assert 0.03 == device.state
-            assert LENGTH_INCHES == device.unit_of_measurement
-            assert 'Precipitation Intensity Today' == friendly_name
+            assert entity_id == 'sensor.pws_precip_1d_in'
+            assert device.state == 0.03
+            assert device.unit_of_measurement == LENGTH_INCHES
+            assert friendly_name == 'Precipitation Intensity Today'
 
 
 @asyncio.coroutine
