@@ -115,8 +115,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Configure the platform and add the sensors."""
-    from zlib import adler32
-
     from pypollencom import Client
 
     _LOGGER.debug('Configuration data: %s', config)
@@ -143,7 +141,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             params,
             name,
             icon,
-            adler32(str(config[CONF_ZIP_CODE]).encode('utf-8'))
+            config[CONF_ZIP_CODE]
         ))
 
     add_devices(sensors, True)
@@ -161,7 +159,7 @@ def calculate_trend(list_of_nums):
 class BaseSensor(Entity):
     """Define a base class for all of our sensors."""
 
-    def __init__(self, data, data_params, name, icon, entity_id):
+    def __init__(self, data, data_params, name, icon, unique_id):
         """Initialize the sensor."""
         self._attrs = {}
         self._icon = icon
@@ -169,7 +167,7 @@ class BaseSensor(Entity):
         self._data_params = data_params
         self._state = None
         self._unit = None
-        self._entity_id = entity_id
+        self._unique_id = unique_id
         self.data = data
 
     @property
@@ -196,7 +194,7 @@ class BaseSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_{1}'.format(self._entity_id, slugify(self._name))
+        return '{0}_{1}'.format(self._unique_id, slugify(self._name))
 
     @property
     def unit_of_measurement(self):
