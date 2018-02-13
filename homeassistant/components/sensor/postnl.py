@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['postnl_api==0.1']
+REQUIREMENTS = ['postnl_api==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 CONF_UPDATE_INTERVAL = 'update_interval'
@@ -33,6 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 # pylint: disable=unused-argument
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the PostNL platform."""
 
@@ -52,13 +54,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([PostNLSensor(username, password, name, update_interval)], True)
 
+
 class PostNLSensor(Entity):
     """PostNL Sensor."""
 
     def __init__(self, username, password, name, interval):
         """Initialize the sensor."""
         self.friendly_name = name
-        self._name = 'postnl_' + name
+        # self._name = DOMAIN + '_' + name
+        self._name = name
         self._attributes = None
         self._state = None
 
@@ -95,14 +99,19 @@ class PostNLSensor(Entity):
         status_counts = defaultdict(str)
 
         def parse_date(date):
-            return datetime.strptime(date.group(1).replace(' ', '')[:-6], '%Y-%m-%dT%H:%M:%S').strftime('%d-%m om %H:%M')
+            return datetime.strptime(date.group(1).replace(' ', '')[:-6], '%Y-%m-%dT%H:%M:%S').strftime('%d-%m-%Y')
+
+        def parse_time(date):
+            return datetime.strptime(date.group(1).replace(' ', '')[:-6], '%Y-%m-%dT%H:%M:%S').strftime('%H:%M')
 
         for shipment in shipments:
             status = shipment['status']['formatted']['short']
-            status = re.sub(r'{(?:Date|time|dateAbs):(.*?)}', parse_date, status)
+            status = re.sub(r'{(?:Date|dateAbs):(.*?)}', parse_date, status)
+            status = re.sub(r'{(?:time):(.*?)}', parse_time, status)
+
             name = shipment['settings']['title']
             status_counts[name] = status
-   
+
         self._attributes = {
             ATTR_ATTRIBUTION: 'Information provided by PostNL'
         }
