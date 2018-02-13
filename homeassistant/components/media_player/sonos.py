@@ -485,7 +485,8 @@ class SonosDevice(MediaPlayerDevice):
 
         # Also update slaves
         for entity in self.hass.data[DATA_SONOS].devices:
-            if entity.coordinator == self:
+            coordinator = entity.coordinator
+            if coordinator and coordinator.unique_id == self.unique_id:
                 entity.schedule_update_ha_state()
 
     def process_rendering_event(self, event):
@@ -518,12 +519,11 @@ class SonosDevice(MediaPlayerDevice):
                 coordinator_uid, *slave_uids = group.split(',')
             else:
                 # Use SoCo cache for existing topology
-                grp = self.soco.group
-                coordinator = grp.coordinator
-                coordinator_uid = coordinator.uid
-                slave_uids = [p.uid for p in grp.members if p != coordinator]
+                coordinator_uid = self.soco.group.coordinator.uid
+                slave_uids = [p.uid for p in self.soco.group.members
+                              if p.uid != coordinator_uid]
 
-            if self == _get_entity_from_soco_uid(self.hass, coordinator_uid):
+            if self.unique_id == coordinator_uid:
                 self._coordinator = None
                 self.schedule_update_ha_state()
 
