@@ -21,6 +21,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
+from homeassistant.util import slugify
 
 REQUIREMENTS = ['PyXiaomiGateway==0.8.0']
 
@@ -213,8 +214,9 @@ class XiaomiDevice(Entity):
         self._name = '{}_{}'.format(name, self._sid)
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
+        self._unique_id = "aqara-" + slugify(self._name)
         self._device_state_attributes = {
-            'unique_id': self.unique_id
+            'unique_id': self._unique_id
         }
         self._remove_unavailability_tracker = None
         xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
@@ -237,7 +239,7 @@ class XiaomiDevice(Entity):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return "aqara-" + self._name
+        return self._unique_id
 
     @property
     def available(self):
