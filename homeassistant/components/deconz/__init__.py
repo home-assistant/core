@@ -17,7 +17,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import DATA_REGISTRY
 from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['pydeconz==28']
@@ -25,6 +24,7 @@ REQUIREMENTS = ['pydeconz==28']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'deconz'
+DATA_DECONZ_ID = 'deconz_entities'
 
 CONFIG_FILE = 'deconz.conf'
 
@@ -106,6 +106,7 @@ def async_setup_deconz(hass, config, deconz_config):
         return False
 
     hass.data[DOMAIN] = deconz
+    hass.data[DATA_DECONZ_ID] = {}
 
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
         hass.async_add_job(discovery.async_load_platform(
@@ -133,16 +134,11 @@ def async_setup_deconz(hass, config, deconz_config):
         data = call.data.get(SERVICE_DATA)
         deconz = hass.data[DOMAIN]
         if entity_id:
-            registry = hass.data.get(DATA_REGISTRY)
-            entity = registry.async_get_entry(entity_id)
-            for device in chain(deconz.groups.values(),
-                                deconz.lights.values(),
-                                deconz.sensors.values()):
-                if entity is not None and device.uniqueid == entity.unique_id:
-                    field = device.deconz_id
-                    break
+            entities = hass.data.get(DATA_DECONZ_ID)
+            if entities:
+                field = entities.get(entity_id)
             if field is None:
-                _LOGGER.error('Could\'nt find the entity %s', entity_id)
+                _LOGGER.error('Could not find the entity %s', entity_id)
                 return
         yield from deconz.async_put_state(field, data)
     hass.services.async_register(

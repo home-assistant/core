@@ -162,11 +162,3 @@ test.no_name:
         'test', 'super_platform', 'without-name')
     assert entry_with_name.name == 'registry override'
     assert entry_without_name.name is None
-
-
-@asyncio.coroutine
-def test_get_entry(registry):
-    """Test that get_entry works."""
-    entry = registry.async_get_or_create('light', 'hue', '1234')
-    assert registry.async_get_entry(entry.entity_id)
-    assert not registry.async_get_entry('light.non_existing')

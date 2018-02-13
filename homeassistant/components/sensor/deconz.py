@@ -6,7 +6,8 @@ https://home-assistant.io/components/sensor.deconz/
 """
 import asyncio
 
-from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
+from homeassistant.components.deconz import (
+    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
 from homeassistant.const import ATTR_BATTERY_LEVEL, CONF_EVENT, CONF_ID
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers.entity import Entity
@@ -25,7 +26,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return
 
     from pydeconz.sensor import DECONZ_SENSOR, SWITCH as DECONZ_REMOTE
-    sensors = hass.data[DECONZ_DATA].sensors
+    sensors = hass.data[DATA_DECONZ].sensors
     entities = []
 
     for key in sorted(sensors.keys(), key=int):
@@ -34,23 +35,25 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if sensor.type in DECONZ_REMOTE:
                 DeconzEvent(hass, sensor)
                 if sensor.battery:
-                    entities.append(DeconzBattery(sensor))
+                    entities.append(DeconzBattery(hass, sensor))
             else:
-                entities.append(DeconzSensor(sensor))
+                entities.append(DeconzSensor(hass, sensor))
     async_add_devices(entities, True)
 
 
 class DeconzSensor(Entity):
     """Representation of a sensor."""
 
-    def __init__(self, sensor):
+    def __init__(self, hass, sensor):
         """Set up sensor and add update callback to get data from websocket."""
+        self.hass = hass
         self._sensor = sensor
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
+        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
 
     @callback
     def async_update_callback(self, reason):
@@ -116,8 +119,9 @@ class DeconzSensor(Entity):
 class DeconzBattery(Entity):
     """Battery class for when a device is only represented as an event."""
 
-    def __init__(self, device):
+    def __init__(self, hass, device):
         """Register dispatcher callback for update of battery state."""
+        self.hass = hass
         self._device = device
         self._name = '{} {}'.format(self._device.name, 'Battery Level')
         self._device_class = 'battery'
@@ -127,6 +131,7 @@ class DeconzBattery(Entity):
     def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self._device.register_async_callback(self.async_update_callback)
+        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._device.deconz_id
 
     @callback
     def async_update_callback(self, reason):

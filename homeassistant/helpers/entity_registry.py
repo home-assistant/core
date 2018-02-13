@@ -91,11 +91,6 @@ class EntityRegistry:
         self.async_schedule_save()
         return entity
 
-    @callback
-    def async_get_entry(self, entity_id):
-        """Get entity."""
-        return self.entities.get(entity_id)
-
     @asyncio.coroutine
     def async_ensure_loaded(self):
         """Load the registry from disk."""
