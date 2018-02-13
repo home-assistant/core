@@ -51,7 +51,8 @@ def test_setup(hass, aioclient_mock):
     """Test that the component is loaded if passed in PWS Id."""
     aioclient_mock.get(URL, text=load_fixture('wunderground-valid.json'))
     aioclient_mock.get(PWS_URL, text=load_fixture('wunderground-valid.json'))
-    aioclient_mock.get(INVALID_URL, text=load_fixture('wunderground-error.json'))
+    aioclient_mock.get(INVALID_URL,
+                       text=load_fixture('wunderground-error.json'))
 
     result = yield from wunderground.async_setup_platform(
         hass, VALID_CONFIG_PWS, lambda _: None)
@@ -92,13 +93,15 @@ def test_sensor(hass, aioclient_mock):
         friendly_name = device.name
 
         if entity_id == 'sensor.pws_weather':
-            assert 'https://icons.wxug.com/i/c/k/clear.gif' == device.entity_picture
+            assert 'https://icons.wxug.com/i/c/k/clear.gif' == \
+                   device.entity_picture
             assert 'Clear' == device.state
             assert device.unit_of_measurement is None
             assert "Weather Summary" == friendly_name
         elif entity_id == 'sensor.pws_alerts':
             assert 1 == device.state
-            assert 'This is a test alert message' == device.device_state_attributes['Message']
+            assert 'This is a test alert message' == \
+                   device.device_state_attributes['Message']
             assert 'mdi:alert-circle-outline' == device.icon
             assert device.entity_picture is None
             assert 'Alerts' == friendly_name
