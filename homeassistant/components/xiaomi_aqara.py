@@ -214,7 +214,7 @@ class XiaomiDevice(Entity):
         self._name = '{}_{}'.format(name, self._sid)
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
-        self._unique_id = DOMAIN + slugify(self._name)
+        self._unique_id = DOMAIN + "_" + slugify(self._name)
         self._device_state_attributes = {
             'unique_id': self._unique_id
         }
