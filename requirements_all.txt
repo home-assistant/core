@@ -1242,6 +1242,7 @@ xboxapi==0.1.1
 xknx==0.7.18
 
 # homeassistant.components.media_player.bluesound
+# homeassistant.components.sensor.startca
 # homeassistant.components.sensor.swiss_hydrological_data
 # homeassistant.components.sensor.ted5000
 # homeassistant.components.sensor.yr
