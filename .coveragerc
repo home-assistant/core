@@ -335,6 +335,7 @@ omit =
     homeassistant/components/climate/sensibo.py
     homeassistant/components/climate/touchline.py
     homeassistant/components/climate/venstar.py
+    homeassistant/components/climate/xiaomi_miio.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py
     homeassistant/components/cover/knx.py
