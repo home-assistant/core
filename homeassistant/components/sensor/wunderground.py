@@ -4,21 +4,24 @@ Support for WUnderground weather service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.wunderground/
 """
+import asyncio
 from datetime import timedelta
 import logging
 
+import aiohttp
+import async_timeout
 import re
-import requests
 import voluptuous as vol
 
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
     TEMP_FAHRENHEIT, TEMP_CELSIUS, LENGTH_INCHES, LENGTH_KILOMETERS,
     LENGTH_MILES, LENGTH_FEET, STATE_UNKNOWN, ATTR_ATTRIBUTION)
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity, generate_entity_id
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -627,7 +630,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                         async_add_devices, discovery_info=None):
     """Set up the WUnderground sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -639,11 +644,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(WUndergroundSensor(hass, rest, variable))
 
-    rest.update()
+    yield from rest.async_update()
     if not rest.data:
         raise PlatformNotReady
 
-    add_devices(sensors)
+    async_add_devices(sensors)
 
     return True
 
@@ -663,7 +668,7 @@ class WUndergroundSensor(Entity):
         self._entity_picture = None
         self._unit_of_measurement = self._cfg_expand("unit_of_measurement")
         self.rest.request_feature(SENSOR_TYPES[condition].feature)
-        self.entity_id = generate_entity_id(
+        self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, "pws_" + condition, hass=hass)
 
     def _cfg_expand(self, what, default=None):
@@ -727,9 +732,10 @@ class WUndergroundSensor(Entity):
         """Return the units of measurement."""
         return self._unit_of_measurement
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Update current conditions."""
-        self.rest.update()
+        yield from self.rest.async_update()
 
         if not self.rest.data:
             # no data, return
@@ -764,7 +770,7 @@ class WUndergroundData(object):
 
     def _build_url(self, baseurl=_RESOURCE):
         url = baseurl.format(
-            self._api_key, "/".join(self._features), self._lang)
+            self._api_key, '/'.join(sorted(self._features)), self._lang)
         if self._pws_id:
             url = url + 'pws:{}'.format(self._pws_id)
         else:
@@ -772,20 +778,23 @@ class WUndergroundData(object):
 
         return url + '.json'
 
+    @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def async_update(self):
         """Get the latest data from WUnderground."""
         try:
-            result = requests.get(self._build_url(), timeout=10).json()
+            websession = async_get_clientsession(self._hass)
+            with async_timeout.timeout(10, loop=self._hass.loop):
+                response = yield from websession.get(self._build_url())
+            result = yield from response.json()
             if "error" in result['response']:
                 raise ValueError(result['response']["error"]
                                  ["description"])
-            else:
-                self.data = result
-                return True
+            self.data = result
+            return True
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
-            self.data = None
-        except requests.RequestException as err:
+        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Error fetching WUnderground data: %s", repr(err))
-            self.data = None
+        self.data = None
+        return False

@@ -1,13 +1,14 @@
 """The tests for the WUnderground platform."""
-import unittest
+import asyncio
 
+import aiohttp
+from homeassistant.core import callback
 from homeassistant.components.sensor import wunderground
 from homeassistant.const import TEMP_CELSIUS, LENGTH_INCHES, STATE_UNKNOWN
 from homeassistant.exceptions import PlatformNotReady
+from pytest import raises
 
-from requests.exceptions import ConnectionError
-
-from tests.common import get_test_home_assistant
+from tests.common import load_fixture
 
 VALID_CONFIG_PWS = {
     'platform': 'wunderground',
@@ -37,268 +38,116 @@ INVALID_CONFIG = {
     ]
 }
 
-FEELS_LIKE = '40'
-WEATHER = 'Clear'
-HTTPS_ICON_URL = 'https://icons.wxug.com/i/c/k/clear.gif'
-ALERT_MESSAGE = 'This is a test alert message'
-ALERT_ICON = 'mdi:alert-circle-outline'
-FORECAST_TEXT = 'Mostly Cloudy. Fog overnight.'
-PRECIP_IN = 0.03
+URL = 'http://api.wunderground.com/api/foo/alerts/conditions/forecast/lang' \
+      ':None/q/32.87336,-117.22743.json'
+PWS_URL = 'http://api.wunderground.com/api/foo/alerts/conditions/' \
+          'lang:None/q/pws:bar.json'
+INVALID_URL = 'http://api.wunderground.com/api/BOB/alerts/conditions/' \
+              'lang:foo/q/pws:bar.json'
 
 
-def mocked_requests_get(*args, **kwargs):
-    """Mock requests.get invocations."""
-    class MockResponse:
-        """Class to represent a mocked response."""
+@asyncio.coroutine
+def test_setup(hass, aioclient_mock):
+    """Test that the component is loaded if passed in PWS Id."""
+    aioclient_mock.get(URL, text=load_fixture('wunderground-valid.json'))
+    aioclient_mock.get(PWS_URL, text=load_fixture('wunderground-valid.json'))
+    aioclient_mock.get(INVALID_URL, text=load_fixture('wunderground-error.json'))
 
-        def __init__(self, json_data, status_code):
-            """Initialize the mock response class."""
-            self.json_data = json_data
-            self.status_code = status_code
+    result = yield from wunderground.async_setup_platform(
+        hass, VALID_CONFIG_PWS, lambda _: None)
+    assert result
 
-        def json(self):
-            """Return the json of the response."""
-            return self.json_data
+    aioclient_mock.get(URL, text=load_fixture('wunderground-valid.json'))
 
-    if str(args[0]).startswith('http://api.wunderground.com/api/foo/'):
-        return MockResponse({
-            "response": {
-                "version": "0.1",
-                "termsofService":
-                    "http://www.wunderground.com/weather/api/d/terms.html",
-                "features": {
-                    "conditions": 1,
-                    "alerts": 1,
-                    "forecast": 1,
-                }
-            }, "current_observation": {
-                "image": {
-                    "url":
-                        'http://icons.wxug.com/graphics/wu2/logo_130x80.png',
-                    "title": "Weather Underground",
-                    "link": "http://www.wunderground.com"
-                },
-                "feelslike_c": FEELS_LIKE,
-                "weather": WEATHER,
-                "icon_url": 'http://icons.wxug.com/i/c/k/clear.gif',
-                "display_location": {
-                    "city": "Holly Springs",
-                    "country": "US",
-                    "full": "Holly Springs, NC"
-                },
-                "observation_location": {
-                    "elevation": "413 ft",
-                    "full": "Twin Lake, Holly Springs, North Carolina"
-                },
-            }, "alerts": [
-                {
-                    "type": 'FLO',
-                    "description": "Areal Flood Warning",
-                    "date": "9:36 PM CDT on September 22, 2016",
-                    "expires": "10:00 AM CDT on September 23, 2016",
-                    "message": ALERT_MESSAGE,
-                },
+    result = yield from wunderground.async_setup_platform(
+        hass, VALID_CONFIG, lambda _: None)
+    assert result
 
-            ], "forecast": {
-                "txt_forecast": {
-                    "date": "22:35 CEST",
-                    "forecastday": [
-                        {
-                            "period": 0,
-                            "icon_url":
-                                "http://icons.wxug.com/i/c/k/clear.gif",
-                            "title": "Tuesday",
-                            "fcttext": FORECAST_TEXT,
-                            "fcttext_metric": FORECAST_TEXT,
-                            "pop": "0"
-                        },
-                    ],
-                }, "simpleforecast": {
-                    "forecastday": [
-                        {
-                            "date": {
-                                "pretty": "19:00 CEST 4. Duben 2017",
-                            },
-                            "period": 1,
-                            "high": {
-                                "fahrenheit": "56",
-                                "celsius": "13",
-                            },
-                            "low": {
-                                "fahrenheit": "43",
-                                "celsius": "6",
-                            },
-                            "conditions": "Možnost deště",
-                            "icon_url":
-                                "http://icons.wxug.com/i/c/k/chancerain.gif",
-                            "qpf_allday": {
-                                "in": PRECIP_IN,
-                                "mm": 1,
-                            },
-                            "maxwind": {
-                                "mph": 0,
-                                "kph": 0,
-                                "dir": "",
-                                "degrees": 0,
-                            },
-                            "avewind": {
-                                "mph": 0,
-                                "kph": 0,
-                                "dir": "severní",
-                                "degrees": 0
-                            }
-                        },
-                    ],
-                },
-            },
-        }, 200)
-    else:
-        return MockResponse({
-            "response": {
-                "version": "0.1",
-                "termsofService":
-                    "http://www.wunderground.com/weather/api/d/terms.html",
-                "features": {},
-                "error": {
-                    "type": "keynotfound",
-                    "description": "this key does not exist"
-                }
-            }
-        }, 200)
+    with raises(PlatformNotReady):
+        yield from wunderground.async_setup_platform(hass, INVALID_CONFIG,
+                                                     lambda _: None)
 
 
-def mocked_requests_get_invalid(*args, **kwargs):
-    """Mock requests.get invocations invalid data."""
-    class MockResponse:
-        """Class to represent a mocked response."""
+@asyncio.coroutine
+def test_sensor(hass, aioclient_mock):
+    """Test the WUnderground sensor class and methods."""
+    aioclient_mock.get(URL, text=load_fixture('wunderground-valid.json'))
 
-        def __init__(self, json_data, status_code):
-            """Initialize the mock response class."""
-            self.json_data = json_data
-            self.status_code = status_code
+    devices = []
 
-        def json(self):
-            """Return the json of the response."""
-            return self.json_data
-
-    return MockResponse({
-        "response": {
-            "version": "0.1",
-            "termsofService":
-                "http://www.wunderground.com/weather/api/d/terms.html",
-            "features": {
-                "conditions": 1,
-                "alerts": 1,
-                "forecast": 1,
-            }
-        }, "current_observation": {
-            "image": {
-                "url":
-                    'http://icons.wxug.com/graphics/wu2/logo_130x80.png',
-                "title": "Weather Underground",
-                "link": "http://www.wunderground.com"
-            },
-        },
-    }, 200)
-
-
-class TestWundergroundSetup(unittest.TestCase):
-    """Test the WUnderground platform."""
-
-    # pylint: disable=invalid-name
-    DEVICES = []
-
-    def add_devices(self, devices):
+    @callback
+    def async_add_devices(new_devices):
         """Mock add devices."""
-        for device in devices:
-            self.DEVICES.append(device)
+        for device in new_devices:
+            devices.append(device)
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.DEVICES = []
-        self.hass = get_test_home_assistant()
-        self.key = 'foo'
-        self.config = VALID_CONFIG_PWS
-        self.lat = 37.8267
-        self.lon = -122.423
-        self.hass.config.latitude = self.lat
-        self.hass.config.longitude = self.lon
+    result = yield from wunderground.async_setup_platform(hass, VALID_CONFIG,
+                                                          async_add_devices)
+    assert result
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
+    for device in devices:
+        yield from device.async_update()
+        entity_id = device.entity_id
+        assert entity_id.startswith('sensor.pws_')
+        friendly_name = device.name
 
-    @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
-    def test_setup(self, req_mock):
-        """Test that the component is loaded if passed in PWS Id."""
-        self.assertTrue(
-            wunderground.setup_platform(self.hass, VALID_CONFIG_PWS,
-                                        self.add_devices, None))
-        self.assertTrue(
-            wunderground.setup_platform(self.hass, VALID_CONFIG,
-                                        self.add_devices, None))
+        if entity_id == 'sensor.pws_weather':
+            assert 'https://icons.wxug.com/i/c/k/clear.gif' == device.entity_picture
+            assert 'Clear' == device.state
+            assert device.unit_of_measurement is None
+            assert "Weather Summary" == friendly_name
+        elif entity_id == 'sensor.pws_alerts':
+            assert 1 == device.state
+            assert 'This is a test alert message' == device.device_state_attributes['Message']
+            assert 'mdi:alert-circle-outline' == device.icon
+            assert device.entity_picture is None
+            assert 'Alerts' == friendly_name
+        elif entity_id == 'sensor.pws_location':
+            assert 'Holly Springs, NC' == device.state
+            assert 'Location' == friendly_name
+        elif entity_id == 'sensor.pws_elevation':
+            assert '413' == device.state
+            assert 'Elevation' == friendly_name
+        elif entity_id == 'sensor.pws_feelslike_c':
+            assert device.entity_picture is None
+            assert '40' == device.state
+            assert TEMP_CELSIUS == device.unit_of_measurement
+            assert "Feels Like" == friendly_name
+        elif entity_id == 'sensor.pws_weather_1d_metric':
+            assert 'Mostly Cloudy. Fog overnight.' == device.state
+            assert 'Tuesday' == friendly_name
+        else:
+            assert 'sensor.pws_precip_1d_in' == entity_id
+            assert 0.03 == device.state
+            assert LENGTH_INCHES == device.unit_of_measurement
+            assert 'Precipitation Intensity Today' == friendly_name
 
-        with self.assertRaises(PlatformNotReady):
-            wunderground.setup_platform(self.hass, INVALID_CONFIG,
-                                        self.add_devices, None)
 
-    @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
-    def test_sensor(self, req_mock):
-        """Test the WUnderground sensor class and methods."""
-        wunderground.setup_platform(self.hass, VALID_CONFIG, self.add_devices,
-                                    None)
-        for device in self.DEVICES:
-            device.update()
-            entity_id = device.entity_id
-            friendly_name = device.name
-            self.assertTrue(entity_id.startswith('sensor.pws_'))
-            if entity_id == 'sensor.pws_weather':
-                self.assertEqual(HTTPS_ICON_URL, device.entity_picture)
-                self.assertEqual(WEATHER, device.state)
-                self.assertIsNone(device.unit_of_measurement)
-                self.assertEqual("Weather Summary", friendly_name)
-            elif entity_id == 'sensor.pws_alerts':
-                self.assertEqual(1, device.state)
-                self.assertEqual(ALERT_MESSAGE,
-                                 device.device_state_attributes['Message'])
-                self.assertEqual(ALERT_ICON, device.icon)
-                self.assertIsNone(device.entity_picture)
-                self.assertEqual('Alerts', friendly_name)
-            elif entity_id == 'sensor.pws_location':
-                self.assertEqual('Holly Springs, NC', device.state)
-                self.assertEqual('Location', friendly_name)
-            elif entity_id == 'sensor.pws_elevation':
-                self.assertEqual('413', device.state)
-                self.assertEqual('Elevation', friendly_name)
-            elif entity_id == 'sensor.pws_feelslike_c':
-                self.assertIsNone(device.entity_picture)
-                self.assertEqual(FEELS_LIKE, device.state)
-                self.assertEqual(TEMP_CELSIUS, device.unit_of_measurement)
-                self.assertEqual("Feels Like", friendly_name)
-            elif entity_id == 'sensor.pws_weather_1d_metric':
-                self.assertEqual(FORECAST_TEXT, device.state)
-                self.assertEqual('Tuesday', friendly_name)
-            else:
-                self.assertEqual(entity_id, 'sensor.pws_precip_1d_in')
-                self.assertEqual(PRECIP_IN, device.state)
-                self.assertEqual(LENGTH_INCHES, device.unit_of_measurement)
-                self.assertEqual('Precipitation Intensity Today',
-                                 friendly_name)
+@asyncio.coroutine
+def test_connect_failed(hass, aioclient_mock):
+    """Test the WUnderground connection error."""
+    aioclient_mock.get(URL, exc=aiohttp.ClientError())
+    with raises(PlatformNotReady):
+        yield from wunderground.async_setup_platform(hass, VALID_CONFIG,
+                                                     lambda _: None)
 
-    @unittest.mock.patch('requests.get',
-                         side_effect=ConnectionError('test exception'))
-    def test_connect_failed(self, req_mock):
-        """Test the WUnderground connection error."""
-        with self.assertRaises(PlatformNotReady):
-            wunderground.setup_platform(self.hass, VALID_CONFIG,
-                                        self.add_devices, None)
 
-    @unittest.mock.patch('requests.get',
-                         side_effect=mocked_requests_get_invalid)
-    def test_invalid_data(self, req_mock):
-        """Test the WUnderground invalid data."""
-        wunderground.setup_platform(self.hass, VALID_CONFIG_PWS,
-                                    self.add_devices, None)
-        for device in self.DEVICES:
-            device.update()
-            self.assertEqual(STATE_UNKNOWN, device.state)
+@asyncio.coroutine
+def test_invalid_data(hass, aioclient_mock):
+    """Test the WUnderground invalid data."""
+    aioclient_mock.get(PWS_URL, text=load_fixture('wunderground-invalid.json'))
+    devices = []
+
+    @callback
+    def async_add_devices(new_devices):
+        """Mock add devices."""
+        for device in new_devices:
+            devices.append(device)
+
+    result = yield from wunderground.async_setup_platform(
+        hass, VALID_CONFIG_PWS, async_add_devices)
+    assert result
+
+    for device in devices:
+        yield from device.async_update()
+        assert STATE_UNKNOWN == device.state
