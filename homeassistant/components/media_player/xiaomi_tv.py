@@ -15,6 +15,8 @@ from homeassistant.components.media_player import (
 
 REQUIREMENTS = ['pymitv==1.0.0']
 
+DEFAULT_NAME="Xiaomi TV"
+
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_XIAOMI_TV = SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | \
@@ -23,7 +25,7 @@ SUPPORT_XIAOMI_TV = SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | \
 # No host is needed for configuration, however it can be set.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -43,11 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         else:
             # Register TV with Home Assistant.
-            if name is not None:
-                add_devices([XiaomiTV(host, name)])
-            else:
-                add_devices([XiaomiTV(host)])
-
+            add_devices([XiaomiTV(host, name)])
     else:
         # Otherwise, discover TVs on network.
         add_devices(XiaomiTV(tv) for tv in Discover().scan())
@@ -56,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class XiaomiTV(MediaPlayerDevice):
     """Represent the Xiaomi TV for Home Assistant."""
 
-    def __init__(self, ip, name="Xiaomi TV"):
+    def __init__(self, ip, name=DEFAULT_TV):
         """Receive IP address and name to construct class."""
         # Import pymitv library.
         from pymitv import TV
