@@ -168,10 +168,10 @@ class SpeedtestData(object):
 
         servers = [] if self._server_id is None else [self._server_id]
 
-        st = speedtest.Speedtest()
-        st.get_servers(servers)
-        st.get_best_server()
-        st.download()
-        st.upload()
+        speed = speedtest.Speedtest()
+        speed.get_servers(servers)
+        speed.get_best_server()
+        speed.download()
+        speed.upload()
 
-        self.data = st.results.dict()
+        self.data = speed.results.dict()
