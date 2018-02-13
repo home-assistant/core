@@ -77,7 +77,7 @@ class ExampleConfigFlow(config_entries.ConfigFlowHandler):
 
     @asyncio.coroutine
     def async_step_name(self, user_input=None):
-        """Ask user to press the name."""
+        """Ask user to enter the name."""
         errors = None
         if user_input is not None:
             name = user_input['name']

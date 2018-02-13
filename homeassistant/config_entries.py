@@ -364,7 +364,7 @@ class FlowManager:
     """Manage all the config flows that are in progress."""
 
     def __init__(self, hass, hass_config, async_add_entry):
-        """Initialize the config manager."""
+        """Initialize the flow manager."""
         self.hass = hass
         self._hass_config = hass_config
         self._progress = {}
@@ -473,7 +473,7 @@ class FlowManager:
 class ConfigFlowHandler:
     """Handle the configuration flow of a component."""
 
-    # Set by config manager
+    # Set by flow manager
     flow_id = None
     hass = None
     source = SOURCE_USER

@@ -9,10 +9,16 @@ def test_flow_works(hass):
     """Test that the config flow works."""
     result = yield from hass.config_entries.flow.async_init(
         'config_entry_example')
+
+    assert result['type'] == config_entries.RESULT_TYPE_FORM
+
     result = yield from hass.config_entries.flow.async_configure(
         result['flow_id'], {
             'object_id': 'bla'
         })
+
+    assert result['type'] == config_entries.RESULT_TYPE_FORM
+
     result = yield from hass.config_entries.flow.async_configure(
         result['flow_id'], {
             'name': 'Hello'
@@ -23,6 +29,7 @@ def test_flow_works(hass):
     assert state is not None
     assert state.name == 'Hello'
     assert 'config_entry_example' in hass.config.components
+    assert len(hass.config_entries.async_entries()) == 1
 
     # Test removing entry.
     entry = hass.config_entries.async_entries()[0]

@@ -24,18 +24,24 @@ def async_setup(hass):
 
 def _prepare_json(result):
     """Convert result for JSON."""
+    if result['type'] != config_entries.RESULT_TYPE_FORM:
+        return result
+
     import voluptuous_serialize
 
-    if result['type'] == config_entries.RESULT_TYPE_FORM:
-        schema = result['data_schema']
-        if schema is None:
-            result['data_schema'] = []
-        else:
-            result['data_schema'] = voluptuous_serialize.convert(schema)
+    result = result.copy()
+
+    schema = result['data_schema']
+    if schema is None:
+        result['data_schema'] = []
+    else:
+        result['data_schema'] = voluptuous_serialize.convert(schema)
+
+    return result
 
 
 class ConfigManagerEntryIndexView(HomeAssistantView):
-    """View to create config flows."""
+    """View to get available config entries."""
 
     url = '/api/config/config_entries/entry'
     name = 'api:config:config_entries:entry'
@@ -54,7 +60,7 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
 
 
 class ConfigManagerEntryResourceView(HomeAssistantView):
-    """View to create config flows."""
+    """View to interact with a config entry."""
 
     url = '/api/config/config_entries/entry/{entry_id}'
     name = 'api:config:config_entries:entry:resource'
@@ -107,13 +113,13 @@ class ConfigManagerFlowIndexView(HomeAssistantView):
         except config_entries.UnknownStep:
             return self.json_message('Handler does not support init', 400)
 
-        _prepare_json(result)
+        result = _prepare_json(result)
 
         return self.json(result)
 
 
 class ConfigManagerFlowResourceView(HomeAssistantView):
-    """View to interact with the config manager."""
+    """View to interact with the flow manager."""
 
     url = '/api/config/config_entries/flow/{flow_id}'
     name = 'api:config:config_entries:flow:resource'
@@ -129,7 +135,7 @@ class ConfigManagerFlowResourceView(HomeAssistantView):
         except config_entries.UnknownFlow:
             return self.json_message('Invalid flow specified', 404)
 
-        _prepare_json(result)
+        result = _prepare_json(result)
 
         return self.json(result)
 
@@ -147,7 +153,7 @@ class ConfigManagerFlowResourceView(HomeAssistantView):
         except vol.Invalid:
             return self.json_message('User input malformed', 400)
 
-        _prepare_json(result)
+        result = _prepare_json(result)
 
         return self.json(result)
 

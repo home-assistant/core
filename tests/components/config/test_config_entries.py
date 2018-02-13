@@ -11,8 +11,9 @@ from homeassistant import config_entries as core_ce
 from homeassistant.config_entries import ConfigFlowHandler, HANDLERS
 from homeassistant.setup import async_setup_component
 from homeassistant.components.config import config_entries
+from homeassistant.loader import set_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockModule, mock_coro_func
 
 
 @pytest.fixture
@@ -70,6 +71,7 @@ def test_remove_entry(hass, client):
     assert data == {
         'require_restart': True
     }
+    assert len(hass.config_entries.async_entries()) == 0
 
 
 @asyncio.coroutine
@@ -115,22 +117,27 @@ def test_initialize_flow(hass, client):
     assert resp.status == 200
     data = yield from resp.json()
 
-    assert data['title'] == 'test-title'
-    assert data['description'] == 'test-description'
-    assert data['data_schema'] == [
-        {
-            'name': 'username',
-            'required': True,
-            'type': 'string'
-        },
-        {
-            'name': 'password',
-            'required': True,
-            'type': 'string'
+    data.pop('flow_id')
+
+    assert data == {
+        'type': 'form',
+        'title': 'test-title',
+        'description': 'test-description',
+        'data_schema': [
+            {
+                'name': 'username',
+                'required': True,
+                'type': 'string'
+            },
+            {
+                'name': 'password',
+                'required': True,
+                'type': 'string'
+            }
+        ],
+        'errors': {
+            'username': 'Should be unique.'
         }
-    ]
-    assert data['errors'] == {
-        'username': 'Should be unique.'
     }
 
 
@@ -158,6 +165,9 @@ def test_abort(hass, client):
 @asyncio.coroutine
 def test_create_account(hass, client):
     """Test a flow that creates an account."""
+    set_component(
+        'test', MockModule('test', async_setup_entry=mock_coro_func(True)))
+
     class TestFlow(ConfigFlowHandler):
         VERSION = 1
 
@@ -184,6 +194,9 @@ def test_create_account(hass, client):
 @asyncio.coroutine
 def test_two_step_flow(hass, client):
     """Test we can finish a two step flow."""
+    set_component(
+        'test', MockModule('test', async_setup_entry=mock_coro_func(True)))
+
     class TestFlow(ConfigFlowHandler):
         VERSION = 1
 
@@ -208,27 +221,36 @@ def test_two_step_flow(hass, client):
                                       json={'domain': 'test'})
         assert resp.status == 200
         data = yield from resp.json()
-        assert data['type'] == 'form'
-        assert data['data_schema'] == [
-            {
-                'name': 'user_title',
-                'type': 'string'
-            }
-        ]
+        flow_id = data.pop('flow_id')
+        assert data == {
+            'type': 'form',
+            'title': 'test-title',
+            'description': None,
+            'data_schema': [
+                {
+                    'name': 'user_title',
+                    'type': 'string'
+                }
+            ],
+            'errors': None
+        }
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = yield from client.post(
-            '/api/config/config_entries/flow/{}'.format(data['flow_id']),
+            '/api/config/config_entries/flow/{}'.format(flow_id),
             json={'user_title': 'user-title'})
         assert resp.status == 200
         data = yield from resp.json()
-        assert data['type'] == 'create_entry'
-        assert data['title'] == 'user-title'
+        data.pop('flow_id')
+        assert data == {
+            'type': 'create_entry',
+            'title': 'user-title',
+        }
 
 
 @asyncio.coroutine
 def test_get_progress_index(hass, client):
-    """Test querying for ."""
+    """Test querying for the flows that are in progress."""
     class TestFlow(ConfigFlowHandler):
         VERSION = 5
 
