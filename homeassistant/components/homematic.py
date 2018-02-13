@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['pyhomematic==0.1.38']
+REQUIREMENTS = ['pyhomematic==0.1.39']
 
 DOMAIN = 'homematic'
 
@@ -209,7 +209,7 @@ SCHEMA_SERVICE_RECONNECT = vol.Schema({})
 
 
 def virtualkey(hass, address, channel, param, proxy=None):
-    """Send virtual keypress to homematic controlller."""
+    """Send virtual keypress to homematic controller."""
     data = {
         ATTR_ADDRESS: address,
         ATTR_CHANNEL: channel,

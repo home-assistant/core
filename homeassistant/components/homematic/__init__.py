@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.38']
+REQUIREMENTS = ['pyhomematic==0.1.39']
 DOMAIN = 'homematic'
 _LOGGER = logging.getLogger(__name__)
 
@@ -220,7 +220,7 @@ SCHEMA_SERVICE_SET_INSTALL_MODE = vol.Schema({
 
 @bind_hass
 def virtualkey(hass, address, channel, param, interface=None):
-    """Send virtual keypress to homematic controlller."""
+    """Send virtual keypress to homematic controller."""
     data = {
         ATTR_ADDRESS: address,
         ATTR_CHANNEL: channel,
@@ -258,7 +258,7 @@ def set_device_value(hass, address, channel, param, value, interface=None):
 
 @bind_hass
 def set_install_mode(hass, interface, mode=None, time=None, address=None):
-    """Call setInstallMode XML-RPC method of supplied inteface."""
+    """Call setInstallMode XML-RPC method of supplied interface."""
     data = {
         key: value for key, value in (
             (ATTR_INTERFACE, interface),
@@ -668,7 +668,7 @@ class HMHub(Entity):
             self.schedule_update_ha_state()
 
     def _update_variables(self, now):
-        """Retrive all variable data and update hmvariable states."""
+        """Retrieve all variable data and update hmvariable states."""
         variables = self._homematic.getAllSystemVariables(self._name)
         if variables is None:
             return
