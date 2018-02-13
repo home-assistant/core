@@ -428,8 +428,8 @@ def _system_callback_handler(hass, config, src, *args):
                     ('cover', DISCOVER_COVER),
                     ('binary_sensor', DISCOVER_BINARY_SENSORS),
                     ('sensor', DISCOVER_SENSORS),
-                    ('climate', DISCOVER_CLIMATE)
-		    ('lock', DISCOVER_LOCK)):
+                    ('climate', DISCOVER_CLIMATE),
+                    ('lock', DISCOVER_LOCK)):
                 # Get all devices of a specific type
                 found_devices = _get_devices(
                     hass, discovery_type, addresses, proxy)
