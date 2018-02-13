@@ -155,7 +155,7 @@ class AirVisualBaseSensor(Entity):
             self._attrs[ATTR_LATITUDE] = self.data.latitude
             self._attrs[ATTR_LONGITUDE] = self.data.longitude
         else:
-            self._attrs['lat'] = self.data.latitude
+            self._attrs['lati'] = self.data.latitude
             self._attrs['long'] = self.data.longitude
 
         return self._attrs
