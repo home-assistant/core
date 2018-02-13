@@ -32,10 +32,6 @@ PLATFORM_SCHEMA = vol.Schema({
 def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up the scenes for KNX platform."""
-    if DATA_KNX not in hass.data \
-            or not hass.data[DATA_KNX].initialized:
-        return False
-
     if discovery_info is not None:
         async_add_devices_discovery(hass, discovery_info, async_add_devices)
     else:
@@ -80,16 +76,7 @@ class KNXScene(Scene):
         """Return the name of the scene."""
         return self.scene.name
 
-    @property
-    def should_poll(self):
-        """Return that polling is not necessary."""
-        return False
-
-    @property
-    def is_on(self):
-        """There is no way of detecting if a scene is active (yet)."""
-        return False
-
-    def activate(self):
+    @asyncio.coroutine
+    def async_activate(self):
         """Activate the scene."""
-        self.hass.async_add_job(self.scene.run())
+        yield from self.scene.run()

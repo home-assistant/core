@@ -224,19 +224,20 @@ class KNXModule(object):
     def create_exposures(self):
         """Create exposures."""
         exposures = []
-        if CONF_KNX_EXPOSE in self.config[DOMAIN]:
-            for to_expose in self.config[DOMAIN][CONF_KNX_EXPOSE]:
-                expose_type = to_expose.get(CONF_KNX_EXPOSE_TYPE)
-                entity_id = to_expose.get(CONF_KNX_EXPOSE_ENTITY_ID)
-                address = to_expose.get(CONF_KNX_EXPOSE_ADDRESS)
-                if expose_type in ['time', 'date', 'datetime']:
-                    exposure = KNXExposeTime(
-                        self.hass, self.xknx, expose_type, address)
-                    exposures.append(exposure)
-                else:
-                    exposure = KNXExposeSensor(
-                        self.hass, self.xknx, expose_type, entity_id, address)
-                    exposures.append(exposure)
+        if CONF_KNX_EXPOSE not in self.config[DOMAIN]:
+            return exposures
+        for to_expose in self.config[DOMAIN][CONF_KNX_EXPOSE]:
+            expose_type = to_expose.get(CONF_KNX_EXPOSE_TYPE)
+            entity_id = to_expose.get(CONF_KNX_EXPOSE_ENTITY_ID)
+            address = to_expose.get(CONF_KNX_EXPOSE_ADDRESS)
+            if expose_type in ['time', 'date', 'datetime']:
+                exposure = KNXExposeTime(
+                    self.hass, self.xknx, expose_type, address)
+                exposures.append(exposure)
+            else:
+                exposure = KNXExposeSensor(
+                    self.hass, self.xknx, expose_type, entity_id, address)
+                exposures.append(exposure)
         return exposures
 
     @asyncio.coroutine
@@ -310,8 +311,6 @@ class KNXExposeTime(object):
             broadcast_type=broadcast_type,
             group_address=self.address)
         self.xknx.devices.add(self.device)
-        async_track_utc_time_change(
-            self.hass, self.device.broadcast_time, second=0)
 
 
 class KNXExposeSensor(object):
