@@ -15,6 +15,7 @@ import homeassistant.core as ha
 import homeassistant.config as conf_util
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.helpers import intent
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
@@ -154,6 +155,12 @@ def async_setup(hass, config):
         ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service)
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service)
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        intent.INTENT_TURN_ON, ha.DOMAIN, SERVICE_TURN_ON, "Turned on {}"))
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        intent.INTENT_TURN_OFF, ha.DOMAIN, SERVICE_TURN_OFF, "Turned off {}"))
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        intent.INTENT_TOGGLE, ha.DOMAIN, SERVICE_TOGGLE, "Toggled {}"))
 
     @asyncio.coroutine
     def async_handle_core_service(call):

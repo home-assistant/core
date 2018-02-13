@@ -96,12 +96,11 @@ class UbusDeviceScanner(DeviceScanner):
         raise NotImplementedError
 
     @_refresh_on_access_denied
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if self.mac2name is None:
             self._generate_mac2name()
-        name = self.mac2name.get(mac.upper(), None)
-        self.mac2name = None
+        name = self.mac2name.get(device.upper(), None)
         return name
 
     @_refresh_on_access_denied
@@ -122,13 +121,18 @@ class UbusDeviceScanner(DeviceScanner):
 
         self.last_results = []
         results = 0
+        # for each access point
         for hostapd in self.hostapd:
             result = _req_json_rpc(
                 self.url, self.session_id, 'call', hostapd, 'get_clients')
 
             if result:
                 results = results + 1
-                self.last_results.extend(result['clients'].keys())
+                # Check for each device is authorized (valid wpa key)
+                for key in result['clients'].keys():
+                    device = result['clients'][key]
+                    if device['authorized']:
+                        self.last_results.append(key)
 
         return bool(results)
 

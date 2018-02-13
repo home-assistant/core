@@ -24,7 +24,7 @@ SLOW_SETUP_WARNING = 10
 
 
 def setup_component(hass: core.HomeAssistant, domain: str,
-                    config: Optional[Dict]=None) -> bool:
+                    config: Optional[Dict] = None) -> bool:
     """Set up a component and all its dependencies."""
     return run_coroutine_threadsafe(
         async_setup_component(hass, domain, config), loop=hass.loop).result()
@@ -32,7 +32,7 @@ def setup_component(hass: core.HomeAssistant, domain: str,
 
 @asyncio.coroutine
 def async_setup_component(hass: core.HomeAssistant, domain: str,
-                          config: Optional[Dict]=None) -> bool:
+                          config: Optional[Dict] = None) -> bool:
     """Set up a component and all its dependencies.
 
     This method is a coroutine.
@@ -206,7 +206,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
         return platform
 
     try:
-        yield from _process_deps_reqs(hass, config, platform_name, platform)
+        yield from _process_deps_reqs(hass, config, platform_path, platform)
     except HomeAssistantError as err:
         log_error(str(err))
         return None

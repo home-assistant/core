@@ -95,13 +95,13 @@ class SnmpSwitch(SwitchDevice):
         self._payload_on = payload_on
         self._payload_off = payload_off
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn on the switch."""
         from pyasn1.type.univ import (Integer)
 
         self._set(Integer(self._command_payload_on))
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn off the switch."""
         from pyasn1.type.univ import (Integer)
 
