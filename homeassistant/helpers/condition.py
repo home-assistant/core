@@ -239,32 +239,41 @@ def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
 
-    sunrise = get_astral_event_date(hass, 'sunrise', today)
-    sunset = get_astral_event_date(hass, 'sunset', today)
+	sunrise_next = get_astral_event_next(hass, 'sunrise')
+	sunset_next = get_astral_event_next(hass, 'sunset')
+	sunrise_last = get_lastral_event_date_last(hass, 'sunrise')
+	sunset_last = get_astral_event_date_last(hass, 'sunset')
 
-    if sunrise is None and (before == SUN_EVENT_SUNRISE or
-                            after == SUN_EVENT_SUNRISE):
-        # There is no sunrise today
-        return False
+	before_gate = False;
+	after_gate = False;
+	
+	# define the default before condition if None
+	if (before == None):
+		if (after == SUN_EVENT_SUNRISE):
+			before = SUN_EVENT_SUNSET
+		else:
+			before = SUN_EVENT_SUNRISE
 
-    if sunset is None and (before == SUN_EVENT_SUNSET or
-                           after == SUN_EVENT_SUNSET):
-        # There is no sunset today
-        return False
+	# define the default after condition if None
+	if (after == None):
+		if (before == SUN_EVENT_SUNRISE):
+			after = SUN_EVENT_SUNSET
+		else:
+			after = SUN_EVENT_SUNRISE
 
-    if before == SUN_EVENT_SUNRISE and utcnow > sunrise + before_offset:
-        return False
+	if (before == SUN_EVENT_SUNRISE and utcnow < sunrise_next + before_offset):
+		before_gate = True;
 
-    elif before == SUN_EVENT_SUNSET and utcnow > sunset + before_offset:
-        return False
+	elif (before == SUN_EVENT_SUNSET and utcnow < sunset_next + before_offset):
+		before_gate = True;
 
-    if after == SUN_EVENT_SUNRISE and utcnow < sunrise + after_offset:
-        return False
+	if (after == SUN_EVENT_SUNRISE and utcnow > sunrise_last + after_offset):
+		after_gate = True;
+	
+	elif (after == SUN_EVENT_SUNSET and utcnow > sunset_last + after_offset):
+		after_gate = True;
 
-    elif after == SUN_EVENT_SUNSET and utcnow < sunset + after_offset:
-        return False
-
-    return True
+	return before_gate and after_gate;
 
 
 def sun_from_config(config, config_validation=True):
