@@ -1,8 +1,8 @@
 """
-Support for HomeMatic switches.
+Support for HomeMatic lock.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.homematic/
+https://home-assistant.io/components/lock.homematic/
 """
 import logging
 from homeassistant.components.lock import LockDevice
@@ -21,8 +21,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     devices = []
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
-        new_device = HMLock(conf)
-        devices.append(new_device)
+        devices.append(HMLock(conf))
 
     add_devices(devices)
 
@@ -52,8 +51,3 @@ class HMLock(HMDevice, LockDevice):
         """Unlock the device."""
         self._hmdevice.unlock(self._channel)
         self._state = STATE_UNLOCKED
-
-    def update(self):
-        """Update state by device callback."""
-        self._state = (STATE_LOCKED if self.is_locked()
-                       else STATE_UNLOCKED)
