@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import rxv
     # Keep track of configured receivers so that we don't end up
     # discovering a receiver dynamically that we have static config
-    # for. Map each device from its unique_id to an instance since
+    # for. Map each device from its zone_id to an instance since
     # YamahaDevice is not hashable (thus not possible to add to a set).
     if hass.data.get(DATA_YAMAHA) is None:
         hass.data[DATA_YAMAHA] = {}
@@ -100,8 +100,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                               source_names, zone_names)
 
         # Only add device if it's not already added
-        if device.unique_id not in hass.data[DATA_YAMAHA]:
-            hass.data[DATA_YAMAHA][device.unique_id] = device
+        if device.zone_id not in hass.data[DATA_YAMAHA]:
+            hass.data[DATA_YAMAHA][device.zone_id] = device
             devices.append(device)
         else:
             _LOGGER.debug('Ignoring duplicate receiver %s', name)
@@ -219,6 +219,11 @@ class YamahaDevice(MediaPlayerDevice):
     def source_list(self):
         """List of available input sources."""
         return self._source_list
+
+    @property
+    def zone_id(self):
+        """Return an zone_id to ensure 1 media player per zone."""
+        return '{0}:{1}'.format(self.receiver.ctrl_url, self._zone)
 
     @property
     def supported_features(self):
