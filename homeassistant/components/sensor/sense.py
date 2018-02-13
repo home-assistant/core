@@ -30,8 +30,8 @@ class SensorConfig(object):
     """ Data structure holding sensor config"""
     def __init__(self, name, sensor_type):
         """ Sensor name and type to pass to API """
-        self.name = name,
-        self.type = sensor_type
+        self.name = name
+        self.sensor_type = sensor_type
 
 # Sensor types/ranges
 SENSOR_TYPES = {'active'  : SensorConfig(ACTIVE_NAME, ACTIVE_TYPE),
@@ -79,6 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     def update_active():
         """Update the active power usage."""
         data.get_realtime()
+        print ("Getting realtime")
 
     devices = []
     for sensor in config.get(CONF_MONITORED_CONDITIONS):
@@ -86,7 +87,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = SENSOR_TYPES[config_name].name
         sensor_type = SENSOR_TYPES[config_name].sensor_type
         is_production = prod == PRODUCTION_NAME.lower()
-        if name == ACTIVE_NAME.lower():
+        if sensor_type == ACTIVE_TYPE:
             update_call = update_active
         else: 
             update_call = update_trends            
