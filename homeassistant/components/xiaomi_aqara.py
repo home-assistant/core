@@ -213,7 +213,9 @@ class XiaomiDevice(Entity):
         self._name = '{}_{}'.format(name, self._sid)
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
-        self._device_state_attributes = {}
+        self._device_state_attributes = {
+            'unique_id': self.unique_id
+        }
         self._remove_unavailability_tracker = None
         xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
         self.parse_data(device['data'], device['raw_data'])
@@ -231,6 +233,11 @@ class XiaomiDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self) -> str:
+        """Return an unique ID."""
+        return "aqara-" + self._name
 
     @property
     def available(self):
