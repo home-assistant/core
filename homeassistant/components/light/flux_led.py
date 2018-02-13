@@ -46,7 +46,7 @@ EFFECT_GREEN_BLUE_CROSS_FADE = 'gb_cross_fade'
 EFFECT_COLORSTROBE = 'colorstrobe'
 EFFECT_RED_STROBE = 'red_strobe'
 EFFECT_GREEN_STROBE = 'green_strobe'
-EFFECT_BLUE_STOBE = 'blue_strobe'
+EFFECT_BLUE_STROBE = 'blue_strobe'
 EFFECT_YELLOW_STROBE = 'yellow_strobe'
 EFFECT_CYAN_STROBE = 'cyan_strobe'
 EFFECT_PURPLE_STROBE = 'purple_strobe'
@@ -68,7 +68,7 @@ EFFECT_MAP = {
     EFFECT_COLORSTROBE:           0x30,
     EFFECT_RED_STROBE:            0x31,
     EFFECT_GREEN_STROBE:          0x32,
-    EFFECT_BLUE_STOBE:            0x33,
+    EFFECT_BLUE_STROBE:            0x33,
     EFFECT_YELLOW_STROBE:         0x34,
     EFFECT_CYAN_STROBE:           0x35,
     EFFECT_PURPLE_STROBE:         0x36,
@@ -166,11 +166,6 @@ class FluxLight(Light):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._bulb is not None
-
-    @property
-    def unique_id(self):
-        """Return the ID of this light."""
-        return '{}.{}'.format(self.__class__, self._ipaddr)
 
     @property
     def name(self):

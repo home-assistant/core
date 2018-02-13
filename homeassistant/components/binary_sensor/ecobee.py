@@ -51,11 +51,6 @@ class EcobeeBinarySensor(BinarySensorDevice):
         return self._state == 'true'
 
     @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return "binary_sensor_ecobee_{}_{}".format(self._name, self.index)
-
-    @property
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._device_class

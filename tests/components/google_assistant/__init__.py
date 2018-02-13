@@ -211,7 +211,7 @@ DEMO_DEVICES = [{
     'type': 'action.devices.types.THERMOSTAT',
     'willReportState': False,
     'attributes': {
-        'availableThermostatModes': 'heat,cool,off',
+        'availableThermostatModes': 'heat,cool,heatcool,off',
         'thermostatTemperatureUnit': 'C',
     },
 }, {

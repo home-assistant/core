@@ -133,7 +133,7 @@ class MailboxEntity(Entity):
 
 
 class Mailbox(object):
-    """Represent an mailbox device."""
+    """Represent a mailbox device."""
 
     def __init__(self, hass, name):
         """Initialize mailbox object."""

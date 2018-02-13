@@ -25,7 +25,7 @@ send_message:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
     inline_keyboard:
-      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or ["Text button1:/button1, Text button2:/button2", "Text button3:/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 send_photo:
@@ -56,7 +56,7 @@ send_photo:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
     inline_keyboard:
-      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 send_video:
@@ -87,7 +87,7 @@ send_video:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
     inline_keyboard:
-      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 send_document:
@@ -118,7 +118,7 @@ send_document:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
     inline_keyboard:
-      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 send_location:
@@ -140,7 +140,7 @@ send_location:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
     inline_keyboard:
-      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 edit_message:
@@ -165,7 +165,7 @@ edit_message:
       description: Disables link previews for links in the message.
       example: true
     inline_keyboard:
-      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 edit_caption:
@@ -181,7 +181,7 @@ edit_caption:
       description: Message body of the notification.
       example: The garage door has been open for 10 minutes.
     inline_keyboard:
-      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 edit_replymarkup:
@@ -194,7 +194,7 @@ edit_replymarkup:
       description: The chat_id where to edit the reply_markup.
       example: 12345
     inline_keyboard:
-      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 answer_callback_query:

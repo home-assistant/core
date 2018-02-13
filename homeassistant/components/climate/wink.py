@@ -30,6 +30,8 @@ ATTR_SCHEDULE_ENABLED = 'schedule_enabled'
 ATTR_SMART_TEMPERATURE = 'smart_temperature'
 ATTR_TOTAL_CONSUMPTION = 'total_consumption'
 ATTR_VACATION_MODE = 'vacation_mode'
+ATTR_HEAT_ON = 'heat_on'
+ATTR_COOL_ON = 'cool_on'
 
 DEPENDENCIES = ['wink']
 
@@ -131,6 +133,12 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         if self.eco_target:
             data[ATTR_ECO_TARGET] = self.eco_target
 
+        if self.heat_on:
+            data[ATTR_HEAT_ON] = self.heat_on
+
+        if self.cool_on:
+            data[ATTR_COOL_ON] = self.cool_on
+
         current_humidity = self.current_humidity
         if current_humidity is not None:
             data[ATTR_CURRENT_HUMIDITY] = current_humidity
@@ -173,6 +181,16 @@ class WinkThermostat(WinkDevice, ClimateDevice):
     def occupied(self):
         """Return status of if the thermostat has detected occupancy."""
         return self.wink.occupied()
+
+    @property
+    def heat_on(self):
+        """Return whether or not the heat is actually heating."""
+        return self.wink.heat_on()
+
+    @property
+    def cool_on(self):
+        """Return whether or not the heat is actually heating."""
+        return self.wink.heat_on()
 
     @property
     def current_operation(self):
@@ -306,9 +324,9 @@ class WinkThermostat(WinkDevice, ClimateDevice):
             return self.wink.fan_modes()
         return None
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Turn fan on/off."""
-        self.wink.set_fan_mode(fan.lower())
+        self.wink.set_fan_mode(fan_mode.lower())
 
     def turn_aux_heat_on(self):
         """Turn auxiliary heater on."""
@@ -468,26 +486,25 @@ class WinkAC(WinkDevice, ClimateDevice):
             return SPEED_LOW
         elif speed <= 0.66:
             return SPEED_MEDIUM
-        else:
-            return SPEED_HIGH
+        return SPEED_HIGH
 
     @property
     def fan_list(self):
         """Return a list of available fan modes."""
         return [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """
         Set fan speed.
 
         The official Wink app only supports 3 modes [low, medium, high]
         which are equal to [0.33, 0.66, 1.0] respectively.
         """
-        if fan == SPEED_LOW:
+        if fan_mode == SPEED_LOW:
             speed = 0.33
-        elif fan == SPEED_MEDIUM:
+        elif fan_mode == SPEED_MEDIUM:
             speed = 0.66
-        elif fan == SPEED_HIGH:
+        elif fan_mode == SPEED_HIGH:
             speed = 1.0
         self.wink.set_ac_fan_speed(speed)
 

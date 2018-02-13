@@ -1,7 +1,7 @@
 """
 Support for BME680 Sensor over SMBus.
 
-Temperature, humidity, pressure and volitile gas support.
+Temperature, humidity, pressure and volatile gas support.
 Air Quality calculation based on humidity and volatile gas.
 
 For more details about this platform, please refer to the documentation at
@@ -70,7 +70,8 @@ FILTER_VALUES = set([0, 1, 3, 7, 15, 31, 63, 127])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): cv.string,
+    vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS):
+        cv.positive_int,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): cv.positive_int,
@@ -115,7 +116,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     return
 
 
-# pylint: disable=import-error
+# pylint: disable=import-error, no-member
 def _setup_bme680(config):
     """Set up and configure the BME680 sensor."""
     from smbus import SMBus
@@ -174,7 +175,7 @@ def _setup_bme680(config):
         else:
             sensor.set_gas_status(bme680.DISABLE_GAS_MEAS)
     except (RuntimeError, IOError):
-        _LOGGER.error("BME680 sensor not detected at %s", i2c_address)
+        _LOGGER.error("BME680 sensor not detected at 0x%02x", i2c_address)
         return None
 
     sensor_handler = BME680Handler(
@@ -237,7 +238,7 @@ class BME680Handler:
 
         self._gas_sensor_running = True
 
-        # Pause to allow inital data read for device validation.
+        # Pause to allow initial data read for device validation.
         sleep(1)
 
         start_time = time()

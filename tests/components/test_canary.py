@@ -17,12 +17,12 @@ def mock_device(device_id, name, is_online=True):
     return device
 
 
-def mock_location(name, is_celsius=True, devices=[]):
+def mock_location(name, is_celsius=True, devices=None):
     """Mock Canary Location class."""
     location = MagicMock()
     type(location).name = PropertyMock(return_value=name)
     type(location).is_celsius = PropertyMock(return_value=is_celsius)
-    type(location).devices = PropertyMock(return_value=devices)
+    type(location).devices = PropertyMock(return_value=devices or [])
     return location
 
 

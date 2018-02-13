@@ -11,8 +11,8 @@ def populate_data():
     These cannot be module level, as importing bellows must be done in a
     in a function.
     """
-    from bellows.zigbee import zcl
-    from bellows.zigbee.profiles import PROFILES, zha, zll
+    from zigpy import zcl
+    from zigpy.profiles import PROFILES, zha, zll
 
     DEVICE_CLASS[zha.PROFILE_ID] = {
         zha.DeviceType.ON_OFF_SWITCH: 'switch',

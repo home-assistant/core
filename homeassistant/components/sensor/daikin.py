@@ -57,7 +57,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DaikinClimateSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, api, monitored_state, units: UnitSystem, name=None):
+    def __init__(self, api, monitored_state, units: UnitSystem,
+                 name=None) -> None:
         """Initialize the sensor."""
         self._api = api
         self._sensor = SENSOR_TYPES.get(monitored_state)
@@ -93,11 +94,6 @@ class DaikinClimateSensor(Entity):
                     value = None
 
         return value
-
-    @property
-    def unique_id(self):
-        """Return the ID of this AC."""
-        return "{}.{}".format(self.__class__, self._api.ip_address)
 
     @property
     def icon(self):

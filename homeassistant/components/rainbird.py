@@ -27,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Set up the Rain Bird componenent."""
+    """Set up the Rain Bird component."""
     conf = config[DOMAIN]
     server = conf.get(CONF_HOST)
     password = conf.get(CONF_PASSWORD)
@@ -38,8 +38,8 @@ def setup(hass, config):
 
     _LOGGER.debug("Rain Bird Controller set to: %s", server)
 
-    initialstatus = controller.currentIrrigation()
-    if initialstatus == -1:
+    initial_status = controller.currentIrrigation()
+    if initial_status == -1:
         _LOGGER.error("Error getting state. Possible configuration issues")
         return False
 
