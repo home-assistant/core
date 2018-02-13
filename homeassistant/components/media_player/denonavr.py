@@ -6,15 +6,18 @@ https://home-assistant.io/components/media_player.denon/
 """
 
 import logging
-from collections import namedtuple
+from collections import (namedtuple, OrderedDict)
+import urllib
+import xml.etree.ElementTree as ET
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_PAUSE, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL,
-    MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_TURN_ON,
-    MEDIA_TYPE_MUSIC, SUPPORT_VOLUME_SET, SUPPORT_PLAY)
+    SUPPORT_SELECT_SOURCE, SUPPORT_SELECT_SOUND_MODE,
+    SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL, MediaPlayerDevice,
+    PLATFORM_SCHEMA, SUPPORT_TURN_ON, MEDIA_TYPE_MUSIC,
+    SUPPORT_VOLUME_SET, SUPPORT_PLAY)
 from homeassistant.const import (
     CONF_HOST, STATE_OFF, STATE_PLAYING, STATE_PAUSED,
     CONF_NAME, STATE_ON, CONF_ZONE, CONF_TIMEOUT)
@@ -27,8 +30,19 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = None
 DEFAULT_SHOW_SOURCES = False
 DEFAULT_TIMEOUT = 2
+DEFAULT_SOUND_MODE = True
+DEFAULT_SOUND_MODE_DICT = OrderedDict([('MUSIC', 'PLII MUSIC'),
+                                       ('MOVIE', 'PLII MOVIE'),
+                                       ('GAME', 'PLII GAME'),
+                                       ('PURE DIRECT', 'DIRECT'),
+                                       ('AUTO', 'None'),
+                                       ('DOLBY DIGITAL', 'DOLBY DIGITAL'),
+                                       ('MCH STEREO', 'MULTI CH STEREO'),
+                                       ('STEREO', 'STEREO')])
 CONF_SHOW_ALL_SOURCES = 'show_all_sources'
 CONF_ZONES = 'zones'
+CONF_SOUND_MODE = 'sound_mode'
+CONF_SOUND_MODE_DICT = 'sound_mode_dict'
 CONF_VALID_ZONES = ['Zone2', 'Zone3']
 CONF_INVALID_ZONES_ERR = 'Invalid Zone (expected Zone2 or Zone3)'
 KEY_DENON_CACHE = 'denonavr_hosts'
@@ -49,6 +63,9 @@ DENON_ZONE_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SOUND_MODE, default=DEFAULT_SOUND_MODE): cv.boolean,
+    vol.Optional(CONF_SOUND_MODE_DICT,
+                 default=DEFAULT_SOUND_MODE_DICT): vol.Schema({str: str}),
     vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES):
         cv.boolean,
     vol.Optional(CONF_ZONES):
@@ -74,6 +91,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Get config option for show_all_sources and timeout
     show_all_sources = config.get(CONF_SHOW_ALL_SOURCES)
     timeout = config.get(CONF_TIMEOUT)
+    sound_mode_support = config.get(CONF_SOUND_MODE)
+    sound_mode_dict = config.get(CONF_SOUND_MODE_DICT)
 
     # Get config option for additional zones
     zones = config.get(CONF_ZONES)
@@ -117,7 +136,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 show_all_inputs=show_all_sources, timeout=timeout,
                 add_zones=add_zones)
             for new_zone in new_device.zones.values():
-                receivers.append(DenonDevice(new_zone))
+                receivers.append(DenonDevice(new_zone, host,
+                                             sound_mode_support,
+                                             sound_mode_dict))
             cache.add(host)
             _LOGGER.info("Denon receiver at host %s initialized", host)
 
@@ -129,14 +150,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DenonDevice(MediaPlayerDevice):
     """Representation of a Denon Media Player Device."""
 
-    def __init__(self, receiver):
+    def __init__(self, receiver, host, sound_mode_support, sound_mode_dict):
         """Initialize the device."""
         self._receiver = receiver
         self._name = self._receiver.name
+        self._host = host
         self._muted = self._receiver.muted
         self._volume = self._receiver.volume
         self._current_source = self._receiver.input_func
         self._source_list = self._receiver.input_func_list
+        self._current_sound_mode = None
+        self._sound_mode_list = list(sound_mode_dict)
+        self._sound_mode_dict = sound_mode_dict
+        self._sound_mode_support = sound_mode_support
         self._state = self._receiver.state
         self._power = self._receiver.power
         self._media_image_url = self._receiver.image_url
@@ -146,6 +172,10 @@ class DenonDevice(MediaPlayerDevice):
         self._band = self._receiver.band
         self._frequency = self._receiver.frequency
         self._station = self._receiver.station
+
+        self._supported_features_base = SUPPORT_DENON
+        self._supported_features_base |= (sound_mode_support and
+                                          SUPPORT_SELECT_SOUND_MODE)
 
     def update(self):
         """Get the latest status information from device."""
@@ -164,6 +194,26 @@ class DenonDevice(MediaPlayerDevice):
         self._band = self._receiver.band
         self._frequency = self._receiver.frequency
         self._station = self._receiver.station
+
+        if self._sound_mode_support:
+            try:
+                url = ('http://' + str(self._host) +
+                       '/goform/formMainZone_MainZoneXml.xml')
+                xml_data = urllib.request.urlopen(url)
+            except urllib.error.URLError:
+                err = "Denon receiver failed to get sound mode, URL-Error"
+                _LOGGER.error(err)
+                return
+            parsed_data = ET.parse(xml_data).getroot()
+            sound_mode_raw = parsed_data.find('selectSurround/value')
+            sound_mode_raw = sound_mode_raw.text.rstrip()
+            try:
+                mode_list = list(self._sound_mode_dict.values())
+                mode_index = mode_list.index(sound_mode_raw.upper())
+                sound_mode = list(self._sound_mode_dict.keys())[mode_index]
+                self._current_sound_mode = sound_mode
+            except ValueError:
+                self._current_sound_mode = sound_mode_raw
 
     @property
     def name(self):
@@ -198,11 +248,21 @@ class DenonDevice(MediaPlayerDevice):
         return self._source_list
 
     @property
+    def sound_mode(self):
+        """Return the current sound mode."""
+        return self._current_sound_mode
+
+    @property
+    def sound_mode_list(self):
+        """Return a list of available sound modes."""
+        return self._sound_mode_list
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         if self._current_source in self._receiver.netaudio_func_list:
-            return SUPPORT_DENON | SUPPORT_MEDIA_MODES
-        return SUPPORT_DENON
+            return self._supported_features_base | SUPPORT_MEDIA_MODES
+        return self._supported_features_base
 
     @property
     def media_content_id(self):
@@ -291,6 +351,14 @@ class DenonDevice(MediaPlayerDevice):
     def select_source(self, source):
         """Select input source."""
         return self._receiver.set_input_func(source)
+
+    def select_sound_mode(self, sound_mode):
+        """Select sound mode."""
+        url = ('http://' + str(self._host) +
+               '/MainZone/index.put.asp?cmd0=PutSurroundMode%2F'
+               + sound_mode.upper().replace(" ", "+"))
+        urllib.request.urlopen(url)
+        return sound_mode
 
     def turn_on(self):
         """Turn on media player."""
