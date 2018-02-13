@@ -5,13 +5,17 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.maxcul/
 """
 import logging
+import voluptuous as vol
 
 from homeassistant.components.climate import (
-    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE
+    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
+    PLATFORM_SCHEMA
 )
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE
+    TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_ID,
+    CONF_DEVICES
 )
+import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.maxcul import (
     DATA_MAXCUL, EVENT_THERMOSTAT_UPDATE
@@ -23,41 +27,51 @@ DEPENDS = ['maxcul']
 
 DEFAULT_TEMPERATURE = 12
 
+DEVICE_SCHEMA = vol.Schema({
+    vol.Required(CONF_ID): cv.positive_int
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_DEVICES): vol.Schema({
+        cv.string: DEVICE_SCHEMA
+    })
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Add a new MAX! thermostat."""
-    from maxcul import ATTR_DEVICE_ID
-    thermostat_id = discovery_info.get(ATTR_DEVICE_ID, None)
-    if thermostat_id is None:
-        return
-
-    device = MaxCulClimate(hass, thermostat_id)
-    add_devices([device])
+    devices = [
+        MaxCulClimate(hass, device[CONF_ID], name)
+        for name, device
+        in config[CONF_DEVICES].items()
+    ]
+    add_devices(devices)
 
 
 class MaxCulClimate(ClimateDevice):
     """A MAX! thermostat backed by a CUL stick."""
 
-    def __init__(self, hass, thermostat_id):
+    def __init__(self, hass, device_id, name):
         """Initialize a new device for the given thermostat id."""
         from maxcul import (
             ATTR_DEVICE_ID, ATTR_DESIRED_TEMPERATURE,
             ATTR_MEASURED_TEMPERATURE, ATTR_MODE,
             ATTR_BATTERY_LOW
         )
-        self.entity_id = "climate.maxcul_thermostat_{:x}".format(thermostat_id)
-        self._name = "Thermostat {:x}".format(thermostat_id)
-        self._thermostat_id = thermostat_id
+        self._name = name
+        self._device_id = device_id
         self._maxcul_handle = hass.data[DATA_MAXCUL]
         self._current_temperature = None
         self._target_temperature = None
         self._mode = None
         self._battery_low = None
 
+        self._maxcul_handle.add_paired_device(self._device_id)
+
         def update(event):
             """Handle thermostat update events."""
-            thermostat_id = event.data.get(ATTR_DEVICE_ID)
-            if thermostat_id != self._thermostat_id:
+            device_id = event.data.get(ATTR_DEVICE_ID)
+            if device_id != self._device_id:
                 return
 
             current_temperature = event.data.get(ATTR_MEASURED_TEMPERATURE)
@@ -78,7 +92,7 @@ class MaxCulClimate(ClimateDevice):
 
         hass.bus.listen(EVENT_THERMOSTAT_UPDATE, update)
 
-        self._maxcul_handle.wakeup(self._thermostat_id)
+        self._maxcul_handle.wakeup(self._device_id)
 
     @property
     def supported_features(self):
@@ -149,13 +163,13 @@ class MaxCulClimate(ClimateDevice):
             return False
 
         return self._maxcul_handle.set_temperature(
-            self.thermostat_id,
+            self._device_id,
             target_temperature,
             self._mode or MODE_MANUAL)
 
     def set_operation_mode(self, operation_mode):
         """Set the operation mode of this device."""
         return self._maxcul_handle.set_temperature(
-            self.thermostat_id,
+            self._device_id,
             self._target_temperature or DEFAULT_TEMPERATURE,
             operation_mode)
