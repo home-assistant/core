@@ -17,17 +17,21 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['holidays==0.8.1']
+REQUIREMENTS = ['holidays==0.9.3']
 
 # List of all countries currently supported by holidays
 # There seems to be no way to get the list out at runtime
-ALL_COUNTRIES = ['Australia', 'AU', 'Austria', 'AT', 'Canada', 'CA',
-                 'Colombia', 'CO', 'Czech', 'CZ', 'Denmark', 'DK', 'England',
-                 'EuropeanCentralBank', 'ECB', 'TAR', 'Germany', 'DE',
-                 'Ireland', 'Isle of Man', 'Mexico', 'MX', 'Netherlands', 'NL',
-                 'NewZealand', 'NZ', 'Northern Ireland', 'Norway', 'NO',
-                 'Portugal', 'PT', 'PortugalExt', 'PTE', 'Scotland', 'Spain',
-                 'ES', 'UnitedKingdom', 'UK', 'UnitedStates', 'US', 'Wales']
+ALL_COUNTRIES = ['Australia', 'AU', 'Austria', 'AT', 'Belgium', 'BE', 'Canada',
+                 'CA', 'Colombia', 'CO', 'Czech', 'CZ', 'Denmark', 'DK',
+                 'England', 'EuropeanCentralBank', 'ECB', 'TAR', 'Finland',
+                 'FI', 'France', 'FRA', 'Germany', 'DE', 'Ireland',
+                 'Isle of Man', 'Italy', 'IT', 'Japan', 'JP', 'Mexico', 'MX',
+                 'Netherlands', 'NL', 'NewZealand', 'NZ', 'Northern Ireland',
+                 'Norway', 'NO', 'Polish', 'PL', 'Portugal', 'PT',
+                 'PortugalExt', 'PTE', 'Scotland', 'Slovenia', 'SI',
+                 'Slovakia', 'SK', 'South Africa', 'ZA', 'Spain', 'ES',
+                 'Sweden', 'SE', 'UnitedKingdom', 'UK', 'UnitedStates', 'US',
+                 'Wales']
 CONF_COUNTRY = 'country'
 CONF_PROVINCE = 'province'
 CONF_WORKDAYS = 'workdays'
@@ -64,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     excludes = config.get(CONF_EXCLUDES)
     days_offset = config.get(CONF_OFFSET)
 
-    year = (datetime.now() + timedelta(days=days_offset)).year
+    year = (get_date(datetime.today()) + timedelta(days=days_offset)).year
     obj_holidays = getattr(holidays, country)(years=year)
 
     if province:
@@ -97,6 +101,11 @@ def day_to_string(day):
         return ALLOWED_DAYS[day]
     except IndexError:
         return None
+
+
+def get_date(date):
+    """Return date. Needed for testing."""
+    return date
 
 
 class IsWorkdaySensor(BinarySensorDevice):
@@ -156,7 +165,7 @@ class IsWorkdaySensor(BinarySensorDevice):
         self._state = False
 
         # Get iso day of the week (1 = Monday, 7 = Sunday)
-        date = datetime.today() + timedelta(days=self._days_offset)
+        date = get_date(datetime.today()) + timedelta(days=self._days_offset)
         day = date.isoweekday() - 1
         day_of_week = day_to_string(day)
 

@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyhydroquebec==2.0.2']
+REQUIREMENTS = ['pyhydroquebec==2.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,8 +103,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     contract = config.get(CONF_CONTRACT)
 
-    hydroquebec_data = HydroquebecData(username, password, contract)
+    httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
+    hydroquebec_data = HydroquebecData(username, password, httpsession,
+                                       contract)
     contracts = yield from hydroquebec_data.get_contract_list()
+    if not contracts:
+        return
     _LOGGER.info("Contract list: %s",
                  ", ".join(contracts))
 
@@ -161,11 +165,11 @@ class HydroQuebecSensor(Entity):
 class HydroquebecData(object):
     """Get data from HydroQuebec."""
 
-    def __init__(self, username, password, contract=None):
+    def __init__(self, username, password, httpsession, contract=None):
         """Initialize the data object."""
         from pyhydroquebec import HydroQuebecClient
         self.client = HydroQuebecClient(
-            username, password, REQUESTS_TIMEOUT)
+            username, password, REQUESTS_TIMEOUT, httpsession)
         self._contract = contract
         self.data = {}
 
@@ -173,17 +177,22 @@ class HydroquebecData(object):
     def get_contract_list(self):
         """Return the contract list."""
         # Fetch data
-        yield from self._fetch_data()
-        return self.client.get_contracts()
+        ret = yield from self._fetch_data()
+        if ret:
+            return self.client.get_contracts()
+        return []
 
     @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _fetch_data(self):
         """Fetch latest data from HydroQuebec."""
+        from pyhydroquebec.client import PyHydroQuebecError
         try:
             yield from self.client.fetch_data()
-        except BaseException as exp:
+        except PyHydroQuebecError as exp:
             _LOGGER.error("Error on receive last Hydroquebec data: %s", exp)
+            return False
+        return True
 
     @asyncio.coroutine
     def async_update(self):

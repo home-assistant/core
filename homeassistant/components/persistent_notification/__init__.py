@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/persistent_notification/
 """
 import asyncio
-import os
 import logging
 
 import voluptuous as vol
@@ -16,7 +15,6 @@ from homeassistant.loader import bind_hass
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.util import slugify
-from homeassistant.config import load_yaml_config_file
 
 ATTR_MESSAGE = 'message'
 ATTR_NOTIFICATION_ID = 'notification_id'
@@ -127,17 +125,10 @@ def async_setup(hass, config):
 
         hass.states.async_remove(entity_id)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
-
     hass.services.async_register(DOMAIN, SERVICE_CREATE, create_service,
-                                 descriptions[SERVICE_CREATE],
                                  SCHEMA_SERVICE_CREATE)
 
     hass.services.async_register(DOMAIN, SERVICE_DISMISS, dismiss_service,
-                                 descriptions[SERVICE_DISMISS],
                                  SCHEMA_SERVICE_DISMISS)
 
     return True

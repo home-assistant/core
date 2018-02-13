@@ -21,7 +21,7 @@ REQUIREMENTS = ['gTTS-token==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-GOOGLE_SPEECH_URL = "http://translate.google.com/translate_tts"
+GOOGLE_SPEECH_URL = "https://translate.google.com/translate_tts"
 MESSAGE_SIZE = 148
 
 SUPPORT_LANGUAGES = [
@@ -87,7 +87,7 @@ class GoogleProvider(Provider):
             url_param = {
                 'ie': 'UTF-8',
                 'tl': language,
-                'q': yarl.quote(part),
+                'q': yarl.URL(part).raw_path,
                 'tk': part_token,
                 'total': len(message_parts),
                 'idx': idx,

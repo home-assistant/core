@@ -92,7 +92,7 @@ class IrishRailTransportSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if len(self._times) > 0:
+        if self._times:
             next_up = "None"
             if len(self._times) > 1:
                 next_up = self._times[1][ATTR_ORIGIN] + " to "
@@ -126,7 +126,7 @@ class IrishRailTransportSensor(Entity):
         """Get the latest data and update the states."""
         self.data.update()
         self._times = self.data.info
-        if len(self._times) > 0:
+        if self._times:
             self._state = self._times[0][ATTR_DUE_IN]
         else:
             self._state = None
@@ -164,7 +164,7 @@ class IrishRailTransportData(object):
                           ATTR_TRAIN_TYPE: train.get('type')}
             self.info.append(train_data)
 
-        if not self.info or len(self.info) == 0:
+        if not self.info or not self.info:
             self.info = self._empty_train_data()
 
     def _empty_train_data(self):

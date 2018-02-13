@@ -9,7 +9,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import HTTP_BAD_REQUEST
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, template
 from homeassistant.components.http import HomeAssistantView
 
@@ -33,6 +33,10 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+class DialogFlowError(HomeAssistantError):
+    """Raised when a DialogFlow error happens."""
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up Dialogflow component."""
@@ -51,57 +55,71 @@ class DialogflowIntentsView(HomeAssistantView):
     def post(self, request):
         """Handle Dialogflow."""
         hass = request.app['hass']
-        data = yield from request.json()
+        message = yield from request.json()
 
-        _LOGGER.debug("Received Dialogflow request: %s", data)
-
-        req = data.get('result')
-
-        if req is None:
-            _LOGGER.error("Received invalid data from Dialogflow: %s", data)
-            return self.json_message(
-                "Expected result value not received", HTTP_BAD_REQUEST)
-
-        action_incomplete = req['actionIncomplete']
-
-        if action_incomplete:
-            return None
-
-        action = req.get('action')
-        parameters = req.get('parameters')
-        dialogflow_response = DialogflowResponse(parameters)
-
-        if action == "":
-            _LOGGER.warning("Received intent with empty action")
-            dialogflow_response.add_speech(
-                "You have not defined an action in your Dialogflow intent.")
-            return self.json(dialogflow_response)
+        _LOGGER.debug("Received Dialogflow request: %s", message)
 
         try:
-            intent_response = yield from intent.async_handle(
-                hass, DOMAIN, action,
-                {key: {'value': value} for key, value
-                 in parameters.items()})
+            response = yield from async_handle_message(hass, message)
+            return b'' if response is None else self.json(response)
+
+        except DialogFlowError as err:
+            _LOGGER.warning(str(err))
+            return self.json(dialogflow_error_response(
+                hass, message, str(err)))
 
         except intent.UnknownIntent as err:
-            _LOGGER.warning("Received unknown intent %s", action)
-            dialogflow_response.add_speech(
-                "This intent is not yet configured within Home Assistant.")
-            return self.json(dialogflow_response)
+            _LOGGER.warning(str(err))
+            return self.json(dialogflow_error_response(
+                hass, message,
+                "This intent is not yet configured within Home Assistant."))
 
         except intent.InvalidSlotInfo as err:
-            _LOGGER.error("Received invalid slot data: %s", err)
-            return self.json_message('Invalid slot data received',
-                                     HTTP_BAD_REQUEST)
-        except intent.IntentError:
-            _LOGGER.exception("Error handling request for %s", action)
-            return self.json_message('Error handling intent', HTTP_BAD_REQUEST)
+            _LOGGER.warning(str(err))
+            return self.json(dialogflow_error_response(
+                hass, message,
+                "Invalid slot information received for this intent."))
 
-        if 'plain' in intent_response.speech:
-            dialogflow_response.add_speech(
-                intent_response.speech['plain']['speech'])
+        except intent.IntentError as err:
+            _LOGGER.warning(str(err))
+            return self.json(dialogflow_error_response(
+                hass, message, "Error handling intent."))
 
-        return self.json(dialogflow_response)
+
+def dialogflow_error_response(hass, message, error):
+    """Return a response saying the error message."""
+    dialogflow_response = DialogflowResponse(message['result']['parameters'])
+    dialogflow_response.add_speech(error)
+    return dialogflow_response.as_dict()
+
+
+@asyncio.coroutine
+def async_handle_message(hass, message):
+    """Handle a DialogFlow message."""
+    req = message.get('result')
+    action_incomplete = req['actionIncomplete']
+
+    if action_incomplete:
+        return None
+
+    action = req.get('action', '')
+    parameters = req.get('parameters')
+    dialogflow_response = DialogflowResponse(parameters)
+
+    if action == "":
+        raise DialogFlowError(
+            "You have not defined an action in your Dialogflow intent.")
+
+    intent_response = yield from intent.async_handle(
+        hass, DOMAIN, action,
+        {key: {'value': value} for key, value
+         in parameters.items()})
+
+    if 'plain' in intent_response.speech:
+        dialogflow_response.add_speech(
+            intent_response.speech['plain']['speech'])
+
+    return dialogflow_response.as_dict()
 
 
 class DialogflowResponse(object):

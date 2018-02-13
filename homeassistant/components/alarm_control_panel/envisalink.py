@@ -6,7 +6,6 @@ https://home-assistant.io/components/alarm_control_panel.envisalink/
 """
 import asyncio
 import logging
-import os
 
 import voluptuous as vol
 
@@ -14,7 +13,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config import load_yaml_config_file
 from homeassistant.components.envisalink import (
     DATA_EVL, EnvisalinkDevice, PARTITION_SCHEMA, CONF_CODE, CONF_PANIC,
     CONF_PARTITIONNAME, SIGNAL_KEYPAD_UPDATE, SIGNAL_PARTITION_UPDATE)
@@ -69,14 +67,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         for device in target_devices:
             device.async_alarm_keypress(keypress)
 
-    # Register Envisalink specific services
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(
         alarm.DOMAIN, SERVICE_ALARM_KEYPRESS, alarm_keypress_handler,
-        descriptions.get(SERVICE_ALARM_KEYPRESS), schema=ALARM_KEYPRESS_SCHEMA)
+        schema=ALARM_KEYPRESS_SCHEMA)
 
     return True
 

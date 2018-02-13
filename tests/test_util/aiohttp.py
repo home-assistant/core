@@ -83,7 +83,7 @@ class AiohttpClientMocker:
         data = data or json
         for response in self._mocks:
             if response.match_request(method, url, params):
-                self.mock_calls.append((method, url, data))
+                self.mock_calls.append((method, url, data, headers))
 
                 if response.exc:
                     raise response.exc
@@ -97,7 +97,7 @@ class AiohttpClientMockResponse:
     """Mock Aiohttp client response."""
 
     def __init__(self, method, url, status, response, cookies=None, exc=None,
-                 headers={}):
+                 headers=None):
         """Initialize a fake response."""
         self.method = method
         self._url = url
@@ -107,7 +107,7 @@ class AiohttpClientMockResponse:
         self.response = response
         self.exc = exc
 
-        self._headers = headers
+        self._headers = headers or {}
         self._cookies = {}
 
         if cookies:

@@ -1,4 +1,4 @@
-"""The tests for the openalpr clooud platform."""
+"""The tests for the openalpr cloud platform."""
 import asyncio
 from unittest.mock import patch, PropertyMock
 
@@ -13,7 +13,7 @@ from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture)
 
 
-class TestOpenAlprCloudlSetup(object):
+class TestOpenAlprCloudSetup(object):
     """Test class for image processing."""
 
     def setup_method(self):
@@ -149,8 +149,7 @@ class TestOpenAlprCloud(object):
             'secret_key': "sk_abcxyz123456",
             'tasks': "plate",
             'return_image': 0,
-            'country': 'eu',
-            'image_bytes': "aW1hZ2U="
+            'country': 'eu'
         }
 
     def teardown_method(self):

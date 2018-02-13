@@ -135,7 +135,7 @@ class TestHomeAssistant(unittest.TestCase):
             """Test Coro."""
             call_count.append('call')
 
-        for i in range(3):
+        for _ in range(3):
             self.hass.add_job(test_coro())
 
         run_coroutine_threadsafe(
@@ -155,7 +155,7 @@ class TestHomeAssistant(unittest.TestCase):
             """Test Coro."""
             call_count.append('call')
 
-        for i in range(2):
+        for _ in range(2):
             self.hass.add_job(test_coro())
 
         @asyncio.coroutine
@@ -172,7 +172,7 @@ class TestHomeAssistant(unittest.TestCase):
         assert len(call_count) == 2
 
     def test_async_add_job_pending_tasks_executor(self):
-        """Run a executor in pending tasks."""
+        """Run an executor in pending tasks."""
         call_count = []
 
         def test_executor():
@@ -185,7 +185,7 @@ class TestHomeAssistant(unittest.TestCase):
             yield from asyncio.sleep(0, loop=self.hass.loop)
             yield from asyncio.sleep(0, loop=self.hass.loop)
 
-        for i in range(2):
+        for _ in range(2):
             self.hass.add_job(test_executor)
 
         run_coroutine_threadsafe(
@@ -210,7 +210,7 @@ class TestHomeAssistant(unittest.TestCase):
             yield from asyncio.sleep(0, loop=self.hass.loop)
             yield from asyncio.sleep(0, loop=self.hass.loop)
 
-        for i in range(2):
+        for _ in range(2):
             self.hass.add_job(test_callback)
 
         run_coroutine_threadsafe(
@@ -640,10 +640,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_services(self):
         """Test services."""
-        expected = {
-            'test_domain': {'test_service': {'description': '', 'fields': {}}}
-        }
-        self.assertEqual(expected, self.services.services)
+        assert len(self.services.services) == 1
 
     def test_call_with_blocking_done_in_time(self):
         """Test call with blocking."""
@@ -800,8 +797,10 @@ class TestConfig(unittest.TestCase):
     def test_is_allowed_path(self):
         """Test is_allowed_path method."""
         with TemporaryDirectory() as tmp_dir:
+            # The created dir is in /tmp. This is a symlink on OS X
+            # causing this test to fail unless we resolve path first.
             self.config.whitelist_external_dirs = set((
-                tmp_dir,
+                os.path.realpath(tmp_dir),
             ))
 
             test_file = os.path.join(tmp_dir, "test.jpg")

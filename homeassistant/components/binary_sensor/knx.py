@@ -5,12 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.knx/
 """
 import asyncio
+
 import voluptuous as vol
 
-from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES, \
-    KNXAutomation
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, \
-    BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA, BinarySensorDevice)
+from homeassistant.components.knx import (
+    ATTR_DISCOVER_DEVICES, DATA_KNX, KNXAutomation)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -53,19 +54,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up binary sensor(s) for KNX platform."""
-    if DATA_KNX not in hass.data \
-            or not hass.data[DATA_KNX].initialized:
-        return False
+    if DATA_KNX not in hass.data or not hass.data[DATA_KNX].initialized:
+        return
 
     if discovery_info is not None:
         async_add_devices_discovery(hass, discovery_info, async_add_devices)
     else:
         async_add_devices_config(hass, config, async_add_devices)
-
-    return True
 
 
 @callback
@@ -80,7 +77,7 @@ def async_add_devices_discovery(hass, discovery_info, async_add_devices):
 
 @callback
 def async_add_devices_config(hass, config, async_add_devices):
-    """Set up binary senor for KNX platform configured within plattform."""
+    """Set up binary senor for KNX platform configured within platform."""
     name = config.get(CONF_NAME)
     import xknx
     binary_sensor = xknx.devices.BinarySensor(
@@ -108,7 +105,7 @@ class KNXBinarySensor(BinarySensorDevice):
     """Representation of a KNX binary sensor."""
 
     def __init__(self, hass, device):
-        """Initialization of KNXBinarySensor."""
+        """Initialize of KNX binary sensor."""
         self.device = device
         self.hass = hass
         self.async_register_callbacks()
@@ -119,7 +116,7 @@ class KNXBinarySensor(BinarySensorDevice):
         """Register callbacks to update hass after device was changed."""
         @asyncio.coroutine
         def after_update_callback(device):
-            """Callback after device was updated."""
+            """Call after device was updated."""
             # pylint: disable=unused-argument
             yield from self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
@@ -128,6 +125,11 @@ class KNXBinarySensor(BinarySensorDevice):
     def name(self):
         """Return the name of the KNX device."""
         return self.device.name
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self.hass.data[DATA_KNX].connected
 
     @property
     def should_poll(self):

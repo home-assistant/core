@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.mqtt/
 """
 import asyncio
 import logging
+import json
 from datetime import timedelta
 
 import voluptuous as vol
@@ -26,6 +27,7 @@ from homeassistant.util import dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 CONF_EXPIRE_AFTER = 'expire_after'
+CONF_JSON_ATTRS = 'json_attributes'
 
 DEFAULT_NAME = 'MQTT Sensor'
 DEFAULT_FORCE_UPDATE = False
@@ -34,6 +36,7 @@ DEPENDENCIES = ['mqtt']
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
@@ -57,6 +60,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_FORCE_UPDATE),
         config.get(CONF_EXPIRE_AFTER),
         value_template,
+        config.get(CONF_JSON_ATTRS),
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
@@ -68,7 +72,8 @@ class MqttSensor(MqttAvailability, Entity):
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
                  force_update, expire_after, value_template,
-                 availability_topic, payload_available, payload_not_available):
+                 json_attributes, availability_topic, payload_available,
+                 payload_not_available):
         """Initialize the sensor."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
@@ -81,6 +86,8 @@ class MqttSensor(MqttAvailability, Entity):
         self._template = value_template
         self._expire_after = expire_after
         self._expiration_trigger = None
+        self._json_attributes = set(json_attributes)
+        self._attributes = None
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -103,6 +110,20 @@ class MqttSensor(MqttAvailability, Entity):
 
                 self._expiration_trigger = async_track_point_in_utc_time(
                     self.hass, self.value_is_expired, expiration_at)
+
+            if self._json_attributes:
+                self._attributes = {}
+                try:
+                    json_dict = json.loads(payload)
+                    if isinstance(json_dict, dict):
+                        attrs = {k: json_dict[k] for k in
+                                 self._json_attributes & json_dict.keys()}
+                        self._attributes = attrs
+                    else:
+                        _LOGGER.warning("JSON result was not a dictionary")
+                except ValueError:
+                    _LOGGER.warning("MQTT payload could not be parsed as JSON")
+                    _LOGGER.debug("Erroneous JSON: %s", payload)
 
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
@@ -144,3 +165,8 @@ class MqttSensor(MqttAvailability, Entity):
     def state(self):
         """Return the state of the entity."""
         return self._state
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes

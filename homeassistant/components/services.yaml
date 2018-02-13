@@ -364,6 +364,38 @@ abode:
         description: Entity id of the quick action to trigger.
         example: 'binary_sensor.home_quick_action'
 
+snips:
+  say:
+    description: Send a TTS message to Snips.
+    fields:
+      text:
+        description: Text to say.
+        example: My name is snips
+      site_id:
+        description: Site to use to start session, defaults to default (optional)
+        example: bedroom
+      custom_data:
+        description: custom data that will be included with all messages in this session
+        example: user=UserName
+  say_action:
+    description: Send a TTS message to Snips to listen for a response.
+    fields:
+      text:
+        description: Text to say
+        example: My name is snips
+      site_id:
+        description: Site to use to start session, defaults to default (optional)
+        example: bedroom
+      custom_data:
+        description: custom data that will be included with all messages in this session
+        example: user=UserName
+      can_be_enqueued:
+        description: If True, session waits for an open session to end, if False session is dropped if one is running
+        example: True
+      intent_filter:
+        description: Optional Array of Strings - A list of intents names to restrict the NLU resolution to on the first query.
+        example: turnOnLights, turnOffLights
+
 input_boolean:
   toggle:
     description: Toggles an input boolean.
@@ -417,6 +449,38 @@ input_number:
       entity_id:
         description: Entity id of the input number the should be decremented.
         example: 'input_number.threshold'
+
+input_select:
+  select_option:
+    description: Select an option of an input select entity.
+    fields:
+      entity_id:
+        description: Entity id of the input select to select the value.
+        example: 'input_select.my_select'
+      option:
+        description: Option to be selected.
+        example: '"Item A"'
+  set_options:
+    description: Set the options of an input select entity.
+    fields:
+      entity_id:
+        description: Entity id of the input select to set the new options for.
+        example: 'input_select.my_select'
+      options:
+        description: Options for the input select entity.
+        example: '["Item A", "Item B", "Item C"]'
+  select_previous:
+    description: Select the previous options of an input select entity.
+    fields:
+      entity_id:
+        description: Entity id of the input select to select the previous value for.
+        example: 'input_select.my_select'
+  select_next:
+    description: Select the next options of an input select entity.
+    fields:
+      entity_id:
+        description: Entity id of the input select to select the next value for.
+        example: 'input_select.my_select'
 
 homeassistant:
   check_config:

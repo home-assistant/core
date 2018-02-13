@@ -8,35 +8,33 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/recorder/
 """
 import asyncio
+from collections import namedtuple
 import concurrent.futures
+from datetime import datetime, timedelta
 import logging
-from os import path
 import queue
 import threading
 import time
-from collections import namedtuple
-from datetime import datetime, timedelta
-from typing import Optional, Dict
+
+from typing import Any, Dict, Optional  # noqa: F401
 
 import voluptuous as vol
 
-from homeassistant.core import (
-    HomeAssistant, callback, CoreState)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
-    CONF_INCLUDE, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
-    EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
+    ATTR_ENTITY_ID, CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED, MATCH_ALL)
+from homeassistant.core import CoreState, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
-from homeassistant import config as conf_util
 
-from . import purge, migration
+from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.0']
+REQUIREMENTS = ['sqlalchemy==1.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,10 +43,12 @@ DOMAIN = 'recorder'
 SERVICE_PURGE = 'purge'
 
 ATTR_KEEP_DAYS = 'keep_days'
+ATTR_REPACK = 'repack'
 
 SERVICE_PURGE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_KEEP_DAYS):
-        vol.All(vol.Coerce(int), vol.Range(min=0))
+    vol.Optional(ATTR_KEEP_DAYS):
+        vol.All(vol.Coerce(int), vol.Range(min=0)),
+    vol.Optional(ATTR_REPACK, default=False): cv.boolean
 })
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
@@ -78,10 +78,10 @@ FILTER_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: FILTER_SCHEMA.extend({
-        vol.Inclusive(CONF_PURGE_KEEP_DAYS, 'purge'):
+        vol.Optional(CONF_PURGE_KEEP_DAYS, default=10):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
-        vol.Inclusive(CONF_PURGE_INTERVAL, 'purge'):
-            vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Optional(CONF_PURGE_INTERVAL, default=1):
+            vol.All(vol.Coerce(int), vol.Range(min=0)),
         vol.Optional(CONF_DB_URL): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -96,7 +96,7 @@ def wait_connection_ready(hass):
     return hass.data[DATA_INSTANCE].async_db_ready
 
 
-def run_information(hass, point_in_time: Optional[datetime]=None):
+def run_information(hass, point_in_time: Optional[datetime] = None):
     """Return information about current run.
 
     There is also the run that covers point_in_time.
@@ -140,21 +140,16 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     @asyncio.coroutine
     def async_handle_purge_service(service):
         """Handle calls to the purge service."""
-        instance.do_adhoc_purge(service.data[ATTR_KEEP_DAYS])
+        instance.do_adhoc_purge(**service.data)
 
-    descriptions = yield from hass.async_add_job(
-        conf_util.load_yaml_config_file, path.join(
-            path.dirname(__file__), 'services.yaml'))
-
-    hass.services.async_register(DOMAIN, SERVICE_PURGE,
-                                 async_handle_purge_service,
-                                 descriptions.get(SERVICE_PURGE),
-                                 schema=SERVICE_PURGE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_PURGE, async_handle_purge_service,
+        schema=SERVICE_PURGE_SCHEMA)
 
     return (yield from instance.async_db_ready)
 
 
-PurgeTask = namedtuple('PurgeTask', ['keep_days'])
+PurgeTask = namedtuple('PurgeTask', ['keep_days', 'repack'])
 
 
 class Recorder(threading.Thread):
@@ -169,6 +164,7 @@ class Recorder(threading.Thread):
         self.hass = hass
         self.keep_days = keep_days
         self.purge_interval = purge_interval
+        self.did_vacuum = False
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
@@ -176,10 +172,9 @@ class Recorder(threading.Thread):
         self.engine = None  # type: Any
         self.run_info = None  # type: Any
 
-        self.entity_filter = generate_filter(include.get(CONF_DOMAINS, []),
-                                             include.get(CONF_ENTITIES, []),
-                                             exclude.get(CONF_DOMAINS, []),
-                                             exclude.get(CONF_ENTITIES, []))
+        self.entity_filter = generate_filter(
+            include.get(CONF_DOMAINS, []), include.get(CONF_ENTITIES, []),
+            exclude.get(CONF_DOMAINS, []), exclude.get(CONF_ENTITIES, []))
         self.exclude_t = exclude.get(CONF_EVENT_TYPES, [])
 
         self.get_session = None
@@ -189,10 +184,12 @@ class Recorder(threading.Thread):
         """Initialize the recorder."""
         self.hass.bus.async_listen(MATCH_ALL, self.event_listener)
 
-    def do_adhoc_purge(self, keep_days):
+    def do_adhoc_purge(self, **kwargs):
         """Trigger an adhoc purge retaining keep_days worth of data."""
-        if keep_days is not None:
-            self.queue.put(PurgeTask(keep_days))
+        keep_days = kwargs.get(ATTR_KEEP_DAYS, self.keep_days)
+        repack = kwargs.get(ATTR_REPACK)
+
+        self.queue.put(PurgeTask(keep_days, repack))
 
     def run(self):
         """Start processing events to save."""
@@ -245,8 +242,7 @@ class Recorder(threading.Thread):
                 self.queue.put(None)
                 self.join()
 
-            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                            shutdown)
+            self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
             if self.hass.state == CoreState.running:
                 hass_started.set_result(None)
@@ -256,14 +252,15 @@ class Recorder(threading.Thread):
                     """Notify that hass has started."""
                     hass_started.set_result(None)
 
-                self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
-                                                notify_hass_started)
+                self.hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_START, notify_hass_started)
 
             if self.keep_days and self.purge_interval:
                 @callback
                 def async_purge(now):
                     """Trigger the purge and schedule the next run."""
-                    self.queue.put(PurgeTask(self.keep_days))
+                    self.queue.put(
+                        PurgeTask(self.keep_days, repack=not self.did_vacuum))
                     self.hass.helpers.event.async_track_point_in_time(
                         async_purge, now + timedelta(days=self.purge_interval))
 
@@ -296,7 +293,7 @@ class Recorder(threading.Thread):
                 self.queue.task_done()
                 return
             elif isinstance(event, PurgeTask):
-                purge.purge_old_data(self, event.keep_days)
+                purge.purge_old_data(self, event.keep_days, event.repack)
                 self.queue.task_done()
                 continue
             elif event.event_type == EVENT_TIME_CHANGED:

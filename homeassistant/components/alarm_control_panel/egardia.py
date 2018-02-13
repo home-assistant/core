@@ -10,13 +10,13 @@ import requests
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-import homeassistant.exceptions as exc
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_PORT, CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_UNKNOWN,
-    CONF_NAME, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED, EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
+import homeassistant.exceptions as exc
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pythonegardia==1.0.26']
 
@@ -35,6 +35,7 @@ DEFAULT_REPORT_SERVER_PORT = 52010
 DEFAULT_VERSION = 'GATE-01'
 DOMAIN = 'egardia'
 D_EGARDIASRV = 'egardiaserver'
+
 NOTIFICATION_ID = 'egardia_notification'
 NOTIFICATION_TITLE = 'Egardia'
 
@@ -97,8 +98,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 server = egardiaserver.EgardiaServer('', rs_port)
                 bound = server.bind()
                 if not bound:
-                    raise IOError("Binding error occurred while " +
-                                  "starting EgardiaServer")
+                    raise IOError(
+                        "Binding error occurred while starting EgardiaServer")
                 hass.data[D_EGARDIASRV] = server
                 server.start()
         except IOError:
@@ -106,22 +107,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.data[D_EGARDIASRV].register_callback(eg_dev.handle_status_event)
 
     def handle_stop_event(event):
-        """Callback function for HA stop event."""
+        """Call function for Home Assistant stop event."""
         hass.data[D_EGARDIASRV].stop()
 
-    # listen to home assistant stop event
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop_event)
 
-    # add egardia alarm device
     add_devices([eg_dev], True)
 
 
 class EgardiaAlarm(alarm.AlarmControlPanel):
     """Representation of a Egardia alarm."""
 
-    def __init__(self, name, egardiasystem,
-                 rs_enabled=False, rs_codes=None):
-        """Initialize object."""
+    def __init__(self, name, egardiasystem, rs_enabled=False, rs_codes=None):
+        """Initialize the Egardia alarm."""
         self._name = name
         self._egardiasystem = egardiasystem
         self._status = None
@@ -149,7 +147,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         return False
 
     def handle_status_event(self, event):
-        """Handle egardia_system_status_event."""
+        """Handle the Egardia system status event."""
         statuscode = event.get('status')
         if statuscode is not None:
             status = self.lookupstatusfromcode(statuscode)

@@ -83,10 +83,10 @@ class TadoDeviceScanner(DeviceScanner):
         return [device.mac for device in self.last_results]
 
     @asyncio.coroutine
-    def async_get_device_name(self, mac):
+    def async_get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        filter_named = [device.name for device in self.last_results
-                        if device.mac == mac]
+        filter_named = [result.name for result in self.last_results
+                        if result.mac == device]
 
         if filter_named:
             return filter_named[0]

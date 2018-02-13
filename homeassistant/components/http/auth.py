@@ -23,7 +23,7 @@ def auth_middleware(request, handler):
     # If no password set, just always set authenticated=True
     if request.app['hass'].http.api_password is None:
         request[KEY_AUTHENTICATED] = True
-        return handler(request)
+        return (yield from handler(request))
 
     # Check authentication
     authenticated = False
@@ -46,7 +46,7 @@ def auth_middleware(request, handler):
         authenticated = True
 
     request[KEY_AUTHENTICATED] = authenticated
-    return handler(request)
+    return (yield from handler(request))
 
 
 def is_trusted_ip(request):

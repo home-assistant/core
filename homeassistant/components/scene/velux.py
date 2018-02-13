@@ -48,6 +48,6 @@ class VeluxScene(Scene):
         """There is no way of detecting if a scene is active (yet)."""
         return False
 
-    def activate(self, **kwargs):
+    def activate(self):
         """Activate the scene."""
         self.hass.async_add_job(self.scene.run())

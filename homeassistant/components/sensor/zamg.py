@@ -236,7 +236,7 @@ def closest_station(lat, lon, cache_dir):
     stations = zamg_stations(cache_dir)
 
     def comparable_dist(zamg_id):
-        """Calculate the psudeo-distance from lat/lon."""
+        """Calculate the pseudo-distance from lat/lon."""
         station_lat, station_lon = stations[zamg_id]
         return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
 

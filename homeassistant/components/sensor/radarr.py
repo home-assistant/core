@@ -162,7 +162,7 @@ class RadarrSensor(Entity):
                     self.ssl, self.host, self.port, self.urlbase, start, end),
                 headers={'X-Api-Key': self.apikey}, timeout=10)
         except OSError:
-            _LOGGER.error("Host %s is not available", self.host)
+            _LOGGER.warning("Host %s is not available", self.host)
             self._available = False
             self._state = None
             return

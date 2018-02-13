@@ -1,6 +1,7 @@
 """The test for the geo rss events sensor platform."""
 import unittest
 from unittest import mock
+import feedparser
 
 from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant
@@ -33,7 +34,8 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_setup_with_categories(self):
+    @mock.patch('feedparser.parse', return_value=feedparser.parse(""))
+    def test_setup_with_categories(self, mock_parse):
         """Test the general setup of this sensor."""
         self.config = VALID_CONFIG_WITH_CATEGORIES
         self.assertTrue(
@@ -43,7 +45,8 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         self.assertIsNotNone(
             self.hass.states.get('sensor.event_service_category_2'))
 
-    def test_setup_without_categories(self):
+    @mock.patch('feedparser.parse', return_value=feedparser.parse(""))
+    def test_setup_without_categories(self, mock_parse):
         """Test the general setup of this sensor."""
         self.assertTrue(
             setup_component(self.hass, 'sensor', {'sensor': self.config}))

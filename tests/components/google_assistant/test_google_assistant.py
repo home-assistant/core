@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant import core, const, setup
 from homeassistant.components import (
-    fan, cover, light, switch, climate, async_setup, media_player)
+    fan, cover, light, switch, climate, async_setup, media_player, sensor)
 from homeassistant.components import google_assistant as ga
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
@@ -36,6 +36,23 @@ def assistant_client(loop, hass, test_client):
                 'project_id': PROJECT_ID,
                 'client_id': CLIENT_ID,
                 'access_token': ACCESS_TOKEN,
+                'entity_config': {
+                    'light.ceiling_lights': {
+                        'aliases': ['top lights', 'ceiling lights'],
+                        'name': 'Roof Lights',
+                    },
+                    'switch.decorative_lights': {
+                        'type': 'light'
+                    },
+                    'sensor.outside_humidity': {
+                        'type': 'climate',
+                        'expose': True
+                    },
+                    'sensor.outside_temperature': {
+                        'type': 'climate',
+                        'expose': True
+                    }
+                }
             }
         }))
 
@@ -44,7 +61,7 @@ def assistant_client(loop, hass, test_client):
 
 @pytest.fixture
 def hass_fixture(loop, hass):
-    """Set up a HOme Assistant instance for these tests."""
+    """Set up a Home Assistant instance for these tests."""
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(async_setup(hass, {core.DOMAIN: {}}))
 
@@ -88,25 +105,12 @@ def hass_fixture(loop, hass):
             }]
         }))
 
-    # Kitchen light is explicitly excluded from being exposed
-    ceiling_lights_entity = hass.states.get('light.ceiling_lights')
-    attrs = dict(ceiling_lights_entity.attributes)
-    attrs[ga.const.ATTR_GOOGLE_ASSISTANT_NAME] = "Roof Lights"
-    attrs[ga.const.CONF_ALIASES] = ['top lights', 'ceiling lights']
-    hass.states.async_set(
-        ceiling_lights_entity.entity_id,
-        ceiling_lights_entity.state,
-        attributes=attrs)
-
-    # By setting the google_assistant_type = 'light'
-    # we can override how a device is reported to GA
-    switch_light = hass.states.get('switch.decorative_lights')
-    attrs = dict(switch_light.attributes)
-    attrs[ga.const.ATTR_GOOGLE_ASSISTANT_TYPE] = "light"
-    hass.states.async_set(
-        switch_light.entity_id,
-        switch_light.state,
-        attributes=attrs)
+    loop.run_until_complete(
+        setup.async_setup_component(hass, sensor.DOMAIN, {
+            'sensor': [{
+                'platform': 'demo'
+            }]
+        }))
 
     return hass
 
@@ -171,6 +175,8 @@ def test_query_request(hass_fixture, assistant_client):
                     'id': "light.bed_light",
                 }, {
                     'id': "light.kitchen_lights",
+                }, {
+                    'id': 'media_player.lounge_room',
                 }]
             }
         }]
@@ -183,12 +189,14 @@ def test_query_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     devices = body['payload']['devices']
-    assert len(devices) == 3
+    assert len(devices) == 4
     assert devices['light.bed_light']['on'] is False
     assert devices['light.ceiling_lights']['on'] is True
     assert devices['light.ceiling_lights']['brightness'] == 70
     assert devices['light.kitchen_lights']['color']['spectrumRGB'] == 16727919
     assert devices['light.kitchen_lights']['color']['temperature'] == 4166
+    assert devices['media_player.lounge_room']['on'] is True
+    assert devices['media_player.lounge_room']['brightness'] == 100
 
 
 @asyncio.coroutine
@@ -205,6 +213,8 @@ def test_query_climate_request(hass_fixture, assistant_client):
                     {'id': 'climate.hvac'},
                     {'id': 'climate.heatpump'},
                     {'id': 'climate.ecobee'},
+                    {'id': 'sensor.outside_temperature'},
+                    {'id': 'sensor.outside_humidity'}
                 ]
             }
         }]
@@ -219,21 +229,37 @@ def test_query_climate_request(hass_fixture, assistant_client):
     devices = body['payload']['devices']
     assert devices == {
         'climate.heatpump': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureSetpoint': 20.0,
             'thermostatTemperatureAmbient': 25.0,
             'thermostatMode': 'heat',
         },
         'climate.ecobee': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureSetpointHigh': 24,
             'thermostatTemperatureAmbient': 23,
-            'thermostatMode': 'on',
+            'thermostatMode': 'heat',
             'thermostatTemperatureSetpointLow': 21
         },
         'climate.hvac': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureSetpoint': 21,
             'thermostatTemperatureAmbient': 22,
             'thermostatMode': 'cool',
             'thermostatHumidityAmbient': 54,
+        },
+        'sensor.outside_temperature': {
+            'on': True,
+            'online': True,
+            'thermostatTemperatureAmbient': 15.6
+        },
+        'sensor.outside_humidity': {
+            'on': True,
+            'online': True,
+            'thermostatHumidityAmbient': 54.0
         }
     }
 
@@ -253,6 +279,7 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
                     {'id': 'climate.hvac'},
                     {'id': 'climate.heatpump'},
                     {'id': 'climate.ecobee'},
+                    {'id': 'sensor.outside_temperature'}
                 ]
             }
         }]
@@ -267,28 +294,39 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
     devices = body['payload']['devices']
     assert devices == {
         'climate.heatpump': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureSetpoint': -6.7,
             'thermostatTemperatureAmbient': -3.9,
             'thermostatMode': 'heat',
         },
         'climate.ecobee': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureSetpointHigh': -4.4,
             'thermostatTemperatureAmbient': -5,
-            'thermostatMode': 'on',
+            'thermostatMode': 'heat',
             'thermostatTemperatureSetpointLow': -6.1,
         },
         'climate.hvac': {
+            'on': True,
+            'online': True,
             'thermostatTemperatureSetpoint': -6.1,
             'thermostatTemperatureAmbient': -5.6,
             'thermostatMode': 'cool',
             'thermostatHumidityAmbient': 54,
+        },
+        'sensor.outside_temperature': {
+            'on': True,
+            'online': True,
+            'thermostatTemperatureAmbient': -9.1
         }
     }
 
 
 @asyncio.coroutine
 def test_execute_request(hass_fixture, assistant_client):
-    """Test a execute request."""
+    """Test an execute request."""
     reqid = '5711642932632160985'
     data = {
         'requestId':
@@ -301,11 +339,24 @@ def test_execute_request(hass_fixture, assistant_client):
                         "id": "light.ceiling_lights",
                     }, {
                         "id": "switch.decorative_lights",
+                    }, {
+                        "id": "media_player.lounge_room",
                     }],
                     "execution": [{
                         "command": "action.devices.commands.OnOff",
                         "params": {
                             "on": False
+                        }
+                    }]
+                }, {
+                    "devices": [{
+                        "id": "media_player.walkman",
+                    }],
+                    "execution": [{
+                        "command":
+                        "action.devices.commands.BrightnessAbsolute",
+                        "params": {
+                            "brightness": 70
                         }
                     }]
                 }, {
@@ -364,7 +415,7 @@ def test_execute_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     commands = body['payload']['commands']
-    assert len(commands) == 6
+    assert len(commands) == 8
 
     ceiling = hass_fixture.states.get('light.ceiling_lights')
     assert ceiling.state == 'off'
@@ -378,3 +429,10 @@ def test_execute_request(hass_fixture, assistant_client):
     assert bed.attributes.get(light.ATTR_RGB_COLOR) == (0, 255, 0)
 
     assert hass_fixture.states.get('switch.decorative_lights').state == 'off'
+
+    walkman = hass_fixture.states.get('media_player.walkman')
+    assert walkman.state == 'playing'
+    assert walkman.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL) == 0.7
+
+    lounge = hass_fixture.states.get('media_player.lounge_room')
+    assert lounge.state == 'off'

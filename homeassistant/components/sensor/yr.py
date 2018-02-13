@@ -129,7 +129,7 @@ class YrSensor(Entity):
         """Weather symbol if type is symbol."""
         if self.type != 'symbol':
             return None
-        return "//api.met.no/weatherapi/weathericon/1.1/" \
+        return "https://api.met.no/weatherapi/weathericon/1.1/" \
                "?symbol={0};content_type=image/png".format(self._state)
 
     @property
@@ -226,7 +226,7 @@ class YrData(object):
 
         # Update all devices
         tasks = []
-        if len(ordered_entries) > 0:
+        if ordered_entries:
             for dev in self.devices:
                 new_state = None
 
@@ -258,5 +258,5 @@ class YrData(object):
                     dev._state = new_state
                     tasks.append(dev.async_update_ha_state())
 
-        if len(tasks) > 0:
+        if tasks:
             yield from asyncio.wait(tasks, loop=self.hass.loop)

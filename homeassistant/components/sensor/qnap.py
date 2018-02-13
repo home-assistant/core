@@ -7,6 +7,8 @@ https://home-assistant.io/components/sensor.qnap/
 import logging
 from datetime import timedelta
 
+import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
@@ -14,8 +16,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL, CONF_TIMEOUT, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-
-import voluptuous as vol
 
 REQUIREMENTS = ['qnapstats==0.2.4']
 
@@ -197,7 +197,6 @@ class QNAPStatsAPI(object):
 
         self.data = {}
 
-    # pylint: disable=bare-except
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update API information and store locally."""
@@ -207,7 +206,7 @@ class QNAPStatsAPI(object):
             self.data["smart_drive_health"] = self._api.get_smart_disk_health()
             self.data["volumes"] = self._api.get_volumes()
             self.data["bandwidth"] = self._api.get_bandwidth()
-        except:
+        except:  # noqa: E722  # pylint: disable=bare-except
             _LOGGER.exception("Failed to fetch QNAP stats from the NAS")
 
 

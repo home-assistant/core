@@ -8,11 +8,10 @@ import asyncio
 from collections import defaultdict
 import functools as ft
 import logging
-import os
-
 import async_timeout
 
-from homeassistant.config import load_yaml_config_file
+import voluptuous as vol
+
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
     EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
@@ -21,7 +20,6 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
-import voluptuous as vol
 
 
 REQUIREMENTS = ['rflink==0.0.34']
@@ -132,14 +130,9 @@ def async_setup(hass, config):
                 call.data.get(CONF_COMMAND))):
             _LOGGER.error('Failed Rflink command for %s', str(call.data))
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
-
     hass.services.async_register(
         DOMAIN, SERVICE_SEND_COMMAND, async_send_command,
-        descriptions[DOMAIN][SERVICE_SEND_COMMAND], SEND_COMMAND_SCHEMA)
+        schema=SEND_COMMAND_SCHEMA)
 
     @callback
     def event_callback(event):
@@ -397,7 +390,7 @@ class RflinkCommand(RflinkDevice):
         """Cancel queued signal repetition commands.
 
         For example when user changed state while repetitions are still
-        queued for broadcast. Or when a incoming Rflink command (remote
+        queued for broadcast. Or when an incoming Rflink command (remote
         switch) changes the state.
         """
         # cancel any outstanding tasks from the previous state change

@@ -117,9 +117,7 @@ class OctoPrintAPI(object):
                 self.job_error_logged = False
                 self.printer_error_logged = False
             return response.json()
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.HTTPError,
-                requests.exceptions.ReadTimeout) as conn_exc:
+        except Exception as conn_exc:  # pylint: disable=broad-except
             log_string = "Failed to update OctoPrint status. " + \
                                "  Error: %s" % (conn_exc)
             # Only log the first failure

@@ -103,7 +103,7 @@ def process_wrong_login(request):
 class IpBan(object):
     """Represents banned IP address."""
 
-    def __init__(self, ip_ban: str, banned_at: datetime=None) -> None:
+    def __init__(self, ip_ban: str, banned_at: datetime = None) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
         self.banned_at = banned_at or datetime.utcnow()

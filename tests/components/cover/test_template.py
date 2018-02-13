@@ -275,7 +275,7 @@ class TestTemplateCover(unittest.TestCase):
         assert self.hass.states.all() == []
 
     def test_template_open_and_close(self):
-        """Test that if open_cover is specified, cose_cover is too."""
+        """Test that if open_cover is specified, close_cover is too."""
         with assert_setup_component(0, 'cover'):
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
