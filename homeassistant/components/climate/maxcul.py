@@ -23,7 +23,7 @@ from homeassistant.components.maxcul import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDS = ['maxcul']
+DEPENDENCIES = ['maxcul']
 
 DEFAULT_TEMPERATURE = 12
 

@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pymaxcul==0.1.8']
+REQUIREMENTS = ['pymaxcul==0.1.9']
 
 DOMAIN = 'maxcul'
 
