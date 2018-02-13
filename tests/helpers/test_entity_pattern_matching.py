@@ -25,8 +25,8 @@ class TestEntityPatternMatching(unittest.TestCase):
         """Test if entity pattern matching works correctly."""
         entity_ids = set()
         update_runs = []
-        entity_list = ['light.demo', 'light.b*', 'lig[h]t.demo2',
-                       'light?demo3']
+        entities_patterns = ({'light.demo'}, {'light.d*', 'light.b*',
+                                              'lig[h]t.demo2', 'light?demo3'})
 
         @callback
         def update_entity_ids(new_entity_ids):
@@ -36,17 +36,16 @@ class TestEntityPatternMatching(unittest.TestCase):
                 self.assertFalse(entity in entity_ids)
             entity_ids.update(new_entity_ids)
 
-        EPM(self.hass, update_entity_ids, entity_list)
+        EPM(self.hass, update_entity_ids, entities_patterns)
 
-        self.assertEqual(1, len(update_runs))
-        self.assertEqual(update_runs[0], {'light.demo'})
+        self.assertEqual(0, len(update_runs))
 
         self.hass.states.set('light.Bowl', 'on')
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
 
-        self.assertEqual(2, len(update_runs))
-        self.assertEqual(update_runs[1], {'light.bowl'})
+        self.assertEqual(1, len(update_runs))
+        self.assertEqual(update_runs[0], {'light.bowl'})
 
         self.hass.states.set('light.demo2', 'off')
         self.hass.states.set('light.demo3', 'off')
@@ -54,5 +53,5 @@ class TestEntityPatternMatching(unittest.TestCase):
         self.hass.bus.fire(EVENT_NETWORK_READY)
         self.hass.block_till_done()
 
-        self.assertEqual(3, len(update_runs))
-        self.assertEqual(update_runs[2], {'light.demo2', 'light.demo3'})
+        self.assertEqual(2, len(update_runs))
+        self.assertEqual(update_runs[1], {'light.demo2', 'light.demo3'})

@@ -8,7 +8,7 @@ from socket import _GLOBAL_DEFAULT_TIMEOUT
 import logging
 import inspect
 
-from typing import Any, Union, TypeVar, Callable, Sequence, Dict
+from typing import Any, Union, TypeVar, Callable, Sequence, Dict, Tuple
 
 import voluptuous as vol
 
@@ -18,7 +18,8 @@ from homeassistant.const import (
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
-from homeassistant.core import valid_entity_id
+from homeassistant.core import (
+    valid_entity_id, valid_entity_id_fnmatch_pattern)
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify as util_slugify
@@ -145,6 +146,27 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
         value = [ent_id.strip() for ent_id in value.split(',')]
 
     return [entity_id(ent_id) for ent_id in value]
+
+
+def entity_id_pattern_list(value: Union[T, Sequence[T]]) \
+        -> Tuple[Sequence[T], Sequence[T]]:
+    """Validate List entries to be Entity ID or pattern."""
+    if value is None:
+        return ([], [])
+    ids = set()
+    patterns = set()
+    if not isinstance(value, list):
+        value = [value]
+    for e in value:
+        e = e.strip().lower()
+        if valid_entity_id_fnmatch_pattern(e):
+            patterns.add(e)
+        elif valid_entity_id(e):
+            ids.add(e)
+        else:
+            raise vol.Invalid('Entity ID or pattern {} is an invalid entity id'
+                              'or pattern'.format(e))
+    return (ids, patterns)
 
 
 def enum(enumClass):
