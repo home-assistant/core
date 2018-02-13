@@ -266,7 +266,7 @@ evohomeclient==0.2.5
 fastdotcom==0.0.3
 
 # homeassistant.components.sensor.fedex
-fedexdeliverymanager==1.0.4
+fedexdeliverymanager==1.0.5
 
 # homeassistant.components.feedreader
 # homeassistant.components.sensor.geo_rss_events
