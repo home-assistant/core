@@ -4,9 +4,11 @@ Camera platform that has a Raspberry Pi camera.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.rpi_camera/
 """
+import os
 import subprocess
 import logging
 import shutil
+from tempfile import NamedTemporaryFile
 
 import voluptuous as vol
 
@@ -76,14 +78,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             CONF_TIMELAPSE: config.get(CONF_TIMELAPSE),
             CONF_HORIZONTAL_FLIP: config.get(CONF_HORIZONTAL_FLIP),
             CONF_VERTICAL_FLIP: config.get(CONF_VERTICAL_FLIP),
-            CONF_FILE_PATH: config.get(CONF_FILE_PATH,
-                                       hass.config.path('image.jpg'))
+            CONF_FILE_PATH: config.get(CONF_FILE_PATH)
         }
     )
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, kill_raspistill)
 
     file_path = setup_config[CONF_FILE_PATH]
+
+    def delete_temp_file(*args):
+        """Delete the temporary file to prevent saving multiple temp images.
+
+        Only used when no path is defined
+        """
+        os.remove(file_path)
+
+    # If no file path is defined, use a temporary file
+    if file_path is None:
+        temp_file = NamedTemporaryFile(suffix='.jpg', delete=False)
+        temp_file.close()
+        file_path = temp_file.name
+        setup_config[CONF_FILE_PATH] = file_path
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, delete_temp_file)
 
     # Check whether the file path has been whitelisted
     if not hass.config.is_allowed_path(file_path):
