@@ -12,8 +12,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import (
-    async_track_state_change, async_track_utc_time_change)
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
 REQUIREMENTS = ['xknx==0.8.3']
