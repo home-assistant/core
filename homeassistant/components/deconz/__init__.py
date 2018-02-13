@@ -7,7 +7,6 @@ https://home-assistant.io/components/deconz/
 
 import asyncio
 import logging
-from itertools import chain
 
 import voluptuous as vol
 
