@@ -30,20 +30,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     entities = []
 
     for light in lights.values():
-        entities.append(DeconzLight(hass, light))
+        entities.append(DeconzLight(light))
 
     for group in groups.values():
         if group.lights:  # Don't create entity for group not containing light
-            entities.append(DeconzLight(hass, group))
+            entities.append(DeconzLight(group))
     async_add_devices(entities, True)
 
 
 class DeconzLight(Light):
     """Representation of a deCONZ light."""
 
-    def __init__(self, hass, light):
+    def __init__(self, light):
         """Set up light and add update callback to get data from websocket."""
-        self.hass = hass
         self._light = light
 
         self._features = SUPPORT_BRIGHTNESS

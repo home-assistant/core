@@ -28,16 +28,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for key in sorted(sensors.keys(), key=int):
         sensor = sensors[key]
         if sensor and sensor.type in DECONZ_BINARY_SENSOR:
-            entities.append(DeconzBinarySensor(hass, sensor))
+            entities.append(DeconzBinarySensor(sensor))
     async_add_devices(entities, True)
 
 
 class DeconzBinarySensor(BinarySensorDevice):
     """Representation of a binary sensor."""
 
-    def __init__(self, hass, sensor):
+    def __init__(self, sensor):
         """Set up sensor and add update callback to get data from websocket."""
-        self.hass = hass
         self._sensor = sensor
 
     @asyncio.coroutine

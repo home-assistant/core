@@ -23,16 +23,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     entities = []
 
     for scene in scenes.values():
-        entities.append(DeconzScene(hass, scene))
+        entities.append(DeconzScene(scene))
     async_add_devices(entities)
 
 
 class DeconzScene(Scene):
     """Representation of a deCONZ scene."""
 
-    def __init__(self, hass, scene):
+    def __init__(self, scene):
         """Set up a scene."""
-        self.hass = hass
         self._scene = scene
 
     @asyncio.coroutine

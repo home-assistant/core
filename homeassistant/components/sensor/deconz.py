@@ -35,18 +35,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if sensor.type in DECONZ_REMOTE:
                 DeconzEvent(hass, sensor)
                 if sensor.battery:
-                    entities.append(DeconzBattery(hass, sensor))
+                    entities.append(DeconzBattery(sensor))
             else:
-                entities.append(DeconzSensor(hass, sensor))
+                entities.append(DeconzSensor(sensor))
     async_add_devices(entities, True)
 
 
 class DeconzSensor(Entity):
     """Representation of a sensor."""
 
-    def __init__(self, hass, sensor):
+    def __init__(self, sensor):
         """Set up sensor and add update callback to get data from websocket."""
-        self.hass = hass
         self._sensor = sensor
 
     @asyncio.coroutine
@@ -119,9 +118,8 @@ class DeconzSensor(Entity):
 class DeconzBattery(Entity):
     """Battery class for when a device is only represented as an event."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Register dispatcher callback for update of battery state."""
-        self.hass = hass
         self._device = device
         self._name = '{} {}'.format(self._device.name, 'Battery Level')
         self._device_class = 'battery'
