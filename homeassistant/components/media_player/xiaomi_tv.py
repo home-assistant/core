@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
 
 REQUIREMENTS = ['pymitv==1.0.0']
 
-DEFAULT_NAME="Xiaomi TV"
+DEFAULT_NAME = "Xiaomi TV"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,13 +48,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([XiaomiTV(host, name)])
     else:
         # Otherwise, discover TVs on network.
-        add_devices(XiaomiTV(tv) for tv in Discover().scan())
+        add_devices(XiaomiTV(tv, DEFAULT_NAME) for tv in Discover().scan())
 
 
 class XiaomiTV(MediaPlayerDevice):
     """Represent the Xiaomi TV for Home Assistant."""
 
-    def __init__(self, ip, name=DEFAULT_TV):
+    def __init__(self, ip, name):
         """Receive IP address and name to construct class."""
         # Import pymitv library.
         from pymitv import TV
