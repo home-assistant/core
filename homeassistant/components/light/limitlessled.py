@@ -141,9 +141,6 @@ def state(new_state):
             if self.repeating:
                 self.repeating = False
                 self.group.stop()
-            # Should be on? Turn on.
-            if new_state is True:
-                pipeline.on()
             # Set transition time.
             if ATTR_TRANSITION in kwargs:
                 transition_time = int(kwargs[ATTR_TRANSITION])
@@ -173,23 +170,22 @@ class LimitlessLEDGroup(Light):
             self._supported = SUPPORT_LIMITLESSLED_RGBWW
 
         self.group = group
+        self.config = config
         self.repeating = False
         self._is_on = False
         self._brightness = None
         self._temperature = None
         self._color = None
 
-        self.config = config
-
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Called when entity is about to be added to hass."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if state:
-            self._is_on = (state.state == STATE_ON)
-            self._brightness = state.attributes.get('brightness')
-            self._temperature = state.attributes.get('color_temp')
-            self._color = state.attributes.get('rgb_color')
+        last_state = yield from async_get_last_state(self.hass, self.entity_id)
+        if last_state:
+            self._is_on = (last_state.state == STATE_ON)
+            self._brightness = last_state.attributes.get('brightness')
+            self._temperature = last_state.attributes.get('color_temp')
+            self._color = last_state.attributes.get('rgb_color')
 
     @property
     def should_poll(self):
@@ -243,7 +239,8 @@ class LimitlessLEDGroup(Light):
     @state(True)
     def turn_on(self, transition_time, pipeline, **kwargs):
         """Turn on (or adjust property of) a group."""
-        from limitlessled.presets import COLORLOOP
+        pipeline.on()
+
         # Set up transition.
         args = {}
         if self.config[CONF_FADE] and not self.is_on and self._brightness:
@@ -268,9 +265,10 @@ class LimitlessLEDGroup(Light):
             self._color = WHITE
             if self._supported & SUPPORT_COLOR_TEMP:
                 self._temperature = kwargs[ATTR_COLOR_TEMP]
-                args['temperature'] = _from_hass_temperature(self._temperature)
+                args['temperature'] = self._from_hass_temperature()
 
-        pipeline.transition(transition_time, **args)
+        if args:
+            pipeline.transition(transition_time, **args)
 
         # Flash.
         if ATTR_FLASH in kwargs and self._supported & SUPPORT_FLASH:
@@ -282,21 +280,17 @@ class LimitlessLEDGroup(Light):
         # Add effects.
         if ATTR_EFFECT in kwargs and self._supported & SUPPORT_EFFECT:
             if kwargs[ATTR_EFFECT] == EFFECT_COLORLOOP:
+                from limitlessled.presets import COLORLOOP
                 self.repeating = True
                 pipeline.append(COLORLOOP)
             if kwargs[ATTR_EFFECT] == EFFECT_WHITE:
                 pipeline.white()
                 self._color = WHITE
 
-
-def _from_hass_temperature(temperature):
-    """Convert Home Assistant color temperature units to percentage."""
-    return 1 - (temperature - 154) / 346
-
-
-def _to_hass_temperature(temperature):
-    """Convert percentage to Home Assistant color temperature units."""
-    return 500 - int(temperature * 346)
+    def _from_hass_temperature(self):
+        """Convert Home Assistant color temperature units to percentage."""
+        width = self.max_mireds - self.min_mireds
+        return 1 - (self._temperature - self.min_mireds) / width
 
 
 def _from_hass_brightness(brightness):
