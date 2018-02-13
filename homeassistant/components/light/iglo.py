@@ -61,7 +61,8 @@ class IGloLamp(Light):
     @property
     def color_temp(self):
         """Return the color temperature."""
-        return color_util.color_temperature_kelvin_to_mired(self._lamp.state['white'])
+        return color_util.color_temperature_kelvin_to_mired(
+            self._lamp.state['white'])
 
     @property
     def min_mireds(self):
@@ -94,7 +95,7 @@ class IGloLamp(Light):
     def supported_features(self):
         """Flag supported features."""
         return (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-          SUPPORT_RGB_COLOR | SUPPORT_EFFECT)
+                SUPPORT_RGB_COLOR | SUPPORT_EFFECT)
 
     @property
     def is_on(self):
