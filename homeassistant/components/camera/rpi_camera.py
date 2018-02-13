@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, delete_temp_file)
 
     # Check whether the file path has been whitelisted
-    if not hass.config.is_allowed_path(file_path):
+    elif not hass.config.is_allowed_path(file_path):
         _LOGGER.error("'%s' is not a whitelisted directory", file_path)
         return False
 
