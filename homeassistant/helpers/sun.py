@@ -60,6 +60,34 @@ def get_astral_event_next(hass, event, utc_point_in_time=None, offset=None):
 
 @callback
 @bind_hass
+def get_astral_event_last(hass, event, utc_point_in_time=None, offset=None):
+    """Calculate the last specified solar event."""
+    import astral
+
+    location = get_astral_location(hass)
+
+    if offset is None:
+        offset = datetime.timedelta()
+
+    if utc_point_in_time is None:
+        utc_point_in_time = dt_util.utcnow()
+
+    mod = 1
+    while True:
+        try:
+            last_dt = getattr(location, event)(
+                dt_util.as_local(utc_point_in_time).date() +
+                datetime.timedelta(days=mod),
+                local=False) + offset
+            if last_dt < utc_point_in_time:
+                return next_dt
+        except astral.AstralError:
+            pass
+        mod -= 1
+
+
+@callback
+@bind_hass
 def get_astral_event_date(hass, event, date=None):
     """Calculate the astral event time for the specified date."""
     import astral
