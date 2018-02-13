@@ -15,7 +15,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['alpha_vantage==1.8.0']
+REQUIREMENTS = ['alpha_vantage==1.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,8 +98,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         from_cur = conversion.get(CONF_FROM)
         to_cur = conversion.get(CONF_TO)
         try:
-            _LOGGER.debug("Configuring forex %s - %s",
-                          from_cur, to_cur)
+            _LOGGER.debug("Configuring forex %s - %s", from_cur, to_cur)
             forex.get_currency_exchange_rate(
                 from_currency=from_cur, to_currency=to_cur)
         except ValueError as error:
@@ -214,10 +213,8 @@ class AlphaVantageForeignExchange(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("Requesting new data for forex %s - %s",
-                      self._from_currency,
-                      self._to_currency)
+                      self._from_currency, self._to_currency)
         self.values, _ = self._foreign_exchange.get_currency_exchange_rate(
             from_currency=self._from_currency, to_currency=self._to_currency)
         _LOGGER.debug("Received new data for forex %s - %s",
-                      self._from_currency,
-                      self._to_currency)
+                      self._from_currency, self._to_currency)
