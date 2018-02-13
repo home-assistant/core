@@ -9,7 +9,7 @@ import datetime
 
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
 from homeassistant.components.mercedesme import (
-    DATA_MME, MercedesMeEntity, BINARY_SENSORS)
+    DATA_MME, FEATURE_NOT_AVAILABLE, MercedesMeEntity, BINARY_SENSORS)
 
 DEPENDENCIES = ['mercedesme']
 
@@ -27,8 +27,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for car in data.cars:
         for key, value in sorted(BINARY_SENSORS.items()):
-            devices.append(MercedesMEBinarySensor(
-                data, key, value[0], car["vin"], None))
+            if car['availabilities'].get(key, 'INVALID') == 'VALID':
+                devices.append(MercedesMEBinarySensor(
+                    data, key, value[0], car["vin"], None))
+            else:
+                _LOGGER.warning(FEATURE_NOT_AVAILABLE, key, car["license"])
 
     add_devices(devices, True)
 
