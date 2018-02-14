@@ -100,14 +100,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if city and state and country:
         _LOGGER.debug(
             "Using city, state, and country: %s, %s, %s", city, state, country)
-        location = ','.join((city, state, country))
+        location_id = ','.join((city, state, country))
         data = AirVisualData(
             Client(api_key), city=city, state=state, country=country,
             show_on_map=show_on_map)
     else:
         _LOGGER.debug(
             "Using latitude and longitude: %s, %s", latitude, longitude)
-        location = ','.join((str(latitude), str(longitude)))
+        location_id = ','.join((str(latitude), str(longitude)))
         data = AirVisualData(
             Client(api_key), latitude=latitude, longitude=longitude,
             radius=radius, show_on_map=show_on_map)
@@ -122,7 +122,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 name,
                 icon,
                 locale,
-                location
+                location_id
             ))
 
     add_devices(sensors, True)
