@@ -18,7 +18,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
     TEMP_FAHRENHEIT, TEMP_CELSIUS, LENGTH_INCHES, LENGTH_KILOMETERS,
-    LENGTH_MILES, LENGTH_FEET, STATE_UNKNOWN, ATTR_ATTRIBUTION)
+    LENGTH_MILES, LENGTH_FEET, ATTR_ATTRIBUTION)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -739,7 +739,7 @@ class WUndergroundSensor(Entity):
             # no data, return
             return
 
-        self._state = self._cfg_expand("value", STATE_UNKNOWN)
+        self._state = self._cfg_expand("value")
         self._update_attrs()
         self._icon = self._cfg_expand("icon", super().icon)
         url = self._cfg_expand("entity_picture")
