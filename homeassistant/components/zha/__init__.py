@@ -214,7 +214,7 @@ class ApplicationListener:
                     'in_clusters': {c.cluster_id: c for c in in_clusters},
                     'out_clusters': {c.cluster_id: c for c in out_clusters},
                     'new_join': join,
-                    'unique_id': "%s-%s".format(device.ieee, endpoint_id),
+                    'unique_id': "{}-{}".format(device.ieee, endpoint_id),
                 }
                 discovery_info.update(discovered_info)
                 self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
