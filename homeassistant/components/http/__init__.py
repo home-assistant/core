@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/http/
 """
 import asyncio
-from functools import wraps
 from ipaddress import ip_network
 import json
 import logging
@@ -415,14 +414,13 @@ def request_handler_factory(view, handler):
         if not request.app['hass'].is_running:
             return web.Response(status=503)
 
-        remote_addr = get_real_ip(request)
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
         if view.requires_auth and not authenticated:
             raise HTTPUnauthorized()
 
         _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, remote_addr, authenticated)
+                     request.path, get_real_ip(request), authenticated)
 
         result = handler(request, **request.match_info)
 
@@ -449,41 +447,3 @@ def request_handler_factory(view, handler):
         return web.Response(body=result, status=status_code)
 
     return handle
-
-
-class RequestDataValidator:
-    """Decorator that will validate the incoming data.
-
-    Takes in a voluptuous schema and adds 'post_data' as
-    keyword argument to the function call.
-
-    Will return a 400 if no JSON provided or doesn't match schema.
-    """
-
-    def __init__(self, schema):
-        """Initialize the decorator."""
-        self._schema = schema
-
-    def __call__(self, method):
-        """Decorate a function."""
-        @asyncio.coroutine
-        @wraps(method)
-        def wrapper(view, request, *args, **kwargs):
-            """Wrap a request handler with data validation."""
-            try:
-                data = yield from request.json()
-            except ValueError:
-                _LOGGER.error('Invalid JSON received.')
-                return view.json_message('Invalid JSON.', 400)
-
-            try:
-                kwargs['data'] = self._schema(data)
-            except vol.Invalid as err:
-                _LOGGER.error('Data does not match schema: %s', err)
-                return view.json_message(
-                    'Message format incorrect: {}'.format(err), 400)
-
-            result = yield from method(view, request, *args, **kwargs)
-            return result
-
-        return wrapper
