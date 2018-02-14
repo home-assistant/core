@@ -909,7 +909,7 @@ pyqwikswitch==0.8
 # homeassistant.components.rainbird
 pyrainbird==0.1.3
 
-# homeassistant.components.sensor.sabnzbd
+# homeassistant.components.sabnzbd
 pysabnzbd==1.0.1
 
 # homeassistant.components.climate.sensibo
