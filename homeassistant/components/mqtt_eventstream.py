@@ -54,12 +54,12 @@ def async_setup(hass, config):
             return
 
         # Filter out the events that were triggered by publishing
-        # to the MQTT topic, or you will end up in an infinite loop.
+        # to any MQTT topic, as this causes hass to publish
+        # the same message to the same mqtt topic
         if event.event_type == EVENT_CALL_SERVICE:
             if (
                     event.data.get('domain') == mqtt.DOMAIN and
-                    event.data.get('service') == mqtt.SERVICE_PUBLISH and
-                    event.data[ATTR_SERVICE_DATA].get('topic') == pub_topic
+                    event.data.get('service') == mqtt.SERVICE_PUBLISH
             ):
                 return
 
