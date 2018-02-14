@@ -29,15 +29,15 @@ def _prepare_json(result):
 
     import voluptuous_serialize
 
-    result = result.copy()
+    data = result.copy()
 
-    schema = result['data_schema']
+    schema = data['data_schema']
     if schema is None:
-        result['data_schema'] = []
+        data['data_schema'] = []
     else:
-        result['data_schema'] = voluptuous_serialize.convert(schema)
+        data['data_schema'] = voluptuous_serialize.convert(schema)
 
-    return result
+    return data
 
 
 class ConfigManagerEntryIndexView(HomeAssistantView):

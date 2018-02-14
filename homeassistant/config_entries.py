@@ -305,8 +305,7 @@ class ConfigEntries:
         if found is None:
             raise UnknownEntry
 
-        entry = self._entries[found]
-        self._entries.pop(found)
+        entry = self._entries.pop(found)
         self._async_schedule_save()
 
         unloaded = yield from entry.async_unload(self.hass)
@@ -321,6 +320,7 @@ class ConfigEntries:
         path = self.hass.config.path(PATH_CONFIG)
         if not os.path.isfile(path):
             self._entries = []
+            return
 
         entries = yield from self.hass.async_add_job(load_json, path)
         self._entries = [ConfigEntry(**entry) for entry in entries]
