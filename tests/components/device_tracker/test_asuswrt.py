@@ -52,8 +52,8 @@ WL_DEVICES = {
 
 ARP_DATA = [
     '? (123.123.123.125) at 01:02:03:04:06:08 [ether]  on eth0\r',
-    '? (123.123.123.126) at 08:09:10:11:12:14 [ether]  on br0\r'
-    '? (123.123.123.127) at <incomplete>  on br0\r'
+    '? (123.123.123.126) at 08:09:10:11:12:14 [ether]  on br0\r',
+    '? (123.123.123.127) at <incomplete>  on br0\r',
 ]
 
 ARP_DEVICES = {
@@ -65,8 +65,10 @@ ARP_DEVICES = {
 
 NEIGH_DATA = [
     '123.123.123.125 dev eth0 lladdr 01:02:03:04:06:08 REACHABLE\r',
-    '123.123.123.126 dev br0 lladdr 08:09:10:11:12:14 STALE\r'
-    '123.123.123.127 dev br0  FAILED\r'
+    '123.123.123.126 dev br0 lladdr 08:09:10:11:12:14 REACHABLE\r',
+    '123.123.123.127 dev br0  FAILED\r',
+    '123.123.123.128 dev br0 lladdr 08:09:15:15:15:15 DELAY\r',
+    'fe80::feff:a6ff:feff:12ff dev br0 lladdr fc:ff:a6:ff:12:ff STALE\r',
 ]
 
 NEIGH_DEVICES = {
@@ -473,7 +475,7 @@ class TestSshConnection(unittest.TestCase):
     def setUp(self):
         """Setup test env."""
         self.connection = SshConnection(
-            'fake', 'fake', 'fake', 'fake', 'fake', 'fake')
+            'fake', 'fake', 'fake', 'fake', 'fake')
         self.connection._connected = True
 
     def test_run_command_exception_eof(self):
@@ -513,7 +515,7 @@ class TestTelnetConnection(unittest.TestCase):
     def setUp(self):
         """Setup test env."""
         self.connection = TelnetConnection(
-            'fake', 'fake', 'fake', 'fake', 'fake')
+            'fake', 'fake', 'fake', 'fake')
         self.connection._connected = True
 
     def test_run_command_exception_eof(self):

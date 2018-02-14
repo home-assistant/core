@@ -34,7 +34,7 @@ class DeconzScene(Scene):
         self._scene = scene
 
     @asyncio.coroutine
-    def async_activate(self, **kwargs):
+    def async_activate(self):
         """Activate the scene."""
         yield from self._scene.async_set_state({})
 

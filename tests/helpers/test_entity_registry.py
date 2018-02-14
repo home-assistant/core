@@ -9,6 +9,9 @@ from homeassistant.helpers import entity_registry
 from tests.common import mock_registry
 
 
+YAML__OPEN_PATH = 'homeassistant.util.yaml.open'
+
+
 @pytest.fixture
 def registry(hass):
     """Return an empty, loaded, registry."""
@@ -82,13 +85,12 @@ def test_save_timer_reset_on_subsequent_save(hass, registry):
 @asyncio.coroutine
 def test_loading_saving_data(hass, registry):
     """Test that we load/save data correctly."""
-    yaml_path = 'homeassistant.util.yaml.open'
     orig_entry1 = registry.async_get_or_create('light', 'hue', '1234')
     orig_entry2 = registry.async_get_or_create('light', 'hue', '5678')
 
     assert len(registry.entities) == 2
 
-    with patch(yaml_path, mock_open(), create=True) as mock_write:
+    with patch(YAML__OPEN_PATH, mock_open(), create=True) as mock_write:
         yield from registry._async_save()
 
     # Mock open calls are: open file, context enter, write, context leave
@@ -98,7 +100,7 @@ def test_loading_saving_data(hass, registry):
     registry2 = entity_registry.EntityRegistry(hass)
 
     with patch('os.path.isfile', return_value=True), \
-            patch(yaml_path, mock_open(read_data=written), create=True):
+            patch(YAML__OPEN_PATH, mock_open(read_data=written), create=True):
         yield from registry2._async_load()
 
     # Ensure same order
@@ -133,3 +135,48 @@ def test_is_registered(registry):
     entry = registry.async_get_or_create('light', 'hue', '1234')
     assert registry.async_is_registered(entry.entity_id)
     assert not registry.async_is_registered('light.non_existing')
+
+
+@asyncio.coroutine
+def test_loading_extra_values(hass):
+    """Test we load extra data from the registry."""
+    written = """
+test.named:
+  platform: super_platform
+  unique_id: with-name
+  name: registry override
+test.no_name:
+  platform: super_platform
+  unique_id: without-name
+test.disabled_user:
+  platform: super_platform
+  unique_id: disabled-user
+  disabled_by: user
+test.disabled_hass:
+  platform: super_platform
+  unique_id: disabled-hass
+  disabled_by: hass
+"""
+
+    registry = entity_registry.EntityRegistry(hass)
+
+    with patch('os.path.isfile', return_value=True), \
+            patch(YAML__OPEN_PATH, mock_open(read_data=written), create=True):
+        yield from registry._async_load()
+
+    entry_with_name = registry.async_get_or_create(
+        'test', 'super_platform', 'with-name')
+    entry_without_name = registry.async_get_or_create(
+        'test', 'super_platform', 'without-name')
+    assert entry_with_name.name == 'registry override'
+    assert entry_without_name.name is None
+    assert not entry_with_name.disabled
+
+    entry_disabled_hass = registry.async_get_or_create(
+        'test', 'super_platform', 'disabled-hass')
+    entry_disabled_user = registry.async_get_or_create(
+        'test', 'super_platform', 'disabled-user')
+    assert entry_disabled_hass.disabled
+    assert entry_disabled_hass.disabled_by == entity_registry.DISABLED_HASS
+    assert entry_disabled_user.disabled
+    assert entry_disabled_user.disabled_by == entity_registry.DISABLED_USER

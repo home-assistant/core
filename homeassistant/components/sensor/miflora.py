@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 
 
-REQUIREMENTS = ['miflora==0.2.0']
+REQUIREMENTS = ['miflora==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,11 +138,15 @@ class MiFloraSensor(Entity):
 
         This uses a rolling median over 3 values to filter out outliers.
         """
+        from miflora.backends import BluetoothBackendException
         try:
             _LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)
         except IOError as ioerr:
             _LOGGER.info("Polling error %s", ioerr)
+            return
+        except BluetoothBackendException as bterror:
+            _LOGGER.info("Polling error %s", bterror)
             return
 
         if data is not None:

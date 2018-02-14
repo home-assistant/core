@@ -46,7 +46,6 @@ TEST_REQUIREMENTS = (
     'ephem',
     'evohomeclient',
     'feedparser',
-    'fuzzywuzzy',
     'gTTS-token',
     'ha-ffmpeg',
     'haversine',

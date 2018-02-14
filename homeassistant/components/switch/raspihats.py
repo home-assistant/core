@@ -121,7 +121,7 @@ class I2CHatSwitch(ToggleEntity):
             _LOGGER.error(self._log_message("Is ON check failed, " + str(ex)))
             return False
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         try:
             state = True if self._invert_logic is False else False
@@ -130,7 +130,7 @@ class I2CHatSwitch(ToggleEntity):
         except I2CHatsException as ex:
             _LOGGER.error(self._log_message("Turn ON failed, " + str(ex)))
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         try:
             state = False if self._invert_logic is False else True

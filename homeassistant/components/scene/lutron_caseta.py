@@ -53,6 +53,6 @@ class LutronCasetaScene(Scene):
         return False
 
     @asyncio.coroutine
-    def async_activate(self, **kwargs):
+    def async_activate(self):
         """Activate the scene."""
         self._bridge.activate_scene(self._scene_id)

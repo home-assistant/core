@@ -188,10 +188,10 @@ class PilightSwitch(SwitchDevice):
         self._state = turn_on
         self.schedule_update_ha_state()
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the switch on by calling pilight.send service with on code."""
         self.set_state(turn_on=True)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch on by calling pilight.send service with off code."""
         self.set_state(turn_on=False)

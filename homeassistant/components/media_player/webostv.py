@@ -26,7 +26,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 import homeassistant.util as util
 
-REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2', 'wakeonlan==0.2.2']
+REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2']
 
 _CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
@@ -270,8 +270,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         """Title of current playing media."""
         if (self._channel is not None) and ('channelName' in self._channel):
             return self._channel['channelName']
-        else:
-            return None
+        return None
 
     @property
     def media_image_url(self):
