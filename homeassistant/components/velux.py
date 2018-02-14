@@ -52,16 +52,13 @@ class VeluxModule:
     def __init__(self, hass, config):
         """Initialize for velux component."""
         from pyvlx import PyVLX
-        self.initialized = False
         host = config[DOMAIN].get(CONF_HOST)
         password = config[DOMAIN].get(CONF_PASSWORD)
         self.pyvlx = PyVLX(
             host=host,
             password=password)
-        self.hass = hass
 
     @asyncio.coroutine
     def async_start(self):
         """Start velux component."""
         yield from self.pyvlx.load_scenes()
-        self.initialized = True
