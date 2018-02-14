@@ -20,9 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['locationsharinglib==0.3.0']
 
-CONF_IGNORED_DEVICES = 'ignored_devices'
-CONF_ACCOUNTNAME = 'account_name'
-
 CREDENTIALS_FILE = 'google_maps_location_sharing.conf'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
