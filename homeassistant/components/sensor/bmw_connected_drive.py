@@ -5,10 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bmw_connected_drive/
 """
 import logging
-import asyncio
 
 from homeassistant.components.bmw_connected_drive \
-    import BMWConnectedDriveVehicle, DOMAIN as BMW_DOMAIN
+    import BMWConnectedDriveEntity, DOMAIN as BMW_DOMAIN
 from homeassistant.helpers.entity import Entity
 
 
@@ -24,35 +23,40 @@ VAILD_ATTRIBUTES = LENGTH_ATTRIBUTES + [
 ]
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the BMW sensors."""
-    vehicles = hass.data[BMW_DOMAIN]
-    _LOGGER.debug('Found BME vehicles: %s',
-                  ', '.join([v.name for v in vehicles]))
+    entities = hass.data[BMW_DOMAIN]
+    _LOGGER.debug('Found BMW accounts: %s',
+                  ', '.join([v.name for v in entities]))
     devices = []
-    for vehicle in vehicles:
-        for sensor in VAILD_ATTRIBUTES:
-            device = BMWConnectedDriveSensor(vehicle, sensor)
-            devices.append(device)
+    for entity in entities:
+        account = entity.account
+        for vehicle in account.vehicles:
+            for sensor in VAILD_ATTRIBUTES:
+                device = BMWConnectedDriveSensor(entity, account,
+                                                 vehicle, sensor)
+                devices.append(device)
     return add_devices(devices)
 
 
 class BMWConnectedDriveSensor(Entity):
     """Representation of a BMW vehicle."""
 
-    def __init__(self, vehicle: BMWConnectedDriveVehicle, attribute: str):
+    def __init__(self, entity: 'BMWConnectedDriveEntity',
+                 account, vehicle, attribute: str):
         """Constructor."""
+
         self._vehicle = vehicle
         self._attribute = attribute
         self._state = None
         self._unit_of_measurement = None
-        self._name = '{}_{}'.format(self._vehicle.name, self._attribute)
+        self._name = '{} {}'.format(self._vehicle.modelName, self._attribute)
+        entity.add_update_listener(self.update)
 
     @property
     def should_poll(self) -> bool:
-        """Data needs to be polled from server."""
-        return True
+        """Data update is triggered from BMWConnectedDriveEntity."""
+        return False
 
     @property
     def name(self) -> str:
@@ -73,15 +77,16 @@ class BMWConnectedDriveSensor(Entity):
         """Get the unit of measurement."""
         return self._unit_of_measurement
 
-    @asyncio.coroutine
-    def async_update(self) -> None:
+    def update(self) -> None:
         """Read new state data from the library."""
-        bimmer = self._vehicle.bimmer
-        self._state = getattr(bimmer, self._attribute)
+        vehicle_state = self._vehicle.state
+        self._state = getattr(vehicle_state, self._attribute)
 
         if self._attribute in LENGTH_ATTRIBUTES:
-            self._unit_of_measurement = bimmer.unit_of_length
+            self._unit_of_measurement = vehicle_state.unit_of_length
         elif self._attribute == 'remaining_fuel':
-            self._unit_of_measurement = bimmer.unit_of_volume
+            self._unit_of_measurement = vehicle_state.unit_of_volume
         else:
             self._unit_of_measurement = None
+
+        self.schedule_update_ha_state()
