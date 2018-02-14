@@ -6,9 +6,11 @@ https://home-assistant.io/components/sensor.teksavvy/
 """
 from datetime import timedelta
 import logging
-
 import asyncio
 import async_timeout
+
+import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME)
@@ -16,7 +18,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,18 +143,17 @@ class TekSavvyData(object):
         if req.status != 200:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
-        else:
-            data = yield from req.json()
-            for (api, ha_name) in API_HA_MAP:
-                self.data[ha_name] = float(data["value"][0][api])
-            on_peak_download = self.data["onpeak_download"]
-            on_peak_upload = self.data["onpeak_upload"]
-            off_peak_download = self.data["offpeak_download"]
-            off_peak_upload = self.data["offpeak_upload"]
-            limit = self.data["limit"]
-            self.data["usage"] = 100*on_peak_download/self.bandwidth_cap
-            self.data["usage_gb"] = on_peak_download
-            self.data["onpeak_total"] = on_peak_download + on_peak_upload
-            self.data["offpeak_total"] = off_peak_download + off_peak_upload
-            self.data["onpeak_remaining"] = limit - on_peak_download
-            return True
+        data = yield from req.json()
+        for (api, ha_name) in API_HA_MAP:
+            self.data[ha_name] = float(data["value"][0][api])
+        on_peak_download = self.data["onpeak_download"]
+        on_peak_upload = self.data["onpeak_upload"]
+        off_peak_download = self.data["offpeak_download"]
+        off_peak_upload = self.data["offpeak_upload"]
+        limit = self.data["limit"]
+        self.data["usage"] = 100*on_peak_download/self.bandwidth_cap
+        self.data["usage_gb"] = on_peak_download
+        self.data["onpeak_total"] = on_peak_download + on_peak_upload
+        self.data["offpeak_total"] = off_peak_download + off_peak_upload
+        self.data["onpeak_remaining"] = limit - on_peak_download
+        return True

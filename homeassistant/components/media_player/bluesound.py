@@ -122,7 +122,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class BluesoundPlayer(MediaPlayerDevice):
-    """Represenatation of a Bluesound Player."""
+    """Representation of a Bluesound Player."""
 
     def __init__(self, hass, host, port=None, name=None, init_callback=None):
         """Initialize the media player."""
@@ -338,7 +338,7 @@ class BluesoundPlayer(MediaPlayerDevice):
     @asyncio.coroutine
     @Throttle(UPDATE_CAPTURE_INTERVAL)
     def async_update_captures(self):
-        """Update Capture cources."""
+        """Update Capture sources."""
         resp = yield from self.send_bluesound_command(
             'RadioBrowse?service=Capture')
         if not resp:
@@ -440,8 +440,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             return STATE_PAUSED
         elif status == 'stream' or status == 'play':
             return STATE_PLAYING
-        else:
-            return STATE_IDLE
+        return STATE_IDLE
 
     @property
     def media_title(self):
@@ -595,7 +594,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             # But it works with radio service_items will catch playlists.
             items = [x for x in self._preset_items if 'url2' in x and
                      parse.unquote(x['url2']) == stream_url]
-            if len(items) > 0:
+            if items:
                 return items[0]['title']
 
         # This could be a bit difficult to detect. Bluetooth could be named
@@ -606,11 +605,11 @@ class BluesoundPlayer(MediaPlayerDevice):
         if title == 'bluetooth' or stream_url == 'Capture:hw:2,0/44100/16/2':
             items = [x for x in self._capture_items
                      if x['url'] == "Capture%3Abluez%3Abluetooth"]
-            if len(items) > 0:
+            if items:
                 return items[0]['title']
 
         items = [x for x in self._capture_items if x['url'] == stream_url]
-        if len(items) > 0:
+        if items:
             return items[0]['title']
 
         if stream_url[:8] == 'Capture:':
@@ -631,12 +630,12 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         items = [x for x in self._capture_items
                  if x['name'] == current_service]
-        if len(items) > 0:
+        if items:
             return items[0]['title']
 
         items = [x for x in self._services_items
                  if x['name'] == current_service]
-        if len(items) > 0:
+        if items:
             return items[0]['title']
 
         if self._status.get('streamUrl', '') != '':

@@ -33,7 +33,7 @@ from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import check_node_schema, check_value_schema, node_name
 
-REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.0.35']
+REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,7 +170,7 @@ def _obj_to_dict(obj):
     """Convert an object into a hash for debug."""
     return {key: getattr(obj, key) for key
             in dir(obj)
-            if key[0] != '_' and not hasattr(getattr(obj, key), '__call__')}
+            if key[0] != '_' and not callable(getattr(obj, key))}
 
 
 def _value_name(value):
@@ -865,8 +865,8 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self.values.primary.set_change_verified(False)
 
         self._name = _value_name(self.values.primary)
-        self._unique_id = "ZWAVE-{}-{}".format(self.node.node_id,
-                                               self.values.primary.object_id)
+        self._unique_id = "{}-{}".format(self.node.node_id,
+                                         self.values.primary.object_id)
         self._update_attributes()
 
         dispatcher.connect(

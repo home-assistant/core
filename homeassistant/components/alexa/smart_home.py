@@ -51,8 +51,8 @@ class _DisplayCategory(object):
 
     # Describes a combination of devices set to a specific state, when the
     # state change must occur in a specific order. For example, a "watch
-    # Neflix" scene might require the: 1. TV to be powered on & 2. Input set to
-    # HDMI1.    Applies to Scenes
+    # Netflix" scene might require the: 1. TV to be powered on & 2. Input set
+    # to HDMI1. Applies to Scenes
     ACTIVITY_TRIGGER = "ACTIVITY_TRIGGER"
 
     # Indicates media devices with video or photo capabilities.
@@ -328,8 +328,9 @@ class _AlexaBrightnessController(_AlexaInterface):
     def get_property(self, name):
         if name != 'brightness':
             raise _UnsupportedProperty(name)
-
-        return round(self.entity.attributes['brightness'] / 255.0 * 100)
+        if 'brightness' in self.entity.attributes:
+            return round(self.entity.attributes['brightness'] / 255.0 * 100)
+        return 0
 
 
 class _AlexaColorController(_AlexaInterface):
@@ -350,6 +351,11 @@ class _AlexaPercentageController(_AlexaInterface):
 class _AlexaSpeaker(_AlexaInterface):
     def name(self):
         return 'Alexa.Speaker'
+
+
+class _AlexaStepSpeaker(_AlexaInterface):
+    def name(self):
+        return 'Alexa.StepSpeaker'
 
 
 class _AlexaPlaybackController(_AlexaInterface):
@@ -471,6 +477,11 @@ class _MediaPlayerCapabilities(_AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & media_player.SUPPORT_VOLUME_SET:
             yield _AlexaSpeaker(self.entity)
+
+        step_volume_features = (media_player.SUPPORT_VOLUME_MUTE |
+                                media_player.SUPPORT_VOLUME_STEP)
+        if supported & step_volume_features:
+            yield _AlexaStepSpeaker(self.entity)
 
         playback_features = (media_player.SUPPORT_PLAY |
                              media_player.SUPPORT_PAUSE |
@@ -667,7 +678,7 @@ def api_message(request,
         }
     }
 
-    # If a correlation token exsits, add it to header / Need by Async requests
+    # If a correlation token exists, add it to header / Need by Async requests
     token = request[API_HEADER].get('correlationToken')
     if token:
         response[API_EVENT][API_HEADER]['correlationToken'] = token
@@ -1054,7 +1065,16 @@ def async_api_lock(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=False)
 
-    return api_message(request)
+    # Alexa expects a lockState in the response, we don't know the actual
+    # lockState at this point but assume it is locked. It is reported
+    # correctly later when ReportState is called. The alt. to this approach
+    # is to implement DeferredResponse
+    properties = [{
+        'name': 'lockState',
+        'namespace': 'Alexa.LockController',
+        'value': 'LOCKED'
+    }]
+    return api_message(request, context={'properties': properties})
 
 
 # Not supported by Alexa yet
@@ -1153,6 +1173,30 @@ def async_api_adjust_volume(hass, config, request, entity):
     return api_message(request)
 
 
+@HANDLERS.register(('Alexa.StepSpeaker', 'AdjustVolume'))
+@extract_entity
+@asyncio.coroutine
+def async_api_adjust_volume_step(hass, config, request, entity):
+    """Process an adjust volume step request."""
+    volume_step = round(float(request[API_PAYLOAD]['volumeSteps'] / 100), 2)
+
+    current_level = entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
+
+    volume = current_level + volume_step
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
+    }
+
+    yield from hass.services.async_call(
+        entity.domain, media_player.SERVICE_VOLUME_SET,
+        data, blocking=False)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.StepSpeaker', 'SetMute'))
 @HANDLERS.register(('Alexa.Speaker', 'SetMute'))
 @extract_entity
 @asyncio.coroutine

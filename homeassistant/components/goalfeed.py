@@ -51,10 +51,10 @@ def setup(hass, config):
                              timeout=30).json()
 
         channel = pusher.subscribe('private-goals', resp['auth'])
-        channel.bind('goalfeed_goal', goal_handler)
+        channel.bind('goal', goal_handler)
 
     pusher = pysher.Pusher(GOALFEED_APP_ID, secure=False, port=8080,
-                           custom_host=GOALFEED_HOST, timeout=30)
+                           custom_host=GOALFEED_HOST)
 
     pusher.connection.bind('pusher:connection_established', connect_handler)
     pusher.connect()

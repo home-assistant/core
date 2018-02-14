@@ -60,7 +60,7 @@ class InsteonLocalFanDevice(FanEntity):
     @property
     def unique_id(self):
         """Return the ID of this Insteon node."""
-        return 'insteon_local_{}_fan'.format(self.node.device_id)
+        return self.node.device_id
 
     @property
     def speed(self) -> str:
@@ -91,7 +91,7 @@ class InsteonLocalFanDevice(FanEntity):
         """Flag supported features."""
         return SUPPORT_INSTEON_LOCAL
 
-    def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
+    def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
         """Turn device on."""
         if speed is None:
             if ATTR_SPEED in kwargs:

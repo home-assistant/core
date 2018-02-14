@@ -87,7 +87,7 @@ class ComfoConnectFan(FanEntity):
         """List of available fan modes."""
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def turn_on(self, speed: str=None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
         if speed is None:
             speed = SPEED_LOW
@@ -97,21 +97,21 @@ class ComfoConnectFan(FanEntity):
         """Turn off the fan (to away)."""
         self.set_speed(SPEED_OFF)
 
-    def set_speed(self, mode):
+    def set_speed(self, speed: str):
         """Set fan speed."""
-        _LOGGER.debug('Changing fan mode to %s.', mode)
+        _LOGGER.debug('Changing fan speed to %s.', speed)
 
         from pycomfoconnect import (
             CMD_FAN_MODE_AWAY, CMD_FAN_MODE_LOW, CMD_FAN_MODE_MEDIUM,
             CMD_FAN_MODE_HIGH)
 
-        if mode == SPEED_OFF:
+        if speed == SPEED_OFF:
             self._ccb.comfoconnect.cmd_rmi_request(CMD_FAN_MODE_AWAY)
-        elif mode == SPEED_LOW:
+        elif speed == SPEED_LOW:
             self._ccb.comfoconnect.cmd_rmi_request(CMD_FAN_MODE_LOW)
-        elif mode == SPEED_MEDIUM:
+        elif speed == SPEED_MEDIUM:
             self._ccb.comfoconnect.cmd_rmi_request(CMD_FAN_MODE_MEDIUM)
-        elif mode == SPEED_HIGH:
+        elif speed == SPEED_HIGH:
             self._ccb.comfoconnect.cmd_rmi_request(CMD_FAN_MODE_HIGH)
 
         # Update current mode

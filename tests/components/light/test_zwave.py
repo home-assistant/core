@@ -208,7 +208,7 @@ def test_set_rgb_color(mock_openzwave):
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
     color = MockValue(data='#0000000000', node=node)
-    # Suppoorts RGB only
+    # Supports RGB only
     color_channels = MockValue(data=0x1c, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
@@ -226,7 +226,7 @@ def test_set_rgbw_color(mock_openzwave):
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
     color = MockValue(data='#0000000000', node=node)
-    # Suppoorts RGBW
+    # Supports RGBW
     color_channels = MockValue(data=0x1d, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
@@ -245,7 +245,7 @@ def test_zw098_set_color_temp(mock_openzwave):
                     command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
     color = MockValue(data='#0000000000', node=node)
-    # Suppoorts RGB, warm white, cold white
+    # Supports RGB, warm white, cold white
     color_channels = MockValue(data=0x1f, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
@@ -267,7 +267,7 @@ def test_rgb_not_supported(mock_openzwave):
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
     color = MockValue(data='#0000000000', node=node)
-    # Suppoorts color temperature only
+    # Supports color temperature only
     color_channels = MockValue(data=0x01, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
@@ -302,7 +302,7 @@ def test_rgb_value_changed(mock_openzwave):
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
     color = MockValue(data='#0000000000', node=node)
-    # Suppoorts RGB only
+    # Supports RGB only
     color_channels = MockValue(data=0x1c, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
@@ -321,7 +321,7 @@ def test_rgbww_value_changed(mock_openzwave):
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
     color = MockValue(data='#0000000000', node=node)
-    # Suppoorts RGB, Warm White
+    # Supports RGB, Warm White
     color_channels = MockValue(data=0x1d, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
@@ -340,7 +340,7 @@ def test_rgbcw_value_changed(mock_openzwave):
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
     color = MockValue(data='#0000000000', node=node)
-    # Suppoorts RGB, Cold White
+    # Supports RGB, Cold White
     color_channels = MockValue(data=0x1e, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)
@@ -360,7 +360,7 @@ def test_ct_value_changed(mock_openzwave):
                     command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
     color = MockValue(data='#0000000000', node=node)
-    # Suppoorts RGB, Cold White
+    # Supports RGB, Cold White
     color_channels = MockValue(data=0x1f, node=node)
     values = MockLightValues(primary=value, color=color,
                              color_channels=color_channels)

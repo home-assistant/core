@@ -275,7 +275,7 @@ class TestImageProcessingFace(object):
     @patch('homeassistant.components.image_processing.demo.'
            'DemoImageProcessingFace.confidence',
            new_callable=PropertyMock(return_value=None))
-    def test_face_event_call_no_confidence(self, mock_confi, aioclient_mock):
+    def test_face_event_call_no_confidence(self, mock_config, aioclient_mock):
         """Setup and scan a picture and test faces from event."""
         aioclient_mock.get(self.url, content=b'image')
 

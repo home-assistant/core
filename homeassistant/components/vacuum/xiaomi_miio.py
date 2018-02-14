@@ -19,12 +19,12 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.3.4']
+REQUIREMENTS = ['python-miio==0.3.6']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Vacuum cleaner'
-ICON = 'mdi:google-circles-group'
+ICON = 'mdi:roomba'
 PLATFORM = 'xiaomi_miio'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -341,9 +341,9 @@ class MiroboVacuum(VacuumDevice):
 
     @asyncio.coroutine
     def async_remote_control_move(self,
-                                  rotation: int=0,
-                                  velocity: float=0.3,
-                                  duration: int=1500):
+                                  rotation: int = 0,
+                                  velocity: float = 0.3,
+                                  duration: int = 1500):
         """Move vacuum with remote control mode."""
         yield from self._try_command(
             "Unable to move with remote control the vacuum: %s",
@@ -352,9 +352,9 @@ class MiroboVacuum(VacuumDevice):
 
     @asyncio.coroutine
     def async_remote_control_move_step(self,
-                                       rotation: int=0,
-                                       velocity: float=0.2,
-                                       duration: int=1500):
+                                       rotation: int = 0,
+                                       velocity: float = 0.2,
+                                       duration: int = 1500):
         """Move vacuum one step with remote control mode."""
         yield from self._try_command(
             "Unable to remote control the vacuum: %s",

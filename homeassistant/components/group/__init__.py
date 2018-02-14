@@ -247,7 +247,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up all groups found definded in the configuration."""
+    """Set up all groups found defined in the configuration."""
     component = hass.data.get(DOMAIN)
 
     if component is None:
@@ -371,7 +371,6 @@ def async_setup(hass, config):
 @asyncio.coroutine
 def _async_process_config(hass, config, component):
     """Process group configuration."""
-    groups = []
     for object_id, conf in config.get(DOMAIN, {}).items():
         name = conf.get(CONF_NAME, object_id)
         entity_ids = conf.get(CONF_ENTITIES) or []
@@ -381,13 +380,9 @@ def _async_process_config(hass, config, component):
 
         # Don't create tasks and await them all. The order is important as
         # groups get a number based on creation order.
-        group = yield from Group.async_create_group(
+        yield from Group.async_create_group(
             hass, name, entity_ids, icon=icon, view=view,
             control=control, object_id=object_id)
-        groups.append(group)
-
-    if groups:
-        yield from component.async_add_entities(groups)
 
 
 class Group(Entity):

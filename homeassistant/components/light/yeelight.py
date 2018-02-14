@@ -176,11 +176,6 @@ class YeelightLight(Light):
         return YEELIGHT_EFFECT_LIST
 
     @property
-    def unique_id(self) -> str:
-        """Return the ID of this light."""
-        return "{}.{}".format(self.__class__, self._ipaddr)
-
-    @property
     def color_temp(self) -> int:
         """Return the color temperature."""
         return self._color_temp

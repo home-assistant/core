@@ -10,7 +10,8 @@ import logging
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.components.tesla import DOMAIN as TESLA_DOMAIN
 from homeassistant.components.tesla import TeslaDevice
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, LENGTH_KILOMETERS, LENGTH_MILES)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,18 +67,23 @@ class TeslaSensor(TeslaDevice, Entity):
         """Update the state from the sensor."""
         _LOGGER.debug("Updating sensor: %s", self._name)
         self.tesla_device.update()
+        units = self.tesla_device.measurement
+
         if self.tesla_device.bin_type == 0x4:
             if self.type == 'outside':
                 self.current_value = self.tesla_device.get_outside_temp()
             else:
                 self.current_value = self.tesla_device.get_inside_temp()
-
-            tesla_temp_units = self.tesla_device.measurement
-
-            if tesla_temp_units == 'F':
+            if units == 'F':
                 self._unit = TEMP_FAHRENHEIT
             else:
                 self._unit = TEMP_CELSIUS
         else:
-            self.current_value = self.tesla_device.battery_level()
-            self._unit = "%"
+            self.current_value = self.tesla_device.get_value()
+            if self.tesla_device.bin_type == 0x5:
+                self._unit = units
+            elif self.tesla_device.bin_type in (0xA, 0xB):
+                if units == 'LENGTH_MILES':
+                    self._unit = LENGTH_MILES
+                else:
+                    self._unit = LENGTH_KILOMETERS

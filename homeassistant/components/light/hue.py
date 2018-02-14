@@ -91,7 +91,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None or 'bridge_id' not in discovery_info:
         return
 
-    if config is not None and len(config) > 0:
+    if config is not None and config:
         # Legacy configuration, will be removed in 0.60
         config_str = yaml.dump([config])
         # Indent so it renders in a fixed-width font
@@ -228,14 +228,7 @@ class HueLight(Light):
     @property
     def unique_id(self):
         """Return the ID of this Hue light."""
-        lid = self.info.get('uniqueid')
-
-        if lid is None:
-            default_type = 'Group' if self.is_group else 'Light'
-            ltype = self.info.get('type', default_type)
-            lid = '{}.{}.{}'.format(self.name, ltype, self.light_id)
-
-        return '{}.{}'.format(self.__class__, lid)
+        return self.info.get('uniqueid')
 
     @property
     def name(self):

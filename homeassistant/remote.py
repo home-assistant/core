@@ -45,8 +45,9 @@ class APIStatus(enum.Enum):
 class API(object):
     """Object to pass around Home Assistant API location and credentials."""
 
-    def __init__(self, host: str, api_password: Optional[str]=None,
-                 port: Optional[int]=SERVER_PORT, use_ssl: bool=False) -> None:
+    def __init__(self, host: str, api_password: Optional[str] = None,
+                 port: Optional[int] = SERVER_PORT,
+                 use_ssl: bool = False) -> None:
         """Init the API."""
         self.host = host
         self.port = port
@@ -68,7 +69,7 @@ class API(object):
         if api_password is not None:
             self._headers[HTTP_HEADER_HA_AUTH] = api_password
 
-    def validate_api(self, force_validate: bool=False) -> bool:
+    def validate_api(self, force_validate: bool = False) -> bool:
         """Test if we can communicate with the API."""
         if self.status is None or force_validate:
             self.status = validate_api(self)

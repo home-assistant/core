@@ -266,8 +266,8 @@ def test_handler_alexa(hass):
     hass.states.async_set(
         'switch.test2', 'on', {'friendly_name': "Test switch 2"})
 
-    with patch('homeassistant.components.cloud.Cloud.initialize',
-               return_value=mock_coro(True)):
+    with patch('homeassistant.components.cloud.Cloud.async_start',
+               return_value=mock_coro()):
         setup = yield from async_setup_component(hass, 'cloud', {
             'cloud': {
                 'alexa': {
@@ -309,8 +309,8 @@ def test_handler_google_actions(hass):
     hass.states.async_set(
         'switch.test2', 'on', {'friendly_name': "Test switch 2"})
 
-    with patch('homeassistant.components.cloud.Cloud.initialize',
-               return_value=mock_coro(True)):
+    with patch('homeassistant.components.cloud.Cloud.async_start',
+               return_value=mock_coro()):
         setup = yield from async_setup_component(hass, 'cloud', {
             'cloud': {
                 'google_actions': {

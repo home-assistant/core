@@ -193,7 +193,7 @@ class EightSleepUserEntity(Entity):
     """The Eight Sleep device entity."""
 
     def __init__(self, eight):
-        """Initialize the data oject."""
+        """Initialize the data object."""
         self._eight = eight
 
     @asyncio.coroutine
@@ -217,7 +217,7 @@ class EightSleepHeatEntity(Entity):
     """The Eight Sleep device entity."""
 
     def __init__(self, eight):
-        """Initialize the data oject."""
+        """Initialize the data object."""
         self._eight = eight
 
     @asyncio.coroutine

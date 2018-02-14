@@ -254,10 +254,6 @@ def setup_platform(hass, config: ConfigType,
 class ISYSensorDevice(ISYDevice):
     """Representation of an ISY994 sensor device."""
 
-    def __init__(self, node) -> None:
-        """Initialize the ISY994 sensor device."""
-        super().__init__(node)
-
     @property
     def raw_unit_of_measurement(self) -> str:
         """Get the raw unit of measurement for the ISY994 sensor device."""
@@ -312,15 +308,6 @@ class ISYSensorDevice(ISYDevice):
 
 class ISYWeatherDevice(ISYDevice):
     """Representation of an ISY994 weather device."""
-
-    def __init__(self, node) -> None:
-        """Initialize the ISY994 weather device."""
-        super().__init__(node)
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique identifier for the node."""
-        return self._node.name
 
     @property
     def raw_units(self) -> str:

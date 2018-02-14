@@ -198,6 +198,7 @@ class LimitlessLEDGroup(Light):
         """Return the brightness property."""
         return self._brightness
 
+    # pylint: disable=arguments-differ
     @state(False)
     def turn_off(self, transition_time, pipeline, **kwargs):
         """Turn off a group."""
@@ -231,6 +232,7 @@ class LimitlessLEDWhiteGroup(LimitlessLEDGroup):
         """Flag supported features."""
         return SUPPORT_LIMITLESSLED_WHITE
 
+    # pylint: disable=arguments-differ
     @state(True)
     def turn_on(self, transition_time, pipeline, **kwargs):
         """Turn on (or adjust property of) a group."""
@@ -271,6 +273,7 @@ class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
         """Flag supported features."""
         return SUPPORT_LIMITLESSLED_RGB
 
+    # pylint: disable=arguments-differ
     @state(True)
     def turn_on(self, transition_time, pipeline, **kwargs):
         """Turn on (or adjust property of) a group."""
@@ -337,6 +340,7 @@ class LimitlessLEDRGBWWGroup(LimitlessLEDGroup):
         """Flag supported features."""
         return SUPPORT_LIMITLESSLED_RGBWW
 
+    # pylint: disable=arguments-differ
     @state(True)
     def turn_on(self, transition_time, pipeline, **kwargs):
         """Turn on (or adjust property of) a group."""

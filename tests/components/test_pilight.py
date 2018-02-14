@@ -304,7 +304,7 @@ class TestPilight(unittest.TestCase):
         with assert_setup_component(4):
             whitelist = {
                 'protocol': [PilightDaemonSim.test_message['protocol'],
-                             'other_protocoll'],
+                             'other_protocol'],
                 'id': [PilightDaemonSim.test_message['message']['id']]}
             self.assertTrue(setup_component(
                 self.hass, pilight.DOMAIN,
@@ -330,7 +330,7 @@ class TestPilight(unittest.TestCase):
         """Check whitelist filter with unmatched data, should not work."""
         with assert_setup_component(4):
             whitelist = {
-                'protocol': ['wrong_protocoll'],
+                'protocol': ['wrong_protocol'],
                 'id': [PilightDaemonSim.test_message['message']['id']]}
             self.assertTrue(setup_component(
                 self.hass, pilight.DOMAIN,

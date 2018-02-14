@@ -87,7 +87,7 @@ class GoogleProvider(Provider):
             url_param = {
                 'ie': 'UTF-8',
                 'tl': language,
-                'q': yarl.quote(part),
+                'q': yarl.URL(part).raw_path,
                 'tk': part_token,
                 'total': len(message_parts),
                 'idx': idx,
