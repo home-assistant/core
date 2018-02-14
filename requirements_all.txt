@@ -118,7 +118,7 @@ basicmodem==0.7
 batinfo==0.4.2
 
 # homeassistant.components.sensor.eddystone_temperature
-# beacontools[scan]==1.0.1
+# beacontools[scan]==1.2.1
 
 # homeassistant.components.device_tracker.linksys_ap
 # homeassistant.components.sensor.geizhals
@@ -454,7 +454,7 @@ liffylights==0.9.4
 lightify==1.0.6.1
 
 # homeassistant.components.light.limitlessled
-limitlessled==1.0.9
+limitlessled==1.0.8
 
 # homeassistant.components.linode
 linode-api==4.1.4b2
