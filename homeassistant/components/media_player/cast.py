@@ -118,7 +118,10 @@ class CastDevice(MediaPlayerDevice):
         self.cast_status = self.cast.status
         self.media_status = self.cast.media_controller.status
         self.media_status_received = None
-        self._unique_id = "cast_" + str(self.cast.device.uuid)
+        if self.cast.device.uuid:
+            self._unique_id = str(self.cast.device.uuid)
+        else:
+            self._unique_id = None
 
     @property
     def should_poll(self):
