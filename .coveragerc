@@ -553,6 +553,7 @@ omit =
     homeassistant/components/sensor/fedex.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
+    homeassistant/components/sensor/foobot.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
     homeassistant/components/sensor/fritzbox_netmonitor.py
     homeassistant/components/sensor/gearbest.py
