@@ -79,8 +79,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Configure the platform and add the sensors."""
-    from zlib import adler32
-
     from pyairvisual import Client
 
     classes = {
@@ -124,7 +122,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 name,
                 icon,
                 locale,
-                adler32(location.encode('utf-8'))
+                location
             ))
 
     add_devices(sensors, True)
