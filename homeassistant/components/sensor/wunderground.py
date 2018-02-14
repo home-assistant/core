@@ -650,8 +650,6 @@ def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
 
     async_add_devices(sensors)
 
-    return True
-
 
 class WUndergroundSensor(Entity):
     """Implementing the WUnderground sensor."""
@@ -763,6 +761,7 @@ class WUndergroundData(object):
         self._longitude = longitude
         self._features = set()
         self.data = None
+        self._session = async_get_clientsession(self._hass)
 
     def request_feature(self, feature):
         """Register feature to be fetched from WU API."""
@@ -783,18 +782,15 @@ class WUndergroundData(object):
     def async_update(self):
         """Get the latest data from WUnderground."""
         try:
-            websession = async_get_clientsession(self._hass)
             with async_timeout.timeout(10, loop=self._hass.loop):
-                response = yield from websession.get(self._build_url())
+                response = yield from self._session.get(self._build_url())
             result = yield from response.json()
             if "error" in result['response']:
-                raise ValueError(result['response']["error"]
-                                 ["description"])
+                raise ValueError(result['response']["error"]["description"])
             self.data = result
-            return True
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
+            self.data = None
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Error fetching WUnderground data: %s", repr(err))
-        self.data = None
-        return False
+            self.data = None

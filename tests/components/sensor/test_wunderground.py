@@ -4,11 +4,11 @@ import aiohttp
 
 from pytest import raises
 
-from homeassistant.core import callback
 from homeassistant.components.sensor import wunderground
 from homeassistant.const import TEMP_CELSIUS, LENGTH_INCHES, STATE_UNKNOWN
 from homeassistant.exceptions import PlatformNotReady
-from tests.common import load_fixture
+from homeassistant.setup import async_setup_component
+from tests.common import load_fixture, assert_setup_component
 
 VALID_CONFIG_PWS = {
     'platform': 'wunderground',
@@ -39,34 +39,42 @@ INVALID_CONFIG = {
 }
 
 URL = 'http://api.wunderground.com/api/foo/alerts/conditions/forecast/lang' \
-      ':None/q/32.87336,-117.22743.json'
+      ':EN/q/32.87336,-117.22743.json'
 PWS_URL = 'http://api.wunderground.com/api/foo/alerts/conditions/' \
-          'lang:None/q/pws:bar.json'
+          'lang:EN/q/pws:bar.json'
 INVALID_URL = 'http://api.wunderground.com/api/BOB/alerts/conditions/' \
               'lang:foo/q/pws:bar.json'
 
 
 @asyncio.coroutine
 def test_setup(hass, aioclient_mock):
-    """Test that the component is loaded if passed in PWS Id."""
+    """Test that the component is loaded."""
     aioclient_mock.get(URL, text=load_fixture('wunderground-valid.json'))
+
+    with assert_setup_component(1, 'sensor'):
+        yield from async_setup_component(hass, 'sensor',
+                                         {'sensor': VALID_CONFIG})
+
+
+@asyncio.coroutine
+def test_setup_pws(hass, aioclient_mock):
+    """Test that the component is loaded with PWS id."""
     aioclient_mock.get(PWS_URL, text=load_fixture('wunderground-valid.json'))
+
+    with assert_setup_component(1, 'sensor'):
+        yield from async_setup_component(hass, 'sensor',
+                                         {'sensor': VALID_CONFIG_PWS})
+
+
+@asyncio.coroutine
+def test_setup_invalid(hass, aioclient_mock):
+    """Test that the component is not loaded with invalid config."""
     aioclient_mock.get(INVALID_URL,
                        text=load_fixture('wunderground-error.json'))
 
-    result = yield from wunderground.async_setup_platform(
-        hass, VALID_CONFIG_PWS, lambda _: None)
-    assert result
-
-    aioclient_mock.get(URL, text=load_fixture('wunderground-valid.json'))
-
-    result = yield from wunderground.async_setup_platform(
-        hass, VALID_CONFIG, lambda _: None)
-    assert result
-
-    with raises(PlatformNotReady):
-        yield from wunderground.async_setup_platform(hass, INVALID_CONFIG,
-                                                     lambda _: None)
+    with assert_setup_component(0, 'sensor'):
+        yield from async_setup_component(hass, 'sensor',
+                                         {'sensor': INVALID_CONFIG})
 
 
 @asyncio.coroutine
@@ -74,56 +82,47 @@ def test_sensor(hass, aioclient_mock):
     """Test the WUnderground sensor class and methods."""
     aioclient_mock.get(URL, text=load_fixture('wunderground-valid.json'))
 
-    devices = []
+    with assert_setup_component(1, 'sensor'):
+        yield from async_setup_component(hass, 'sensor',
+                                         {'sensor': VALID_CONFIG})
 
-    @callback
-    def async_add_devices(new_devices):
-        """Mock add devices."""
-        for device in new_devices:
-            devices.append(device)
+    state = hass.states.get('sensor.pws_weather')
+    assert state.state == 'Clear'
+    assert state.name == "Weather Summary"
+    assert 'unit_of_measurement' not in state.attributes
+    assert state.attributes['entity_picture'] == \
+        'https://icons.wxug.com/i/c/k/clear.gif'
 
-    result = yield from wunderground.async_setup_platform(hass, VALID_CONFIG,
-                                                          async_add_devices)
-    assert result
+    state = hass.states.get('sensor.pws_alerts')
+    assert state.state == 1
+    assert state.name == 'Alerts'
+    assert state.attributes['Message'] == \
+        "This is a test alert message"
+    assert state.attributes['icon'] == 'mdi:alert-circle-outline'
+    assert 'entity_picture' not in state.attributes
 
-    for device in devices:
-        yield from device.async_update()
-        entity_id = device.entity_id
-        assert entity_id.startswith('sensor.pws_')
-        friendly_name = device.name
+    state = hass.states.get('sensor.pws_location')
+    assert state.state == "Holly Springs, NC"
+    assert state.name == 'Location'
 
-        if entity_id == 'sensor.pws_weather':
-            assert device.entity_picture == \
-                'https://icons.wxug.com/i/c/k/clear.gif'
-            assert device.state == 'Clear'
-            assert device.unit_of_measurement is None
-            assert friendly_name == "Weather Summary"
-        elif entity_id == 'sensor.pws_alerts':
-            assert device.state == 1
-            assert device.device_state_attributes['Message'] == \
-                'This is a test alert message'
-            assert device.icon == 'mdi:alert-circle-outline'
-            assert device.entity_picture is None
-            assert friendly_name == 'Alerts'
-        elif entity_id == 'sensor.pws_location':
-            assert device.state == 'Holly Springs, NC'
-            assert friendly_name == 'Location'
-        elif entity_id == 'sensor.pws_elevation':
-            assert device.state == '413'
-            assert friendly_name == 'Elevation'
-        elif entity_id == 'sensor.pws_feelslike_c':
-            assert device.entity_picture is None
-            assert device.state == '40'
-            assert device.unit_of_measurement == TEMP_CELSIUS
-            assert friendly_name == "Feels Like"
-        elif entity_id == 'sensor.pws_weather_1d_metric':
-            assert device.state == 'Mostly Cloudy. Fog overnight.'
-            assert friendly_name == 'Tuesday'
-        else:
-            assert entity_id == 'sensor.pws_precip_1d_in'
-            assert device.state == 0.03
-            assert device.unit_of_measurement == LENGTH_INCHES
-            assert friendly_name == 'Precipitation Intensity Today'
+    state = hass.states.get('sensor.pws_elevation')
+    assert state.state == '413'
+    assert state.name == 'Elevation'
+
+    state = hass.states.get('sensor.pws_feelslike_c')
+    assert state.state == '40'
+    assert state.name == "Feels Like"
+    assert 'entity_picture' not in state.attributes
+    assert state.attributes['unit_of_measurement'] == TEMP_CELSIUS
+
+    state = hass.states.get('sensor.pws_pws_weather_1d_metric')
+    assert state.state == "Mostly Cloudy. Fog overnight."
+    assert state.name == 'Tuesday'
+
+    state = hass.states.get('sensor.pws_precip_1d_in')
+    assert state.state == 0.03
+    assert state.name == "Precipitation Intensity Today"
+    assert state.attributes['unit_of_measurement'] == LENGTH_INCHES
 
 
 @asyncio.coroutine
@@ -138,19 +137,12 @@ def test_connect_failed(hass, aioclient_mock):
 @asyncio.coroutine
 def test_invalid_data(hass, aioclient_mock):
     """Test the WUnderground invalid data."""
-    aioclient_mock.get(PWS_URL, text=load_fixture('wunderground-invalid.json'))
-    devices = []
+    aioclient_mock.get(URL, text=load_fixture('wunderground-invalid.json'))
 
-    @callback
-    def async_add_devices(new_devices):
-        """Mock add devices."""
-        for device in new_devices:
-            devices.append(device)
+    with assert_setup_component(1, 'sensor'):
+        yield from async_setup_component(hass, 'sensor',
+                                         {'sensor': VALID_CONFIG})
 
-    result = yield from wunderground.async_setup_platform(
-        hass, VALID_CONFIG_PWS, async_add_devices)
-    assert result
-
-    for device in devices:
-        yield from device.async_update()
-        assert STATE_UNKNOWN == device.state
+    for condition in VALID_CONFIG['monitored_conditions']:
+        state = hass.states.get('sensor.pws_' + condition)
+        assert state.state == STATE_UNKNOWN
