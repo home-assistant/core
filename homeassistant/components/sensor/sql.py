@@ -143,4 +143,3 @@ class SQLSensor(Entity):
                 data, None)
         else:
             self._state = data
-
