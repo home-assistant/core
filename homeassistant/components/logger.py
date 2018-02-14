@@ -17,6 +17,8 @@ DOMAIN = 'logger'
 DATA_LOGGER = 'logger'
 
 SERVICE_SET_LEVEL = 'set_level'
+SERVICE_DUMP_CONFIG = 'dump_config'
+SERVICE_LIST_LOGGERS = 'list_loggers'
 
 LOGSEVERITY = {
     'CRITICAL': 50,
@@ -95,6 +97,9 @@ def async_setup(hass, config):
 
         # Add new logpoints mapped to correct severity
         for key, value in logpoints.items():
+            if LOGGER_DEFAULT == key:  # default key is stored on top-level
+                logfilter[LOGGER_DEFAULT] = LOGSEVERITY[value]
+
             logs[key] = LOGSEVERITY[value]
 
         logfilter[LOGGER_LOGS] = OrderedDict(
@@ -124,5 +129,27 @@ def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, SERVICE_SET_LEVEL, async_service_handler,
         schema=SERVICE_SET_LEVEL_SCHEMA)
+
+    @asyncio.coroutine
+    def async_dump_config(service):
+        """Dump current config to the log."""
+        logger.info("Current logger config: %s", logfilter)
+        return logfilter
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_DUMP_CONFIG, async_dump_config)
+
+    @asyncio.coroutine
+    def async_list_loggers(service):
+        """Return a dictionary of available loggers with their log levels."""
+        loggers = {k: v.getEffectiveLevel()
+                   for k, v in logging.Logger.manager.loggerDict.items()
+                   if isinstance(v, logging.Logger)}
+
+        logger.info("Available loggers: %s", loggers)
+        return loggers
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_LIST_LOGGERS, async_list_loggers)
 
     return True
