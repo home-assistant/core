@@ -344,7 +344,6 @@ class MockModule(object):
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
         self.REQUIREMENTS = requirements or []
-        self._setup = setup
 
         if config_schema is not None:
             self.CONFIG_SCHEMA = config_schema
@@ -352,18 +351,15 @@ class MockModule(object):
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
 
+        if setup is not None:
+            # We run this in executor, wrap it in function
+            self.setup = lambda *args: setup(*args)
+
         if async_setup is not None:
             self.async_setup = async_setup
 
-    def setup(self, hass, config):
-        """Set up the component.
-
-        We always define this mock because MagicMock setups will be seen by the
-        executor as a coroutine, raising an exception.
-        """
-        if self._setup is not None:
-            return self._setup(hass, config)
-        return True
+        if setup is None and async_setup is None:
+            self.async_setup = mock_coro_func(True)
 
 
 class MockPlatform(object):
@@ -374,18 +370,19 @@ class MockPlatform(object):
                  platform_schema=None, async_setup_platform=None):
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
-        self._setup_platform = setup_platform
 
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
 
+        if setup_platform is not None:
+            # We run this in executor, wrap it in function
+            self.setup_platform = lambda *args: setup_platform(*args)
+
         if async_setup_platform is not None:
             self.async_setup_platform = async_setup_platform
 
-    def setup_platform(self, hass, config, add_devices, discovery_info=None):
-        """Set up the platform."""
-        if self._setup_platform is not None:
-            self._setup_platform(hass, config, add_devices, discovery_info)
+        if setup_platform is None and async_setup_platform is None:
+            self.async_setup_platform = mock_coro_func()
 
 
 class MockToggleDevice(entity.ToggleEntity):

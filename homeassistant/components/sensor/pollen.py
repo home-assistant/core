@@ -16,7 +16,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_STATE, CONF_MONITORED_CONDITIONS
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, slugify
 
 REQUIREMENTS = ['pypollencom==1.1.1']
 _LOGGER = logging.getLogger(__name__)
@@ -125,6 +125,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         'allergy_index_data': AllergyIndexData(client),
         'disease_average_data': DiseaseData(client)
     }
+    classes = {
+        'AllergyAverageSensor': AllergyAverageSensor,
+        'AllergyIndexSensor': AllergyIndexSensor
+    }
 
     for data in datas.values():
         data.update()
@@ -132,11 +136,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for condition in config[CONF_MONITORED_CONDITIONS]:
         name, sensor_class, data_key, params, icon = CONDITIONS[condition]
-        sensors.append(globals()[sensor_class](
+        sensors.append(classes[sensor_class](
             datas[data_key],
             params,
             name,
-            icon
+            icon,
+            config[CONF_ZIP_CODE]
         ))
 
     add_devices(sensors, True)
@@ -154,7 +159,7 @@ def calculate_trend(list_of_nums):
 class BaseSensor(Entity):
     """Define a base class for all of our sensors."""
 
-    def __init__(self, data, data_params, name, icon):
+    def __init__(self, data, data_params, name, icon, unique_id):
         """Initialize the sensor."""
         self._attrs = {}
         self._icon = icon
@@ -162,6 +167,7 @@ class BaseSensor(Entity):
         self._data_params = data_params
         self._state = None
         self._unit = None
+        self._unique_id = unique_id
         self.data = data
 
     @property
@@ -184,6 +190,11 @@ class BaseSensor(Entity):
     def state(self):
         """Return the state."""
         return self._state
+
+    @property
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return '{0}_{1}'.format(self._unique_id, slugify(self._name))
 
     @property
     def unit_of_measurement(self):
