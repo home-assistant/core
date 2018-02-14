@@ -123,6 +123,8 @@ class LuftdatenSensor(Entity):
             attr = {
                 ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
                 ATTR_SENSOR_ID: self._sensor_id,
+                'lat': self.luftdaten.data.meta['latitude'],
+                'long': self.luftdaten.data.meta['longitude'],
             }
             if self._show_on_map:
                 attr[ATTR_LATITUDE] = self.luftdaten.data.meta['latitude']
