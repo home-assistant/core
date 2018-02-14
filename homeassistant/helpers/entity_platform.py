@@ -114,24 +114,28 @@ class EntityPlatform(object):
         finally:
             warn_task.cancel()
 
-    def _schedule_add_entities(self, new_entities, update_before_add=False):
+    def _schedule_add_entities(self, new_entities, update_before_add=False,
+                               replace=False):
         """Synchronously schedule adding entities for a single platform."""
         run_callback_threadsafe(
             self.hass.loop,
             self._async_schedule_add_entities, list(new_entities),
-            update_before_add
+            update_before_add, replace
         ).result()
 
     @callback
     def _async_schedule_add_entities(self, new_entities,
-                                     update_before_add=False):
+                                     update_before_add=False,
+                                     replace=False):
         """Schedule adding entities for a single platform async."""
         self._tasks.append(self.hass.async_add_job(
             self.async_add_entities(
-                new_entities, update_before_add=update_before_add)
+                new_entities, update_before_add=update_before_add,
+                replace=replace)
         ))
 
-    def add_entities(self, new_entities, update_before_add=False):
+    def add_entities(self, new_entities, update_before_add=False,
+                     replace=False):
         """Add entities for a single platform."""
         # That avoid deadlocks
         if update_before_add:
@@ -140,11 +144,13 @@ class EntityPlatform(object):
                 "only inside tests or you can run into a deadlock!")
 
         run_coroutine_threadsafe(
-            self.async_add_entities(list(new_entities), update_before_add),
+            self.async_add_entities(list(new_entities), update_before_add,
+                                    replace),
             self.hass.loop).result()
 
     @asyncio.coroutine
-    def async_add_entities(self, new_entities, update_before_add=False):
+    def async_add_entities(self, new_entities, update_before_add=False,
+                           replace=False):
         """Add entities for a single platform async.
 
         This method must be run in the event loop.
@@ -164,7 +170,7 @@ class EntityPlatform(object):
         yield from registry.async_ensure_loaded()
 
         tasks = [
-            self._async_add_entity(entity, update_before_add,
+            self._async_add_entity(entity, update_before_add, replace,
                                    component_entities, registry)
             for entity in new_entities]
 
@@ -181,8 +187,8 @@ class EntityPlatform(object):
         )
 
     @asyncio.coroutine
-    def _async_add_entity(self, entity, update_before_add, component_entities,
-                          registry):
+    def _async_add_entity(self, entity, update_before_add, replace,
+                          component_entities, registry):
         """Helper method to add an entity to the platform."""
         if entity is None:
             raise ValueError('Entity cannot be None')
@@ -252,12 +258,15 @@ class EntityPlatform(object):
             raise HomeAssistantError(
                 'Invalid entity id: {}'.format(entity.entity_id))
         elif entity.entity_id in component_entities:
-            msg = 'Entity id already exists: {}'.format(entity.entity_id)
-            if entity.unique_id is not None:
-                msg += '. Platform {} does not generate unique IDs'.format(
-                    self.platform_name)
-            raise HomeAssistantError(
-                msg)
+            if replace:
+                yield from self.async_remove_entity(entity.entity_id)
+            else:
+                msg = 'Entity id already exists: {}'.format(entity.entity_id)
+                if entity.unique_id is not None:
+                    msg += '. Platform {} does not generate unique IDs'.format(
+                        self.platform_name)
+                raise HomeAssistantError(
+                    msg)
 
         self.entities[entity.entity_id] = entity
         component_entities.add(entity.entity_id)
