@@ -648,7 +648,7 @@ def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     if not rest.data:
         raise PlatformNotReady
 
-    async_add_devices(sensors)
+    async_add_devices(sensors, True)
 
 
 class WUndergroundSensor(Entity):

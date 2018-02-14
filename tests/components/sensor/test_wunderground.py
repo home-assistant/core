@@ -22,6 +22,7 @@ VALID_CONFIG_PWS = {
 VALID_CONFIG = {
     'platform': 'wunderground',
     'api_key': 'foo',
+    'lang': 'EN',
     'monitored_conditions': [
         'weather', 'feelslike_c', 'alerts', 'elevation', 'location',
         'weather_1d_metric', 'precip_1d_in'
@@ -94,7 +95,7 @@ def test_sensor(hass, aioclient_mock):
         'https://icons.wxug.com/i/c/k/clear.gif'
 
     state = hass.states.get('sensor.pws_alerts')
-    assert state.state == 1
+    assert state.state == '1'
     assert state.name == 'Alerts'
     assert state.attributes['Message'] == \
         "This is a test alert message"
@@ -115,12 +116,12 @@ def test_sensor(hass, aioclient_mock):
     assert 'entity_picture' not in state.attributes
     assert state.attributes['unit_of_measurement'] == TEMP_CELSIUS
 
-    state = hass.states.get('sensor.pws_pws_weather_1d_metric')
+    state = hass.states.get('sensor.pws_weather_1d_metric')
     assert state.state == "Mostly Cloudy. Fog overnight."
     assert state.name == 'Tuesday'
 
     state = hass.states.get('sensor.pws_precip_1d_in')
-    assert state.state == 0.03
+    assert state.state == '0.03'
     assert state.name == "Precipitation Intensity Today"
     assert state.attributes['unit_of_measurement'] == LENGTH_INCHES
 
