@@ -215,7 +215,7 @@ class XiaomiDevice(Entity):
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
         self._device_state_attributes = {}
-        self._unique_id = DOMAIN + "_" + slugify(self._name)
+        self._unique_id = slugify(self._name)
         self._remove_unavailability_tracker = None
         xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
         self.parse_data(device['data'], device['raw_data'])
