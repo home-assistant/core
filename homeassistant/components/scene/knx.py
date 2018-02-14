@@ -37,8 +37,6 @@ def async_setup_platform(hass, config, async_add_devices,
     else:
         async_add_devices_config(hass, config, async_add_devices)
 
-    return True
-
 
 @callback
 def async_add_devices_discovery(hass, discovery_info, async_add_devices):
@@ -46,7 +44,7 @@ def async_add_devices_discovery(hass, discovery_info, async_add_devices):
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
-        entities.append(KNXScene(hass, device))
+        entities.append(KNXScene(device))
     async_add_devices(entities)
 
 
@@ -60,15 +58,14 @@ def async_add_devices_config(hass, config, async_add_devices):
         group_address=config.get(CONF_ADDRESS),
         scene_number=config.get(CONF_SCENE_NUMBER))
     hass.data[DATA_KNX].xknx.devices.add(scene)
-    async_add_devices([KNXScene(hass, scene)])
+    async_add_devices([KNXScene(scene)])
 
 
 class KNXScene(Scene):
     """Representation of a KNX scene."""
 
-    def __init__(self, hass, scene):
+    def __init__(self, scene):
         """Init KNX scene."""
-        self.hass = hass
         self.scene = scene
 
     @property

@@ -231,7 +231,7 @@ class KNXModule(object):
             address = to_expose.get(CONF_KNX_EXPOSE_ADDRESS)
             if expose_type in ['time', 'date', 'datetime']:
                 exposure = KNXExposeTime(
-                    self.hass, self.xknx, expose_type, address)
+                    self.xknx, expose_type, address)
                 exposures.append(exposure)
             else:
                 exposure = KNXExposeSensor(
@@ -290,9 +290,8 @@ class KNXAutomation():
 class KNXExposeTime(object):
     """Object to Expose Time/Date object to KNX bus."""
 
-    def __init__(self, hass, xknx, expose_type, address):
+    def __init__(self, xknx, expose_type, address):
         """Initialize of Expose class."""
-        self.hass = hass
         self.xknx = xknx
         self.type = expose_type
         self.address = address
