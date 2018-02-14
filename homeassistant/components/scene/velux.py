@@ -21,7 +21,6 @@ def async_setup_platform(hass, config, async_add_devices,
     for scene in hass.data[DATA_VELUX].pyvlx.scenes:
         entities.append(VeluxScene(scene))
     async_add_devices(entities)
-    return True
 
 
 class VeluxScene(Scene):
