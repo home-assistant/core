@@ -53,9 +53,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up cover(s) for KNX platform."""
-    if DATA_KNX not in hass.data or not hass.data[DATA_KNX].initialized:
-        return
-
     if discovery_info is not None:
         async_add_devices_discovery(hass, discovery_info, async_add_devices)
     else:
