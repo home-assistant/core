@@ -237,7 +237,6 @@ class LightTemplate(Light):
     @asyncio.coroutine
     def async_update(self):
         """Update the state from the template."""
-        print("ASYNC UPDATE")
         if self._template is not None:
             try:
                 state = self._template.async_render().lower()
