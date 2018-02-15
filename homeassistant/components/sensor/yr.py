@@ -22,16 +22,17 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, async_track_utc_time_change, async_call_later)
+from homeassistant.helpers.event import (async_track_utc_time_change,
+                                         async_call_later)
 from homeassistant.util import dt as dt_util
 
 REQUIREMENTS = ['xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Weather forecast from yr.no, delivered by the Norwegian " \
-                   "Meteorological Institute and the NRK."
+CONF_ATTRIBUTION = "Weather forecast from met.no, delivered by the Norwegian " \
+                   "Meteorological Institute."
+# https://api.met.no/license_data.html
 
 SENSOR_TYPES = {
     'symbol': ['Symbol', None],
@@ -171,7 +172,7 @@ class YrData(object):
         def try_again(err: str):
             """Retry in at least 20 minutes."""
             minutes = 15 + randrange(5)
-            _LOGGER.error("Retrying in %i minutes: %s", minutes, err)
+            _LOGGER.warning("Retrying in %i minutes: %s", minutes, err)
             async_call_later(self.hass, minutes*60, self.download_new_data)
         _LOGGER.error('asking for new data')
         _LOGGER.error(self._url)
@@ -200,7 +201,6 @@ class YrData(object):
                                                                           minute=self._random_update_time[0],
                                                                           second=self._random_update_time[1])
         _LOGGER.error(self._random_update_time)
-
         yield from self.async_update()
 
 
