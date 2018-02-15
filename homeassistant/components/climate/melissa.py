@@ -200,9 +200,7 @@ class MelissaClimate(ClimateDevice):
 
     def melissa_op_to_hass(self, mode):
         """Translate Melissa modes to hass states."""
-        if mode == self._api.MODE_AUTO:
-            return STATE_AUTO
-        elif mode == self._api.MODE_HEAT:
+        if mode == self._api.MODE_HEAT:
             return STATE_HEAT
         elif mode == self._api.MODE_COOL:
             return STATE_COOL
@@ -229,9 +227,7 @@ class MelissaClimate(ClimateDevice):
 
     def hass_mode_to_melissa(self, mode):
         """Translate hass states to melissa modes."""
-        if mode == STATE_AUTO:
-            return self._api.MODE_AUTO
-        elif mode == STATE_HEAT:
+        if mode == STATE_HEAT:
             return self._api.MODE_HEAT
         elif mode == STATE_COOL:
             return self._api.MODE_COOL
