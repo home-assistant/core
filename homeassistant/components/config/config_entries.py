@@ -4,8 +4,8 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.http import (
-    HomeAssistantView, RequestDataValidator)
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.data_validator import RequestDataValidator
 
 
 REQUIREMENTS = ['voluptuous-serialize==0.1']
