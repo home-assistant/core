@@ -93,8 +93,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     weather = YrData(hass, coordinates, forecast, dev)
     # Update weather on the hour, spread seconds
     async_track_utc_time_change(
-        hass, weather.async_update, minute=randrange(1, 10),
-        second=randrange(0, 59))
+        hass, weather.async_update, minute=1)
+    yield from weather.download_new_data()
     yield from weather.async_update()
 
 
@@ -160,43 +160,54 @@ class YrData(object):
         self.hass = hass
 
     @asyncio.coroutine
-    def async_update(self, *_):
+    def download_new_data(self, *_):
         """Get the latest data from yr.no."""
         import xmltodict
 
+        _LOGGER.error('async_update')
         def try_again(err: str):
             """Retry in 15 minutes."""
-            _LOGGER.warning("Retrying in 15 minutes: %s", err)
+            _LOGGER.error("Retrying in 15 minutes: %s", err)
             self._nextrun = None
             nxt = dt_util.utcnow() + timedelta(minutes=15)
             if nxt.minute >= 15:
-                async_track_point_in_utc_time(self.hass, self.async_update,
+                async_track_point_in_utc_time(self.hass, self.download_new_data,
                                               nxt)
-
-        if self._nextrun is None or dt_util.utcnow() >= self._nextrun:
-            try:
-                websession = async_get_clientsession(self.hass)
-                with async_timeout.timeout(10, loop=self.hass.loop):
-                    resp = yield from websession.get(
-                        self._url, params=self._urlparams)
-                if resp.status != 200:
-                    try_again('{} returned {}'.format(resp.url, resp.status))
-                    return
-                text = yield from resp.text()
-
-            except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-                try_again(err)
+        _LOGGER.error('asking for new data')
+        _LOGGER.error(self._url)
+        _LOGGER.error(self._urlparams)
+        try:
+            websession = async_get_clientsession(self.hass)
+            with async_timeout.timeout(10, loop=self.hass.loop):
+                resp = yield from websession.get(
+                    self._url, params=self._urlparams)
+            if resp.status != 200:
+                try_again('{} returned {}'.format(resp.url, resp.status))
                 return
+            text = yield from resp.text()
 
-            try:
-                self.data = xmltodict.parse(text)['weatherdata']
-                model = self.data['meta']['model']
-                if '@nextrun' not in model:
-                    model = model[0]
-                self._nextrun = dt_util.parse_datetime(model['@nextrun'])
-            except (ExpatError, IndexError) as err:
-                try_again(err)
-                return
+        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+            try_again(err)
+            return
+
+        try:
+            self.data = xmltodict.parse(text)['weatherdata']
+            model = self.data['meta']['model']
+            if '@nextrun' not in model:
+                model = model[0]
+            self._nextrun = dt_util.parse_datetime(model['@nextrun'])
+        except (ExpatError, IndexError) as err:
+            try_again(err)
+            return
+
+        nxt = self._nextrun + timedelta(minutes=randrange(59))
+        async_track_point_in_utc_time(self.hass, self.async_update, nxt)
+
+
+    @asyncio.coroutine
+    def async_update(self, *_):
+        """Find the current data from yr.no."""
+        import xmltodict
 
         now = dt_util.utcnow()
         forecast_time = now + dt_util.dt.timedelta(hours=self._forecast)
