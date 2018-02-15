@@ -172,6 +172,17 @@ class TestMQTTCallbacks(unittest.TestCase):
                 "b'\\x9a' on test-topic with encoding utf-8",
                 test_handle.output[0])
 
+    def test_all_subscriptions_run_when_decode_fails(self):
+        """Test all other subscriptions still run when decode fails for one."""
+        mqtt.subscribe(self.hass, 'test-topic', self.record_calls,
+                       encoding='ascii')
+        mqtt.subscribe(self.hass, 'test-topic', self.record_calls)
+
+        fire_mqtt_message(self.hass, 'test-topic', '°C')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_subscribe_topic(self):
         """Test the subscription of a topic."""
         unsub = mqtt.subscribe(self.hass, 'test-topic', self.record_calls)
