@@ -7,7 +7,6 @@ https://home-assistant.io/components/sensor.yr/
 import asyncio
 import logging
 
-from datetime import timedelta
 from random import randrange
 from xml.parsers.expat import ExpatError
 
@@ -197,9 +196,13 @@ class YrData(object):
             try_again(err)
             return
 
-        self._unsubscribe_download_new_data = async_track_utc_time_change(self.hass, self.download_new_data,
-                                                                          minute=self._random_update_time[0],
-                                                                          second=self._random_update_time[1])
+        self._unsubscribe_download_new_data = async_track_utc_time_change(self.hass,
+                                                                          self.download_new_data,
+                                                                          minute=
+                                                                          self._random_update_time[0],
+                                                                          second=
+                                                                          self._random_update_time[1])
+
         _LOGGER.error(self._random_update_time)
         yield from self.async_update()
 
