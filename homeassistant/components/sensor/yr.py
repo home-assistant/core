@@ -198,7 +198,6 @@ class YrData(object):
                                              second=self._update_time[1])
         self._unsubscribe_download_new_data = _unsub
 
-        _LOGGER.error(self._random_update_time)
         yield from self.async_update()
 
     @asyncio.coroutine
