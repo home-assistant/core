@@ -19,7 +19,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.config import find_config_file, load_yaml_config_file
-from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
+from homeassistant.const import (
+    CONF_NAME, EVENT_THEMES_UPDATED, EVENT_TRANSLATIONS_UPDATED)
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
@@ -68,6 +69,7 @@ DATA_EXTRA_HTML_URL_ES5 = 'frontend_extra_html_url_es5'
 DATA_THEMES = 'frontend_themes'
 DATA_DEFAULT_THEME = 'frontend_default_theme'
 DEFAULT_THEME = 'default'
+DATA_TRANSLATIONS = 'frontend_translations'
 
 PRIMARY_COLOR = 'primary-color'
 
@@ -379,6 +381,9 @@ def async_setup(hass, config):
 
     async_setup_themes(hass, conf.get(CONF_THEMES))
 
+    hass.data[DATA_TRANSLATIONS] = {}
+    hass.http.register_view(TranslationsView)
+
     return True
 
 
@@ -538,6 +543,23 @@ class ThemesView(HomeAssistantView):
         return self.json({
             'themes': hass.data[DATA_THEMES],
             'default_theme': hass.data[DATA_DEFAULT_THEME],
+        })
+
+
+class TranslationsView(HomeAssistantView):
+    """View to return backend defined translations."""
+
+    url = '/api/translations/{language}'
+    name = 'api:translations'
+
+    @callback
+    def get(self, request, language):
+        """Return themes."""
+        hass = request.app['hass']
+
+        resources = hass.data[DATA_TRANSLATIONS].get(language)
+        return self.json({
+            'resources': resources,
         })
 
 
