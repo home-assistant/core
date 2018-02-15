@@ -9,8 +9,6 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from aiohttp import web
-
 from homeassistant import core as ha, loader
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
@@ -25,9 +23,6 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
 from homeassistant.components import mqtt, recorder
-from homeassistant.components.http.auth import auth_middleware
-from homeassistant.components.http.const import (
-    KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
 from homeassistant.util.async import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
@@ -260,35 +255,6 @@ def mock_state_change_event(hass, new_state, old_state=None):
         event_data['old_state'] = old_state
 
     hass.bus.fire(EVENT_STATE_CHANGED, event_data)
-
-
-def mock_http_component(hass, api_password=None):
-    """Mock the HTTP component."""
-    hass.http = MagicMock(api_password=api_password)
-    mock_component(hass, 'http')
-    hass.http.views = {}
-
-    def mock_register_view(view):
-        """Store registered view."""
-        if isinstance(view, type):
-            # Instantiate the view, if needed
-            view = view()
-
-        hass.http.views[view.name] = view
-
-    hass.http.register_view = mock_register_view
-
-
-def mock_http_component_app(hass, api_password=None):
-    """Create an aiohttp.web.Application instance for testing."""
-    if 'http' not in hass.config.components:
-        mock_http_component(hass, api_password)
-    app = web.Application(middlewares=[auth_middleware])
-    app['hass'] = hass
-    app[KEY_USE_X_FORWARDED_FOR] = False
-    app[KEY_BANS_ENABLED] = False
-    app[KEY_TRUSTED_NETWORKS] = []
-    return app
 
 
 @asyncio.coroutine

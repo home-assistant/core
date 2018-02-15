@@ -14,7 +14,7 @@ from homeassistant.components import logbook
 from homeassistant.setup import setup_component
 
 from tests.common import (
-    mock_http_component, init_recorder_component, get_test_home_assistant)
+    init_recorder_component, get_test_home_assistant)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,10 +29,7 @@ class TestComponentLogbook(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)  # Force an in memory DB
-        mock_http_component(self.hass)
-        self.hass.config.components |= set(['frontend', 'recorder', 'api'])
-        assert setup_component(self.hass, logbook.DOMAIN,
-                               self.EMPTY_CONFIG)
+        assert setup_component(self.hass, logbook.DOMAIN, self.EMPTY_CONFIG)
         self.hass.start()
 
     def tearDown(self):

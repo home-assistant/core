@@ -12,34 +12,27 @@ import os
 import ssl
 
 from aiohttp import web
-from aiohttp.hdrs import ACCEPT, ORIGIN, CONTENT_TYPE
 from aiohttp.web_exceptions import HTTPUnauthorized, HTTPMovedPermanently
 import voluptuous as vol
 
 from homeassistant.const import (
-    SERVER_PORT, CONTENT_TYPE_JSON, HTTP_HEADER_HA_AUTH,
-    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
-    HTTP_HEADER_X_REQUESTED_WITH)
+    SERVER_PORT, CONTENT_TYPE_JSON,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,)
 from homeassistant.core import is_callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.remote as rem
 import homeassistant.util as hass_util
 from homeassistant.util.logging import HideSensitiveDataFilter
 
-from .auth import auth_middleware
-from .ban import ban_middleware
-from .const import (
-    KEY_BANS_ENABLED, KEY_AUTHENTICATED, KEY_LOGIN_THRESHOLD,
-    KEY_TRUSTED_NETWORKS, KEY_USE_X_FORWARDED_FOR)
+from .auth import setup_auth
+from .ban import setup_bans
+from .cors import setup_cors
+from .real_ip import setup_real_ip
+from .const import KEY_AUTHENTICATED, KEY_REAL_IP
 from .static import (
     CachingFileResponse, CachingStaticResource, staticresource_middleware)
-from .util import get_real_ip
 
 REQUIREMENTS = ['aiohttp_cors==0.6.0']
-
-ALLOWED_CORS_HEADERS = [
-    ORIGIN, ACCEPT, HTTP_HEADER_X_REQUESTED_WITH, CONTENT_TYPE,
-    HTTP_HEADER_HA_AUTH]
 
 DOMAIN = 'http'
 
@@ -127,7 +120,7 @@ def async_setup(hass, config):
         logging.getLogger('aiohttp.access').addFilter(
             HideSensitiveDataFilter(api_password))
 
-    server = HomeAssistantWSGI(
+    server = HomeAssistantHTTP(
         hass,
         server_host=server_host,
         server_port=server_port,
@@ -173,25 +166,29 @@ def async_setup(hass, config):
     return True
 
 
-class HomeAssistantWSGI(object):
-    """WSGI server for Home Assistant."""
+class HomeAssistantHTTP(object):
+    """HTTP server for Home Assistant."""
 
     def __init__(self, hass, api_password, ssl_certificate,
                  ssl_key, server_host, server_port, cors_origins,
                  use_x_forwarded_for, trusted_networks,
                  login_threshold, is_ban_enabled):
-        """Initialize the WSGI Home Assistant server."""
-        middlewares = [auth_middleware, staticresource_middleware]
+        """Initialize the HTTP Home Assistant server."""
+        app = self.app = web.Application(
+            middlewares=[staticresource_middleware])
+
+        # This order matters
+        setup_real_ip(app, use_x_forwarded_for)
 
         if is_ban_enabled:
-            middlewares.insert(0, ban_middleware)
+            setup_bans(hass, app, login_threshold)
 
-        self.app = web.Application(middlewares=middlewares)
-        self.app['hass'] = hass
-        self.app[KEY_USE_X_FORWARDED_FOR] = use_x_forwarded_for
-        self.app[KEY_TRUSTED_NETWORKS] = trusted_networks
-        self.app[KEY_BANS_ENABLED] = is_ban_enabled
-        self.app[KEY_LOGIN_THRESHOLD] = login_threshold
+        setup_auth(app, trusted_networks, api_password)
+
+        if cors_origins:
+            setup_cors(app, cors_origins)
+
+        app['hass'] = hass
 
         self.hass = hass
         self.api_password = api_password
@@ -199,20 +196,9 @@ class HomeAssistantWSGI(object):
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
+        self.is_ban_enabled = is_ban_enabled
         self._handler = None
         self.server = None
-
-        if cors_origins:
-            import aiohttp_cors
-
-            self.cors = aiohttp_cors.setup(self.app, defaults={
-                host: aiohttp_cors.ResourceOptions(
-                    allow_headers=ALLOWED_CORS_HEADERS,
-                    allow_methods='*',
-                ) for host in cors_origins
-            })
-        else:
-            self.cors = None
 
     def register_view(self, view):
         """Register a view with the WSGI server.
@@ -292,15 +278,7 @@ class HomeAssistantWSGI(object):
     @asyncio.coroutine
     def start(self):
         """Start the WSGI server."""
-        cors_added = set()
-        if self.cors is not None:
-            for route in list(self.app.router.routes()):
-                if hasattr(route, 'resource'):
-                    route = route.resource
-                if route in cors_added:
-                    continue
-                self.cors.add(route)
-                cors_added.add(route)
+        yield from self.app.startup()
 
         if self.ssl_certificate:
             try:
@@ -420,7 +398,7 @@ def request_handler_factory(view, handler):
             raise HTTPUnauthorized()
 
         _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, get_real_ip(request), authenticated)
+                     request.path, request.get(KEY_REAL_IP), authenticated)
 
         result = handler(request, **request.match_info)
 
