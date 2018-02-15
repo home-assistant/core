@@ -96,6 +96,7 @@ BASE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
     vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+    vol.Optional(CONF_TIMEOUT): vol.Coerce(float),
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend({
