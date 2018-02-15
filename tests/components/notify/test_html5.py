@@ -6,10 +6,7 @@ from aiohttp.hdrs import AUTHORIZATION
 
 from homeassistant.setup import async_setup_component
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.json import save_json
 from homeassistant.components.notify import html5
-
-from tests.common import mock_http_component_app, mock_coro
 
 CONFIG_FILE = 'file.conf'
 

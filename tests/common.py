@@ -260,33 +260,6 @@ def mock_state_change_event(hass, new_state, old_state=None):
     hass.bus.fire(EVENT_STATE_CHANGED, event_data)
 
 
-def mock_http_component(hass, api_password=None):
-    """Mock the HTTP component."""
-    hass.http = MagicMock(api_password=api_password)
-    mock_component(hass, 'http')
-    hass.http.views = {}
-
-    def mock_register_view(view):
-        """Store registered view."""
-        if isinstance(view, type):
-            # Instantiate the view, if needed
-            view = view()
-
-        hass.http.views[view.name] = view
-
-    hass.http.register_view = mock_register_view
-
-
-def mock_http_component_app(hass, api_password=None):
-    """Create an aiohttp.web.Application instance for testing."""
-    if 'http' not in hass.config.components:
-        mock_http_component(hass, api_password)
-    app = web.Application()
-    app['hass'] = hass
-    setup_auth(app, [], None)
-    return app
-
-
 @asyncio.coroutine
 def async_mock_mqtt_component(hass, config=None):
     """Mock the MQTT component."""

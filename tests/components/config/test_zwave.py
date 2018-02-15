@@ -9,10 +9,6 @@ from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 
 from homeassistant.components.zwave import DATA_NETWORK, const
-from homeassistant.components.config.zwave import (
-    ZWaveNodeValueView, ZWaveNodeGroupView, ZWaveNodeConfigView,
-    ZWaveUserCodeView, ZWaveConfigWriteView)
-from tests.common import mock_http_component_app
 from tests.mock.zwave import MockNode, MockValue, MockEntityValues
 
 
