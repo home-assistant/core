@@ -42,8 +42,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     all_devices = []
 
     for device in devices:
-        all_devices.append(MelissaClimate(
-            api, device['serial_number'], device))
+        if device['type'] == 'melissa':
+            all_devices.append(MelissaClimate(
+                api, device['serial_number'], device))
 
     add_devices(all_devices)
 
