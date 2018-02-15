@@ -197,8 +197,11 @@ class YrData(object):
             try_again(err)
             return
 
-        nxt = self._nextrun + timedelta(minutes=randrange(59))
+        # Wait at least 3 min after nextrun timestamp
+        nxt = self._nextrun + timedelta(minutes=3+randrange(56))
         async_track_point_in_utc_time(self.hass, self.async_update, nxt)
+        _LOGGER.error(nxt)
+        _LOGGER.error(self._nextrun)
         yield from self.async_update()
 
 
