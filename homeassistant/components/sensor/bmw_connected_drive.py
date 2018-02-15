@@ -6,8 +6,7 @@ https://home-assistant.io/components/sensor.bmw_connected_drive/
 """
 import logging
 
-from homeassistant.components.bmw_connected_drive \
-    import BMWConnectedDriveEntity, DOMAIN as BMW_DOMAIN
+from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.helpers.entity import Entity
 
 
@@ -42,10 +41,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class BMWConnectedDriveSensor(Entity):
     """Representation of a BMW vehicle."""
 
-    def __init__(self, entity: 'BMWConnectedDriveEntity',
-                 account, vehicle, attribute: str):
+    def __init__(self, entity, account, vehicle, attribute: str):
         """Constructor."""
-
         self._vehicle = vehicle
         self._attribute = attribute
         self._state = None

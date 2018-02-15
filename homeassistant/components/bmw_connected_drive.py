@@ -59,7 +59,8 @@ def setup(hass, config):
         password = account_config[CONF_PASSWORD]
         country = account_config[CONF_COUNTRY]
         _LOGGER.debug('Adding new account %s', name)
-        bimmer = BMWConnectedDriveEntity(hass, username, password, country, name)
+        bimmer = BMWConnectedDriveEntity(hass, username, password, country,
+                                         name)
         accounts.append(bimmer)
 
         # update every 5 minutes, select second randomly to reduce server
