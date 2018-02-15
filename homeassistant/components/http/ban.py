@@ -16,11 +16,13 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.yaml import dump
-from .const import (
-    KEY_BANNED_IPS, KEY_LOGIN_THRESHOLD, KEY_REAL_IP,
-    KEY_FAILED_LOGIN_ATTEMPTS)
+from .const import KEY_REAL_IP
 
 _LOGGER = logging.getLogger(__name__)
+
+KEY_BANNED_IPS = 'ha_banned_ips'
+KEY_FAILED_LOGIN_ATTEMPTS = 'ha_failed_login_attempts'
+KEY_LOGIN_THRESHOLD = 'ha_login_threshold'
 
 NOTIFICATION_ID_BAN = 'ip-ban'
 NOTIFICATION_ID_LOGIN = 'http-login'

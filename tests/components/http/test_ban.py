@@ -8,8 +8,8 @@ from aiohttp.web_exceptions import HTTPUnauthorized
 
 from homeassistant.setup import async_setup_component
 import homeassistant.components.http as http
-from homeassistant.components.http.const import KEY_BANNED_IPS
-from homeassistant.components.http.ban import IpBan, IP_BANS_FILE, setup_bans
+from homeassistant.components.http.ban import (
+    IpBan, IP_BANS_FILE, setup_bans, KEY_BANNED_IPS)
 
 from . import mock_real_ip
 

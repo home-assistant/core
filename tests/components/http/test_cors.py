@@ -1,3 +1,4 @@
+"""Test cors for the HTTP component."""
 import asyncio
 from unittest.mock import patch
 
@@ -5,7 +6,6 @@ from aiohttp import web
 from aiohttp.hdrs import (
     ACCESS_CONTROL_ALLOW_ORIGIN,
     ACCESS_CONTROL_ALLOW_HEADERS,
-    ACCESS_CONTROL_ALLOW_METHODS,
     ACCESS_CONTROL_REQUEST_HEADERS,
     ACCESS_CONTROL_REQUEST_METHOD,
     ORIGIN

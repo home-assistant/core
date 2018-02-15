@@ -1,7 +1,7 @@
 """The tests for the Home Assistant HTTP component."""
 # pylint: disable=protected-access
 import asyncio
-from ipaddress import ip_address, ip_network
+from ipaddress import ip_network
 from unittest.mock import patch
 
 from aiohttp import BasicAuth, web
@@ -12,7 +12,7 @@ from homeassistant.const import HTTP_HEADER_HA_AUTH
 from homeassistant.setup import async_setup_component
 from homeassistant.components.http.auth import setup_auth
 from homeassistant.components.http.real_ip import setup_real_ip
-from homeassistant.components.http.const import KEY_AUTHENTICATED, KEY_REAL_IP
+from homeassistant.components.http.const import KEY_AUTHENTICATED
 
 from . import mock_real_ip
 
