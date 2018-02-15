@@ -102,7 +102,9 @@ class PlexSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "Watching"
+        if self._state > 1:
+            return "Streams"
+        return "Stream"
 
     @property
     def device_state_attributes(self):
@@ -116,65 +118,66 @@ class PlexSensor(Entity):
         now_playing = []
         for sess in sessions:
             user = sess.usernames[0] if sess.usernames is not None else ""
-            playing_title = ""
+            playing_title = []
             if sess.TYPE == 'movie':
                 # example
-                # "The incredible Hulk (2008)"
+                # "The Incredible Hulk (2008)"
                 mov_title = (sess.title
                              if sess.title is not None
-                             else "")
-                mov_year = ("({0})".format(sess.year)
-                            if sess.year is not None
-                            else "")
-                playing_title = "{0} {1}".format(mov_title, mov_year)
+                             else None)
+                if sess.year is not None and mov_title is not None:
+                    mov_title += " ({0})".format(sess.year)
+
+                playing_title.append(mov_title)
             elif sess.TYPE == 'episode':
                 # example:
-                # "Supernatural (2005) - s01e13 - Route 666"
-                season_year = ("({0})".format(sess.show().year)
-                               if sess.show().year is not None
-                               else "")
+                # "Supernatural (2005) - S01 · E13 - Route 666"
                 season_title = (sess.grandparentTitle
                                 if sess.grandparentTitle is not None
-                                else "")
-                season_episode = (sess.seasonEpisode
-                                  if sess.seasonEpisode is not None
-                                  else "")
+                                else None)
+                if sess.show().year is not None and season_title is not None:
+                    season_title += " ({0})".format(sess.show().year)
+
+                season_episode = ("S{0}".format(sess.parentIndex)
+                                  if sess.parentIndex is not None
+                                  else None)
+                if sess.index is not None and season_episode is not None:
+                    season_episode += " · E{0}".format(sess.index)
+
                 episode_title = (sess.title
                                  if sess.title is not None
-                                 else "")
-                playing_title = "{0} {1} - {2} - {3}".format(season_title,
-                                                             season_year,
-                                                             season_episode,
-                                                             episode_title)
+                                 else None)
+
+                playing_title.extend([season_title, season_episode,
+                                      episode_title])
             elif sess.TYPE == 'track':
                 # example:
-                # "Billy Talent - Afraid of Heights (2016) - Afraid of Heights"
-                track_title = (sess.title
-                               if sess.title is not None
-                               else "")
-                track_album = (sess.parentTitle
-                               if sess.parentTitle is not None
-                               else "")
-                track_year = ("({0})".format(sess.year)
-                              if sess.year is not None
-                              else "")
+                # "Billy Talent - Afraid of Heights - Afraid of Heights"
                 track_artist = (sess.grandparentTitle
                                 if sess.grandparentTitle is not None
-                                else "")
-                playing_title = "{0} - {1} {2} - {3}".format(track_artist,
-                                                             track_album,
-                                                             track_year,
-                                                             track_title)
+                                else None)
+
+                track_album = (sess.parentTitle
+                               if sess.parentTitle is not None
+                               else None)
+
+                track_title = (sess.title
+                               if sess.title is not None
+                               else None)
+
+                playing_title.extend([track_artist, track_album, track_title])
             else:
                 # example:
                 # "picture_of_last_summer_camp (2015)"
                 title = (sess.title
                          if sess.title is not None
-                         else "")
-                year = ("({0})".format(sess.year)
-                        if sess.year is not None
-                        else "")
-                playing_title = "{0} {1}".format(title, year)
-            now_playing.append((user, playing_title))
+                         else None)
+
+                title += (" ({0})".format(sess.year)
+                          if sess.year is not None
+                          else None)
+
+                playing_title.append(title)
+            now_playing.append((user, " - ".join(playing_title)))
         self._state = len(sessions)
         self._now_playing = now_playing
