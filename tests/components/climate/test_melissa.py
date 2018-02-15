@@ -122,7 +122,7 @@ class TestMelissa(unittest.TestCase):
     def test_operation_list(self):
         """Test the operation list."""
         self.assertEqual(
-            [STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT],
+            [STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT],
             self.thermostat.operation_list
         )
 
