@@ -147,7 +147,7 @@ class SmappeeSensor(Entity):
             if voltage:
                 self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 self._state = round(voltage, 3)
-        elif self._sensor is 'active_power':
+        elif self._sensor == 'active_power':
             data = self._smappee.load_instantaneous()
             _LOGGER.debug("%s %s", self._sensor, data)
             if data:
@@ -160,7 +160,7 @@ class SmappeeSensor(Entity):
                 active_power = sum(value1 + value2 + value3) / 1000
                 self._state = round(active_power, 2)
                 self._timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        elif self._sensor is 'solar':
+        elif self._sensor == 'solar':
             data = self._smappee.load_instantaneous()
             _LOGGER.debug("%s %s", self._sensor, data)
             if data:

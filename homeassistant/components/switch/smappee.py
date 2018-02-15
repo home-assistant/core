@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if smappee.is_remote_active:
         for location_id in smappee.locations.keys():
             for items in smappee.info[location_id].get('actuators'):
-                if items.get('name') is not '':
+                if items.get('name') != '':
                     dev.append(SmappeeSwitch(smappee,
                                              DEFAULT_NAME,
                                              location_id,
