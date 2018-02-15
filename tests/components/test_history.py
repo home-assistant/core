@@ -10,8 +10,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.components import history, recorder
 
 from tests.common import (
-    init_recorder_component, mock_http_component, mock_state_change_event,
-    get_test_home_assistant)
+    init_recorder_component, mock_state_change_event, get_test_home_assistant)
 
 
 class TestComponentHistory(unittest.TestCase):
@@ -38,7 +37,6 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_setup(self):
         """Test setup method of history."""
-        mock_http_component(self.hass)
         config = history.CONFIG_SCHEMA({
             # ha.DOMAIN: {},
             history.DOMAIN: {
