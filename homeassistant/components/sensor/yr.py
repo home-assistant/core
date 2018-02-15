@@ -156,7 +156,7 @@ class YrData(object):
         self.data = {}
         self.hass = hass
         self._unsubscribe_download_new_data = None
-        self._update_time = [randrange(59), randrange(59)]
+        self._update_time = [randrange(60), randrange(60)]
 
     @asyncio.coroutine
     def download_new_data(self, *_):
@@ -168,8 +168,8 @@ class YrData(object):
             self._unsubscribe_download_new_data = None
 
         def try_again(err: str):
-            """Retry in at least 20 minutes."""
-            minutes = 15 + randrange(5)
+            """Retry in 15 to 20 minutes."""
+            minutes = 15 + randrange(6)
             _LOGGER.error("Retrying in %i minutes: %s", minutes, err)
             async_call_later(self.hass, minutes*60, self.download_new_data)
         try:
