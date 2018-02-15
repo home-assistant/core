@@ -51,6 +51,13 @@ class LeafClimateSwitch(LeafCore.LeafEntity, ToggleEntity):
 
         self._update_callback()
 
+    @property
+    def icon(self):
+        if self.car.data[LeafCore.DATA_CLIMATE]:
+            return 'mdi:fan'
+        else:
+            return 'mdi:fan-off'
+
 
 class LeafChargeSwitch(LeafCore.LeafEntity, ToggleEntity):
     @property
@@ -61,6 +68,13 @@ class LeafChargeSwitch(LeafCore.LeafEntity, ToggleEntity):
         _LOGGER.debug(
             "Registered LeafChargeSwitch component with HASS for VIN %s",
             self.car.leaf.vin)
+
+    @property
+    def icon(self):
+        if self.car.data[LeafCore.DATA_CHARGING]:
+            return 'mdi:flash'
+        else:
+            return 'mdi:flash-off'
 
     @property
     def is_on(self):

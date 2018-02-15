@@ -7,6 +7,7 @@ Please refer to the main platform component for configuration details
 
 import logging
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.helpers.icon import icon_for_battery_level
 from .. import nissan_leaf as LeafCore
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,6 +47,14 @@ class LeafBatterySensor(LeafCore.LeafEntity):
     @property
     def unit_of_measurement(self):
         return '%'
+
+    @property
+    def icon(self):
+        chargeState = self.car.data[LeafCore.DATA_CHARGING]
+        return icon_for_battery_level(
+            battery_level=self.state,
+            charging=chargeState
+        )
 
 
 class LeafRangeSensor(LeafCore.LeafEntity):
@@ -87,3 +96,7 @@ class LeafRangeSensor(LeafCore.LeafEntity):
             return "mi"
         else:
             return "km"
+
+    @property
+    def icon(self):
+        return 'mdi:speedometer'

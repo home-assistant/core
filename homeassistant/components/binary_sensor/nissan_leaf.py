@@ -40,3 +40,10 @@ class LeafPluggedInSensor(LeafCore.LeafEntity):
     @property
     def state(self):
         return self.car.data[LeafCore.DATA_PLUGGED_IN]
+
+    @property
+    def icon(self):
+        if self.car.data[LeafCore.DATA_PLUGGED_IN]:
+            return 'mdi:power-plug'
+        else:
+            return 'mdi:power-plug-off'
