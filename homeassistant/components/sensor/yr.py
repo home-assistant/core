@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, async_track_utc_time_change)
+    async_track_point_in_utc_time, async_track_utc_time_change, async_call_later)
 from homeassistant.util import dt as dt_util
 
 REQUIREMENTS = ['xmltodict==0.11.0']
@@ -92,8 +92,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     weather = YrData(hass, coordinates, forecast, dev)
     # Update weather on the hour, spread seconds
-    async_track_utc_time_change(
-        hass, weather.async_update, second=1)
+    async_track_utc_time_change(hass, weather.async_update, second=0)
     yield from weather.download_new_data()
 
 
@@ -152,24 +151,28 @@ class YrData(object):
         self._url = 'https://aa015h6buqvih86i1.api.met.no/'\
                     'weatherapi/locationforecast/1.9/'
         self._urlparams = coordinates
-        self._nextrun = None
         self._forecast = forecast
         self.devices = devices
         self.data = {}
         self.hass = hass
+        self._unsubscribe_download_new_data = None
+        self._random_update_time = [randrange(59), randrange(59)]
 
     @asyncio.coroutine
-    def download_new_data(self):
+    def download_new_data(self, *_):
         """Get the latest data from yr.no."""
         import xmltodict
 
+        if self._unsubscribe_download_new_data:
+            self._unsubscribe_download_new_data()
+            self._unsubscribe_download_new_data = None
+
         _LOGGER.error('download_new_data')
         def try_again(err: str):
-            """Retry in 20 minutes."""
-            _LOGGER.error("Retrying in 20 minutes: %s", err)
-            self._nextrun = None
-            nxt = dt_util.utcnow() + timedelta(minutes=20)
-            async_track_point_in_utc_time(self.hass, self.download_new_data, nxt)
+            """Retry in at least 20 minutes."""
+            minutes = 15 + randrange(5)
+            _LOGGER.error("Retrying in %i minutes: %s", minutes, err)
+            async_call_later(self.hass, minutes*60, self.download_new_data)
         _LOGGER.error('asking for new data')
         _LOGGER.error(self._url)
         _LOGGER.error(self._urlparams)
@@ -189,25 +192,21 @@ class YrData(object):
 
         try:
             self.data = xmltodict.parse(text)['weatherdata']
-            model = self.data['meta']['model']
-            if '@nextrun' not in model:
-                model = model[0]
-            self._nextrun = dt_util.parse_datetime(model['@nextrun'])
         except (ExpatError, IndexError) as err:
             try_again(err)
             return
 
-        # Wait at least 3 min after nextrun timestamp
-        nxt = self._nextrun + timedelta(minutes=3+randrange(56))
-        async_track_point_in_utc_time(self.hass, self.async_update, nxt)
-        _LOGGER.error(nxt)
-        _LOGGER.error(self._nextrun)
+        self._unsubscribe_download_new_data = async_track_utc_time_change(self.hass, self.download_new_data,
+                                                                          minute=self._random_update_time[0],
+                                                                          second=self._random_update_time[1])
+        _LOGGER.error(self._random_update_time)
+
         yield from self.async_update()
 
 
     @asyncio.coroutine
     def async_update(self, *_):
-        """Find the current data from yr.no."""
+        """Find the current data from self.data."""
         if not self.data:
             return
 
