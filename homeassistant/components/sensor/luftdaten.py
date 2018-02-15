@@ -119,16 +119,16 @@ class LuftdatenSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        onmap = ATTR_LATITUDE, ATTR_LONGITUDE
+        nomap = 'lat', 'long'
+        lat_format, lon_format = onmap if self._show_on_map else nomap
         try:
             attr = {
                 ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
                 ATTR_SENSOR_ID: self._sensor_id,
-                'lat': self.luftdaten.data.meta['latitude'],
-                'long': self.luftdaten.data.meta['longitude'],
+                lat_format: self.luftdaten.data.meta['latitude'],
+                lon_format: self.luftdaten.data.meta['longitude'],
             }
-            if self._show_on_map:
-                attr[ATTR_LATITUDE] = self.luftdaten.data.meta['latitude']
-                attr[ATTR_LONGITUDE] = self.luftdaten.data.meta['longitude']
             return attr
         except KeyError:
             return
