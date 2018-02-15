@@ -184,7 +184,7 @@ class ApplicationListener:
 
             component = None
             profile_clusters = ([], [])
-            device_key = '%s-%s' % (str(device.ieee), endpoint_id)
+            device_key = "{}-{}".format(str(device.ieee), endpoint_id)
             node_config = self._config[DOMAIN][CONF_DEVICE_CONFIG].get(
                 device_key, {})
 
@@ -214,6 +214,7 @@ class ApplicationListener:
                     'in_clusters': {c.cluster_id: c for c in in_clusters},
                     'out_clusters': {c.cluster_id: c for c in out_clusters},
                     'new_join': join,
+                    'unique_id': "{}-{}".format(device.ieee, endpoint_id),
                 }
                 discovery_info.update(discovered_info)
                 self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
@@ -240,9 +241,11 @@ class ApplicationListener:
                     'in_clusters': {cluster.cluster_id: cluster},
                     'out_clusters': {},
                     'new_join': join,
+                    'unique_id': "{}-{}-{}".format(
+                        device.ieee, endpoint_id, cluster_id),
                 }
                 discovery_info.update(discovered_info)
-                cluster_key = '%s-%s' % (device_key, cluster_id)
+                cluster_key = "{}-{}".format(device_key, cluster_id)
                 self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
 
                 yield from discovery.async_load_platform(
@@ -264,25 +267,25 @@ class Entity(entity.Entity):
     _domain = None  # Must be overridden by subclasses
 
     def __init__(self, endpoint, in_clusters, out_clusters, manufacturer,
-                 model, application_listener, **kwargs):
+                 model, application_listener, unique_id, **kwargs):
         """Init ZHA entity."""
         self._device_state_attributes = {}
         ieee = endpoint.device.ieee
         ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
         if manufacturer and model is not None:
-            self.entity_id = '%s.%s_%s_%s_%s' % (
+            self.entity_id = "{}.{}_{}_{}_{}".format(
                 self._domain,
                 slugify(manufacturer),
                 slugify(model),
                 ieeetail,
                 endpoint.endpoint_id,
             )
-            self._device_state_attributes['friendly_name'] = '%s %s' % (
+            self._device_state_attributes['friendly_name'] = "{} {}".format(
                 manufacturer,
                 model,
             )
         else:
-            self.entity_id = "%s.zha_%s_%s" % (
+            self.entity_id = "{}.zha_{}_{}".format(
                 self._domain,
                 ieeetail,
                 endpoint.endpoint_id,
@@ -295,8 +298,19 @@ class Entity(entity.Entity):
         self._in_clusters = in_clusters
         self._out_clusters = out_clusters
         self._state = ha_const.STATE_UNKNOWN
+        self._unique_id = unique_id
 
         application_listener.register_entity(ieee, self)
+
+    @property
+    def unique_id(self) -> str:
+        """Return an unique ID."""
+        return self._unique_id
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return self._device_state_attributes
 
     def attribute_updated(self, attribute, value):
         """Handle an attribute updated on this cluster."""
@@ -305,11 +319,6 @@ class Entity(entity.Entity):
     def zdo_command(self, tsn, command_id, args):
         """Handle a ZDO command received on this cluster."""
         pass
-
-    @property
-    def device_state_attributes(self):
-        """Return device specific state attributes."""
-        return self._device_state_attributes
 
 
 @asyncio.coroutine
