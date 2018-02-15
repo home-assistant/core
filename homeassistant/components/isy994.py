@@ -83,9 +83,9 @@ NODE_FILTERS = {
     },
     'fan': {
         'uom': [],
-        'states': ['on', 'off', 'low', 'medium', 'high'],
+        'states': ['off', 'low', 'medium', 'high'],
         'node_def_id': ['FanLincMotor'],
-        'insteon_type': ['1.46.']
+        'insteon_type': []
     },
     'cover': {
         'uom': ['97'],
@@ -99,7 +99,7 @@ NODE_FILTERS = {
         'node_def_id': ['DimmerLampSwitch', 'DimmerLampSwitch_ADV',
                         'DimmerSwitchOnly', 'DimmerSwitchOnly_ADV',
                         'DimmerLampOnly', 'BallastRelayLampSwitch',
-                        'BallastRelayLampSwitch_ADV', 'RelayLampSwitch',
+                        'BallastRelayLampSwitch_ADV',
                         'RemoteLinc2', 'RemoteLinc2_ADV'],
         'insteon_type': ['1.']
     },
@@ -431,7 +431,10 @@ class ISYDevice(Entity):
     def unique_id(self) -> str:
         """Get the unique identifier of the device."""
         # pylint: disable=protected-access
-        return self._node._id
+        if hasattr(self._node, '_id'):
+            return self._node._id
+
+        return None
 
     @property
     def name(self) -> str:
