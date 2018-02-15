@@ -9,8 +9,6 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from aiohttp import web
-
 from homeassistant import core as ha, loader
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
@@ -25,7 +23,6 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
 from homeassistant.components import mqtt, recorder
-from homeassistant.components.http.auth import setup_auth
 from homeassistant.util.async import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
