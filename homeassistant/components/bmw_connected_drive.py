@@ -101,10 +101,13 @@ class BMWConnectedDriveEntity(object):
         _LOGGER.debug('Updating vehicle state for account %s, '
                       'notifying %d listeners',
                       self.name, len(self._update_listeners))
-        self.account.update_vehicle_states()
-
-        for listener in self._update_listeners:
-            listener()
+        try:
+            self.account.update_vehicle_states()
+            for listener in self._update_listeners:
+                listener()
+        except IOError as exception:
+            _LOGGER.error('Error updating the vehicle state.')
+            _LOGGER.exception(exception)
 
     def add_update_listener(self, listener):
         """Add a listener for update notifications."""
