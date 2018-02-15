@@ -172,7 +172,7 @@ class YrData(object):
         def try_again(err: str):
             """Retry in at least 20 minutes."""
             minutes = 15 + randrange(5)
-            _LOGGER.warning("Retrying in %i minutes: %s", minutes, err)
+            _LOGGER.error("Retrying in %i minutes: %s", minutes, err)
             async_call_later(self.hass, minutes*60, self.download_new_data)
         _LOGGER.error('asking for new data')
         _LOGGER.error(self._url)
