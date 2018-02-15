@@ -398,7 +398,7 @@ def request_handler_factory(view, handler):
             raise HTTPUnauthorized()
 
         _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, request[KEY_REAL_IP], authenticated)
+                     request.path, request.get(KEY_REAL_IP), authenticated)
 
         result = handler(request, **request.match_info)
 
