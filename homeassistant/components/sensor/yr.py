@@ -93,9 +93,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     weather = YrData(hass, coordinates, forecast, dev)
     # Update weather on the hour, spread seconds
     async_track_utc_time_change(
-        hass, weather.async_update, minute=1)
+        hass, weather.async_update, second=1)
     yield from weather.download_new_data()
-    yield from weather.async_update()
 
 
 class YrSensor(Entity):
@@ -160,19 +159,17 @@ class YrData(object):
         self.hass = hass
 
     @asyncio.coroutine
-    def download_new_data(self, *_):
+    def download_new_data(self):
         """Get the latest data from yr.no."""
         import xmltodict
 
-        _LOGGER.error('async_update')
+        _LOGGER.error('download_new_data')
         def try_again(err: str):
-            """Retry in 15 minutes."""
-            _LOGGER.error("Retrying in 15 minutes: %s", err)
+            """Retry in 20 minutes."""
+            _LOGGER.error("Retrying in 20 minutes: %s", err)
             self._nextrun = None
-            nxt = dt_util.utcnow() + timedelta(minutes=15)
-            if nxt.minute >= 15:
-                async_track_point_in_utc_time(self.hass, self.download_new_data,
-                                              nxt)
+            nxt = dt_util.utcnow() + timedelta(minutes=20)
+            async_track_point_in_utc_time(self.hass, self.download_new_data, nxt)
         _LOGGER.error('asking for new data')
         _LOGGER.error(self._url)
         _LOGGER.error(self._urlparams)
@@ -202,12 +199,14 @@ class YrData(object):
 
         nxt = self._nextrun + timedelta(minutes=randrange(59))
         async_track_point_in_utc_time(self.hass, self.async_update, nxt)
+        yield from self.async_update()
 
 
     @asyncio.coroutine
     def async_update(self, *_):
         """Find the current data from yr.no."""
-        import xmltodict
+        if not self.data:
+            return
 
         now = dt_util.utcnow()
         forecast_time = now + dt_util.dt.timedelta(hours=self._forecast)
