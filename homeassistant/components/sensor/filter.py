@@ -20,8 +20,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.components.recorder.util import session_scope, execute
 
-REQUIREMENTS = ['pyserial-asyncio==0.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_COUNT = 'count'
