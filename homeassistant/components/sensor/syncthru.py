@@ -4,7 +4,7 @@ Connect to a Samsung Printer via it's SyncThru
 """
 import logging
 
-DEPENDENCIES = [
+REQUIREMENTS = [
     'pysyncthru'  # for obvious reasons
     ]
 
