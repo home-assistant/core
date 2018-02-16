@@ -343,7 +343,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
             client_id = 'home-assistant'
     else:
         err = "Unable to start MQTT broker."
-        if CONF_EMBEDDED in conf:
+        if conf.get(CONF_EMBEDDED) is not None:
             # Explicit embedded config, requires explicit broker config
             err += " (Broker configuration required.)"
         _LOGGER.error(err)
@@ -360,10 +360,10 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         certificate = requests.certs.where()
 
     will_message = None  # type: Optional[Message]
-    if CONF_WILL_MESSAGE in conf:
+    if conf[CONF_WILL_MESSAGE] is not None:
         will_message = Message(**conf.get(CONF_WILL_MESSAGE))
     birth_message = None  # type: Optional[Message]
-    if CONF_BIRTH_MESSAGE in conf:
+    if conf[CONF_BIRTH_MESSAGE] is not None:
         birth_message = Message(**conf.get(CONF_BIRTH_MESSAGE))
 
     # Be able to override versions other than TLSv1.0 under Python3.6
