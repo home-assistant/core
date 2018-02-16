@@ -156,17 +156,11 @@ class YrData(object):
         self.devices = devices
         self.data = {}
         self.hass = hass
-        self._unsubscribe_fetching_data = None
-        self._update_time = [randrange(60), randrange(60)]
 
     @asyncio.coroutine
     def fetching_data(self, *_):
         """Get the latest data from yr.no."""
         import xmltodict
-
-        if self._unsubscribe_fetching_data:
-            self._unsubscribe_fetching_data()
-            self._unsubscribe_fetching_data = None
 
         def try_again(err: str):
             """Retry in 15 to 20 minutes."""
@@ -193,13 +187,8 @@ class YrData(object):
             try_again(err)
             return
 
-        _unsub = async_track_utc_time_change(self.hass,
-                                             self.fetching_data,
-                                             minute=self._update_time[0],
-                                             second=self._update_time[1])
-        self._unsubscribe_fetching_data = _unsub
-
         yield from self.updating_devices()
+        async_call_later(self.hass, 60*60, self.fetching_data)
 
     @asyncio.coroutine
     def updating_devices(self, *_):
