@@ -18,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.util import dt as dt_util
 from homeassistant.components.recorder.util import session_scope, execute
 
 REQUIREMENTS = ['pyserial-asyncio==0.4']
@@ -32,7 +31,7 @@ ATTR_SAMPLING_SIZE = 'window_size'
 CONF_WINDOW_SIZE = 'window_size'
 
 DEFAULT_NAME = 'Filter'
-DEFAULT_SIZE = 5 
+DEFAULT_SIZE = 5
 ICON = 'mdi: chart-line-variant '
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -87,8 +86,9 @@ class FilterSensor(Entity):
             hass, entity_id, async_stats_sensor_state_listener)
 
     def _add_state_to_queue(self, new_state):
+        """Add a single state to states."""
         try:
-            _LOGGER.debug("New value: %s",new_state.state)
+            _LOGGER.debug("New value: %s", new_state.state)
             new_state.state = float(new_state.state)
 
             #Outliers filters:
@@ -100,12 +100,14 @@ class FilterSensor(Entity):
             _LOGGER.error("Invalid Value: %s, reason: %s", float(new_state.state), e)
 
     def _outlier(self, new_state):
-        """BASIC outlier filter"""
-        if len(self.states) > 1 and abs(new_state - statistics.median(self.states)) > 10*statistics.stdev(self.states): 
+        """BASIC outlier filter.
+        Where does 10 SD come from?"""
+        if len(self.states) > 1 and abs(new_state - statistics.median(self.states)) > 10*statistics.stdev(self.states):
             raise ValueError("Outlier detected")
 
     def _lowpass(self, new_state, time_constant=4):
-        """BASIC Low Pass Filter"""
+        """BASIC Low Pass Filter.
+        COULD REPLACE WITH _FILTER THEN DEFINE WHATEVER FILTER WE WANT?"""
         try:
             B = 1.0 / time_constant
             A = 1.0 - B
@@ -126,12 +128,12 @@ class FilterSensor(Entity):
         if len(self.states):
             return self.states[-1]
         else:
-            return STATE_UNKNOWN
+            return STATE_UNKNOWN # I think STATE_UNKNOWN is discouraged
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._unit_of_measurement 
+        return self._unit_of_measurement
 
     @property
     def should_poll(self):
@@ -147,7 +149,7 @@ class FilterSensor(Entity):
     def async_update(self):
         """Get the latest data and updates the states."""
         try:  # require at least two data points
-            _LOGGER.debug("<%s> variance %s",self.states[-1], round(statistics.variance(self.states),2))
+            _LOGGER.debug("<%s> variance %s", self.states[-1], round(statistics.variance(self.states), 2))
         except statistics.StatisticsError as err:
             _LOGGER.error(err)
             self.variance = STATE_UNKNOWN
