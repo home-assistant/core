@@ -80,13 +80,13 @@ class SyncThruSensor(Entity):
 
         self._attributes['output_tray'] = syncthru.outputTrayStatus()
         for key, value in syncthru.systemStatus().items():
-            self._attributes[key] = value
+            self._attributes[str(key)] = value
         for key, value in syncthru.tonerStatus().items():
-            self._attributes['toner_' + key] = value
+            self._attributes['toner_' + str(key)] = value
         for key, value in syncthru.drumStatus().items():
-            self._attributes['drum_' + key] = value
+            self._attributes['drum_' + str(key)] = value
         for key, value in syncthru.inputTrayStatus().items():
-            self._attributes['input_tray_' + key] = value
+            self._attributes['input_tray_' + str(key)] = value
 
     @property
     def device_state_attributes(self):
