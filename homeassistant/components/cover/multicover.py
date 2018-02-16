@@ -6,7 +6,6 @@ https://home-assistant.io/components/cover.multicover/
 """
 import asyncio
 import logging
-import re
 
 import voluptuous as vol
 
@@ -17,10 +16,9 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP,
     SUPPORT_SET_POSITION, SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT,
     SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION)
-from homeassistant.components.zwave.const import EVENT_NETWORK_READY
 from homeassistant.const import (
     CONF_COVERS, CONF_ENTITY_ID, CONF_FRIENDLY_NAME,
-    EVENT_HOMEASSISTANT_START, EVENT_CALL_SERVICE,
+    EVENT_CALL_SERVICE,
     STATE_CLOSED, STATE_UNKNOWN, ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_COVER, SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT,
@@ -39,7 +37,6 @@ TILT_FEATURES = SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | \
                 SUPPORT_STOP_TILT | SUPPORT_SET_TILT_POSITION
 
 
-CONF_ENTITY_ID_REGEX = 'entity_id_regex'
 CONF_TILT = 'tilt'
 CONF_WINTER_PROTECTION = 'winter_protection'
 CONF_CLOSE_POSITION = 'close_position'
@@ -62,11 +59,10 @@ WINTER_PROTECTION_SCHEMA = vol.All(vol.Schema({
 
 COVER_SCHEMA = vol.All(vol.Schema({
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    CONF_ENTITY_ID: cv.entity_ids,
-    CONF_ENTITY_ID_REGEX: cv.string,
+    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     vol.Optional(CONF_TILT): cv.boolean,
     vol.Optional(CONF_WINTER_PROTECTION): WINTER_PROTECTION_SCHEMA,
-}), cv.has_at_least_one_key(CONF_ENTITY_ID, CONF_ENTITY_ID_REGEX))
+}))
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
@@ -80,8 +76,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for device, device_config in config[CONF_COVERS].items():
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
-        entity_ids = device_config.get(CONF_ENTITY_ID, [])
-        entity_ids_regex = device_config.get(CONF_ENTITY_ID_REGEX)
+        entity_ids = device_config.get(CONF_ENTITY_ID)
         tilt = device_config.get(CONF_TILT, False)
 
         winter_config = device_config.get(CONF_WINTER_PROTECTION, {})
@@ -91,7 +86,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         temp_sensor = winter_config.get(CONF_TEMPERATURE_SENSOR)
         covers.append(
             MultiCover(
-                hass, device, friendly_name, entity_ids, entity_ids_regex,
+                hass, device, friendly_name, entity_ids,
                 tilt, close_position, open_position, temp, temp_sensor)
         )
 
@@ -106,8 +101,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MultiCover(CoverDevice):
     """Representation of a MultiCover."""
 
-    def __init__(self, hass, device_id, friendly_name,
-                 entity_ids, entity_ids_regex, tilt,
+    def __init__(self, hass, device_id, friendly_name, entity_ids, tilt,
                  close_position, open_position, temp, temp_sensor):
         """Initialize a multicover entity."""
         self.hass = hass
@@ -115,14 +109,12 @@ class MultiCover(CoverDevice):
             ENTITY_ID_FORMAT, device_id, hass=hass)
         self._device_id = device_id
         self._name = friendly_name
-        self._entities = set(entity_ids)
-        self._entity_ids_regex = entity_ids_regex
+        self.entities = self.get_entities_set(entity_ids)
         self._tilt = tilt
         self._close_position = close_position
         self._open_position = open_position
         self._temp = temp
         self._temp_sensor = temp_sensor
-        self.matched_entities = set()
         self.covers = {KEY_OPEN_CLOSE: set(), KEY_STOP: set(),
                        KEY_POSITION: set()}
         self.tilts = {KEY_OPEN_CLOSE: set(), KEY_STOP: set(),
@@ -133,114 +125,89 @@ class MultiCover(CoverDevice):
                       self._device_id, tilt, temp, temp_sensor,
                       close_position, open_position)
 
-    def match_entities(self):
-        """Return all matched entities based on regex if not matched before."""
-        if self._entity_ids_regex is None:
-            return False
-
-        pattern = re.compile(self._entity_ids_regex, re.I | re.M)
-        all_entities = ', '.join(self.hass.states.async_entity_ids(DOMAIN))
-        match_all = set(re.findall(pattern, all_entities))
-
-        for match in match_all:
-            if match not in self.matched_entities:
-                self._entities.add(match)
-
-        self.matched_entities = self.matched_entities.union(match_all)
-
-    def check_supported_features(self):
-        """Iterate through entity list and check supported features."""
-        all_entities = set()
-        for entity in self._entities.copy():
-            if entity == self.entity_id:
-                _LOGGER.warning("%s: The entity_id of this component \"%s\" "
-                                "is not allowed.", self._device_id, entity)
-                self._entities.remove(entity)
-                continue
+    def get_entities_set(self, entity_ids):
+        """Check if entities are valid."""
+        entities = set()
+        for entity in entity_ids:
             if split_entity_id(entity)[0] != DOMAIN:
                 _LOGGER.warning("%s: Only cover entities are allowed. Please "
                                 "remove: \"%s\".", self._device_id, entity)
-                self._entities.remove(entity)
                 continue
-            state = self.hass.states.get(entity)
-            if state is None:
+            if entity == self.entity_id:
+                _LOGGER.warning("%s: The entity_id of this component \"%s\" "
+                                "is not allowed.", self._device_id, entity)
                 continue
-            all_entities.add(entity)
-            self._entities.remove(entity)
-            features = state.attributes[ATTR_SUPPORTED_FEATURES]
-            # Supported features for covers
-            if features & 1 and features & 2:
-                self.covers[KEY_OPEN_CLOSE].add(entity)
-            if features & 4:
-                self.covers[KEY_POSITION].add(entity)
-            if features & 8:
-                self.covers[KEY_STOP].add(entity)
-            # Supported features for tilts
-            if features & 16 and features & 32:
-                self.tilts[KEY_OPEN_CLOSE].add(entity)
-            if features & 64:
-                self.tilts[KEY_STOP].add(entity)
-            if features & 128:
-                self.tilts[KEY_POSITION].add(entity)
-        if self._entities != set():
-            _LOGGER.debug("%s: Entities not found: %s",
-                          self._device_id, self._entities)
-        return all_entities
+            entities.add(entity)
+        return entities
 
-    def temp_state_change(self, state):
-        """Update winter_protection based on state change."""
-        self.winter_protection = bool(
-            state is not None and state.state != STATE_UNKNOWN and
-            float(state.state) < self._temp)
-        _LOGGER.debug("%s: Winter protection enabled: %s",
-                      self._device_id, self.winter_protection)
+    def update_supported_features(self, entity_id, old_state, new_state):
+        """Update dictionaries with supported features."""
+        if old_state is None and new_state is not None:
+            features = new_state.attributes[ATTR_SUPPORTED_FEATURES]
+            self.add_supported_features(entity_id, features)
+        elif old_state is not None:
+            if new_state is not None:
+                features_old = old_state.attributes[ATTR_SUPPORTED_FEATURES]
+                features_new = new_state.attributes[ATTR_SUPPORTED_FEATURES]
+                if features_old != features_new:
+                    self.remove_supported_features(entity_id)
+                    self.add_supported_features(entity_id, features_new)
+            else:
+                self.remove_supported_features(entity_id)
+
+    def remove_supported_features(self, entity_id):
+        """Remove entity ID form supported features dictionaries."""
+        for _, value in self.covers.items():
+            value.discard(entity_id)
+        for _, value in self.tilts.items():
+            value.discard(entity_id)
+
+    def add_supported_features(self, entity_id, features):
+        """Add entity ID to supported features dictionaries."""
+        if features & 1 and features & 2:
+            self.covers[KEY_OPEN_CLOSE].add(entity_id)
+        if features & 4:
+            self.covers[KEY_POSITION].add(entity_id)
+        if features & 8:
+            self.covers[KEY_STOP].add(entity_id)
+        if features & 16 and features & 32:
+            self.tilts[KEY_OPEN_CLOSE].add(entity_id)
+        if features & 64:
+            self.tilts[KEY_STOP].add(entity_id)
+        if features & 128:
+            self.tilts[KEY_POSITION].add(entity_id)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
         @callback
-        def multicover_state_listener(entity, old_state, new_state):
+        def state_change_listener(entity, old_state, new_state):
             """Handle cover state changes and update state."""
+            self.update_supported_features(entity, old_state, new_state)
             self.async_schedule_update_ha_state(True)
 
         @callback
-        def multicover_temp_state_listener(entity, old_state, new_state):
+        def temp_state_change_listener(entity=None, old_state=None,
+                                       new_state=None):
             """Handle temperature sensore changes."""
-            self.temp_state_change(new_state)
+            self.winter_protection = bool(
+                new_state is not None and new_state.state != STATE_UNKNOWN and
+                float(new_state.state) < self._temp)
+            _LOGGER.debug("%s: Winter protection enabled: %s",
+                          self._device_id, self.winter_protection)
 
-        @callback
-        def multicover_startup(event):
-            """Update MultiCover after startup."""
-            # Check entity features and add state change listeners.
-            self.match_entities()
-            entities = self.check_supported_features()
-            async_track_state_change(
-                self.hass, entities, multicover_state_listener)
-            # Check if winter protection feature is used.
-            if self._temp_sensor:
-                async_track_state_change(self.hass, self._temp_sensor,
-                                         multicover_temp_state_listener)
-                self.temp_state_change(self.hass.states.get(self._temp_sensor))
+        for entity_id in self.entities:
+            new_state = self.hass.states.get(entity_id)
+            self.update_supported_features(entity_id, None, new_state)
+        async_track_state_change(self.hass, self.entities,
+                                 state_change_listener)
 
-            self.async_schedule_update_ha_state(True)
-            _LOGGER.debug("%s: Finished taskes after HomeAssistant startup.",
-                          self._device_id)
-
-        @callback
-        def multicover_zwave_startup(event):
-            """Update MultiCover after ZWave Network startup."""
-            self.match_entities()
-            entities = self.check_supported_features()
-            async_track_state_change(
-                self.hass, entities, multicover_state_listener)
-            self.async_schedule_update_ha_state(True)
-            _LOGGER.debug("%s: Finished taskes after ZWave Network war ready.",
-                          self._device_id)
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, multicover_startup)
-        self.hass.bus.async_listen_once(
-            EVENT_NETWORK_READY, multicover_zwave_startup)
+        # Check if winter protection feature is used.
+        if self._temp_sensor:
+            async_track_state_change(self.hass, self._temp_sensor,
+                                     temp_state_change_listener)
+            init_temp_state = self.hass.states.get(self._temp_sensor)
+            self.temp_state_change_listener(new_state=init_temp_state)
 
     @property
     def name(self):
