@@ -52,7 +52,7 @@ class Folder(Entity):
     def __init__(self, folder_path, filter_term):
         """Initialize the data object."""
         folder_path = os.path.join(folder_path, '')  # If no trailing / add it
-        self._folder_path = folder_path   # Need to check its a valid path
+        self._folder_path = folder_path
         self._filter_term = filter_term
         self._sorted_files_list = []
         self._number_of_files = None
