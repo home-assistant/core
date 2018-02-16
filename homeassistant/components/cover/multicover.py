@@ -18,7 +18,7 @@ from homeassistant.components.cover import (
     SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION)
 from homeassistant.const import (
     CONF_COVERS, CONF_ENTITY_ID, CONF_FRIENDLY_NAME,
-    EVENT_CALL_SERVICE, STATE_CLOSED, ATTR_SUPPORTED_FEATURES,
+    STATE_CLOSED, ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_COVER, SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION, SERVICE_SET_COVER_TILT_POSITION,
@@ -44,8 +44,8 @@ KEY_POSITION = 'position'
 
 COVER_SCHEMA = vol.Schema({
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     vol.Optional(CONF_TILT, default=False): cv.boolean,
+    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -60,14 +60,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for device, device_config in config[CONF_COVERS].items():
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
-        entity_ids = device_config.get(CONF_ENTITY_ID)
         tilt = device_config.get(CONF_TILT)
+        entity_ids = device_config.get(CONF_ENTITY_ID)
 
         covers.append(
-            MultiCover(hass, device, friendly_name, entity_ids, tilt))
+            MultiCover(hass, device, friendly_name, tilt, entity_ids))
 
     if not covers:
-        _LOGGER.error("No multicovers added")
+        _LOGGER.error("No multicovers added.")
         return False
 
     async_add_devices(covers, True)
@@ -77,7 +77,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MultiCover(CoverDevice):
     """Representation of a MultiCover."""
 
-    def __init__(self, hass, device_id, friendly_name, entity_ids, tilt):
+    def __init__(self, hass, device_id, friendly_name, tilt, entity_ids):
         """Initialize a multicover entity."""
         self._hass = hass
         self._device_id = device_id
@@ -108,40 +108,27 @@ class MultiCover(CoverDevice):
 
     def update_supported_features(self, entity_id, old_state, new_state):
         """Update dictionaries with supported features."""
-        if old_state is None and new_state is not None:
+        if new_state is None:
+            for value in self.covers.values():
+                value.discard(entity_id)
+            for value in self.tilts.values():
+                value.discard(entity_id)
+            return
+
+        if old_state is None:
             features = new_state.attributes[ATTR_SUPPORTED_FEATURES]
-            self.add_supported_features(entity_id, features)
-        elif old_state is not None:
-            if new_state is not None:
-                features_old = old_state.attributes[ATTR_SUPPORTED_FEATURES]
-                features_new = new_state.attributes[ATTR_SUPPORTED_FEATURES]
-                if features_old != features_new:
-                    self.remove_supported_features(entity_id)
-                    self.add_supported_features(entity_id, features_new)
-            else:
-                self.remove_supported_features(entity_id)
-
-    def remove_supported_features(self, entity_id):
-        """Remove entity ID form supported features dictionaries."""
-        for _, value in self.covers.items():
-            value.discard(entity_id)
-        for _, value in self.tilts.items():
-            value.discard(entity_id)
-
-    def add_supported_features(self, entity_id, features):
-        """Add entity ID to supported features dictionaries."""
-        if features & 1 and features & 2:
-            self.covers[KEY_OPEN_CLOSE].add(entity_id)
-        if features & 4:
-            self.covers[KEY_POSITION].add(entity_id)
-        if features & 8:
-            self.covers[KEY_STOP].add(entity_id)
-        if features & 16 and features & 32:
-            self.tilts[KEY_OPEN_CLOSE].add(entity_id)
-        if features & 64:
-            self.tilts[KEY_STOP].add(entity_id)
-        if features & 128:
-            self.tilts[KEY_POSITION].add(entity_id)
+            if features & 1 and features & 2:
+                self.covers[KEY_OPEN_CLOSE].add(entity_id)
+            if features & 4:
+                self.covers[KEY_POSITION].add(entity_id)
+            if features & 8:
+                self.covers[KEY_STOP].add(entity_id)
+            if features & 16 and features & 32:
+                self.tilts[KEY_OPEN_CLOSE].add(entity_id)
+            if features & 64:
+                self.tilts[KEY_STOP].add(entity_id)
+            if features & 128:
+                self.tilts[KEY_POSITION].add(entity_id)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -176,7 +163,7 @@ class MultiCover(CoverDevice):
     @property
     def is_closed(self):
         """Return if all covers in group are closed."""
-        if self.covers[KEY_OPEN_CLOSE] == []:
+        if self.covers[KEY_OPEN_CLOSE] == set():
             return False
         for entity_id in self.covers[KEY_OPEN_CLOSE]:
             state = self._hass.states.get(entity_id)
@@ -255,76 +242,66 @@ class MultiCover(CoverDevice):
     def async_open_cover(self, **kwargs):
         """Move the covers up."""
         _LOGGER.debug("Open covers called")
-        covers = self.covers['open_close'].union(self.covers[KEY_POSITION])
-        self._hass.bus.async_fire(
-            EVENT_CALL_SERVICE, {
-                'domain': DOMAIN, 'service': SERVICE_OPEN_COVER,
-                'service_data': {'entity_id': covers}})
+        self._hass.add_job(self._hass.services.async_call(
+            DOMAIN, SERVICE_OPEN_COVER,
+            {'entity_id': self.covers[KEY_OPEN_CLOSE]}))
 
     @asyncio.coroutine
     def async_close_cover(self, **kwargs):
         """Move the covers down."""
         _LOGGER.debug("Close covers called")
-        covers = self.covers[KEY_OPEN_CLOSE].union(self.covers[KEY_POSITION])
-        self._hass.bus.async_fire(
-            EVENT_CALL_SERVICE, {
-                'domain': DOMAIN, 'service': SERVICE_CLOSE_COVER,
-                'service_data': {'entity_id': covers}})
+        self._hass.add_job(self._hass.services.async_call(
+            DOMAIN, SERVICE_CLOSE_COVER,
+            {'entity_id': self.covers[KEY_OPEN_CLOSE]}))
 
     @asyncio.coroutine
     def async_stop_cover(self, **kwargs):
         """Fire the stop action."""
         _LOGGER.debug("Stop covers called")
-        self._hass.bus.async_fire(
-            EVENT_CALL_SERVICE, {
-                'domain': DOMAIN, 'service': SERVICE_STOP_COVER,
-                'service_data': {'entity_id': self.covers[KEY_STOP]}})
+        self._hass.add_job(self._hass.services.async_call(
+            DOMAIN, SERVICE_STOP_COVER,
+            {'entity_id': self.covers[KEY_STOP]}))
 
     @asyncio.coroutine
     def async_set_cover_position(self, **kwargs):
         """Set covers position."""
         position = kwargs[ATTR_POSITION]
         _LOGGER.debug("Set cover position called: %d", position)
-        self._hass.bus.async_fire(
-            EVENT_CALL_SERVICE, {
-                'domain': DOMAIN, 'service': SERVICE_SET_COVER_POSITION,
-                'service_data': {'entity_id': self.covers[KEY_POSITION],
-                                 ATTR_POSITION: position}})
+        self._hass.add_job(self._hass.services.async_call(
+            DOMAIN, SERVICE_SET_COVER_POSITION,
+            {'entity_id': self.covers[KEY_POSITION],
+             ATTR_POSITION: position}))
 
     @asyncio.coroutine
     def async_open_cover_tilt(self, **kwargs):
         """Tilt covers open."""
         _LOGGER.debug("Open tilts called")
-        self._hass.bus.async_fire(
-            EVENT_CALL_SERVICE, {
-                'domain': DOMAIN, 'service': SERVICE_OPEN_COVER_TILT,
-                'service_data': {'entity_id': self.tilts[KEY_OPEN_CLOSE]}})
+        self._hass.add_job(self._hass.services.async_call(
+            DOMAIN, SERVICE_OPEN_COVER_TILT,
+            {'entity_id': self.tilts[KEY_OPEN_CLOSE]}))
 
     @asyncio.coroutine
     def async_close_cover_tilt(self, **kwargs):
         """Tilt covers closed."""
         _LOGGER.debug("Close tilts called")
-        self._hass.bus.async_fire(
-            EVENT_CALL_SERVICE, {
-                'domain': DOMAIN, 'service': SERVICE_CLOSE_COVER_TILT,
-                'service_data': {'entity_id': self.tilts[KEY_OPEN_CLOSE]}})
+        self._hass.add_job(self._hass.services.async_call(
+            DOMAIN, SERVICE_CLOSE_COVER_TILT,
+            {'entity_id': self.tilts[KEY_OPEN_CLOSE]}))
 
     @asyncio.coroutine
     def async_stop_cover_tilt(self, **kwargs):
         """Stop cover tilt."""
         _LOGGER.debug("Stop tilts called")
-        self._hass.bus.async_fire(
-            EVENT_CALL_SERVICE, {
-                'domain': DOMAIN, 'service': SERVICE_STOP_COVER_TILT,
-                'service_data': {'entity_id': self.tilts[KEY_STOP]}})
+        self._hass.add_job(self._hass.services.async_call(
+            DOMAIN, SERVICE_STOP_COVER_TILT,
+            {'entity_id': self.tilts[KEY_STOP]}))
 
     @asyncio.coroutine
     def async_set_cover_tilt_position(self, **kwargs):
         """Set tilt position."""
         tilt_position = kwargs[ATTR_TILT_POSITION]
         _LOGGER.debug("Set tilt position called: %d", tilt_position)
-        self._hass.bus.async_fire(
-            EVENT_CALL_SERVICE, {
-                'domain': DOMAIN, 'service': SERVICE_SET_COVER_TILT_POSITION,
-                'service_data': {'entity_id': self.tilts[KEY_POSITION],
-                                 ATTR_TILT_POSITION: tilt_position}})
+        self._hass.add_job(self._hass.services.async_call(
+            DOMAIN, SERVICE_SET_COVER_TILT_POSITION,
+            {'entity_id': self.tilts[KEY_POSITION],
+             ATTR_TILT_POSITION: tilt_position}))
