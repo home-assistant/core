@@ -1125,6 +1125,9 @@ somecomfort==0.5.0
 # homeassistant.components.sensor.speedtest
 speedtest-cli==1.0.7
 
+# homeassistant.components.sensor.spotcrime
+spotcrime==1.0.2
+
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
