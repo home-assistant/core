@@ -343,7 +343,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
             client_id = 'home-assistant'
     else:
         err = "Unable to start MQTT broker."
-        if conf.get(CONF_EMBEDDED) is not None:
+        if CONF_EMBEDDED in conf:
             # Explicit embedded config, requires explicit broker config
             err += " (Broker configuration required.)"
         _LOGGER.error(err)
