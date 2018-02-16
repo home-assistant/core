@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE_CLASS): cv.string,
     vol.Optional(CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT):
         cv.positive_int,
-    vol.Optional(CONF_AUTOMATION, default=None): AUTOMATIONS_SCHEMA,
+    vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
 })
 
 
