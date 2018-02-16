@@ -91,9 +91,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(dev)
 
     weather = YrData(hass, coordinates, forecast, dev)
-    # Update weather on the hour, spread seconds
     async_track_utc_time_change(hass, weather.updating_devices, minute=31)
-    yield from weather.fetching_data()
+    # wait 1 minute after start up before we fetch data,
+    # to avoid several restarts to fetch new data.
+    async_call_later(hass, 60, weather.fetching_data)
 
 
 class YrSensor(Entity):
