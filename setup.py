@@ -53,7 +53,7 @@ REQUIRES = [
     'pytz>=2017.02',
     'pip>=8.0.3',
     'jinja2>=2.10',
-    'voluptuous==0.10.5',
+    'voluptuous==0.11.1',
     'typing>=3,<4',
     'aiohttp==2.3.10',   # If updated, check if yarl also needs an update!
     'yarl==1.1.0',
