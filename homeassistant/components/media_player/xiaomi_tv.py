@@ -67,13 +67,18 @@ class XiaomiTV(MediaPlayerDevice):
 
     @property
     def name(self):
-        """Return the display name of this light."""
+        """Return the display name of this TV."""
         return self._name
 
     @property
     def state(self):
         """Return _state variable, containing the appropriate constant."""
         return self._state
+
+    @property
+    def assumed_state(self):
+        """Indicate that state is assumed."""
+        return True
 
     @property
     def supported_features(self):
