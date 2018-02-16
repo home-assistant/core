@@ -5,17 +5,15 @@ from datetime import timedelta
 import homeassistant.util.dt as dt_util
 
 from homeassistant import setup
-from homeassistant.core import State
 from homeassistant.components import cover
-from homeassistant.components.zwave.const import EVENT_NETWORK_READY
 from tests.common import (
-    assert_setup_component, get_test_home_assistant,
-    fire_time_changed, mock_state_change_event)
+    assert_setup_component, get_test_home_assistant, fire_time_changed)
 
 MULTICOVER = 'cover.test_multicover'
 DEMO_COVER = 'cover.kitchen_window'
 DEMO_COVER_POS = 'cover.hall_window'
 DEMO_COVER_TILT = 'cover.living_room_window'
+DEMO_TILT = 'cover.tilt_demo'
 
 CONFIG = {
     'cover': [
@@ -43,7 +41,7 @@ CONFIG_TILT = {
                  'tilt': True,
                  'entity_id': [
                      DEMO_COVER, DEMO_COVER_POS,
-                     DEMO_COVER_TILT, 'cover.tilt_demo'
+                     DEMO_COVER_TILT, DEMO_TILT
                  ],
              }
          }}
@@ -101,11 +99,30 @@ class TestMultiCover(unittest.TestCase):
         self.hass.states.set(
             DEMO_COVER_POS, 'open',
             {'current_position': 70, 'supported_features': 15})
-        mock_state_change_event(self.hass, State(DEMO_COVER_POS, 'open'))
         self.hass.block_till_done()
 
         self.assertEqual(self.hass.states.get(MULTICOVER)
                          .attributes.get('current_position'), 70)
+
+        self.hass.states.remove(DEMO_COVER_POS)
+        self.hass.states.set(
+            DEMO_COVER_TILT, 'open',
+            {'current_position': 80, 'supported_features': 15})
+        self.hass.block_till_done()
+
+        self.assertEqual(self.hass.states.get(MULTICOVER)
+                         .attributes.get('current_position'), 80)
+
+        self.hass.states.remove(DEMO_COVER_TILT)
+        self.hass.states.set(DEMO_COVER, 'closed')
+        self.hass.block_till_done()
+
+        self.assertEqual(self.hass.states.get(MULTICOVER).state, 'closed')
+
+        self.hass.states.remove(DEMO_COVER)
+        self.hass.block_till_done()
+
+        self.assertEqual(self.hass.states.get(MULTICOVER).state, 'open')
 
     def test_current_tilt_position(self):
         """Test different current cover tilt positions."""
@@ -116,19 +133,16 @@ class TestMultiCover(unittest.TestCase):
         self.hass.block_till_done()
 
         self.hass.states.set(
-            'cover.tilt_demo', 'open',
+            DEMO_TILT, 'open',
             {'current_tilt_position': 60, 'supported_features': 255})
-        self.hass.bus.fire(EVENT_NETWORK_READY)
-        mock_state_change_event(self.hass, State(DEMO_COVER, 'open'))
         self.hass.block_till_done()
 
         self.assertEqual(self.hass.states.get(MULTICOVER)
                          .attributes.get('current_tilt_position'), 100)
 
         self.hass.states.set(
-            'cover.tilt_demo', 'open',
+            DEMO_TILT, 'open',
             {'current_tilt_position': 50, 'supported_features': 255})
-        mock_state_change_event(self.hass, State(DEMO_COVER, 'open'))
         self.hass.block_till_done()
 
         self.assertEqual(self.hass.states.get(MULTICOVER)
@@ -150,10 +164,8 @@ class TestMultiCover(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get(MULTICOVER)
-        attr = state.attributes
-
         self.assertEqual(state.state, 'open')
-        self.assertEqual(attr.get('current_position'), 100)
+        self.assertEqual(state.attributes.get('current_position'), 100)
 
         self.assertEqual(self.hass.states.get(DEMO_COVER).state, 'open')
         self.assertEqual(self.hass.states.get(DEMO_COVER_POS)
@@ -177,10 +189,8 @@ class TestMultiCover(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get(MULTICOVER)
-        attr = state.attributes
-
         self.assertEqual(state.state, 'closed')
-        self.assertEqual(attr.get('current_position'), 0)
+        self.assertEqual(state.attributes.get('current_position'), 0)
 
         self.assertEqual(self.hass.states.get(DEMO_COVER).state, 'closed')
         self.assertEqual(self.hass.states.get(DEMO_COVER_POS)
@@ -208,10 +218,8 @@ class TestMultiCover(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get(MULTICOVER)
-        attr = state.attributes
-
         self.assertEqual(state.state, 'open')
-        self.assertEqual(attr.get('current_position'), 100)
+        self.assertEqual(state.attributes.get('current_position'), 100)
 
         self.assertEqual(self.hass.states.get(DEMO_COVER).state, 'open')
         self.assertEqual(self.hass.states.get(DEMO_COVER_POS)
@@ -235,10 +243,8 @@ class TestMultiCover(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get(MULTICOVER)
-        attr = state.attributes
-
         self.assertEqual(state.state, 'open')
-        self.assertEqual(attr.get('current_position'), 50)
+        self.assertEqual(state.attributes.get('current_position'), 50)
 
         self.assertEqual(self.hass.states.get(DEMO_COVER).state, 'closed')
         self.assertEqual(self.hass.states.get(DEMO_COVER_POS)
@@ -262,10 +268,8 @@ class TestMultiCover(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get(MULTICOVER)
-        attr = state.attributes
-
         self.assertEqual(state.state, 'open')
-        self.assertEqual(attr.get('current_tilt_position'), 100)
+        self.assertEqual(state.attributes.get('current_tilt_position'), 100)
 
         self.assertEqual(self.hass.states.get(DEMO_COVER_TILT)
                          .attributes.get('current_tilt_position'), 100)
@@ -286,10 +290,8 @@ class TestMultiCover(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get(MULTICOVER)
-        attr = state.attributes
-
         self.assertEqual(state.state, 'open')
-        self.assertEqual(attr.get('current_tilt_position'), 0)
+        self.assertEqual(state.attributes.get('current_tilt_position'), 0)
 
         self.assertEqual(self.hass.states.get(DEMO_COVER_TILT)
                          .attributes.get('current_tilt_position'), 0)
@@ -314,10 +316,8 @@ class TestMultiCover(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get(MULTICOVER)
-        attr = state.attributes
-
         self.assertEqual(state.state, 'open')
-        self.assertEqual(attr.get('current_tilt_position'), 60)
+        self.assertEqual(state.attributes.get('current_tilt_position'), 60)
 
         self.assertEqual(self.hass.states.get(DEMO_COVER_TILT)
                          .attributes.get('current_tilt_position'), 60)
@@ -338,10 +338,8 @@ class TestMultiCover(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get(MULTICOVER)
-        attr = state.attributes
-
         self.assertEqual(state.state, 'open')
-        self.assertEqual(attr.get('current_tilt_position'), 80)
+        self.assertEqual(state.attributes.get('current_tilt_position'), 80)
 
         self.assertEqual(self.hass.states.get(DEMO_COVER_TILT)
                          .attributes.get('current_tilt_position'), 80)
