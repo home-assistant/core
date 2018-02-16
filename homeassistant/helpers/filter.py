@@ -10,11 +10,13 @@ FILTER_OUTLIER = 2
 FILTERS = [FILTER_LOWPASS, FILTER_OUTLIER]
 
 class Filter(object):
-    """ Filter outlier states, and smooth things out """
+    """Filter outlier states, and smooth things out."""
+
     def __init__(self, filter_algorithm, window_size=DEFAULT_WINDOW_SIZE):
+        """Decorator constructor, selects algorithm and configures windows."""
         module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
         self.logger = logging.getLogger(module_name)
-        self.logger.debug("Init filter %s on %s", filter_algorithm, module_name)
+        self.logger.debug("Filter %s on %s", filter_algorithm, module_name)
         self.filter = None
         self.states = deque(maxlen=window_size)
 
@@ -26,7 +28,6 @@ class Filter(object):
         else:
             self.logger.error("Unknown filter <%s>", filter_algorithm)
             return
-
 
     def __call__(self, func):
         """Decorate function as deprecated."""
@@ -41,10 +42,9 @@ class Filter(object):
 
         def func_wrapper(self):
             """Wrap for the original function."""
-            new_state = func(self)   
+            new_state = func(self)
             try:
-                #float might not be appropriate
-                filtered_state = filter_algo(float(new_state), states)
+                filtered_state = filter_algo(float(new_state), states) #float might not be appropriate
             except TypeError:
                 return None
             except ValueError as e:
@@ -56,12 +56,12 @@ class Filter(object):
 
         return func_wrapper
 
-
     @staticmethod
-    def _outlier(new_state, states):
-        """BASIC outlier filter.
-        Where does 10 SD come from?"""
-        if len(states) > 1 and abs(new_state - statistics.median(states)) > 10*statistics.stdev(states):
+    def _outlier(new_state, states, constant=10):
+        """BASIC outlier filter."""
+        if (len(states) > 1 and 
+            abs(new_state - statistics.median(states)) > 
+            constant*statistics.stdev(states)):
             raise ValueError("Outlier detected")
         return new_state
 
@@ -73,6 +73,7 @@ class Filter(object):
             A = 1.0 - B
             filtered = A * states[-1] + B * new_state
         except IndexError:
-            # if we don't have enough states to run the filter, just accept the new value
+            # if we don't have enough states to run the filter
+            # just accept the new value
             filtered = new_state
         return round(filtered, 2)
