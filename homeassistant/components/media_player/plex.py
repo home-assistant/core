@@ -370,7 +370,8 @@ class PlexClient(MediaPlayerDevice):
                 self._is_player_available = False
             self._media_position = self._session.viewOffset
             self._media_content_id = self._session.ratingKey
-            self._media_content_rating = self._session.contentRating
+            self._media_content_rating = getattr(
+                self._session, 'contentRating', None)
 
         self._set_player_state()
 
