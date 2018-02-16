@@ -607,7 +607,7 @@ class MQTT(object):
                                     "with encoding %s",
                                     msg.payload, msg.topic,
                                     subscription.encoding)
-                    return
+                    continue
 
             self.hass.async_run_job(subscription.callback,
                                     msg.topic, payload, msg.qos)

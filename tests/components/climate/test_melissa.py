@@ -202,7 +202,7 @@ class TestMelissa(unittest.TestCase):
         self.thermostat._cur_settings = None
         self.assertFalse(self.thermostat.send({
             'fan': self.api.FAN_LOW}))
-        self.assertNotEquals(SPEED_LOW, self.thermostat.current_fan_mode)
+        self.assertNotEqual(SPEED_LOW, self.thermostat.current_fan_mode)
         self.assertIsNone(self.thermostat._cur_settings)
 
     @mock.patch('homeassistant.components.climate.melissa._LOGGER.warning')
