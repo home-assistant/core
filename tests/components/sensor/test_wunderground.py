@@ -83,9 +83,7 @@ def test_sensor(hass, aioclient_mock):
     """Test the WUnderground sensor class and methods."""
     aioclient_mock.get(URL, text=load_fixture('wunderground-valid.json'))
 
-    with assert_setup_component(1, 'sensor'):
-        yield from async_setup_component(hass, 'sensor',
-                                         {'sensor': VALID_CONFIG})
+    yield from async_setup_component(hass, 'sensor', {'sensor': VALID_CONFIG})
 
     state = hass.states.get('sensor.pws_weather')
     assert state.state == 'Clear'
@@ -140,9 +138,7 @@ def test_invalid_data(hass, aioclient_mock):
     """Test the WUnderground invalid data."""
     aioclient_mock.get(URL, text=load_fixture('wunderground-invalid.json'))
 
-    with assert_setup_component(1, 'sensor'):
-        yield from async_setup_component(hass, 'sensor',
-                                         {'sensor': VALID_CONFIG})
+    yield from async_setup_component(hass, 'sensor', {'sensor': VALID_CONFIG})
 
     for condition in VALID_CONFIG['monitored_conditions']:
         state = hass.states.get('sensor.pws_' + condition)
