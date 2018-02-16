@@ -484,6 +484,31 @@ def test_overriding_name_from_registry(hass):
 
 
 @asyncio.coroutine
+def test_replace_entities_with_equal_unique_ids(hass):
+    """Test replacing an entity with an entity of the same unique ID."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    mock_registry(hass, {
+        'test_domain.world': entity_registry.RegistryEntry(
+            entity_id='test_domain.world',
+            unique_id='1234',
+            platform='test_domain',
+        )
+    })
+    old_entity = MockEntity(unique_id='1234', name='old')
+    new_entity = MockEntity(unique_id='1234', name='new')
+
+    yield from component.async_add_entities([old_entity])
+    state = hass.states.get('test_domain.world')
+    assert state is not None
+    assert state.name == 'old'
+
+    yield from component.async_add_entities([new_entity], replace=True)
+    state = hass.states.get('test_domain.world')
+    assert state is not None
+    assert state.name == 'new'
+
+
+@asyncio.coroutine
 def test_registry_respect_entity_namespace(hass):
     """Test that the registry respects entity namespace."""
     mock_registry(hass)
