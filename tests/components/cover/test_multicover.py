@@ -397,12 +397,33 @@ class TestMultiCover(unittest.TestCase):
 
     def test_winter_protection_true(self):
         """Test winter protection feature with temperature under limit."""
+        self.hass.states.set('sensor.temperature', 2)
+
         with assert_setup_component(2, 'cover'):
             assert setup.setup_component(self.hass, 'cover',
                                          CONFIG_WINTERPROTECTION)
 
         self.hass.start()
         self.hass.block_till_done()
+
+        cover.close_cover(self.hass, MULTICOVER)
+        self.hass.block_till_done()
+        for _ in range(10):
+            future = dt_util.utcnow() + timedelta(seconds=1)
+            fire_time_changed(self.hass, future)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get(MULTICOVER)
+        attr = state.attributes
+
+        self.assertEqual(state.state, 'open')
+        self.assertEqual(attr.get('current_position'), 10)
+
+        self.assertEqual(self.hass.states.get(DEMO_COVER).state, 'closed')
+        self.assertEqual(self.hass.states.get(DEMO_COVER_POS)
+                         .attributes.get('current_position'), 10)
+        self.assertEqual(self.hass.states.get(DEMO_COVER_TILT)
+                         .attributes.get('current_position'), 10)
 
         self.hass.states.set('sensor.temperature', 0)
 
@@ -424,22 +445,3 @@ class TestMultiCover(unittest.TestCase):
                          .attributes.get('current_position'), 90)
         self.assertEqual(self.hass.states.get(DEMO_COVER_TILT)
                          .attributes.get('current_position'), 90)
-
-        cover.close_cover(self.hass, MULTICOVER)
-        self.hass.block_till_done()
-        for _ in range(10):
-            future = dt_util.utcnow() + timedelta(seconds=1)
-            fire_time_changed(self.hass, future)
-            self.hass.block_till_done()
-
-        state = self.hass.states.get(MULTICOVER)
-        attr = state.attributes
-
-        self.assertEqual(state.state, 'open')
-        self.assertEqual(attr.get('current_position'), 10)
-
-        self.assertEqual(self.hass.states.get(DEMO_COVER).state, 'closed')
-        self.assertEqual(self.hass.states.get(DEMO_COVER_POS)
-                         .attributes.get('current_position'), 10)
-        self.assertEqual(self.hass.states.get(DEMO_COVER_TILT)
-                         .attributes.get('current_position'), 10)

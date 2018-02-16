@@ -17,8 +17,7 @@ from homeassistant.components.cover import (
     SUPPORT_SET_POSITION, SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT,
     SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION)
 from homeassistant.const import (
-    CONF_COVERS, CONF_ENTITY_ID, CONF_FRIENDLY_NAME,
-    EVENT_CALL_SERVICE,
+    CONF_COVERS, CONF_ENTITY_ID, CONF_FRIENDLY_NAME, EVENT_CALL_SERVICE,
     STATE_CLOSED, STATE_UNKNOWN, ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_COVER, SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT,
@@ -57,12 +56,12 @@ WINTER_PROTECTION_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_TEMPERATURE_SENSOR): cv.entity_id,
 }), cv.has_at_least_one_key(CONF_CLOSE_POSITION, CONF_OPEN_POSITION))
 
-COVER_SCHEMA = vol.All(vol.Schema({
+COVER_SCHEMA = vol.Schema({
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-    vol.Optional(CONF_TILT): cv.boolean,
-    vol.Optional(CONF_WINTER_PROTECTION): WINTER_PROTECTION_SCHEMA,
-}))
+    vol.Optional(CONF_TILT, default=False): cv.boolean,
+    vol.Optional(CONF_WINTER_PROTECTION, default={}): WINTER_PROTECTION_SCHEMA,
+})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
@@ -77,12 +76,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for device, device_config in config[CONF_COVERS].items():
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
         entity_ids = device_config.get(CONF_ENTITY_ID)
-        tilt = device_config.get(CONF_TILT, False)
+        tilt = device_config.get(CONF_TILT)
 
-        winter_config = device_config.get(CONF_WINTER_PROTECTION, {})
+        winter_config = device_config.get(CONF_WINTER_PROTECTION)
         close_position = winter_config.get(CONF_CLOSE_POSITION)
         open_position = winter_config.get(CONF_OPEN_POSITION)
-        temp = winter_config.get(ATTR_TEMPERATURE, 3)
+        temp = winter_config.get(ATTR_TEMPERATURE)
         temp_sensor = winter_config.get(CONF_TEMPERATURE_SENSOR)
         covers.append(
             MultiCover(
@@ -207,7 +206,7 @@ class MultiCover(CoverDevice):
             async_track_state_change(self.hass, self._temp_sensor,
                                      temp_state_change_listener)
             init_temp_state = self.hass.states.get(self._temp_sensor)
-            self.temp_state_change_listener(new_state=init_temp_state)
+            temp_state_change_listener(new_state=init_temp_state)
 
     @property
     def name(self):
@@ -296,16 +295,11 @@ class MultiCover(CoverDevice):
 
     @property
     def supported_features(self):
-        """Flag supported features for a cover.
+        """Flag supported features for a cover."""
+        if not self._tilt:
+            return COVER_FEATURES
 
-        Currently doesn't support tilt features.
-        """
-        supported_features = COVER_FEATURES
-
-        if self._tilt:
-            supported_features |= TILT_FEATURES
-
-        return supported_features
+        return COVER_FEATURES | TILT_FEATURES
 
     @asyncio.coroutine
     def async_open_cover(self, **kwargs):
