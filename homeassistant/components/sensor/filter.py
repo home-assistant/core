@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_ENTITY_ID, STATE_UNKNOWN, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.filter import Filter, FILTER_OUTLIER, FILTER_LOWPASS 
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.components.recorder.util import session_scope, execute
 
@@ -63,11 +64,7 @@ class FilterSensor(Entity):
         self._name = '{} {}'.format(name, ATTR_FILTER)
         self._window_size = window_size
         self._unit_of_measurement = None
-        self.states = deque(maxlen=self._window_size)
-
-        if 'recorder' in self._hass.config.components:
-            # only use the database if it's configured
-            hass.async_add_job(self._initialize_from_database)
+        self._state = None
 
         @callback
         # pylint: disable=invalid-name
@@ -76,44 +73,12 @@ class FilterSensor(Entity):
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
 
-            self._add_state_to_queue(new_state)
+            self._state = new_state.state
 
             hass.async_add_job(self.async_update_ha_state, True)
 
         async_track_state_change(
             hass, entity_id, async_stats_sensor_state_listener)
-
-    def _add_state_to_queue(self, new_state):
-        """Add a single state to states."""
-        try:
-            _LOGGER.debug("New value: %s", new_state.state)
-            new_state.state = float(new_state.state)
-
-            #Outliers filters:
-            self._outlier(new_state.state)
-
-            #Smooth filters:
-            self.states.append(self._lowpass(new_state.state))
-        except ValueError as e:
-            _LOGGER.error("Invalid Value: %s, reason: %s", float(new_state.state), e)
-
-    def _outlier(self, new_state):
-        """BASIC outlier filter.
-        Where does 10 SD come from?"""
-        if len(self.states) > 1 and abs(new_state - statistics.median(self.states)) > 10*statistics.stdev(self.states):
-            raise ValueError("Outlier detected")
-
-    def _lowpass(self, new_state, time_constant=4):
-        """BASIC Low Pass Filter.
-        COULD REPLACE WITH _FILTER THEN DEFINE WHATEVER FILTER WE WANT?"""
-        try:
-            B = 1.0 / time_constant
-            A = 1.0 - B
-            filtered = A * self.states[-1] + B * new_state
-        except IndexError:
-            # if we don't have enough states to run the filter, just accept the new value
-            filtered = new_state
-        return round(filtered, 2)
 
     @property
     def name(self):
@@ -121,12 +86,10 @@ class FilterSensor(Entity):
         return self._name
 
     @property
+    @Filter(FILTER_LOWPASS)
     def state(self):
         """Return the state of the sensor."""
-        if len(self.states):
-            return self.states[-1]
-        else:
-            return STATE_UNKNOWN # I think STATE_UNKNOWN is discouraged
+        return self._state
 
     @property
     def unit_of_measurement(self):
@@ -142,37 +105,3 @@ class FilterSensor(Entity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
-
-    @asyncio.coroutine
-    def async_update(self):
-        """Get the latest data and updates the states."""
-        try:  # require at least two data points
-            _LOGGER.debug("<%s> variance %s", self.states[-1], round(statistics.variance(self.states), 2))
-        except statistics.StatisticsError as err:
-            _LOGGER.error(err)
-            self.variance = STATE_UNKNOWN
-
-
-    @asyncio.coroutine
-    def _initialize_from_database(self):
-        """Initialize the list of states from the database.
-
-        The query will get the list of states in DESCENDING order so that we
-        can limit the result to self._sample_size. Afterwards reverse the
-        list so that we get it in the right order again.
-        """
-        from homeassistant.components.recorder.models import States
-        _LOGGER.debug("initializing values for %s from the database",
-                      self._entity_id)
-
-        with session_scope(hass=self._hass) as session:
-            query = session.query(States)\
-                .filter(States.entity_id == self._entity_id.lower())\
-                .order_by(States.last_updated.desc())\
-                .limit(self._window_size)
-            states = execute(query)
-
-        for state in reversed(states):
-            self._add_state_to_queue(state)
-
-        _LOGGER.debug("initializing from database completed")
