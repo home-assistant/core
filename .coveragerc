@@ -462,6 +462,7 @@ omit =
     homeassistant/components/media_player/vizio.py
     homeassistant/components/media_player/vlc.py
     homeassistant/components/media_player/volumio.py
+    homeassistant/components/media_player/xiaomi_tv.py
     homeassistant/components/media_player/yamaha.py
     homeassistant/components/media_player/yamaha_musiccast.py
     homeassistant/components/media_player/ziggo_mediabox_xl.py
