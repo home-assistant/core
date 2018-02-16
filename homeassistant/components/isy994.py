@@ -83,7 +83,7 @@ NODE_FILTERS = {
     },
     'fan': {
         'uom': [],
-        'states': ['off', 'low', 'medium', 'high'],
+        'states': ['off', 'low', 'med', 'high'],
         'node_def_id': ['FanLincMotor'],
         'insteon_type': []
     },
