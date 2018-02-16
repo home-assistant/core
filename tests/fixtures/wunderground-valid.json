@@ -1,0 +1,90 @@
+{
+    "response": {
+        "version": "0.1",
+        "termsofService": "http://www.wunderground.com/weather/api/d/terms.html",
+        "features": {
+            "conditions": 1,
+            "alerts": 1,
+            "forecast": 1
+        }
+    },
+    "current_observation": {
+        "image": {
+            "url": "http://icons.wxug.com/graphics/wu2/logo_130x80.png",
+            "title": "Weather Underground",
+            "link": "http://www.wunderground.com"
+        },
+        "feelslike_c": "40",
+        "weather": "Clear",
+        "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+        "display_location": {
+            "city": "Holly Springs",
+            "country": "US",
+            "full": "Holly Springs, NC"
+        },
+        "observation_location": {
+            "elevation": "413 ft",
+            "full": "Twin Lake, Holly Springs, North Carolina"
+        }
+    },
+    "alerts": [
+        {
+            "type": "FLO",
+            "description": "Areal Flood Warning",
+            "date": "9:36 PM CDT on September 22, 2016",
+            "expires": "10:00 AM CDT on September 23, 2016",
+            "message": "This is a test alert message"
+        }
+    ],
+    "forecast": {
+        "txt_forecast": {
+            "date": "22:35 CEST",
+            "forecastday": [
+                {
+                    "period": 0,
+                    "icon_url": "http://icons.wxug.com/i/c/k/clear.gif",
+                    "title": "Tuesday",
+                    "fcttext": "Mostly Cloudy. Fog overnight.",
+                    "fcttext_metric": "Mostly Cloudy. Fog overnight.",
+                    "pop": "0"
+                }
+            ]
+        },
+        "simpleforecast": {
+            "forecastday": [
+                {
+                    "date": {
+                        "pretty": "19:00 CEST 4. Duben 2017"
+                    },
+                    "period": 1,
+                    "high": {
+                        "fahrenheit": "56",
+                        "celsius": "13"
+                    },
+                    "low": {
+                        "fahrenheit": "43",
+                        "celsius": "6"
+                    },
+                    "conditions": "Mo\u017enost de\u0161t\u011b",
+                    "icon_url": "http://icons.wxug.com/i/c/k/chancerain.gif",
+                    "qpf_allday": {
+                        "in": 0.03,
+                        "mm": 1
+                    },
+                    "maxwind": {
+                        "mph": 0,
+                        "kph": 0,
+                        "dir": "",
+                        "degrees": 0
+                    },
+                    "avewind": {
+                        "mph": 0,
+                        "kph": 0,
+                        "dir": "severn\u00ed",
+                        "degrees": 0
+                    }
+                }
+            ]
+        }
+    }
+}
