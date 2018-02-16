@@ -52,8 +52,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     exclude = config.get(CONF_EXCLUDE)
 
     add_devices([SpotCrimeSensor(
-        hass, name, latitude, longitude, radius, include, exclude, days)],
-        True)
+                hass, name, latitude, longitude, radius, include,
+                exclude, days)], True)
 
 
 class SpotCrimeSensor(Entity):
