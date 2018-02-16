@@ -4,18 +4,18 @@ Connect to a Samsung Printer via it's SyncThru
 """
 import logging
 
+DEPENDENCIES = [
+    'pysyncthru'  # for obvious reasons
+    ]
+
+
 import voluptuous as vol
-from pysyncthru import SyncThru, test_syncthru
 import asyncio
 
 from homeassistant.const import (
     CONF_RESOURCE, STATE_UNKNOWN, CONF_PASSWORD)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = [
-    'pysyncthru'  # for obvious reasons
-    ]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +28,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the BLNET component"""
+
+    from pysyncthru import SyncThru, test_syncthru
 
     resource = config.get(CONF_RESOURCE)
 
