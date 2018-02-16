@@ -23,7 +23,7 @@ from homeassistant.util.unit_system import UnitSystem
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES.keys()):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })

@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             product_cfg = device['product_cfg']
             product = device['product']
             sensor = IHCBinarySensor(ihc_controller, name, ihc_id, info,
-                                     product_cfg[CONF_TYPE],
+                                     product_cfg.get(CONF_TYPE),
                                      product_cfg[CONF_INVERTING],
                                      product)
             devices.append(sensor)
