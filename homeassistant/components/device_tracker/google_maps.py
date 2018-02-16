@@ -49,7 +49,7 @@ class GoogleMapsScanner(object):
 
         try:
             self.service = Service(self.username, self.password,
-                                   CREDENTIALS_FILE)
+                                   hass.config.path(CREDENTIALS_FILE))
             self._update_info()
 
             track_utc_time_change(
