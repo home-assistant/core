@@ -12,7 +12,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.util import get_real_ip
+from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.components.telegram_bot import (
     CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA)
 from homeassistant.const import (
@@ -110,7 +110,7 @@ class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
     @asyncio.coroutine
     def post(self, request):
         """Accept the POST from telegram."""
-        real_ip = get_real_ip(request)
+        real_ip = request[KEY_REAL_IP]
         if not any(real_ip in net for net in self.trusted_networks):
             _LOGGER.warning("Access denied from %s", real_ip)
             return self.json_message('Access denied', HTTP_UNAUTHORIZED)
