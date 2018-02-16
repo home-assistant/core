@@ -5,7 +5,7 @@ Connect to a Samsung Printer via it's SyncThru
 import logging
 
 REQUIREMENTS = [
-    'pysyncthru'  # for obvious reasons
+    'pysyncthru>=0.1.2'
     ]
 
 
@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_RESOURCE, STATE_UNKNOWN, CONF_PASSWORD)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     sync_comp = SyncThruSensor(hass, SyncThru(resource))
-    add_devices([sync_comp])
+    add_devices([sync_comp], True)
 
 
 class SyncThruSensor(Entity):
@@ -74,11 +75,11 @@ class SyncThruSensor(Entity):
         syncthru = self.syncthru
 
         syncthru.update()
-        self._state = syncthru.deviceState()
+        self._state = syncthru.deviceStatus()
         self._friendly_name = syncthru.model()
 
         self._attributes['output_tray'] = syncthru.outputTrayStatus()
-        for key, value in syncthru.systemState().items():
+        for key, value in syncthru.systemStatus().items():
             self._attributes[key] = value
         for key, value in syncthru.tonerStatus().items():
             self._attributes['toner_' + key] = value
@@ -91,5 +92,5 @@ class SyncThruSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
 
-        _attributes[FRIENDLY_NAME] = self._friendly_name
-        return _attributes
+        self._attributes[FRIENDLY_NAME] = self._friendly_name
+        return self._attributes
