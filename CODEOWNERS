@@ -56,6 +56,7 @@ homeassistant/components/light/yeelight.py @rytilahti
 homeassistant/components/media_player/kodi.py @armills
 homeassistant/components/media_player/mediaroom.py @dgomes
 homeassistant/components/media_player/monoprice.py @etsinko
+homeassistant/components/media_player/xiaomi_tv.py @fattdev
 homeassistant/components/media_player/yamaha_musiccast.py @jalmeroth
 homeassistant/components/plant.py @ChristianKuehnel
 homeassistant/components/sensor/airvisual.py @bachya
