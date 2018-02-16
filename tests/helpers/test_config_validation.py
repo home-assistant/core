@@ -164,6 +164,23 @@ def test_entity_ids():
     ]
 
 
+def test_entity_id_pattern_list():
+    """Test entity_id_pattern_list."""
+    schema = vol.Schema(cv.entity_id_pattern_list)
+    with pytest.raises(vol.MultipleInvalid):
+        schema('a sensor.*')
+        schema('sensor?light f')
+        schema('sensor[a.light')
+    assert ([], []) == schema(None)
+    assert ({'sensor.light'}, set()) == schema('sensor.LIGHT ')
+    assert ({'sensor.light'}, {'sensor.*'}) == \
+        schema(['sensor.light', 'sensor.*'])
+    assert (set(), {'sen?or.light', 'sensor.*', 'sen[s]or.light'}) == \
+        schema(['sen?or.light', 'sensor.*', 'sen[s]or.light'])
+    assert ({'sensor.light'}, set()) == \
+        schema(['sensor.light', 'sensor.light'])
+
+
 def test_ensure_list_csv():
     """Test ensure_list_csv."""
     schema = vol.Schema(cv.ensure_list_csv)
@@ -453,7 +470,7 @@ def test_deprecated(caplog):
     )
 
     deprecated_schema({'venus': True})
-    assert len(caplog.records) == 0
+    assert caplog.records == []
 
     deprecated_schema({'mars': True})
     assert len(caplog.records) == 1

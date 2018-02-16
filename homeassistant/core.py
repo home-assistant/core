@@ -48,6 +48,8 @@ SERVICE_CALL_LIMIT = 10  # seconds
 
 # Pattern for validating entity IDs (format: <domain>.<entity>)
 ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
+# Pattern for validating entity ID patterns using fnmatch
+ENTITY_ID_FNMATCH_PATTERN = re.compile(r"^(\S*(\*|\?|\[\S*\])\S*)$")
 
 # How long to wait till things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
@@ -63,6 +65,11 @@ def split_entity_id(entity_id: str) -> List[str]:
 def valid_entity_id(entity_id: str) -> bool:
     """Test if an entity ID is a valid format."""
     return ENTITY_ID_PATTERN.match(entity_id) is not None
+
+
+def valid_entity_id_fnmatch_pattern(entity_id: str) -> bool:
+    """Test if an entity ID pattern is a valid format."""
+    return ENTITY_ID_FNMATCH_PATTERN.match(entity_id) is not None
 
 
 def valid_state(state: str) -> bool:

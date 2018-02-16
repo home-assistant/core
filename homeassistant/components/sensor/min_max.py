@@ -15,6 +15,8 @@ from homeassistant.const import (
     CONF_NAME, STATE_UNKNOWN, CONF_TYPE, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_pattern_matching \
+    import EntityPatternMatching as EPM
 from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]):
         vol.All(cv.string, vol.In(SENSOR_TYPES.values())),
     vol.Optional(CONF_NAME): cv.string,
-    vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
+    # vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
+    vol.Required(CONF_ENTITY_IDS): cv.entity_id_pattern_list,
     vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
 })
 
@@ -57,13 +60,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the min/max/mean sensor."""
-    entity_ids = config.get(CONF_ENTITY_IDS)
+    entities_patterns = config.get(CONF_ENTITY_IDS)
     name = config.get(CONF_NAME)
     sensor_type = config.get(CONF_TYPE)
     round_digits = config.get(CONF_ROUND_DIGITS)
 
     async_add_devices(
-        [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits)],
+        [MinMaxSensor(hass, entities_patterns, name, sensor_type,
+                      round_digits)],
         True)
     return True
 
@@ -104,12 +108,15 @@ def calc_mean(sensor_values, round_digits):
 class MinMaxSensor(Entity):
     """Representation of a min/max sensor."""
 
-    def __init__(self, hass, entity_ids, name, sensor_type, round_digits):
+    def __init__(self, hass, entities_patterns, name, sensor_type,
+                 round_digits):
         """Initialize the min/max sensor."""
         self._hass = hass
-        self._entity_ids = entity_ids
+        self._entity_ids = entities_patterns[0]
+        # self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._round_digits = round_digits
+        _LOGGER.debug(entities_patterns)
 
         if name:
             self._name = name
@@ -120,6 +127,7 @@ class MinMaxSensor(Entity):
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
         self.min_value = self.max_value = self.mean = self.last = STATE_UNKNOWN
+        # self.count_sensors = len(self._entity_ids)
         self.count_sensors = len(self._entity_ids)
         self.states = {}
 
@@ -152,8 +160,23 @@ class MinMaxSensor(Entity):
 
             hass.async_add_job(self.async_update_ha_state, True)
 
+        @callback
+        def update_entity_ids(new_entity_ids):
+            """Update entity_ids after pattern matching."""
+            _LOGGER.debug(new_entity_ids)
+            async_track_state_change(
+                hass, new_entity_ids, async_min_max_sensor_state_listener)
+            self._entity_ids.update(new_entity_ids)
+            self.count_sensors += len(new_entity_ids)
+            hass.async_add_job(self.async_update_ha_state, True)
+            for entity in self._entity_ids:
+                self.states[entity] = \
+                    float(self._hass.states.get(entity).state)
+
+        EPM(hass, update_entity_ids, entities_patterns)
+
         async_track_state_change(
-            hass, entity_ids, async_min_max_sensor_state_listener)
+            hass, self._entity_ids, async_min_max_sensor_state_listener)
 
     @property
     def name(self):
