@@ -9,6 +9,7 @@ FILTER_LOWPASS = 1
 FILTER_OUTLIER = 2
 FILTERS = [FILTER_LOWPASS, FILTER_OUTLIER]
 
+
 class Filter(object):
     """Filter outlier states, and smooth things out."""
 
@@ -44,14 +45,16 @@ class Filter(object):
             """Wrap for the original function."""
             new_state = func(self)
             try:
-                filtered_state = filter_algo(float(new_state), states) #float might not be appropriate
+                filtered_state = filter_algo(float(new_state), states)  #float? 
             except TypeError:
                 return None
             except ValueError as e:
-                logger.debug("Invalid Value: %s, reason: %s", float(new_state), e)
+                logger.debug("Invalid Value: %s, reason: %s", 
+                    float(new_state), e)
                 return last_state
             states.append(filtered_state)
-            logger.debug("new_state = %s    | filtered_state = %s", new_state, filtered_state)
+            logger.debug("new_state = %s    | filtered_state = %s", 
+                new_state, filtered_state)
             return filtered_state
 
         return func_wrapper
@@ -59,9 +62,9 @@ class Filter(object):
     @staticmethod
     def _outlier(new_state, states, constant=10):
         """BASIC outlier filter."""
-        if (len(states) > 1 and 
-            abs(new_state - statistics.median(states)) > 
-            constant*statistics.stdev(states)):
+        if (len(states) > 1 and
+                abs(new_state - statistics.median(states)) >
+                constant*statistics.stdev(states)):
             raise ValueError("Outlier detected")
         return new_state
 
