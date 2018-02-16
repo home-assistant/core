@@ -6,20 +6,17 @@ https://home-assistant.io/components/sensor.filter/
 """
 import asyncio
 import logging
-import statistics
-from collections import deque
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_ENTITY_ID, STATE_UNKNOWN, ATTR_UNIT_OF_MEASUREMENT)
+    CONF_NAME, CONF_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.filter import Filter, FILTER_OUTLIER, FILTER_LOWPASS 
+from homeassistant.helpers.filter import Filter, FILTER_LOWPASS
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.components.recorder.util import session_scope, execute
 
 _LOGGER = logging.getLogger(__name__)
 
