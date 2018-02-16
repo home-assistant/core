@@ -12,8 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 def purge_old_data(instance, purge_days):
     """Purge events and states older than purge_days ago."""
     from .models import States, Events
-    from sqlalchemy import orm
-    from sqlalchemy.sql import exists
+    from sqlalchemy import func
 
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
 
@@ -21,18 +20,10 @@ def purge_old_data(instance, purge_days):
         # For each entity, the most recent state is protected from deletion
         # s.t. we can properly restore state even if the entity has not been
         # updated in a long time
-        states_alias = orm.aliased(States, name='StatesAlias')
-        protected_states = session.query(States.state_id, States.event_id)\
-            .filter(~exists()
-                    .where(States.entity_id ==
-                           states_alias.entity_id)
-                    .where(states_alias.last_updated >
-                           States.last_updated))\
-            .all()
+        protected_states = session.query(func.max(States.state_id)) \
+            .group_by(States.entity_id).all()
 
         protected_state_ids = tuple((state[0] for state in protected_states))
-        protected_event_ids = tuple((state[1] for state in protected_states
-                                     if state[1] is not None))
 
         deleted_rows = session.query(States) \
                               .filter((States.last_updated < purge_before)) \
@@ -45,6 +36,13 @@ def purge_old_data(instance, purge_days):
         # Otherwise, if the SQL server has "ON DELETE CASCADE" as default, it
         # will delete the protected state when deleting its associated
         # event. Also, we would be producing NULLed foreign keys otherwise.
+        protected_events = session.query(States.event_id) \
+            .filter(States.state_id.in_(protected_state_ids)) \
+            .filter(States.event_id.isnot(None)) \
+            .all()
+
+        protected_event_ids = tuple((state[0] for state in protected_events))
+
         deleted_rows = session.query(Events) \
             .filter((Events.time_fired < purge_before)) \
             .filter(~Events.event_id.in_(
