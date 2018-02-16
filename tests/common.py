@@ -9,7 +9,7 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from homeassistant import core as ha, loader
+from homeassistant import core as ha, loader, config_entries
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
@@ -109,6 +109,9 @@ def get_test_home_assistant():
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant(loop)
+    hass.config_entries = config_entries.ConfigEntries(hass, {})
+    hass.config_entries._entries = []
+    hass.config.async_load = Mock()
     INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
@@ -305,7 +308,8 @@ class MockModule(object):
     # pylint: disable=invalid-name
     def __init__(self, domain=None, dependencies=None, setup=None,
                  requirements=None, config_schema=None, platform_schema=None,
-                 async_setup=None):
+                 async_setup=None, async_setup_entry=None,
+                 async_unload_entry=None):
         """Initialize the mock module."""
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
@@ -326,6 +330,12 @@ class MockModule(object):
 
         if setup is None and async_setup is None:
             self.async_setup = mock_coro_func(True)
+
+        if async_setup_entry is not None:
+            self.async_setup_entry = async_setup_entry
+
+        if async_unload_entry is not None:
+            self.async_unload_entry = async_unload_entry
 
 
 class MockPlatform(object):
@@ -400,6 +410,35 @@ class MockToggleDevice(entity.ToggleEntity):
                             if call[0] == method)
             except StopIteration:
                 return None
+
+
+class MockConfigEntry(config_entries.ConfigEntry):
+    """Helper for creating config entries that adds some defaults."""
+
+    def __init__(self, *, domain='test', data=None, version=0, entry_id=None,
+                 source=config_entries.SOURCE_USER, title='Mock Title',
+                 state=None):
+        """Initialize a mock config entry."""
+        kwargs = {
+            'entry_id': entry_id or 'mock-id',
+            'domain': domain,
+            'data': data or {},
+            'version': version,
+            'title': title
+        }
+        if source is not None:
+            kwargs['source'] = source
+        if state is not None:
+            kwargs['state'] = state
+        super().__init__(**kwargs)
+
+    def add_to_hass(self, hass):
+        """Test helper to add entry to hass."""
+        hass.config_entries._entries.append(self)
+
+    def add_to_manager(self, manager):
+        """Test helper to add entry to entry manager."""
+        manager._entries.append(self)
 
 
 def patch_yaml_files(files_dict, endswith=True):
