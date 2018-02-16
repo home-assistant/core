@@ -45,16 +45,16 @@ class Filter(object):
             """Wrap for the original function."""
             new_state = func(self)
             try:
-                filtered_state = filter_algo(float(new_state), states)  #float? 
+                filtered_state = filter_algo(float(new_state), states)  
             except TypeError:
                 return None
             except ValueError as e:
-                logger.debug("Invalid Value: %s, reason: %s", 
-                    float(new_state), e)
+                logger.debug("Invalid Value: %s, reason: %s",
+                                float(new_state), e)
                 return last_state
             states.append(filtered_state)
             logger.debug("new_state = %s    | filtered_state = %s", 
-                new_state, filtered_state)
+                            new_state, filtered_state)
             return filtered_state
 
         return func_wrapper
