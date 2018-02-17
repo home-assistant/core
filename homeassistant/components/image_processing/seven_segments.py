@@ -33,7 +33,7 @@ DEFAULT_BINARY = 'ssocr'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_EXTRA_ARGUMENTS, default=''): cv.string,
-    vol.Optional.get(CONF_DIGITS, -1): cv.positive_int,
+    vol.Optional(CONF_DIGITS): cv.positive_int,
     vol.Optional(CONF_HEIGHT, default=0): cv.positive_int,
     vol.Optional(CONF_SSOCR_BIN, default=DEFAULT_BINARY): cv.string,
     vol.Optional(CONF_THRESHOLD, default=0): cv.positive_int,
