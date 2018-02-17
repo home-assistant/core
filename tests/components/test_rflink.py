@@ -12,8 +12,7 @@ from tests.common import assert_setup_component
 
 
 @asyncio.coroutine
-def mock_rflink(hass, config, domain, monkeypatch, failures=None,
-                platform_count=1):
+def mock_rflink(hass, config, domain, monkeypatch, failures=None):
     """Create mock Rflink asyncio protocol, test component setup."""
     transport, protocol = (Mock(), Mock())
 
@@ -47,9 +46,7 @@ def mock_rflink(hass, config, domain, monkeypatch, failures=None,
         'rflink.protocol.create_rflink_connection',
         mock_create)
 
-    # verify instantiation of component with given config
-    with assert_setup_component(platform_count, domain):
-        yield from async_setup_component(hass, domain, config)
+    yield from async_setup_component(hass, domain, config)
 
     # hook into mock config for injecting events
     event_callback = mock_create.call_args_list[0][1]['event_callback']
@@ -164,7 +161,7 @@ def test_send_command(hass, monkeypatch):
 
     # setup mocking rflink module
     _, _, protocol, _ = yield from mock_rflink(
-        hass, config, domain, monkeypatch, platform_count=5)
+        hass, config, domain, monkeypatch)
 
     hass.async_add_job(
         hass.services.async_call(domain, SERVICE_SEND_COMMAND,
@@ -188,7 +185,7 @@ def test_send_command_invalid_arguments(hass, monkeypatch):
 
     # setup mocking rflink module
     _, _, protocol, _ = yield from mock_rflink(
-        hass, config, domain, monkeypatch, platform_count=5)
+        hass, config, domain, monkeypatch)
 
     # one argument missing
     hass.async_add_job(
