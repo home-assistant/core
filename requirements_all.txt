@@ -160,6 +160,9 @@ botocore==1.7.34
 # homeassistant.components.switch.broadlink
 broadlink==0.5
 
+# homeassistant.components.device_tracker.bluetooth_tracker
+bt_proximity==0.1.2
+
 # homeassistant.components.sensor.buienradar
 # homeassistant.components.weather.buienradar
 buienradar==0.9

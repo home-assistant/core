@@ -5,9 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.bluetooth_tracker/
 """
 import logging
-import struct
-import array
-import fcntl
 
 import voluptuous as vol
 
@@ -20,7 +17,7 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pybluez==0.22']
+REQUIREMENTS = ['pybluez==0.22', 'bt_proximity==0.1.2']
 
 BT_PREFIX = 'BT_'
 
@@ -36,57 +33,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Bluetooth Scanner."""
     # pylint: disable=import-error
     import bluetooth
-    import bluetooth._bluetooth as bt
-
-    class BluetoothRSSI(object):
-        """Object class for getting the RSSI value of a Bluetooth address."""
-
-        def __init__(self, addr):
-            self.addr = addr
-            self.hci_sock = bt.hci_open_dev()
-            self.hci_fd = self.hci_sock.fileno()
-            self.bt_sock = bluetooth.BluetoothSocket(bluetooth.L2CAP)
-            self.bt_sock.settimeout(10)
-            self.connected = False
-            self.cmd_pkt = None
-
-        def prep_cmd_pkt(self):
-            """Prepare the command packet for requesting RSSI."""
-            reqstr = struct.pack(
-                b'6sB17s', bt.str2ba(self.addr), bt.ACL_LINK, b'\0' * 17)
-            request = array.array('b', reqstr)
-            handle = fcntl.ioctl(self.hci_fd, bt.HCIGETCONNINFO, request, 1)
-            handle = struct.unpack(b'8xH14x', request.tostring())[0]
-            self.cmd_pkt = struct.pack('H', handle)
-
-        def connect(self):
-            """Connect to the Bluetooth device."""
-            # Connecting via PSM 1 - Service Discovery
-            self.bt_sock.connect_ex((self.addr, 1))
-            self.connected = True
-
-        def request_rssi(self):
-            """Request the current RSSI value.
-
-            @return: The RSSI value or None if the device connection fails
-                     (i.e. the device is not in range).
-            """
-            try:
-                # Only do connection if not already connected
-                if not self.connected:
-                    self.connect()
-                if self.cmd_pkt is None:
-                    self.prep_cmd_pkt()
-                # Send command to request RSSI
-                rssi = bt.hci_send_req(
-                    self.hci_sock, bt.OGF_STATUS_PARAM,
-                    bt.OCF_READ_RSSI, bt.EVT_CMD_COMPLETE, 4, self.cmd_pkt)
-                rssi = struct.unpack('b', rssi[3].to_bytes(1, 'big'))
-                return rssi
-            except IOError:
-                # Happens if connection fails (e.g. device is not in range)
-                self.connected = False
-                return None
+    from bt_proximity import BluetoothRSSI
 
     def see_device(device):
         """Mark a device as seen."""
