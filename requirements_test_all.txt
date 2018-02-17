@@ -25,7 +25,7 @@ PyJWT==1.5.3
 SoCo==0.13
 
 # homeassistant.components.device_tracker.automatic
-aioautomatic==0.6.4
+aioautomatic==0.6.5
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
