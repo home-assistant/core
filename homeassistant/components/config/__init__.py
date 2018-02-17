@@ -15,7 +15,7 @@ DOMAIN = 'config'
 DEPENDENCIES = ['http']
 SECTIONS = ('core', 'customize', 'group', 'hassbian', 'automation', 'script')
 ON_DEMAND = ('zwave',)
-FEATURE_FLAGS = ('hidden_entries',)
+FEATURE_FLAGS = ('config_entries',)
 
 
 @asyncio.coroutine
