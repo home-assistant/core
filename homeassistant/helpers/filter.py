@@ -12,9 +12,9 @@ FILTERS = [FILTER_LOWPASS, FILTER_OUTLIER]
 
 class Filter(object):
     """Filter outlier states, and smooth things out."""
-   
+
     logger = None
-    
+
     def __init__(self, filter_algorithm, window_size=DEFAULT_WINDOW_SIZE,
                  **kwargs):
         """Decorator constructor, selects algorithm and configures windows."""
