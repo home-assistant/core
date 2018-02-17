@@ -8,6 +8,8 @@ import voluptuous as vol
 from homeassistant.const import HTTP_NOT_FOUND, HTTP_BAD_REQUEST
 from homeassistant.core import callback
 from homeassistant.components import http
+from homeassistant.components.http.data_validator import (
+    RequestDataValidator)
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
@@ -192,7 +194,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     url = '/api/shopping_list/item'
     name = "api:shopping_list:item"
 
-    @http.RequestDataValidator(vol.Schema({
+    @RequestDataValidator(vol.Schema({
         vol.Required('name'): str,
     }))
     @asyncio.coroutine
