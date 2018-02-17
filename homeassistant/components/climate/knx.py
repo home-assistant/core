@@ -47,9 +47,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SETPOINT_SHIFT_STEP,
                  default=DEFAULT_SETPOINT_SHIFT_STEP): vol.All(
                      float, vol.Range(min=0, max=2)),
-    vol.Optional(CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX):
+    vol.Optional(CONF_SETPOINT_SHIFT_MAX):
         vol.All(int, vol.Range(min=-32, max=0)),
-    vol.Optional(CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN):
+    vol.Optional(CONF_SETPOINT_SHIFT_MIN):
         vol.All(int, vol.Range(min=0, max=32)),
     vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
@@ -95,8 +95,10 @@ def async_add_devices_config(hass, config, async_add_devices):
         group_address_setpoint_shift_state=config.get(
             CONF_SETPOINT_SHIFT_STATE_ADDRESS),
         setpoint_shift_step=config.get(CONF_SETPOINT_SHIFT_STEP),
-        setpoint_shift_max=config.get(CONF_SETPOINT_SHIFT_MAX),
-        setpoint_shift_min=config.get(CONF_SETPOINT_SHIFT_MIN),
+        setpoint_shift_max=config.get(CONF_SETPOINT_SHIFT_MAX,
+                                      DEFAULT_SETPOINT_SHIFT_MAX),
+        setpoint_shift_min=config.get(CONF_SETPOINT_SHIFT_MIN,
+                                      DEFAULT_SETPOINT_SHIFT_MIN),
         group_address_operation_mode=config.get(CONF_OPERATION_MODE_ADDRESS),
         group_address_operation_mode_state=config.get(
             CONF_OPERATION_MODE_STATE_ADDRESS),

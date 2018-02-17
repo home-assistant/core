@@ -51,10 +51,8 @@ GAS_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ELEC): vol.All(
-        dict, ELEC_SCHEMA),
-    vol.Optional(CONF_GAS, default={}): vol.All(
-        dict, GAS_SCHEMA)
+    vol.Required(CONF_ELEC): ELEC_SCHEMA,
+    vol.Optional(CONF_GAS): GAS_SCHEMA
 })
 
 
@@ -63,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pyloopenergy
 
     elec_config = config.get(CONF_ELEC)
-    gas_config = config.get(CONF_GAS)
+    gas_config = config.get(CONF_GAS, {})
 
     # pylint: disable=too-many-function-args
     controller = pyloopenergy.LoopEnergy(
