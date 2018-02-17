@@ -68,7 +68,7 @@ class Filter(object):
     @staticmethod
     def _outlier(new_state, states, **kwargs):
         """BASIC outlier filter.
-        
+   
         Will through a ValueError indicating an outlier value
         that should not be published, else the current value.
 
@@ -76,9 +76,9 @@ class Filter(object):
             new_state (float): new value to the series
             states (deque): previous data series
             constant (int): stdev multiplier.
-       
+
         Returns:
-            the original new_state 
+            the original new_state
 
         """
         constant = kwargs.pop('constant', 10)
