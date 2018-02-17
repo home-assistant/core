@@ -237,7 +237,6 @@ class LightTemplate(Light):
     @asyncio.coroutine
     def async_update(self):
         """Update the state from the template."""
-        print("ASYNC UPDATE")
         if self._template is not None:
             try:
                 state = self._template.async_render().lower()
@@ -262,7 +261,7 @@ class LightTemplate(Light):
                 self._state = None
 
             if 0 <= int(brightness) <= 255:
-                self._brightness = brightness
+                self._brightness = int(brightness)
             else:
                 _LOGGER.error(
                     'Received invalid brightness : %s' +
