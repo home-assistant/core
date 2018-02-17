@@ -55,8 +55,8 @@ class Filter(object):
             except TypeError:
                 return None
             except ValueError as e:
-                Filter.logger.debug("Invalid Value: %s, reason: %s",
-                                    float(new_state), e)
+                Filter.logger.warning("Invalid Value in %s: %s, reason: %s",
+                                      self.entity_id, float(new_state), e)
                 return last_state
             states.append(filtered_state)
             Filter.logger.debug("filter(%s) -> %s",
@@ -68,9 +68,18 @@ class Filter(object):
     @staticmethod
     def _outlier(new_state, states, **kwargs):
         """BASIC outlier filter.
+        
+        Will through a ValueError indicating an outlier value
+        that should not be published, else the current value.
 
-        arguments:
-            constant: int
+        Args:
+            new_state (float): new value to the series
+            states (deque): previous data series
+            constant (int): stdev multiplier.
+       
+        Returns:
+            the original new_state 
+
         """
         constant = kwargs.pop('constant', 10)
 
@@ -84,8 +93,14 @@ class Filter(object):
     def _lowpass(new_state, states, **kwargs):
         """BASIC Low Pass Filter.
 
-        arguments:
-            time_constant: int
+        Args:
+            new_state (float): new value to the series
+            states (deque): previous data series
+            time_constant (int): time constant.
+
+        Returns:
+            a new state value that has been smoothed by filter
+
         """
         time_constant = kwargs.pop('time_constant', 4)
         if len(kwargs) != 0:
