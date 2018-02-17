@@ -83,7 +83,7 @@ class FilterSensor(Entity):
         return self._name
 
     @property
-    @Filter(FILTER_LOWPASS)
+    @Filter(FILTER_LOWPASS, time_constant=4)
     def state(self):
         """Return the state of the sensor."""
         return self._state
