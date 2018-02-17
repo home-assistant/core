@@ -126,6 +126,8 @@ class SQLSensor(Entity):
         except sqlalchemy.exc.SQLAlchemyError as err:
             _LOGGER.error("Error executing query %s: %s", self._query, err)
             return
+        finally:
+            sess.close()
 
         for res in result:
             _LOGGER.debug(res.items())
@@ -141,5 +143,3 @@ class SQLSensor(Entity):
                 data, None)
         else:
             self._state = data
-
-        sess.close()
