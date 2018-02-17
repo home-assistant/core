@@ -16,8 +16,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 
-from insteonplm.constants import *
-
 from insteonplm.states.onOff import (OnOffSwitch,
                                      OnOffSwitch_OutletTop,
                                      OnOffSwitch_OutletBottom,
