@@ -65,7 +65,7 @@ def async_setup(hass, config):
         newnames = ''
     use_newnames = False
     if newnames.lower() == 'y' or newnames.lower() == 'yes':
-        use_newnames == True
+        use_newnames = True
 
     @callback
     def async_plm_new_device(device):
@@ -74,18 +74,19 @@ def async_setup(hass, config):
         _LOGGER.debug('Starting Home-Assistant async_plm_new_device')
         _LOGGER.debug(device)
         for stateKey in device.states:
-            platformInfo = ipdb[device.states[stateKey]] 
+            platformInfo = ipdb[device.states[stateKey]]
             platform = platformInfo.platform
             if platform is not None:
                 _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
-                              device.address, 
-                              device.states[stateKey].name, 
-                              platform)
+                             device.address,
+                             device.states[stateKey].name,
+                             platform)
+
                 hass.async_add_job(
                     discovery.async_load_platform(
                         hass, platform, DOMAIN,
-                        discovered=[{'address':device.address.hex,
-                                     'stateKey':stateKey,
+                        discovered=[{'address': device.address.hex,
+                                     'stateKey': stateKey,
                                      'newnames': use_newnames}],
                         hass_config=config))
 
@@ -147,8 +148,8 @@ State = collections.namedtuple('Product', 'stateType platform')
 
 
 class IPDB(object):
-    """Embodies the INSTEON Product Database static data 
-    and access methods."""
+    """Embodies the INSTEON Product Database static data
+and access methods."""
 
     states = [
         State(OnOffSwitch_OutletTop, 'switch'),

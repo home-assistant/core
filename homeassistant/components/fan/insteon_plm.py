@@ -40,11 +40,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class InsteonPLMFan(FanEntity):
     """An INSTEON fan component."""
 
-    def __init__(self, hass, device, stateKey, newnames, supported_features: int, ) -> None:
+    def __init__(self, hass, device, stateKey, newnames, 
+                 supported_features: int, ) -> None:
         """Initialize the entity."""
         self._hass = hass
         self._state = device.states[stateKey]
-        self._device = device 
+        self._device = device
         self._newnames = newnames
         self._supported_features = supported_features
 
@@ -113,7 +114,9 @@ class InsteonPLMFan(FanEntity):
     @callback
     def async_fan_update(self, deviceid, statename, val):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update calback from PLM for device %s state %s', deviceid, statename)
+        _LOGGER.info('Received update calback from PLM for device %s state %s',
+                     deviceid, 
+                     statename)
         self.hass.async_add_job(self.async_update_ha_state())
 
     @property
@@ -128,7 +131,7 @@ class InsteonPLMFan(FanEntity):
             return 0x3f
         elif speed == SPEED_MEDIUM:
             return 0xbe
-        elif SPEED == SPEED_HIGH:
+        elif speed == SPEED_HIGH:
             return 0xff
         return 0xbe
 

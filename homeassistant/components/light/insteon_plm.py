@@ -88,7 +88,7 @@ class InsteonPLMDimmerDevice(Light):
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        _LOGGER.debug("on level for %s is %s", 
+        _LOGGER.debug("on level for %s is %s",
                       self._device.id, self.brightness)
         return bool(self.brightness)
 
