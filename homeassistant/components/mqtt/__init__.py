@@ -360,10 +360,10 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         certificate = requests.certs.where()
 
     will_message = None  # type: Optional[Message]
-    if conf[CONF_WILL_MESSAGE] is not None:
+    if conf.get(CONF_WILL_MESSAGE) is not None:
         will_message = Message(**conf.get(CONF_WILL_MESSAGE))
     birth_message = None  # type: Optional[Message]
-    if conf[CONF_BIRTH_MESSAGE] is not None:
+    if conf.get(CONF_BIRTH_MESSAGE) is not None:
         birth_message = Message(**conf.get(CONF_BIRTH_MESSAGE))
 
     # Be able to override versions other than TLSv1.0 under Python3.6
