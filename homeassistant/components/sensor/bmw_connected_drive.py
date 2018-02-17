@@ -5,10 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bmw_connected_drive/
 """
 import logging
+import asyncio
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.helpers.entity import Entity
 
+DEPENDENCIES = ['bmw_connected_drive']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,38 +19,36 @@ LENGTH_ATTRIBUTES = [
     'mileage',
     ]
 
-VAILD_ATTRIBUTES = LENGTH_ATTRIBUTES + [
+VALID_ATTRIBUTES = LENGTH_ATTRIBUTES + [
     'remaining_fuel',
 ]
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the BMW sensors."""
-    entities = hass.data[BMW_DOMAIN]
+    accounts = hass.data[BMW_DOMAIN]
     _LOGGER.debug('Found BMW accounts: %s',
-                  ', '.join([v.name for v in entities]))
+                  ', '.join([a.name for a in accounts]))
     devices = []
-    for entity in entities:
-        account = entity.account
-        for vehicle in account.vehicles:
-            for sensor in VAILD_ATTRIBUTES:
-                device = BMWConnectedDriveSensor(entity, account,
-                                                 vehicle, sensor)
+    for account in accounts:
+        for vehicle in account.account.vehicles:
+            for sensor in VALID_ATTRIBUTES:
+                device = BMWConnectedDriveSensor(account, vehicle, sensor)
                 devices.append(device)
     return add_devices(devices)
 
 
 class BMWConnectedDriveSensor(Entity):
-    """Representation of a BMW vehicle."""
+    """Representation of a BMW vehicle sensor."""
 
-    def __init__(self, entity, account, vehicle, attribute: str):
+    def __init__(self, account, vehicle, attribute: str):
         """Constructor."""
         self._vehicle = vehicle
+        self._account = account
         self._attribute = attribute
         self._state = None
         self._unit_of_measurement = None
         self._name = '{} {}'.format(self._vehicle.modelName, self._attribute)
-        entity.add_update_listener(self.update)
 
     @property
     def should_poll(self) -> bool:
@@ -87,3 +87,8 @@ class BMWConnectedDriveSensor(Entity):
             self._unit_of_measurement = None
 
         self.schedule_update_ha_state()
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Add callback after being added to hass."""
+        self._account.add_update_listener(self.update)

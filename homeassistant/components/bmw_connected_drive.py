@@ -5,12 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/bmw_connected_drive/
 """
 import logging
-import asyncio
 from random import randint
 
 import voluptuous as vol
 from homeassistant.helpers import discovery
-from homeassistant.helpers.event import async_track_utc_time_change
+from homeassistant.helpers.event import track_utc_time_change
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
@@ -59,20 +58,20 @@ def setup(hass, config):
         password = account_config[CONF_PASSWORD]
         country = account_config[CONF_COUNTRY]
         _LOGGER.debug('Adding new account %s', name)
-        bimmer = BMWConnectedDriveEntity(hass, username, password, country,
+        bimmer = BMWConnectedDriveAccount(username, password, country,
                                          name)
         accounts.append(bimmer)
 
         # update every 5 minutes, select second randomly to reduce server
         # load
-        async_track_utc_time_change(
-            hass, bimmer.async_update, minute=range(0, 60, 5),
+        track_utc_time_change(
+            hass, bimmer.update, minute=range(0, 60, 5),
             second=randint(0, 59))
 
     hass.data[DOMAIN] = accounts
 
     for account in accounts:
-        account.async_update()
+        account.update()
 
     for component in BMW_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -80,21 +79,19 @@ def setup(hass, config):
     return True
 
 
-class BMWConnectedDriveEntity(object):
+class BMWConnectedDriveAccount(object):
     """Representation of a BMW vehicle."""
 
-    def __init__(self, hass, username: str, password: str, country: str,
+    def __init__(self,  username: str, password: str, country: str,
                  name: str) -> None:
         """Constructor."""
         from bimmer_connected import ConnectedDriveAccount
 
-        self._hass = hass
         self.account = ConnectedDriveAccount(username, password, country)
         self.name = name
         self._update_listeners = []
 
-    @asyncio.coroutine
-    def async_update(self, *_):
+    def update(self, *_):
         """Update the state of all vehicles.
 
         Notify all listeners about the update.
