@@ -63,6 +63,7 @@ _IP_NEIGH_REGEX = re.compile(
     r'\w+\s'
     r'(\w+\s(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))))?\s'
     r'\s?(router)?'
+    r'\s?(nud)?'
     r'(?P<status>(\w+))')
 
 _ARP_CMD = 'arp -n'
@@ -118,11 +119,10 @@ class AsusWrtDeviceScanner(DeviceScanner):
         if self.protocol == 'ssh':
             self.connection = SshConnection(
                 self.host, self.port, self.username, self.password,
-                self.ssh_key, self.mode == 'ap')
+                self.ssh_key)
         else:
             self.connection = TelnetConnection(
-                self.host, self.port, self.username, self.password,
-                self.mode == 'ap')
+                self.host, self.port, self.username, self.password)
 
         self.last_results = {}
 
@@ -212,6 +212,9 @@ class AsusWrtDeviceScanner(DeviceScanner):
         result = _parse_lines(lines, _IP_NEIGH_REGEX)
         devices = {}
         for device in result:
+            status = device['status']
+            if status is None or status.upper() != 'REACHABLE':
+                continue
             if device['mac'] is not None:
                 mac = device['mac'].upper()
                 old_device = cur_devices.get(mac)
@@ -226,7 +229,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
         result = _parse_lines(lines, _ARP_REGEX)
         devices = {}
         for device in result:
-            if device['mac']:
+            if device['mac'] is not None:
                 mac = device['mac'].upper()
                 devices[mac] = Device(mac, device['ip'], None)
         return devices
@@ -253,7 +256,7 @@ class _Connection:
 class SshConnection(_Connection):
     """Maintains an SSH connection to an ASUS-WRT router."""
 
-    def __init__(self, host, port, username, password, ssh_key, ap):
+    def __init__(self, host, port, username, password, ssh_key):
         """Initialize the SSH connection properties."""
         super().__init__()
 
@@ -263,7 +266,6 @@ class SshConnection(_Connection):
         self._username = username
         self._password = password
         self._ssh_key = ssh_key
-        self._ap = ap
 
     def run_command(self, command):
         """Run commands through an SSH connection.
@@ -323,7 +325,7 @@ class SshConnection(_Connection):
 class TelnetConnection(_Connection):
     """Maintains a Telnet connection to an ASUS-WRT router."""
 
-    def __init__(self, host, port, username, password, ap):
+    def __init__(self, host, port, username, password):
         """Initialize the Telnet connection properties."""
         super().__init__()
 
@@ -332,7 +334,6 @@ class TelnetConnection(_Connection):
         self._port = port
         self._username = username
         self._password = password
-        self._ap = ap
         self._prompt_string = None
 
     def run_command(self, command):

@@ -51,7 +51,7 @@ def utcnow() -> dt.datetime:
     return dt.datetime.now(UTC)
 
 
-def now(time_zone: dt.tzinfo=None) -> dt.datetime:
+def now(time_zone: dt.tzinfo = None) -> dt.datetime:
     """Get now in specified time zone."""
     return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
 

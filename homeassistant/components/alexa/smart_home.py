@@ -328,8 +328,9 @@ class _AlexaBrightnessController(_AlexaInterface):
     def get_property(self, name):
         if name != 'brightness':
             raise _UnsupportedProperty(name)
-
-        return round(self.entity.attributes['brightness'] / 255.0 * 100)
+        if 'brightness' in self.entity.attributes:
+            return round(self.entity.attributes['brightness'] / 255.0 * 100)
+        return 0
 
 
 class _AlexaColorController(_AlexaInterface):
@@ -1064,7 +1065,16 @@ def async_api_lock(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=False)
 
-    return api_message(request)
+    # Alexa expects a lockState in the response, we don't know the actual
+    # lockState at this point but assume it is locked. It is reported
+    # correctly later when ReportState is called. The alt. to this approach
+    # is to implement DeferredResponse
+    properties = [{
+        'name': 'lockState',
+        'namespace': 'Alexa.LockController',
+        'value': 'LOCKED'
+    }]
+    return api_message(request, context={'properties': properties})
 
 
 # Not supported by Alexa yet
@@ -1168,20 +1178,24 @@ def async_api_adjust_volume(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_adjust_volume_step(hass, config, request, entity):
     """Process an adjust volume step request."""
-    volume_step = round(float(request[API_PAYLOAD]['volume'] / 100), 2)
-
-    current_level = entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
-
-    volume = current_level + volume_step
+    # media_player volume up/down service does not support specifying steps
+    # each component handles it differently e.g. via config.
+    # For now we use the volumeSteps returned to figure out if we
+    # should step up/down
+    volume_step = request[API_PAYLOAD]['volumeSteps']
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
-    yield from hass.services.async_call(
-        entity.domain, media_player.SERVICE_VOLUME_SET,
-        data, blocking=False)
+    if volume_step > 0:
+        yield from hass.services.async_call(
+            entity.domain, media_player.SERVICE_VOLUME_UP,
+            data, blocking=False)
+    elif volume_step < 0:
+        yield from hass.services.async_call(
+            entity.domain, media_player.SERVICE_VOLUME_DOWN,
+            data, blocking=False)
 
     return api_message(request)
 

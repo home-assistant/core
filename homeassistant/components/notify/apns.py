@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 REGISTER_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_PUSH_ID): cv.string,
-    vol.Optional(ATTR_NAME, default=None): cv.string,
+    vol.Optional(ATTR_NAME): cv.string,
 })
 
 

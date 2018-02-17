@@ -57,14 +57,14 @@ def setup(hass, config):
     try:
         api = TahomaApi(username, password)
     except RequestException:
-        _LOGGER.exception("Error communicating with Tahoma API")
+        _LOGGER.exception("Error when trying to log in to the Tahoma API")
         return False
 
     try:
         api.get_setup()
         devices = api.get_devices()
     except RequestException:
-        _LOGGER.exception("Cannot fetch information from Tahoma API")
+        _LOGGER.exception("Error when getting devices from the Tahoma API")
         return False
 
     hass.data[DOMAIN] = {

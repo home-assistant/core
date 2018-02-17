@@ -21,7 +21,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['python-miio==0.3.5']
+REQUIREMENTS = ['python-miio==0.3.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -210,8 +210,7 @@ class XiaomiMiioRemote(RemoteDevice):
         """Hide remote by default."""
         if self._is_hidden:
             return {'hidden': 'true'}
-        else:
-            return
+        return
 
     # pylint: disable=R0201
     @asyncio.coroutine
@@ -226,7 +225,6 @@ class XiaomiMiioRemote(RemoteDevice):
         _LOGGER.error("Device does not support turn_off, " +
                       "please use 'remote.send_command' to send commands.")
 
-    # pylint: enable=R0201
     def _send_command(self, payload):
         """Send a command."""
         from miio import DeviceException

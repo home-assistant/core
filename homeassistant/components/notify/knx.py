@@ -27,10 +27,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_get_service(hass, config, discovery_info=None):
     """Get the KNX notification service."""
-    if DATA_KNX not in hass.data \
-            or not hass.data[DATA_KNX].initialized:
-        return False
-
     return async_get_service_discovery(hass, discovery_info) \
         if discovery_info is not None else \
         async_get_service_config(hass, config)
@@ -44,7 +40,7 @@ def async_get_service_discovery(hass, discovery_info):
         device = hass.data[DATA_KNX].xknx.devices[device_name]
         notification_devices.append(device)
     return \
-        KNXNotificationService(hass, notification_devices) \
+        KNXNotificationService(notification_devices) \
         if notification_devices else \
         None
 
@@ -58,15 +54,14 @@ def async_get_service_config(hass, config):
         name=config.get(CONF_NAME),
         group_address=config.get(CONF_ADDRESS))
     hass.data[DATA_KNX].xknx.devices.add(notification)
-    return KNXNotificationService(hass, [notification, ])
+    return KNXNotificationService([notification, ])
 
 
 class KNXNotificationService(BaseNotificationService):
     """Implement demo notification service."""
 
-    def __init__(self, hass, devices):
+    def __init__(self, devices):
         """Initialize the service."""
-        self.hass = hass
         self.devices = devices
 
     @property

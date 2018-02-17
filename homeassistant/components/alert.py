@@ -34,7 +34,7 @@ DEFAULT_SKIP_FIRST = False
 
 ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_DONE_MESSAGE, default=None): cv.string,
+    vol.Optional(CONF_DONE_MESSAGE): cv.string,
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_STATE, default=STATE_ON): cv.string,
     vol.Required(CONF_REPEAT): vol.All(cv.ensure_list, [vol.Coerce(float)]),
@@ -121,7 +121,7 @@ def async_setup(hass, config):
     # Setup alerts
     for entity_id, alert in alerts.items():
         entity = Alert(hass, entity_id,
-                       alert[CONF_NAME], alert[CONF_DONE_MESSAGE],
+                       alert[CONF_NAME], alert.get(CONF_DONE_MESSAGE),
                        alert[CONF_ENTITY_ID], alert[CONF_STATE],
                        alert[CONF_REPEAT], alert[CONF_SKIP_FIRST],
                        alert[CONF_NOTIFIERS], alert[CONF_CAN_ACK])

@@ -8,8 +8,9 @@ import asyncio
 from collections import defaultdict
 import functools as ft
 import logging
-
 import async_timeout
+
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_COMMAND, CONF_HOST, CONF_PORT,
@@ -19,7 +20,6 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
-import voluptuous as vol
 
 
 REQUIREMENTS = ['rflink==0.0.34']
@@ -74,7 +74,7 @@ DEVICE_DEFAULTS_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
-        vol.Optional(CONF_HOST, default=None): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
         vol.Optional(CONF_RECONNECT_INTERVAL,
                      default=DEFAULT_RECONNECT_INTERVAL): int,
@@ -175,7 +175,7 @@ def async_setup(hass, config):
                     hass.data[DATA_DEVICE_REGISTER][event_type], event)
 
     # When connecting to tcp host instead of serial port (optional)
-    host = config[DOMAIN][CONF_HOST]
+    host = config[DOMAIN].get(CONF_HOST)
     # TCP port when host configured, otherwise serial port
     port = config[DOMAIN][CONF_PORT]
 

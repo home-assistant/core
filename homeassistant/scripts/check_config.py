@@ -1,4 +1,5 @@
 """Script to ensure a configuration file exists."""
+import asyncio
 import argparse
 import logging
 import os
@@ -30,20 +31,25 @@ MOCKS = {
                       config_util._log_pkg_error),
     'logger_exception': ("homeassistant.setup._LOGGER.error",
                          setup._LOGGER.error),
+    'logger_exception_bootstrap': ("homeassistant.bootstrap._LOGGER.error",
+                                   bootstrap._LOGGER.error),
 }
 SILENCE = (
+    'homeassistant.bootstrap.async_enable_logging',
     'homeassistant.bootstrap.clear_secret_cache',
     'homeassistant.bootstrap.async_register_signal_handling',
-    'homeassistant.core._LOGGER.info',
-    'homeassistant.loader._LOGGER.info',
-    'homeassistant.bootstrap._LOGGER.info',
-    'homeassistant.bootstrap._LOGGER.warning',
-    'homeassistant.util.yaml._LOGGER.debug',
+    'homeassistant.config.process_ha_config_upgrade',
 )
 PATCHES = {}
 
 C_HEAD = 'bold'
 ERROR_STR = 'General Errors'
+
+
+@asyncio.coroutine
+def mock_coro(*args):
+    """Coroutine that returns None."""
+    return None
 
 
 def color(the_color, *args, reset=None):
@@ -153,6 +159,11 @@ def run(script_args: List) -> int:
 
 def check(config_path):
     """Perform a check by mocking hass load functions."""
+    logging.getLogger('homeassistant.core').setLevel(logging.WARNING)
+    logging.getLogger('homeassistant.loader').setLevel(logging.WARNING)
+    logging.getLogger('homeassistant.setup').setLevel(logging.WARNING)
+    logging.getLogger('homeassistant.bootstrap').setLevel(logging.ERROR)
+    logging.getLogger('homeassistant.util.yaml').setLevel(logging.INFO)
     res = {
         'yaml_files': OrderedDict(),  # yaml_files loaded
         'secrets': OrderedDict(),  # secret cache and secrets loaded
@@ -170,11 +181,12 @@ def check(config_path):
     # pylint: disable=unused-variable
     def mock_get(comp_name):
         """Mock hass.loader.get_component to replace setup & setup_platform."""
-        def mock_setup(*kwargs):
+        @asyncio.coroutine
+        def mock_async_setup(*args):
             """Mock setup, only record the component name & config."""
             assert comp_name not in res['components'], \
                 "Components should contain a list of platforms"
-            res['components'][comp_name] = kwargs[1].get(comp_name)
+            res['components'][comp_name] = args[1].get(comp_name)
             return True
         module = MOCKS['get'][1](comp_name)
 
@@ -187,15 +199,15 @@ def check(config_path):
 
         # Test if platform/component and overwrite setup
         if '.' in comp_name:
-            module.setup_platform = mock_setup
+            module.async_setup_platform = mock_async_setup
 
-            if hasattr(module, 'async_setup_platform'):
-                del module.async_setup_platform
+            if hasattr(module, 'setup_platform'):
+                del module.setup_platform
         else:
-            module.setup = mock_setup
+            module.async_setup = mock_async_setup
 
-            if hasattr(module, 'async_setup'):
-                del module.async_setup
+            if hasattr(module, 'setup'):
+                del module.setup
 
         return module
 
@@ -229,9 +241,14 @@ def check(config_path):
         res['except'].setdefault(ERROR_STR, []).append(msg % params)
         MOCKS['logger_exception'][1](msg, *params)
 
+    def mock_logger_exception_bootstrap(msg, *params):
+        """Log logger.exceptions."""
+        res['except'].setdefault(ERROR_STR, []).append(msg % params)
+        MOCKS['logger_exception_bootstrap'][1](msg, *params)
+
     # Patches to skip functions
     for sil in SILENCE:
-        PATCHES[sil] = patch(sil)
+        PATCHES[sil] = patch(sil, return_value=mock_coro())
 
     # Patches with local mock functions
     for key, val in MOCKS.items():

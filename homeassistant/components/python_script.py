@@ -208,5 +208,4 @@ class TimeWrapper:
                 """Wrap to return callable method if callable."""
                 return attribute(*args, **kw)
             return wrapper
-        else:
-            return attribute
+        return attribute
