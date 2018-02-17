@@ -24,7 +24,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Insteon PLM device."""
 
     state_list = []
-    plm = hass.data['insteon_plm'] 
+    plm = hass.data['insteon_plm']
 
     for deviceInfo in discovery_info:
         address = deviceInfo['address']

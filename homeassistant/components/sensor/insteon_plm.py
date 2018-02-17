@@ -40,11 +40,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class InsteonPLMSensorDevice(Entity):
     """A Class for an Insteon device."""
 
-    def __init__(self, hass, device, state, newnames):
+    def __init__(self, hass, device, stateKey, newnames):
         """Initialize the binarysensor."""
         self._hass = hass
         self._state = device.states[stateKey]
-        self._device = device 
+        self._device = device
         self._newnames = newnames
 
         self._state.register_updates(self.async_sensor_update)

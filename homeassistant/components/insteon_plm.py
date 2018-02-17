@@ -17,9 +17,19 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 
 from insteonplm.constants import *
-from insteonplm.states.onOff import (OnOffSwitch, OnOffSwitch_OutletTop, OnOffSwitch_OutletBottom, OpenClosedRelay)
-from insteonplm.states.dimmable import (DimmableSwitch, DimmableSwitch_Fan)
-from insteonplm.states.sensor import (VariableSensor, OnOffSensor, SmokeCO2Sensor, IoLincSensor)
+
+from insteonplm.states.onOff import (OnOffSwitch,
+                                     OnOffSwitch_OutletTop,
+                                     OnOffSwitch_OutletBottom,
+                                     OpenClosedRelay)
+
+from insteonplm.states.dimmable import (DimmableSwitch,
+                                        DimmableSwitch_Fan)
+
+from insteonplm.states.sensor import (VariableSensor,
+                                      OnOffSensor,
+                                      SmokeCO2Sensor,
+                                      IoLincSensor)
 
 REQUIREMENTS = ['insteonplm==0.8.2']
 
@@ -73,15 +83,20 @@ def async_setup(hass, config):
                               platform)
                 hass.async_add_job(
                     discovery.async_load_platform(
-                        hass, platform, DOMAIN, discovered=[{'address':device.address.hex, 
-                                                             'stateKey':stateKey,
-                                                             'newnames': use_newnames}],
+                        hass, platform, DOMAIN,
+                        discovered=[{'address':device.address.hex,
+                                     'stateKey':stateKey,
+                                     'newnames': use_newnames}],
                         hass_config=config))
 
         _LOGGER.debug('Starting Home-Assistant async_plm_new_device')
     _LOGGER.info('Config dir %s', hass.config.config_dir)
     _LOGGER.info("Looking for PLM on %s", port)
-    conn = yield from insteonplm.Connection.create(device=port, loop=hass.loop, workdir=hass.config.config_dir)
+    conn = yield from insteonplm.Connection.create(
+        device=port,
+        loop=hass.loop,
+        workdir=hass.config.config_dir)
+
     plm = conn.protocol
 
     for device_override in overrides:
@@ -89,17 +104,21 @@ def async_setup(hass, config):
         # Override the device default capabilities for a specific address
         #
         if device_override.get('cat', False):
-            plm.devices.add_override(
-                    device_override['address'], 'cat', device_override['cat'])
+            plm.devices.add_override(device_override['address'],
+                                     'cat',
+                                     device_override['cat'])
         if device_override.get('subcat', False):
-            plm.devices.add_override(
-                    device_override['address'], 'subcat', device_override['subcat'])
+            plm.devices.add_override(device_override['address'],
+                                     'subcat',
+                                     device_override['subcat'])
         if device_override.get('firmware', False):
-            plm.devices.add_override(
-                    device_override['address'], 'product_key', device_override['firmware'])
+            plm.devices.add_override(device_override['address'],
+                                     'product_key',
+                                     device_override['firmware'])
         if device_override.get('product_key', False):
-            plm.devices.add_override(
-                device_override['address'], 'product_key', device_override['product_key'])
+            plm.devices.add_override(device_override['address'],
+                                     'product_key',
+                                     device_override['product_key'])
 
     hass.data['insteon_plm'] = plm
 
@@ -109,10 +128,11 @@ def async_setup(hass, config):
 
     return True
 
+
 def common_attributes(entity, state):
     """Return the device state attributes."""
     attributes = {
-        'INSTEON Address' : entity.address.human,
+        'INSTEON Address': entity.address.human,
         'Description': entity.description,
         'Model': entity.model,
         'Category': '{:02x}'.format(entity.cat),
@@ -125,8 +145,10 @@ def common_attributes(entity, state):
 
 State = collections.namedtuple('Product', 'stateType platform')
 
+
 class IPDB(object):
-    """Embodies the INSTEON Product Database static data and access methods."""
+    """Embodies the INSTEON Product Database static data 
+    and access methods."""
 
     states = [
         State(OnOffSwitch_OutletTop, 'switch'),

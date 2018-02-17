@@ -21,7 +21,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the INSTEON PLM device class for the hass platform."""
 
     state_list = []
-    plm = hass.data['insteon_plm'] 
+    plm = hass.data['insteon_plm']
 
     for deviceInfo in discovery_info:
         address = deviceInfo['address']
@@ -30,11 +30,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         newnames = deviceInfo['newnames']
 
         stateName = device.states[stateKey].name
-       
+
         if stateName in ['lightOnOff', 'outletTopOnOff', 'outletBottomOnOff']:
-            state_list.append(InsteonPLMSwitchDevice( hass, device, stateKey, newnames))
+            state_list.append(InsteonPLMSwitchDevice(hass,
+                                                     device,
+                                                     stateKey,
+                                                     newnames))
         elif stateName == 'openClosedRelay':
-            state_list.append(InsteonPLMOpenClosedDevice( hass, device, stateKey, newnames))
+            state_list.append(InsteonPLMOpenClosedDevice(hass,
+                                                         device,
+                                                         stateKey,
+                                                         newnames))
 
     async_add_devices(state_list)
 
