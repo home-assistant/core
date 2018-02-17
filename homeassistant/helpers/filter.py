@@ -54,7 +54,7 @@ class Filter(object):
             last_state = None
 
         def func_wrapper(self):
-            """Wrap for the original function."""
+            """Wrap for the original state() function."""
             new_state = func(self)
             try:
                 Filter.logger.debug("Filter arguments: %s", filter_args)
@@ -67,7 +67,7 @@ class Filter(object):
                                       self.entity_id, float(new_state), e)
                 return last_state
             states.append(filtered_state)
-            Filter.logger.debug("filter(%s) -> %s",
+            Filter.logger.debug("%s(%s) -> %s", filter_algo.__name__,
                                 new_state, filtered_state)
             return filtered_state
 
