@@ -7,13 +7,12 @@ https://home-assistant.io/components/sensor.foobot/
 import asyncio
 import logging
 from datetime import timedelta, datetime
-from collections import OrderedDict
 
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady, HomeAssistantError
 from homeassistant.const import (
     ATTR_TIME, ATTR_TEMPERATURE, CONF_TOKEN, CONF_USERNAME, TEMP_CELSIUS)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -30,17 +29,15 @@ ATTR_CARBON_DIOXIDE = 'CO2'
 ATTR_VOLATILE_ORGANIC_COMPOUNDS = 'VOC'
 ATTR_FOOBOT_INDEX = 'index'
 
-SENSOR_TYPES = OrderedDict([('time', [ATTR_TIME, 's']),
-                            ('pm', [ATTR_PM2_5, 'µg/m3', 'mdi:cloud']),
-                            ('tmp', [ATTR_TEMPERATURE, TEMP_CELSIUS,
-                                     'mdi:thermometer']),
-                            ('hum', [ATTR_HUMIDITY, '%', 'mdi:water-percent']),
-                            ('co2', [ATTR_CARBON_DIOXIDE, 'ppm',
-                                     'mdi:periodic-table-co2']),
-                            ('voc', [ATTR_VOLATILE_ORGANIC_COMPOUNDS, 'ppb',
-                                     'mdi:cloud']),
-                            ('allpollu', [ATTR_FOOBOT_INDEX, '%',
-                                          'mdi:percent'])])
+SENSOR_TYPES = {'time': [ATTR_TIME, 's'],
+                'pm': [ATTR_PM2_5, 'µg/m3', 'mdi:cloud'],
+                'tmp': [ATTR_TEMPERATURE, TEMP_CELSIUS, 'mdi:thermometer'],
+                'hum': [ATTR_HUMIDITY, '%', 'mdi:water-percent'],
+                'co2': [ATTR_CARBON_DIOXIDE, 'ppm',
+                        'mdi:periodic-table-co2'],
+                'voc': [ATTR_VOLATILE_ORGANIC_COMPOUNDS, 'ppb',
+                        'mdi:cloud'],
+                'allpollu': [ATTR_FOOBOT_INDEX, '%', 'mdi:percent']}
 
 SCAN_INTERVAL = timedelta(minutes=10)
 PARALLEL_UPDATES = 1
@@ -71,19 +68,26 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.debug("The following devices were found: %s", devices)
         for device in devices:
             for sensor_type in SENSOR_TYPES.keys():
-                if sensor_type != 'time':
-                    foobot_sensor = FoobotSensor(client, data, device,
-                                                 sensor_type)
-                    dev.append(foobot_sensor)
+                if sensor_type == 'time':
+                    continue
+                foobot_sensor = FoobotSensor(client, data, device,
+                                             sensor_type)
+                dev.append(foobot_sensor)
     except (aiohttp.client_exceptions.ClientConnectorError,
-            asyncio.TimeoutError, client.ClientError):
+            asyncio.TimeoutError, FoobotClient.TooManyRequests,
+            FoobotClient.InternalError):
         _LOGGER.exception('Failed to connect to foobot servers.')
         raise PlatformNotReady
+    except (FoobotClient.ClientError):
+        _LOGGER.exception('Failed to fetch data from foobot servers.')
+        raise HomeAssistantError
     async_add_devices(dev, True)
 
 
 class FoobotSensor(Entity):
     """Implementation of a Foobot sensor."""
+
+    __cache = {}
 
     def __init__(self, client, data, device, sensor_type):
         """Initialize the sensor."""
@@ -93,8 +97,6 @@ class FoobotSensor(Entity):
                                            SENSOR_TYPES[sensor_type][0])
         self.type = sensor_type
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self._last_request = datetime.utcfromtimestamp(0)
-        self._data = data
 
     @property
     def name(self):
@@ -110,7 +112,7 @@ class FoobotSensor(Entity):
     def state(self):
         """Return the state of the device."""
         try:
-            data = self._data[self._uuid][self.type]
+            data = self.__cache[self._uuid][self.type]
         except(KeyError, TypeError):
             data = None
         return data
@@ -123,12 +125,14 @@ class FoobotSensor(Entity):
     @asyncio.coroutine
     def async_update(self):
         """Get the latest data."""
-        if self._uuid in self._data:
-            _LOGGER.debug('last_update: %s', self._last_request)
+        if self._uuid in self.__cache:
+            last_request = self.__cache[self._uuid]['last_request']
+            _LOGGER.debug('last_update: %s', last_request)
             _LOGGER.debug('now: %s', datetime.utcnow())
-            if self._last_request + SCAN_INTERVAL > datetime.utcnow():
+            if last_request + SCAN_INTERVAL > datetime.utcnow():
                 # If the last request made is recent enough,
                 # just skip the update
+                _LOGGER.debug('Skipping update')
                 return
 
         interval = SCAN_INTERVAL.total_seconds()
@@ -137,11 +141,11 @@ class FoobotSensor(Entity):
                                                              interval,
                                                              interval + 1)
         except (aiohttp.client_exceptions.ClientConnectorError,
-                asyncio.TimeoutError, self._client.ClientError):
-            _LOGGER.exception('Failed to fetch data from foobot servers.')
-            raise PlatformNotReady
+                asyncio.TimeoutError, self._client.TooManyRequests,
+                self._client.InternalError):
+            raise HomeAssistantError
         if response:
             _LOGGER.debug("The data response is: %s", response)
-            self._last_request = datetime.utcnow()
-            self._data[self._uuid] = {k: round(v, 1) for k, v in
-                                      response[0].items()}
+            self.__cache[self._uuid] = {k: round(v, 1) for k, v in
+                                        response[0].items()}
+            self.__cache[self._uuid]['last_request'] = datetime.utcnow()
