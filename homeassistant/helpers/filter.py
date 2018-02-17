@@ -17,7 +17,15 @@ class Filter(object):
 
     def __init__(self, filter_algorithm, window_size=DEFAULT_WINDOW_SIZE,
                  **kwargs):
-        """Decorator constructor, selects algorithm and configures windows."""
+        """Decorator constructor, selects algorithm and configures window.
+
+        Args:
+            filter_algorithm (int): must be one of the defined filters
+            window_size (int): size of the sliding window that holds previous
+                                values
+            kwargs (dict): arguments to be passed to the specific filter
+
+        """
         module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
         Filter.logger = logging.getLogger(module_name)
         Filter.logger.debug("Filter %s on %s", filter_algorithm, module_name)
