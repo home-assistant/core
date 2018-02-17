@@ -29,9 +29,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         stateKey = deviceInfo['stateKey']
         newnames = deviceInfo['newnames']
        
-        _LOGGER.info('Registered device %s state %s with binary_sensor platform %s', device.address, device.states[stateKey].name)
-        state_list.append(InsteonPLMBinarySensor( hass, device, stateKey, newnames))
-
+        _LOGGER.info('Registered device %s state %s with binary_sensor platform %s',
+                     device.address, device.states[stateKey].name)
+        state_list.append(InsteonPLMBinarySensor(hass,
+                                                 device,
+                                                 stateKey,
+                                                 newnames))
 
     async_add_devices(state_list)
 
@@ -43,7 +46,7 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
         """Initialize the binarysensor."""
         self._hass = hass
         self._state = device.states[stateKey]
-        self._device = device 
+        self._device = device
         self._sensor_type = self._stateName_to_sensor_type(self._state.name)
         self._newnames = newnames
 
@@ -84,9 +87,10 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
     @callback
     def async_binarysensor_update(self, deviceid, statename, val):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update calback from PLM for device %s state %s', deviceid, statename)
+        _LOGGER.info('Received update calback from PLM for device %s state %s',
+                     deviceid, statename)
         self._hass.async_add_job(self.async_update_ha_state())
-    
+
     @property
     def device_class(self):
         """Return the class of this sensor."""
@@ -96,7 +100,8 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
     def is_on(self):
         """Return the boolean response if the node is on."""
         sensorstate = self._state.value
-        _LOGGER.info("Sensor for device %s state %s is %s", self.id, self._state.name, sensorstate)
+        _LOGGER.info("Sensor for device %s state %s is %s",
+                     self.id, self._state.name, sensorstate)
         return bool(sensorstate)
 
     def _stateName_to_sensor_type(self, stateName):

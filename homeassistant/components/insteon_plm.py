@@ -153,7 +153,7 @@ and access methods."""
 
     states = [
         State(OnOffSwitch_OutletTop, 'switch'),
-        State(OnOffSwitch_OutletBottom,'switch'),
+        State(OnOffSwitch_OutletBottom, 'switch'),
         State(OpenClosedRelay, 'switch'),
         State(OnOffSwitch, 'switch'),
 

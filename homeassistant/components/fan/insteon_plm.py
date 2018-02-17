@@ -8,10 +8,12 @@ import logging
 import asyncio
 
 from homeassistant.core import callback
-from homeassistant.components.fan import (SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
-                                          FanEntity, SUPPORT_SET_SPEED, 
-                                          DIRECTION_FORWARD, DIRECTION_REVERSE,
-                                          SUPPORT_OSCILLATE, SUPPORT_DIRECTION)
+from homeassistant.components.fan import (SPEED_OFF,
+                                          SPEED_LOW,
+                                          SPEED_MEDIUM,
+                                          SPEED_HIGH,
+                                          FanEntity,
+                                          SUPPORT_SET_SPEED)
 from homeassistant.const import STATE_OFF
 from homeassistant.loader import get_component
 
@@ -25,22 +27,27 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the INSTEON PLM device class for the hass platform."""
 
     state_list = []
-    plm = hass.data['insteon_plm'] 
+    plm = hass.data['insteon_plm']
 
     for deviceInfo in discovery_info:
         address = deviceInfo['address']
         device = plm.devices[address]
         stateKey = deviceInfo['stateKey']
         newnames = deviceInfo['newnames']
-       
-        state_list.append(InsteonPLMFan( hass, device, stateKey, newnames, SUPPORT_SET_SPEED))
+
+        state_list.append(InsteonPLMFan(hass,
+                                        device,
+                                        stateKey,
+                                        newnames,
+                                        SUPPORT_SET_SPEED))
 
     async_add_devices(state_list)
+
 
 class InsteonPLMFan(FanEntity):
     """An INSTEON fan component."""
 
-    def __init__(self, hass, device, stateKey, newnames, 
+    def __init__(self, hass, device, stateKey, newnames,
                  supported_features: int, ) -> None:
         """Initialize the entity."""
         self._hass = hass
@@ -115,7 +122,7 @@ class InsteonPLMFan(FanEntity):
     def async_fan_update(self, deviceid, statename, val):
         """Receive notification from transport that new data exists."""
         _LOGGER.info('Received update calback from PLM for device %s state %s',
-                     deviceid, 
+                     deviceid,
                      statename)
         self.hass.async_add_job(self.async_update_ha_state())
 
