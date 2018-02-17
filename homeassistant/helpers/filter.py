@@ -76,7 +76,7 @@ class Filter(object):
     @staticmethod
     def _outlier(new_state, states, **kwargs):
         """BASIC outlier filter.
-   
+
         Will through a ValueError indicating an outlier value
         that should not be published, else the current value.
 
