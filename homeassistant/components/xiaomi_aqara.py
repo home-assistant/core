@@ -90,11 +90,9 @@ def _fix_conf_defaults(config):
     return config
 
 
-DEFAULT_GATEWAY_CONFIG = [{CONF_MAC: None, CONF_KEY: None}]
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_GATEWAYS, default=DEFAULT_GATEWAY_CONFIG):
+        vol.Optional(CONF_GATEWAYS, default={}):
             vol.All(cv.ensure_list, [GATEWAY_CONFIG], [_fix_conf_defaults]),
         vol.Optional(CONF_INTERFACE, default='any'): cv.string,
         vol.Optional(CONF_DISCOVERY_RETRY, default=3): cv.positive_int

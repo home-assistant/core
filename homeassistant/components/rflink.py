@@ -74,7 +74,7 @@ DEVICE_DEFAULTS_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
-        vol.Optional.get(CONF_HOST): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
         vol.Optional(CONF_RECONNECT_INTERVAL,
                      default=DEFAULT_RECONNECT_INTERVAL): int,
