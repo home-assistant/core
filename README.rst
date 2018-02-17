@@ -10,6 +10,12 @@ To get started:
     python3 -m pip install homeassistant
     hass --open-ui
 
+Using docker:
+
+.. code:: bash
+
+	docker run -p 80:8123 -v ~/hassconfig:/config homeassistant/home-assistant
+
 Check out `home-assistant.io <https://home-assistant.io>`__ for `a
 demo <https://home-assistant.io/demo/>`__, `installation instructions <https://home-assistant.io/getting-started/>`__,
 `tutorials <https://home-assistant.io/getting-started/automation-2/>`__ and `documentation <https://home-assistant.io/docs/>`__.
