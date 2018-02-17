@@ -5,7 +5,7 @@ Connect to a Samsung Printer via it's SyncThru
 import logging
 
 REQUIREMENTS = [
-    'pysyncthru>=0.1.2'
+    'pysyncthru>=0.1.3'
     ]
 
 
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     resource = config.get(CONF_RESOURCE)
 
-    if test_syncthru(resource) is None:
+    if test_syncthru(resource) is False:
         _LOGGER.error("No SyncThru Printer reached under given resource")
         return False
 
@@ -76,21 +76,22 @@ class SyncThruSensor(Entity):
 
         syncthru.update()
         self._state = syncthru.deviceStatus()
-        self._friendly_name = syncthru.model()
+        
+        if syncthru.isOnline():
+            self._friendly_name = syncthru.model()
+            self._attributes[FRIENDLY_NAME] = self._friendly_name
 
-        self._attributes['output_tray'] = syncthru.outputTrayStatus()
-        for key, value in syncthru.systemStatus().items():
-            self._attributes[str(key)] = value
-        for key, value in syncthru.tonerStatus().items():
-            self._attributes['toner_' + str(key)] = value
-        for key, value in syncthru.drumStatus().items():
-            self._attributes['drum_' + str(key)] = value
-        for key, value in syncthru.inputTrayStatus().items():
-            self._attributes['input_tray_' + str(key)] = value
+            self._attributes['output_tray'] = syncthru.outputTrayStatus()
+            for key, value in syncthru.systemStatus().items():
+                self._attributes[str(key)] = value
+            for key, value in syncthru.tonerStatus().items():
+                self._attributes['toner_' + str(key)] = value
+            for key, value in syncthru.drumStatus().items():
+                self._attributes['drum_' + str(key)] = value
+            for key, value in syncthru.inputTrayStatus().items():
+                self._attributes['input_tray_' + str(key)] = value
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-
-        self._attributes[FRIENDLY_NAME] = self._friendly_name
         return self._attributes
