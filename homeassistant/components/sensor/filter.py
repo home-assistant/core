@@ -1,6 +1,23 @@
 """
 Support for filtering for sensor values.
 
+Example configuration:
+
+sensor:
+  - platform: simulated
+    name: 'simulated relative humidity'
+    unit: '%'
+    amplitude: 0 # Turns off sine wave
+    mean: 50
+    spread: 10
+    seed: 999
+
+  - platform: filter
+    entity_id: sensor.simulated_relative_humidity
+    name: lowpass
+    options:
+      time_constant: 10
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.filter/
 """
@@ -15,26 +32,42 @@ from homeassistant.const import (
     CONF_NAME, CONF_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.filter import Filter, FILTER_LOWPASS
+from homeassistant.helpers.filter import (
+    Filter, FILTER_LOWPASS, FILTER_OUTLIER)
 from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_COUNT = 'count'
-ATTR_FILTER = 'filtered'
-ATTR_SAMPLING_SIZE = 'window_size'
+ATTR_FILTER = 'filter_name'
+ATTR_PRE_FILTER = 'pre_filter_state'
 
-CONF_WINDOW_SIZE = 'window_size'
+CONF_FILTER_OPTIONS = 'options'
+CONF_FILTER_NAME = 'filter'
 
-DEFAULT_NAME = 'Filter'
+TYPE_LOWPASS = 'lowpass'
+TYPE_OUTLIER = 'outlier'
+
+FILTER_MAP = {
+             TYPE_LOWPASS: FILTER_LOWPASS,
+             TYPE_OUTLIER: FILTER_OUTLIER,
+             }
+
+DEFAULT_NAME_TEMPLATE = "{} filter {}"
 DEFAULT_SIZE = 5
-ICON = 'mdi: chart-line-variant '
+ICON = 'mdi: chart-line-variant'
+
+#add here user customizable OPTIONAL filter arguments
+FILTER_SCHEMA = vol.Schema({
+    vol.Optional('time_constant'): vol.Coerce(int), 
+    vol.Optional('constant'): vol.Coerce(int) 
+})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_WINDOW_SIZE, default=DEFAULT_SIZE):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Required(CONF_FILTER_NAME): 
+        vol.Any(TYPE_LOWPASS, TYPE_OUTLIER),
+    vol.Optional(CONF_FILTER_OPTIONS): FILTER_SCHEMA, 
+    vol.Optional(CONF_NAME, default=None): cv.string,
 })
 
 
@@ -42,26 +75,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Statistics sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
+    filtername = config.get(CONF_FILTER_NAME)
     name = config.get(CONF_NAME)
-    window_size = config.get(CONF_WINDOW_SIZE)
+    if name is None:
+        name = DEFAULT_NAME_TEMPLATE.format(entity_id, filtername)
 
     async_add_devices(
-        [FilterSensor(hass, entity_id, name, window_size)],
-        True)
+        [FilterSensor(hass, name, entity_id, filtername,
+        config.get(CONF_FILTER_OPTIONS, dict()))], True)
     return True
 
 
 class FilterSensor(Entity):
     """Representation of a Filter sensor."""
 
-    def __init__(self, hass, entity_id, name, window_size):
+    def __init__(self, hass, name, entity_id, filtername, filter_args):
         """Initialize the Statistics sensor."""
         self._hass = hass
         self._entity_id = entity_id
-        self._name = '{} {}'.format(name, ATTR_FILTER)
-        self._window_size = window_size
+        self._name = name
+        self._filter_name = filtername
         self._unit_of_measurement = None
-        self._state = None
+        self._pre_filter_state = self._state = None
+
+        self._filterdata = self.filterdata_factory(FILTER_MAP[filtername], **filter_args)()
 
         @callback
         # pylint: disable=invalid-name
@@ -70,7 +107,12 @@ class FilterSensor(Entity):
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
 
-            self._state = new_state.state
+            try:
+                self._pre_filter_state = new_state.state
+                self._filterdata.update(self._pre_filter_state)
+            except ValueError:
+                _LOGGER.error("This component can only filter integer or float values")
+                return 
 
             hass.async_add_job(self.async_update_ha_state, True)
 
@@ -78,15 +120,19 @@ class FilterSensor(Entity):
             hass, entity_id, async_stats_sensor_state_listener)
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return not self._pre_filter_state is None 
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
-    @Filter(FILTER_LOWPASS, time_constant=4)
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return self._filterdata.data
 
     @property
     def unit_of_measurement(self):
@@ -102,3 +148,30 @@ class FilterSensor(Entity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return ICON
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the sensor."""
+        state_attr = {
+            ATTR_FILTER: self._filter_name,
+            ATTR_PRE_FILTER: self._pre_filter_state,
+            ATTR_UNIT_OF_MEASUREMENT: self._unit_of_measurement
+        }
+        return state_attr
+
+    def filterdata_factory(self, filter_function, **kwargs):
+        """Factory to create filters with user provided arguments."""
+        class FilterData(object):
+            def __init__(self, initial=None):
+                self._data = initial 
+            
+            @property
+            @Filter(filter_function, **kwargs)
+            def data(self):
+                return self._data
+
+            def update(self, new_data):
+                self._data = float(new_data)
+
+        return FilterData
+
