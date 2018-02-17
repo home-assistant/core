@@ -28,15 +28,15 @@ DEPENDENCIES = ['rfxtrx']
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): {
         cv.string: vol.Schema({
-            vol.Optional(CONF_NAME, default=None): cv.string,
-            vol.Optional(CONF_DEVICE_CLASS, default=None):
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_DEVICE_CLASS):
                 DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-            vol.Optional(CONF_OFF_DELAY, default=None):
+            vol.Optional(CONF_OFF_DELAY):
             vol.Any(cv.time_period, cv.positive_timedelta),
-            vol.Optional(CONF_DATA_BITS, default=None): cv.positive_int,
-            vol.Optional(CONF_COMMAND_ON, default=None): cv.byte,
-            vol.Optional(CONF_COMMAND_OFF, default=None): cv.byte
+            vol.Optional(CONF_DATA_BITS): cv.positive_int,
+            vol.Optional(CONF_COMMAND_ON): cv.byte,
+            vol.Optional(CONF_COMMAND_OFF): cv.byte
         })
     },
     vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import RFXtrx as rfxtrxmod
     sensors = []
 
-    for packet_id, entity in config['devices'].items():
+    for packet_id, entity in config[CONF_DEVICES].items():
         event = rfxtrx.get_rfx_object(packet_id)
         device_id = slugify(event.device.id_string.lower())
 
@@ -64,10 +64,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       entity[ATTR_NAME], entity[CONF_DEVICE_CLASS])
 
         device = RfxtrxBinarySensor(
-            event, entity[ATTR_NAME], entity[CONF_DEVICE_CLASS],
-            entity[CONF_FIRE_EVENT], entity[CONF_OFF_DELAY],
-            entity[CONF_DATA_BITS], entity[CONF_COMMAND_ON],
-            entity[CONF_COMMAND_OFF])
+            event, entity.get(CONF_NAME), entity.get(CONF_DEVICE_CLASS),
+            entity[CONF_FIRE_EVENT], entity.get(CONF_OFF_DELAY),
+            entity.get(CONF_DATA_BITS), entity.get(CONF_COMMAND_ON),
+            entity.get(CONF_COMMAND_OFF))
         device.hass = hass
         sensors.append(device)
         rfxtrx.RFX_DEVICES[device_id] = device
