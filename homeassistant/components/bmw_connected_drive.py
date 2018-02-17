@@ -85,7 +85,7 @@ def setup(hass, config):
 class BMWConnectedDriveAccount(object):
     """Representation of a BMW vehicle."""
 
-    def __init__(self,  username: str, password: str, country: str,
+    def __init__(self, username: str, password: str, country: str,
                  name: str) -> None:
         """Constructor."""
         from bimmer_connected import ConnectedDriveAccount
