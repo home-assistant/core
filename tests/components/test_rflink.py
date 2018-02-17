@@ -8,7 +8,6 @@ from homeassistant.components.rflink import (
     CONF_RECONNECT_INTERVAL, SERVICE_SEND_COMMAND)
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_STOP_COVER)
-from tests.common import assert_setup_component
 
 
 @asyncio.coroutine
