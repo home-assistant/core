@@ -115,4 +115,3 @@ class FacebookNotificationService(BaseNotificationService):
                     _LOGGER.error(
                         "Error %s : %s (Code %s)", resp.status_code, error_message,
                         error_code)
-                    
