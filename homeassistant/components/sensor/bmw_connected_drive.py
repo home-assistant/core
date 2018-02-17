@@ -90,5 +90,9 @@ class BMWConnectedDriveSensor(Entity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Add callback after being added to hass."""
+        """Add callback after being added to hass.
+
+        Show latest data after startup.
+        """
         self._account.add_update_listener(self.update)
+        self.update()

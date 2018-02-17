@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/bmw_connected_drive/
 """
 import logging
-from random import randint
+import datetime
 
 import voluptuous as vol
 from homeassistant.helpers import discovery
@@ -48,6 +48,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 BMW_COMPONENTS = ['device_tracker', 'sensor']
+UPDATE_INTERVAL = 5  # in minutes
 
 
 def setup(hass, config):
@@ -58,15 +59,17 @@ def setup(hass, config):
         password = account_config[CONF_PASSWORD]
         country = account_config[CONF_COUNTRY]
         _LOGGER.debug('Adding new account %s', name)
-        bimmer = BMWConnectedDriveAccount(username, password, country,
-                                         name)
+        bimmer = BMWConnectedDriveAccount(username, password, country, name)
         accounts.append(bimmer)
 
-        # update every 5 minutes, select second randomly to reduce server
-        # load
+        # update every UPDATE_INTERVAL minutes, starting now
+        # this should even out the load on the servers
+
+        now = datetime.datetime.now()
         track_utc_time_change(
-            hass, bimmer.update, minute=range(0, 60, 5),
-            second=randint(0, 59))
+            hass, bimmer.update,
+            minute=range(now.minute % UPDATE_INTERVAL, 60, UPDATE_INTERVAL),
+            second=now.second)
 
     hass.data[DOMAIN] = accounts
 
@@ -110,3 +113,4 @@ class BMWConnectedDriveAccount(object):
     def add_update_listener(self, listener):
         """Add a listener for update notifications."""
         self._update_listeners.append(listener)
+        listener()
