@@ -9,9 +9,7 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from aiohttp import web
-
-from homeassistant import core as ha, loader
+from homeassistant import core as ha, loader, config_entries
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
@@ -25,9 +23,6 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
 from homeassistant.components import mqtt, recorder
-from homeassistant.components.http.auth import auth_middleware
-from homeassistant.components.http.const import (
-    KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
 from homeassistant.util.async import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
@@ -114,6 +109,9 @@ def get_test_home_assistant():
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant(loop)
+    hass.config_entries = config_entries.ConfigEntries(hass, {})
+    hass.config_entries._entries = []
+    hass.config.async_load = Mock()
     INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
@@ -262,35 +260,6 @@ def mock_state_change_event(hass, new_state, old_state=None):
     hass.bus.fire(EVENT_STATE_CHANGED, event_data)
 
 
-def mock_http_component(hass, api_password=None):
-    """Mock the HTTP component."""
-    hass.http = MagicMock(api_password=api_password)
-    mock_component(hass, 'http')
-    hass.http.views = {}
-
-    def mock_register_view(view):
-        """Store registered view."""
-        if isinstance(view, type):
-            # Instantiate the view, if needed
-            view = view()
-
-        hass.http.views[view.name] = view
-
-    hass.http.register_view = mock_register_view
-
-
-def mock_http_component_app(hass, api_password=None):
-    """Create an aiohttp.web.Application instance for testing."""
-    if 'http' not in hass.config.components:
-        mock_http_component(hass, api_password)
-    app = web.Application(middlewares=[auth_middleware])
-    app['hass'] = hass
-    app[KEY_USE_X_FORWARDED_FOR] = False
-    app[KEY_BANS_ENABLED] = False
-    app[KEY_TRUSTED_NETWORKS] = []
-    return app
-
-
 @asyncio.coroutine
 def async_mock_mqtt_component(hass, config=None):
     """Mock the MQTT component."""
@@ -339,7 +308,8 @@ class MockModule(object):
     # pylint: disable=invalid-name
     def __init__(self, domain=None, dependencies=None, setup=None,
                  requirements=None, config_schema=None, platform_schema=None,
-                 async_setup=None):
+                 async_setup=None, async_setup_entry=None,
+                 async_unload_entry=None):
         """Initialize the mock module."""
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
@@ -360,6 +330,12 @@ class MockModule(object):
 
         if setup is None and async_setup is None:
             self.async_setup = mock_coro_func(True)
+
+        if async_setup_entry is not None:
+            self.async_setup_entry = async_setup_entry
+
+        if async_unload_entry is not None:
+            self.async_unload_entry = async_unload_entry
 
 
 class MockPlatform(object):
@@ -434,6 +410,35 @@ class MockToggleDevice(entity.ToggleEntity):
                             if call[0] == method)
             except StopIteration:
                 return None
+
+
+class MockConfigEntry(config_entries.ConfigEntry):
+    """Helper for creating config entries that adds some defaults."""
+
+    def __init__(self, *, domain='test', data=None, version=0, entry_id=None,
+                 source=config_entries.SOURCE_USER, title='Mock Title',
+                 state=None):
+        """Initialize a mock config entry."""
+        kwargs = {
+            'entry_id': entry_id or 'mock-id',
+            'domain': domain,
+            'data': data or {},
+            'version': version,
+            'title': title
+        }
+        if source is not None:
+            kwargs['source'] = source
+        if state is not None:
+            kwargs['state'] = state
+        super().__init__(**kwargs)
+
+    def add_to_hass(self, hass):
+        """Test helper to add entry to hass."""
+        hass.config_entries._entries.append(self)
+
+    def add_to_manager(self, manager):
+        """Test helper to add entry to entry manager."""
+        manager._entries.append(self)
 
 
 def patch_yaml_files(files_dict, endswith=True):

@@ -48,7 +48,7 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_RESOURCES, default=['disk_use']):
+    vol.Optional(CONF_RESOURCES, default={CONF_TYPE: 'disk_use'}):
         vol.All(cv.ensure_list, [vol.Schema({
             vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
             vol.Optional(CONF_ARG): cv.string,

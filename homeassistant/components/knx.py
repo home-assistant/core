@@ -136,7 +136,6 @@ class KNXModule(object):
         self.hass = hass
         self.config = config
         self.connected = False
-        self.initialized = True
         self.init_xknx()
         self.register_callbacks()
         self.exposures = self.create_exposures()

@@ -56,7 +56,7 @@ CUSTOMIZE_SCHEMA = vol.Schema({
     })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_SSL, default=False): cv.boolean,

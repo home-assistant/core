@@ -12,7 +12,8 @@ from typing import Any, Optional, Dict
 import voluptuous as vol
 
 from homeassistant import (
-    core, config as conf_util, loader, components as core_components)
+    core, config as conf_util, config_entries, loader,
+    components as core_components)
 from homeassistant.components import persistent_notification
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
@@ -123,9 +124,13 @@ def async_from_config_dict(config: Dict[str, Any],
         new_config[key] = value or {}
     config = new_config
 
+    hass.config_entries = config_entries.ConfigEntries(hass, config)
+    yield from hass.config_entries.async_load()
+
     # Filter out the repeating and common config section [homeassistant]
     components = set(key.split(' ')[0] for key in config.keys()
                      if key != core.DOMAIN)
+    components.update(hass.config_entries.async_domains())
 
     # setup components
     # pylint: disable=not-an-iterable
