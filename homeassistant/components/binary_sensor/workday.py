@@ -47,7 +47,7 @@ DEFAULT_OFFSET = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COUNTRY): vol.In(ALL_COUNTRIES),
-    vol.Optional(CONF_PROVINCE, default=None): cv.string,
+    vol.Optional(CONF_PROVINCE): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
     vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS):

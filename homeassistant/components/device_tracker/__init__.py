@@ -649,8 +649,7 @@ def async_load_config(path: str, hass: HomeAssistantType,
     """
     dev_schema = vol.Schema({
         vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_ICON, default=False):
-            vol.Any(None, cv.icon),
+        vol.Optional(CONF_ICON, default=None): vol.Any(None, cv.icon),
         vol.Optional('track', default=False): cv.boolean,
         vol.Optional(CONF_MAC, default=None):
             vol.Any(None, vol.All(cv.string, vol.Upper)),

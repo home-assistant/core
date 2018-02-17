@@ -45,8 +45,7 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_RADIO_TYPE, default=RadioType.ezsp):
-            cv.enum(RadioType),
+        vol.Optional(CONF_RADIO_TYPE, default='ezsp'): cv.enum(RadioType),
         CONF_USB_PATH: cv.string,
         vol.Optional(CONF_BAUDRATE, default=57600): cv.positive_int,
         CONF_DATABASE: cv.string,

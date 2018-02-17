@@ -56,10 +56,7 @@ GOOGLE_ENTITY_SCHEMA = vol.Schema({
 })
 
 ASSISTANT_SCHEMA = vol.Schema({
-    vol.Optional(
-        CONF_FILTER,
-        default=lambda: entityfilter.generate_filter([], [], [], [])
-    ): entityfilter.FILTER_SCHEMA,
+    vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
 })
 
 ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend({

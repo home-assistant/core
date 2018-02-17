@@ -73,22 +73,23 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SERVER_HOST = '0.0.0.0'
 DEFAULT_DEVELOPMENT = '0'
-DEFAULT_LOGIN_ATTEMPT_THRESHOLD = -1
+NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
 HTTP_SCHEMA = vol.Schema({
-    vol.Optional(CONF_API_PASSWORD, default=None): cv.string,
+    vol.Optional(CONF_API_PASSWORD): cv.string,
     vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
     vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
     vol.Optional(CONF_BASE_URL): cv.string,
-    vol.Optional(CONF_SSL_CERTIFICATE, default=None): cv.isfile,
-    vol.Optional(CONF_SSL_KEY, default=None): cv.isfile,
+    vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+    vol.Optional(CONF_SSL_KEY): cv.isfile,
     vol.Optional(CONF_CORS_ORIGINS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
     vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
         vol.All(cv.ensure_list, [ip_network]),
     vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD,
-                 default=DEFAULT_LOGIN_ATTEMPT_THRESHOLD): cv.positive_int,
+                 default=NO_LOGIN_ATTEMPT_THRESHOLD):
+        vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
     vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean
 })
 
@@ -105,11 +106,11 @@ def async_setup(hass, config):
     if conf is None:
         conf = HTTP_SCHEMA({})
 
-    api_password = conf[CONF_API_PASSWORD]
+    api_password = conf.get(CONF_API_PASSWORD)
     server_host = conf[CONF_SERVER_HOST]
     server_port = conf[CONF_SERVER_PORT]
-    ssl_certificate = conf[CONF_SSL_CERTIFICATE]
-    ssl_key = conf[CONF_SSL_KEY]
+    ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
+    ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf[CONF_CORS_ORIGINS]
     use_x_forwarded_for = conf[CONF_USE_X_FORWARDED_FOR]
     trusted_networks = conf[CONF_TRUSTED_NETWORKS]
