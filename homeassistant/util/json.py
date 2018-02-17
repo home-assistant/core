@@ -9,7 +9,8 @@ from homeassistant.exceptions import HomeAssistantError
 _LOGGER = logging.getLogger(__name__)
 
 
-def load_json(filename: str) -> Union[List, Dict]:
+def load_json(filename: str, default: Union[List, Dict] = {}) \
+        -> Union[List, Dict]:
     """Load JSON data from a file and return as dict or list.
 
     Defaults to returning empty dict if file is not found.
@@ -26,7 +27,7 @@ def load_json(filename: str) -> Union[List, Dict]:
     except OSError as error:
         _LOGGER.exception('JSON file reading failed: %s', filename)
         raise HomeAssistantError(error)
-    return {}  # (also evaluates to False)
+    return default  # (also evaluates to False)
 
 
 def save_json(filename: str, config: Union[List, Dict]):
