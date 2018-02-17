@@ -10,6 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
@@ -87,6 +88,7 @@ def async_setup(hass, config):
     from xknx.exceptions import XKNXException
     try:
         hass.data[DATA_KNX] = KNXModule(hass, config)
+        hass.data[DATA_KNX].async_create_exposures()
         yield from hass.data[DATA_KNX].start()
 
     except XKNXException as ex:
@@ -138,7 +140,7 @@ class KNXModule(object):
         self.connected = False
         self.init_xknx()
         self.register_callbacks()
-        self.exposures = self.create_exposures()
+        self.exposures = []
 
     def init_xknx(self):
         """Initialize of KNX object."""
@@ -219,11 +221,11 @@ class KNXModule(object):
             self.xknx.telegram_queue.register_telegram_received_cb(
                 self.telegram_received_cb, address_filters)
 
-    def create_exposures(self):
+    @callback
+    def async_create_exposures(self):
         """Create exposures."""
-        exposures = []
         if CONF_KNX_EXPOSE not in self.config[DOMAIN]:
-            return exposures
+            return
         for to_expose in self.config[DOMAIN][CONF_KNX_EXPOSE]:
             expose_type = to_expose.get(CONF_KNX_EXPOSE_TYPE)
             entity_id = to_expose.get(CONF_KNX_EXPOSE_ENTITY_ID)
@@ -231,12 +233,13 @@ class KNXModule(object):
             if expose_type in ['time', 'date', 'datetime']:
                 exposure = KNXExposeTime(
                     self.xknx, expose_type, address)
-                exposures.append(exposure)
+                exposure.async_register()
+                self.exposures.append(exposure)
             else:
                 exposure = KNXExposeSensor(
                     self.hass, self.xknx, expose_type, entity_id, address)
-                exposures.append(exposure)
-        return exposures
+                exposure.async_register()
+                self.exposures.append(exposure)
 
     @asyncio.coroutine
     def telegram_received_cb(self, telegram):
@@ -295,9 +298,9 @@ class KNXExposeTime(object):
         self.type = expose_type
         self.address = address
         self.device = None
-        self.register()
 
-    def register(self):
+    @callback
+    def async_register(self):
         """Register listener."""
         from xknx.devices import DateTime, DateTimeBroadcastType
         broadcast_type_string = self.type.upper()
@@ -321,9 +324,9 @@ class KNXExposeSensor(object):
         self.entity_id = entity_id
         self.address = address
         self.device = None
-        self.register()
 
-    def register(self):
+    @callback
+    def async_register(self):
         """Register listener."""
         from xknx.devices import ExposeSensor
         self.device = ExposeSensor(
