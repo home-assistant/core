@@ -163,7 +163,6 @@ EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 EVENT_THEMES_UPDATED = 'themes_updated'
-EVENT_TRANSLATIONS_UPDATED = 'translations_updated'
 
 # #### STATES ####
 STATE_ON = 'on'
