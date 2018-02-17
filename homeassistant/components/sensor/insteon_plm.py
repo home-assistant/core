@@ -21,17 +21,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the INSTEON PLM device class for the hass platform."""
 
     state_list = []
-    plm = hass.data['insteon_plm'] 
+    plm = hass.data['insteon_plm']
 
     for deviceInfo in discovery_info:
         address = deviceInfo['address']
         device = plm.devices[address]
         stateKey = deviceInfo['stateKey']
         newnames = deviceInfo['newnames']
-       
+
         state_list.append(InsteonPLMSensorDevice( hass, device, stateKey, newnames))
 
     async_add_devices(state_list)
+
 
 class InsteonPLMSensorDevice(Entity):
     """A Class for an Insteon device."""
