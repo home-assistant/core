@@ -32,7 +32,7 @@ class Filter(object):
             return
 
     def __call__(self, func):
-        """Decorate function as deprecated."""
+        """Decorate function as filter."""
         states = self.states
         filter_algo = self.filter
         filter_args = self.filter_args
