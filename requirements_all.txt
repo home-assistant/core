@@ -60,7 +60,7 @@ YesssSMS==0.1.1b3
 abodepy==0.12.2
 
 # homeassistant.components.device_tracker.automatic
-aioautomatic==0.6.4
+aioautomatic==0.6.5
 
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
