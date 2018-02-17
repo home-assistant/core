@@ -11,6 +11,7 @@ from tests.common import (
     get_test_home_assistant, load_fixture, assert_setup_component)
 
 from ...test_util.aiohttp import mock_aiohttp_client
+from homeassistant.exceptions import PlatformNotReady, HomeAssistantError
 
 VALID_CONFIG = {
     'platform': 'foobot',
@@ -45,31 +46,35 @@ class TestFoobotSetup(unittest.TestCase):
                 assert setup_component(self.hass, sensor.DOMAIN, {
                     'sensor': VALID_CONFIG})
 
-            state = self.hass.states.get('sensor.foobot_happybot_co2')
-            self.assertEqual('1232.0', state.state)
-            self.assertEqual('ppm',
-                             state.attributes.get('unit_of_measurement'))
+            metrics = {'co2': ['1232.0', 'ppm'],
+                       'temperature': ['21.1', TEMP_CELSIUS],
+                       'humidity': ['49.5', '%'],
+                       'pm25': ['144.8', 'µg/m3'],
+                       'voc': ['340.7', 'ppb'],
+                       'index': ['138.9', '%']}
 
-            state = self.hass.states.get('sensor.foobot_happybot_temperature')
-            self.assertEqual('21.1', state.state)
-            self.assertEqual(TEMP_CELSIUS,
-                             state.attributes.get('unit_of_measurement'))
+            for name, value in metrics.items():
+                state = self.hass.states.get('sensor.foobot_happybot_%s'
+                                             % name)
+                self.assertEqual(value[0], state.state)
+                self.assertEqual(value[1],
+                                 state.attributes.get('unit_of_measurement'))
 
-            state = self.hass.states.get('sensor.foobot_happybot_humidity')
-            self.assertEqual('49.5', state.state)
-            self.assertEqual('%', state.attributes.get('unit_of_measurement'))
+    @unittest.skipIf(sys.version_info < (3, 5),
+                     "Test not working on Python 3.4")
+    def test_setup_error(self):
+        """Expected failures caused by various errors in API response."""
+        errors = [[400, HomeAssistantError],
+                  [401, HomeAssistantError],
+                  [403, HomeAssistantError],
+                  [429, PlatformNotReady],
+                  [500, PlatformNotReady]]
 
-            state = self.hass.states.get('sensor.foobot_happybot_pm25')
-            self.assertEqual('144.8', state.state)
-            self.assertEqual('µg/m3',
-                             state.attributes.get('unit_of_measurement'))
+        for error in errors:
+            with mock_aiohttp_client() as aioclient_mock:
+                aioclient_mock.get(re.compile('api.foobot.io/v2/owner/.*'),
+                                   status=error[0])
 
-            state = self.hass.states.get('sensor.foobot_happybot_voc')
-            self.assertEqual('340.7', state.state)
-            self.assertEqual('ppb',
-                             state.attributes.get('unit_of_measurement'))
-
-            state = self.hass.states.get('sensor.foobot_happybot_index')
-            self.assertEqual('138.9', state.state)
-            self.assertEqual('%',
-                             state.attributes.get('unit_of_measurement'))
+                with self.assertRaises(error[1]):
+                    yield from setup_component(self.hass, sensor.DOMAIN,
+                                               {'sensor': VALID_CONFIG})
