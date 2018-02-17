@@ -63,13 +63,13 @@ class FacebookNotificationService(BaseNotificationService):
 
             brdcast_create_body = {"messages": [body_message]}
 
-            _LOGGER.debug("FB Messager broadcast body full  %s : ", brdcast_create_body)
+            _LOGGER.debug("Broadcast body %s : ", brdcast_create_body)
 
             resp = requests.post(CR_BRCST_MSG_URL, data=json.dumps(brdcast_create_body),
                                  params=payload,
                                  headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
                                  timeout=10)
-                        _LOGGER.info("FB Messager broadcast id %s : ", resp.json())
+            _LOGGER.info("FB Messager broadcast id %s : ", resp.json())
 
             # at this point we get broadcast id
             brdcast_body = {
@@ -81,13 +81,13 @@ class FacebookNotificationService(BaseNotificationService):
                                  params=payload,
                                  headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
                                  timeout=10)
-                        if resp.status_code != 200:
-            obj = resp.json()
-            error_message = obj['error']['message']
-            error_code = obj['error']['code']
-            _LOGGER.error(
-                "Error %s : %s (Code %s)", resp.status_code, error_message,
-                error_code)
+            if resp.status_code != 200:
+                obj = resp.json()
+                error_message = obj['error']['message']
+                error_code = obj['error']['code']
+                _LOGGER.error(
+                    "Error %s : %s (Code %s)", resp.status_code, error_message,
+                    error_code)
 
         # non-broadcast message
         else:
