@@ -31,8 +31,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         device = plm.devices[address]
         stateKey = deviceInfo['stateKey']
         newnames = deviceInfo['newnames']
-       
-        state_list.append(InsteonPLMDimmerDevice( hass, device, stateKey, newnames))
+
+        state_list.append(InsteonPLMDimmerDevice(hass, 
+                                                 device, 
+                                                 stateKey, 
+                                                 newnames))
 
     async_add_devices(state_list)
 
@@ -44,7 +47,7 @@ class InsteonPLMDimmerDevice(Light):
         """Initialize the light."""
         self._hass = hass
         self._state = device.states[stateKey]
-        self._device = device 
+        self._device = device
         self._newnames = newnames
 
         self._state.register_updates(self.async_light_update)
@@ -85,7 +88,8 @@ class InsteonPLMDimmerDevice(Light):
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        _LOGGER.debug("on level for %s is %s", self._device.id, self.brightness)
+        _LOGGER.debug("on level for %s is %s", 
+                      self._device.id, self.brightness)
         return bool(self.brightness)
 
     @property

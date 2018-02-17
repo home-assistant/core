@@ -93,7 +93,8 @@ class InsteonPLMSwitchDevice(SwitchDevice):
     @callback
     def async_switch_update(self, deviceid, statename, val):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update calback from PLM for %s', self._device.id)
+        _LOGGER.info('Received update calback from PLM for %s', 
+                     self._device.id)
         self._hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
@@ -106,6 +107,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
         """Turn device off"""
         self._state.off()
 
+
 class InsteonPLMOpenClosedDevice(SwitchDevice):
     """A Class for an Insteon device."""
 
@@ -113,7 +115,7 @@ class InsteonPLMOpenClosedDevice(SwitchDevice):
         """Initialize the switch."""
         self._hass = hass
         self._state = device.states[stateKey]
-        self._device = device 
+        self._device = device
         self._newnames = newnames
 
         self._state.register_updates(self.async_relay_update)
@@ -160,7 +162,8 @@ class InsteonPLMOpenClosedDevice(SwitchDevice):
     @callback
     def async_relay_update(self, deviceid, statename, val):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update calback from PLM for %s', self._device.id)
+        _LOGGER.info('Received update calback from PLM for %s', 
+                     self._device.id)
         self._hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
