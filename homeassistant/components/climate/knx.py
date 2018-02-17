@@ -48,9 +48,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                  default=DEFAULT_SETPOINT_SHIFT_STEP): vol.All(
                      float, vol.Range(min=0, max=2)),
     vol.Optional(CONF_SETPOINT_SHIFT_MAX):
-        vol.All(int, vol.Range(min=-32, max=0)),
-    vol.Optional(CONF_SETPOINT_SHIFT_MIN):
         vol.All(int, vol.Range(min=0, max=32)),
+    vol.Optional(CONF_SETPOINT_SHIFT_MIN):
+        vol.All(int, vol.Range(min=-32, max=0)),
     vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
