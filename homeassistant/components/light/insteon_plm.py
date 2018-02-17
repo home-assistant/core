@@ -32,9 +32,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         stateKey = deviceInfo['stateKey']
         newnames = deviceInfo['newnames']
 
-        state_list.append(InsteonPLMDimmerDevice(hass, 
-                                                 device, 
-                                                 stateKey, 
+        state_list.append(InsteonPLMDimmerDevice(hass,
+                                                 device,
+                                                 stateKey,
                                                  newnames))
 
     async_add_devices(state_list)
