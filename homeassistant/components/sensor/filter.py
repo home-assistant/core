@@ -56,17 +56,17 @@ DEFAULT_NAME_TEMPLATE = "{} filter {}"
 DEFAULT_SIZE = 5
 ICON = 'mdi: chart-line-variant'
 
-#add here user customizable OPTIONAL filter arguments
+# Add here user customizable OPTIONAL filter arguments
 FILTER_SCHEMA = vol.Schema({
-    vol.Optional('time_constant'): vol.Coerce(int), 
-    vol.Optional('constant'): vol.Coerce(int) 
+    vol.Optional('time_constant'): vol.Coerce(int),
+    vol.Optional('constant'): vol.Coerce(int)
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Required(CONF_FILTER_NAME): 
+    vol.Required(CONF_FILTER_NAME):
         vol.Any(TYPE_LOWPASS, TYPE_OUTLIER),
-    vol.Optional(CONF_FILTER_OPTIONS): FILTER_SCHEMA, 
+    vol.Optional(CONF_FILTER_OPTIONS): FILTER_SCHEMA,
     vol.Optional(CONF_NAME, default=None): cv.string,
 })
 
@@ -80,9 +80,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if name is None:
         name = DEFAULT_NAME_TEMPLATE.format(entity_id, filtername)
 
-    async_add_devices(
-        [FilterSensor(hass, name, entity_id, filtername,
-        config.get(CONF_FILTER_OPTIONS, dict()))], True)
+    async_add_devices([
+            FilterSensor(hass, name, entity_id, filtername,
+                         config.get(CONF_FILTER_OPTIONS, dict()))
+        ], True)
     return True
 
 
@@ -98,7 +99,8 @@ class FilterSensor(Entity):
         self._unit_of_measurement = None
         self._pre_filter_state = self._state = None
 
-        self._filterdata = self.filterdata_factory(FILTER_MAP[filtername], **filter_args)()
+        self._filterdata = self.filterdata_factory(FILTER_MAP[filtername],
+                                                   **filter_args)()
 
         @callback
         # pylint: disable=invalid-name
@@ -111,8 +113,8 @@ class FilterSensor(Entity):
                 self._pre_filter_state = new_state.state
                 self._filterdata.update(self._pre_filter_state)
             except ValueError:
-                _LOGGER.error("This component can only filter integer or float values")
-                return 
+                _LOGGER.error("This component can only filter numbers")
+                return
 
             hass.async_add_job(self.async_update_ha_state, True)
 
@@ -122,7 +124,7 @@ class FilterSensor(Entity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return not self._pre_filter_state is None 
+        return self._pre_filter_state is not None
 
     @property
     def name(self):
@@ -163,8 +165,8 @@ class FilterSensor(Entity):
         """Factory to create filters with user provided arguments."""
         class FilterData(object):
             def __init__(self, initial=None):
-                self._data = initial 
-            
+                self._data = initial
+
             @property
             @Filter(filter_function, **kwargs)
             def data(self):
@@ -174,4 +176,3 @@ class FilterSensor(Entity):
                 self._data = float(new_data)
 
         return FilterData
-
