@@ -65,6 +65,7 @@ class Filter(object):
     @staticmethod
     def _outlier(new_state, states, **kwargs):
         """BASIC outlier filter.
+
         arguments:
             constant: int
         """
@@ -79,8 +80,9 @@ class Filter(object):
     @staticmethod
     def _lowpass(new_state, states, **kwargs):
         """BASIC Low Pass Filter.
+
         arguments:
-            time_constant: int 
+            time_constant: int
         """
         time_constant = kwargs.pop('time_constant', 4)
         if len(kwargs) != 0:
