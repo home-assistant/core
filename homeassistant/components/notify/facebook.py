@@ -20,8 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PAGE_ACCESS_TOKEN = 'page_access_token'
 BASE_URL = 'https://graph.facebook.com/v2.6/me/messages'
-CREATE_BROADCAST_MSG_URL = 'https://graph.facebook.com/v2.11/me/message_creatives'
-BROADCAST_MSG_URL = 'https://graph.facebook.com/v2.11/me/broadcast_messages'
+CR_BRCST_MSG_URL = 'https://graph.facebook.com/v2.11/me/message_creatives'
+SND_BRCST_MSG_URL = 'https://graph.facebook.com/v2.11/me/broadcast_messages'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string,
@@ -65,10 +65,10 @@ class FacebookNotificationService(BaseNotificationService):
 
             _LOGGER.debug("FB Messager broadcast body full  %s : ", brdcast_create_body)
 
-            resp = requests.post(CREATE_BROADCAST_MSG_URL, data=json.dumps(brdcast_create_body),
-                                 params=payload,
-                                 headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
-                                 timeout=10)
+            resp = requests.post(CR_BRCST_MSG_URL, data=json.dumps(brdcast_create_body),
+                     params=payload,
+                     headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
+                     timeout=10)
             _LOGGER.info("FB Messager broadcast id %s : ", resp.json())
 
             # at this point we get broadcast id
@@ -77,10 +77,10 @@ class FacebookNotificationService(BaseNotificationService):
                 "notification_type": "REGULAR",
             }
 
-            resp = requests.post(BROADCAST_MSG_URL, data=json.dumps(brdcast_body),
-                                 params=payload,
-                                 headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
-                                 timeout=10)
+            resp = requests.post(SND_BRCST_MSG_URL, data=json.dumps(brdcast_body),
+                     params=payload,
+                     headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
+                     timeout=10)
             if resp.status_code != 200:
                 obj = resp.json()
                 error_message = obj['error']['message']
@@ -115,5 +115,3 @@ class FacebookNotificationService(BaseNotificationService):
                     _LOGGER.error(
                         "Error %s : %s (Code %s)", resp.status_code, error_message,
                         error_code)
-
-
