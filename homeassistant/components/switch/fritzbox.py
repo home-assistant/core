@@ -1,36 +1,36 @@
 """
-Support for AVM Fritz!Box fritzhome switch devices.
+Support for AVM Fritz!Box smarthome switch devices.
 
 For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/switch.fritzhome/
+http://home-assistant.io/components/switch.fritzbox/
 """
 import logging
 
 import requests
 
-from homeassistant.components.fritzhome import DOMAIN as FRITZHOME_DOMAIN
+from homeassistant.components.fritzhome import DOMAIN as FRITZEBOX_DOMAIN
 from homeassistant.components.switch import SwitchDevice
 
-DEPENDENCIES = ['fritzhome']
+DEPENDENCIES = ['fritzbox']
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Fritzhome switch platform."""
-    fritz = hass.data[FRITZHOME_DOMAIN]
+    """Set up the Fritzbox switch platform."""
+    fritz = hass.data[FRITZBOX_DOMAIN]
     device_list = fritz.get_devices()
 
     devices = []
     for device in device_list:
         if device.has_switch:
-            devices.append(FritzhomeSwitch(device, fritz))
+            devices.append(FritzboxSwitch(device, fritz))
 
     add_devices(devices)
 
 
-class FritzhomeSwitch(SwitchDevice):
-    """The switch class for Fritzhome switches."""
+class FritzboxSwitch(SwitchDevice):
+    """The switch class for Fritzbox switches."""
 
     def __init__(self, device, fritz):
         """Initialize the switch."""

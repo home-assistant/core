@@ -1,21 +1,21 @@
 """
-Support for AVM Fritz!Box fritzhome thermostate devices.
+Support for AVM Fritz!Box smarthome thermostate devices.
 
 For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/climate.fritzhome/
+http://home-assistant.io/components/climate.fritzbox/
 """
 import logging
 
 import requests
 
-from homeassistant.components.fritzhome import DOMAIN as FRITZHOME_DOMAIN
+from homeassistant.components.fritzhome import DOMAIN as FRITZBOX_DOMAIN
 from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO, STATE_HEAT, STATE_MANUAL,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS)
 
-DEPENDENCIES = ['fritzhome']
+DEPENDENCIES = ['fritzbox']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,20 +32,20 @@ ATTR_STATE_LOW_BAT = 'low_battery'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Fritzhome thermostat platform."""
-    fritz = hass.data[FRITZHOME_DOMAIN]
+    """Set up the Fritzbox smarthome thermostat platform."""
+    fritz = hass.data[FRITZBOX_DOMAIN]
     device_list = fritz.get_devices()
 
     devices = []
     for device in device_list:
         if device.has_thermostat:
-            devices.append(FritzhomeThermostat(device, fritz))
+            devices.append(FritzboxThermostat(device, fritz))
 
     add_devices(devices)
 
 
-class FritzhomeThermostat(ClimateDevice):
-    """The thermostat class for Fritzhome thermostates."""
+class FritzboxThermostat(ClimateDevice):
+    """The thermostat class for Fritzbox smarthome thermostates."""
 
     def __init__(self, device, fritz):
         """Initialize the thermostat."""
@@ -151,5 +151,5 @@ class FritzhomeThermostat(ClimateDevice):
             self._comfort_temperature = self._device.comfort_temperature
             self._eco_temperature = self._device.eco_temperature
         except requests.exceptions.HTTPError as ex:
-            _LOGGER.warning("Fritzhome connection error: %s", ex)
+            _LOGGER.warning("Fritzbox connection error: %s", ex)
             self._fritz.login()

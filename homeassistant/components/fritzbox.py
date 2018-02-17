@@ -1,8 +1,8 @@
 """
-Support for AVM Fritz!Box fritzhome devices.
+Support for AVM Fritz!Box smarthome devices.
 
 For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/fritzhome/
+http://home-assistant.io/components/fritzbox/
 """
 import logging
 
@@ -19,7 +19,7 @@ REQUIREMENTS = ['pyfritzhome==0.3.5']
 
 SUPPORTED_DOMAINS = ['climate', 'switch']
 
-DOMAIN = 'fritzhome'
+DOMAIN = 'fritzbox'
 
 DEFAULT_HOST = 'fritz.box'
 
@@ -34,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Set up the fritzhome component."""
+    """Set up the fritzbox component."""
     from pyfritzhome import Fritzhome, LoginError
 
     conf = config[DOMAIN]
