@@ -12,14 +12,17 @@ FILTERS = [FILTER_LOWPASS, FILTER_OUTLIER]
 
 class Filter(object):
     """Filter outlier states, and smooth things out."""
+   
     logger = None
-    def __init__(self, filter_algorithm, window_size=DEFAULT_WINDOW_SIZE, **kwargs):
+    
+    def __init__(self, filter_algorithm, window_size=DEFAULT_WINDOW_SIZE,
+                 **kwargs):
         """Decorator constructor, selects algorithm and configures windows."""
         module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
         Filter.logger = logging.getLogger(module_name)
         Filter.logger.debug("Filter %s on %s", filter_algorithm, module_name)
         self.filter = None
-        self.filter_args = kwargs 
+        self.filter_args = kwargs
         self.states = deque(maxlen=window_size)
 
         if filter_algorithm in FILTERS:
@@ -53,11 +56,11 @@ class Filter(object):
                 return None
             except ValueError as e:
                 Filter.logger.debug("Invalid Value: %s, reason: %s",
-                             float(new_state), e)
+                                    float(new_state), e)
                 return last_state
             states.append(filtered_state)
             Filter.logger.debug("filter(%s) -> %s",
-                         new_state, filtered_state)
+                                new_state, filtered_state)
             return filtered_state
 
         return func_wrapper
