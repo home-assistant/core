@@ -184,8 +184,8 @@ class BraviaTVDevice(MediaPlayerDevice):
             else:
                 filtered_dict = {title: uri for (title, uri) in
                                  self._content_mapping.items()
-                                 if any(filter_title in title
-                                 for filter_title in self._source_filter)}
+                                 if any(filter_title in title for filter_title
+                                        in self._source_filter)}
                 for key in filtered_dict:
                     self._source_list.append(key)
 
