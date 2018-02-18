@@ -7,6 +7,7 @@ https://home-assistant.io/components/media_player.cast/
 # pylint: disable=import-error
 import asyncio
 import logging
+from typing import Tuple
 
 import voluptuous as vol
 
@@ -38,10 +39,10 @@ SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_PLAY
 
-INTERNAL_DISCOVERY_RUNNING = 'cast_discovery_running'
+INTERNAL_DISCOVERY_RUNNING_KEY = 'cast_discovery_running'
 # UUID -> CastDevice mapping; None key has all CastDevices without UUID
 ADDED_CAST_DEVICES_KEY = 'cast_added_cast_devices'
-# Stores every discovered pychromecast.Chromecast
+# Stores every discovered (host, port, uuid)
 KNOWN_CHROMECASTS_KEY = 'cast_all_chromecasts'
 
 SIGNAL_CAST_DISCOVERED = 'cast_discovered'
@@ -54,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def _setup_internal_discovery(hass: HomeAssistantType) -> None:
     """Set up the pychromecast internal discovery."""
-    if hass.data.get(INTERNAL_DISCOVERY_RUNNING, False):
+    if hass.data.get(INTERNAL_DISCOVERY_RUNNING_KEY, False):
         # Internal discovery is already running
         return
 
@@ -62,24 +63,33 @@ def _setup_internal_discovery(hass: HomeAssistantType) -> None:
 
     def internal_callback(name):
         """Called when zeroconf has discovered a new chromecast."""
+        mdns = listener.services[name]
+        ip_address, port, uuid, model_name, friendly_name = mdns
+        key = (ip_address, port, uuid)
+
+        if key in hass.data[KNOWN_CHROMECASTS_KEY]:
+            _LOGGER.debug("Discovered previous chromecast %s", mdns)
+            return
+
+        _LOGGER.debug("Discovered new chromecast %s", mdns)
         try:
             chromecast = pychromecast._get_chromecast_from_host(
-                listener.services[name], blocking=True)
-        except pychromecast.ChromecastConnectionError:  # noqa
-            pass
-        else:
-            _LOGGER.debug("Found chromecast %s", chromecast)
-            hass.data[KNOWN_CHROMECASTS_KEY].append(chromecast)
-            dispatcher_send(hass, SIGNAL_CAST_DISCOVERED, chromecast)
+                mdns, blocking=True)
+        except pychromecast.ChromecastConnectionError:
+            _LOGGER.debug("Can't set up cast with mDNS info %s. "
+                          "Assuming it's not a Chromecast", mdns)
+            return
+        hass.data[KNOWN_CHROMECASTS_KEY][key] = chromecast
+        dispatcher_send(hass, SIGNAL_CAST_DISCOVERED, chromecast)
 
     _LOGGER.debug("Starting internal pychromecast discovery.")
     listener, browser = pychromecast.start_discovery(internal_callback)
-    hass.data[INTERNAL_DISCOVERY_RUNNING] = True
+    hass.data[INTERNAL_DISCOVERY_RUNNING_KEY] = True
 
     def stop_discovery():
         """Stops discovery of new chromecasts."""
         pychromecast.stop_discovery(browser)
-        hass.data[INTERNAL_DISCOVERY_RUNNING] = False
+        hass.data[INTERNAL_DISCOVERY_RUNNING_KEY] = False
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_discovery)
 
@@ -91,34 +101,29 @@ def _async_create_cast_device(hass, chromecast):
     Returns None if the cast device has already been added. Additionally,
     automatically updates existing chromecast entities.
     """
-    new_host = (chromecast.host, chromecast.port)
-    known_casts = hass.data[ADDED_CAST_DEVICES_KEY]
 
     if chromecast.uuid is None:
-        # Found a cast without UUID.
-        empty_casts = known_casts.setdefault(None, [])
-
-        if any((cast.cast.host, cast.cast.port) == new_host
-               for cast in empty_casts):
-            # Already discovered this device with same host+port, ignore.
-            return None
-        cast_device = CastDevice(chromecast)
-        empty_casts.append(cast_device)
+        # Found a cast without UUID, we don't store it because we won't be able
+        # to update it anyway.
         return CastDevice(chromecast)
 
     # Found a cast with UUID
+    known_casts = hass.data[ADDED_CAST_DEVICES_KEY]
     old_cast_device = known_casts.get(chromecast.uuid)
     if old_cast_device is None:
-        # New cast device
-        cast_device = CastDevice(chromecast)
-        known_casts[chromecast.uuid] = cast_device
+        # -> New cast device
+        cast_device = known_casts[chromecast.uuid] = CastDevice(chromecast)
         return cast_device
 
-    old_host = (old_cast_device.cast.host, old_cast_device.cast.port)
-    if old_host != new_host:
-        # Cast device changed host
-        old_cast_device.async_set_chromecast(chromecast)
-    # Already discovered this device with same host+port, no need to update
+    # -> Cast device changed host
+
+    # Remove old pychromecast.Chromecast from global list, because it isn't
+    # valid anymore
+    key = (old_cast_device.cast.host,
+           old_cast_device.cast.port,
+           old_cast_device.cast.uuid)
+    hass.data[KNOWN_CHROMECASTS_KEY].pop(key)
+    old_cast_device.async_set_chromecast(chromecast)
     return None
 
 
@@ -131,7 +136,7 @@ def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     # Import CEC IGNORE attributes
     pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC, [])
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, {})
-    hass.data.setdefault(KNOWN_CHROMECASTS_KEY, [])
+    hass.data.setdefault(KNOWN_CHROMECASTS_KEY, {})
 
     # None -> use discovery; (host, port) -> manually specify chromecast.
     want_host = None
@@ -155,7 +160,7 @@ def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
             """Callback for when a new chromecast is discovered."""
             if want_host is not None and \
                     (chromecast.host, chromecast.port) != want_host:
-                return  # for groups
+                return  # for groups, only add requested device
             cast_device = _async_create_cast_device(hass, chromecast)
 
             if cast_device is not None:
@@ -164,7 +169,7 @@ def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         async_dispatcher_connect(hass, SIGNAL_CAST_DISCOVERED,
                                  async_cast_discovered)
         # Re-play the callback for all past chromecasts
-        for chromecast in hass.data[KNOWN_CHROMECASTS_KEY]:
+        for chromecast in hass.data[KNOWN_CHROMECASTS_KEY].values():
             async_cast_discovered(chromecast)
 
         hass.async_add_job(_setup_internal_discovery, hass)
@@ -176,7 +181,8 @@ def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
             _LOGGER.warning("Can't set up chromecast on %s", want_host[0])
             raise
         else:
-            hass.data[KNOWN_CHROMECASTS_KEY].append(chromecast)
+            key = (chromecast.host, chromecast.port, chromecast.uuid)
+            hass.data[KNOWN_CHROMECASTS_KEY][key] = chromecast
             cast_device = _async_create_cast_device(hass, chromecast)
             if cast_device is not None:
                 async_add_devices([cast_device])
