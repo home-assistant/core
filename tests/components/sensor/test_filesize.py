@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from homeassistant.components.sensor.filesize import CONF_FILE_PATHS
 from homeassistant.setup import setup_component
+import homeassistant.core as ha
 from tests.common import get_test_home_assistant, mock_registry
 
 
@@ -23,6 +24,7 @@ class TestFileSensor(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.config = ha.Config()
         mock_registry(self.hass)
 
     def teardown_method(self, method):
@@ -48,9 +50,10 @@ class TestFileSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'filesize',
-                CONF_FILE_PATHS: ['tests/components/sensor/test_filesize.py']}
+                CONF_FILE_PATHS: ['/tests/components/sensor/test_filesize.py']}
         }
 
+        self.config.whitelist_external_dirs = set(('/tests/components/sensor/'))
         self.assertTrue(
             setup_component(self.hass, 'sensor', config))
 
