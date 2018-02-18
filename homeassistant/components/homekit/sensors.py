@@ -48,14 +48,3 @@ class TemperatureSensor(HomeAccessory):
         temperature = new_state.state
         if temperature != STATE_UNKNOWN:
             self.char_temp.set_value(float(temperature))
-
-        if self._entity_id == 'sensor.weather_1':
-            _LOGGER.debug('Set temp: -2')
-            self.char_temp.value = -2
-            self.char_temp.notify()
-
-        if self._entity_id == 'sensor.weather_2':
-            _LOGGER.debug('Set temp: -1')
-            self.char_temp.set_value(float(-1))
-
-        _LOGGER.debug(self.char_temp.get_value())

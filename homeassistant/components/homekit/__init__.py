@@ -37,10 +37,6 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup the homekit component."""
-    # pylint: disable=unused-variable
-    from .covers import Window  # noqa F401
-    # pylint: disable=unused-variable
-    from .sensors import TemperatureSensor # noqa F401
     _LOGGER.debug("Begin setup homekit")
 
     conf = config[DOMAIN]
@@ -53,6 +49,14 @@ def async_setup(hass, config):
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_START, homekit.start_driver)
     return True
+
+
+def import_types():
+    """Import all types from files in the homekit dir."""
+    # pylint: disable=unused-variable
+    from .covers import Window  # noqa F401
+    # pylint: disable=unused-variable
+    from .sensors import TemperatureSensor # noqa F401
 
 
 def get_accessory(hass, state):
@@ -97,26 +101,26 @@ class Homekit():
     def start_driver(self, event):
         """Start the accessory driver."""
         from pyhap.accessory_driver import AccessoryDriver
-        _LOGGER.debug('Start driver')
-        self._hass.bus.async_listen_once(
+        self._hass.bus.listen_once(
             EVENT_HOMEASSISTANT_STOP, self.stop_driver)
 
-        _LOGGER.debug('Start adding accessories.')
-        for state in self._hass.states.async_all():
+        _LOGGER.debug("Import type files.")
+        import_types()
+        _LOGGER.debug("Start adding accessories.")
+        for state in self._hass.states.all():
             acc = get_accessory(self._hass, state)
             if acc is not None:
                 self.bridge.add_accessory(acc)
 
         ip_address = get_local_ip()
-        # ip_address = yield from self._hass.async_add_job(get_local_ip)
         path = self._hass.config.path(HOMEKIT_FILE)
         self.driver = AccessoryDriver(self.bridge, self._port,
                                       ip_address, path)
-        _LOGGER.debug('Driver started')
+        _LOGGER.debug("Driver started")
         self.driver.start()
 
     def stop_driver(self, event):
         """Stop the accessory driver."""
-        _LOGGER.debug('Driver stop')
+        _LOGGER.debug("Driver stop")
         if self.driver is not None:
             self.driver.stop()
