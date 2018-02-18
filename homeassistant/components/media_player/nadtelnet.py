@@ -1,8 +1,8 @@
 """
-Support for interfacing with NAD receivers through RS-232.
+Support for interfacing with NAD receivers through telnet.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.nad/
+https://home-assistant.io/components/media_player.nadtelnet/
 """
 import logging
 
@@ -29,7 +29,7 @@ SUPPORT_NAD = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
     SUPPORT_SELECT_SOURCE
 
-CONF_SERIAL_PORT = 'serial_port'
+CONF_NAD_HOST = 'host'
 CONF_MIN_VOLUME = 'min_volume'
 CONF_MAX_VOLUME = 'max_volume'
 CONF_SOURCE_DICT = 'sources'
@@ -39,7 +39,7 @@ SOURCE_DICT_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SERIAL_PORT): cv.string,
+    vol.Required(CONF_NAD_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MIN_VOLUME, default=DEFAULT_MIN_VOLUME): int,
     vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): int,
@@ -49,24 +49,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the NAD platform."""
-    from nad_receiver import NADReceiver
-    add_devices([NAD(
+    from nad_receiver import NADReceiverTelnet
+    add_devices([NADTelnet(
         config.get(CONF_NAME),
-        NADReceiver(config.get(CONF_SERIAL_PORT)),
+        NADReceiverTelnet(config.get(CONF_NAD_HOST)),
         config.get(CONF_MIN_VOLUME),
         config.get(CONF_MAX_VOLUME),
         config.get(CONF_SOURCE_DICT)
     )], True)
 
 
-class NAD(MediaPlayerDevice):
+class NADTelnet(MediaPlayerDevice):
     """Representation of a NAD Receiver."""
 
     def __init__(self, name, nad_receiver, min_volume, max_volume,
                  source_dict):
         """Initialize the NAD Receiver device."""
         self._name = name
-        self._nad_receiver = nad_receiver
+        self._receiver = nad_receiver
         self._min_volume = min_volume
         self._max_volume = max_volume
         self._source_dict = source_dict
@@ -74,24 +74,6 @@ class NAD(MediaPlayerDevice):
                                  self._source_dict.items()}
 
         self._volume = self._state = self._mute = self._source = None
-
-    def calc_volume(self, decibel):
-        """
-        Calculate the volume given the decibel.
-
-        Return the volume (0..1).
-        """
-        return abs(self._min_volume - decibel) / abs(
-            self._min_volume - self._max_volume)
-
-    def calc_db(self, volume):
-        """
-        Calculate the decibel given the volume.
-
-        Return the dB.
-        """
-        return self._min_volume + round(
-            abs(self._min_volume - self._max_volume) * volume)
 
     @property
     def name(self):
@@ -105,19 +87,24 @@ class NAD(MediaPlayerDevice):
 
     def update(self):
         """Retrieve latest state."""
-        if self._nad_receiver.main_power('?') == 'Off':
+        try:
+            if self._receiver.main_power('?') == 'Off':
+                self._state = STATE_OFF
+            else:
+                self._state = STATE_ON
+
+            if self._receiver.main_mute('?') == 'Off':
+                self._mute = False
+            else:
+                self._mute = True
+
+            self._volume = self._receiver.main_volume('?')
+            self._source = self._source_dict.get(
+                self._receiver.main_source('?'))
+        except:
+            # Could be that the NAD got turned off
             self._state = STATE_OFF
-        else:
-            self._state = STATE_ON
-
-        if self._nad_receiver.main_mute('?') == 'Off':
-            self._mute = False
-        else:
-            self._mute = True
-
-        self._volume = self.calc_volume(self._nad_receiver.main_volume('?'))
-        self._source = self._source_dict.get(
-            self._nad_receiver.main_source('?'))
+            _LOGGER.debug("Communications with NAD failed")
 
     @property
     def volume_level(self):
@@ -136,27 +123,51 @@ class NAD(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn the media player off."""
-        self._nad_receiver.main_power('=', 'Off')
+        try:
+            self._receiver.main_power('=', 'Off')
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
 
     def turn_on(self):
         """Turn the media player on."""
-        self._nad_receiver.main_power('=', 'On')
+        try:
+            self._receiver.main_power('=', 'On')
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
 
     def volume_up(self):
         """Volume up the media player."""
-        self._nad_receiver.main_volume('+')
+        try:
+            self._receiver.main_volume('+')
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
 
     def volume_down(self):
         """Volume down the media player."""
-        self._nad_receiver.main_volume('-')
+        try:
+            self._receiver.main_volume('-')
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self._nad_receiver.main_volume('=', self.calc_db(volume))
+        try:
+            self._receiver.main_volume('=', volume)
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
 
     def select_source(self, source):
         """Select input source."""
-        self._nad_receiver.main_source('=', self._reverse_mapping.get(source))
+        try:
+            self._receiver.main_source('=', self._reverse_mapping.get(source))
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
 
     @property
     def source(self):
@@ -170,7 +181,11 @@ class NAD(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
-        if mute:
-            self._nad_receiver.main_mute('=', 'On')
-        else:
-            self._nad_receiver.main_mute('=', 'Off')
+        try:
+            if mute:
+                self._receiver.main_mute('=', 'On')
+            else:
+                self._receiver.main_mute('=', 'Off')
+        except:
+            _LOGGER.debug("Communications with NAD failed")
+            pass
