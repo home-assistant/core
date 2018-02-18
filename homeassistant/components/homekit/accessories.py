@@ -19,10 +19,10 @@ class HomeAccessory(Accessory):
         """Set the category of the accessory."""
         self.category = category
 
-    def set_services(self, services):
+    def add_preload_service(self, service):
         """Define the services to be available for the accessory."""
         from pyhap.loader import get_serv_loader
-        self.add_service(get_serv_loader().get(services))
+        self.add_service(get_serv_loader().get(service))
 
     def set_accessory_info(self, model, manufacturer=MANUFACTURER,
                            serial_number='0000'):

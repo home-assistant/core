@@ -24,8 +24,8 @@ class Window(HomeAccessory):
         """Initialize a Window accessory object."""
         super().__init__(display_name)
         self.set_category(self.ALL_CATEGORIES.WINDOW)
-        self.set_services(SERVICES_WINDOW_COVERING)
         self.set_accessory_info(entity_id)
+        self.add_preload_service(SERVICES_WINDOW_COVERING)
 
         self._hass = hass
         self._entity_id = entity_id

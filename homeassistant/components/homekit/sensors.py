@@ -24,8 +24,8 @@ class TemperatureSensor(HomeAccessory):
         """Initialize a TemperatureSensor accessory object."""
         super().__init__(display_name)
         self.set_category(self.ALL_CATEGORIES.SENSOR)
-        self.set_services(SERVICES_TEMPERATURE_SENSOR)
         self.set_accessory_info(entity_id)
+        self.add_preload_service(SERVICES_TEMPERATURE_SENSOR)
 
         self._hass = hass
         self._entity_id = entity_id
