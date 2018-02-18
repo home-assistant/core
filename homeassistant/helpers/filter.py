@@ -83,7 +83,7 @@ class Filter(object):
         Args:
             new_state (float): new value to the series
             states (deque): previous data series
-            constant (int): stdev multiplier.
+            constant (int): median multiplier/band range
 
         Returns:
             the original new_state
@@ -111,6 +111,8 @@ class Filter(object):
 
         """
         time_constant = kwargs.pop('time_constant', 4)
+        precision = kwargs.pop('precision', None)
+
         if len(kwargs) != 0:
             Filter.logger.error("unrecognized params passed in: %s", kwargs)
 
@@ -122,4 +124,8 @@ class Filter(object):
             # if we don't have enough states to run the filter
             # just accept the new value
             filtered = new_state
-        return round(filtered, 2)
+
+        if precision is None:
+            return filtered
+        else:
+            return round(filtered, precision)
