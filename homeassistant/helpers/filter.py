@@ -89,11 +89,11 @@ class Filter(object):
             the original new_state
 
         """
-        constant = kwargs.pop('constant', 10)
-
+        constant = kwargs.pop('constant', 0.10)
+        
         if (len(states) > 1 and
                 abs(new_state - statistics.median(states)) >
-                constant*statistics.stdev(states)):
+                constant*statistics.median(states)):
             raise ValueError("Outlier detected")
         return new_state
 
