@@ -183,7 +183,7 @@ class ApplicationListener:
 
             component = None
             profile_clusters = ([], [])
-            device_key = "{}-{}".format(str(device.ieee), endpoint_id)
+            device_key = "{}-{}".format(device.ieee, endpoint_id)
             node_config = self._config[DOMAIN][CONF_DEVICE_CONFIG].get(
                 device_key, {})
 
@@ -213,7 +213,7 @@ class ApplicationListener:
                     'in_clusters': {c.cluster_id: c for c in in_clusters},
                     'out_clusters': {c.cluster_id: c for c in out_clusters},
                     'new_join': join,
-                    'unique_id': "{}-{}".format(device.ieee, endpoint_id),
+                    'unique_id': device_key,
                 }
                 discovery_info.update(discovered_info)
                 self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
@@ -234,17 +234,17 @@ class ApplicationListener:
                     continue
 
                 component = zha_const.SINGLE_CLUSTER_DEVICE_CLASS[cluster_type]
+                cluster_key = "{}-{}".format(device_key, cluster_id)
                 discovery_info = {
                     'application_listener': self,
                     'endpoint': endpoint,
                     'in_clusters': {cluster.cluster_id: cluster},
                     'out_clusters': {},
                     'new_join': join,
-                    'unique_id': "{}-{}-{}".format(
-                        device.ieee, endpoint_id, cluster_id),
+                    'unique_id': cluster_key,
+                    'entity_suffix': '_{}'.format(cluster_id),
                 }
                 discovery_info.update(discovered_info)
-                cluster_key = "{}-{}".format(device_key, cluster_id)
                 self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
 
                 yield from discovery.async_load_platform(
@@ -272,23 +272,26 @@ class Entity(entity.Entity):
         ieee = endpoint.device.ieee
         ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
         if manufacturer and model is not None:
-            self.entity_id = "{}.{}_{}_{}_{}".format(
+            self.entity_id = "{}.{}_{}_{}_{}{}".format(
                 self._domain,
                 slugify(manufacturer),
                 slugify(model),
                 ieeetail,
                 endpoint.endpoint_id,
+                kwargs.get('entity_suffix', ''),
             )
             self._device_state_attributes['friendly_name'] = "{} {}".format(
                 manufacturer,
                 model,
             )
         else:
-            self.entity_id = "{}.zha_{}_{}".format(
+            self.entity_id = "{}.zha_{}_{}{}".format(
                 self._domain,
                 ieeetail,
                 endpoint.endpoint_id,
+                kwargs.get('entity_suffix', ''),
             )
+
         for cluster in in_clusters.values():
             cluster.add_listener(self)
         for cluster in out_clusters.values():
@@ -370,8 +373,7 @@ def get_discovery_info(hass, discovery_info):
 
     discovery_key = discovery_info.get('discovery_key', None)
     all_discovery_info = hass.data.get(DISCOVERY_KEY, {})
-    discovery_info = all_discovery_info.get(discovery_key, None)
-    return discovery_info
+    return all_discovery_info.get(discovery_key, None)
 
 
 @asyncio.coroutine
