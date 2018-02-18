@@ -612,6 +612,9 @@ pushetta==1.0.15
 # homeassistant.components.light.rpi_gpio_pwm
 pwmled==1.2.1
 
+# homeassistant.components.august
+py-august==0.3.0
+
 # homeassistant.components.canary
 py-canary==0.4.0
 
