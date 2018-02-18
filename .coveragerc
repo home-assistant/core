@@ -208,6 +208,9 @@ omit =
     homeassistant/components/skybell.py
     homeassistant/components/*/skybell.py
 
+    homeassistant/components/smappee.py
+    homeassistant/components/*/smappee.py
+
     homeassistant/components/tado.py
     homeassistant/components/*/tado.py
 
