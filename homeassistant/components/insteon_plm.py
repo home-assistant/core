@@ -11,23 +11,9 @@ import collections
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import (
-    CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-
-from insteonplm.states.onOff import (OnOffSwitch,
-                                     OnOffSwitch_OutletTop,
-                                     OnOffSwitch_OutletBottom,
-                                     OpenClosedRelay)
-
-from insteonplm.states.dimmable import (DimmableSwitch,
-                                        DimmableSwitch_Fan)
-
-from insteonplm.states.sensor import (VariableSensor,
-                                      OnOffSensor,
-                                      SmokeCO2Sensor,
-                                      IoLincSensor)
 
 REQUIREMENTS = ['insteonplm==0.8.2']
 
@@ -52,6 +38,20 @@ CONFIG_SCHEMA = vol.Schema({
 def async_setup(hass, config):
     """Set up the connection to the PLM."""
     import insteonplm
+
+    import insteonplm.states.onOff.OnOffSwitch
+    import insteonplm.states.onOffOn.OffSwitch_OutletTop
+    import insteonplm.states.onOffOn.OffSwitch_OutletBottom
+    import insteonplm.states.onOff.OpenClosedRelay
+
+    import insteonplm.states.dimmable.DimmableSwitch
+    import insteonplm.states.dimmable.DimmableSwitch_Fan
+
+    import insteonplm.states.sensor.VariableSensor
+    import insteonplm.states.sensor.OnOffSensor
+    import insteonplm.states.sensor.SmokeCO2Sensor
+    import insteonplm.states.sensor.IoLincSensor
+
     ipdb = IPDB()
 
     conf = config[DOMAIN]
@@ -148,6 +148,19 @@ State = collections.namedtuple('Product', 'stateType platform')
 class IPDB(object):
     """Embodies the INSTEON Product Database static data
 and access methods."""
+
+    import insteonplm.states.onOff.OnOffSwitch
+    import insteonplm.states.onOffOn.OffSwitch_OutletTop
+    import insteonplm.states.onOffOn.OffSwitch_OutletBottom
+    import insteonplm.states.onOff.OpenClosedRelay
+
+    import insteonplm.states.dimmable.DimmableSwitch
+    import insteonplm.states.dimmable.DimmableSwitch_Fan
+
+    import insteonplm.states.sensor.VariableSensor
+    import insteonplm.states.sensor.OnOffSensor
+    import insteonplm.states.sensor.SmokeCO2Sensor
+    import insteonplm.states.sensor.IoLincSensor
 
     states = [
         State(OnOffSwitch_OutletTop, 'switch'),
