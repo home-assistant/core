@@ -112,7 +112,7 @@ class FroniusSensor(Entity):
 
     @asyncio.coroutine
     def async_update(self):
-        """Retrieve latest state."""
+        """Retrieve and update latest state."""
         _LOGGER.debug("Update {}".format(self.name))
 
         values = {}
@@ -133,6 +133,7 @@ class FroniusSensor(Entity):
 
     @asyncio.coroutine
     def _update(self):
+        """Get the values for the current state."""
         if self._type == TYPE_INVERTER:
             if self._scope == SCOPE_SYSTEM:
                 return self.data.current_system_inverter_data()
@@ -148,6 +149,7 @@ class FroniusSensor(Entity):
             return self.data.current_power_flow()
 
     def _get_attributes(self, values):
+        """Map the attributes and ensure proper values."""  
         attributes = {}
         for key in values:
             if 'value' in values[key] and values[key]['value']:
