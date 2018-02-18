@@ -136,7 +136,6 @@ class IPDB(object):
     """Embodies the INSTEON Product Database static data
 and access methods."""
 
-
     from insteonplm.states.onOff import (OnOffSwitch,
                                          OnOffSwitch_OutletTop,
                                          OnOffSwitch_OutletBottom,
