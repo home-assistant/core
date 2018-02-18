@@ -18,16 +18,16 @@ import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
 from homeassistant.components.media_player import (
-    SUPPORT_PLAY, SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_PAUSE, PLATFORM_SCHEMA,
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
-    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SHUFFLE_SET, ATTR_MEDIA_ENQUEUE, MediaPlayerDevice,
-    DOMAIN, STATE_OFF)
+    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA,
+    SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_HOSTS, STATE_IDLE, STATE_PAUSED,
-    STATE_PLAYING, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
-    ATTR_ENTITY_ID)
+    ATTR_ENTITY_ID, CONF_HOST, CONF_HOSTS, CONF_NAME, CONF_PORT,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_IDLE,
+    STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -41,9 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 
 STATE_GROUPED = 'grouped'
 
-ATTR_MODEL = 'model'
-ATTR_MODEL_NAME = 'model_name'
-ATTR_BRAND = 'brand'
 ATTR_MASTER = 'master'
 ATTR_SLEEP = 'sleep'
 
@@ -205,9 +202,6 @@ class BluesoundPlayer(MediaPlayerDevice):
         self._polling_session = async_get_clientsession(hass)
         self._polling_task = None  # The actual polling task.
         self._name = name
-        self._brand = None
-        self._model = None
-        self._model_name = None
         self._icon = None
         self._capture_items = []
         self._services_items = []
@@ -251,14 +245,8 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         if not self._name:
             self._name = self._sync_status.get('@name', self.host)
-        if not self._brand:
-            self._brand = self._sync_status.get('@brand', self.host)
-        if not self._model:
-            self._model = self._sync_status.get('@model', self.host)
         if not self._icon:
             self._icon = self._sync_status.get('@icon', self.host)
-        if not self._model_name:
-            self._model_name = self._sync_status.get('@modelName', self.host)
 
         master = self._sync_status.get('master', None)
         if master is not None:
@@ -814,9 +802,6 @@ class BluesoundPlayer(MediaPlayerDevice):
             sleep = self._status.get('sleep', 0)
 
         return {
-            ATTR_MODEL: self._model,
-            ATTR_MODEL_NAME: self._model_name,
-            ATTR_BRAND: self._brand,
             ATTR_SLEEP: sleep
         }
 
