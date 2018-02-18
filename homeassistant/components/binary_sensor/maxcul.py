@@ -7,6 +7,8 @@ https://home-assistant.io/components/binary_sensor.maxcul/
 import logging
 import voluptuous as vol
 
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import dispatcher_connect
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.binary_sensor import (
@@ -16,7 +18,7 @@ from homeassistant.const import (
     CONF_ID, CONF_DEVICES, CONF_DEVICE_CLASS
 )
 from homeassistant.components.maxcul import (
-    DATA_MAXCUL, EVENT_SHUTTER_UPDATE
+    DATA_MAXCUL, SIGNAL_SHUTTER_UPDATE
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,6 +73,7 @@ class MaxShutterContact(BinarySensorDevice):
 
         self._maxcul_handle.add_paired_device(self._device_id)
 
+        @callback
         def update(event):
             """Handle thermostat update events."""
             device_id = event.data.get(ATTR_DEVICE_ID)
@@ -80,7 +83,7 @@ class MaxShutterContact(BinarySensorDevice):
 
             self.async_schedule_update_ha_state()
 
-        hass.bus.listen(EVENT_SHUTTER_UPDATE, update)
+        dispatcher_connect(hass, SIGNAL_SHUTTER_UPDATE, update)
 
         self._maxcul_handle.wakeup(self._device_id)
 

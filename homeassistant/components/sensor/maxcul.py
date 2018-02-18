@@ -7,6 +7,8 @@ https://home-assistant.io/components/sensor.maxcul/
 import logging
 import voluptuous as vol
 
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import dispatcher_connect
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_ID
@@ -14,7 +16,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 from homeassistant.components.maxcul import (
     DATA_MAXCUL,
-    EVENT_PUSH_BUTTON_UPDATE
+    SIGNAL_PUSH_BUTTON_UPDATE
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,6 +69,7 @@ class MaxEcoSwitch(Entity):
 
         self._maxcul_handle.add_paired_device(self._device_id)
 
+        @callback
         def update(payload):
             """Handle eco switch updates."""
             if self._device_id != payload.get(ATTR_DEVICE_ID):
@@ -75,7 +78,7 @@ class MaxEcoSwitch(Entity):
 
             self.async_schedule_update_ha_state()
 
-        hass.bus.listen(EVENT_PUSH_BUTTON_UPDATE, update)
+        dispatcher_connect(hass, SIGNAL_PUSH_BUTTON_UPDATE, update)
 
         self._maxcul_handle.wakeup(self._device_id)
 

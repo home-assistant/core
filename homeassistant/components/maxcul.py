@@ -8,6 +8,7 @@ import logging
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,9 +31,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 DATA_MAXCUL = 'maxcul'
 
-EVENT_THERMOSTAT_UPDATE = DOMAIN + '.thermostat_update'
-EVENT_PUSH_BUTTON_UPDATE = DOMAIN + '.push_button_update'
-EVENT_SHUTTER_UPDATE = DOMAIN + '.shutter_update'
+SIGNAL_THERMOSTAT_UPDATE = DOMAIN + '.thermostat_update'
+SIGNAL_PUSH_BUTTON_UPDATE = DOMAIN + '.push_button_update'
+SIGNAL_SHUTTER_UPDATE = DOMAIN + '.shutter_update'
 
 ATTR_DURATION = 'duration'
 
@@ -71,13 +72,14 @@ def setup(hass, config):
     def callback(event, payload):
         """Handle new MAX! events."""
         if event == maxcul.EVENT_THERMOSTAT_UPDATE:
-            hass.bus.fire(EVENT_THERMOSTAT_UPDATE, payload)
+            dispatcher_send(hass, SIGNAL_THERMOSTAT_UPDATE, payload)
 
         elif event == maxcul.EVENT_PUSH_BUTTON_UPDATE:
-            hass.bus.fire(EVENT_PUSH_BUTTON_UPDATE, payload)
+            dispatcher_send(hass, SIGNAL_PUSH_BUTTON_UPDATE, payload)
 
         elif event == maxcul.EVENT_SHUTTER_UPDATE:
-            hass.bus.fire(EVENT_SHUTTER_UPDATE, payload)
+            dispatcher_send(hass, SIGNAL_SHUTTER_UPDATE, payload)
+            hass.bus.fire(SIGNAL_SHUTTER_UPDATE, payload)
 
         elif event in [maxcul.EVENT_DEVICE_PAIRED,
                        maxcul.EVENT_DEVICE_REPAIRED]:
