@@ -133,13 +133,12 @@ class InsteonPLMOpenClosedDevice(SwitchDevice):
     @property
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
-        if self._newnames:
-            return self._device.id + '_' + self._state.name
+        name = ''
+        if self._state.group == 0x01 and not self._newnames:
+            name = self._device.id
         else:
-            if self._state.group == 0x01:
-                return self._device.id
-            else:
-                return self._device.id+'_'+str(self._state.group)
+            name = '{:s}_{:s}'.format(self._device.id, self._state.name)
+        return name
 
     @property
     def is_on(self):

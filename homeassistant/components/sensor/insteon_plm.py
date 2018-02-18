@@ -63,13 +63,10 @@ class InsteonPLMSensorDevice(Entity):
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
         name = ''
-        if self._newnames:
-            name = '{:s}_{:s}'.format(self._device.id, self._state.name)
+        if self._state.group == 0x01 and not self._newnames:
+            name = self._device.id
         else:
-            if self._state.group == 0x01:
-                name = self._device.id
-            else:
-                name = '{:s}_{:d}'.format(self._device.id, self._state.group)
+            name = '{:s}_{:s}'.format(self._device.id, self._state.name)
         return name
 
     @property

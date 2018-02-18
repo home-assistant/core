@@ -49,7 +49,7 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
         self._hass = hass
         self._state = device.states[stateKey]
         self._device = device
-        self._sensor_type = self._stateName_to_sensor_type(self._state.name)
+        self._sensor_type = SENSOR_TYPES[self._state.name]
         self._newnames = newnames
 
         self._state.register_updates(self.async_binarysensor_update)
@@ -68,13 +68,10 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
         name = ''
-        if self._newnames:
-            name = '{:s}_{:s}'.format(self._device.id, self._state.name)
+        if self._state.group == 0x01 and not self._newnames:
+            name = self._device.id
         else:
-            if self._state.group == 0x01:
-                name = self._device.id
-            else:
-                name = '{:s}_{:d}'.format(self._device.id, self._state.group)
+            name = '{:s}_{:s}'.format(self._device.id, self._state.name)
         return name
 
     @property
@@ -98,4 +95,3 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
         """Return the boolean response if the node is on."""
         sensorstate = self._state.value
         return bool(sensorstate)
-

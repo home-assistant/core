@@ -140,7 +140,7 @@ and access methods."""
                                               OnOffSensor,
                                               SmokeCO2Sensor,
                                               IoLincSensor)
-        
+
         self.states = [State(OnOffSwitch_OutletTop, 'switch'),
                        State(OnOffSwitch_OutletBottom, 'switch'),
                        State(OpenClosedRelay, 'switch'),
@@ -153,7 +153,7 @@ and access methods."""
 
                        State(DimmableSwitch_Fan, 'fan'),
                        State(DimmableSwitch, 'light')
-                       ]
+                      ]
 
     def __len__(self):
         return len(self.states)

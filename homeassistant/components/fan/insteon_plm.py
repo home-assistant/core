@@ -19,6 +19,11 @@ from homeassistant.loader import get_component
 
 DEPENDENCIES = ['insteon_plm']
 
+SPEED_TO_HEX = {SPEED_OFF: 0x00,
+                SPEED_LOW: 0x3f,
+                SPEED_MEDIUM: 0xbe,
+                SPEED_HIGH: 0xff}
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -72,13 +77,10 @@ class InsteonPLMFan(FanEntity):
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
         name = ''
-        if self._newnames:
-            name = '{:s}_{:s}'.format(self._device.id, self._state.name)
+        if self._state.group == 0x01 and not self._newnames:
+            name = self._device.id
         else:
-            if self._state.group == 0x01:
-                name = self._device.id
-            else:
-                name = '{:s}_{:d}'.format(self._device.id, self._state.group)
+            name = '{:s}_{:s}'.format(self._device.id, self._state.name)
         return name
 
     @property
@@ -97,19 +99,19 @@ class InsteonPLMFan(FanEntity):
         """Get the list of available speeds."""
         return [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def async_turn_on(self, speed: str=None) -> None:
+    def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the entity."""
         if speed is None:
             speed = SPEED_MEDIUM
         self.async_set_speed(speed)
 
-    def async_turn_off(self) -> None:
+    def async_turn_off(self, **kwargs) -> None:
         """Turn off the entity."""
         self.async_set_speed(SPEED_OFF)
 
     def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        fanSpeed = self._speed_to_hex(speed)
+        fanSpeed = SPEED_TO_HEX[speed]
         if fanSpeed == 0x00:
             self._state.off()
         else:
@@ -125,22 +127,13 @@ class InsteonPLMFan(FanEntity):
         """Flag supported features."""
         return self._supported_features
 
-    def _speed_to_hex(self, speed: str):
-        if speed == SPEED_OFF:
-            return 0x00
-        elif speed == SPEED_LOW:
-            return 0x3f
-        elif speed == SPEED_MEDIUM:
-            return 0xbe
-        elif speed == SPEED_HIGH:
-            return 0xff
-        return 0xbe
-
-    def _hex_to_speed(self, speed: int):
+    @staticmethod
+    def _hex_to_speed(speed: int):
+        hex_speed = SPEED_OFF
         if speed > 0xfe:
-            return SPEED_HIGH
+            hex_speed = SPEED_HIGH
         elif speed > 0x7f:
-            return SPEED_MEDIUM
+            hex_speed = SPEED_MEDIUM
         elif speed > 0:
-            return SPEED_LOW
-        return SPEED_OFF
+            hex_speed = SPEED_LOW
+        return hex_speed
