@@ -674,7 +674,7 @@ pyfido==1.0.1
 pyflexit==0.3
 
 # homeassistant.components.fritzhome
-pyfritzhome==0.3.5
+pyfritzhome==0.3.6
 
 # homeassistant.components.ifttt
 pyfttt==0.3
