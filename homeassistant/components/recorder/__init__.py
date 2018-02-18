@@ -87,13 +87,14 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+@asyncio.coroutine
 def wait_connection_ready(hass):
     """
     Wait till the connection is ready.
 
     Returns a coroutine object.
     """
-    return hass.data[DATA_INSTANCE].async_db_ready
+    return (yield from hass.data[DATA_INSTANCE].async_db_ready)
 
 
 def run_information(hass, point_in_time: Optional[datetime] = None):
