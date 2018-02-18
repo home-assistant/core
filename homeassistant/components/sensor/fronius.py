@@ -75,7 +75,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         try:
             yield from sensor.async_update()
         except:
-            _LOGGER.error("yield failed")
+            _LOGGER.error("Update of sensor data failed.")
 
     interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=10)
     async_track_time_interval(hass, async_fronius, interval)
