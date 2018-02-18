@@ -289,7 +289,10 @@ class PlexClient(MediaPlayerDevice):
         self._media_episode = None
         self._media_season = None
         self._media_series_title = None
-
+        if self.machine_identifier:
+            self._unique_id = str(self.machine_identifier)
+        else:
+            self._unique_id = None
         self.refresh(device, session)
 
         # Assign custom entity ID if desired
@@ -459,8 +462,8 @@ class PlexClient(MediaPlayerDevice):
 
     @property
     def unique_id(self):
-        """Return the id of this plex client."""
-        return self.machine_identifier
+        """Return a unique id."""
+        return self._unique_id
 
     @property
     def name(self):
