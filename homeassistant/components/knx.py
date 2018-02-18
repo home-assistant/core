@@ -71,7 +71,7 @@ async def async_setup(hass, config):
     from xknx.exceptions import XKNXException
     try:
         hass.data[DATA_KNX] = KNXModule(hass, config)
-        yield from hass.data[DATA_KNX].start()
+        await hass.data[DATA_KNX].start()
 
     except XKNXException as ex:
         _LOGGER.warning("Can't connect to KNX interface: %s", ex)
