@@ -29,11 +29,11 @@ class HomeAccessory(Accessory):
         """Set the default accessory information."""
         service_info = self.get_service(SERVICES_ACCESSORY_INFO)
         service_info.get_characteristic(CHAR_MODEL) \
-                    .set_value(model, False)
+                    .set_value(model)
         service_info.get_characteristic(CHAR_MANUFACTURER) \
-                    .set_value(manufacturer, False)
+                    .set_value(manufacturer)
         service_info.get_characteristic(CHAR_SERIAL_NUMBER) \
-                    .set_value(serial_number, False)
+                    .set_value(serial_number)
 
 
 class HomeBridge(Bridge):
@@ -48,8 +48,8 @@ class HomeBridge(Bridge):
         """Set the default accessory information."""
         service_info = self.get_service(SERVICES_ACCESSORY_INFO)
         service_info.get_characteristic(CHAR_MODEL) \
-                    .set_value(model, False)
+                    .set_value(model)
         service_info.get_characteristic(CHAR_MANUFACTURER) \
-                    .set_value(manufacturer, False)
+                    .set_value(manufacturer)
         service_info.get_characteristic(CHAR_SERIAL_NUMBER) \
-                    .set_value(serial_number, False)
+                    .set_value(serial_number)
