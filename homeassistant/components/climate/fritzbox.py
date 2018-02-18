@@ -33,13 +33,14 @@ ATTR_STATE_LOW_BAT = 'low_battery'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fritzbox smarthome thermostat platform."""
-    fritz = hass.data[FRITZBOX_DOMAIN]
-    device_list = fritz.get_devices()
-
     devices = []
-    for device in device_list:
-        if device.has_thermostat:
-            devices.append(FritzboxThermostat(device, fritz))
+    fritz_list = hass.data[FRITZBOX_DOMAIN]
+
+    for fritz in fritz_list:
+        device_list = fritz.get_devices()
+        for device in device_list:
+            if device.has_thermostat:
+                devices.append(FritzboxThermostat(device, fritz))
 
     add_devices(devices)
 
@@ -134,13 +135,12 @@ class FritzboxThermostat(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
-        dev_specific = {
+        attrs = {
             ATTR_STATE_DEVICE_LOCKED: self._device.device_lock,
             ATTR_STATE_LOCKED: self._device.lock,
             ATTR_STATE_LOW_BAT: self._device.battery_low,
         }
-
-        return dev_specific
+        return attrs
 
     def update(self):
         """Update the data from the thermostat."""

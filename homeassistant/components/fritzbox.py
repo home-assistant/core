@@ -10,12 +10,13 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
+    CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyfritzhome==0.3.5']
+REQUIREMENTS = ['pyfritzhome==0.3.6']
 
 SUPPORTED_DOMAINS = ['climate', 'switch']
 
@@ -26,9 +27,8 @@ DEFAULT_HOST = 'fritz.box'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Required(CONF_DEVICES, default=[]):
+            vol.All(cv.ensure_list, [dict]),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -37,20 +37,35 @@ def setup(hass, config):
     """Set up the fritzbox component."""
     from pyfritzhome import Fritzhome, LoginError
 
-    conf = config[DOMAIN]
-    host = conf.get(CONF_HOST)
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
+    fritz_list = []
 
-    try:
-        fritz = Fritzhome(host=host, user=username, password=password)
-        fritz.login()
-        hass.data[DOMAIN] = fritz
-    except LoginError:
-        _LOGGER.warning("Login to Fritz!Box failed")
-        return False
+    if CONF_DEVICES in config[DOMAIN] and config[DOMAIN].get(CONF_DEVICES):
+        configured_devices = config[DOMAIN].get(CONF_DEVICES)
+        for device in configured_devices:
+            try:
+                host = device['host']
+                username = device['username']
+                password = device['password']
+                fritzbox = Fritzhome(host=host, user=username, password=password)
+                fritzbox.login()
+                fritz_list.append(fritzbox)
+                _LOGGER.info("Connected to device %s", device)
+            except LoginError:
+                _LOGGER.warning("Login to Fritz!Box %s as %s failed",
+                                host, username)
+                continue
+            except KeyError:
+                _LOGGER.warning("Configuration error")
+                continue
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, fritz.logout)
+    hass.data[DOMAIN] = fritz_list
+
+    def logout_fritzboxes(event):
+        """Close all connections to the fritzboxes."""
+        for fritz in fritz_list:
+            fritz.logout()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, logout_fritzboxes)
 
     for domain in SUPPORTED_DOMAINS:
         discovery.load_platform(hass, domain, DOMAIN, {}, config)

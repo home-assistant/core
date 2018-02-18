@@ -28,14 +28,15 @@ ATTR_TEMPERATURE_UNIT = 'temperature_unit'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Fritzbox switch platform."""
-    fritz = hass.data[FRITZBOX_DOMAIN]
-    device_list = fritz.get_devices()
-
+    """Set up the Fritzbox smarthome switch platform."""
     devices = []
-    for device in device_list:
-        if device.has_switch:
-            devices.append(FritzboxSwitch(hass, device, fritz))
+    fritz_list = hass.data[FRITZBOX_DOMAIN]
+
+    for fritz in fritz_list:
+        device_list = fritz.get_devices()
+        for device in device_list:
+            if device.has_switch:
+                devices.append(FritzboxSwitch(hass, device, fritz))
 
     add_devices(devices)
 
