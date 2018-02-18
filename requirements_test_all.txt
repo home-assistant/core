@@ -22,7 +22,7 @@ asynctest>=0.11.1
 PyJWT==1.5.3
 
 # homeassistant.components.media_player.sonos
-SoCo==0.13
+SoCo==0.14
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
