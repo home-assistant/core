@@ -22,7 +22,7 @@ from homeassistant.components.fan import (
 )
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION, ATTR_POSITION, SERVICE_SET_COVER_POSITION, 
+    ATTR_CURRENT_POSITION, ATTR_POSITION, SERVICE_SET_COVER_POSITION,
     SUPPORT_SET_POSITION
 )
 
