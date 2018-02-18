@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the HomeMatic binary sensor platform."""
+    """Set up the maxcul binary sensor platform."""
     devices = [
         MaxShutterContact(
             hass,
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MaxShutterContact(BinarySensorDevice):
-    """Representation of a binary HomeMatic device."""
+    """Representation of a MAX! shutter contact."""
 
     def __init__(self, hass, device_id, name,
                  device_class=DEFAULT_DEVICE_CLASS):
