@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             name
         )
         for name, device
-        in config[CONF_DEVICES].items()
+        in config[CONF_ECO_SWITCHES].items()
     ]
     add_devices(devices)
 
@@ -55,11 +55,11 @@ class MaxEcoSwitch(Entity):
     """Representation of a MAX! Eco Switch."""
 
     def __init__(self, hass, device_id, name):
+        """Initialize a new MAX! Eco Switch."""
         from maxcul import (
             ATTR_DEVICE_ID,
             ATTR_STATE
         )
-        """Initialize the sensor."""
         self._device_id = device_id
         self._name = name
         self._is_on = None
@@ -68,6 +68,7 @@ class MaxEcoSwitch(Entity):
         self._maxcul_handle.add_paired_device(self._device_id)
 
         def update(payload):
+            """Handle eco switch updates."""
             if self._device_id != payload.get(ATTR_DEVICE_ID):
                 return
             self._is_on = payload.get(ATTR_STATE)
