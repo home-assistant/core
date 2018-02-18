@@ -261,8 +261,8 @@ class XiaomiPhilipsGenericLight(Light):
             self._brightness = ceil((255 / 100.0) * state.brightness)
 
             if state.delay_off_countdown > 0:
-                delayed_turn_off = dt.utcnow() + timedelta(
-                    seconds=state.delay_off_countdown)
+                delayed_turn_off = dt.utcnow().replace(microsecond=0) + \
+                    timedelta(seconds=state.delay_off_countdown)
             else:
                 delayed_turn_off = None
 
@@ -399,8 +399,8 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
                 self.max_mireds, self.min_mireds)
 
             if state.delay_off_countdown > 0:
-                delayed_turn_off = dt.utcnow() + timedelta(
-                    seconds=state.delay_off_countdown)
+                delayed_turn_off = dt.utcnow().replace(microsecond=0) + \
+                    timedelta(seconds=state.delay_off_countdown)
             else:
                 delayed_turn_off = None
 
