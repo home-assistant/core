@@ -38,7 +38,7 @@ from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_FILTER = 'filter_name'
+ATTR_FILTER = 'filter'
 ATTR_PRE_FILTER = 'pre_filter_state'
 
 CONF_FILTER_OPTIONS = 'options'
@@ -53,10 +53,9 @@ FILTER_MAP = {
              }
 
 DEFAULT_NAME_TEMPLATE = "{} filter {}"
-DEFAULT_SIZE = 5
 ICON = 'mdi: chart-line-variant'
 
-# Add here user customizable OPTIONAL filter arguments
+# ALL filter arguments must be OPTIONAL
 FILTER_SCHEMA = vol.Schema({
     vol.Optional('time_constant'): vol.Coerce(int),
     vol.Optional('constant'): vol.Coerce(int)
@@ -73,15 +72,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the Statistics sensor."""
+    """Set up the Filter sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
-    filtername = config.get(CONF_FILTER_NAME)
+    filter_name = config.get(CONF_FILTER_NAME)
     name = config.get(CONF_NAME)
     if name is None:
-        name = DEFAULT_NAME_TEMPLATE.format(entity_id, filtername)
+        name = DEFAULT_NAME_TEMPLATE.format(entity_id, filter_name)
 
     async_add_devices([
-            FilterSensor(hass, name, entity_id, filtername,
+            FilterSensor(hass, name, entity_id, filter_name,
                          config.get(CONF_FILTER_OPTIONS, dict()))
         ], True)
     return True
@@ -90,16 +89,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class FilterSensor(Entity):
     """Representation of a Filter sensor."""
 
-    def __init__(self, hass, name, entity_id, filtername, filter_args):
-        """Initialize the Statistics sensor."""
-        self._hass = hass
-        self._entity_id = entity_id
+    def __init__(self, hass, name, entity_id, filter_name, filter_args):
+        """Initialize the Filter sensor."""
         self._name = name
-        self._filter_name = filtername
+        self._filter_name = filter_name
         self._unit_of_measurement = None
         self._pre_filter_state = self._state = None
 
-        self._filterdata = self.filterdata_factory(FILTER_MAP[filtername],
+        self._filterdata = self.filterdata_factory(FILTER_MAP[filter_name],
                                                    **filter_args)()
 
         @callback
@@ -122,8 +119,8 @@ class FilterSensor(Entity):
             hass, entity_id, async_stats_sensor_state_listener)
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
+    def available(self):
+        """Return True if there is data to filter."""
         return self._pre_filter_state is not None
 
     @property
@@ -148,7 +145,7 @@ class FilterSensor(Entity):
 
     @property
     def icon(self):
-        """Return the icon to use in the frontend, if any."""
+        """Return the icon to use in the frontend."""
         return ICON
 
     @property
@@ -164,8 +161,8 @@ class FilterSensor(Entity):
     def filterdata_factory(self, filter_function, **kwargs):
         """Factory to create filters with user provided arguments."""
         class FilterData(object):
-            def __init__(self, initial=None):
-                self._data = initial
+            def __init__(self):
+                self._data = None 
 
             @property
             @Filter(filter_function, **kwargs)
