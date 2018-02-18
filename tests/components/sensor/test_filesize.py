@@ -53,12 +53,15 @@ class TestFileSensor(unittest.TestCase):
                 CONF_FILE_PATHS: ['/tests/components/sensor/test_filesize.py']}
         }
 
-        self.config.whitelist_external_dirs = set(('/tests/components/sensor/'))
+        self.config.whitelist_external_dirs = set(
+            ('/tests/components/sensor/'))
         self.assertTrue(
             setup_component(self.hass, 'sensor', config))
 
         assert len(self.hass.states.entity_ids()) == 1
 
+
+"""
         #state = self.hass.states.get('sensor.test_api_streamspy')
 
     #    assert state.state == 37.99
@@ -66,3 +69,4 @@ class TestFileSensor(unittest.TestCase):
     #    assert state.attributes.get(
     #        'last_updated') == '2018-02-08 21:46:03.551424'
     #    assert state.attributes.get('path') == PATH
+"""
