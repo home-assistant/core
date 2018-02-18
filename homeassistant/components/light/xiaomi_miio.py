@@ -8,6 +8,7 @@ import asyncio
 from functools import partial
 import logging
 from math import ceil
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -18,6 +19,7 @@ from homeassistant.components.light import (
 
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN, )
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,10 +47,10 @@ CCT_MAX = 100
 SUCCESS = ['ok']
 ATTR_MODEL = 'model'
 ATTR_SCENE = 'scene'
-ATTR_DELAY_OFF_COUNTDOWN = 'delay_off_countdown'
+ATTR_DELAYED_TURN_OFF = 'delayed_turn_off'
 
 SERVICE_SET_SCENE = 'xiaomi_miio_set_scene'
-SERVICE_SET_DELAY_OFF = 'xiaomi_miio_set_delay_off'
+SERVICE_SET_DELAYED_TURN_OFF = 'xiaomi_miio_set_delayed_turn_off'
 
 XIAOMI_MIIO_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -59,15 +61,15 @@ SERVICE_SCHEMA_SET_SCENE = XIAOMI_MIIO_SERVICE_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Clamp(min=1, max=4))
 })
 
-SERVICE_SCHEMA_SET_DELAY_OFF = XIAOMI_MIIO_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_DELAY_OFF_COUNTDOWN):
+SERVICE_SCHEMA_SET_DELAYED_TURN_OFF = XIAOMI_MIIO_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_DELAYED_TURN_OFF):
         vol.All(vol.Coerce(int), vol.Range(min=0))
 })
 
 SERVICE_TO_METHOD = {
-    SERVICE_SET_DELAY_OFF: {
-        'method': 'async_set_delay_off',
-        'schema': SERVICE_SCHEMA_SET_DELAY_OFF},
+    SERVICE_SET_DELAYED_TURN_OFF: {
+        'method': 'async_set_delayed_turn_off',
+        'schema': SERVICE_SCHEMA_SET_DELAYED_TURN_OFF},
     SERVICE_SET_SCENE: {
         'method': 'async_set_scene',
         'schema': SERVICE_SCHEMA_SET_SCENE},
@@ -167,7 +169,7 @@ class XiaomiPhilipsGenericLight(Light):
         self._state_attrs = {
             ATTR_MODEL: self._model,
             ATTR_SCENE: None,
-            ATTR_DELAY_OFF_COUNTDOWN: None,
+            ATTR_DELAYED_TURN_OFF: None,
         }
 
     @property
@@ -257,9 +259,16 @@ class XiaomiPhilipsGenericLight(Light):
 
             self._state = state.is_on
             self._brightness = ceil((255 / 100.0) * state.brightness)
+
+            if state.delay_off_countdown > 0:
+                delayed_turn_off = dt.utcnow() - timedelta(
+                    seconds=state.delay_off_countdown)
+            else:
+                delayed_turn_off = None
+
             self._state_attrs.update({
                 ATTR_SCENE: state.scene,
-                ATTR_DELAY_OFF_COUNTDOWN: state.delay_off_countdown,
+                ATTR_DELAYED_TURN_OFF: delayed_turn_off,
             })
 
         except DeviceException as ex:
@@ -274,11 +283,11 @@ class XiaomiPhilipsGenericLight(Light):
             self._light.set_scene, scene)
 
     @asyncio.coroutine
-    def async_set_delay_off(self, delay_off_countdown: int):
+    def async_set_delayed_turn_off(self, delayed_turn_off: int):
         """Set delay off. The unit is different per device"""
         yield from self._try_command(
             "Setting the delay off failed.",
-            self._light.delay_off, delay_off_countdown)
+            self._light.delay_off, delayed_turn_off)
 
     @staticmethod
     def translate(value, left_min, left_max, right_min, right_max):
@@ -388,9 +397,16 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
                 state.color_temperature,
                 CCT_MIN, CCT_MAX,
                 self.max_mireds, self.min_mireds)
+
+            if state.delay_off_countdown > 0:
+                delayed_turn_off = dt.utcnow() - timedelta(
+                    seconds=state.delay_off_countdown)
+            else:
+                delayed_turn_off = None
+
             self._state_attrs.update({
                 ATTR_SCENE: state.scene,
-                ATTR_DELAY_OFF_COUNTDOWN: state.delay_off_countdown,
+                ATTR_DELAYED_TURN_OFF: delayed_turn_off,
             })
 
         except DeviceException as ex:
