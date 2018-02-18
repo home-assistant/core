@@ -284,7 +284,7 @@ class XiaomiPhilipsGenericLight(Light):
 
     @asyncio.coroutine
     def async_set_delayed_turn_off(self, delayed_turn_off: int):
-        """Set delay off. The unit is different per device"""
+        """Set delay off. The unit is different per device."""
         yield from self._try_command(
             "Setting the delay off failed.",
             self._light.delay_off, delayed_turn_off)
