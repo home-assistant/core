@@ -43,10 +43,11 @@ def setup(hass, config):
         configured_devices = config[DOMAIN].get(CONF_DEVICES)
         for device in configured_devices:
             try:
-                host = device['host']
-                username = device['username']
-                password = device['password']
-                fritzbox = Fritzhome(host=host, user=username, password=password)
+                host = device[CONF_HOST]
+                username = device[CONF_USERNAME]
+                password = device[CONF_PASSWORD]
+                fritzbox = Fritzhome(host=host, user=username,
+                                     password=password)
                 fritzbox.login()
                 fritz_list.append(fritzbox)
                 _LOGGER.info("Connected to device %s", device)
