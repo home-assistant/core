@@ -141,8 +141,6 @@ and access methods."""
                                               SmokeCO2Sensor,
                                               IoLincSensor)
         
-        self.log = logging.getLogger(__name__)
-
         self.states = [State(OnOffSwitch_OutletTop, 'switch'),
                        State(OnOffSwitch_OutletBottom, 'switch'),
                        State(OpenClosedRelay, 'switch'),
