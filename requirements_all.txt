@@ -895,7 +895,7 @@ python-digitalocean==1.13.2
 python-ecobee-api==0.0.15
 
 # homeassistant.components.climate.eq3btsmart
-# python-eq3bt==0.1.8
+# python-eq3bt==0.1.9
 
 # homeassistant.components.sensor.etherscan
 python-etherscan-api==0.0.3
