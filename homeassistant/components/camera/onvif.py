@@ -130,6 +130,7 @@ class ONVIFHassCamera(Camera):
         try:
             self._ptz = camera.create_ptz_service()
         except Exception as err:
+            self._ptz = None
             _LOGGER.warning("Unable to setup PTZ for ONVIF Camera: %s", err)
 
     def perform_ptz(self, pan, tilt, zoom):
