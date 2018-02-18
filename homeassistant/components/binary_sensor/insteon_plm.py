@@ -47,7 +47,7 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
         self._hass = hass
         self._state = device.states[stateKey]
         self._device = device
-        self._sensor_type = SENSOR_TYPES[self._state.name]
+        self._sensor_type = SENSOR_TYPES.get(self._state.name, None)
 
         self._state.register_updates(self.async_binarysensor_update)
 
