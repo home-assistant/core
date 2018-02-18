@@ -849,8 +849,8 @@ class BluesoundPlayer(MediaPlayerDevice):
             _LOGGER.error('Error while increasing sleep time on player: %s',
                           self.host)
             return 0
-        else:
-            return int(sleep_time.get('sleep', '0'))
+        
+        return int(sleep_time.get('sleep', '0'))
 
     @asyncio.coroutine
     def async_clear_timer(self):
@@ -974,8 +974,8 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
             return self.send_bluesound_command(url)
-        else:
-            return self.send_bluesound_command(url)
+
+        return self.send_bluesound_command(url)
 
     @asyncio.coroutine
     def async_volume_up(self):
