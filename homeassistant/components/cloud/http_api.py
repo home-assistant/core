@@ -3,11 +3,12 @@ import asyncio
 from functools import wraps
 import logging
 
-import voluptuous as vol
 import async_timeout
+import voluptuous as vol
 
-from homeassistant.components.http import (
-    HomeAssistantView, RequestDataValidator)
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.data_validator import (
+    RequestDataValidator)
 
 from . import auth_api
 from .const import DOMAIN, REQUEST_TIMEOUT
@@ -17,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def async_setup(hass):
-    """Initialize the HTTP api."""
+    """Initialize the HTTP API."""
     hass.http.register_view(CloudLoginView)
     hass.http.register_view(CloudLogoutView)
     hass.http.register_view(CloudAccountView)
@@ -40,7 +41,7 @@ _CLOUD_ERRORS = {
 
 
 def _handle_cloud_errors(handler):
-    """Helper method to handle auth errors."""
+    """Handle auth errors."""
     @asyncio.coroutine
     @wraps(handler)
     def error_handler(view, request, *args, **kwargs):

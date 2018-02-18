@@ -47,7 +47,7 @@ def _threaded_factory(async_factory):
     return factory
 
 
-def async_from_config(config: ConfigType, config_validation: bool=True):
+def async_from_config(config: ConfigType, config_validation: bool = True):
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
@@ -70,7 +70,7 @@ def async_from_config(config: ConfigType, config_validation: bool=True):
 from_config = _threaded_factory(async_from_config)
 
 
-def async_and_from_config(config: ConfigType, config_validation: bool=True):
+def async_and_from_config(config: ConfigType, config_validation: bool = True):
     """Create multi condition matcher using 'AND'."""
     if config_validation:
         config = cv.AND_CONDITION_SCHEMA(config)
@@ -101,7 +101,7 @@ def async_and_from_config(config: ConfigType, config_validation: bool=True):
 and_from_config = _threaded_factory(async_and_from_config)
 
 
-def async_or_from_config(config: ConfigType, config_validation: bool=True):
+def async_or_from_config(config: ConfigType, config_validation: bool = True):
     """Create multi condition matcher using 'OR'."""
     if config_validation:
         config = cv.OR_CONDITION_SCHEMA(config)

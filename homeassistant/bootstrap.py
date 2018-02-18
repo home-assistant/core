@@ -12,7 +12,8 @@ from typing import Any, Optional, Dict
 import voluptuous as vol
 
 from homeassistant import (
-    core, config as conf_util, loader, components as core_components)
+    core, config as conf_util, config_entries, loader,
+    components as core_components)
 from homeassistant.components import persistent_notification
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
@@ -35,13 +36,13 @@ FIRST_INIT_COMPONENT = set((
 
 
 def from_config_dict(config: Dict[str, Any],
-                     hass: Optional[core.HomeAssistant]=None,
-                     config_dir: Optional[str]=None,
-                     enable_log: bool=True,
-                     verbose: bool=False,
-                     skip_pip: bool=False,
-                     log_rotate_days: Any=None,
-                     log_file: Any=None) \
+                     hass: Optional[core.HomeAssistant] = None,
+                     config_dir: Optional[str] = None,
+                     enable_log: bool = True,
+                     verbose: bool = False,
+                     skip_pip: bool = False,
+                     log_rotate_days: Any = None,
+                     log_file: Any = None) \
                      -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
@@ -68,12 +69,12 @@ def from_config_dict(config: Dict[str, Any],
 @asyncio.coroutine
 def async_from_config_dict(config: Dict[str, Any],
                            hass: core.HomeAssistant,
-                           config_dir: Optional[str]=None,
-                           enable_log: bool=True,
-                           verbose: bool=False,
-                           skip_pip: bool=False,
-                           log_rotate_days: Any=None,
-                           log_file: Any=None) \
+                           config_dir: Optional[str] = None,
+                           enable_log: bool = True,
+                           verbose: bool = False,
+                           skip_pip: bool = False,
+                           log_rotate_days: Any = None,
+                           log_file: Any = None) \
                            -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
@@ -123,9 +124,13 @@ def async_from_config_dict(config: Dict[str, Any],
         new_config[key] = value or {}
     config = new_config
 
+    hass.config_entries = config_entries.ConfigEntries(hass, config)
+    yield from hass.config_entries.async_load()
+
     # Filter out the repeating and common config section [homeassistant]
     components = set(key.split(' ')[0] for key in config.keys()
                      if key != core.DOMAIN)
+    components.update(hass.config_entries.async_domains())
 
     # setup components
     # pylint: disable=not-an-iterable
@@ -163,11 +168,11 @@ def async_from_config_dict(config: Dict[str, Any],
 
 
 def from_config_file(config_path: str,
-                     hass: Optional[core.HomeAssistant]=None,
-                     verbose: bool=False,
-                     skip_pip: bool=True,
-                     log_rotate_days: Any=None,
-                     log_file: Any=None):
+                     hass: Optional[core.HomeAssistant] = None,
+                     verbose: bool = False,
+                     skip_pip: bool = True,
+                     log_rotate_days: Any = None,
+                     log_file: Any = None):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter if given,
@@ -188,10 +193,10 @@ def from_config_file(config_path: str,
 @asyncio.coroutine
 def async_from_config_file(config_path: str,
                            hass: core.HomeAssistant,
-                           verbose: bool=False,
-                           skip_pip: bool=True,
-                           log_rotate_days: Any=None,
-                           log_file: Any=None):
+                           verbose: bool = False,
+                           skip_pip: bool = True,
+                           log_rotate_days: Any = None,
+                           log_file: Any = None):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter.
@@ -219,7 +224,7 @@ def async_from_config_file(config_path: str,
 
 
 @core.callback
-def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
+def async_enable_logging(hass: core.HomeAssistant, verbose: bool = False,
                          log_rotate_days=None, log_file=None) -> None:
     """Set up the logging.
 

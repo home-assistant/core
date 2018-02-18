@@ -7,7 +7,6 @@ https://home-assistant.io/components/sensor.yr/
 import asyncio
 import logging
 
-from datetime import timedelta
 from random import randrange
 from xml.parsers.expat import ExpatError
 
@@ -22,16 +21,17 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_point_in_utc_time, async_track_utc_time_change)
+from homeassistant.helpers.event import (async_track_utc_time_change,
+                                         async_call_later)
 from homeassistant.util import dt as dt_util
 
 REQUIREMENTS = ['xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Weather forecast from yr.no, delivered by the Norwegian " \
-                   "Meteorological Institute and the NRK."
+CONF_ATTRIBUTION = "Weather forecast from met.no, delivered " \
+                   "by the Norwegian Meteorological Institute."
+# https://api.met.no/license_data.html
 
 SENSOR_TYPES = {
     'symbol': ['Symbol', None],
@@ -91,11 +91,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(dev)
 
     weather = YrData(hass, coordinates, forecast, dev)
-    # Update weather on the hour, spread seconds
-    async_track_utc_time_change(
-        hass, weather.async_update, minute=randrange(1, 10),
-        second=randrange(0, 59))
-    yield from weather.async_update()
+    async_track_utc_time_change(hass, weather.updating_devices, minute=31)
+    yield from weather.fetching_data()
 
 
 class YrSensor(Entity):
@@ -129,7 +126,7 @@ class YrSensor(Entity):
         """Weather symbol if type is symbol."""
         if self.type != 'symbol':
             return None
-        return "//api.met.no/weatherapi/weathericon/1.1/" \
+        return "https://api.met.no/weatherapi/weathericon/1.1/" \
                "?symbol={0};content_type=image/png".format(self._state)
 
     @property
@@ -153,50 +150,49 @@ class YrData(object):
         self._url = 'https://aa015h6buqvih86i1.api.met.no/'\
                     'weatherapi/locationforecast/1.9/'
         self._urlparams = coordinates
-        self._nextrun = None
         self._forecast = forecast
         self.devices = devices
         self.data = {}
         self.hass = hass
 
     @asyncio.coroutine
-    def async_update(self, *_):
+    def fetching_data(self, *_):
         """Get the latest data from yr.no."""
         import xmltodict
 
         def try_again(err: str):
-            """Retry in 15 minutes."""
-            _LOGGER.warning("Retrying in 15 minutes: %s", err)
-            self._nextrun = None
-            nxt = dt_util.utcnow() + timedelta(minutes=15)
-            if nxt.minute >= 15:
-                async_track_point_in_utc_time(self.hass, self.async_update,
-                                              nxt)
-
-        if self._nextrun is None or dt_util.utcnow() >= self._nextrun:
-            try:
-                websession = async_get_clientsession(self.hass)
-                with async_timeout.timeout(10, loop=self.hass.loop):
-                    resp = yield from websession.get(
-                        self._url, params=self._urlparams)
-                if resp.status != 200:
-                    try_again('{} returned {}'.format(resp.url, resp.status))
-                    return
-                text = yield from resp.text()
-
-            except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-                try_again(err)
+            """Retry in 15 to 20 minutes."""
+            minutes = 15 + randrange(6)
+            _LOGGER.error("Retrying in %i minutes: %s", minutes, err)
+            async_call_later(self.hass, minutes*60, self.fetching_data)
+        try:
+            websession = async_get_clientsession(self.hass)
+            with async_timeout.timeout(10, loop=self.hass.loop):
+                resp = yield from websession.get(
+                    self._url, params=self._urlparams)
+            if resp.status != 200:
+                try_again('{} returned {}'.format(resp.url, resp.status))
                 return
+            text = yield from resp.text()
 
-            try:
-                self.data = xmltodict.parse(text)['weatherdata']
-                model = self.data['meta']['model']
-                if '@nextrun' not in model:
-                    model = model[0]
-                self._nextrun = dt_util.parse_datetime(model['@nextrun'])
-            except (ExpatError, IndexError) as err:
-                try_again(err)
-                return
+        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+            try_again(err)
+            return
+
+        try:
+            self.data = xmltodict.parse(text)['weatherdata']
+        except (ExpatError, IndexError) as err:
+            try_again(err)
+            return
+
+        yield from self.updating_devices()
+        async_call_later(self.hass, 60*60, self.fetching_data)
+
+    @asyncio.coroutine
+    def updating_devices(self, *_):
+        """Find the current data from self.data."""
+        if not self.data:
+            return
 
         now = dt_util.utcnow()
         forecast_time = now + dt_util.dt.timedelta(hours=self._forecast)
@@ -226,7 +222,7 @@ class YrData(object):
 
         # Update all devices
         tasks = []
-        if len(ordered_entries) > 0:
+        if ordered_entries:
             for dev in self.devices:
                 new_state = None
 
@@ -258,5 +254,5 @@ class YrData(object):
                     dev._state = new_state
                     tasks.append(dev.async_update_ha_state())
 
-        if len(tasks) > 0:
+        if tasks:
             yield from asyncio.wait(tasks, loop=self.hass.loop)

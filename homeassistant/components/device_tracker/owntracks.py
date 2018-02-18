@@ -15,7 +15,10 @@ import voluptuous as vol
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import zone as zone_comp
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA, ATTR_SOURCE_TYPE, SOURCE_TYPE_BLUETOOTH_LE,
+    SOURCE_TYPE_GPS
+)
 from homeassistant.const import STATE_HOME
 from homeassistant.core import callback
 from homeassistant.util import slugify, decorator
@@ -140,6 +143,13 @@ def _parse_see_args(message, subscribe_topic):
         kwargs['attributes']['tid'] = message['tid']
     if 'addr' in message:
         kwargs['attributes']['address'] = message['addr']
+    if 'cog' in message:
+        kwargs['attributes']['course'] = message['cog']
+    if 't' in message:
+        if message['t'] == 'c':
+            kwargs['attributes'][ATTR_SOURCE_TYPE] = SOURCE_TYPE_GPS
+        if message['t'] == 'b':
+            kwargs['attributes'][ATTR_SOURCE_TYPE] = SOURCE_TYPE_BLUETOOTH_LE
 
     return dev_id, kwargs
 

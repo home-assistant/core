@@ -7,13 +7,14 @@ https://home-assistant.io/components/apple_tv/
 import asyncio
 import logging
 
+from typing import Sequence, TypeVar, Union
+
 import voluptuous as vol
 
-from typing import Union, TypeVar, Sequence
-from homeassistant.const import (CONF_HOST, CONF_NAME, ATTR_ENTITY_ID)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers import discovery
 from homeassistant.components.discovery import SERVICE_APPLE_TV
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
+from homeassistant.helpers import discovery
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyatv==0.3.9']
@@ -59,9 +60,9 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(ensure_list, [vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_LOGIN_ID): cv.string,
+        vol.Optional(CONF_CREDENTIALS): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_CREDENTIALS, default=None): cv.string,
-        vol.Optional(CONF_START_OFF, default=False): cv.boolean
+        vol.Optional(CONF_START_OFF, default=False): cv.boolean,
     })])
 }, extra=vol.ALLOW_EXTRA)
 
@@ -140,7 +141,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def async_service_handler(service):
-        """Handler for service calls."""
+        """Handle service calls."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
         if service.service == SERVICE_SCAN:
@@ -167,7 +168,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def atv_discovered(service, info):
-        """Setup an Apple TV that was auto discovered."""
+        """Set up an Apple TV that was auto discovered."""
         yield from _setup_atv(hass, {
             CONF_NAME: info['name'],
             CONF_HOST: info['host'],
@@ -194,7 +195,7 @@ def async_setup(hass, config):
 
 @asyncio.coroutine
 def _setup_atv(hass, atv_config):
-    """Setup an Apple TV."""
+    """Set up an Apple TV."""
     import pyatv
     name = atv_config.get(CONF_NAME)
     host = atv_config.get(CONF_HOST)
@@ -245,7 +246,7 @@ class AppleTVPowerManager:
 
     @property
     def turned_on(self):
-        """If device is on or off."""
+        """Return true if device is on or off."""
         return self._is_on
 
     def set_power_on(self, value):

@@ -32,6 +32,7 @@ COMMENT_REQUIREMENTS = (
     'i2csense',
     'credstash',
     'pytradfri',
+    'bme680',
 )
 
 TEST_REQUIREMENTS = (
@@ -45,7 +46,6 @@ TEST_REQUIREMENTS = (
     'ephem',
     'evohomeclient',
     'feedparser',
-    'fuzzywuzzy',
     'gTTS-token',
     'ha-ffmpeg',
     'haversine',
@@ -62,6 +62,7 @@ TEST_REQUIREMENTS = (
     'pilight',
     'pmsensor',
     'prometheus_client',
+    'pushbullet.py',
     'py-canary',
     'pydispatcher',
     'PyJWT',
@@ -81,6 +82,7 @@ TEST_REQUIREMENTS = (
     'sqlalchemy',
     'statsd',
     'uvcclient',
+    'voluptuous-serialize',
     'warrant',
     'yahoo-finance',
     'pythonwhois',

@@ -296,7 +296,7 @@ class SoundTouchDevice(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        _LOGGER.debug("Starting media with media_id: " + str(media_id))
+        _LOGGER.debug("Starting media with media_id: %s", media_id)
         if re.match(r'http://', str(media_id)):
             # URL
             _LOGGER.debug("Playing URL %s", str(media_id))
@@ -307,11 +307,10 @@ class SoundTouchDevice(MediaPlayerDevice):
             preset = next([preset for preset in presets if
                            preset.preset_id == str(media_id)].__iter__(), None)
             if preset is not None:
-                _LOGGER.debug("Playing preset: " + preset.name)
+                _LOGGER.debug("Playing preset: %s", preset.name)
                 self._device.select_preset(preset)
             else:
-                _LOGGER.warning(
-                    "Unable to find preset with id " + str(media_id))
+                _LOGGER.warning("Unable to find preset with id %s", media_id)
 
     def create_zone(self, slaves):
         """
@@ -323,8 +322,8 @@ class SoundTouchDevice(MediaPlayerDevice):
         if not slaves:
             _LOGGER.warning("Unable to create zone without slaves")
         else:
-            _LOGGER.info(
-                "Creating zone with master " + str(self.device.config.name))
+            _LOGGER.info("Creating zone with master %s",
+                         self.device.config.name)
             self.device.create_zone([slave.device for slave in slaves])
 
     def remove_zone_slave(self, slaves):
@@ -341,8 +340,8 @@ class SoundTouchDevice(MediaPlayerDevice):
         if not slaves:
             _LOGGER.warning("Unable to find slaves to remove")
         else:
-            _LOGGER.info("Removing slaves from zone with master " +
-                         str(self.device.config.name))
+            _LOGGER.info("Removing slaves from zone with master %s",
+                         self.device.config.name)
             self.device.remove_zone_slave([slave.device for slave in slaves])
 
     def add_zone_slave(self, slaves):
@@ -357,7 +356,6 @@ class SoundTouchDevice(MediaPlayerDevice):
         if not slaves:
             _LOGGER.warning("Unable to find slaves to add")
         else:
-            _LOGGER.info(
-                "Adding slaves to zone with master " + str(
-                    self.device.config.name))
+            _LOGGER.info("Adding slaves to zone with master %s",
+                         self.device.config.name)
             self.device.add_zone_slave([slave.device for slave in slaves])

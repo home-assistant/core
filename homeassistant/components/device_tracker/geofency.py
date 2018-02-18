@@ -120,8 +120,7 @@ class GeofencyView(HomeAssistantView):
         """Return name of device tracker."""
         if 'beaconUUID' in data:
             return "{}_{}".format(BEACON_DEV_PREFIX, data['name'])
-        else:
-            return data['device']
+        return data['device']
 
     @asyncio.coroutine
     def _set_location(self, hass, data, location_name):

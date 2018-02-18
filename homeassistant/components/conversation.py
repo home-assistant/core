@@ -7,19 +7,17 @@ https://home-assistant.io/components/conversation/
 import asyncio
 import logging
 import re
-import warnings
 
 import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components import http
-from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
+from homeassistant.components.http.data_validator import (
+    RequestDataValidator)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import intent
-from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['fuzzywuzzy==0.16.0']
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,9 +25,6 @@ ATTR_TEXT = 'text'
 
 DEPENDENCIES = ['http']
 DOMAIN = 'conversation'
-
-INTENT_TURN_OFF = 'HassTurnOff'
-INTENT_TURN_ON = 'HassTurnOn'
 
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
 REGEX_TYPE = type(re.compile(''))
@@ -50,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
 @core.callback
 @bind_hass
 def async_register(hass, intent_type, utterances):
-    """Register an intent.
+    """Register utterances and any custom intents.
 
     Registrations don't require conversations to be loaded. They will become
     active once the conversation component is loaded.
@@ -75,8 +70,6 @@ def async_register(hass, intent_type, utterances):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Register the process service."""
-    warnings.filterwarnings('ignore', module='fuzzywuzzy')
-
     config = config.get(DOMAIN, {})
     intents = hass.data.get(DOMAIN)
 
@@ -102,12 +95,12 @@ def async_setup(hass, config):
 
     hass.http.register_view(ConversationProcessView)
 
-    hass.helpers.intent.async_register(TurnOnIntent())
-    hass.helpers.intent.async_register(TurnOffIntent())
-    async_register(hass, INTENT_TURN_ON,
+    async_register(hass, intent.INTENT_TURN_ON,
                    ['Turn {name} on', 'Turn on {name}'])
-    async_register(hass, INTENT_TURN_OFF, [
-        'Turn {name} off', 'Turn off {name}'])
+    async_register(hass, intent.INTENT_TURN_OFF,
+                   ['Turn {name} off', 'Turn off {name}'])
+    async_register(hass, intent.INTENT_TOGGLE,
+                   ['Toggle {name}', '{name} toggle'])
 
     return True
 
@@ -151,86 +144,13 @@ def _process(hass, text):
             return response
 
 
-@core.callback
-def _match_entity(hass, name):
-    """Match a name to an entity."""
-    from fuzzywuzzy import process as fuzzyExtract
-    entities = {state.entity_id: state.name for state
-                in hass.states.async_all()}
-    entity_id = fuzzyExtract.extractOne(
-        name, entities, score_cutoff=65)[2]
-    return hass.states.get(entity_id) if entity_id else None
-
-
-class TurnOnIntent(intent.IntentHandler):
-    """Handle turning item on intents."""
-
-    intent_type = INTENT_TURN_ON
-    slot_schema = {
-        'name': cv.string,
-    }
-
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
-        """Handle turn on intent."""
-        hass = intent_obj.hass
-        slots = self.async_validate_slots(intent_obj.slots)
-        name = slots['name']['value']
-        entity = _match_entity(hass, name)
-
-        if not entity:
-            _LOGGER.error("Could not find entity id for %s", name)
-            return None
-
-        yield from hass.services.async_call(
-            core.DOMAIN, SERVICE_TURN_ON, {
-                ATTR_ENTITY_ID: entity.entity_id,
-            }, blocking=True)
-
-        response = intent_obj.create_response()
-        response.async_set_speech(
-            'Turned on {}'.format(entity.name))
-        return response
-
-
-class TurnOffIntent(intent.IntentHandler):
-    """Handle turning item off intents."""
-
-    intent_type = INTENT_TURN_OFF
-    slot_schema = {
-        'name': cv.string,
-    }
-
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
-        """Handle turn off intent."""
-        hass = intent_obj.hass
-        slots = self.async_validate_slots(intent_obj.slots)
-        name = slots['name']['value']
-        entity = _match_entity(hass, name)
-
-        if not entity:
-            _LOGGER.error("Could not find entity id for %s", name)
-            return None
-
-        yield from hass.services.async_call(
-            core.DOMAIN, SERVICE_TURN_OFF, {
-                ATTR_ENTITY_ID: entity.entity_id,
-            }, blocking=True)
-
-        response = intent_obj.create_response()
-        response.async_set_speech(
-            'Turned off {}'.format(entity.name))
-        return response
-
-
 class ConversationProcessView(http.HomeAssistantView):
     """View to retrieve shopping list content."""
 
     url = '/api/conversation/process'
     name = "api:conversation:process"
 
-    @http.RequestDataValidator(vol.Schema({
+    @RequestDataValidator(vol.Schema({
         vol.Required('text'): str,
     }))
     @asyncio.coroutine

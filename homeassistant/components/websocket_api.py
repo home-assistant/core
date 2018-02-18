@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/developers/websocket_api/
 """
 import asyncio
+from concurrent import futures
 from contextlib import suppress
 from functools import partial
 import json
@@ -80,7 +81,7 @@ CALL_SERVICE_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('type'): TYPE_CALL_SERVICE,
     vol.Required('domain'): str,
     vol.Required('service'): str,
-    vol.Optional('service_data', default=None): dict
+    vol.Optional('service_data'): dict
 })
 
 GET_STATES_MESSAGE_SCHEMA = vol.Schema({
@@ -119,6 +120,11 @@ BASE_COMMAND_MESSAGE_SCHEMA = vol.Schema({
                                   TYPE_GET_PANELS,
                                   TYPE_PING)
 }, extra=vol.ALLOW_EXTRA)
+
+# Define the possible errors that occur when connections are cancelled.
+# Originally, this was just asyncio.CancelledError, but issue #9546 showed
+# that futures.CancelledErrors can also occur in some situations.
+CANCELLATION_ERRORS = (asyncio.CancelledError, futures.CancelledError)
 
 
 def auth_ok_message():
@@ -231,7 +237,7 @@ class ActiveConnection:
     def _writer(self):
         """Write outgoing messages."""
         # Exceptions if Socket disconnected or cancelled by connection handler
-        with suppress(RuntimeError, asyncio.CancelledError):
+        with suppress(RuntimeError, *CANCELLATION_ERRORS):
             while not self.wsock.closed:
                 message = yield from self.to_write.get()
                 if message is None:
@@ -363,7 +369,7 @@ class ActiveConnection:
             self.log_error(msg)
             self._writer_task.cancel()
 
-        except asyncio.CancelledError:
+        except CANCELLATION_ERRORS:
             self.debug("Connection cancelled by server")
 
         except asyncio.QueueFull:
@@ -445,7 +451,7 @@ class ActiveConnection:
         def call_service_helper(msg):
             """Call a service and fire complete message."""
             yield from self.hass.services.async_call(
-                msg['domain'], msg['service'], msg['service_data'], True)
+                msg['domain'], msg['service'], msg.get('service_data'), True)
             self.send_message_outside(result_message(msg['id']))
 
         self.hass.async_add_job(call_service_helper(msg))

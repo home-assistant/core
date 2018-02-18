@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_FORECAST, default=False): cv.boolean,
-    vol.Optional(CONF_LANGUAGE, default=None): cv.string,
+    vol.Optional(CONF_LANGUAGE): cv.string,
 })
 
 
@@ -176,7 +176,7 @@ class OpenWeatherMapSensor(Entity):
         elif self.type == 'forecast':
             if fc_data is None:
                 return
-            self._state = fc_data.get_weathers()[0].get_status()
+            self._state = fc_data.get_weathers()[0].get_detailed_status()
 
 
 class WeatherData(object):
