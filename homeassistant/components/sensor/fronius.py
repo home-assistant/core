@@ -119,9 +119,9 @@ class FroniusSensor(Entity):
         try:
             values = yield from self._update()
         except ServerDisconnectedError:
-            _LOGGER.error("Sensor data cannot be updated because of connection error.")
+            _LOGGER.error("Sensor data cannot be updated: connection error.")
         except TimeoutError:
-            _LOGGER.error("Sensor data cannot be updated because of timeout.")
+            _LOGGER.error("Sensor data cannot be updated: timeout.")
 
         _LOGGER.debug(values)
 
@@ -148,7 +148,7 @@ class FroniusSensor(Entity):
             return self.data.current_power_flow()
 
     def _get_attributes(self, values):
-        """Map the attributes and ensure proper values."""  
+        """Map the attributes and ensure proper values."""
         attributes = {}
         for key in values:
             if 'value' in values[key] and values[key]['value']:
