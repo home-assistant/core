@@ -65,7 +65,7 @@ class MaxEcoSwitch(Entity):
         self._device_id = device_id
         self._name = name
         self._is_on = None
-        self._maxcul_handle = hass[DATA_MAXCUL]
+        self._maxcul_handle = hass.data[DATA_MAXCUL]
 
         self._maxcul_handle.add_paired_device(self._device_id)
 
