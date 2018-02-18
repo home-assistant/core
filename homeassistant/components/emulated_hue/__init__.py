@@ -14,7 +14,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.components.http import REQUIREMENTS  # NOQA
-from homeassistant.components.http import HomeAssistantWSGI
+from homeassistant.components.http import HomeAssistantHTTP
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
@@ -86,7 +86,7 @@ def setup(hass, yaml_config):
     """Activate the emulated_hue component."""
     config = Config(hass, yaml_config.get(DOMAIN, {}))
 
-    server = HomeAssistantWSGI(
+    server = HomeAssistantHTTP(
         hass,
         server_host=config.host_ip_addr,
         server_port=config.listen_port,

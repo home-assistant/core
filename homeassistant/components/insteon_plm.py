@@ -26,8 +26,7 @@ CONF_OVERRIDE = 'device_override'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): cv.string,
-        vol.Optional(CONF_OVERRIDE, default=[]): vol.All(
-            cv.ensure_list_csv, vol.Length(min=1))
+        vol.Optional(CONF_OVERRIDE, default=[]): cv.ensure_list_csv,
     })
 }, extra=vol.ALLOW_EXTRA)
 

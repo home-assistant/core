@@ -42,7 +42,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         yield from home.update_info()
         dev.append(TibberSensor(home))
 
-    async_add_devices(dev)
+    async_add_devices(dev, True)
 
 
 class TibberSensor(Entity):

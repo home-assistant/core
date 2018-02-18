@@ -515,17 +515,15 @@ def test_media_player(hass):
 
     call, _ = yield from assert_request_calls_service(
         'Alexa.StepSpeaker', 'AdjustVolume', 'media_player#test',
-        'media_player.volume_set',
+        'media_player.volume_up',
         hass,
         payload={'volumeSteps': 20})
-    assert call.data['volume_level'] == 0.95
 
     call, _ = yield from assert_request_calls_service(
         'Alexa.StepSpeaker', 'AdjustVolume', 'media_player#test',
-        'media_player.volume_set',
+        'media_player.volume_down',
         hass,
         payload={'volumeSteps': -20})
-    assert call.data['volume_level'] == 0.55
 
 
 @asyncio.coroutine
