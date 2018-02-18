@@ -21,6 +21,9 @@ asynctest>=0.11.1
 # homeassistant.components.notify.html5
 PyJWT==1.5.3
 
+# homeassistant.components.media_player.sonos
+SoCo==0.14
+
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.4
 
@@ -70,9 +73,6 @@ holidays==0.9.3
 
 # homeassistant.components.frontend
 home-assistant-frontend==20180211.0
-
-# homeassistant.components.media_player.sonos
-https://github.com/SoCo/SoCo/archive/9f848e7a2c73aebb0f6d0b09008b17990f4ffabc.zip#SoCo==0.12-
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb

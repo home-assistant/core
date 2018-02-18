@@ -26,9 +26,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = [
-    'https://github.com/SoCo/SoCo/archive/'
-    '9f848e7a2c73aebb0f6d0b09008b17990f4ffabc.zip#SoCo==0.12-']
+REQUIREMENTS = ['SoCo==0.14']
 
 _LOGGER = logging.getLogger(__name__)
 
