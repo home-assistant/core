@@ -85,7 +85,7 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return SENSOR_TYPES.get(self._sensor_type, None)
+        return self._sensor_type
 
     @property
     def is_on(self):
