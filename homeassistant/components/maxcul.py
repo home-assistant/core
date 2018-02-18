@@ -20,7 +20,6 @@ CONF_DEVICE_PATH = 'device_path'
 CONF_DEVICE_BAUD_RATE = 'device_baud_rate'
 CONF_DEVICE_ID = 'device_id'
 
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DEVICE_PATH): cv.string,
@@ -35,11 +34,14 @@ SIGNAL_THERMOSTAT_UPDATE = DOMAIN + '.thermostat_update'
 SIGNAL_PUSH_BUTTON_UPDATE = DOMAIN + '.push_button_update'
 SIGNAL_SHUTTER_UPDATE = DOMAIN + '.shutter_update'
 
+ATTR_DURATION = 'duration'
+
 SERIVCE_ENABLE_PAIRING = 'enable_pairing'
 
 SCHEMA_SERVICE_ENABLE_PAIRING = vol.Schema({
     vol.Optional('duration', default=30): cv.positive_int,
 })
+
 
 def setup(hass, config):
     """
