@@ -40,7 +40,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         attributes = {}
         if rssi is not None:
             attributes['rssi'] = rssi
-        see(mac=BT_PREFIX + mac, host_name=name,
+        see(mac="%s_%s" % (BT_PREFIX, mac), host_name=name,
             attributes=attributes, source_type=SOURCE_TYPE_BLUETOOTH)
 
     def discover_devices():
