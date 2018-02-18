@@ -8,7 +8,6 @@ from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.purge import purge_old_data
 from homeassistant.components.recorder.models import States, Events
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.util.async import run_coroutine_threadsafe
 from tests.common import get_test_home_assistant, init_recorder_component
 
 
@@ -20,8 +19,6 @@ class TestRecorderPurge(unittest.TestCase):
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)
         self.hass.start()
-        run_coroutine_threadsafe(
-            recorder.wait_connection_ready(self.hass), self.hass.loop).result()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
