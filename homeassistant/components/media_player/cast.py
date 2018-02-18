@@ -7,7 +7,6 @@ https://home-assistant.io/components/media_player.cast/
 # pylint: disable=import-error
 import asyncio
 import logging
-from typing import Tuple
 
 import voluptuous as vol
 
