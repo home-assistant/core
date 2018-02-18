@@ -35,12 +35,12 @@ def setup_scanner(hass, config, see, discovery_info=None):
     import bluetooth
     from bt_proximity import BluetoothRSSI
 
-    def see_device(device):
+    def see_device(mac, name, rssi=None):
         """Mark a device as seen."""
         attributes = {}
-        if len(device) > 2:
-            attributes['rssi'] = device[2]
-        see(mac=BT_PREFIX + device[0], host_name=device[1],
+        if rssi is not None:
+            attributes['rssi'] = rssi
+        see(mac=BT_PREFIX + mac, host_name=name,
             attributes=attributes, source_type=SOURCE_TYPE_BLUETOOTH)
 
     def discover_devices():
@@ -73,7 +73,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
             if dev[0] not in devs_to_track and \
                     dev[0] not in devs_donot_track:
                 devs_to_track.append(dev[0])
-                see_device(dev)
+                see_device(dev[0], dev[1])
 
     interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
@@ -89,15 +89,14 @@ def setup_scanner(hass, config, see, discovery_info=None):
                         devs_to_track.append(dev[0])
             for mac in devs_to_track:
                 _LOGGER.debug("Scanning %s", mac)
-                result = (bluetooth.lookup_name(mac, timeout=5),)
+                result = bluetooth.lookup_name(mac, timeout=5)
+                rssi = None
                 if request_rssi:
                     rssi = BluetoothRSSI(mac).request_rssi()
-                    if rssi is not None:
-                        result = result + rssi
-                if result[0] is None:
+                if result is None:
                     # Could not lookup device name
                     continue
-                see_device((mac,) + result)
+                see_device(mac, result, rssi)
         except bluetooth.BluetoothError:
             _LOGGER.exception("Error looking up Bluetooth device")
         track_point_in_utc_time(
