@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MODEL, default=None): vol.In(
         ['philips.light.sread1',
          'philips.light.ceiling',
-         'philips.light.bulb']),
+         'philips.light.bulb', None]),
 })
 
 REQUIREMENTS = ['python-miio==0.3.6']
