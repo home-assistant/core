@@ -27,12 +27,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         address = deviceInfo['address']
         device = plm.devices[address]
         stateKey = deviceInfo['stateKey']
-        newnames = deviceInfo['newnames']
 
         state_list.append(InsteonPLMSensorDevice(hass,
                                                  device,
-                                                 stateKey,
-                                                 newnames))
+                                                 stateKey))
 
     async_add_devices(state_list)
 
@@ -40,12 +38,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class InsteonPLMSensorDevice(Entity):
     """A Class for an Insteon device."""
 
-    def __init__(self, hass, device, stateKey, newnames):
+    def __init__(self, hass, device, stateKey):
         """Initialize the binarysensor."""
         self._hass = hass
         self._state = device.states[stateKey]
         self._device = device
-        self._newnames = newnames
 
         self._state.register_updates(self.async_sensor_update)
 
@@ -63,10 +60,10 @@ class InsteonPLMSensorDevice(Entity):
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
         name = ''
-        if self._state.group == 0x01 and not self._newnames:
+        if self._state.group == 0x01:
             name = self._device.id
         else:
-            name = '{:s}_{:s}'.format(self._device.id, self._state.name)
+            name = '{:s}_{:d}'.format(self._device.id, self._state.group)
         return name
 
     @property

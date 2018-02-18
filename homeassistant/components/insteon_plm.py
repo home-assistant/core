@@ -22,14 +22,12 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'insteon_plm'
 
 CONF_OVERRIDE = 'device_override'
-CONF_NEWNAMES = 'new_names'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): cv.string,
         vol.Optional(CONF_OVERRIDE): vol.All(
-            cv.ensure_list_csv, vol.Length(min=1)),
-        vol.Optional(CONF_NEWNAMES, default=False): cv.boolean
+            cv.ensure_list_csv, vol.Length(min=1))
         })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -44,7 +42,6 @@ def async_setup(hass, config):
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
     overrides = conf.get(CONF_OVERRIDE, [])
-    use_newnames = conf.get(CONF_NEWNAMES)
 
     @callback
     def async_plm_new_device(device):
@@ -63,8 +60,7 @@ def async_setup(hass, config):
                     discovery.async_load_platform(
                         hass, platform, DOMAIN,
                         discovered=[{'address': device.address.hex,
-                                     'stateKey': stateKey,
-                                     'newnames': use_newnames}],
+                                     'stateKey': stateKey}],
                         hass_config=config))
 
     _LOGGER.info("Looking for PLM on %s", port)
