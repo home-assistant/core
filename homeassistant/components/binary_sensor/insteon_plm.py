@@ -15,6 +15,10 @@ DEPENDENCIES = ['insteon_plm']
 
 _LOGGER = logging.getLogger(__name__)
 
+SENSOR_TYPES = {'openClosedSensor': 'opening',
+                'motionSensor': 'motion',
+                'doorSensor': 'door',
+                'leakSensor': 'moisture'}
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -29,9 +33,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         stateKey = deviceInfo['stateKey']
         newnames = deviceInfo['newnames']
 
-        _LOGGER.info(
-            'Registered device %s state %s with binary_sensor platform %s',
-            device.address, device.states[stateKey].name)
         state_list.append(InsteonPLMBinarySensor(hass,
                                                  device,
                                                  stateKey,
@@ -64,20 +65,17 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
         return self._device.address.human
 
     @property
-    def id(self):
-        """Return the name of the node."""
-        return self._device.id
-
-    @property
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
+        name = ''
         if self._newnames:
-            return self._device.id + '_' + self._state.name
+            name = '{:s}_{:s}'.format(self._device.id, self._state.name)
         else:
             if self._state.group == 0x01:
-                return self._device.id
+                name = self._device.id
             else:
-                return self._device.id+'_'+str(self._state.group)
+                name = '{:s}_{:d}'.format(self._device.id, self._state.group)
+        return name
 
     @property
     def device_state_attributes(self):
@@ -88,31 +86,16 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
     @callback
     def async_binarysensor_update(self, deviceid, statename, val):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update calback from PLM for device %s state %s',
-                     deviceid, statename)
         self._hass.async_add_job(self.async_update_ha_state())
 
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return self._sensor_type
+        return SENSOR_TYPES.get(self._sensor_type, None)
 
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
         sensorstate = self._state.value
-        _LOGGER.info("Sensor for device %s state %s is %s",
-                     self.id, self._state.name, sensorstate)
         return bool(sensorstate)
 
-    def _stateName_to_sensor_type(self, stateName):
-        if stateName == 'openClosedSensor   ':
-            return 'opening'
-        elif stateName == 'motionSensor':
-            return 'motion'
-        elif stateName == 'doorSensor':
-            return 'door'
-        elif stateName == 'leakSensor':
-            return 'moisture'
-        else:
-            return ""

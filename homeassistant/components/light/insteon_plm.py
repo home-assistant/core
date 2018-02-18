@@ -63,33 +63,27 @@ class InsteonPLMDimmerDevice(Light):
         return self._device.address.human
 
     @property
-    def id(self):
-        """Return the name of the node."""
-        return self._device.id
-
-    @property
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
+        name = ''
         if self._newnames:
-            return self._device.id + '_' + self._state.name
+            name = '{:s}_{:s}'.format(self._device.id, self._state.name)
         else:
             if self._state.group == 0x01:
-                return self._device.id
+                name = self._device.id
             else:
-                return self._device.id+'_'+str(self._state.group)
+                name = '{:s}_{:d}'.format(self._device.id, self._state.group)
+        return name
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         onlevel = self._state.value
-        _LOGGER.debug("on level for %s is %s", self._device.address, onlevel)
         return int(onlevel)
 
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        _LOGGER.debug("on level for %s is %s",
-                      self._device.id, self.brightness)
         return bool(self.brightness)
 
     @property
@@ -106,7 +100,6 @@ class InsteonPLMDimmerDevice(Light):
     @callback
     def async_light_update(self, entity_id, statename, val):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info("Received update calback from PLM for %s", self.id)
         self._hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine

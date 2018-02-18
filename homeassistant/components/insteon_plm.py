@@ -27,9 +27,9 @@ CONF_NEWNAMES = 'new_names'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): cv.string,
-        vol.Optional(CONF_OVERRIDE, default=[]): vol.All(
+        vol.Optional(CONF_OVERRIDE): vol.All(
             cv.ensure_list_csv, vol.Length(min=1)),
-        vol.Optional(CONF_NEWNAMES, default=['no']): cv.string
+        vol.Optional(CONF_NEWNAMES, default=False): cv.boolean
         })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -43,21 +43,13 @@ def async_setup(hass, config):
 
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
-    overrides = conf.get(CONF_OVERRIDE)
-    newnames = conf.get(CONF_NEWNAMES)
-
-    if isinstance(newnames, list):
-        newnames = ''
-    use_newnames = False
-    if newnames.lower() == 'y' or newnames.lower() == 'yes':
-        use_newnames = True
+    overrides = conf.get(CONF_OVERRIDE, [])
+    use_newnames = conf.get(CONF_NEWNAMES)
 
     @callback
     def async_plm_new_device(device):
         """Detect device from transport to be delegated to platform."""
-        _LOGGER = logging.getLogger(__name__)
-        _LOGGER.debug('Starting Home-Assistant async_plm_new_device')
-        _LOGGER.debug(device)
+
         for stateKey in device.states:
             platformInfo = ipdb[device.states[stateKey]]
             platform = platformInfo.platform
@@ -75,8 +67,6 @@ def async_setup(hass, config):
                                      'newnames': use_newnames}],
                         hass_config=config))
 
-        _LOGGER.debug('Starting Home-Assistant async_plm_new_device')
-    _LOGGER.info('Config dir %s', hass.config.config_dir)
     _LOGGER.info("Looking for PLM on %s", port)
     conn = yield from insteonplm.Connection.create(
         device=port,
@@ -136,36 +126,36 @@ class IPDB(object):
     """Embodies the INSTEON Product Database static data
 and access methods."""
 
-    from insteonplm.states.onOff import (OnOffSwitch,
-                                         OnOffSwitch_OutletTop,
-                                         OnOffSwitch_OutletBottom,
-                                         OpenClosedRelay)
-
-    from insteonplm.states.dimmable import (DimmableSwitch,
-                                            DimmableSwitch_Fan)
-
-    from insteonplm.states.sensor import (VariableSensor,
-                                          OnOffSensor,
-                                          SmokeCO2Sensor,
-                                          IoLincSensor)
-
-    states = [
-        State(OnOffSwitch_OutletTop, 'switch'),
-        State(OnOffSwitch_OutletBottom, 'switch'),
-        State(OpenClosedRelay, 'switch'),
-        State(OnOffSwitch, 'switch'),
-
-        State(IoLincSensor, 'binary_sensor'),
-        State(SmokeCO2Sensor, 'sensor'),
-        State(OnOffSensor, 'binary_sensor'),
-        State(VariableSensor, 'sensor'),
-
-        State(DimmableSwitch_Fan, 'fan'),
-        State(DimmableSwitch, 'light')
-        ]
-
     def __init__(self):
+
+        from insteonplm.states.onOff import (OnOffSwitch,
+                                             OnOffSwitch_OutletTop,
+                                             OnOffSwitch_OutletBottom,
+                                             OpenClosedRelay)
+
+        from insteonplm.states.dimmable import (DimmableSwitch,
+                                                DimmableSwitch_Fan)
+
+        from insteonplm.states.sensor import (VariableSensor,
+                                              OnOffSensor,
+                                              SmokeCO2Sensor,
+                                              IoLincSensor)
+        
         self.log = logging.getLogger(__name__)
+
+        self.states = [State(OnOffSwitch_OutletTop, 'switch'),
+                       State(OnOffSwitch_OutletBottom, 'switch'),
+                       State(OpenClosedRelay, 'switch'),
+                       State(OnOffSwitch, 'switch'),
+
+                       State(IoLincSensor, 'binary_sensor'),
+                       State(SmokeCO2Sensor, 'sensor'),
+                       State(OnOffSensor, 'binary_sensor'),
+                       State(VariableSensor, 'sensor'),
+
+                       State(DimmableSwitch_Fan, 'fan'),
+                       State(DimmableSwitch, 'light')
+                       ]
 
     def __len__(self):
         return len(self.states)
