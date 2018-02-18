@@ -71,7 +71,7 @@ def setup(hass, config):
     hass.data[DOMAIN] = {
         'controller': api,
         'devices': defaultdict(list),
-        'scenes':[]
+        'scenes': []
     }
 
     for device in devices:
