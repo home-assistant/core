@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import dispatcher_connect
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES, PLATFORM_SCHEMA
 )
@@ -68,7 +67,7 @@ class MaxShutterContact(BinarySensorDevice):
         self._name = name
         self._device_id = device_id
         self._device_class = device_class
-        self._is_open = STATE_UNKNOWN
+        self._is_open = None
         self._maxcul_handle = hass.data[DATA_MAXCUL]
 
         self._maxcul_handle.add_paired_device(self._device_id)
@@ -79,7 +78,7 @@ class MaxShutterContact(BinarySensorDevice):
             device_id = event.data.get(ATTR_DEVICE_ID)
             if device_id != self._device_id:
                 return
-            self._is_open = event.data.get(ATTR_STATE, STATE_UNKNOWN)
+            self._is_open = event.data.get(ATTR_STATE, None)
 
             self.async_schedule_update_ha_state()
 
