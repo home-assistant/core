@@ -1,9 +1,9 @@
 """Class to hold all cover accessories."""
 import logging
 
-from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
 
+from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
     SERVICES_WINDOW_COVERING, CHAR_CURRENT_POSITION,
@@ -13,6 +13,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+@TYPES.register('Window')
 class Window(HomeAccessory):
     """Generate a Window accessory for a cover entity.
 
@@ -50,18 +51,6 @@ class Window(HomeAccessory):
         async_track_state_change(
             self._hass, self._entity_id, self.update_cover_position)
 
-        # self.debug_characteristics()
-
-    def debug_characteristics(self):
-        """Method to debug characteristics."""
-        while not self.run_sentinel.wait(5):
-            _LOGGER.debug("%s: Target: %d", self._entity_id,
-                          self.char_target_position.get_value())
-            _LOGGER.debug("%s: Current: %d", self._entity_id,
-                          self.char_current_position.get_value())
-            _LOGGER.debug("%s: PositionState: %d", self._entity_id,
-                          self.char_position_state.get_value())
-
     def move_cover(self, value):
         """Move cover to value if call came from homekit."""
         if value != self.current_position:
@@ -75,7 +64,6 @@ class Window(HomeAccessory):
                 'cover', 'set_cover_position',
                 {'entity_id': self._entity_id, 'position': value})
 
-    @callback
     def update_cover_position(self, entity_id=None, old_state=None,
                               new_state=None):
         """Update cover position after state changed."""

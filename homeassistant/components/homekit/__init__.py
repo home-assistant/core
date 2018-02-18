@@ -8,65 +8,27 @@ import logging
 
 import voluptuous as vol
 
-from pyhap.accessory_driver import AccessoryDriver
-
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_NAME, CONF_IP_ADDRESS, CONF_PORT,
+    ATTR_FRIENDLY_NAME, ATTR_SUPPORTED_FEATURES, CONF_PATH, CONF_PORT,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util import get_local_ip
+from homeassistant.util.decorator import Registry
 
-from .accessories import HomeBridge
-from .covers import Window
-from .sensors import TemperatureSensor
-
-
+TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'homekit'
 REQUIREMENTS = ['HAP-python==1.1.2']
 
-ATTR_CLASS = 'class'
-ATTR_NAME = 'name'
-
+BRIDGE_NAME = 'Home Assistant'
 CONF_PIN_CODE = 'pincode'
-CONF_TYPES = 'types'
-
-ALL_TYPES = {
-    'sensor_temperature': {ATTR_NAME: 'Temperature',
-                           ATTR_CLASS: TemperatureSensor},
-    'cover': {ATTR_NAME: 'Cover',
-              ATTR_CLASS: Window},
-}
-
-
-def valid_typ(value):
-    """Check if typ is valid."""
-    if value.lower() in ALL_TYPES.keys():
-        return value.lower()
-    raise vol.Invalid('Typ {} is an invalid typ.'.format(value))
-
-
-def valid_string(string):
-    """Check if name string is valid. An empty string is allowed."""
-    if string is None:
-        return None
-    return str(string)
-
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_IP_ADDRESS): cv.string,
-        vol.Optional(CONF_PORT): vol.Coerce(int),
-        vol.Optional(CONF_PIN_CODE): cv.string,
-        vol.Required(CONF_TYPES): vol.Schema({
-            vol.Required(valid_typ): vol.Schema({
-                vol.Required(cv.entity_id): valid_string,
-            })
-        })
+        vol.Optional(CONF_PORT, default=51826): vol.Coerce(int),
+        vol.Optional(CONF_PIN_CODE, default='123-45-678'): cv.string,
+        vol.Optional(CONF_PATH, default='accessory.state'): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -74,70 +36,79 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup the homekit component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    # pylint: disable=unused-variable
+    from .covers import Window  # noqa F401
+    # pylint: disable=unused-variable
+    from .sensors import TemperatureSensor # noqa F401
 
     conf = config[DOMAIN]
-    name = conf.get(CONF_NAME, 'homeassistant')
-    ip_address = conf.get(CONF_IP_ADDRESS, '127.0.0.1')
-    port = conf.get(CONF_PORT, 51826)
-    pin = conf.get(CONF_PIN_CODE, '123-45-678')
-    types = conf.get(CONF_TYPES)
+    port = conf.get(CONF_PORT)
+    pin = str.encode(conf.get(CONF_PIN_CODE))
+    path = hass.config.path(conf.get(CONF_PATH))
 
-    yield from component.async_add_entities([
-        Homekit(hass, name, ip_address, port, pin, types)])
+    ip_address = get_local_ip()
+
+    homekit = Homekit(ip_address, port, path)
+    homekit.setup_bridge(BRIDGE_NAME, pin)
+
+    _LOGGER.debug('Start adding accessories.')
+    for state in hass.states.async_all():
+        if state.domain == 'cover':
+            # Only add covers that support set_cover_position
+            if not state.attributes.get(ATTR_SUPPORTED_FEATURES) & 4:
+                continue
+            _LOGGER.debug('Add \"%s\" as \"%s\"',
+                          state.entity_id, 'Window')
+            name = state.attributes.get(ATTR_FRIENDLY_NAME, 'cover')
+            acc = TYPES['Window'](hass, state.entity_id, name)
+            homekit.add_accessory(acc)
+            continue
+        if state.domain == 'sensor':
+            _LOGGER.debug('Add \"%s\" as \"%s\"',
+                          state.entity_id, 'TemperatureSensor')
+            name = state.attributes.get(ATTR_FRIENDLY_NAME, 'sensor')
+            acc = TYPES['TemperatureSensor'](hass, state.entity_id, name)
+            homekit.add_accessory(acc)
+            continue
+
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_START, homekit.start_driver)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, homekit.stop_driver)
+
     return True
 
 
-class Homekit(Entity):
+class Homekit():
     """Class to handle all actions between homekit and Home Assistant."""
 
-    def __init__(self, hass, name, ip_address, port, pin, types):
-        """Initialize a homekit entity."""
-        self._hass = hass
-        self._name = name
+    def __init__(self, ip_address, port, path):
+        """Initialize a homekit object."""
         self._ip_address = ip_address
         self._port = port
-        self._pin = str.encode(pin)
-        self._types = types
-        self.path = self._hass.config.path('accessory.state')
+        self._path = path
         self.bridge = None
         self.driver = None
 
-    def setup_bridge(self):
+    def setup_bridge(self, name, pin):
         """Setup the bridge component to track all accessories."""
-        self.bridge = HomeBridge(self._name, pincode=self._pin)
+        from .accessories import HomeBridge
+        self.bridge = HomeBridge(name, pincode=pin)
         self.bridge.set_accessory_info('homekit.bridge')
 
-    def setup_accessories(self):
-        """Setup all accessories to be available in homekit."""
-        for typ, entities in self._types.items():
-            for entity_id, name in entities.items():
-                if name is None:
-                    name = ALL_TYPES[typ][ATTR_NAME]
-                acc = ALL_TYPES[typ][ATTR_CLASS](
-                    self.hass, entity_id, display_name=name)
-                self.bridge.add_accessory(acc)
+    def add_accessory(self, acc):
+        """Add an accessory to the bridge."""
+        self.bridge.add_accessory(acc)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Register callbacks."""
-        @callback
-        def start_driver(event):
-            """Start the accessory driver after HA start is called."""
-            self.setup_bridge()
-            self.setup_accessories()
-            _LOGGER.debug('Driver start')
-            self.driver = AccessoryDriver(self.bridge, self._port,
-                                          self._ip_address, self.path)
-            self.driver.start()
+    def start_driver(self, event):
+        """Start the accessory driver."""
+        from pyhap.accessory_driver import AccessoryDriver
+        self.driver = AccessoryDriver(self.bridge, self._port,
+                                      self._ip_address, self._path)
+        _LOGGER.debug('Driver start')
+        self.driver.start()
 
-        @callback
-        def homeassistant_stop(event):
-            """Stop the accessory drive after HA stop is called."""
-            _LOGGER.debug('Driver stop')
-            self.driver.stop()
-
-        self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, start_driver)
-        self._hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, homeassistant_stop)
+    def stop_driver(self, event):
+        """Stop the accessory driver."""
+        _LOGGER.debug('Driver stop')
+        self.driver.stop()
