@@ -30,7 +30,7 @@ class TestFileSensor(unittest.TestCase):
         self.hass.stop()
 
     def test_invalid_path(self):
-        """Test the filesize class."""
+        """Test that an invalid path is caught."""
         config = {
             'sensor': {
                 'platform': 'filesize',
@@ -44,11 +44,11 @@ class TestFileSensor(unittest.TestCase):
 
     @patch('os.stat', Mock(return_value=FAKE))
     def test_valid_path(self):
-        """Test the filesize class."""
+        """Test for a valid path."""
         config = {
             'sensor': {
                 'platform': 'filesize',
-                CONF_FILE_PATHS: ['/tmp']}
+                CONF_FILE_PATHS: ['tests/components/sensor/test_filesize.py']}
         }
 
         self.assertTrue(
