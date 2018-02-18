@@ -59,6 +59,9 @@ YesssSMS==0.1.1b3
 # homeassistant.components.abode
 abodepy==0.12.2
 
+# homeassistant.components.media_player.frontier_silicon
+afsapi==0.0.1
+
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.4
 
@@ -291,9 +294,6 @@ freesms==0.1.2
 
 # homeassistant.components.switch.fritzdect
 fritzhome==1.0.4
-
-# homeassistant.components.media_player.frontier_silicon
-afsapi==0.0.1
 
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
