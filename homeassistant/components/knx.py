@@ -71,12 +71,7 @@ async def async_setup(hass, config):
     from xknx.exceptions import XKNXException
     try:
         hass.data[DATA_KNX] = KNXModule(hass, config)
-<<<<<<< HEAD
         yield from hass.data[DATA_KNX].start()
-=======
-        hass.data[DATA_KNX].async_create_exposures()
-        await hass.data[DATA_KNX].start()
->>>>>>> 2995813... Removing asyncio.coroutine syntax (first steps)
 
     except XKNXException as ex:
         _LOGGER.warning("Can't connect to KNX interface: %s", ex)
@@ -204,32 +199,7 @@ class KNXModule(object):
             self.xknx.telegram_queue.register_telegram_received_cb(
                 self.telegram_received_cb, address_filters)
 
-<<<<<<< HEAD
-    @asyncio.coroutine
-    def telegram_received_cb(self, telegram):
-=======
-    @callback
-    def async_create_exposures(self):
-        """Create exposures."""
-        if CONF_KNX_EXPOSE not in self.config[DOMAIN]:
-            return
-        for to_expose in self.config[DOMAIN][CONF_KNX_EXPOSE]:
-            expose_type = to_expose.get(CONF_KNX_EXPOSE_TYPE)
-            entity_id = to_expose.get(CONF_KNX_EXPOSE_ENTITY_ID)
-            address = to_expose.get(CONF_KNX_EXPOSE_ADDRESS)
-            if expose_type in ['time', 'date', 'datetime']:
-                exposure = KNXExposeTime(
-                    self.xknx, expose_type, address)
-                exposure.async_register()
-                self.exposures.append(exposure)
-            else:
-                exposure = KNXExposeSensor(
-                    self.hass, self.xknx, expose_type, entity_id, address)
-                exposure.async_register()
-                self.exposures.append(exposure)
-
     async def telegram_received_cb(self, telegram):
->>>>>>> 2995813... Removing asyncio.coroutine syntax (first steps)
         """Call invoked after a KNX telegram was received."""
         self.hass.bus.fire('knx_event', {
             'address': telegram.group_address.str(),
