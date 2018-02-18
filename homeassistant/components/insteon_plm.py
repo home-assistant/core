@@ -40,8 +40,8 @@ def async_setup(hass, config):
     import insteonplm
 
     from insteonplm.states.onOff import (OnOffSwitch,
-                                         OffSwitch_OutletTop,
-                                         OffSwitch_OutletBottom,
+                                         OnOffSwitch_OutletTop,
+                                         OnOffSwitch_OutletBottom,
                                          OpenClosedRelay)
 
     from insteonplm.states.dimmable import (DimmableSwitch,
@@ -151,8 +151,8 @@ and access methods."""
 
 
     from insteonplm.states.onOff import (OnOffSwitch,
-                                         OffSwitch_OutletTop,
-                                         OffSwitch_OutletBottom,
+                                         OnOffSwitch_OutletTop,
+                                         OnOffSwitch_OutletBottom,
                                          OpenClosedRelay)
 
     from insteonplm.states.dimmable import (DimmableSwitch,
