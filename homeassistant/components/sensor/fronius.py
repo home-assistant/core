@@ -83,6 +83,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class FroniusSensor(Entity):
+    """The Fronius sensor implementation"""
+
     def __init__(self, data, name, device_type, scope, device):
         """Initialize the sensor."""
         self.data = data
