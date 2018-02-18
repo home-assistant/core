@@ -102,8 +102,8 @@ class ZhaFan(zha.Entity, FanEntity):
     def async_update(self):
         """Retrieve latest state."""
         result = yield from zha.safe_read(self._endpoint.fan, ['fan_mode'])
-        value = result.get('fan_mode', SPEED_TO_VALUE[self._state])
-        self._state = VALUE_TO_SPEED.get(value, STATE_UNKNOWN)
+        new_value = result.get('fan_mode', None)
+        self._state = VALUE_TO_SPEED.get(new_value, STATE_UNKNOWN)
 
     @property
     def should_poll(self) -> bool:
