@@ -162,7 +162,7 @@ class FilterSensor(Entity):
         """Factory to create filters with user provided arguments."""
         class FilterData(object):
             def __init__(self):
-                self._data = None 
+                self._data = None
 
             @property
             @Filter(filter_function, **kwargs)
