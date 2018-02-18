@@ -29,7 +29,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT)
+    CONF_NAME, CONF_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.filter import (
@@ -105,6 +105,9 @@ class FilterSensor(Entity):
             """Handle the sensor state changes."""
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
+
+            if new_state.state is None or new_state.state is STATE_UNKNOWN:
+                return
 
             try:
                 self._pre_filter_state = new_state.state
