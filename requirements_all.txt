@@ -162,7 +162,7 @@ broadlink==0.5
 
 # homeassistant.components.sensor.buienradar
 # homeassistant.components.weather.buienradar
-buienradar==0.9
+buienradar==0.91
 
 # homeassistant.components.calendar.caldav
 caldav==0.5.0

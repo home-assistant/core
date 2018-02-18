@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.components.sensor.buienradar import (
     BrData)
 
-REQUIREMENTS = ['buienradar==0.9']
+REQUIREMENTS = ['buienradar==0.91']
 
 _LOGGER = logging.getLogger(__name__)
 
