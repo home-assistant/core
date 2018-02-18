@@ -51,7 +51,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up of Fronius platform."""
-    _LOGGER.debug("Running setup")
     _LOGGER.debug(config)
     import pyfronius
 
