@@ -40,7 +40,6 @@ _LOGGER = logging.getLogger(__name__)
 STATE_GROUPED = 'grouped'
 
 ATTR_MASTER = 'master'
-ATTR_SLEEP = 'sleep'
 
 SERVICE_JOIN = 'bluesound_join'
 SERVICE_UNJOIN = 'bluesound_unjoin'
@@ -777,17 +776,6 @@ class BluesoundPlayer(MediaPlayerDevice):
             supported = supported | SUPPORT_SEEK
 
         return supported
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        sleep = 0
-        if self._status is not None:
-            sleep = self._status.get('sleep', 0)
-
-        return {
-            ATTR_SLEEP: sleep
-        }
 
     @property
     def is_master(self):
