@@ -8,7 +8,6 @@ import asyncio
 from asyncio.futures import CancelledError
 from datetime import timedelta
 import logging
-import os
 
 import aiohttp
 from aiohttp.client_exceptions import ClientError
@@ -16,7 +15,6 @@ from aiohttp.hdrs import CONNECTION, KEEP_ALIVE
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA,
     SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
