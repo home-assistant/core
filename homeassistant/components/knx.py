@@ -4,7 +4,7 @@ Connects to KNX platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/knx/
 """
-import asyncio
+
 import logging
 
 import voluptuous as vol
@@ -66,13 +66,17 @@ SERVICE_KNX_SEND_SCHEMA = vol.Schema({
 })
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the KNX component."""
     from xknx.exceptions import XKNXException
     try:
         hass.data[DATA_KNX] = KNXModule(hass, config)
+<<<<<<< HEAD
         yield from hass.data[DATA_KNX].start()
+=======
+        hass.data[DATA_KNX].async_create_exposures()
+        await hass.data[DATA_KNX].start()
+>>>>>>> 2995813... Removing asyncio.coroutine syntax (first steps)
 
     except XKNXException as ex:
         _LOGGER.warning("Can't connect to KNX interface: %s", ex)
@@ -128,20 +132,18 @@ class KNXModule(object):
         from xknx import XKNX
         self.xknx = XKNX(config=self.config_file(), loop=self.hass.loop)
 
-    @asyncio.coroutine
-    def start(self):
+    async def start(self):
         """Start KNX object. Connect to tunneling or Routing device."""
         connection_config = self.connection_config()
-        yield from self.xknx.start(
+        await self.xknx.start(
             state_updater=self.config[DOMAIN][CONF_KNX_STATE_UPDATER],
             connection_config=connection_config)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         self.connected = True
 
-    @asyncio.coroutine
-    def stop(self, event):
+    async def stop(self, event):
         """Stop KNX object. Disconnect from tunneling or Routing device."""
-        yield from self.xknx.stop()
+        await self.xknx.stop()
 
     def config_file(self):
         """Resolve and return the full path of xknx.yaml if configured."""
@@ -202,8 +204,32 @@ class KNXModule(object):
             self.xknx.telegram_queue.register_telegram_received_cb(
                 self.telegram_received_cb, address_filters)
 
+<<<<<<< HEAD
     @asyncio.coroutine
     def telegram_received_cb(self, telegram):
+=======
+    @callback
+    def async_create_exposures(self):
+        """Create exposures."""
+        if CONF_KNX_EXPOSE not in self.config[DOMAIN]:
+            return
+        for to_expose in self.config[DOMAIN][CONF_KNX_EXPOSE]:
+            expose_type = to_expose.get(CONF_KNX_EXPOSE_TYPE)
+            entity_id = to_expose.get(CONF_KNX_EXPOSE_ENTITY_ID)
+            address = to_expose.get(CONF_KNX_EXPOSE_ADDRESS)
+            if expose_type in ['time', 'date', 'datetime']:
+                exposure = KNXExposeTime(
+                    self.xknx, expose_type, address)
+                exposure.async_register()
+                self.exposures.append(exposure)
+            else:
+                exposure = KNXExposeSensor(
+                    self.hass, self.xknx, expose_type, entity_id, address)
+                exposure.async_register()
+                self.exposures.append(exposure)
+
+    async def telegram_received_cb(self, telegram):
+>>>>>>> 2995813... Removing asyncio.coroutine syntax (first steps)
         """Call invoked after a KNX telegram was received."""
         self.hass.bus.fire('knx_event', {
             'address': telegram.group_address.str(),
@@ -212,8 +238,7 @@ class KNXModule(object):
         # False signals XKNX to proceed with processing telegrams.
         return False
 
-    @asyncio.coroutine
-    def service_send_to_knx_bus(self, call):
+    async def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
         from xknx.knx import Telegram, GroupAddress, DPTBinary, DPTArray
         attr_payload = call.data.get(SERVICE_KNX_ATTR_PAYLOAD)
@@ -230,7 +255,7 @@ class KNXModule(object):
         telegram = Telegram()
         telegram.payload = payload
         telegram.group_address = address
-        yield from self.xknx.telegrams.put(telegram)
+        await self.xknx.telegrams.put(telegram)
 
 
 class KNXAutomation():

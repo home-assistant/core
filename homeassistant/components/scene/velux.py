@@ -4,7 +4,6 @@ Support for VELUX scenes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/scene.velux/
 """
-import asyncio
 
 from homeassistant.components.scene import Scene
 from homeassistant.components.velux import _LOGGER, DATA_VELUX
@@ -13,8 +12,7 @@ from homeassistant.components.velux import _LOGGER, DATA_VELUX
 DEPENDENCIES = ['velux']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up the scenes for velux platform."""
     entities = []
@@ -36,7 +34,6 @@ class VeluxScene(Scene):
         """Return the name of the scene."""
         return self.scene.name
 
-    @asyncio.coroutine
-    def async_activate(self):
+    async def async_activate(self):
         """Activate the scene."""
-        yield from self.scene.run()
+        await self.scene.run()
