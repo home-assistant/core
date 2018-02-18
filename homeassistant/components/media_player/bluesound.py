@@ -168,17 +168,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         else:
             target_players = hass.data[DATA_BLUESOUND]
 
-        update_tasks = []
         for player in target_players:
             yield from getattr(player, method['method'])(**params)
-
-        for player in target_players:
-            if player.should_poll:
-                update_coro = player.async_update_ha_state(True)
-                update_tasks.append(update_coro)
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     for service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service]['schema']
