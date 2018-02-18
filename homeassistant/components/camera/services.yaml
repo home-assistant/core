@@ -24,7 +24,7 @@ snapshot:
       description: Template of a Filename. Variable is entity_id.
       example: '/tmp/snapshot_{{ entity_id }}'
 
-ptz:
+onvif_ptz:
   description: Pan/Tilt/Zoom service for ONVIF camera.
   fields:
     entity_id:

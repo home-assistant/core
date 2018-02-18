@@ -46,7 +46,7 @@ DIR_RIGHT = "RIGHT"
 ZOOM_OUT = "ZOOM_OUT"
 ZOOM_IN = "ZOOM_IN"
 
-SERVICE_PTZ = "ptz"
+SERVICE_PTZ = "onvif_ptz"
 
 ONVIF_DATA = "onvif"
 ENTITIES = "entities"
