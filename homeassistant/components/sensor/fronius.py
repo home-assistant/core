@@ -23,7 +23,7 @@ REQUIREMENTS = ['pyfronius==0.2']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_TYPE = 'type'
-CONF_DEVICE = 'device'
+CONF_DEVICEID = 'device'
 CONF_SCOPE = 'scope'
 
 TYPE_INVERTER = 'inverter'
@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
     vol.Optional(CONF_SCOPE, default=DEFAULT_SCOPE):
         vol.All(cv.ensure_list, [vol.In(SCOPE_TYPES)]),
-    vol.Optional(CONF_DEVICE): cv.positive_int,
+    vol.Optional(CONF_DEVICEID): cv.positive_int,
 })
 
 
@@ -59,8 +59,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     fronius = pyfronius.Fronius(session, config[CONF_HOST])
 
     name = "fronius_{}_{}".format(config[CONF_TYPE], config[CONF_HOST])
-    if CONF_DEVICE in config.keys():
-        device = config[CONF_DEVICE]
+    if CONF_DEVICEID in config.keys():
+        device = config[CONF_DEVICEID]
         name = name + "_{}".format(device)
     else:
         device = DEFAULT_DEVICE
