@@ -99,7 +99,7 @@ class ONVIFHassCamera(Camera):
 
     def __init__(self, hass, config):
         """Initialize a ONVIF camera."""
-        from onvif import ONVIFCamera
+        from onvif import ONVIFCamera, exceptions
         super().__init__()
 
         self._name = config.get(CONF_NAME)
@@ -129,7 +129,7 @@ class ONVIFHassCamera(Camera):
             raise
         try:
             self._ptz = camera.create_ptz_service()
-        except Exception as err:
+        except exceptions.ONVIFError as err:
             self._ptz = None
             _LOGGER.warning("Unable to setup PTZ for ONVIF Camera: %s", err)
 
