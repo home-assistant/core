@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.core import callback
 from homeassistant.const import MATCH_ALL
-from homeassistant.components.recorder import Recorder, wait_connection_ready
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.recorder.models import States, Events
