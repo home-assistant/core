@@ -102,7 +102,7 @@ class FroniusSensor(Entity):
 
     @property
     def state(self):
-        """Return the ???."""
+        """Return the current state."""
         return self._state
 
     @property
