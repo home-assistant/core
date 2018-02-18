@@ -5,23 +5,22 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/lock.kiwi/
 """
 import logging
-import datetime
 import requests
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.dt import (utcnow, parse_datetime)
 from homeassistant.components.lock import (LockDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, ATTR_ID, ATTR_LONGITUDE, ATTR_LATITUDE)
 
-REQUIREMENTS = ['python-dateutil==2.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_TYPE = "hardware type"
+ATTR_TYPE = 'hardware_type'
 ATTR_PERMISSION = 'permission'
-ATTR_CAN_INVITE = "can invite others"
+ATTR_CAN_INVITE = 'can_invite_others'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -59,14 +58,12 @@ class KiwiClient:
 
     def _with_valid_session(self):
         """Check if the session is valid; renew if necessary."""
-        now = datetime.datetime.now(tz=datetime.timezone.utc)
-        if not self.__session_expires or (now >= self.__session_expires):
+        if not self.__session_expires or (utcnow() >= self.__session_expires):
             _LOGGER.debug("no valid session found - renewing session key")
             self._renew_sessionkey()
 
     def _renew_sessionkey(self):
         """Update the clients session key."""
-        import dateutil.parser
         _LOGGER.info(
             "authentication for user %s started.",
             self.__username)
@@ -88,7 +85,7 @@ class KiwiClient:
             raise ValueError("authentication failed")
 
         self.__session_key = auth_response.json()['result']['session_key']
-        self.__session_expires = dateutil.parser.parse(
+        self.__session_expires = parse_datetime(
             auth_response.json()['result']['session']['expires'])
 
     def get_locks(self):

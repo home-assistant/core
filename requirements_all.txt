@@ -960,9 +960,6 @@ python-blockchain-api==0.0.2
 # homeassistant.components.media_player.clementine
 python-clementine-remote==1.0.1
 
-# homeassistant.components.lock.kiwi
-python-dateutil==2.6.1
-
 # homeassistant.components.digital_ocean
 python-digitalocean==1.13.2
 
