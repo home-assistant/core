@@ -7,10 +7,11 @@ import pytest
 
 from homeassistant.core import callback
 from homeassistant.const import MATCH_ALL
-from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder import Recorder, wait_connection_ready
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.recorder.models import States, Events
+from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import get_test_home_assistant, init_recorder_component
 
@@ -23,6 +24,8 @@ class TestRecorder(unittest.TestCase):
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)
         self.hass.start()
+        run_coroutine_threadsafe(
+            wait_connection_ready(self.hass), self.hass.loop).result()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
