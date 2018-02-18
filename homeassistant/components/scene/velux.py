@@ -13,7 +13,7 @@ DEPENDENCIES = ['velux']
 
 
 async def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+                               discovery_info=None):
     """Set up the scenes for velux platform."""
     entities = []
     for scene in hass.data[DATA_VELUX].pyvlx.scenes:
