@@ -7,6 +7,9 @@ https://home-assistant.io/components/group/
 import asyncio
 import logging
 
+import operator
+from functools import reduce
+
 import voluptuous as vol
 
 from homeassistant import core as ha
@@ -14,7 +17,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
     STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
     STATE_UNLOCKED, STATE_OK, STATE_PROBLEM, STATE_UNKNOWN,
-    ATTR_ASSUMED_STATE, SERVICE_RELOAD)
+    ATTR_ASSUMED_STATE, SERVICE_RELOAD, ATTR_SUPPORTED_FEATURES)
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
@@ -243,6 +246,20 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
     return [ent_id for ent_id in entity_ids
             if ent_id.startswith(domain_filter)]
+
+
+@bind_hass
+def get_common_supported_features(hass, entity_ids):
+    """Get grouped entity objects."""
+    sub_entities = [hass.states.get(eid) for eid in entity_ids]
+
+    # Get features of existing entities or default to 0
+    features = [e.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                for e in sub_entities
+                if e is not None and hasattr(e, 'attributes')]
+
+    # Return merged supported features in a "common features only" manner
+    return reduce(operator.and_, features) if len(features) > 0 else 0
 
 
 @asyncio.coroutine
@@ -495,6 +512,7 @@ class Group(Entity):
         """Return the state attributes for the group."""
         data = {
             ATTR_ENTITY_ID: self.tracking,
+            ATTR_SUPPORTED_FEATURES: self.supported_features,
             ATTR_ORDER: self._order,
         }
         if not self._user_defined:
@@ -509,6 +527,11 @@ class Group(Entity):
     def assumed_state(self):
         """Test if any member has an assumed state."""
         return self._assumed_state
+
+    @property
+    def supported_features(self) -> int:
+        """Get common supported state from grouped entities."""
+        return get_common_supported_features(self.hass, self.tracking)
 
     def update_tracked_entity_ids(self, entity_ids):
         """Update the member entity IDs."""
