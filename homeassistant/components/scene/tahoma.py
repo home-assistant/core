@@ -33,7 +33,7 @@ class TahomaScene(Scene):
         self.controller = controller
         self._name = self.tahoma_scene.name
 
-    def activate(self, **kwargs):
+    def activate(self):
         """Activate the scene."""
         self.controller.launch_action_group(self.tahoma_scene.oid)
 
