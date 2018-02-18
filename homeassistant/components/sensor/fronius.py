@@ -74,7 +74,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         """Update all the fronius sensors."""
         try:
             yield from sensor.async_update()
-        except:
+        except Exception:
             _LOGGER.error("Update of sensor data failed.")
 
     interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=10)
