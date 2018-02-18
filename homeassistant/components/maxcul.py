@@ -35,24 +35,11 @@ SIGNAL_THERMOSTAT_UPDATE = DOMAIN + '.thermostat_update'
 SIGNAL_PUSH_BUTTON_UPDATE = DOMAIN + '.push_button_update'
 SIGNAL_SHUTTER_UPDATE = DOMAIN + '.shutter_update'
 
-ATTR_DURATION = 'duration'
-
 SERIVCE_ENABLE_PAIRING = 'enable_pairing'
 
 SCHEMA_SERVICE_ENABLE_PAIRING = vol.Schema({
     vol.Optional('duration', default=30): cv.positive_int,
 })
-
-DESCRIPTION_SERVICE_ENABLE_PAIRING = {
-    'description': "Enable pairing for a given duration",
-    'fields': {
-        ATTR_DURATION: {
-            'description': "Duration for which pairing is possible in seconds",
-            'example': 30
-        }
-    }
-}
-
 
 def setup(hass, config):
     """
@@ -107,7 +94,6 @@ def setup(hass, config):
         DOMAIN,
         SERIVCE_ENABLE_PAIRING,
         _service_enable_pairing,
-        DESCRIPTION_SERVICE_ENABLE_PAIRING,
         schema=SCHEMA_SERVICE_ENABLE_PAIRING)
 
     return True
