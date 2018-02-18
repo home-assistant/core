@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['afsapi==0.0.2']
+REQUIREMENTS = ['afsapi==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -244,12 +244,12 @@ class AFSAPIDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_media_previous_track(self):
         """Send previous track command (results in rewind)."""
-        yield from self.fs_device.prev()
+        yield from self.fs_device.rewind()
 
     @asyncio.coroutine
     def async_media_next_track(self):
         """Send next track command (results in fast-forward)."""
-        yield from self.fs_device.next()
+        yield from self.fs_device.forward()
 
     # mute
     @property
