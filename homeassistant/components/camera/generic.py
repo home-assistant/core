@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION,
-    HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
+    CONF_HEADERS, HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.exceptions import TemplateError
 from homeassistant.components.camera import (
     PLATFORM_SCHEMA, DEFAULT_CONTENT_TYPE, Camera)
@@ -40,6 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
+    vol.Optional(CONF_HEADERS): {cv.string: cv.string}
 })
 
 
@@ -75,6 +76,8 @@ class GenericCamera(Camera):
         else:
             self._auth = None
 
+        self._headers = device_info.get(CONF_HEADERS)
+
         self._last_url = None
         self._last_image = None
 
@@ -101,7 +104,9 @@ class GenericCamera(Camera):
             def fetch():
                 """Read image from a URL."""
                 try:
-                    response = requests.get(url, timeout=10, auth=self._auth)
+                    response = requests.get(url, timeout=10,
+                                            headers=self._headers,
+                                            auth=self._auth)
                     return response.content
                 except requests.exceptions.RequestException as error:
                     _LOGGER.error("Error getting camera image: %s", error)
@@ -115,7 +120,7 @@ class GenericCamera(Camera):
                 websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
                     response = yield from websession.get(
-                        url, auth=self._auth)
+                        url, headers=self._headers, auth=self._auth)
                 self._last_image = yield from response.read()
             except asyncio.TimeoutError:
                 _LOGGER.error("Timeout getting camera image")
