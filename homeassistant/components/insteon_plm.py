@@ -39,18 +39,18 @@ def async_setup(hass, config):
     """Set up the connection to the PLM."""
     import insteonplm
 
-    import insteonplm.states.onOff.OnOffSwitch
-    import insteonplm.states.onOffOn.OffSwitch_OutletTop
-    import insteonplm.states.onOffOn.OffSwitch_OutletBottom
-    import insteonplm.states.onOff.OpenClosedRelay
+    from insteonplm.states.onOff import (OnOffSwitch,
+                                         OffSwitch_OutletTop,
+                                         OffSwitch_OutletBottom,
+                                         OpenClosedRelay)
 
-    import insteonplm.states.dimmable.DimmableSwitch
-    import insteonplm.states.dimmable.DimmableSwitch_Fan
+    from insteonplm.states.dimmable import (DimmableSwitch,
+                                            DimmableSwitch_Fan)
 
-    import insteonplm.states.sensor.VariableSensor
-    import insteonplm.states.sensor.OnOffSensor
-    import insteonplm.states.sensor.SmokeCO2Sensor
-    import insteonplm.states.sensor.IoLincSensor
+    from insteonplm.states.sensor import (VariableSensor,
+                                          OnOffSensor,
+                                          SmokeCO2Sensor,
+                                          IoLincSensor)
 
     ipdb = IPDB()
 
@@ -149,18 +149,19 @@ class IPDB(object):
     """Embodies the INSTEON Product Database static data
 and access methods."""
 
-    import insteonplm.states.onOff.OnOffSwitch
-    import insteonplm.states.onOffOn.OffSwitch_OutletTop
-    import insteonplm.states.onOffOn.OffSwitch_OutletBottom
-    import insteonplm.states.onOff.OpenClosedRelay
 
-    import insteonplm.states.dimmable.DimmableSwitch
-    import insteonplm.states.dimmable.DimmableSwitch_Fan
+    from insteonplm.states.onOff import (OnOffSwitch,
+                                         OffSwitch_OutletTop,
+                                         OffSwitch_OutletBottom,
+                                         OpenClosedRelay)
 
-    import insteonplm.states.sensor.VariableSensor
-    import insteonplm.states.sensor.OnOffSensor
-    import insteonplm.states.sensor.SmokeCO2Sensor
-    import insteonplm.states.sensor.IoLincSensor
+    from insteonplm.states.dimmable import (DimmableSwitch,
+                                            DimmableSwitch_Fan)
+
+    from insteonplm.states.sensor import (VariableSensor,
+                                          OnOffSensor,
+                                          SmokeCO2Sensor,
+                                          IoLincSensor)
 
     states = [
         State(OnOffSwitch_OutletTop, 'switch'),
