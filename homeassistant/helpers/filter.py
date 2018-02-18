@@ -90,7 +90,7 @@ class Filter(object):
 
         """
         constant = kwargs.pop('constant', 0.10)
-        
+
         if (len(states) > 1 and
                 abs(new_state - statistics.median(states)) >
                 constant*statistics.median(states)):
