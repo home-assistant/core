@@ -105,24 +105,15 @@ class ONVIFHassCamera(Camera):
         self._name = config.get(CONF_NAME)
         self._ffmpeg_arguments = config.get(CONF_EXTRA_ARGUMENTS)
         self._input = None
-        try:
-            self._ptz = ONVIFService(
-                'http://{}:{}/onvif/device_service'.format(
-                    config.get(CONF_HOST), config.get(CONF_PORT)),
-                config.get(CONF_USERNAME),
-                config.get(CONF_PASSWORD),
-                '{}/wsdl/ptz.wsdl'.format(os.path.dirname(onvif.__file__))
-            )
-        except onvif.exceptions.ONVIFError:
-            self._ptz = None
-            _LOGGER.warning("PTZ is not supported by camera")
+        camera = None
         try:
             _LOGGER.debug("Connecting with ONVIF Camera: %s on port %s",
                           config.get(CONF_HOST), config.get(CONF_PORT))
-            media_service = ONVIFCamera(
+            camera = ONVIFCamera(
                 config.get(CONF_HOST), config.get(CONF_PORT),
                 config.get(CONF_USERNAME), config.get(CONF_PASSWORD)
-            ).create_media_service()
+            )
+            media_service = camera.create_media_service()
             stream_uri = media_service.GetStreamUri(
                 {'StreamSetup': {'Stream': 'RTP-Unicast', 'Transport': 'RTSP'}}
                 )
@@ -136,6 +127,10 @@ class ONVIFHassCamera(Camera):
         except Exception as err:
             _LOGGER.error("Unable to communicate with ONVIF Camera: %s", err)
             raise
+        try:
+            self._ptz = camera.create_ptz_service()
+        except Exception as err:
+            _LOGGER.warning("Unable to setup PTZ for ONVIF Camera: %s", err)
 
     def perform_ptz(self, pan, tilt, zoom):
         """Perform a PTZ action on the camera."""
