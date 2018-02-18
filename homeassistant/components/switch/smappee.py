@@ -13,7 +13,6 @@ DEPENDENCIES = ['smappee']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Comfort Plug'
 ICON = 'mdi:power-plug'
 
 
@@ -26,20 +25,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for location_id in smappee.locations.keys():
             for items in smappee.info[location_id].get('actuators'):
                 if items.get('name') != '':
+                    _LOGGER.debug("Remote actuator %s", items)
                     dev.append(SmappeeSwitch(smappee,
-                                             DEFAULT_NAME,
+                                             items.get('name'),
                                              location_id,
                                              items.get('id')))
-
-    # Skip local switches if remote available
-    if not smappee.is_remote_active:
-        local_devices = smappee.local_devices
-        if smappee.is_local_active:
-            for items in local_devices:
-                dev.append(SmappeeSwitch(smappee,
-                                         items.get('value'),
-                                         None,
-                                         items.get('key')))
+    elif smappee.is_local_active:
+        for items in smappee.local_devices:
+            _LOGGER.debug("Local actuator %s", items)
+            dev.append(SmappeeSwitch(smappee,
+                                     items.get('value'),
+                                     None,
+                                     items.get('key')))
     add_devices(dev)
 
 
@@ -74,19 +71,15 @@ class SmappeeSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn on Comport Plug."""
-        self._smappee.actuator_on(self._location_id, self._switch_id,
-                                  self._remoteswitch)
-        self._smappee.actuator_on(self._location_id, self._switch_id,
-                                  self._remoteswitch)
-        self._state = True
+        if self._smappee.actuator_on(self._location_id, self._switch_id,
+                                     self._remoteswitch):
+            self._state = True
 
     def turn_off(self, **kwargs):
         """Turn off Comport Plug."""
-        self._smappee.actuator_off(self._location_id, self._switch_id,
-                                   self._remoteswitch)
-        self._smappee.actuator_off(self._location_id, self._switch_id,
-                                   self._remoteswitch)
-        self._state = False
+        if self._smappee.actuator_off(self._location_id, self._switch_id,
+                                      self._remoteswitch):
+            self._state = False
 
     @property
     def device_state_attributes(self):

@@ -1107,7 +1107,7 @@ sleekxmpp==1.3.2
 sleepyq==0.6
 
 # homeassistant.components.smappee
-smappy==0.2.14
+smappy==0.2.15
 
 # homeassistant.components.raspihats
 # homeassistant.components.sensor.bh1750

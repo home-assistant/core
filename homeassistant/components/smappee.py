@@ -16,7 +16,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.discovery import load_platform
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['smappy==0.2.14']
+REQUIREMENTS = ['smappy==0.2.15']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +34,6 @@ _SENSOR_REGEX = re.compile(
     r'(?P<key>([A-Za-z]+))\=' +
     r'(?P<value>([0-9\.]+))')
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Inclusive(CONF_CLIENT_ID, 'Server credentials'): cv.string,
@@ -47,6 +45,8 @@ CONFIG_SCHEMA = vol.Schema({
             cv.string
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 
 def setup(hass, config):
@@ -109,6 +109,8 @@ class Smappee(object):
 
         self.locations = {}
         self.info = {}
+        self.consumption = {}
+        self.instantaneous = {}
 
         if self._remote_active or self._local_active:
             self.update()
@@ -125,10 +127,21 @@ class Smappee(object):
                     self.locations[location_id] = location.get('name')
                     self.info[location_id] = self._smappy \
                         .get_service_location_info(location_id)
-                    _LOGGER.debug(self.locations, self.info)
+                    _LOGGER.debug("Remote info %s %s",
+                                  self.locations, self.info)
+
+                    self.consumption[location_id] = self.get_consumption(
+                        location_id, aggregation=3, delta=1440)
+                    _LOGGER.debug("Remote consumption %s %s",
+                                  self.locations,
+                                  self.consumption[location_id])
+
         if self.is_local_active:
             self.local_devices = self.get_switches()
-            _LOGGER.debug(self.local_devices)
+            _LOGGER.debug("Local switches %s", self.local_devices)
+
+            self.instantaneous = self.load_instantaneous()
+            _LOGGER.debug("Local values %s", self.instantaneous)
 
     @property
     def is_remote_active(self):
@@ -142,9 +155,15 @@ class Smappee(object):
 
     def get_switches(self):
         """Get switches from local Smappee."""
-        if self.is_local_active:
+        if not self.is_local_active:
+            return
+
+        try:
             return self._localsmappy.load_command_control_config()
-        return False
+        except RequestException as error:
+            _LOGGER.error(
+                "Error getting switches from local Smappee. (%s)",
+                error)
 
     def get_consumption(self, location_id, aggregation, delta):
         """Update data from Smappee."""
@@ -156,20 +175,20 @@ class Smappee(object):
         # 3 = daily values,
         # 4 = monthly values,
         # 5 = quarterly values
-        if self.is_remote_active:
-            end = datetime.utcnow()
-            start = end - timedelta(minutes=delta)
-            try:
-                return self._smappy.get_consumption(location_id,
-                                                    start,
-                                                    end,
-                                                    aggregation)
-            except RequestException as error:
-                _LOGGER.error(
-                    "Error getting comsumption from Smappee cloud. (%s)",
-                    error)
-                return False
-        return False
+        if not self.is_remote_active:
+            return
+
+        end = datetime.utcnow()
+        start = end - timedelta(minutes=delta)
+        try:
+            return self._smappy.get_consumption(location_id,
+                                                start,
+                                                end,
+                                                aggregation)
+        except RequestException as error:
+            _LOGGER.error(
+                "Error getting comsumption from Smappee cloud. (%s)",
+                error)
 
     def get_sensor_consumption(self, location_id, sensor_id):
         """Update data from Smappee."""
@@ -181,110 +200,138 @@ class Smappee(object):
         # 3 = daily values,
         # 4 = monthly values,
         # 5 = quarterly values
-        if self.is_remote_active:
-            start = datetime.utcnow() - timedelta(minutes=30)
-            end = datetime.utcnow()
-            try:
-                return self._smappy.get_sensor_consumption(location_id,
-                                                           sensor_id,
-                                                           start,
-                                                           end, 1)
-            except RequestException as error:
-                _LOGGER.error(
-                    "Error getting comsumption from Smappee cloud. (%s)",
-                    error)
-                return False
+        if not self.is_remote_active:
+            return
 
-        return False
+        start = datetime.utcnow() - timedelta(minutes=30)
+        end = datetime.utcnow()
+        try:
+            return self._smappy.get_sensor_consumption(location_id,
+                                                       sensor_id,
+                                                       start,
+                                                       end, 1)
+        except RequestException as error:
+            _LOGGER.error(
+                "Error getting comsumption from Smappee cloud. (%s)",
+                error)
 
     def actuator_on(self, location_id, actuator_id,
                     is_remote_switch, duration=None):
         """Turn on actuator."""
         # Duration = 300,900,1800,3600
         #  or any other value for an undetermined period of time.
-        if is_remote_switch:
-            self._smappy.actuator_on(location_id, actuator_id, duration)
-        else:
-            self._localsmappy.on_command_control(actuator_id)
-            return True
+        #
+        # The comport plugs have a tendency to ignore the on/off signal.
+        # And because you can't read the status of a plug, it's more
+        # reliable to execute the command twice.
+        try:
+            if is_remote_switch:
+                self._smappy.actuator_on(location_id, actuator_id, duration)
+                self._smappy.actuator_on(location_id, actuator_id, duration)
+            else:
+                self._localsmappy.on_command_control(actuator_id)
+                self._localsmappy.on_command_control(actuator_id)
+        except RequestException as error:
+            _LOGGER.error(
+                "Error turning actuator on. (%s)",
+                error)
+            return False
+
+        return True
 
     def actuator_off(self, location_id, actuator_id,
                      is_remote_switch, duration=None):
         """Turn off actuator."""
         # Duration = 300,900,1800,3600
         #  or any other value for an undetermined period of time.
-        if is_remote_switch:
-            self._smappy.actuator_off(location_id, actuator_id, duration)
-        else:
-            self._localsmappy.off_command_control(actuator_id)
-            return True
+        #
+        # The comport plugs have a tendency to ignore the on/off signal.
+        # And because you can't read the status of a plug, it's more
+        # reliable to execute the command twice.
+        try:
+            if is_remote_switch:
+                self._smappy.actuator_off(location_id, actuator_id, duration)
+                self._smappy.actuator_off(location_id, actuator_id, duration)
+            else:
+                self._localsmappy.off_command_control(actuator_id)
+                self._localsmappy.off_command_control(actuator_id)
+        except RequestException as error:
+            _LOGGER.error(
+                "Error turning actuator on. (%s)",
+                error)
+            return False
+
+        return True
 
     def active_power(self):
         """Get sum of all instantanious active power values from local hub."""
-        if self.is_local_active:
-            try:
-                return self._localsmappy.active_power()
-            except RequestException as error:
-                _LOGGER.error(
-                    "Error getting data from Local Smappee unit. (%s)",
-                    error)
-                return False
-        return False
+        if not self.is_local_active:
+            return
+
+        try:
+            return self._localsmappy.active_power()
+        except RequestException as error:
+            _LOGGER.error(
+                "Error getting data from Local Smappee unit. (%s)",
+                error)
 
     def active_cosfi(self):
         """Get the average of all instantaneous cosfi values."""
-        if self.is_local_active:
-            try:
-                return self._localsmappy.active_cosfi()
-            except RequestException as error:
-                _LOGGER.error(
-                    "Error getting data from Local Smappee unit. (%s)",
-                    error)
-                return False
-        return False
+        if not self.is_local_active:
+            return
+
+        try:
+            return self._localsmappy.active_cosfi()
+        except RequestException as error:
+            _LOGGER.error(
+                "Error getting data from Local Smappee unit. (%s)",
+                error)
 
     def instantaneous_values(self):
         """ReportInstantaneousValues."""
-        if self.is_local_active:
-            report_instantaneous_values = \
-                self._localsmappy.report_instantaneous_values()
+        if not self.is_local_active:
+            return
 
-            report_result = \
-                report_instantaneous_values['report'].split('<BR>')
-            properties = {}
-            for lines in report_result:
-                lines_result = lines.split(',')
-                for prop in lines_result:
-                    match = _SENSOR_REGEX.search(prop)
-                    if match:
-                        properties[match.group('key')] = \
-                            match.group('value')
-            _LOGGER.debug(properties)
-            return properties
-        return False
+        report_instantaneous_values = \
+            self._localsmappy.report_instantaneous_values()
+
+        report_result = \
+            report_instantaneous_values['report'].split('<BR>')
+        properties = {}
+        for lines in report_result:
+            lines_result = lines.split(',')
+            for prop in lines_result:
+                match = _SENSOR_REGEX.search(prop)
+                if match:
+                    properties[match.group('key')] = \
+                        match.group('value')
+        _LOGGER.debug(properties)
+        return properties
 
     def active_current(self):
         """Get current active Amps."""
-        if self.is_local_active:
-            properties = self.instantaneous_values()
-            return float(properties['current'])
-        return False
+        if not self.is_local_active:
+            return
+
+        properties = self.instantaneous_values()
+        return float(properties['current'])
 
     def active_voltage(self):
         """Get current active Voltage."""
-        if self.is_local_active:
-            properties = self.instantaneous_values()
-            return float(properties['voltage'])
-        return False
+        if not self.is_local_active:
+            return
+
+        properties = self.instantaneous_values()
+        return float(properties['voltage'])
 
     def load_instantaneous(self):
         """LoadInstantaneous."""
-        if self.is_local_active:
-            try:
-                return self._localsmappy.load_instantaneous()
-            except RequestException as error:
-                _LOGGER.error(
-                    "Error getting data from Local Smappee unit. (%s)",
-                    error)
-                return False
-        return False
+        if not self.is_local_active:
+            return
+
+        try:
+            return self._localsmappy.load_instantaneous()
+        except RequestException as error:
+            _LOGGER.error(
+                "Error getting data from Local Smappee unit. (%s)",
+                error)
