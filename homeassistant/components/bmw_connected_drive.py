@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD
 )
 
-REQUIREMENTS = ['bimmer_connected==0.2.0']
+REQUIREMENTS = ['bimmer_connected==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +88,7 @@ class BMWConnectedDriveAccount(object):
     def __init__(self, username: str, password: str, country: str,
                  name: str) -> None:
         """Constructor."""
-        from bimmer_connected import ConnectedDriveAccount
+        from bimmer_connected.account import ConnectedDriveAccount
 
         self.account = ConnectedDriveAccount(username, password, country)
         self.name = name
