@@ -119,9 +119,9 @@ class FroniusSensor(Entity):
         try:
             values = yield from self._update()
         except ServerDisconnectedError:
-            _LOGGER.error("ServerDisconnectedError")
+            _LOGGER.error("Sensor data cannot be updated because of connection error.")
         except TimeoutError:
-            _LOGGER.error("TimeoutError")
+            _LOGGER.error("Sensor data cannot be updated because of timeout.")
 
         _LOGGER.debug(values)
 
