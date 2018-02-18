@@ -29,8 +29,7 @@ class TestFileSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('os.stat', Mock(return_value=FAKE))
-    def test_filesize_class(self):
+    def test_invalid_path(self):
         """Test the filesize class."""
         config = {
             'sensor': {
@@ -42,6 +41,20 @@ class TestFileSensor(unittest.TestCase):
             setup_component(self.hass, 'sensor', config))
 
         assert len(self.hass.states.entity_ids()) == 0
+
+    @patch('os.stat', Mock(return_value=FAKE))
+    def test_valid_path(self):
+        """Test the filesize class."""
+        config = {
+            'sensor': {
+                'platform': 'filesize',
+                CONF_FILE_PATHS: ['/tmp']}
+        }
+
+        self.assertTrue(
+            setup_component(self.hass, 'sensor', config))
+
+        assert len(self.hass.states.entity_ids()) == 1
 
         #state = self.hass.states.get('sensor.test_api_streamspy')
 
