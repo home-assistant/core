@@ -39,19 +39,6 @@ def async_setup(hass, config):
     """Set up the connection to the PLM."""
     import insteonplm
 
-    from insteonplm.states.onOff import (OnOffSwitch,
-                                         OnOffSwitch_OutletTop,
-                                         OnOffSwitch_OutletBottom,
-                                         OpenClosedRelay)
-
-    from insteonplm.states.dimmable import (DimmableSwitch,
-                                            DimmableSwitch_Fan)
-
-    from insteonplm.states.sensor import (VariableSensor,
-                                          OnOffSensor,
-                                          SmokeCO2Sensor,
-                                          IoLincSensor)
-
     ipdb = IPDB()
 
     conf = config[DOMAIN]
