@@ -110,4 +110,4 @@ class RelativeHumiditySensor(Sensor):
         if self._state == 'unknown':
             return 'unknown'
 
-        return round(float(self._state) /  100, 1)
+        return round(float(self._state) / 100, 1)
