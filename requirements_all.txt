@@ -45,7 +45,7 @@ PyXiaomiGateway==0.8.0
 RtmAPI==0.7.0
 
 # homeassistant.components.media_player.sonos
-SoCo==0.13
+SoCo==0.14
 
 # homeassistant.components.sensor.travisci
 TravisPy==0.3.5
