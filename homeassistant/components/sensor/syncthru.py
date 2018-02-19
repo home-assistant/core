@@ -8,8 +8,6 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_RESOURCE, STATE_UNKNOWN, CONF_HOST, CONF_NAME, CONF_FRIENDLY_NAME,
     CONF_MONITORED_CONDITIONS)
-from homeassistant.components.discovery import SERVICE_SAMSUNG_PRINTER
-from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
