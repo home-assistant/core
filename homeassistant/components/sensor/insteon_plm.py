@@ -1,5 +1,5 @@
 """
-Support for Insteon lights via PowerLinc Modem.
+Support for INSTEON dimmers via PowerLinc Modem.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon_plm/
@@ -8,20 +8,17 @@ import logging
 import asyncio
 
 from homeassistant.core import callback
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
-
-_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['insteon_plm']
 
-MAX_BRIGHTNESS = 255
+_LOGGER = logging.getLogger(__name__)
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the Insteon PLM device."""
+    """Set up the INSTEON PLM device class for the hass platform."""
     state_list = []
     plm = hass.data['insteon_plm']
 
@@ -30,23 +27,23 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         device = plm.devices[address]
         state_key = device_info['state_key']
 
-        state_list.append(InsteonPLMDimmerDevice(hass,
+        state_list.append(InsteonPLMSensorDevice(hass,
                                                  device,
                                                  state_key))
 
     async_add_devices(state_list)
 
 
-class InsteonPLMDimmerDevice(Light):
+class InsteonPLMSensorDevice(Entity):
     """A Class for an Insteon device."""
 
     def __init__(self, hass, device, state_key):
-        """Initialize the light."""
+        """Initialize the binarysensor."""
         self._hass = hass
         self._insteon_device_state = device.states[state_key]
         self._insteon_device = device
 
-        self._insteon_device_state.register_updates(self.async_light_update)
+        self._insteon_device_state.register_updates(self.async_sensor_update)
 
     @property
     def should_poll(self):
@@ -70,20 +67,10 @@ class InsteonPLMDimmerDevice(Light):
         return name
 
     @property
-    def brightness(self):
-        """Return the brightness of this light between 0..255."""
-        onlevel = self._insteon_device_state.value
-        return int(onlevel)
-
-    @property
-    def is_on(self):
-        """Return the boolean response if the node is on."""
-        return bool(self.brightness)
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
+    def state(self):
+        """Return the state of the sensor."""
+        sensorstate = self._insteon_device_state.value
+        return sensorstate
 
     @property
     def device_state_attributes(self):
@@ -93,20 +80,6 @@ class InsteonPLMDimmerDevice(Light):
                                              self._insteon_device_state)
 
     @callback
-    def async_light_update(self, entity_id, statename, val):
+    def async_sensor_update(self, deviceid, statename, val):
         """Receive notification from transport that new data exists."""
         self._hass.async_add_job(self.async_update_ha_state())
-
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
-        """Turn device on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = int(kwargs[ATTR_BRIGHTNESS])
-            self._insteon_device_state.set_level(brightness)
-        else:
-            self._insteon_device_state.on()
-
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
-        """Turn device off."""
-        self._insteon_device_state.off()
