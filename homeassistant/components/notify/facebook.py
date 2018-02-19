@@ -65,7 +65,8 @@ class FacebookNotificationService(BaseNotificationService):
 
             _LOGGER.debug("Broadcast body %s : ", brdcast_create_body)
 
-            resp = requests.post(CR_BRCST_MSG_URL, data=json.dumps(brdcast_create_body),
+            resp = requests.post(CR_BRCST_MSG_URL,
+                                 data=json.dumps(brdcast_create_body),
                                  params=payload,
                                  headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
                                  timeout=10)
@@ -77,7 +78,8 @@ class FacebookNotificationService(BaseNotificationService):
                 "notification_type": "REGULAR",
             }
 
-            resp = requests.post(SND_BRCST_MSG_URL, data=json.dumps(brdcast_body),
+            resp = requests.post(SND_BRCST_MSG_URL,
+                                 data=json.dumps(brdcast_body),
                                  params=payload,
                                  headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
                                  timeout=10)
@@ -93,7 +95,7 @@ class FacebookNotificationService(BaseNotificationService):
         else:
 
             for target in targets:
-                # If the target starts with a "+", we suppose it's a phone number,
+                # If the target starts with a "+", it's a phone number,
                 # otherwise it's a user id.
                 if target.startswith('+'):
                     recipient = {"phone_number": target}
@@ -113,5 +115,6 @@ class FacebookNotificationService(BaseNotificationService):
                     error_message = obj['error']['message']
                     error_code = obj['error']['code']
                     _LOGGER.error(
-                        "Error %s : %s (Code %s)", resp.status_code, error_message,
+                        "Error %s : %s (Code %s)", resp.status_code,
+                        error_message,
                         error_code)
