@@ -47,6 +47,7 @@ TEST_REQUIREMENTS = (
     'evohomeclient',
     'feedparser',
     'gTTS-token',
+    'HAP-python',
     'ha-ffmpeg',
     'haversine',
     'hbmqtt',
@@ -92,6 +93,9 @@ TEST_REQUIREMENTS = (
 
 IGNORE_PACKAGES = (
     'homeassistant.components.recorder.models',
+    'homeassistant.components.homekit.accessories',
+    'homeassistant.components.homekit.covers',
+    'homeassistant.components.homekit.sensors'
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
