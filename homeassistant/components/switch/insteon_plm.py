@@ -19,7 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the INSTEON PLM device class for the hass platform."""
-
     state_list = []
     plm = hass.data['insteon_plm']
 
@@ -65,7 +64,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
 
     @property
     def name(self):
-        """Return the name of the node. (used for Entity_ID)"""
+        """Return the name of the node (used for Entity_ID)."""
         name = ''
         if self._insteon_device_state.group == 0x01:
             name = self._insteon_device.id
@@ -99,7 +98,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
-        """Turn device off"""
+        """Turn device off."""
         self._insteon_device_state.off()
 
 
@@ -160,5 +159,5 @@ class InsteonPLMOpenClosedDevice(SwitchDevice):
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
-        """Turn device off"""
+        """Turn device off."""
         self._insteon_device_state.close()

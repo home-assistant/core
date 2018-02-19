@@ -46,7 +46,6 @@ def async_setup(hass, config):
     @callback
     def async_plm_new_device(device):
         """Detect device from transport to be delegated to platform."""
-
         for state_key in device.states:
             platform_info = ipdb[device.states[state_key]]
             platform = platform_info.platform
@@ -119,11 +118,9 @@ State = collections.namedtuple('Product', 'stateType platform')
 
 
 class IPDB(object):
-    """Embodies the INSTEON Product Database static data
-and access methods."""
-
+    """Embodies the INSTEON Product Database static data and access methods."""
     def __init__(self):
-
+        """Create the INSTEON Product Database (IPDB)."""
         from insteonplm.states.onOff import (OnOffSwitch,
                                              OnOffSwitch_OutletTop,
                                              OnOffSwitch_OutletBottom,
@@ -148,17 +145,20 @@ and access methods."""
                        State(VariableSensor, 'sensor'),
 
                        State(DimmableSwitch_Fan, 'fan'),
-                       State(DimmableSwitch, 'light')
-                      ]
+                       State(DimmableSwitch, 'light')]
 
     def __len__(self):
+        """Return the number of INSTEON state types mapped to HA platforms."""
         return len(self.states)
 
     def __iter__(self):
+        """Itterate through the INSTEON state types to HA platforms."""
         for product in self.states:
             yield product
 
     def __getitem__(self, key):
+        """Return a Home Assistant platform from an INSTEON state type.
+        """
         for state in self.states:
             if isinstance(key, state.stateType):
                 return state

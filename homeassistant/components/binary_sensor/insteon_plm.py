@@ -20,10 +20,10 @@ SENSOR_TYPES = {'openClosedSensor': 'opening',
                 'doorSensor': 'door',
                 'leakSensor': 'moisture'}
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the INSTEON PLM device class for the hass platform."""
-
     state_list = []
     plm = hass.data['insteon_plm']
 
@@ -43,7 +43,7 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
     """A Class for an Insteon device state."""
 
     def __init__(self, hass, device, state_key):
-        """Initialize the binarysensor."""
+        """Initialize the INSTEON PLM binary sensor."""
         self._hass = hass
         self._insteon_device_state = device.states[state_key]
         self._insteon_device = device
@@ -65,7 +65,7 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """Return the name of the node. (used for Entity_ID)"""
+        """Return the name of the node (used for Entity_ID)."""
         name = ''
         if self._insteon_device_state.group == 0x01:
             name = self._insteon_device.id
