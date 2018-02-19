@@ -103,7 +103,7 @@ def async_setup(hass, config):
 
                 if state:
                     event_data[key] = state
-        
+
         if ignore_call_service and event_type == EVENT_CALL_SERVICE:
             return
 
