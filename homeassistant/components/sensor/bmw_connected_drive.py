@@ -96,4 +96,4 @@ class BMWConnectedDriveSensor(Entity):
         Show latest data after startup.
         """
         self._account.add_update_listener(self.update)
-        self.update()
+        yield from self.hass.async_add_job(self.update)
