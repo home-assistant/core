@@ -276,12 +276,13 @@ def test_service_calls(hassio_env, hass, aioclient_mock):
     yield from hass.services.async_call('hassio', 'snapshot_partial', {
         'addons': ['test'],
         'folders': ['ssl'],
+        'password': "123456",
     })
     yield from hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 8
     assert aioclient_mock.mock_calls[-1][2] == {
-        'addons': ['test'], 'folders': ['ssl']}
+        'addons': ['test'], 'folders': ['ssl'], 'password': "123456"}
 
     yield from hass.services.async_call('hassio', 'restore_full', {
         'snapshot': 'test',
@@ -291,12 +292,15 @@ def test_service_calls(hassio_env, hass, aioclient_mock):
         'homeassistant': False,
         'addons': ['test'],
         'folders': ['ssl'],
+        'password': "123456",
     })
     yield from hass.async_block_till_done()
 
     assert aioclient_mock.call_count == 10
     assert aioclient_mock.mock_calls[-1][2] == {
-        'addons': ['test'], 'folders': ['ssl'], 'homeassistant': False}
+        'addons': ['test'], 'folders': ['ssl'], 'homeassistant': False,
+        'password': "123456"
+    }
 
 
 @asyncio.coroutine
