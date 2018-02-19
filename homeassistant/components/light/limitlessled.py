@@ -290,7 +290,8 @@ class LimitlessLEDGroup(Light):
     def limitlessled_temperature(self):
         """Convert Home Assistant color temperature units to percentage."""
         width = self.max_mireds - self.min_mireds
-        return 1 - (self._temperature - self.min_mireds) / width
+        temperature = 1 - (self._temperature - self.min_mireds) / width
+        return max(0, min(1, temperature))
 
     def limitlessled_brightness(self):
         """Convert Home Assistant brightness units to percentage."""
