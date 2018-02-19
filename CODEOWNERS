@@ -77,6 +77,7 @@ homeassistant/components/*/axis.py @kane610
 homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/hive.py @Rendili @KJonline
 homeassistant/components/*/hive.py @Rendili @KJonline
+homeassistant/components/homekit/* @cdce8p
 homeassistant/components/*/deconz.py @kane610
 homeassistant/components/*/rfxtrx.py @danielhiversen
 homeassistant/components/velux.py @Julius2342
