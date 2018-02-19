@@ -4,7 +4,6 @@ Connect to a Samsung Printer via it's SyncThru
 """
 import logging
 import voluptuous as vol
-import asyncio
 
 from homeassistant.const import (
     CONF_RESOURCE, STATE_UNKNOWN, CONF_HOST, CONF_NAME, CONF_FRIENDLY_NAME,
