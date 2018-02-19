@@ -30,12 +30,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the file size sensor."""
     sensors = []
     for path in config.get(CONF_FILE_PATHS):
-            if not hass.config.is_allowed_path(path):
-                _LOGGER.error(
-                    "Filepath {} is not valid or allowed".format(path))
-                return
-            else:
-                sensors.append(Filesize(path))
+        if not hass.config.is_allowed_path(path):
+            _LOGGER.error(
+                "Filepath {} is not valid or allowed".format(path))
+            return
+        else:
+            sensors.append(Filesize(path))
 
     if sensors:
         add_devices(sensors, True)
