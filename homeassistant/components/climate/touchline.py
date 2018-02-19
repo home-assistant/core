@@ -9,7 +9,11 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
+<<<<<<< HEAD
     ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE,
+=======
+    ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE, 
+>>>>>>> 28e5d7834a2b8bc303b791954767442af9219c36
     SUPPORT_OPERATION_MODE)
 from homeassistant.const import CONF_HOST, TEMP_CELSIUS, ATTR_TEMPERATURE
 import homeassistant.helpers.config_validation as cv
@@ -55,7 +59,11 @@ class Touchline(ClimateDevice):
         self._target_temperature = None
         self._current_operation = None
         self._current_week_program = None
+<<<<<<< HEAD
         self._operation_list = [STATE_NORMAL, STATE_NIGHT,
+=======
+        self._operation_list = [STATE_NORMAL, STATE_NIGHT, 
+>>>>>>> 28e5d7834a2b8bc303b791954767442af9219c36
                                 STATE_VACATION, STATE_P1, STATE_P2, STATE_P3]
 
     @property
@@ -69,7 +77,11 @@ class Touchline(ClimateDevice):
         self._name = self.unit.get_name()
         self._current_temperature = self.unit.get_current_temperature()
         self._target_temperature = self.unit.get_target_temperature()
+<<<<<<< HEAD
         self._current_operation = self.unit.get_operation_mode()
+=======
+        self._current_operation = self.unit.get_operation_mode()        
+>>>>>>> 28e5d7834a2b8bc303b791954767442af9219c36
         self._current_week_program = self.unit.get_week_program()
         self._current_operation = self._current_operation
 
@@ -102,7 +114,11 @@ class Touchline(ClimateDevice):
     def current_operation(self):
         """Return the current operation mode."""
         return self.map_mode_touchline_hass(self._current_operation,
+<<<<<<< HEAD
 			self._current_week_program)
+=======
+        self._current_week_program)
+>>>>>>> 28e5d7834a2b8bc303b791954767442af9219c36
 
     @property
     def operation_list(self):
@@ -175,4 +191,8 @@ class Touchline(ClimateDevice):
         else:
             operation_mode = None
 
+<<<<<<< HEAD
         return operation_mode
+=======
+        return operation_mode
+>>>>>>> 28e5d7834a2b8bc303b791954767442af9219c36
