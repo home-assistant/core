@@ -31,6 +31,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 @asyncio.coroutine
 def make_sensor(discovery_info):
     """Create ZHA sensors factory."""
+    _LOGGER.info("Discovery info: %s", discovery_info)
     from zigpy.zcl.clusters.measurement import (
         RelativeHumidity, TemperatureMeasurement, IlluminanceMeasurement
     )
@@ -78,7 +79,7 @@ class Sensor(zha.Entity):
         if isinstance(self._state, float):
             return str(round(self._state, 2))
         return self._state
-    
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -160,10 +161,15 @@ class GenericBatterySensor(Sensor):
         """Retrieve latest state."""
         _LOGGER.debug("%s async_update", self.entity_id)
 
-        result = yield from zha.safe_read(self._endpoint.power,
-                ['battery_size', 'battery_quantity', 'battery_voltage'])
-        self._device_state_attributes['battery_size'] = self.battery_sizes.get(
-            result.get('battery_size', 255), 'Unknown')
+        result = yield from zha.safe_read(
+            self._endpoint.power,
+            ['battery_size', 'battery_quantity', 'battery_voltage']
+        )
+        self._device_state_attributes['battery_size'] = \
+            self.battery_sizes.get(
+                result.get('battery_size', 255),
+                'Unknown'
+            )
         self._device_state_attributes['battery_quantity'] = result.get(
             'battery_quantity', 'Unknown')
         self._state = result.get('battery_voltage', self._state)
@@ -172,8 +178,8 @@ class GenericBatterySensor(Sensor):
 class CentraliteBatterySensor(GenericBatterySensor):
     """ZHA battery sensor."""
 
-    #currently restricted to centralite sensors because the value
-    #conversion is specific to centralite sensors.
+    # currently restricted to centralite sensors because the value
+    # conversion is specific to centralite sensors.
 
     minVolts = 15
     maxVolts = 28
