@@ -13,15 +13,16 @@ import voluptuous as vol
 import asyncio
 
 from homeassistant.const import (
-    CONF_RESOURCE, STATE_UNKNOWN, CONF_PASSWORD)
+    CONF_RESOURCE, STATE_UNKNOWN, CONF_HOST, CONF_NAME, CONF_FRIENDLY_NAME)
+from homeassistant.components.discovery import SERVICE_SAMSUNG_PRINTER
+from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
-FRIENDLY_NAME = 'friendly_name'
-
+DEFAULT_NAME = 'Samsung Printer'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url
@@ -32,27 +33,38 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     from pysyncthru import SyncThru, test_syncthru
 
-    resource = config.get(CONF_RESOURCE)
+    if discovery_info is not None:
+        host = discovery_info.get(CONF_HOST)
+        name = discovery_info.get(CONF_NAME, DEFAULT_NAME)
+    else:
+        host = config.get(CONF_RESOURCE)
+        name = config.get(CONF_NAME, DEFAULT_NAME)
+        
+    _LOGGER.error("Discovered a new Samsung Printer: {}".format(discovery_info))
 
-    if test_syncthru(resource) is False:
+    if test_syncthru(host) is False:
         _LOGGER.error("No SyncThru Printer reached under given resource")
         return False
-
-    sync_comp = SyncThruSensor(hass, SyncThru(resource))
+    
+    sync_comp = SyncThruSensor(hass, SyncThru(host), name)
+    
     add_devices([sync_comp], True)
+
+    return True
+    
 
 
 class SyncThruSensor(Entity):
     """Implementation of a Samsung Printer sensor platform."""
 
-    def __init__(self, hass, syncthru):
+    def __init__(self, hass, syncthru, name):
         """Initialize the BL-NET sensor."""
         self._hass = hass
         self.syncthru = syncthru
         # init the devices entitiy name starting without number/name
         self._attributes = {}
         self._state = STATE_UNKNOWN
-        self._name = 'SyncThru Printer'
+        self._name = name
         self._icon = 'mdi:printer'
 
     @property
@@ -79,7 +91,7 @@ class SyncThruSensor(Entity):
         
         if syncthru.isOnline():
             self._friendly_name = syncthru.model()
-            self._attributes[FRIENDLY_NAME] = self._friendly_name
+            self._attributes[CONF_FRIENDLY_NAME] = self._friendly_name
 
             self._attributes['output_tray'] = syncthru.outputTrayStatus()
             for key, value in syncthru.systemStatus().items():
