@@ -189,7 +189,7 @@ def get_age(date: dt.datetime) -> str:
         return first // second, first % second
 
     if date > now():
-        delta = date - now()
+        delta = date + timedelta(seconds=0.9) - now()
     else:
         delta = now() - date
 
