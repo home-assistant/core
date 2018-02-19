@@ -193,7 +193,7 @@ class ApplicationListener:
             else:
                 # These may be manufacturer specific profiles and they
                 # will need special handling if they are to be supported
-                # correctly. Without skipping them simple sensors get 
+                # correctly. Without skipping them simple sensors get
                 # duplicated because the clusters are reported on multiple
                 # endpoints
                 _LOGGER.info("Skipping endpoint with profile_id: %s",
@@ -393,4 +393,3 @@ async def safe_read(cluster, attributes):
         return result
     except Exception:  # pylint: disable=broad-except
         return {}
-    

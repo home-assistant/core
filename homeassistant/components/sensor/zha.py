@@ -178,20 +178,20 @@ class CentraliteBatterySensor(GenericBatterySensor):
     minVolts = 15
     maxVolts = 28
     values = {
-        28:100,
-        27:100,
-        26:100,
-        25:90,
-        24:90,
-        23:70,
-        22:70,
-        21:50,
-        20:50,
-        19:30,
-        18:30,
-        17:15,
-        16:1,
-        15:0
+        28: 100,
+        27: 100,
+        26: 100,
+        25: 90,
+        24: 90,
+        23: 70,
+        22: 70,
+        21: 50,
+        20: 50,
+        19: 30,
+        18: 30,
+        17: 15,
+        16: 1,
+        15: 0
     }
 
     @property
@@ -244,7 +244,7 @@ class ElectricalMeasurementSensor(Sensor):
         if self._state == 'unknown':
             return 'unknown'
 
-        return round(float(self._state) / 10, 1) 
+        return round(float(self._state) / 10, 1)
 
     @property
     def should_poll(self) -> bool:
@@ -258,8 +258,8 @@ class ElectricalMeasurementSensor(Sensor):
         """Retrieve latest state."""
         _LOGGER.debug("%s async_update", self.entity_id)
 
-        result = yield from zha.safe_read(self._endpoint.electrical_measurement,
-                ['active_power'])
+        result = yield from zha.safe_read(
+            self._endpoint.electrical_measurement, ['active_power'])
         self._state = result.get('active_power', self._state)
 
 
@@ -278,4 +278,3 @@ class IlluminanceMeasurementSensor(Sensor):
             return 'unknown'
 
         return self._state
-    
