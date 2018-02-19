@@ -3,10 +3,12 @@
 import unittest
 from unittest.mock import patch
 
+import voluptuous as vol
+
 from homeassistant import setup
 from homeassistant.core import Event
 from homeassistant.components.homekit import (
-    CONF_PIN_CODE, BRIDGE_NAME, Homekit)
+    CONF_PIN_CODE, BRIDGE_NAME, Homekit, valid_pin)
 from homeassistant.components.homekit.covers import Window
 from homeassistant.components.homekit.sensors import TemperatureSensor
 from homeassistant.const import (
@@ -21,11 +23,6 @@ CONFIG = {
     'homekit': {
         CONF_PORT: 11111,
         CONF_PIN_CODE: '987-65-432',
-    }
-}
-CONFIG_INVALID = {
-    'homekit': {
-        CONF_PIN_CODE: 'abc-de-fgh',
     }
 }
 
@@ -74,10 +71,16 @@ class TestHomekit(unittest.TestCase):
         mock_homekit.assert_called_once_with(self.hass, 11111)
         mock_setup_bridge.assert_called_with(b'987-65-432')
 
-    # def test_setup_invalid(self):
-    #     """Test async_setup with invalid config option."""
-    #     self.assertFalse(setup.setup_component(
-    #         self.hass, 'homekit', CONFIG_INVALID))
+    def test_validate_pincode(self):
+        """Test async_setup with invalid config option."""
+        schema = vol.Schema(valid_pin)
+
+        for value in ('', '123-456-78', 'a23-45-678', '12345678'):
+            with self.assertRaises(vol.MultipleInvalid):
+                schema(value)
+
+        for value in ('123-45-678', '234-56-789'):
+            self.assertTrue(schema(value))
 
     @patch('pyhap.accessory_driver.AccessoryDriver.persist')
     @patch('pyhap.accessory_driver.AccessoryDriver.stop')

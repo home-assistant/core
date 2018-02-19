@@ -1,6 +1,7 @@
 """Class to hold all cover accessories."""
 import logging
 
+from homeassistant.components.cover import ATTR_CURRENT_POSITION
 from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
@@ -70,7 +71,10 @@ class Window(HomeAccessory):
         if new_state is None:
             return
 
-        self.current_position = int(new_state.attributes['current_position'])
+        current_position = new_state.attributes[ATTR_CURRENT_POSITION]
+        if current_position is None:
+            return
+        self.current_position = int(current_position)
         self.char_current_position.set_value(self.current_position)
 
         if self.homekit_target is None or \

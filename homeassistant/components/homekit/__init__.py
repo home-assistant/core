@@ -5,18 +5,20 @@ https://home-assistant.io/components/homekit/
 """
 import asyncio
 import logging
+import re
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, CONF_PORT, TEMP_CELSIUS,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, CONF_PORT,
+    TEMP_CELSIUS, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
+
+_RE_VALID_PINCODE = re.compile(r"^(\d{3}-\d{2}-\d{3})$")
 
 DOMAIN = 'homekit'
 REQUIREMENTS = ['HAP-python==1.1.5']
@@ -26,10 +28,19 @@ CONF_PIN_CODE = 'pincode'
 
 HOMEKIT_FILE = '.homekit.state'
 
+
+def valid_pin(value):
+    """Validate pincode value."""
+    match = _RE_VALID_PINCODE.findall(value.strip())
+    if match == []:
+        raise vol.Invalid("Pin must be in the format: '123-45-678'")
+    return match[0]
+
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
         vol.Optional(CONF_PORT, default=51826): vol.Coerce(int),
-        vol.Optional(CONF_PIN_CODE, default='123-45-678'): cv.string,
+        vol.Optional(CONF_PIN_CODE, default='123-45-678'): valid_pin,
     })
 }, extra=vol.ALLOW_EXTRA)
 
