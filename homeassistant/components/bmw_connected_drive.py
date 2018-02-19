@@ -24,16 +24,6 @@ DOMAIN = 'bmw_connected_drive'
 CONF_VALUES = 'values'
 CONF_COUNTRY = 'country'
 
-LENGTH_ATTRIBUTES = [
-    'remaining_range_fuel',
-    'mileage',
-    ]
-
-VAILD_ATTRIBUTES = LENGTH_ATTRIBUTES + [
-    'timestamp',
-    'remaining_fuel',
-]
-
 ACCOUNT_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
@@ -113,4 +103,3 @@ class BMWConnectedDriveAccount(object):
     def add_update_listener(self, listener):
         """Add a listener for update notifications."""
         self._update_listeners.append(listener)
-        listener()

@@ -4,7 +4,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.bmw_connected_drive/
 """
 import logging
-import asyncio
 
 from homeassistant.components.bmw_connected_drive import DOMAIN \
     as BMW_DOMAIN
@@ -22,7 +21,9 @@ def setup_scanner(hass, config, see, discovery_info=None):
                   ', '.join([a.name for a in accounts]))
     for account in accounts:
         for vehicle in account.account.vehicles:
-            BMWDeviceTracker(see, account, vehicle)
+            tracker = BMWDeviceTracker(see, account, vehicle)
+            account.add_update_listener(tracker.update)
+            tracker.update()
     return True
 
 
@@ -38,6 +39,7 @@ class BMWDeviceTracker(object):
     def update(self) -> None:
         """Update the device info."""
         dev_id = slugify(self.vehicle.modelName)
+        _LOGGER.debug('Updating %s', dev_id)
         attrs = {
             'trackr_id': dev_id,
             'id': dev_id,
@@ -48,12 +50,3 @@ class BMWDeviceTracker(object):
             gps=self.vehicle.state.gps_position, attributes=attrs,
             icon='mdi:car'
         )
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Add callback after being added to hass.
-
-        Show latest data after startup.
-        """
-        self._account.add_update_listener(self.update)
-        self.update()

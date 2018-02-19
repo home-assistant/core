@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for sensor in VALID_ATTRIBUTES:
                 device = BMWConnectedDriveSensor(account, vehicle, sensor)
                 devices.append(device)
-    return add_devices(devices)
+    add_devices(devices)
 
 
 class BMWConnectedDriveSensor(Entity):
@@ -76,6 +76,7 @@ class BMWConnectedDriveSensor(Entity):
 
     def update(self) -> None:
         """Read new state data from the library."""
+        _LOGGER.debug('Updating %s', self.entity_id)
         vehicle_state = self._vehicle.state
         self._state = getattr(vehicle_state, self._attribute)
 
