@@ -388,14 +388,13 @@ class PlaylistData:
     def __init__(self, hass):
         """Initialize the Spotify playlist store list."""
         self.hass = hass
-        self.playlists = {}
+        self.playlists = self.load()
 
     def update(self, playlist=None):
         """Add a playlist."""
         if playlist is not None:
             self.playlists[playlist['id']] = playlist
         self.save()
-        self.playlists = self.load()
 
     def load(self):
         """Load the playlists."""
