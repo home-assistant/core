@@ -77,14 +77,16 @@ class InsteonPLMFan(FanEntity):
         if self._insteon_device_state.group == 0x01:
             name = self._insteon_device.id
         else:
-            name = '{:s}_{:d}'.format(self._insteon_device.id, self._insteon_device_state.group)
+            name = '{:s}_{:d}'.format(self._insteon_device.id, 
+                                      self._insteon_device_state.group)
         return name
 
     @property
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
         insteon_plm = get_component('insteon_plm')
-        return insteon_plm.common_attributes(self._insteon_device, self._insteon_device_state)
+        return insteon_plm.common_attributes(self._insteon_device, 
+                                             self._insteon_device_state)
 
     @property
     def speed(self) -> str:

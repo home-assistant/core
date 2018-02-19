@@ -47,9 +47,11 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
         self._hass = hass
         self._insteon_device_state = device.states[state_key]
         self._insteon_device = device
-        self._sensor_type = SENSOR_TYPES.get(self._insteon_device_state.name, None)
+        self._sensor_type = SENSOR_TYPES.get(self._insteon_device_state.name, 
+                                             None)
 
-        self._insteon_device_state.register_updates(self.async_binarysensor_update)
+        self._insteon_device_state.register_updates(
+            self.async_binarysensor_update)
 
     @property
     def should_poll(self):
@@ -68,14 +70,16 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
         if self._insteon_device_state.group == 0x01:
             name = self._insteon_device.id
         else:
-            name = '{:s}_{:d}'.format(self._insteon_device.id, self._insteon_device_state.group)
+            name = '{:s}_{:d}'.format(self._insteon_device.id, 
+                                      self._insteon_device_state.group)
         return name
 
     @property
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
         insteon_plm = get_component('insteon_plm')
-        return insteon_plm.common_attributes(self._insteon_device, self._insteon_device_state)
+        return insteon_plm.common_attributes(self._insteon_device, 
+                                             self._insteon_device_state)
 
     @callback
     def async_binarysensor_update(self, deviceid, statename, val):
