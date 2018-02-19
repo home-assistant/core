@@ -98,7 +98,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for key, value in printer.inputTrayStatus(filter_supported=True).items():
         if 'tray_' + str(key) in monitored:
             devices.append(SyncThruInputTray(hass, printer, name, key))
-    for key, value in printer.outputTrayStatus(filter_supported=True).items():
+    for key, value in printer.outputTrayStatus().items():
         if 'output_tray_' + str(key) in monitored:
             devices.append(SyncThruOutputTray(hass, printer, name, key))
 
