@@ -28,13 +28,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         device = plm.devices[address]
         state_key = device_info['state_key']
 
-        stateName = device.states[state_key].name
+        state_name = device.states[state_key].name
 
-        if stateName in ['lightOnOff', 'outletTopOnOff', 'outletBottomOnOff']:
+        if state_name in ['lightOnOff', 'outletTopOnOff', 'outletBottomOnOff']:
             state_list.append(InsteonPLMSwitchDevice(hass,
                                                      device,
                                                      state_key))
-        elif stateName == 'openClosedRelay':
+        elif state_name == 'openClosedRelay':
             state_list.append(InsteonPLMOpenClosedDevice(hass,
                                                          device,
                                                          state_key))
@@ -70,7 +70,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
         if self._insteon_device_state.group == 0x01:
             name = self._insteon_device.id
         else:
-            name = '{:s}_{:d}'.format(self._insteon_device.id, 
+            name = '{:s}_{:d}'.format(self._insteon_device.id,
                                       self._insteon_device_state.group)
         return name
 
@@ -84,7 +84,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
         insteon_plm = get_component('insteon_plm')
-        return insteon_plm.common_attributes(self._insteon_device, 
+        return insteon_plm.common_attributes(self._insteon_device,
                                              self._insteon_device_state)
 
     @callback
@@ -131,7 +131,7 @@ class InsteonPLMOpenClosedDevice(SwitchDevice):
         if self._insteon_device_state.group == 0x01:
             name = self._insteon_device.id
         else:
-            name = '{:s}_{:d}'.format(self._insteon_device.id, 
+            name = '{:s}_{:d}'.format(self._insteon_device.id,
                                       self._insteon_device_state.group)
         return name
 
@@ -145,7 +145,7 @@ class InsteonPLMOpenClosedDevice(SwitchDevice):
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
         insteon_plm = get_component('insteon_plm')
-        return insteon_plm.common_attributes(self._insteon_device, 
+        return insteon_plm.common_attributes(self._insteon_device,
                                              self._insteon_device_state)
 
     @callback
