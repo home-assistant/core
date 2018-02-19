@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_INCLUDE, CONF_EXCLUDE, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_RADIUS, CONF_DAYS)
+    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_RADIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 import homeassistant.helpers.config_validation as cv
@@ -22,6 +22,9 @@ import homeassistant.helpers.config_validation as cv
 REQUIREMENTS = ['spotcrime==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_DAYS = 'days'
+DEFAULT_DAYS = 3
 
 DOMAIN = 'spotcrime'
 
@@ -34,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RADIUS): vol.Coerce(float),
     vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
-    vol.Optional(CONF_DAYS): cv.positive_int,
+    vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.positive_int,
     vol.Optional(CONF_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_EXCLUDE): vol.All(cv.ensure_list, [cv.string])
 })
