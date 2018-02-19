@@ -9,7 +9,7 @@ from homeassistant.const import (
     TEMP_CELSIUS, STATE_UNKNOWN)
 
 
-def test_import_types(self):
+def test_import_types():
     """Test if all type files are imported correctly."""
     try:
         import_types()
