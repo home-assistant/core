@@ -407,4 +407,4 @@ class PlaylistData:
     def save(self):
         """Save playlists."""
         with open(self.hass.config.path(PERSISTENCE), 'wt') as p_file:
-            json.dump(self.playlist, p_file)
+            json.dump(self.playlists, p_file)
