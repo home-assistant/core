@@ -58,6 +58,7 @@ ATTR_ADDONS = 'addons'
 ATTR_FOLDERS = 'folders'
 ATTR_HOMEASSISTANT = 'homeassistant'
 ATTR_NAME = 'name'
+ATTR_PASSWORD = 'password'
 
 NO_TIMEOUT = {
     re.compile(r'^homeassistant/update$'),
@@ -87,6 +88,7 @@ SCHEMA_ADDON_STDIN = SCHEMA_ADDON.extend({
 
 SCHEMA_SNAPSHOT_FULL = vol.Schema({
     vol.Optional(ATTR_NAME): cv.string,
+    vol.Optional(ATTR_PASSWORD): cv.string,
 })
 
 SCHEMA_SNAPSHOT_PARTIAL = SCHEMA_SNAPSHOT_FULL.extend({
@@ -96,6 +98,7 @@ SCHEMA_SNAPSHOT_PARTIAL = SCHEMA_SNAPSHOT_FULL.extend({
 
 SCHEMA_RESTORE_FULL = vol.Schema({
     vol.Required(ATTR_SNAPSHOT): cv.slug,
+    vol.Optional(ATTR_PASSWORD): cv.string,
 })
 
 SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend({
