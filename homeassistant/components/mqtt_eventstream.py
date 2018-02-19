@@ -26,12 +26,15 @@ DEPENDENCIES = ['mqtt']
 CONF_PUBLISH_TOPIC = 'publish_topic'
 CONF_SUBSCRIBE_TOPIC = 'subscribe_topic'
 CONF_PUBLISH_EVENTSTREAM_RECEIVED = 'publish_eventstream_received'
+CONF_IGNORE_EVENT_CALL_SERVICE = 'ignore_call_service'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_PUBLISH_TOPIC): valid_publish_topic,
         vol.Optional(CONF_SUBSCRIBE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PUBLISH_EVENTSTREAM_RECEIVED, default=False):
+            cv.boolean,
+        vol.Optional(CONF_IGNORE_EVENT_CALL_SERVICE, default=False):
             cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -44,6 +47,7 @@ def async_setup(hass, config):
     conf = config.get(DOMAIN, {})
     pub_topic = conf.get(CONF_PUBLISH_TOPIC)
     sub_topic = conf.get(CONF_SUBSCRIBE_TOPIC)
+    ignore_call_service = conf.get(CONF_IGNORE_EVENT_CALL_SERVICE)
 
     @callback
     def _event_publisher(event):
@@ -99,6 +103,9 @@ def async_setup(hass, config):
 
                 if state:
                     event_data[key] = state
+        
+        if ignore_call_service and event_type == EVENT_CALL_SERVICE:
+            return
 
         hass.bus.async_fire(
             event_type,
