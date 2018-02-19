@@ -8,7 +8,7 @@ import logging
 
 import requests
 
-from homeassistant.components.fritzhome import DOMAIN as FRITZBOX_DOMAIN
+from homeassistant.components.fritzbox import DOMAIN as FRITZBOX_DOMAIN
 from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO, STATE_HEAT, STATE_MANUAL,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
