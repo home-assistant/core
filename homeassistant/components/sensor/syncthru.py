@@ -3,12 +3,6 @@ Connect to a Samsung Printer via it's SyncThru
  web interface and read data
 """
 import logging
-
-REQUIREMENTS = [
-    'pysyncthru>=0.2.2'
-    ]
-
-
 import voluptuous as vol
 import asyncio
 
@@ -20,6 +14,10 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+
+REQUIREMENTS = [
+    'pysyncthru>=0.2.2'
+    ]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         ): vol.All(cv.ensure_list, [vol.In(DEFAULT_MONITORED_CONDITIONS)])
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the BLNET component"""
 
@@ -71,7 +70,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is not None:
         host = discovery_info.get(CONF_HOST)
         name = discovery_info.get(CONF_NAME, DEFAULT_NAME)
-        _LOGGER.info("Discovered a new Samsung Printer: {}".format(discovery_info))
+        _LOGGER.info(
+            "Discovered a new Samsung Printer: {}".format(discovery_info))
         # Test if the discovered device actually is a syncthru printer
         if test_syncthru(host) is False:
             _LOGGER.error("No SyncThru Printer reached under given resource")
@@ -90,21 +90,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = [SyncThruSensor(hass, printer, name)]
 
     for key, value in printer.tonerStatus(filter_supported=True).items():
-        if 'toner_' + key in monitored:
+        if 'toner_' + str(key) in monitored:
             devices.append(SyncThruToner(hass, printer, name, key))
     for key, value in printer.drumStatus(filter_supported=True).items():
-        if 'drum_' + key in monitored:
+        if 'drum_' + str(key) in monitored:
             devices.append(SyncThruDrum(hass, printer, name, key))
     for key, value in printer.inputTrayStatus(filter_supported=True).items():
-        if 'tray_' + key in monitored:
+        if 'tray_' + str(key) in monitored:
             devices.append(SyncThruInputTray(hass, printer, name, key))
-    for key, value in printer.inputTrayStatus(filter_supported=True).items():
-        if 'output_tray_' + key in monitored:
-            devices.append(SyncThruInputTray(hass, printer, name, key))
+    for key, value in printer.outputTrayStatus(filter_supported=True).items():
+        if 'output_tray_' + str(key) in monitored:
+            devices.append(SyncThruOutputTray(hass, printer, name, key))
 
     add_devices(devices, True)
     return True
-    
 
 
 class SyncThruSensor(Entity):
@@ -141,7 +140,7 @@ class SyncThruSensor(Entity):
 
         syncthru.update()
         self._state = syncthru.deviceStatus()
-        
+
         if syncthru.isOnline():
             self._friendly_name = syncthru.model()
             self._attributes[CONF_FRIENDLY_NAME] = self._friendly_name
@@ -151,6 +150,7 @@ class SyncThruSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attributes
+
 
 class SyncThruToner(Entity):
     """Implementation of a Samsung Printer toner sensor platform."""
@@ -162,7 +162,7 @@ class SyncThruToner(Entity):
         # init the devices entitiy name starting without number/name
         self._attributes = {}
         self._state = STATE_UNKNOWN
-        self._name = name + ' toner ' + color
+        self._name = "{} toner {}".format(name, color)
         self._color = color
         self._icon = 'mdi:printer'
         self._unit_of_measurement = '%'
@@ -189,22 +189,24 @@ class SyncThruToner(Entity):
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
-        
+
         # Data fetching is taken care of through the Main sensor
         syncthru = self.syncthru
-        
+
         if syncthru.isOnline():
             self._attributes = syncthru.tonerStatus(
                 ).get(self._color, {})
             self._state = self._attributes.get(
                 'remaining', STATE_UNKNOWN)
-            self._friendly_name = self._color + " Toner " + syncthru.model()
+            self._friendly_name = "{} Toner {}".format(
+                self._color, syncthru.model())
             self._attributes[CONF_FRIENDLY_NAME] = self._friendly_name
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attributes
+
 
 class SyncThruDrum(Entity):
     """Implementation of a Samsung Printer toner sensor platform."""
@@ -216,7 +218,7 @@ class SyncThruDrum(Entity):
         # init the devices entitiy name starting without number/name
         self._attributes = {}
         self._state = STATE_UNKNOWN
-        self._name = name + ' drum ' + color
+        self._name = "{} drum {}".format(name, color)
         self._color = color
         self._icon = 'mdi:printer'
         self._unit_of_measurement = '%'
@@ -243,22 +245,24 @@ class SyncThruDrum(Entity):
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
-        
+
         # Data fetching is taken care of through the Main sensor
         syncthru = self.syncthru
-        
+
         if syncthru.isOnline():
             self._attributes = syncthru.drumStatus(
                 ).get(self._color, {})
             self._state = self._attributes.get(
                 'remaining', STATE_UNKNOWN)
-            self._friendly_name = self._color + " Drum " + syncthru.model()
+            self._friendly_name = "{} Drum {}".format(
+                self._color, syncthru.model())
             self._attributes[CONF_FRIENDLY_NAME] = self._friendly_name
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attributes
+
 
 class SyncThruInputTray(Entity):
     """Implementation of a Samsung Printer input tray sensor platform."""
@@ -270,7 +274,7 @@ class SyncThruInputTray(Entity):
         # init the devices entitiy name starting without number/name
         self._attributes = {}
         self._state = STATE_UNKNOWN
-        self._name = name + ' tray ' + number
+        self._name = "{} tray {}".format(name, number)
         self._icon = 'mdi:printer'
         self._number = number
         self._unit_of_measurement = None
@@ -297,10 +301,10 @@ class SyncThruInputTray(Entity):
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
-        
+
         # Data fetching is taken care of through the Main sensor
         syncthru = self.syncthru
-        
+
         if syncthru.isOnline():
             self._attributes = syncthru.inputTrayStatus(
                 ).get(self._number, {})
@@ -308,13 +312,15 @@ class SyncThruInputTray(Entity):
                 'newError', STATE_UNKNOWN)
             if self._state == '':
                 self._state = 'Ready'
-            self._friendly_name = "Tray " + self._number + " " + syncthru.model()
+            self._friendly_name = "Tray {} {}".format(
+                self._number, syncthru.model())
             self._attributes[CONF_FRIENDLY_NAME] = self._friendly_name
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attributes
+
 
 class SyncThruOutputTray(Entity):
     """Implementation of a Samsung Printer input tray sensor platform."""
@@ -326,7 +332,7 @@ class SyncThruOutputTray(Entity):
         # init the devices entitiy name starting without number/name
         self._attributes = {}
         self._state = STATE_UNKNOWN
-        self._name = name + ' output tray ' + number
+        self._name = "{} output tray {}".format(name, number)
         self._icon = 'mdi:printer'
         self._number = number
         self._unit_of_measurement = None
@@ -353,10 +359,10 @@ class SyncThruOutputTray(Entity):
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
-        
+
         # Data fetching is taken care of through the Main sensor
         syncthru = self.syncthru
-        
+
         if syncthru.isOnline():
             self._attributes = syncthru.outputTrayStatus(
                 ).get(self._number, {})
@@ -364,11 +370,11 @@ class SyncThruOutputTray(Entity):
                 'status', STATE_UNKNOWN)
             if self._state == '':
                 self._state = 'Ready'
-            self._friendly_name = "Output Tray " + self._number + " " + syncthru.model()
+            self._friendly_name = "Output Tray {} {}".format(
+                self._number, syncthru.model())
             self._attributes[CONF_FRIENDLY_NAME] = self._friendly_name
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._attributes
-
