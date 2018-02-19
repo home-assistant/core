@@ -313,13 +313,13 @@ class BluesoundPlayer(MediaPlayerDevice):
             self._is_online = True
             self._last_status_update = dt_util.utcnow()
             self._status = xmltodict.parse(result)['status'].copy()
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
         except (asyncio.TimeoutError, ClientError):
             self._is_online = False
             self._last_status_update = None
             self._status = None
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
             _LOGGER.info("Client connection error, marking %s as offline",
                          self._name)
             raise
