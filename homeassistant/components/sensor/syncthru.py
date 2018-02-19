@@ -36,6 +36,7 @@ DEFAULT_MONITORED_CONDITIONS = [
     'tray_3',
     'tray_4',
     'tray_5',
+    'output_tray_0',
     'output_tray_1',
     'output_tray_2',
     'output_tray_3',
