@@ -13,7 +13,8 @@ import voluptuous as vol
 import asyncio
 
 from homeassistant.const import (
-    CONF_RESOURCE, STATE_UNKNOWN, CONF_HOST, CONF_NAME, CONF_FRIENDLY_NAME)
+    CONF_RESOURCE, STATE_UNKNOWN, CONF_HOST, CONF_NAME, CONF_FRIENDLY_NAME,
+    CONF_MONITORED_CONDITIONS)
 from homeassistant.components.discovery import SERVICE_SAMSUNG_PRINTER
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
@@ -23,9 +24,31 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Samsung Printer'
+DEFAULT_MONITORED_CONDITIONS = [
+    'hdd',
+    'ram',
+    'toner_black',
+    'toner_cyan',
+    'toner_magenta',
+    'toner_yellow',
+    'drum_black',
+    'drum_cyan',
+    'drum_magenta',
+    'drum_yellow',
+    'tray1',
+    'tray2',
+    'tray3',
+    'tray4',
+    'tray5',
+    'outputTray'
+]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): cv.url
+    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Optional(
+            CONF_MONITORED_CONDITIONS,
+            default=DEFAULT_MONITORED_CONDITIONS
+        ): vol.All(cv.ensure_list, [vol.In(DEFAULT_MONITORED_CONDITIONS)])
 })
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -36,15 +59,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is not None:
         host = discovery_info.get(CONF_HOST)
         name = discovery_info.get(CONF_NAME, DEFAULT_NAME)
+        _LOGGER.info("Discovered a new Samsung Printer: {}".format(discovery_info))
+        # Test if the discovered device actually is a syncthru printer
+        if test_syncthru(host) is False:
+            _LOGGER.error("No SyncThru Printer reached under given resource")
+            return False
     else:
         host = config.get(CONF_RESOURCE)
         name = config.get(CONF_NAME, DEFAULT_NAME)
-        
-    _LOGGER.error("Discovered a new Samsung Printer: {}".format(discovery_info))
-
-    if test_syncthru(host) is False:
-        _LOGGER.error("No SyncThru Printer reached under given resource")
-        return False
     
     sync_comp = SyncThruSensor(hass, SyncThru(host), name)
     
