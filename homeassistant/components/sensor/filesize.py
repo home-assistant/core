@@ -26,13 +26,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+def get_file_size(path):
+    """Return the size of the file in bytes."""
+    statinfo = os.stat(path)
+    file_size_bytes = statinfo.st_size
+    return file_size_bytes
+
+
+def get_last_updated(path):
+    """Return the time the file was last modified."""
+    statinfo = os.stat(path)
+    last_updated = datetime.datetime.fromtimestamp(statinfo.st_mtime)
+    last_updated = last_updated.isoformat(' ')
+    return last_updated
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the file size sensor."""
     sensors = []
     for path in config.get(CONF_FILE_PATHS):
         if not hass.config.is_allowed_path(path):
             _LOGGER.error(
-                "Filepath {} is not valid or allowed".format(path))
+                "Filepath %s is not valid or allowed", path)
             return
         else:
             sensors.append(Filesize(path))
@@ -54,21 +69,8 @@ class Filesize(Entity):
 
     def update(self):
         """Update the sensor."""
-        self._size = self.get_file_size(self._path)
-        self._last_updated = self.get_last_updated(self._path)
-
-    def get_file_size(self, path):
-        """Return the size of the file in bytes."""
-        statinfo = os.stat(path)
-        file_size_bytes = statinfo.st_size
-        return file_size_bytes
-
-    def get_last_updated(self, path):
-        """Return the time the file was last modified."""
-        statinfo = os.stat(path)
-        last_updated = datetime.datetime.fromtimestamp(statinfo.st_mtime)
-        last_updated = last_updated.isoformat(' ')
-        return last_updated
+        self._size = get_file_size(self._path)
+        self._last_updated = get_last_updated(self._path)
 
     @property
     def name(self):
