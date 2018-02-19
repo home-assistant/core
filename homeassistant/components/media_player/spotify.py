@@ -402,10 +402,10 @@ class PlaylistData:
         path = self.hass.config.path(PERSISTENCE)
         if not os.path.isfile(path):
             return {}
-        with open(path) as file:
-            return json.loads(file.read())
+        with open(path) as p_file:
+            return json.loads(p_file)
 
     def save(self):
         """Save playlists."""
-        with open(self.hass.config.path(PERSISTENCE), 'wt') as file:
-            file.write(json.dumps(self.playlists))
+        with open(self.hass.config.path(PERSISTENCE), 'wt') as p_file:
+            json.dump(self.playlist, yp_file)
