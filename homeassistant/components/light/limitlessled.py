@@ -244,11 +244,11 @@ class LimitlessLEDGroup(Light):
         # Set up transition.
         args = {}
         if self.config[CONF_FADE] and not self.is_on and self._brightness:
-            args['brightness'] = _from_hass_brightness(self._brightness)
+            args['brightness'] = self.limitlessled_brightness()
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            args['brightness'] = _from_hass_brightness(self._brightness)
+            args['brightness'] = self.limitlessled_brightness()
 
         if ATTR_RGB_COLOR in kwargs and self._supported & SUPPORT_RGB_COLOR:
             self._color = kwargs[ATTR_RGB_COLOR]
@@ -257,7 +257,7 @@ class LimitlessLEDGroup(Light):
                 pipeline.white()
                 self._color = WHITE
             else:
-                args['color'] = _from_hass_color(self._color)
+                args['color'] = self.limitlessled_color()
 
         if ATTR_COLOR_TEMP in kwargs:
             if self._supported & SUPPORT_RGB_COLOR:
@@ -265,7 +265,7 @@ class LimitlessLEDGroup(Light):
             self._color = WHITE
             if self._supported & SUPPORT_COLOR_TEMP:
                 self._temperature = kwargs[ATTR_COLOR_TEMP]
-                args['temperature'] = self._from_hass_temperature()
+                args['temperature'] = self.limitlessled_temperature()
 
         if args:
             pipeline.transition(transition_time, **args)
@@ -287,28 +287,16 @@ class LimitlessLEDGroup(Light):
                 pipeline.white()
                 self._color = WHITE
 
-    def _from_hass_temperature(self):
+    def limitlessled_temperature(self):
         """Convert Home Assistant color temperature units to percentage."""
         width = self.max_mireds - self.min_mireds
         return 1 - (self._temperature - self.min_mireds) / width
 
+    def limitlessled_brightness(self):
+        """Convert Home Assistant brightness units to percentage."""
+        return self._brightness / 255
 
-def _from_hass_brightness(brightness):
-    """Convert Home Assistant brightness units to percentage."""
-    return brightness / 255
-
-
-def _to_hass_brightness(brightness):
-    """Convert percentage to Home Assistant brightness units."""
-    return int(brightness * 255)
-
-
-def _from_hass_color(color):
-    """Convert Home Assistant RGB list to Color tuple."""
-    from limitlessled import Color
-    return Color(*tuple(color))
-
-
-def _to_hass_color(color):
-    """Convert from Color tuple to Home Assistant RGB list."""
-    return list([int(c) for c in color])
+    def limitlessled_color(self):
+        """Convert Home Assistant RGB list to Color tuple."""
+        from limitlessled import Color
+        return Color(*tuple(self._color))
