@@ -408,6 +408,7 @@ insteonlocal==0.53
 
 # homeassistant.components.insteon_plm
 insteonplm==0.8.2
+
 # homeassistant.components.verisure
 jsonpath==0.75
 
