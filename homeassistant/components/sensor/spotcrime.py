@@ -24,7 +24,7 @@ REQUIREMENTS = ['spotcrime==1.0.2']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DAYS = 'days'
-DEFAULT_DAYS = 3
+DEFAULT_DAYS = 1
 
 DOMAIN = 'spotcrime'
 
