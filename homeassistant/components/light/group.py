@@ -2,19 +2,21 @@
 This component allows several lights to be grouped into one light.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.grouped_light/
+https://home-assistant.io/components/light.group/
 """
 import asyncio
 import logging
 import itertools
-from typing import List, Tuple, Optional, TypeVar, Iterator
+from typing import List, Tuple, Optional, Iterator, Any
+
 import voluptuous as vol
 
-from homeassistant.core import State
+from homeassistant.core import State, callback
 from homeassistant.components import light
-from homeassistant.const import (
-    STATE_OFF, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID,
-    CONF_NAME, CONF_ENTITIES, STATE_UNAVAILABLE, STATE_UNKNOWN)
+from homeassistant.const import (STATE_OFF, STATE_ON, SERVICE_TURN_ON,
+                                 SERVICE_TURN_OFF, ATTR_ENTITY_ID, CONF_NAME,
+                                 CONF_ENTITIES, STATE_UNAVAILABLE,
+                                 STATE_UNKNOWN, EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.components.light import (
@@ -25,13 +27,13 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'grouped_light'
+DOMAIN = 'group'
 
-DEFAULT_NAME = 'Grouped Light'
+DEFAULT_NAME = 'Group Light'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ENTITIES): cv.entity_ids,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_ENTITIES): cv.entity_ids,
 })
 
 SUPPORT_GROUP_LIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
@@ -44,27 +46,21 @@ def async_setup_platform(hass: HomeAssistantType,
                          config: ConfigType,
                          async_add_devices,
                          discovery_info=None) -> None:
-    """Initialize grouped_light platform."""
-    async_add_devices([GroupedLight(
-        hass,
-        config.get(CONF_NAME),
-        config.get(CONF_ENTITIES)
-    )])
+    """Initialize light.group platform."""
+    async_add_devices(
+        [GroupLight(hass, config.get(CONF_NAME), config[CONF_ENTITIES])])
 
 
-T = TypeVar('T')
-
-
-class GroupedLight(light.Light):
-    """Representation of a Grouped Light."""
+class GroupLight(light.Light):
+    """Representation of a group light."""
 
     def __init__(self, hass: HomeAssistantType, name: str,
                  entity_ids: List[str]) -> None:
-        """Initialize a Grouped Light."""
+        """Initialize a group light."""
         self.hass = hass  # type: HomeAssistantType
         self._name = name  # type: str
         self._entity_ids = entity_ids  # type: List[str]
-        self._state = STATE_OFF  # type: str
+        self._state = STATE_UNAVAILABLE  # type: str
         self._brightness = None  # type: Optional[int]
         self._xy_color = None  # type: Optional[Tuple[float, float]]
         self._rgb_color = None  # type: Optional[Tuple[int, int, int]]
@@ -78,9 +74,24 @@ class GroupedLight(light.Light):
 
     @asyncio.coroutine
     def async_added_to_hass(self) -> None:
-        """Subscribe to light events."""
-        async_track_state_change(self.hass, self._entity_ids,
-                                 self._async_state_changed_listener)
+        """Register callbacks"""
+
+        @callback
+        def async_state_changed_listener(self, entity_id: str,
+                                         old_state: State, new_state: State):
+            """Handle child updates."""
+            self.async_schedule_update_ha_state(True)
+
+        @callback
+        def async_homeassistant_start(event):
+            """Track child state changes on startup."""
+            async_track_state_change(self.hass, self._entity_ids,
+                                     async_state_changed_listener)
+
+            self.async_schedule_update_ha_state(True)
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                                        async_homeassistant_start)
 
     @property
     def name(self) -> str:
@@ -149,7 +160,7 @@ class GroupedLight(light.Light):
 
     @property
     def should_poll(self) -> bool:
-        """No polling needed for a Grouped Light."""
+        """No polling needed for a group light."""
         return False
 
     @asyncio.coroutine
@@ -208,29 +219,15 @@ class GroupedLight(light.Light):
         # so that we don't break in the future when a new feature is added.
         self._supported_features &= SUPPORT_GROUP_LIGHT
 
-    @asyncio.coroutine
-    def _async_state_changed_listener(self, entity_id: str, old_state: State,
-                                      new_state: State):
-        """Respond to a member state changing."""
-        yield from self._update_hass()
-
     def _child_states(self) -> List[State]:
         """The states that the group is tracking."""
         states = [self.hass.states.get(x) for x in self._entity_ids]
         return list(filter(None, states))
 
-    @asyncio.coroutine
-    def _update_hass(self):
-        """Request new status and push it to hass."""
-        yield from self.async_update()
-        yield from self.async_update_ha_state()
 
-
-# https://github.com/PyCQA/pylint/issues/1543
-# pylint: disable=bad-whitespace
 def _find_state_attributes(states: List[State],
                            key: str,
-                           force_on: bool = True) -> Iterator[T]:
+                           force_on: bool = True) -> Iterator[Any]:
     """Find attributes with matching key from states.
 
     Only returns attributes of enabled lights when force_on is True.
@@ -241,12 +238,10 @@ def _find_state_attributes(states: List[State],
             yield state.attributes.get(key)
 
 
-# https://github.com/PyCQA/pylint/issues/1543
-# pylint: disable=bad-whitespace
 def _reduce_attribute(states: List[State],
                       key: str,
-                      default: Optional[T] = None,
-                      force_on: bool = True) -> T:
+                      default: Optional[Any] = None,
+                      force_on: bool = True) -> Any:
     """Find the first attribute matching key from states.
 
     If none are found, returns default.
@@ -258,12 +253,10 @@ def _determine_on_off_state(states: List[State]) -> str:
     """Helper method to determine the ON/OFF/... state of a light."""
     s_states = [state.state for state in states]
 
-    if not s_states:
+    if not s_states or all(state == STATE_UNAVAILABLE for state in s_states):
         return STATE_UNAVAILABLE
     elif any(state == STATE_ON for state in s_states):
         return STATE_ON
-    elif all(state == STATE_UNAVAILABLE for state in s_states):
-        return STATE_UNAVAILABLE
     elif all(state == STATE_UNKNOWN for state in s_states):
         return STATE_UNKNOWN
     return STATE_OFF
