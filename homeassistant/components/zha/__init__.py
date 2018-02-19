@@ -190,6 +190,15 @@ class ApplicationListener:
                     profile_clusters = profile.CLUSTERS[endpoint.device_type]
                     profile_info = zha_const.DEVICE_CLASS[endpoint.profile_id]
                     component = profile_info[endpoint.device_type]
+            else:
+                # These may be manufacturer specific profiles and they
+                # will need special handling if they are to be supported
+                # correctly. Without skipping them simple sensors get 
+                # duplicated because the clusters are reported on multiple
+                # endpoints
+                _LOGGER.info("Skipping endpoint with profile_id: %s",
+                             endpoint.profile_id)
+                continue
 
             if ha_const.CONF_TYPE in node_config:
                 component = node_config[ha_const.CONF_TYPE]
@@ -384,3 +393,4 @@ async def safe_read(cluster, attributes):
         return result
     except Exception:  # pylint: disable=broad-except
         return {}
+    
