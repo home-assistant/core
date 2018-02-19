@@ -23,21 +23,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     state_list = []
     plm = hass.data['insteon_plm']
 
-    for deviceInfo in discovery_info:
-        address = deviceInfo['address']
+    for device_info in discovery_info:
+        address = device_info['address']
         device = plm.devices[address]
-        stateKey = deviceInfo['stateKey']
+        state_key = device_info['state_key']
 
-        stateName = device.states[stateKey].name
+        stateName = device.states[state_key].name
 
         if stateName in ['lightOnOff', 'outletTopOnOff', 'outletBottomOnOff']:
             state_list.append(InsteonPLMSwitchDevice(hass,
                                                      device,
-                                                     stateKey))
+                                                     state_key))
         elif stateName == 'openClosedRelay':
             state_list.append(InsteonPLMOpenClosedDevice(hass,
                                                          device,
-                                                         stateKey))
+                                                         state_key))
 
     async_add_devices(state_list)
 
@@ -45,13 +45,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class InsteonPLMSwitchDevice(SwitchDevice):
     """A Class for an Insteon device."""
 
-    def __init__(self, hass, device, stateKey):
+    def __init__(self, hass, device, state_key):
         """Initialize the switch."""
         self._hass = hass
-        self._state = device.states[stateKey]
-        self._device = device
+        self._insteon_device_state = device.states[state_key]
+        self._insteon_device = device
 
-        self._state.register_updates(self.async_switch_update)
+        self._insteon_device_state.register_updates(self.async_switch_update)
 
     @property
     def should_poll(self):
@@ -61,29 +61,29 @@ class InsteonPLMSwitchDevice(SwitchDevice):
     @property
     def address(self):
         """Return the address of the node."""
-        return self._device.address.human
+        return self._insteon_device.address.human
 
     @property
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
         name = ''
-        if self._state.group == 0x01:
-            name = self._device.id
+        if self._insteon_device_state.group == 0x01:
+            name = self._insteon_device.id
         else:
-            name = '{:s}_{:d}'.format(self._device.id, self._state.group)
+            name = '{:s}_{:d}'.format(self._insteon_device.id, self._insteon_device_state.group)
         return name
 
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        onlevel = self._state.value
+        onlevel = self._insteon_device_state.value
         return bool(onlevel)
 
     @property
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
         insteon_plm = get_component('insteon_plm')
-        return insteon_plm.common_attributes(self._device, self._state)
+        return insteon_plm.common_attributes(self._insteon_device, self._insteon_device_state)
 
     @callback
     def async_switch_update(self, deviceid, statename, val):
@@ -93,24 +93,24 @@ class InsteonPLMSwitchDevice(SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn device on."""
-        self._state.on()
+        self._insteon_device_state.on()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn device off"""
-        self._state.off()
+        self._insteon_device_state.off()
 
 
 class InsteonPLMOpenClosedDevice(SwitchDevice):
     """A Class for an Insteon device."""
 
-    def __init__(self, hass, device, stateKey):
+    def __init__(self, hass, device, state_key):
         """Initialize the switch."""
         self._hass = hass
-        self._state = device.states[stateKey]
-        self._device = device
+        self._insteon_device_state = device.states[state_key]
+        self._insteon_device = device
 
-        self._state.register_updates(self.async_relay_update)
+        self._insteon_device_state.register_updates(self.async_relay_update)
 
     @property
     def should_poll(self):
@@ -120,29 +120,29 @@ class InsteonPLMOpenClosedDevice(SwitchDevice):
     @property
     def address(self):
         """Return the address of the node."""
-        return self._device.address.human
+        return self._insteon_device.address.human
 
     @property
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
         name = ''
-        if self._state.group == 0x01:
-            name = self._device.id
+        if self._insteon_device_state.group == 0x01:
+            name = self._insteon_device.id
         else:
-            name = '{:s}_{:d}'.format(self._device.id, self._state.group)
+            name = '{:s}_{:d}'.format(self._insteon_device.id, self._insteon_device_state.group)
         return name
 
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        onlevel = self._state.value
+        onlevel = self._insteon_device_state.value
         return bool(onlevel)
 
     @property
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
         insteon_plm = get_component('insteon_plm')
-        return insteon_plm.common_attributes(self._device, self._state)
+        return insteon_plm.common_attributes(self._insteon_device, self._insteon_device_state)
 
     @callback
     def async_relay_update(self, deviceid, statename, val):
@@ -152,9 +152,9 @@ class InsteonPLMOpenClosedDevice(SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn device on."""
-        self._state.open()
+        self._insteon_device_state.open()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn device off"""
-        self._state.close()
+        self._insteon_device_state.close()

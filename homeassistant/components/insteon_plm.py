@@ -47,20 +47,20 @@ def async_setup(hass, config):
     def async_plm_new_device(device):
         """Detect device from transport to be delegated to platform."""
 
-        for stateKey in device.states:
-            platformInfo = ipdb[device.states[stateKey]]
-            platform = platformInfo.platform
+        for state_key in device.states:
+            platform_info = ipdb[device.states[state_key]]
+            platform = platform_info.platform
             if platform is not None:
                 _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
                              device.address,
-                             device.states[stateKey].name,
+                             device.states[state_key].name,
                              platform)
 
                 hass.async_add_job(
                     discovery.async_load_platform(
                         hass, platform, DOMAIN,
                         discovered=[{'address': device.address.hex,
-                                     'stateKey': stateKey}],
+                                     'state_key': state_key}],
                         hass_config=config))
 
     _LOGGER.info("Looking for PLM on %s", port)

@@ -27,14 +27,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     state_list = []
     plm = hass.data['insteon_plm']
 
-    for deviceInfo in discovery_info:
-        address = deviceInfo['address']
+    for device_info in discovery_info:
+        address = device_info['address']
         device = plm.devices[address]
-        stateKey = deviceInfo['stateKey']
+        state_key = device_info['state_key']
 
         state_list.append(InsteonPLMBinarySensor(hass,
                                                  device,
-                                                 stateKey))
+                                                 state_key))
 
     async_add_devices(state_list)
 
@@ -42,14 +42,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class InsteonPLMBinarySensor(BinarySensorDevice):
     """A Class for an Insteon device state."""
 
-    def __init__(self, hass, device, stateKey):
+    def __init__(self, hass, device, state_key):
         """Initialize the binarysensor."""
         self._hass = hass
-        self._state = device.states[stateKey]
-        self._device = device
-        self._sensor_type = SENSOR_TYPES.get(self._state.name, None)
+        self._insteon_device_state = device.states[state_key]
+        self._insteon_device = device
+        self._sensor_type = SENSOR_TYPES.get(self._insteon_device_state.name, None)
 
-        self._state.register_updates(self.async_binarysensor_update)
+        self._insteon_device_state.register_updates(self.async_binarysensor_update)
 
     @property
     def should_poll(self):
@@ -59,23 +59,23 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
     @property
     def address(self):
         """Return the address of the node."""
-        return self._device.address.human
+        return self._insteon_device.address.human
 
     @property
     def name(self):
         """Return the name of the node. (used for Entity_ID)"""
         name = ''
-        if self._state.group == 0x01:
-            name = self._device.id
+        if self._insteon_device_state.group == 0x01:
+            name = self._insteon_device.id
         else:
-            name = '{:s}_{:d}'.format(self._device.id, self._state.group)
+            name = '{:s}_{:d}'.format(self._insteon_device.id, self._insteon_device_state.group)
         return name
 
     @property
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
         insteon_plm = get_component('insteon_plm')
-        return insteon_plm.common_attributes(self._device, self._state)
+        return insteon_plm.common_attributes(self._insteon_device, self._insteon_device_state)
 
     @callback
     def async_binarysensor_update(self, deviceid, statename, val):
@@ -90,5 +90,5 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        sensorstate = self._state.value
+        sensorstate = self._insteon_device_state.value
         return bool(sensorstate)
