@@ -53,6 +53,7 @@ def async_setup(hass, config):
 
 def import_types():
     """Import all types from files in the homekit dir."""
+    _LOGGER.debug("Import type files.")
     # pylint: disable=unused-variable
     from .covers import Window  # noqa F401
     # pylint: disable=unused-variable
@@ -94,17 +95,12 @@ class Homekit():
         self.bridge = HomeBridge(BRIDGE_NAME, pincode=pin)
         self.bridge.set_accessory_info('homekit.bridge')
 
-    def add_accessory(self, acc):
-        """Add an accessory to the bridge."""
-        self.bridge.add_accessory(acc)
-
     def start_driver(self, event):
         """Start the accessory driver."""
         from pyhap.accessory_driver import AccessoryDriver
         self._hass.bus.listen_once(
             EVENT_HOMEASSISTANT_STOP, self.stop_driver)
 
-        _LOGGER.debug("Import type files.")
         import_types()
         _LOGGER.debug("Start adding accessories.")
         for state in self._hass.states.all():

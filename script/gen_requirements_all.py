@@ -47,6 +47,7 @@ TEST_REQUIREMENTS = (
     'evohomeclient',
     'feedparser',
     'gTTS-token',
+    'HAP-python',
     'ha-ffmpeg',
     'haversine',
     'hbmqtt',

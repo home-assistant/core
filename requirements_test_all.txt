@@ -18,6 +18,9 @@ flake8-docstrings==1.0.3
 asynctest>=0.11.1
 
 
+# homeassistant.components.homekit
+HAP-python==1.1.5
+
 # homeassistant.components.notify.html5
 PyJWT==1.5.3
 
