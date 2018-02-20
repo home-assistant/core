@@ -55,7 +55,7 @@ class TestHomekit(unittest.TestCase):
 
         self.hass.start()
         self.hass.block_till_done()
-        mock_start_driver.assert_called_once()
+        self.assertEqual(mock_start_driver.call_count, 1)
 
     @patch(HOMEKIT_PATH + '.Homekit.start_driver')
     @patch(HOMEKIT_PATH + '.Homekit.setup_bridge')
@@ -109,8 +109,8 @@ class TestHomekit(unittest.TestCase):
         homekit.start_driver(Event(EVENT_HOMEASSISTANT_START))
 
         self.assertEqual(mock_get_accessory.call_count, 2)
-        mock_import_types.assert_called_once()
-        mock_driver_start.assert_called_once()
+        self.assertEqual(mock_import_types.call_count, 1)
+        self.assertEqual(mock_driver_start.call_count, 1)
 
         accessories = homekit.bridge.accessories
         self.assertEqual(accessories[2], acc1)
@@ -121,4 +121,4 @@ class TestHomekit(unittest.TestCase):
         self.hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
         self.hass.block_till_done()
 
-        mock_driver_stop.assert_called_once()
+        self.assertEqual(mock_driver_stop.call_count, 1)
