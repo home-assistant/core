@@ -148,7 +148,9 @@ class CloudIoT:
                 _LOGGER.exception("Unexpected error")
 
         finally:
-            if disconnect_warn is not None:
+            if disconnect_warn is None:
+                _LOGGER.info("Connection closed")
+            else:
                 _LOGGER.warning("Connection closed: %s", disconnect_warn)
 
             if remove_hass_stop_listener is not None:
