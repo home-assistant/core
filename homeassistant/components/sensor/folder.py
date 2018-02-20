@@ -72,7 +72,7 @@ class Folder(Entity):
         self._number_of_files = None
         self._recent_modified_file = None
         self._last_updated = None
-        self._name = folder_path.split("/")[-2]
+        self._name = os.path.split(os.path.split(folder_path)[0])[1]
 
     def update(self):
         """Update the sensor."""
@@ -105,8 +105,8 @@ class Folder(Entity):
         attr = {
             'folder': self._folder_path,
             'filter': self._filter_term,
-            'modified_file': self._recent_modified_file.split('/')[-1],
+            'modified_file': os.path.split(self._recent_modified_file)[1],
             'number_of_files': len(self._sorted_files_list),
-            'files': [f.split('/')[-1] for f in self._sorted_files_list]
+            'files': [os.path.split(f)[1] for f in self._sorted_files_list]
             }
         return attr
