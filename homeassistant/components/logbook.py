@@ -189,9 +189,6 @@ def humanify(events):
             if event.event_type == EVENT_STATE_CHANGED:
                 entity_id = event.data.get('entity_id')
 
-                if entity_id is None:
-                    continue
-
                 if entity_id.startswith(tuple('{}.'.format(
                         domain) for domain in CONTINUOUS_DOMAINS)):
                     last_sensor_event[entity_id] = event
@@ -213,14 +210,6 @@ def humanify(events):
             if event.event_type == EVENT_STATE_CHANGED:
 
                 to_state = State.from_dict(event.data.get('new_state'))
-
-                # If last_changed != last_updated only attributes have changed
-                # we do not report on that yet. Also filter auto groups.
-                if not to_state or \
-                   to_state.last_changed != to_state.last_updated or \
-                   to_state.domain == 'group' and \
-                   to_state.attributes.get('auto', False):
-                    continue
 
                 domain = to_state.domain
 
@@ -290,7 +279,7 @@ def _get_events(hass, config, start_day, end_day):
 
 
 def _exclude_events(events, config):
-    """Get lists of excluded entities and platforms."""
+    """Get list of filtered events."""
     excluded_entities = []
     excluded_domains = []
     included_entities = []
@@ -309,13 +298,26 @@ def _exclude_events(events, config):
         domain, entity_id = None, None
 
         if event.event_type == EVENT_STATE_CHANGED:
-            to_state = State.from_dict(event.data.get('new_state'))
+            entity_id = event.data.get('entity_id')
+
+            if entity_id is None:
+                continue
+
             # Do not report on new entities
             if event.data.get('old_state') is None:
                 continue
 
+            to_state = State.from_dict(event.data.get('new_state'))
+
             # Do not report on entity removal
             if not to_state:
+                continue
+
+            # If last_changed != last_updated only attributes have changed
+            # we do not report on that yet. Also filter auto groups.
+            if to_state.last_changed != to_state.last_updated or \
+               to_state.domain == 'group' and \
+               to_state.attributes.get('auto', False):
                 continue
 
             # exclude entities which are customized hidden
@@ -324,7 +326,6 @@ def _exclude_events(events, config):
                 continue
 
             domain = to_state.domain
-            entity_id = to_state.entity_id
 
         elif event.event_type == EVENT_LOGBOOK_ENTRY:
             domain = event.data.get(ATTR_DOMAIN)
