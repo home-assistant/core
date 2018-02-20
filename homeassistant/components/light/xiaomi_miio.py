@@ -265,7 +265,7 @@ class XiaomiPhilipsGenericLight(Light):
 
             delayed_turn_off = self.delayed_turn_off_timestamp(
                 state.delay_off_countdown,
-                self._state.attrs[ATTR_DELAYED_TURN_OFF])
+                self._state_attrs[ATTR_DELAYED_TURN_OFF])
 
             self._state_attrs.update({
                 ATTR_SCENE: state.scene,
@@ -420,7 +420,7 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
 
             delayed_turn_off = self.delayed_turn_off_timestamp(
                 state.delay_off_countdown,
-                self._state.attrs[ATTR_DELAYED_TURN_OFF])
+                self._state_attrs[ATTR_DELAYED_TURN_OFF])
 
             self._state_attrs.update({
                 ATTR_SCENE: state.scene,
