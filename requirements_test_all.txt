@@ -179,7 +179,7 @@ statsd==3.2.1
 uvcclient==0.10.1
 
 # homeassistant.components.config.config_entries
-voluptuous-serialize==0.1
+voluptuous-serialize==1
 
 # homeassistant.components.vultr
 vultr==0.1.2
