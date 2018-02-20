@@ -5,12 +5,13 @@ import statistics
 from collections import deque
 
 DEFAULT_WINDOW_SIZE = 5
-FILTER_LOWPASS = 'lowpass' 
+FILTER_LOWPASS = 'lowpass'
 FILTER_OUTLIER = 'outlier'
+
 
 class Filter(object):
     """Filter decorator."""
-    
+
     logger = None
     sensor_name = None
 
@@ -31,11 +32,11 @@ class Filter(object):
                             module_name)
         self.filter = None
         self.filter_args = kwargs
-        self.filter_stats = { 'filter': filter_algorithm }
+        self.filter_stats = {'filter': filter_algorithm}
         self.states = deque(maxlen=window_size)
 
         if filter_algorithm in FILTERS.keys():
-            self.filter = FILTERS[filter_algorithm] 
+            self.filter = FILTERS[filter_algorithm]
         else:
             self.logger.error("Unknown filter <%s>", filter_algorithm)
             return
@@ -44,13 +45,13 @@ class Filter(object):
         """Decorate function as filter."""
         def func_wrapper(sensor_object):
             """Wrap for the original state() function."""
-        
             Filter.sensor_name = sensor_object.entity_id
             new_state = func(sensor_object)
             try:
                 filtered_state = self.filter(new_state=float(new_state),
                                              stats=self.filter_stats,
-                                             states=self.states, **self.filter_args)
+                                             states=self.states,
+                                             **self.filter_args)
             except TypeError:
                 return None
 
@@ -64,6 +65,7 @@ class Filter(object):
             return filtered_state
 
         return func_wrapper
+
 
 def _outlier(new_state, stats, states, **kwargs):
     """BASIC outlier filter.
@@ -82,7 +84,7 @@ def _outlier(new_state, stats, states, **kwargs):
 
     """
     constant = kwargs.pop('constant', 0.10)
-    erasures = stats.get('erasures',0)
+    erasures = stats.get('erasures', 0)
 
     if (len(states) > 1 and
             abs(new_state - statistics.median(states)) >
@@ -93,6 +95,7 @@ def _outlier(new_state, stats, states, **kwargs):
                               Filter.sensor_name, float(new_state))
         return statistics.median(states)
     return new_state
+
 
 def _lowpass(new_state, stats, states, **kwargs):
     """BASIC Low Pass Filter.
@@ -127,8 +130,8 @@ def _lowpass(new_state, stats, states, **kwargs):
     else:
         return round(filtered, precision)
 
+
 FILTERS = {
            FILTER_LOWPASS: _lowpass,
            FILTER_OUTLIER: _outlier,
           }
-

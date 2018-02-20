@@ -159,8 +159,8 @@ class FilterSensor(Entity):
         class FilterData(object):
             def __init__(self, sensor_name):
                 self._data = None
-                self.filter_stats = {} 
-                self.entity_id = sensor_name 
+                self.filter_stats = {}
+                self.entity_id = sensor_name
 
             @property
             @Filter(filter_function, **kwargs)
