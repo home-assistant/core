@@ -1,15 +1,11 @@
 """The tests for the hassio component."""
 import asyncio
 import os
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components.hassio import async_check_config
-
-from tests.common import mock_coro
-from .test_init import hassio_env
 
 API_PASSWORD = 'pass1234'
 
