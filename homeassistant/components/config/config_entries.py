@@ -8,7 +8,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
 
-REQUIREMENTS = ['voluptuous-serialize==0.1']
+REQUIREMENTS = ['voluptuous-serialize==1']
 
 
 @asyncio.coroutine
