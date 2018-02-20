@@ -44,6 +44,8 @@ REQUIREMENTS = ['python-miio==0.3.6']
 CCT_MIN = 1
 CCT_MAX = 100
 
+DELAYED_TURN_OFF_MAX_DEVIATION = 4
+
 SUCCESS = ['ok']
 ATTR_MODEL = 'model'
 ATTR_SCENE = 'scene'
@@ -260,11 +262,9 @@ class XiaomiPhilipsGenericLight(Light):
             self._state = state.is_on
             self._brightness = ceil((255 / 100.0) * state.brightness)
 
-            if state.delay_off_countdown > 0:
-                delayed_turn_off = dt.utcnow().replace(microsecond=0) + \
-                    timedelta(seconds=state.delay_off_countdown)
-            else:
-                delayed_turn_off = None
+            delayed_turn_off = self.delayed_turn_off_timestamp(
+                state.delay_off_countdown,
+                self._state.attrs[ATTR_DELAYED_TURN_OFF])
 
             self._state_attrs.update({
                 ATTR_SCENE: state.scene,
@@ -296,6 +296,25 @@ class XiaomiPhilipsGenericLight(Light):
         right_span = right_max - right_min
         value_scaled = float(value - left_min) / float(left_span)
         return int(right_min + (value_scaled * right_span))
+
+    def delayed_turn_off_timestamp(self, countdown: int,
+                                   previous_timestamp: dt.datetime):
+        if countdown > 0:
+            turn_off_timestamp = dt.utcnow().replace(microsecond=0) + \
+                                 timedelta(seconds=countdown)
+
+            if previous_timestamp is None:
+                return turn_off_timestamp
+            else:
+                min = timedelta(seconds=-DELAYED_TURN_OFF_MAX_DEVIATION)
+                max = timedelta(seconds=DELAYED_TURN_OFF_MAX_DEVIATION)
+                diff = previous_timestamp - turn_off_timestamp
+                if min < diff < max:
+                    return previous_timestamp
+                else:
+                    return turn_off_timestamp
+        else:
+            return None
 
 
 class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
@@ -398,11 +417,9 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
                 CCT_MIN, CCT_MAX,
                 self.max_mireds, self.min_mireds)
 
-            if state.delay_off_countdown > 0:
-                delayed_turn_off = dt.utcnow().replace(microsecond=0) + \
-                    timedelta(seconds=state.delay_off_countdown)
-            else:
-                delayed_turn_off = None
+            delayed_turn_off = self.delayed_turn_off_timestamp(
+                state.delay_off_countdown,
+                self._state.attrs[ATTR_DELAYED_TURN_OFF])
 
             self._state_attrs.update({
                 ATTR_SCENE: state.scene,
