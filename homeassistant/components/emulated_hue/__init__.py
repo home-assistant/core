@@ -21,7 +21,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
-    HueOneLightChangeView)
+    HueOneLightChangeView, HueGroupView)
 from .upnp import DescriptionXmlView, UPNPResponderThread
 
 DOMAIN = 'emulated_hue'
@@ -105,7 +105,8 @@ def setup(hass, yaml_config):
     server.register_view(HueAllLightsStateView(config))
     server.register_view(HueOneLightStateView(config))
     server.register_view(HueOneLightChangeView(config))
-
+    server.register_view(HueGroupView(config))
+    
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr, config.listen_port,
         config.upnp_bind_multicast, config.advertise_ip,
