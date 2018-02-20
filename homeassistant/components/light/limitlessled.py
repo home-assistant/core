@@ -19,7 +19,7 @@ from homeassistant.components.light import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import async_get_last_state
 
-REQUIREMENTS = ['limitlessled==1.0.8']
+REQUIREMENTS = ['limitlessled==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ DEFAULT_TRANSITION = 0
 DEFAULT_VERSION = 6
 DEFAULT_FADE = False
 
-LED_TYPE = ['rgbw', 'rgbww', 'white', 'bridge-led']
+LED_TYPE = ['rgbw', 'rgbww', 'white', 'bridge-led', 'dimmer']
 
 RGB_BOUNDARY = 40
 
@@ -43,6 +43,7 @@ WHITE = [255, 255, 255]
 
 SUPPORT_LIMITLESSLED_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
                               SUPPORT_TRANSITION)
+SUPPORT_LIMITLESSLED_DIMMER = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
 SUPPORT_LIMITLESSLED_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
                             SUPPORT_FLASH | SUPPORT_RGB_COLOR |
                             SUPPORT_TRANSITION)
@@ -161,9 +162,12 @@ class LimitlessLEDGroup(Light):
         """Initialize a group."""
         from limitlessled.group.rgbw import RgbwGroup
         from limitlessled.group.white import WhiteGroup
+        from limitlessled.group.dimmer import DimmerGroup
         from limitlessled.group.rgbww import RgbwwGroup
         if isinstance(group, WhiteGroup):
             self._supported = SUPPORT_LIMITLESSLED_WHITE
+        elif isinstance(group, DimmerGroup):
+            self._supported = SUPPORT_LIMITLESSLED_DIMMER
         elif isinstance(group, RgbwGroup):
             self._supported = SUPPORT_LIMITLESSLED_RGB
         elif isinstance(group, RgbwwGroup):
