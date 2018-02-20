@@ -11,7 +11,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.components.climate import (
     ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
-    PLATFORM_SCHEMA
+    PLATFORM_SCHEMA,
+    STATE_AUTO, STATE_MANUAL, STATE_BOOST, STATE_TEMPORARY
 )
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_ID,
@@ -150,13 +151,12 @@ class MaxCulClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return the current operation mode of this device."""
-        return self._mode
+        return MaxCulClimate._mode_to_state(self._mode)
 
     @property
     def operation_list(self):
         """All supported operation modes of this device."""
-        from maxcul import MODE_AUTO, MODE_MANUAL, MODE_TEMPORARY, MODE_BOOST
-        return [MODE_AUTO, MODE_MANUAL, MODE_TEMPORARY, MODE_BOOST]
+        return [STATE_AUTO, STATE_MANUAL, STATE_BOOST, STATE_TEMPORARY]
 
     def set_temperature(self, **kwargs):
         """Set the target temperature of this device."""
@@ -172,7 +172,34 @@ class MaxCulClimate(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set the operation mode of this device."""
+        new_mode = MaxCulClimate._state_to_mode(operation_mode)
+        if new_mode is None:
+            return False
         return self._maxcul_handle.set_temperature(
             self._device_id,
             self._target_temperature or DEFAULT_TEMPERATURE,
-            operation_mode)
+            new_mode)
+
+    @staticmethod
+    def _state_to_mode(state):
+        from maxcul import (
+            MODE_AUTO, MODE_MANUAL, MODE_BOOST, MODE_TEMPORARY
+        )
+        return {
+            STATE_AUTO: MODE_AUTO,
+            STATE_MANUAL: MODE_MANUAL,
+            STATE_BOOST: MODE_BOOST,
+            STATE_TEMPORARY: MODE_TEMPORARY,
+        }.get(state)
+
+    @staticmethod
+    def _mode_to_state(mode):
+        from maxcul import (
+            MODE_AUTO, MODE_MANUAL, MODE_BOOST, MODE_TEMPORARY
+        )
+        return {
+            MODE_AUTO: STATE_AUTO,
+            MODE_MANUAL: STATE_MANUAL,
+            MODE_BOOST: STATE_BOOST,
+            MODE_TEMPORARY: STATE_TEMPORARY,
+        }.get(mode)
