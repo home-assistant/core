@@ -90,9 +90,7 @@ class CloudIoT:
             while not client.closed:
                 msg = yield from client.receive()
 
-                if msg.type in (WSMsgType.ERROR, WSMsgType.CLOSED,
-                                WSMsgType.CLOSING):
-                    disconnect_warn = 'Connection cancelled.'
+                if msg.type in (WSMsgType.CLOSED, WSMsgType.CLOSING):
                     break
 
                 elif msg.type != WSMsgType.TEXT:
@@ -131,8 +129,8 @@ class CloudIoT:
                 _LOGGER.debug("Publishing message: %s", response)
                 yield from client.send_json(response)
 
-        except auth_api.CloudError:
-            _LOGGER.warning("Unable to connect: Unable to refresh token.")
+        except auth_api.CloudError as err:
+            _LOGGER.warning("Unable to connect: %s", err)
 
         except client_exceptions.WSServerHandshakeError as err:
             if err.code == 401:
@@ -150,7 +148,9 @@ class CloudIoT:
                 _LOGGER.exception("Unexpected error")
 
         finally:
-            if disconnect_warn is not None:
+            if disconnect_warn is None:
+                _LOGGER.info("Connection closed")
+            else:
                 _LOGGER.warning("Connection closed: %s", disconnect_warn)
 
             if remove_hass_stop_listener is not None:
