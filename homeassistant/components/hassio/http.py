@@ -57,7 +57,7 @@ class HassIOView(HomeAssistantView):
         if _need_auth(path) and not request[KEY_AUTHENTICATED]:
             return web.Response(status=401)
 
-        client = yield from self.command_proxy(path, request)
+        client = yield from self._command_proxy(path, request)
 
         data = yield from client.read()
         if path.endswith('/logs'):
@@ -68,7 +68,7 @@ class HassIOView(HomeAssistantView):
     post = _handle
 
     @asyncio.coroutine
-    def command_proxy(self, path, request):
+    def _command_proxy(self, path, request):
         """Return a client request with proxy origin for Hass.io supervisor.
 
         This method is a coroutine.

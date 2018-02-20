@@ -35,9 +35,10 @@ def test_forward_request(hassio_client):
     response = MagicMock()
     response.read.return_value = mock_coro('data')
 
-    with patch('homeassistant.components.hassio.HassIO.command_proxy',
+    with patch('homeassistant.components.hassio.HassIOView._command_proxy',
                Mock(return_value=mock_coro(response))), \
-            patch('homeassistant.components.hassio._create_response') as mresp:
+            patch('homeassistant.components.hassio.http'
+                  '._create_response') as mresp:
         mresp.return_value = 'response'
         resp = yield from hassio_client.post('/api/hassio/beer', headers={
                 HTTP_HEADER_HA_AUTH: API_PASSWORD
@@ -73,9 +74,10 @@ def test_forward_request_no_auth_for_panel(hassio_client, build_type):
     response = MagicMock()
     response.read.return_value = mock_coro('data')
 
-    with patch('homeassistant.components.hassio.HassIO.command_proxy',
+    with patch('homeassistant.components.hassio.HassIOView._command_proxy',
                Mock(return_value=mock_coro(response))), \
-            patch('homeassistant.components.hassio._create_response') as mresp:
+            patch('homeassistant.components.hassio.http.'
+                  '_create_response') as mresp:
         mresp.return_value = 'response'
         resp = yield from hassio_client.get(
             '/api/hassio/app-{}'.format(build_type))
@@ -96,9 +98,10 @@ def test_forward_request_no_auth_for_logo(hassio_client):
     response = MagicMock()
     response.read.return_value = mock_coro('data')
 
-    with patch('homeassistant.components.hassio.HassIO.command_proxy',
+    with patch('homeassistant.components.hassio.HassIOView._command_proxy',
                Mock(return_value=mock_coro(response))), \
-            patch('homeassistant.components.hassio._create_response') as mresp:
+            patch('homeassistant.components.hassio.http.'
+                  '_create_response') as mresp:
         mresp.return_value = 'response'
         resp = yield from hassio_client.get('/api/hassio/addons/bl_b392/logo')
 
@@ -118,9 +121,9 @@ def test_forward_log_request(hassio_client):
     response = MagicMock()
     response.read.return_value = mock_coro('data')
 
-    with patch('homeassistant.components.hassio.HassIO.command_proxy',
+    with patch('homeassistant.components.hassio.HassIOView._command_proxy',
                Mock(return_value=mock_coro(response))), \
-            patch('homeassistant.components.hassio.'
+            patch('homeassistant.components.hassio.http.'
                   '_create_response_log') as mresp:
         mresp.return_value = 'response'
         resp = yield from hassio_client.get('/api/hassio/beer/logs', headers={
@@ -140,7 +143,7 @@ def test_forward_log_request(hassio_client):
 @asyncio.coroutine
 def test_bad_gateway_when_cannot_find_supervisor(hassio_client):
     """Test we get a bad gateway error if we can't find supervisor."""
-    with patch('homeassistant.components.hassio.async_timeout.timeout',
+    with patch('homeassistant.components.hassio.http.async_timeout.timeout',
                side_effect=asyncio.TimeoutError):
         resp = yield from hassio_client.get(
             '/api/hassio/addons/test/info', headers={
