@@ -136,7 +136,8 @@ class LogbookView(HomeAssistantView):
 
         events = yield from hass.async_add_job(
             _get_events, hass, self.config, start_day, end_day)
-        return self.json(events)
+        response = yield from hass.async_add_job(self.json, events)
+        return response
 
 
 class Entry(object):
