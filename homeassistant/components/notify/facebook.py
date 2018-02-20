@@ -93,7 +93,6 @@ class FacebookNotificationService(BaseNotificationService):
 
         # non-broadcast message
         else:
-
             for target in targets:
                 # If the target starts with a "+", it's a phone number,
                 # otherwise it's a user id.
