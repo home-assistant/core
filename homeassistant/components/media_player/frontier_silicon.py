@@ -164,7 +164,6 @@ class AFSAPIDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_update(self):
         """Get the latest date and update device state."""
-        start = time.time()
         fs_device = self.fs_device
 
         if not self._name:
@@ -201,9 +200,6 @@ class AFSAPIDevice(MediaPlayerDevice):
             self._source = None
             self._mute = None
             self._media_image_url = None
-
-        end = time.time()
-        _LOGGER.debug('Frontier Silicon device update took: %s', (end-start))
 
     # Management actions
 
