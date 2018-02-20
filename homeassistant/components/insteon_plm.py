@@ -74,22 +74,24 @@ def async_setup(hass, config):
         #
         # Override the device default capabilities for a specific address
         #
-        if device_override.get('cat', False):
-            plm.devices.add_override(device_override['address'],
-                                     'cat',
-                                     device_override['cat'])
-        if device_override.get('subcat', False):
-            plm.devices.add_override(device_override['address'],
-                                     'subcat',
-                                     device_override['subcat'])
-        if device_override.get('firmware', False):
-            plm.devices.add_override(device_override['address'],
-                                     'product_key',
-                                     device_override['firmware'])
-        if device_override.get('product_key', False):
-            plm.devices.add_override(device_override['address'],
-                                     'product_key',
-                                     device_override['product_key'])
+        address = device_override.get('address', None)
+        if address is not None:
+            if device_override.get('cat', False):
+                plm.devices.add_override(address,
+                                         'cat',
+                                         device_override['cat'])
+            if device_override.get('subcat', False):
+                plm.devices.add_override(address,
+                                         'subcat',
+                                         device_override['subcat'])
+            if device_override.get('firmware', False):
+                plm.devices.add_override(address,
+                                         'product_key',
+                                         device_override['firmware'])
+            if device_override.get('product_key', False):
+                plm.devices.add_override(address,
+                                         'product_key',
+                                         device_override['product_key'])
 
     hass.data['insteon_plm'] = plm
 
