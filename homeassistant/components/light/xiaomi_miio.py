@@ -9,6 +9,7 @@ from functools import partial
 import logging
 from math import ceil
 from datetime import timedelta
+import datetime
 
 import voluptuous as vol
 
@@ -298,7 +299,7 @@ class XiaomiPhilipsGenericLight(Light):
         return int(right_min + (value_scaled * right_span))
 
     def delayed_turn_off_timestamp(self, countdown: int,
-                                   previous_timestamp: dt.datetime):
+                                   previous_timestamp: datetime):
         if countdown > 0:
             turn_off_timestamp = dt.utcnow().replace(microsecond=0) + \
                                  timedelta(seconds=countdown)
