@@ -26,19 +26,22 @@ CONSUMPTION_NAME = "Usage"
 
 ACTIVE_TYPE = 'active'
 
+
 class SensorConfig(object):
     """ Data structure holding sensor config"""
+    
     def __init__(self, name, sensor_type):
         """ Sensor name and type to pass to API """
         self.name = name
         self.sensor_type = sensor_type
 
+
 # Sensor types/ranges
-SENSOR_TYPES = {'active'  : SensorConfig(ACTIVE_NAME, ACTIVE_TYPE),
-                'daily'   : SensorConfig('Daily', 'DAY'),
-                'weekly'  : SensorConfig('Weekly', 'WEEK'),
-                'monthly' : SensorConfig('Monthly', 'MONTH'),
-                'yearly'  : SensorConfig('Yearly', 'YEAR')}
+SENSOR_TYPES = {'active': SensorConfig(ACTIVE_NAME, ACTIVE_TYPE),
+                'daily': SensorConfig('Daily', 'DAY'),
+                'weekly': SensorConfig('Weekly', 'WEEK'),
+                'monthly': SensorConfig('Monthly', 'MONTH'),
+                'yearly': SensorConfig('Yearly', 'YEAR')}
 
 # Production/consumption variants
 SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
@@ -55,7 +58,7 @@ MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,    
+    vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(VALID_SENSORS)]),
 })
@@ -79,7 +82,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     def update_active():
         """Update the active power usage."""
         data.get_realtime()
-        print ("Getting realtime")
 
     devices = []
     for sensor in config.get(CONF_MONITORED_CONDITIONS):
@@ -89,9 +91,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         is_production = prod == PRODUCTION_NAME.lower()
         if sensor_type == ACTIVE_TYPE:
             update_call = update_active
-        else: 
-            update_call = update_trends            
-        devices.append(Sense(data, name, sensor_type, is_production, update_call))
+        else:
+            update_call = update_trends
+        devices.append(Sense(data, name, sensor_type,
+                             is_production, update_call))
 
     add_devices(devices)
 
