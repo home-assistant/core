@@ -39,7 +39,7 @@ SERVICE_TELLDUSLIVE = 'tellstick'
 SERVICE_HUE = 'philips_hue'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DAIKIN = 'daikin'
-SERVICE_SAMSUNG_PRINTER = 'samsungprinter'
+SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
