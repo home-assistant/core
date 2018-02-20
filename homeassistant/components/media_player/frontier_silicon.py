@@ -7,7 +7,6 @@ https://home-assistant.io/components/media_player.frontier_silicon/
 import logging
 
 import asyncio
-import time
 
 import voluptuous as vol
 
@@ -202,7 +201,6 @@ class AFSAPIDevice(MediaPlayerDevice):
             self._media_image_url = None
 
     # Management actions
-
     # power control
     @asyncio.coroutine
     def async_turn_on(self):
