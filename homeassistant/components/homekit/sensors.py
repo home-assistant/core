@@ -45,6 +45,9 @@ class TemperatureSensor(HomeAccessory):
     def update_temperature(self, entity_id=None, old_state=None,
                            new_state=None):
         """Update temperature after state changed."""
+        if new_state is None:
+            return
+
         temperature = new_state.state
         if temperature != STATE_UNKNOWN:
             self.char_temp.set_value(float(temperature))
