@@ -13,20 +13,6 @@ from tests.common import mock_coro
 API_PASSWORD = 'pass1234'
 
 
-@pytest.fixture
-def hassio_env():
-    """Fixture to inject hassio env."""
-    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}), \
-            patch('homeassistant.components.hassio.HassIO.is_connected',
-                  Mock(return_value=mock_coro(
-                    {"result": "ok", "data": {}}))), \
-            patch.dict(os.environ, {'HASSIO_TOKEN': "123456"}), \
-            patch('homeassistant.components.hassio.HassIO.'
-                  'get_homeassistant_info',
-                  Mock(return_value=mock_coro(None))):
-        yield
-
-
 @asyncio.coroutine
 def test_fail_setup_without_environ_var(hass):
     """Fail setup if no environ variable set."""

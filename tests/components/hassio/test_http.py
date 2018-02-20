@@ -5,28 +5,9 @@ from unittest.mock import patch, Mock, MagicMock
 import pytest
 
 from homeassistant.const import HTTP_HEADER_HA_AUTH
-from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
-from .test_init import hassio_env
-
-API_PASSWORD = 'pass1234'
-
-
-@pytest.fixture
-def hassio_client(hassio_env, hass, test_client):
-    """Create mock hassio http client."""
-    with patch('homeassistant.components.hassio.HassIO.update_hass_api',
-               Mock(return_value=mock_coro({"result": "ok"}))), \
-            patch('homeassistant.components.hassio.HassIO.'
-                  'get_homeassistant_info',
-                  Mock(return_value=mock_coro(None))):
-        hass.loop.run_until_complete(async_setup_component(hass, 'hassio', {
-            'http': {
-                'api_password': API_PASSWORD
-            }
-        }))
-    yield hass.loop.run_until_complete(test_client(hass.http.app))
+from . import API_PASSWORD
 
 
 @asyncio.coroutine
