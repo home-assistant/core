@@ -48,7 +48,7 @@ SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
 
 # Valid sensors for configuration
 VALID_SENSORS = ['%s_%s' % (typ, var)
-                 for typ in SENSOR_TYPES.keys()
+                 for typ in SENSOR_TYPES
                  for var in SENSOR_VARIANTS]
 
 ICON = 'mdi:flash'
