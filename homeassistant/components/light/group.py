@@ -4,10 +4,12 @@ This component allows several lights to be grouped into one light.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.group/
 """
+import asyncio
 import logging
 import itertools
 from typing import List, Tuple, Optional, Iterator, Any
 from collections import Counter
+from copy import deepcopy
 
 import voluptuous as vol
 
@@ -159,19 +161,25 @@ class GroupLight(light.Light):
         """No polling needed for a group light."""
         return False
 
+    async def _async_send_message(self, service, **kwargs):
+        """Send a message to all entities in the group."""
+        tasks = []
+        for entity_id in self._entity_ids:
+            payload = deepcopy(kwargs)
+            payload[ATTR_ENTITY_ID] = entity_id
+            tasks.append(self.hass.services.async_call(
+                'light', SERVICE_TURN_OFF, payload, blocking=True))
+
+        if tasks:
+            await asyncio.wait(tasks, loop=self.hass.loop)
+
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to all lights in the group."""
-        for entity_id in self._entity_ids:
-            kwargs[ATTR_ENTITY_ID] = entity_id
-            await self.hass.services.async_call(
-                'light', SERVICE_TURN_ON, kwargs, blocking=True)
+        await self._async_send_message(SERVICE_TURN_ON, **kwargs)
 
     async def async_turn_off(self, **kwargs):
         """Forward the turn_off command to all lights in the group."""
-        for entity_id in self._entity_ids:
-            kwargs[ATTR_ENTITY_ID] = entity_id
-            await self.hass.services.async_call(
-                'light', SERVICE_TURN_OFF, kwargs, blocking=True)
+        await self._async_send_message(SERVICE_TURN_OFF, **kwargs)
 
     async def async_update(self):
         """Query all members and determine the group state."""
