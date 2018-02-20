@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Home Assistant setup script."""
-import os
-from setuptools import setup, find_packages
 import sys
+
+from setuptools import setup, find_packages
 
 import homeassistant.const as hass_const
 
@@ -41,8 +41,6 @@ GITHUB_PATH = '{}/{}'.format(
     PROJECT_GITHUB_USERNAME, PROJECT_GITHUB_REPOSITORY)
 GITHUB_URL = 'https://github.com/{}'.format(GITHUB_PATH)
 
-
-HERE = os.path.abspath(os.path.dirname(__file__))
 DOWNLOAD_URL = '{}/archive/{}.zip'.format(GITHUB_URL, hass_const.__version__)
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
