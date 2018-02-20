@@ -30,12 +30,11 @@ class Filter(object):
         Filter.logger = logging.getLogger(module_name)
         Filter.logger.debug("Filter %s(%s) on %s", filter_algorithm, kwargs,
                             module_name)
-        self.filter = None
         self.filter_args = kwargs
         self.filter_stats = {'filter': filter_algorithm}
         self.states = deque(maxlen=window_size)
 
-        if filter_algorithm in FILTERS.keys():
+        if filter_algorithm in FILTERS:
             self.filter = FILTERS[filter_algorithm]
         else:
             self.logger.error("Unknown filter <%s>", filter_algorithm)
