@@ -3,14 +3,10 @@ import asyncio
 import os
 from unittest.mock import patch, Mock
 
-import pytest
-
 from homeassistant.setup import async_setup_component
 from homeassistant.components.hassio import async_check_config
 
 from tests.common import mock_coro
-
-API_PASSWORD = 'pass1234'
 
 
 @asyncio.coroutine
