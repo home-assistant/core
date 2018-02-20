@@ -9,7 +9,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -30,7 +31,6 @@ CONF_KNX_FIRE_EVENT_FILTER = "fire_event_filter"
 CONF_KNX_STATE_UPDATER = "state_updater"
 CONF_KNX_EXPOSE = "expose"
 CONF_KNX_EXPOSE_TYPE = "type"
-CONF_KNX_EXPOSE_ENTITY_ID = "entity_id"
 CONF_KNX_EXPOSE_ADDRESS = "address"
 
 SERVICE_KNX_SEND = "send"
@@ -53,7 +53,7 @@ ROUTING_SCHEMA = vol.Schema({
 
 EXPOSE_SCHEMA = vol.Schema({
     vol.Required(CONF_KNX_EXPOSE_TYPE): cv.string,
-    vol.Optional(CONF_KNX_EXPOSE_ENTITY_ID): cv.string,
+    vol.Optional(ATTR_ENTITY_ID): cv.string,
     vol.Required(CONF_KNX_EXPOSE_ADDRESS): cv.string,
 })
 
@@ -228,7 +228,7 @@ class KNXModule(object):
             return
         for to_expose in self.config[DOMAIN][CONF_KNX_EXPOSE]:
             expose_type = to_expose.get(CONF_KNX_EXPOSE_TYPE)
-            entity_id = to_expose.get(CONF_KNX_EXPOSE_ENTITY_ID)
+            entity_id = to_expose.get(ATTR_ENTITY_ID)
             address = to_expose.get(CONF_KNX_EXPOSE_ADDRESS)
             if expose_type in ['time', 'date', 'datetime']:
                 exposure = KNXExposeTime(
