@@ -114,5 +114,5 @@ class KWBSensor(Entity):
 
     def update(self):
         """Check and restart pykwb."""
-        if (not self._easyfire.is_alive()):
+        if not self._easyfire.is_alive():
             self._easyfire.run_thread()
