@@ -55,7 +55,7 @@ FILTER_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_FILTER_NAME):
-        vol.Any(*FILTERS),
+        vol.In(list(FILTERS)),
     vol.Optional(CONF_FILTER_OPTIONS): FILTER_SCHEMA,
     vol.Optional(CONF_NAME, default=None): cv.string,
 })
@@ -74,7 +74,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             FilterSensor(hass, name, entity_id, filter_name,
                          config.get(CONF_FILTER_OPTIONS, dict()))
         ], True)
-    return True
 
 
 class FilterSensor(Entity):

@@ -1,12 +1,15 @@
-"""Deprecation helpers for Home Assistant."""
+"""Filter helpers for Home Assistant."""
 import logging
 import inspect
 import statistics
 from collections import deque
+from homeassistant.util.decorator import Registry
 
 DEFAULT_WINDOW_SIZE = 5
 FILTER_LOWPASS = 'lowpass'
 FILTER_OUTLIER = 'outlier'
+
+FILTERS = Registry()
 
 
 class Filter(object):
@@ -66,6 +69,7 @@ class Filter(object):
         return func_wrapper
 
 
+@FILTERS.register(FILTER_OUTLIER)
 def _outlier(new_state, stats, states, **kwargs):
     """BASIC outlier filter.
 
@@ -96,6 +100,7 @@ def _outlier(new_state, stats, states, **kwargs):
     return new_state
 
 
+@FILTERS.register(FILTER_LOWPASS)
 def _lowpass(new_state, stats, states, **kwargs):
     """BASIC Low Pass Filter.
 
@@ -128,9 +133,3 @@ def _lowpass(new_state, stats, states, **kwargs):
         return filtered
     else:
         return round(filtered, precision)
-
-
-FILTERS = {
-           FILTER_LOWPASS: _lowpass,
-           FILTER_OUTLIER: _outlier,
-          }
