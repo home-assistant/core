@@ -53,10 +53,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if not hass.config.is_allowed_path(path):
         _LOGGER.error("folder %s is not valid or allowed", path)
-        return
-
-    folder = Folder(path, config.get(CONF_FILTER))
-    add_devices([folder], True)
+    else:
+        folder = Folder(path, config.get(CONF_FILTER))
+        add_devices([folder], True)
 
 
 class Folder(Entity):
