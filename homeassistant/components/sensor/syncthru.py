@@ -12,9 +12,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
-REQUIREMENTS = [
-    'pysyncthru>=0.2.2'
-    ]
+REQUIREMENTS = ['pysyncthru>=0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,16 +84,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     printer.update()
     devices = [SyncThruSensor(hass, printer, name)]
 
-    for key, value in printer.tonerStatus(filter_supported=True).items():
+    for key in printer.tonerStatus(filter_supported=True).keys():
         if 'toner_' + str(key) in monitored:
             devices.append(SyncThruToner(hass, printer, name, key))
-    for key, value in printer.drumStatus(filter_supported=True).items():
+    for key in printer.drumStatus(filter_supported=True).keys():
         if 'drum_' + str(key) in monitored:
             devices.append(SyncThruDrum(hass, printer, name, key))
-    for key, value in printer.inputTrayStatus(filter_supported=True).items():
+    for key in printer.inputTrayStatus(filter_supported=True).keys():
         if 'tray_' + str(key) in monitored:
             devices.append(SyncThruInputTray(hass, printer, name, key))
-    for key, value in printer.outputTrayStatus().items():
+    for key in printer.outputTrayStatus().keys():
         if 'output_tray_' + str(key) in monitored:
             devices.append(SyncThruOutputTray(hass, printer, name, key))
 
