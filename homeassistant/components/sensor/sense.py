@@ -29,7 +29,7 @@ ACTIVE_TYPE = 'active'
 
 class SensorConfig(object):
     """ Data structure holding sensor config"""
-    
+
     def __init__(self, name, sensor_type):
         """ Sensor name and type to pass to API """
         self.name = name
