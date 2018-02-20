@@ -7,7 +7,7 @@ https://home-assistant.io/components/light.group/
 import asyncio
 import logging
 import itertools
-from typing import List, Tuple, Optional, Iterator, Any
+from typing import List, Tuple, Optional, Iterator, Any, Callable
 from collections import Counter
 from copy import deepcopy
 
@@ -75,8 +75,8 @@ class GroupLight(light.Light):
         """Register callbacks"""
 
         @callback
-        def async_state_changed_listener(self, entity_id: str,
-                                         old_state: State, new_state: State):
+        def async_state_changed_listener(entity_id: str, old_state: State,
+                                         new_state: State):
             """Handle child updates."""
             self.async_schedule_update_ha_state(True)
 
@@ -168,7 +168,7 @@ class GroupLight(light.Light):
             payload = deepcopy(kwargs)
             payload[ATTR_ENTITY_ID] = entity_id
             tasks.append(self.hass.services.async_call(
-                'light', SERVICE_TURN_OFF, payload, blocking=True))
+                'light', service, payload, blocking=True))
 
         if tasks:
             await asyncio.wait(tasks, loop=self.hass.loop)
@@ -184,20 +184,22 @@ class GroupLight(light.Light):
     async def async_update(self):
         """Query all members and determine the group state."""
         states = self._child_states()
+        on_states = [state for state in states if state.state == STATE_ON]
 
         self._state = _determine_on_off_state(states)
-        self._brightness = _reduce_attribute(states, 'brightness')
-        self._xy_color = _reduce_attribute(states, 'xy_color')
-        self._rgb_color = _reduce_attribute(states, 'rgb_color')
-        self._color_temp = _reduce_attribute(states, 'color_temp')
+        self._brightness = _reduce_attribute(on_states, 'brightness')
+        self._xy_color = _reduce_attribute(
+            on_states, 'xy_color', reduce=_average_tuple)
+        self._rgb_color = _reduce_attribute(
+            on_states, 'rgb_color', reduce=_average_tuple)
+        self._white_value = _reduce_attribute(on_states, 'white_value')
+        self._color_temp = _reduce_attribute(on_states, 'color_temp')
         self._min_mireds = _reduce_attribute(
-            states, 'min_mireds', default=154, force_on=False)
+            states, 'min_mireds', default=154, reduce=min)
         self._max_mireds = _reduce_attribute(
-            states, 'max_mireds', default=500, force_on=False)
-        self._white_value = _reduce_attribute(states, 'white_value')
+            states, 'max_mireds', default=500, reduce=max)
 
-        all_effect_lists = list(
-            _find_state_attributes(states, 'effect_list', force_on=False))
+        all_effect_lists = list(_find_state_attributes(states, 'effect_list'))
         self._effect_list = None
         if all_effect_lists:
             # Merge all effects from all effect_lists with a union merge.
@@ -206,14 +208,13 @@ class GroupLight(light.Light):
         all_effects = list(_find_state_attributes(states, 'effect'))
         self._effect = None
         if all_effects:
-            flat_effects = list(itertools.chain(*all_effect_lists))
+            flat_effects = list(itertools.chain(all_effects))
             # Report the most common effect.
             effects_count = Counter(flat_effects)
             self._effect = effects_count.most_common(1)[0][0]
 
         self._supported_features = 0
-        for support in _find_state_attributes(
-                states, 'supported_features', force_on=False):
+        for support in _find_state_attributes(states, 'supported_features'):
             # Merge supported features by emulating support for every feature
             # we find.
             self._supported_features |= support
@@ -228,27 +229,37 @@ class GroupLight(light.Light):
 
 
 def _find_state_attributes(states: List[State],
-                           key: str,
-                           force_on: bool = True) -> Iterator[Any]:
-    """Find attributes with matching key from states.
-
-    Only return attributes of enabled lights when force_on is True.
-    """
+                           key: str) -> Iterator[Any]:
+    """Find attributes with matching key from states."""
     for state in states:
-        assume_on = (not force_on) or state.state == STATE_ON
-        if assume_on and key in state.attributes:
+        if key in state.attributes:
             yield state.attributes.get(key)
+
+
+def _average(*args):
+    """Return the average of the supplied values."""
+    return sum(args) / len(args)
+
+
+def _average_tuple(*args):
+    """Return the average values along the columns of the supplied values."""
+    return tuple(sum(l) / len(l) for l in zip(*args))
 
 
 def _reduce_attribute(states: List[State],
                       key: str,
                       default: Optional[Any] = None,
-                      force_on: bool = True) -> Any:
+                      reduce: Callable[..., Any] = _average) -> Any:
     """Find the first attribute matching key from states.
 
     If none are found, return default.
     """
-    return next(_find_state_attributes(states, key, force_on), default)
+    attrs = list(_find_state_attributes(states, key))
+
+    if not attrs:
+        return default
+
+    return reduce(*attrs)
 
 
 def _determine_on_off_state(states: List[State]) -> str:
