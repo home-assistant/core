@@ -790,7 +790,5 @@ class WUndergroundData(object):
             self.data = result
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
-            self.data = None
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Error fetching WUnderground data: %s", repr(err))
-            self.data = None
