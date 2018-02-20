@@ -121,6 +121,7 @@ State = collections.namedtuple('Product', 'stateType platform')
 
 class IPDB(object):
     """Embodies the INSTEON Product Database static data and access methods."""
+
     def __init__(self):
         """Create the INSTEON Product Database (IPDB)."""
         from insteonplm.states.onOff import (OnOffSwitch,
@@ -159,8 +160,7 @@ class IPDB(object):
             yield product
 
     def __getitem__(self, key):
-        """Return a Home Assistant platform from an INSTEON state type.
-        """
+        """Return a Home Assistant platform from an INSTEON state type."""
         for state in self.states:
             if isinstance(key, state.stateType):
                 return state
