@@ -28,6 +28,7 @@ they should appear as "home" almost instantly, as soon as Hass refreshes the
 devices states.
 
 """
+import copy
 import logging
 from collections import namedtuple
 from datetime import timedelta
@@ -35,8 +36,9 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+    PLATFORM_SCHEMA, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 from homeassistant.const import (
     CONF_HOST, CONF_PORT)
 from homeassistant.util import Throttle
@@ -56,11 +58,16 @@ PLATFORM_SCHEMA = vol.All(
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
-def get_scanner(hass, config):
-    """Validate the configuration and return a Bbox scanner."""
-    scanner = FreeboxDeviceScanner(hass, config[DOMAIN])
+def setup_scanner(hass, config, see, discovery_info=None):
+    freebox_config = copy.deepcopy(config)
+    if discovery_info is not None:
+        freebox_config[CONF_HOST] = discovery_info['properties']['api_domain']
+        freebox_config[CONF_PORT] = discovery_info['properties']['https_port']
+        _LOGGER.info("Discovered Freebox server: %s:%s",
+                     freebox_config[CONF_HOST], freebox_config[CONF_PORT])
 
-    return scanner if scanner.success_init else None
+    FreeboxDeviceScanner(hass, freebox_config, see)
+    return True
 
 
 Device = namedtuple('Device', ['id', 'name', 'ip'])
@@ -73,41 +80,25 @@ def _build_device(device_dict):
             device_dict['l3connectivities'][0]['addr'])
 
 
-class FreeboxDeviceScanner(DeviceScanner):
+class FreeboxDeviceScanner(object):
     """This class scans for devices connected to the Freebox."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass, config, see):
         """Initialize the scanner."""
         self.host = config[CONF_HOST]
         self.port = config[CONF_PORT]
         self.token_file = hass.config.path(FREEBOX_CONFIG_FILE)
 
-        self.last_results = []  # type: List[Device]
+        self.see = see
 
-        self.success_init = self._update_info()
-        _LOGGER.info("Scanner initialized")
+        self.update_info()
 
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-
-        _LOGGER.info("Devices detected: " + str([device.name for device in self.last_results]))
-        return [device.id for device in self.last_results]
-
-    def get_device_name(self, id):
-        """Return the name of the given device or None if we don't know."""
-        for device in self.last_results:
-            if device.id == id:
-                return device.name
-
-        return None
+        interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        track_time_interval(hass, self.update_info, interval)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
-    def _update_info(self):
-        """Check the Freebox for devices.
-
-        Returns boolean if scanning successful.
-        """
+    def update_info(self, now=None):
+        """Check the Freebox for devices."""
         _LOGGER.info('Scanning devices')
 
         from freepybox import Freepybox
@@ -139,7 +130,7 @@ class FreeboxDeviceScanner(DeviceScanner):
                         for device in hosts
                         if device['active']]
 
-        self.last_results = last_results
+        for d in last_results:
+            self.see(mac=d.id, host_name=d.name)
 
-        _LOGGER.info('Scan successful')
         return True
