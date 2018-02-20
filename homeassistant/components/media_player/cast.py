@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def _setup_internal_discovery(hass: HomeAssistantType) -> None:
     """Set up the pychromecast internal discovery."""
     hass.data.setdefault(INTERNAL_DISCOVERY_RUNNING_KEY, threading.Lock())
-    if not hass.data[INTERNAL_DISCOVERY_RUNNING_KEY].acquire():
+    if not hass.data[INTERNAL_DISCOVERY_RUNNING_KEY].acquire(blocking=False):
         # Internal discovery is already running
         return
 
@@ -126,7 +126,6 @@ def _async_create_cast_device(hass, chromecast):
     # -> Cast device changed host
     # Remove old pychromecast.Chromecast from global list, because it isn't
     # valid anymore
-    hass.data[KNOWN_CHROMECASTS_KEY].pop(old_key)
     old_cast_device.async_set_chromecast(chromecast)
     return None
 
@@ -442,4 +441,6 @@ class CastDevice(MediaPlayerDevice):
         if self.cast is None:
             return
         _LOGGER.debug("Disconnecting existing chromecast object")
+        old_key = (self.cast.host, self.cast.port, self.cast.uuid)
+        self.hass.data[KNOWN_CHROMECASTS_KEY].pop(old_key)
         self.hass.async_add_job(self.cast.disconnect)
