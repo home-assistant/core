@@ -4,10 +4,10 @@ This component allows several lights to be grouped into one light.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.group/
 """
-import asyncio
 import logging
 import itertools
 from typing import List, Tuple, Optional, Iterator, Any
+from collections import Counter
 
 import voluptuous as vol
 
@@ -41,11 +41,8 @@ SUPPORT_GROUP_LIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
                        | SUPPORT_XY_COLOR | SUPPORT_WHITE_VALUE)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass: HomeAssistantType,
-                         config: ConfigType,
-                         async_add_devices,
-                         discovery_info=None) -> None:
+async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                               async_add_devices, discovery_info=None) -> None:
     """Initialize light.group platform."""
     async_add_devices(
         [GroupLight(hass, config.get(CONF_NAME), config[CONF_ENTITIES])])
@@ -72,8 +69,7 @@ class GroupLight(light.Light):
         self._effect = None  # type: Optional[str]
         self._supported_features = 0  # type: int
 
-    @asyncio.coroutine
-    def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self) -> None:
         """Register callbacks"""
 
         @callback
@@ -106,7 +102,7 @@ class GroupLight(light.Light):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self.state == STATE_ON
+        return self._state == STATE_ON
 
     @property
     def brightness(self) -> Optional[int]:
@@ -163,24 +159,21 @@ class GroupLight(light.Light):
         """No polling needed for a group light."""
         return False
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to all lights in the group."""
         for entity_id in self._entity_ids:
             kwargs[ATTR_ENTITY_ID] = entity_id
-            yield from self.hass.services.async_call(
+            await self.hass.services.async_call(
                 'light', SERVICE_TURN_ON, kwargs, blocking=True)
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Forward the turn_off command to all lights in the group."""
         for entity_id in self._entity_ids:
             kwargs[ATTR_ENTITY_ID] = entity_id
-            yield from self.hass.services.async_call(
+            await self.hass.services.async_call(
                 'light', SERVICE_TURN_OFF, kwargs, blocking=True)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Query all members and determine the group state."""
         states = self._child_states()
 
@@ -207,7 +200,8 @@ class GroupLight(light.Light):
         if all_effects:
             flat_effects = list(itertools.chain(*all_effect_lists))
             # Report the most common effect.
-            self._effect = max(set(flat_effects), key=flat_effects.count)
+            effects_count = Counter(flat_effects)
+            self._effect = effects_count.most_common(1)[0][0]
 
         self._supported_features = 0
         for support in _find_state_attributes(
@@ -230,7 +224,7 @@ def _find_state_attributes(states: List[State],
                            force_on: bool = True) -> Iterator[Any]:
     """Find attributes with matching key from states.
 
-    Only returns attributes of enabled lights when force_on is True.
+    Only return attributes of enabled lights when force_on is True.
     """
     for state in states:
         assume_on = (not force_on) or state.state == STATE_ON
@@ -244,7 +238,7 @@ def _reduce_attribute(states: List[State],
                       force_on: bool = True) -> Any:
     """Find the first attribute matching key from states.
 
-    If none are found, returns default.
+    If none are found, return default.
     """
     return next(_find_state_attributes(states, key, force_on), default)
 
