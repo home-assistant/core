@@ -43,6 +43,7 @@ homeassistant/components/hassio.py @home-assistant/hassio
 
 # Individual components
 homeassistant/components/alarm_control_panel/egardia.py @jeroenterheerdt
+homeassistant/components/bmw_connected_drive.py @ChristianKuehnel
 homeassistant/components/camera/yi.py @bachya
 homeassistant/components/climate/ephember.py @ttroy50
 homeassistant/components/climate/eq3btsmart.py @rytilahti
@@ -74,6 +75,7 @@ homeassistant/components/switch/tplink.py @rytilahti
 homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 
 homeassistant/components/*/axis.py @kane610
+homeassistant/components/*/bmw_connected_drive.py @ChristianKuehnel
 homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/hive.py @Rendili @KJonline
 homeassistant/components/*/hive.py @Rendili @KJonline
