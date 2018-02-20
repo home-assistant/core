@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is not None:
         host = discovery_info.get(CONF_HOST)
         name = discovery_info.get(CONF_NAME, DEFAULT_NAME)
-        #_LOGGER.info("Discovered a new Samsung Printer: %s" % discovery_info)
+        # _LOGGER.info("Discovered a new Samsung Printer: %s" % discovery_info)
         # Test if the discovered device actually is a syncthru printer
         if test_syncthru(host) is False:
             _LOGGER.error("No SyncThru Printer reached under given resource")
