@@ -162,7 +162,7 @@ def test_cloud_getting_disconnected_by_server(mock_client, caplog, mock_cloud):
 
     yield from conn.connect()
 
-    assert 'Connection closed: Connection cancelled.' in caplog.text
+    assert 'Connection closed' in caplog.text
     assert 'connect' in str(mock_cloud.hass.async_add_job.mock_calls[-1][1][0])
 
 
@@ -197,13 +197,13 @@ def test_cloud_sending_invalid_json(mock_client, caplog, mock_cloud):
 
 @asyncio.coroutine
 def test_cloud_check_token_raising(mock_client, caplog, mock_cloud):
-    """Test cloud sending invalid JSON."""
+    """Test cloud unable to check token."""
     conn = iot.CloudIoT(mock_cloud)
-    mock_client.receive.side_effect = auth_api.CloudError
+    mock_client.receive.side_effect = auth_api.CloudError("BLA")
 
     yield from conn.connect()
 
-    assert 'Unable to connect: Unable to refresh token.' in caplog.text
+    assert 'Unable to connect: BLA' in caplog.text
     assert 'connect' in str(mock_cloud.hass.async_add_job.mock_calls[-1][1][0])
 
 
