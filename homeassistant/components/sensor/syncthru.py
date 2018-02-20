@@ -54,9 +54,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         default=DEFAULT_NAME
     ): cv.string,
     vol.Optional(
-            CONF_MONITORED_CONDITIONS,
-            default=DEFAULT_MONITORED_CONDITIONS
-        ): vol.All(cv.ensure_list, [vol.In(DEFAULT_MONITORED_CONDITIONS)])
+        CONF_MONITORED_CONDITIONS,
+        default=DEFAULT_MONITORED_CONDITIONS
+    ): vol.All(cv.ensure_list, [vol.In(DEFAULT_MONITORED_CONDITIONS)])
 })
 
 
@@ -68,8 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is not None:
         host = discovery_info.get(CONF_HOST)
         name = discovery_info.get(CONF_NAME, DEFAULT_NAME)
-        _LOGGER.info(
-            "Discovered a new Samsung Printer: {}".format(discovery_info))
+        #_LOGGER.info("Discovered a new Samsung Printer: %s" % discovery_info)
         # Test if the discovered device actually is a syncthru printer
         if test_syncthru(host) is False:
             _LOGGER.error("No SyncThru Printer reached under given resource")
@@ -140,8 +139,7 @@ class SyncThruSensor(Entity):
         self._state = syncthru.deviceStatus()
 
         if syncthru.isOnline():
-            self._friendly_name = syncthru.model()
-            self._attributes[CONF_FRIENDLY_NAME] = self._friendly_name
+            self._attributes[CONF_FRIENDLY_NAME] = syncthru.model()
             self._state = syncthru.deviceStatus()
 
     @property
@@ -196,9 +194,8 @@ class SyncThruToner(Entity):
                 ).get(self._color, {})
             self._state = self._attributes.get(
                 'remaining', STATE_UNKNOWN)
-            self._friendly_name = "{} Toner {}".format(
+            self._attributes[CONF_FRIENDLY_NAME] = "{} Toner {}".format(
                 self._color, syncthru.model())
-            self._attributes[CONF_FRIENDLY_NAME] = self._friendly_name
 
     @property
     def device_state_attributes(self):
@@ -252,9 +249,8 @@ class SyncThruDrum(Entity):
                 ).get(self._color, {})
             self._state = self._attributes.get(
                 'remaining', STATE_UNKNOWN)
-            self._friendly_name = "{} Drum {}".format(
+            self._attributes[CONF_FRIENDLY_NAME] = "{} Drum {}".format(
                 self._color, syncthru.model())
-            self._attributes[CONF_FRIENDLY_NAME] = self._friendly_name
 
     @property
     def device_state_attributes(self):
@@ -310,9 +306,8 @@ class SyncThruInputTray(Entity):
                 'newError', STATE_UNKNOWN)
             if self._state == '':
                 self._state = 'Ready'
-            self._friendly_name = "Tray {} {}".format(
+            self._attributes[CONF_FRIENDLY_NAME] = "Tray {} {}".format(
                 self._number, syncthru.model())
-            self._attributes[CONF_FRIENDLY_NAME] = self._friendly_name
 
     @property
     def device_state_attributes(self):
@@ -368,9 +363,8 @@ class SyncThruOutputTray(Entity):
                 'status', STATE_UNKNOWN)
             if self._state == '':
                 self._state = 'Ready'
-            self._friendly_name = "Output Tray {} {}".format(
+            self._attributes[CONF_FRIENDLY_NAME] = "Output Tray {} {}".format(
                 self._number, syncthru.model())
-            self._attributes[CONF_FRIENDLY_NAME] = self._friendly_name
 
     @property
     def device_state_attributes(self):
