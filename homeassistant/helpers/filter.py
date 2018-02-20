@@ -5,15 +5,14 @@ import statistics
 from collections import deque
 
 DEFAULT_WINDOW_SIZE = 5
-FILTER_LOWPASS = 1
-FILTER_OUTLIER = 2
-FILTERS = [FILTER_LOWPASS, FILTER_OUTLIER]
-
+FILTER_LOWPASS = 'lowpass' 
+FILTER_OUTLIER = 'outlier'
 
 class Filter(object):
-    """Filter outlier states, and smooth things out."""
-
+    """Filter decorator."""
+    
     logger = None
+    sensor_name = None
 
     def __init__(self, filter_algorithm, window_size=DEFAULT_WINDOW_SIZE,
                  **kwargs):
@@ -28,104 +27,108 @@ class Filter(object):
         """
         module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
         Filter.logger = logging.getLogger(module_name)
-        Filter.logger.debug("Filter %s on %s", filter_algorithm, module_name)
+        Filter.logger.debug("Filter %s(%s) on %s", filter_algorithm, kwargs,
+                            module_name)
         self.filter = None
         self.filter_args = kwargs
+        self.filter_stats = { 'filter': filter_algorithm }
         self.states = deque(maxlen=window_size)
 
-        if filter_algorithm in FILTERS:
-            if filter_algorithm == FILTER_LOWPASS:
-                self.filter = self._lowpass
-            elif filter_algorithm == FILTER_OUTLIER:
-                self.filter = self._outlier
+        if filter_algorithm in FILTERS.keys():
+            self.filter = FILTERS[filter_algorithm] 
         else:
             self.logger.error("Unknown filter <%s>", filter_algorithm)
             return
 
     def __call__(self, func):
         """Decorate function as filter."""
-        states = self.states
-        filter_algo = self.filter
-        filter_args = self.filter_args
-
-        if len(self.states):
-            last_state = self.states[-1]
-        else:
-            last_state = None
-
-        def func_wrapper(self):
+        def func_wrapper(sensor_object):
             """Wrap for the original state() function."""
-            new_state = func(self)
+        
+            Filter.sensor_name = sensor_object.entity_id
+            new_state = func(sensor_object)
             try:
-                Filter.logger.debug("Filter arguments: %s", filter_args)
-                filtered_state = filter_algo(new_state=float(new_state),
-                                             states=states, **filter_args)
+                filtered_state = self.filter(new_state=float(new_state),
+                                             stats=self.filter_stats,
+                                             states=self.states, **self.filter_args)
             except TypeError:
                 return None
-            except ValueError as e:
-                Filter.logger.warning("Invalid Value in %s: %s, reason: %s",
-                                      self.entity_id, float(new_state), e)
-                return last_state
-            states.append(filtered_state)
-            Filter.logger.debug("%s(%s) -> %s", filter_algo.__name__,
+
+            self.states.append(filtered_state)
+
+            """ filter_stats makes available few statistics to the sensor """
+            sensor_object.filter_stats = self.filter_stats
+
+            Filter.logger.debug("%s(%s) -> %s", self.filter_stats['filter'],
                                 new_state, filtered_state)
             return filtered_state
 
         return func_wrapper
 
-    @staticmethod
-    def _outlier(new_state, states, **kwargs):
-        """BASIC outlier filter.
+def _outlier(new_state, stats, states, **kwargs):
+    """BASIC outlier filter.
 
-        Will through a ValueError indicating an outlier value
-        that should not be published, else the current value.
+    Determines if new state in a band around the median
 
-        Args:
-            new_state (float): new value to the series
-            states (deque): previous data series
-            constant (int): median multiplier/band range
+    Args:
+        new_state (float): new value to the series
+        stats (dict): used to feedback stats on the filter
+        states (deque): previous data series
+        constant (int): median multiplier/band range
 
-        Returns:
-            the original new_state
+    Returns:
+        the original new_state case not an outlier
+        the median of the window case it's an outlier
 
-        """
-        constant = kwargs.pop('constant', 0.10)
+    """
+    constant = kwargs.pop('constant', 0.10)
+    erasures = stats.get('erasures',0)
 
-        if (len(states) > 1 and
-                abs(new_state - statistics.median(states)) >
-                constant*statistics.median(states)):
-            raise ValueError("Outlier detected")
-        return new_state
+    if (len(states) > 1 and
+            abs(new_state - statistics.median(states)) >
+            constant*statistics.median(states)):
 
-    @staticmethod
-    def _lowpass(new_state, states, **kwargs):
-        """BASIC Low Pass Filter.
+        stats['erasures'] = erasures+1
+        Filter.logger.warning("Outlier in %s: %s",
+                              Filter.sensor_name, float(new_state))
+        return statistics.median(states)
+    return new_state
 
-        Args:
-            new_state (float): new value to the series
-            states (deque): previous data series
-            time_constant (int): time constant.
+def _lowpass(new_state, stats, states, **kwargs):
+    """BASIC Low Pass Filter.
 
-        Returns:
-            a new state value that has been smoothed by filter
+    Args:
+        new_state (float): new value to the series
+        stats (dict): used to feedback stats on the filter
+        states (deque): previous data series
+        time_constant (int): time constant.
 
-        """
-        time_constant = kwargs.pop('time_constant', 4)
-        precision = kwargs.pop('precision', None)
+    Returns:
+        a new state value that has been smoothed by filter
 
-        if len(kwargs) != 0:
-            Filter.logger.error("unrecognized params passed in: %s", kwargs)
+    """
+    time_constant = kwargs.pop('time_constant', 4)
+    precision = kwargs.pop('precision', None)
 
-        try:
-            B = 1.0 / time_constant
-            A = 1.0 - B
-            filtered = A * states[-1] + B * new_state
-        except IndexError:
-            # if we don't have enough states to run the filter
-            # just accept the new value
-            filtered = new_state
+    if len(kwargs) != 0:
+        Filter.logger.error("unrecognized params passed in: %s", kwargs)
 
-        if precision is None:
-            return filtered
-        else:
-            return round(filtered, precision)
+    try:
+        B = 1.0 / time_constant
+        A = 1.0 - B
+        filtered = A * states[-1] + B * new_state
+    except IndexError:
+        # if we don't have enough states to run the filter
+        # just accept the new value
+        filtered = new_state
+
+    if precision is None:
+        return filtered
+    else:
+        return round(filtered, precision)
+
+FILTERS = {
+           FILTER_LOWPASS: _lowpass,
+           FILTER_OUTLIER: _outlier,
+          }
+

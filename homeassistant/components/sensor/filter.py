@@ -33,24 +33,15 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.filter import (
-    Filter, FILTER_LOWPASS, FILTER_OUTLIER)
+    Filter, FILTERS)
 from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_FILTER = 'filter'
 ATTR_PRE_FILTER = 'pre_filter_state'
 
 CONF_FILTER_OPTIONS = 'options'
 CONF_FILTER_NAME = 'filter'
-
-TYPE_LOWPASS = 'lowpass'
-TYPE_OUTLIER = 'outlier'
-
-FILTER_MAP = {
-             TYPE_LOWPASS: FILTER_LOWPASS,
-             TYPE_OUTLIER: FILTER_OUTLIER,
-             }
 
 DEFAULT_NAME_TEMPLATE = "{} filter {}"
 ICON = 'mdi: chart-line-variant'
@@ -58,13 +49,13 @@ ICON = 'mdi: chart-line-variant'
 # ALL filter arguments must be OPTIONAL
 FILTER_SCHEMA = vol.Schema({
     vol.Optional('time_constant'): vol.Coerce(int),
-    vol.Optional('constant'): vol.Coerce(int)
+    vol.Optional('constant'): vol.Coerce(float)
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_FILTER_NAME):
-        vol.Any(TYPE_LOWPASS, TYPE_OUTLIER),
+        vol.Any(*FILTERS),
     vol.Optional(CONF_FILTER_OPTIONS): FILTER_SCHEMA,
     vol.Optional(CONF_NAME, default=None): cv.string,
 })
@@ -96,8 +87,8 @@ class FilterSensor(Entity):
         self._unit_of_measurement = None
         self._pre_filter_state = self._state = None
 
-        self._filterdata = self.filterdata_factory(FILTER_MAP[filter_name],
-                                                   **filter_args)()
+        self._filterdata = self.filterdata_factory(filter_name,
+                                                   **filter_args)(self._name)
 
         @callback
         # pylint: disable=invalid-name
@@ -113,7 +104,8 @@ class FilterSensor(Entity):
                 self._pre_filter_state = new_state.state
                 self._filterdata.update(self._pre_filter_state)
             except ValueError:
-                _LOGGER.error("This component can only filter numbers")
+                _LOGGER.warning("Could not convert <%s> into a number",
+                                self._pre_filter_state)
                 return
 
             hass.async_add_job(self.async_update_ha_state, True)
@@ -155,22 +147,29 @@ class FilterSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         state_attr = {
-            ATTR_FILTER: self._filter_name,
             ATTR_PRE_FILTER: self._pre_filter_state,
             ATTR_UNIT_OF_MEASUREMENT: self._unit_of_measurement
         }
+        state_attr.update(self._filterdata.stats)
+
         return state_attr
 
     def filterdata_factory(self, filter_function, **kwargs):
         """Factory to create filters with user provided arguments."""
         class FilterData(object):
-            def __init__(self):
+            def __init__(self, sensor_name):
                 self._data = None
+                self.filter_stats = {} 
+                self.entity_id = sensor_name 
 
             @property
             @Filter(filter_function, **kwargs)
             def data(self):
                 return self._data
+
+            @property
+            def stats(self):
+                return self.filter_stats
 
             def update(self, new_data):
                 self._data = float(new_data)
