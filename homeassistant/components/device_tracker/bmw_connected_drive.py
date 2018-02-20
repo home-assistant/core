@@ -21,7 +21,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
                   ', '.join([a.name for a in accounts]))
     for account in accounts:
         for vehicle in account.account.vehicles:
-            tracker = BMWDeviceTracker(see, account, vehicle)
+            tracker = BMWDeviceTracker(see, vehicle)
             account.add_update_listener(tracker.update)
             tracker.update()
     return True
@@ -30,11 +30,10 @@ def setup_scanner(hass, config, see, discovery_info=None):
 class BMWDeviceTracker(object):
     """BMW Connected Drive device tracker."""
 
-    def __init__(self, see, account, vehicle):
+    def __init__(self, see, vehicle):
         """Initialize the Tracker."""
         self._see = see
         self.vehicle = vehicle
-        self._account = account
 
     def update(self) -> None:
         """Update the device info."""
