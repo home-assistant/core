@@ -307,25 +307,31 @@ def _exclude_events(events, config):
             if event.data.get('old_state') is None:
                 continue
 
-            to_state = State.from_dict(event.data.get('new_state'))
+            new_state = event.data.get('new_state')
 
             # Do not report on entity removal
-            if not to_state:
+            if not new_state:
                 continue
 
+            attributes = new_state.get('attributes', {})
+
             # If last_changed != last_updated only attributes have changed
-            # we do not report on that yet. Also filter auto groups.
-            if to_state.last_changed != to_state.last_updated or \
-               to_state.domain == 'group' and \
-               to_state.attributes.get('auto', False):
+            # we do not report on that yet.
+            last_changed = new_state.get('last_changed')
+            last_updated = new_state.get('last_updated')
+            if last_changed != last_updated:
+                continue
+
+            domain = split_entity_id(entity_id)[0]
+
+            # Also filter auto groups.
+            if domain == 'group' and attributes.get('auto', False):
                 continue
 
             # exclude entities which are customized hidden
-            hidden = to_state.attributes.get(ATTR_HIDDEN, False)
+            hidden = attributes.get(ATTR_HIDDEN, False)
             if hidden:
                 continue
-
-            domain = to_state.domain
 
         elif event.event_type == EVENT_LOGBOOK_ENTRY:
             domain = event.data.get(ATTR_DOMAIN)
