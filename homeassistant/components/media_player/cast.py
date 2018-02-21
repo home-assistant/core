@@ -184,10 +184,14 @@ def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
             _LOGGER.warning("Can't set up chromecast on %s", want_host[0])
             raise
         key = (chromecast.host, chromecast.port, chromecast.uuid)
-        hass.data[KNOWN_CHROMECASTS_KEY][key] = chromecast
         cast_device = _async_create_cast_device(hass, chromecast)
         if cast_device is not None:
+            hass.data[KNOWN_CHROMECASTS_KEY][key] = chromecast
             async_add_devices([cast_device])
+        else:
+            # Some other entity already has this chromecast, throw this one
+            # away.
+            chromecast.disconnect(blocking=False)
 
 
 class CastDevice(MediaPlayerDevice):
@@ -443,4 +447,4 @@ class CastDevice(MediaPlayerDevice):
         _LOGGER.debug("Disconnecting existing chromecast object")
         old_key = (self.cast.host, self.cast.port, self.cast.uuid)
         self.hass.data[KNOWN_CHROMECASTS_KEY].pop(old_key)
-        self.hass.async_add_job(self.cast.disconnect)
+        self.cast.disconnect(blocking=False)
