@@ -1,118 +1,95 @@
 """
-Support for multiple covers which integrate with other components.
+This platform allows several cover to be grouped into one cover.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.multicover/
+https://home-assistant.io/components/cover.group/
 """
 import asyncio
 import logging
 
 import voluptuous as vol
 
-from homeassistant.core import (callback, split_entity_id)
+from homeassistant.core import callback, split_entity_id
 from homeassistant.components.cover import (
-    ENTITY_ID_FORMAT, DOMAIN, PLATFORM_SCHEMA, CoverDevice,
-    ATTR_POSITION, ATTR_TILT_POSITION, ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP,
-    SUPPORT_SET_POSITION, SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT,
+    DOMAIN, PLATFORM_SCHEMA, CoverDevice, ATTR_POSITION,
+    ATTR_CURRENT_POSITION, ATTR_TILT_POSITION, ATTR_CURRENT_TILT_POSITION,
+    SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP, SUPPORT_SET_POSITION,
+    SUPPORT_OPEN_TILT, SUPPORT_CLOSE_TILT,
     SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION)
 from homeassistant.const import (
-    CONF_COVERS, CONF_ENTITY_ID, CONF_FRIENDLY_NAME,
-    STATE_CLOSED, ATTR_SUPPORTED_FEATURES,
+    CONF_ENTITIES, CONF_NAME, ATTR_SUPPORTED_FEATURES, STATE_CLOSED,
     SERVICE_CLOSE_COVER, SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER, SERVICE_OPEN_COVER_TILT,
-    SERVICE_SET_COVER_POSITION, SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_STOP_COVER, SERVICE_STOP_COVER_TILT)
+    SERVICE_STOP_COVER, SERVICE_STOP_COVER_TILT,
+    SERVICE_SET_COVER_POSITION, SERVICE_SET_COVER_TILT_POSITION)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
-COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | \
-                 SUPPORT_STOP | SUPPORT_SET_POSITION
 TILT_FEATURES = SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | \
                 SUPPORT_STOP_TILT | SUPPORT_SET_TILT_POSITION
-
-
-CONF_TILT = 'tilt'
 
 KEY_OPEN_CLOSE = 'open_close'
 KEY_STOP = 'stop'
 KEY_POSITION = 'position'
 
 
-COVER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-    vol.Optional(CONF_TILT, default=False): cv.boolean,
-    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-})
+def entities_domain(domain):
+    """Validate that entities belong to domain."""
+    def validate(values):
+        """Test if entitiy domain is domain."""
+        values = cv.entity_ids(values)
+        for ent_id in values:
+            if split_entity_id(ent_id)[0] != domain:
+                raise vol.Invalid(
+                    "Entity ID '{}' does not belong to domain '{}'"
+                    .format(ent_id, domain))
+        return values
+    return validate
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
+    vol.Optional(CONF_NAME, default='Group Cover'): cv.string,
+    vol.Required(CONF_ENTITIES): entities_domain(DOMAIN),
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the MultiCover."""
-    covers = []
-
-    for device, device_config in config[CONF_COVERS].items():
-        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
-        tilt = device_config.get(CONF_TILT)
-        entity_ids = device_config.get(CONF_ENTITY_ID)
-
-        covers.append(
-            MultiCover(hass, device, friendly_name, tilt, entity_ids))
-
-    if not covers:
-        _LOGGER.error("No multicovers added.")
-        return False
-
-    async_add_devices(covers, True)
+    """Set up the Group Cover platform."""
+    async_add_devices(
+        [GroupCover(hass, config.get(CONF_NAME),
+                    config.get(CONF_ENTITIES))])
     return True
 
 
-class MultiCover(CoverDevice):
-    """Representation of a MultiCover."""
+class GroupCover(CoverDevice):
+    """Representation of a GroupCover."""
 
-    def __init__(self, hass, device_id, friendly_name, tilt, entity_ids):
-        """Initialize a multicover entity."""
+    def __init__(self, hass, name, entities):
+        """Initialize a GroupCover entity."""
         self._hass = hass
-        self._device_id = device_id
-        self._name = friendly_name
-        self._tilt = tilt
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, device_id, hass=hass)
-        self.entities = self.get_entities_set(entity_ids)
+        self._name = name
+        self._tilt = False
+
+        self.entities = entities
         self.covers = {KEY_OPEN_CLOSE: set(), KEY_STOP: set(),
                        KEY_POSITION: set()}
         self.tilts = {KEY_OPEN_CLOSE: set(), KEY_STOP: set(),
                       KEY_POSITION: set()}
 
-    def get_entities_set(self, entity_ids):
-        """Check if entities are valid."""
-        entities = set()
-        for entity in entity_ids:
-            if split_entity_id(entity)[0] != DOMAIN:
-                _LOGGER.warning("%s: Only cover entities are allowed. Please "
-                                "remove: \"%s\".", self._device_id, entity)
-                continue
-            if entity == self.entity_id:
-                _LOGGER.warning("%s: The entity_id of this component \"%s\" "
-                                "is not allowed.", self._device_id, entity)
-                continue
-            entities.add(entity)
-        return entities
-
     def update_supported_features(self, entity_id, old_state, new_state):
         """Update dictionaries with supported features."""
         if new_state is None:
+            tilt = False
             for value in self.covers.values():
                 value.discard(entity_id)
             for value in self.tilts.values():
                 value.discard(entity_id)
+                if value != set():
+                    tilt = True
+            self._tilt = tilt
             return
 
         if old_state is None:
@@ -125,10 +102,13 @@ class MultiCover(CoverDevice):
                 self.covers[KEY_STOP].add(entity_id)
             if features & 16 and features & 32:
                 self.tilts[KEY_OPEN_CLOSE].add(entity_id)
+                self._tilt = True
             if features & 64:
                 self.tilts[KEY_STOP].add(entity_id)
+                self._tilt = True
             if features & 128:
                 self.tilts[KEY_POSITION].add(entity_id)
+                self._tilt = True
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -233,10 +213,21 @@ class MultiCover(CoverDevice):
     @property
     def supported_features(self):
         """Flag supported features for a cover."""
-        if not self._tilt:
-            return COVER_FEATURES
+        supported_features = 0
 
-        return COVER_FEATURES | TILT_FEATURES
+        if self.covers[KEY_OPEN_CLOSE] != set():
+            supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE
+
+        if self.covers[KEY_STOP] != set():
+            supported_features |= SUPPORT_STOP
+
+        if self.covers[KEY_POSITION] != set():
+            supported_features |= SUPPORT_SET_POSITION
+
+        if self._tilt:
+            supported_features |= TILT_FEATURES
+
+        return supported_features
 
     @asyncio.coroutine
     def async_open_cover(self, **kwargs):
