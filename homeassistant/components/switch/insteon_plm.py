@@ -38,7 +38,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         new_entity = InsteonPLMOpenClosedDevice(device, state_key)
 
     if new_entity is not None:
-        async_add_devices(new_entity)
+        async_add_devices([new_entity])
 
 
 class InsteonPLMSwitchDevice(SwitchDevice):
