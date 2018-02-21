@@ -170,6 +170,8 @@ def humanify(events):
     - if 2+ sensor updates in GROUP_BY_MINUTES, show last
     - if home assistant stop and start happen in same minute call it restarted
     """
+    domain_prefixes = tuple('{}.'.format(dom) for dom in CONTINUOUS_DOMAINS)
+
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
             events,
@@ -189,8 +191,7 @@ def humanify(events):
             if event.event_type == EVENT_STATE_CHANGED:
                 entity_id = event.data.get('entity_id')
 
-                if entity_id.startswith(tuple('{}.'.format(
-                        domain) for domain in CONTINUOUS_DOMAINS)):
+                if entity_id.startswith(domain_prefixes):
                     last_sensor_event[entity_id] = event
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
