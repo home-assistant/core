@@ -53,7 +53,7 @@ def async_setup(hass, config):
     pub_topic = conf.get(CONF_PUBLISH_TOPIC)
     sub_topic = conf.get(CONF_SUBSCRIBE_TOPIC)
     ignore_event = conf.get(CONF_IGNORE_EVENT)
-    print(ignore_event)
+
     @callback
     def _event_publisher(event):
         """Handle events by publishing them on the MQTT queue."""
