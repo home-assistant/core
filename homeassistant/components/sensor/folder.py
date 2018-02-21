@@ -1,7 +1,7 @@
 """
 Sensor for monitoring the contents of a folder.
 
-For more details about this platform, refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.folder/
 """
 from datetime import datetime as dt
@@ -103,10 +103,9 @@ class Folder(Entity):
     def device_state_attributes(self):
         """Return other details about the sensor state."""
         attr = {
-            'folder': self._folder_path,
+            'path': self._folder_path,
             'filter': self._filter_term,
             'modified_file': os.path.split(self._recent_modified_file)[1],
-            'number_of_files': len(self._sorted_files_list),
-            'files': [os.path.split(f)[1] for f in self._sorted_files_list]
+            'number_of_files': len(self._sorted_files_list)
             }
         return attr
