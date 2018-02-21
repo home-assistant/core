@@ -32,6 +32,19 @@ def _api_bool(funct):
     return _wrapper
 
 
+def _api_data(funct):
+    """Return a api data."""
+    @asyncio.coroutine
+    def _wrapper(*argv, **kwargs):
+        """Wrap function."""
+        data = yield from funct(*argv, **kwargs)
+        if data and data['result'] == "ok":
+            return data['data']
+        return None
+
+    return _wrapper
+
+
 class HassIO(object):
     """Small API wrapper for Hass.io."""
 
@@ -49,6 +62,7 @@ class HassIO(object):
         """
         return self.send_command("/supervisor/ping", method="get")
 
+    @_api_data
     def get_homeassistant_info(self):
         """Return data for Home Assistant.
 
