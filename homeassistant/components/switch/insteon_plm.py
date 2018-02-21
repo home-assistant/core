@@ -37,8 +37,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     elif state_name == 'openClosedRelay':
         new_entity = InsteonPLMOpenClosedDevice(device, state_key)
 
-    _LOGGER.debug('Created Switch device with address %s', new_entity.address)
-
     if new_entity is not None:
         async_add_devices([new_entity])
 
@@ -82,11 +80,11 @@ class InsteonPLMSwitchDevice(SwitchDevice):
         onlevel = self._insteon_device_state.value
         return bool(onlevel)
 
-    #@property
-    #def device_state_attributes(self):
-    #    """Provide attributes for display on device card."""
-    #    insteon_plm = get_component('insteon_plm')
-    #    return insteon_plm.common_attributes(self)
+    @property
+    def device_state_attributes(self):
+        """Provide attributes for display on device card."""
+        insteon_plm = get_component('insteon_plm')
+        return insteon_plm.common_attributes(self)
 
     @callback
     def async_switch_update(self, deviceid, statename, val):
@@ -131,10 +129,6 @@ class InsteonPLMOpenClosedDevice(SwitchDevice):
         """Return the address of the node."""
         return self._insteon_device.address.human
 
-    def group(self):
-        """Return the INSTEON group that the entity responds to."""
-        return self._insteon_device_state.group
-
     @property
     def name(self):
         """Return the name of the node (used for Entity_ID)."""
@@ -152,12 +146,12 @@ class InsteonPLMOpenClosedDevice(SwitchDevice):
         onlevel = self._insteon_device_state.value
         return bool(onlevel)
 
-    #@property
-    #def device_state_attributes(self):
-    #    """Provide attributes for display on device card."""
-    #    insteon_plm = get_component('insteon_plm')
-    #    return insteon_plm.common_attributes(self._insteon_device,
-    #                                         self._insteon_device_state)
+    @property
+    def device_state_attributes(self):
+        """Provide attributes for display on device card."""
+        insteon_plm = get_component('insteon_plm')
+        return insteon_plm.common_attributes(self._insteon_device,
+                                             self._insteon_device_state)
 
     @callback
     def async_relay_update(self, deviceid, statename, val):
