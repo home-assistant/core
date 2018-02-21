@@ -1,4 +1,4 @@
-"""The tests for the cover multicover platform."""
+"""The tests for the group cover platform."""
 
 import unittest
 from datetime import timedelta
@@ -9,7 +9,7 @@ from homeassistant.components import cover
 from tests.common import (
     assert_setup_component, get_test_home_assistant, fire_time_changed)
 
-MULTICOVER = 'cover.test_multicover'
+GROUP_COVER = 'cover.group_cover'
 DEMO_COVER = 'cover.kitchen_window'
 DEMO_COVER_POS = 'cover.hall_window'
 DEMO_COVER_TILT = 'cover.living_room_window'
@@ -18,39 +18,15 @@ DEMO_TILT = 'cover.tilt_demo'
 CONFIG = {
     'cover': [
         {'platform': 'demo'},
-        {'platform': 'multicover',
-         'covers': {
-             'test_multicover': {
-                 'friendly_name': "Test Multicover",
-                 'entity_id': [
-                     DEMO_COVER, DEMO_COVER_POS, DEMO_COVER_TILT,
-                     'cover.test', 'cover.test_multicover', 'demo.demo'
-                 ],
-             }
-         }}
-    ]
-}
-
-CONFIG_TILT = {
-    'cover': [
-        {'platform': 'demo'},
-        {'platform': 'multicover',
-         'covers': {
-             'test_multicover': {
-                 'friendly_name': "Test Multicover",
-                 'tilt': True,
-                 'entity_id': [
-                     DEMO_COVER, DEMO_COVER_POS,
-                     DEMO_COVER_TILT, DEMO_TILT
-                 ],
-             }
-         }}
+        {'platform': 'group',
+         'entities': [
+             DEMO_COVER, DEMO_COVER_POS, DEMO_COVER_TILT, DEMO_TILT]}
     ]
 }
 
 
 class TestMultiCover(unittest.TestCase):
-    """Test the Multicover component."""
+    """Test the group cover platform."""
 
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -60,26 +36,18 @@ class TestMultiCover(unittest.TestCase):
         """Stop down everthing that was started."""
         self.hass.stop()
 
-    def test_empty_config(self):
-        """Test component setup with empty config."""
-        with assert_setup_component(1, 'cover'):
-            assert setup.setup_component(
-                self.hass, 'cover',
-                {'cover': {'platform': 'multicover', 'covers': {}}})
-
     def test_attributes(self):
         """Test state attributes after setup."""
         with assert_setup_component(2, 'cover'):
-            assert setup.setup_component(self.hass, 'cover', CONFIG_TILT)
+            assert setup.setup_component(self.hass, 'cover', CONFIG)
 
         self.hass.start()
         self.hass.block_till_done()
 
-        state = self.hass.states.get(MULTICOVER)
+        state = self.hass.states.get(GROUP_COVER)
         attr = state.attributes
 
         self.assertEqual(state.state, 'open')
-        self.assertEqual(attr.get('friendly_name'), "Test Multicover")
         self.assertEqual(attr.get('current_position'), 100)
         self.assertEqual(attr.get('current_tilt_position'), 50)
         self.assertEqual(attr.get('supported_features'), 255)
@@ -88,12 +56,12 @@ class TestMultiCover(unittest.TestCase):
     def test_current_cover_position(self):
         """Test different current cover positions."""
         with assert_setup_component(2, 'cover'):
-            assert setup.setup_component(self.hass, 'cover', CONFIG)
+            setup.setup_component(self.hass, 'cover', CONFIG)
 
         self.hass.start()
         self.hass.block_till_done()
 
-        self.assertEqual(self.hass.states.get(MULTICOVER)
+        self.assertEqual(self.hass.states.get(GROUP_COVER)
                          .attributes.get('current_position'), 100)
 
         self.hass.states.set(
@@ -101,7 +69,7 @@ class TestMultiCover(unittest.TestCase):
             {'current_position': 70, 'supported_features': 15})
         self.hass.block_till_done()
 
-        self.assertEqual(self.hass.states.get(MULTICOVER)
+        self.assertEqual(self.hass.states.get(GROUP_COVER)
                          .attributes.get('current_position'), 70)
 
         self.hass.states.remove(DEMO_COVER_POS)
@@ -110,24 +78,24 @@ class TestMultiCover(unittest.TestCase):
             {'current_position': 80, 'supported_features': 15})
         self.hass.block_till_done()
 
-        self.assertEqual(self.hass.states.get(MULTICOVER)
+        self.assertEqual(self.hass.states.get(GROUP_COVER)
                          .attributes.get('current_position'), 80)
 
         self.hass.states.remove(DEMO_COVER_TILT)
         self.hass.states.set(DEMO_COVER, 'closed')
         self.hass.block_till_done()
 
-        self.assertEqual(self.hass.states.get(MULTICOVER).state, 'closed')
+        self.assertEqual(self.hass.states.get(GROUP_COVER).state, 'closed')
 
         self.hass.states.remove(DEMO_COVER)
         self.hass.block_till_done()
 
-        self.assertEqual(self.hass.states.get(MULTICOVER).state, 'open')
+        self.assertEqual(self.hass.states.get(GROUP_COVER).state, 'open')
 
     def test_current_tilt_position(self):
         """Test different current cover tilt positions."""
         with assert_setup_component(2, 'cover'):
-            assert setup.setup_component(self.hass, 'cover', CONFIG_TILT)
+            assert setup.setup_component(self.hass, 'cover', CONFIG)
 
         self.hass.start()
         self.hass.block_till_done()
@@ -137,7 +105,7 @@ class TestMultiCover(unittest.TestCase):
             {'current_tilt_position': 60, 'supported_features': 255})
         self.hass.block_till_done()
 
-        self.assertEqual(self.hass.states.get(MULTICOVER)
+        self.assertEqual(self.hass.states.get(GROUP_COVER)
                          .attributes.get('current_tilt_position'), 100)
 
         self.hass.states.set(
@@ -145,7 +113,7 @@ class TestMultiCover(unittest.TestCase):
             {'current_tilt_position': 50, 'supported_features': 255})
         self.hass.block_till_done()
 
-        self.assertEqual(self.hass.states.get(MULTICOVER)
+        self.assertEqual(self.hass.states.get(GROUP_COVER)
                          .attributes.get('current_tilt_position'), 50)
 
     def test_open_covers(self):
@@ -156,14 +124,14 @@ class TestMultiCover(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        cover.open_cover(self.hass, MULTICOVER)
+        cover.open_cover(self.hass, GROUP_COVER)
         self.hass.block_till_done()
         for _ in range(10):
             future = dt_util.utcnow() + timedelta(seconds=1)
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
 
-        state = self.hass.states.get(MULTICOVER)
+        state = self.hass.states.get(GROUP_COVER)
         self.assertEqual(state.state, 'open')
         self.assertEqual(state.attributes.get('current_position'), 100)
 
@@ -181,14 +149,14 @@ class TestMultiCover(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        cover.close_cover(self.hass, MULTICOVER)
+        cover.close_cover(self.hass, GROUP_COVER)
         self.hass.block_till_done()
         for _ in range(10):
             future = dt_util.utcnow() + timedelta(seconds=1)
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
 
-        state = self.hass.states.get(MULTICOVER)
+        state = self.hass.states.get(GROUP_COVER)
         self.assertEqual(state.state, 'closed')
         self.assertEqual(state.attributes.get('current_position'), 0)
 
@@ -206,18 +174,18 @@ class TestMultiCover(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        cover.open_cover(self.hass, MULTICOVER)
+        cover.open_cover(self.hass, GROUP_COVER)
         self.hass.block_till_done()
         future = dt_util.utcnow() + timedelta(seconds=1)
         fire_time_changed(self.hass, future)
         self.hass.block_till_done()
-        cover.stop_cover(self.hass, MULTICOVER)
+        cover.stop_cover(self.hass, GROUP_COVER)
         self.hass.block_till_done()
         future = dt_util.utcnow() + timedelta(seconds=1)
         fire_time_changed(self.hass, future)
         self.hass.block_till_done()
 
-        state = self.hass.states.get(MULTICOVER)
+        state = self.hass.states.get(GROUP_COVER)
         self.assertEqual(state.state, 'open')
         self.assertEqual(state.attributes.get('current_position'), 100)
 
@@ -235,14 +203,14 @@ class TestMultiCover(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        cover.set_cover_position(self.hass, 50, MULTICOVER)
+        cover.set_cover_position(self.hass, 50, GROUP_COVER)
         self.hass.block_till_done()
         for _ in range(4):
             future = dt_util.utcnow() + timedelta(seconds=1)
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
 
-        state = self.hass.states.get(MULTICOVER)
+        state = self.hass.states.get(GROUP_COVER)
         self.assertEqual(state.state, 'open')
         self.assertEqual(state.attributes.get('current_position'), 50)
 
@@ -255,19 +223,19 @@ class TestMultiCover(unittest.TestCase):
     def test_open_tilts(self):
         """Test open tilt function."""
         with assert_setup_component(2, 'cover'):
-            assert setup.setup_component(self.hass, 'cover', CONFIG_TILT)
+            assert setup.setup_component(self.hass, 'cover', CONFIG)
 
         self.hass.start()
         self.hass.block_till_done()
 
-        cover.open_cover_tilt(self.hass, MULTICOVER)
+        cover.open_cover_tilt(self.hass, GROUP_COVER)
         self.hass.block_till_done()
         for _ in range(5):
             future = dt_util.utcnow() + timedelta(seconds=1)
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
 
-        state = self.hass.states.get(MULTICOVER)
+        state = self.hass.states.get(GROUP_COVER)
         self.assertEqual(state.state, 'open')
         self.assertEqual(state.attributes.get('current_tilt_position'), 100)
 
@@ -277,19 +245,19 @@ class TestMultiCover(unittest.TestCase):
     def test_close_tilts(self):
         """Test close tilt function."""
         with assert_setup_component(2, 'cover'):
-            assert setup.setup_component(self.hass, 'cover', CONFIG_TILT)
+            assert setup.setup_component(self.hass, 'cover', CONFIG)
 
         self.hass.start()
         self.hass.block_till_done()
 
-        cover.close_cover_tilt(self.hass, MULTICOVER)
+        cover.close_cover_tilt(self.hass, GROUP_COVER)
         self.hass.block_till_done()
         for _ in range(5):
             future = dt_util.utcnow() + timedelta(seconds=1)
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
 
-        state = self.hass.states.get(MULTICOVER)
+        state = self.hass.states.get(GROUP_COVER)
         self.assertEqual(state.state, 'open')
         self.assertEqual(state.attributes.get('current_tilt_position'), 0)
 
@@ -299,23 +267,23 @@ class TestMultiCover(unittest.TestCase):
     def test_stop_tilts(self):
         """Test stop tilts function."""
         with assert_setup_component(2, 'cover'):
-            assert setup.setup_component(self.hass, 'cover', CONFIG_TILT)
+            assert setup.setup_component(self.hass, 'cover', CONFIG)
 
         self.hass.start()
         self.hass.block_till_done()
 
-        cover.open_cover_tilt(self.hass, MULTICOVER)
+        cover.open_cover_tilt(self.hass, GROUP_COVER)
         self.hass.block_till_done()
         future = dt_util.utcnow() + timedelta(seconds=1)
         fire_time_changed(self.hass, future)
         self.hass.block_till_done()
-        cover.stop_cover_tilt(self.hass, MULTICOVER)
+        cover.stop_cover_tilt(self.hass, GROUP_COVER)
         self.hass.block_till_done()
         future = dt_util.utcnow() + timedelta(seconds=1)
         fire_time_changed(self.hass, future)
         self.hass.block_till_done()
 
-        state = self.hass.states.get(MULTICOVER)
+        state = self.hass.states.get(GROUP_COVER)
         self.assertEqual(state.state, 'open')
         self.assertEqual(state.attributes.get('current_tilt_position'), 60)
 
@@ -325,19 +293,19 @@ class TestMultiCover(unittest.TestCase):
     def test_set_tilt_positions(self):
         """Test set tilt position function."""
         with assert_setup_component(2, 'cover'):
-            assert setup.setup_component(self.hass, 'cover', CONFIG_TILT)
+            assert setup.setup_component(self.hass, 'cover', CONFIG)
 
         self.hass.start()
         self.hass.block_till_done()
 
-        cover.set_cover_tilt_position(self.hass, 80, MULTICOVER)
+        cover.set_cover_tilt_position(self.hass, 80, GROUP_COVER)
         self.hass.block_till_done()
         for _ in range(3):
             future = dt_util.utcnow() + timedelta(seconds=1)
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
 
-        state = self.hass.states.get(MULTICOVER)
+        state = self.hass.states.get(GROUP_COVER)
         self.assertEqual(state.state, 'open')
         self.assertEqual(state.attributes.get('current_tilt_position'), 80)
 
