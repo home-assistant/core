@@ -4,7 +4,7 @@ import unittest
 from homeassistant.components.sensor.simulated import (
     CONF_UNIT, CONF_AMP, CONF_MEAN, CONF_PERIOD, CONF_PHASE, CONF_FWHM,
     CONF_SEED, DEFAULT_NAME, DEFAULT_AMP, DEFAULT_MEAN,
-    DEFAULT_FWHM, DEFAULT_SEED)
+    DEFAULT_PHASE, DEFAULT_FWHM, DEFAULT_SEED)
 from homeassistant.const import CONF_FRIENDLY_NAME
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
@@ -40,9 +40,9 @@ class TestSimulatedSensor(unittest.TestCase):
         assert state.attributes.get(
             CONF_MEAN) == DEFAULT_MEAN
         assert state.attributes.get(
-            CONF_PERIOD) == '60 seconds'
+            CONF_PERIOD) == 60.0
         assert state.attributes.get(
-            CONF_PHASE) == '0 degrees'
+            CONF_PHASE) == DEFAULT_PHASE
         assert state.attributes.get(
             CONF_FWHM) == DEFAULT_FWHM
         assert state.attributes.get(
