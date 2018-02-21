@@ -43,7 +43,7 @@ def setup(hass, config):
         configured_devices = config[DOMAIN].get(CONF_DEVICES)
         for device in configured_devices:
             try:
-                host = device[CONF_HOST]
+                host = device.get(CONF_HOST, DEFAULT_HOST)
                 username = device[CONF_USERNAME]
                 password = device[CONF_PASSWORD]
                 fritzbox = Fritzhome(host=host, user=username,
