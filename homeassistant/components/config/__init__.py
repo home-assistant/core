@@ -159,7 +159,7 @@ class EditKeyBasedConfigView(BaseEditConfigView):
 
     def _get_value(self, hass, data, config_key):
         """Get value."""
-        return data.get(config_key, {})
+        return data.get(config_key)
 
     def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
