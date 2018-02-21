@@ -57,11 +57,7 @@ class Filter(object):
             except TypeError:
                 return None
 
-            if filtered_state is None:
-                filtered_state = self.states[-1]
-                self.states.popleft()
-            else:
-                self.states.append(filtered_state)
+            self.states.append(filtered_state)
 
             """ filter_stats makes available few statistics to the sensor """
             sensor_object.filter_stats = self.filter_stats
@@ -100,7 +96,7 @@ def _outlier(new_state, stats, states, **kwargs):
         stats['erasures'] = erasures+1
         Filter.logger.warning("Outlier in %s: %s",
                               Filter.sensor_name, float(new_state))
-        return None 
+        return states[-1] 
     return new_state
 
 
