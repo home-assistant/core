@@ -91,7 +91,7 @@ class HassIO(object):
 
         This method return a coroutine.
         """
-        return self.send_command("/homeassistant/check")
+        return self.send_command("/homeassistant/check", timeout=300)
 
     @_api_bool
     def update_hass_api(self, http_config):
