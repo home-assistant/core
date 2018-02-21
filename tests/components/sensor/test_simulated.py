@@ -29,6 +29,7 @@ class TestSimulatedSensor(unittest.TestCase):
         }
         self.assertTrue(
             setup_component(self.hass, 'sensor', config))
+        assert len(self.hass.states.entity_ids()) == 1
         state = self.hass.states.get('sensor.simulated')
         assert state.attributes.get(
             CONF_FRIENDLY_NAME) == DEFAULT_NAME
