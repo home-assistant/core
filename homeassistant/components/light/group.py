@@ -187,11 +187,14 @@ class GroupLight(light.Light):
         on_states = [state for state in states if state.state == STATE_ON]
 
         self._state = _determine_on_off_state(states)
+
         self._brightness = _reduce_attribute(on_states, 'brightness')
         self._xy_color = _reduce_attribute(
             on_states, 'xy_color', reduce=_average_tuple)
         self._rgb_color = _reduce_attribute(
             on_states, 'rgb_color', reduce=_average_tuple)
+        if self._rgb_color is not None:
+            self._rgb_color = tuple(map(int, self._rgb_color))
         self._white_value = _reduce_attribute(on_states, 'white_value')
         self._color_temp = _reduce_attribute(on_states, 'color_temp')
         self._min_mireds = _reduce_attribute(
@@ -199,18 +202,17 @@ class GroupLight(light.Light):
         self._max_mireds = _reduce_attribute(
             states, 'max_mireds', default=500, reduce=max)
 
-        all_effect_lists = list(_find_state_attributes(states, 'effect_list'))
         self._effect_list = None
+        all_effect_lists = list(_find_state_attributes(states, 'effect_list'))
         if all_effect_lists:
             # Merge all effects from all effect_lists with a union merge.
             self._effect_list = list(set().union(*all_effect_lists))
 
-        all_effects = list(_find_state_attributes(states, 'effect'))
         self._effect = None
+        all_effects = list(_find_state_attributes(states, 'effect'))
         if all_effects:
-            flat_effects = list(itertools.chain(all_effects))
             # Report the most common effect.
-            effects_count = Counter(flat_effects)
+            effects_count = Counter(itertools.chain(all_effects))
             self._effect = effects_count.most_common(1)[0][0]
 
         self._supported_features = 0
@@ -232,8 +234,9 @@ def _find_state_attributes(states: List[State],
                            key: str) -> Iterator[Any]:
     """Find attributes with matching key from states."""
     for state in states:
-        if key in state.attributes:
-            yield state.attributes.get(key)
+        value = state.attributes.get(key)
+        if value is not None:
+            yield value
 
 
 def _average(*args):
