@@ -68,7 +68,9 @@ def import_types():
     # pylint: disable=unused-variable
     from .covers import Window  # noqa F401
     # pylint: disable=unused-variable
-    from .sensors import TemperatureSensor # noqa F401
+    from .sensors import TemperatureSensor  # noqa F401
+    # pylint: disable=unused-variable
+    from .lights import Lightbulb  # noqa F401
 
 
 def get_accessory(hass, state):
@@ -86,6 +88,9 @@ def get_accessory(hass, state):
             _LOGGER.debug("Add \"%s\" as \"%s\"",
                           state.entity_id, 'Window')
             return TYPES['Window'](hass, state.entity_id, state.name)
+
+    elif state.domain == 'light':
+        return TYPES['Lightbulb'](hass, state.entity_id, state.name)
 
     return None
 
