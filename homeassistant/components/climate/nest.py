@@ -98,6 +98,7 @@ class NestThermostat(ClimateDevice):
                  SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE)
         # If the device has a fan, add the fan as feature
         if self._has_fan:
+            _LOGGER.info("NEST HAS A FAN!!")
             flags = (flags | SUPPORT_FAN_MODE)
         """Return the list of supported features."""
         return flags
