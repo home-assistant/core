@@ -14,14 +14,16 @@ DEPENDENCIES = ['bmw_connected_drive']
 
 _LOGGER = logging.getLogger(__name__)
 
-LENGTH_ATTRIBUTES = [
-    'remaining_range_fuel',
-    'mileage',
-    ]
+LENGTH_ATTRIBUTES = {
+    'remaining_range_fuel': ['Range (fuel)', 'mdi:ruler'],
+    'mileage': ['Mileage', 'mdi:speedometer']
+}
 
-VALID_ATTRIBUTES = LENGTH_ATTRIBUTES + [
-    'remaining_fuel',
-]
+VALID_ATTRIBUTES = {
+    'remaining_fuel': ['Remaining Fuel', 'mdi:gas-station']
+}
+
+VALID_ATTRIBUTES.update(LENGTH_ATTRIBUTES)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -32,8 +34,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for account in accounts:
         for vehicle in account.account.vehicles:
-            for sensor in VALID_ATTRIBUTES:
-                device = BMWConnectedDriveSensor(account, vehicle, sensor)
+            for key, value in sorted(VALID_ATTRIBUTES.items()):
+                device = BMWConnectedDriveSensor(account, vehicle, key,
+                                                 value[0], value[1])
                 devices.append(device)
     add_devices(devices)
 
@@ -41,14 +44,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class BMWConnectedDriveSensor(Entity):
     """Representation of a BMW vehicle sensor."""
 
-    def __init__(self, account, vehicle, attribute: str):
+    def __init__(self, account, vehicle, attribute: str, sensor_name, icon):
         """Constructor."""
         self._vehicle = vehicle
         self._account = account
         self._attribute = attribute
         self._state = None
         self._unit_of_measurement = None
-        self._name = '{} {}'.format(self._vehicle.modelName, self._attribute)
+        self._name = sensor_name
+        self._icon = icon
 
     @property
     def should_poll(self) -> bool:
@@ -59,6 +63,11 @@ class BMWConnectedDriveSensor(Entity):
     def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return self._icon
 
     @property
     def state(self):
@@ -73,6 +82,16 @@ class BMWConnectedDriveSensor(Entity):
     def unit_of_measurement(self) -> str:
         """Get the unit of measurement."""
         return self._unit_of_measurement
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the binary sensor."""
+        vehicle_state = self._vehicle.state
+
+        return {
+            'last_update': vehicle_state.timestamp,
+            'car': self._vehicle.modelName
+        }
 
     def update(self) -> None:
         """Read new state data from the library."""
