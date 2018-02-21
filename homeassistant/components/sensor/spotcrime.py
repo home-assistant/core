@@ -75,7 +75,7 @@ class SpotCrimeSensor(Entity):
         self._state = None
         self._previous_incidents = set()
         self._attributes = {
-             ATTR_ATTRIBUTION: spotcrime.ATTRIBUTION
+            ATTR_ATTRIBUTION: spotcrime.ATTRIBUTION
         }
 
     @property
@@ -108,7 +108,6 @@ class SpotCrimeSensor(Entity):
 
     def update(self):
         """Update device state."""
-        import spotcrime
         incident_counts = defaultdict(int)
         incidents = self._spotcrime.get_incidents()
         if len(incidents) < len(self._previous_incidents):
