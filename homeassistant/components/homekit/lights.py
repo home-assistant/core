@@ -1,7 +1,7 @@
 """Class to hold all light accesories."""
 import logging
 
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
@@ -18,36 +18,26 @@ class Lightbulb(HomeAccessory):
     """Generate a Light accessory for a lightbulb."""
 
     def __init__(self, hass, entity_id, display_name):
-        _LOGGER.debug("Loading light component1")
+        _LOGGER.debug("Loading light component")
         """Initialize a LightBulb accessory object."""
         super().__init__(display_name)
         self.set_category(self.ALL_CATEGORIES.LIGHTBULB)
-        _LOGGER.debug("Loading light component2")
         self.set_accessory_info(entity_id)
-        _LOGGER.debug("Loading light component3")
         self.add_preload_service(SERVICES_LIGHTBULB)
-        _LOGGER.debug("Loading light component4")
 
         self._hass = hass
         self._entity_id = entity_id
 
         self.brightness = None
 
-        _LOGGER.debug("Loading light component5")
-
         self.service_lightbulb = self.get_service(SERVICES_LIGHTBULB)
-        _LOGGER.debug("Loading light component6")
         #self.char_brightness = self.service_lightbulb. \
         #    get_characteristic(CHAR_BRIGHTNESS)
-        _LOGGER.debug("Loading light component7")
         self.char_state = self.service_lightbulb. \
             get_characteristic(CHAR_STATE)
-        _LOGGER.debug("Loading light component8")
 
         #self.char_brightness.setter_callback = self.set_brightness
-        _LOGGER.debug("Loading light component9")
         self.char_state.setter_callback = self.set_state
-        _LOGGER.debug("Loading light component10")
 
     def run(self):
         """Method called be object after driver is started."""
@@ -65,8 +55,19 @@ class Lightbulb(HomeAccessory):
         pass
 
     def set_state(self, value):
-        _LOGGER.debug(str(value))
+        """Receives command from Homekit."""
+        new_state = value == 1
+        action = 'turn_on' if new_state else 'turn_off'
+
+        # Send to Home Assistant
+        self._hass.services.call(
+            'light', action,
+            {'entity_id': self._entity_id}
+        )
 
     def update_state(self, entity_id=None, old_state=None,
                               new_state=None):
-        return True
+        """Updates the Homekit value of the accessory."""
+        state = new_state.state == 'on'
+
+        self.char_state.set_value(state)
