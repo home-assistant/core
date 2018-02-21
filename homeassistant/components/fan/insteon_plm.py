@@ -39,6 +39,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     device = plm.devices[address]
     state_key = discovery_info['state_key']
 
+    _LOGGER.debug('Adding device %s with state name %s to Fan platform.', 
+                  device.address.hex, device.states[state_key].name)
+
     entities.append(InsteonPLMFan(device, state_key, SUPPORT_SET_SPEED))
 
     async_add_devices(entities)

@@ -26,6 +26,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     device = plm.devices[address]
     state_key = discovery_info['state_key']
 
+    _LOGGER.debug('Adding device %s with state name %s to Sensor platform.', 
+                  device.address.hex, device.states[state_key].name)
+
     entities.append(InsteonPLMSensorDevice(device, state_key))
 
     async_add_devices(entities)
