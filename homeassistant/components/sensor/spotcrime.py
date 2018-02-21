@@ -25,10 +25,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DAYS = 'days'
 DEFAULT_DAYS = 1
+NAME = 'spotcrime'
 
-DOMAIN = 'spotcrime'
-
-EVENT_INCIDENT = '{}_incident'.format(DOMAIN)
+EVENT_INCIDENT = '{}_incident'.format(NAME)
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
@@ -48,25 +47,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Crime Reports platform."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    name = config.get(CONF_NAME)
-    radius = config.get(CONF_RADIUS)
+    name = config[CONF_NAME]
+    radius = config[CONF_RADIUS]
     days = config.get(CONF_DAYS)
     include = config.get(CONF_INCLUDE)
     exclude = config.get(CONF_EXCLUDE)
 
     add_devices([SpotCrimeSensor(
-                hass, name, latitude, longitude, radius, include,
-                exclude, days)], True)
+        name, latitude, longitude, radius, include,
+        exclude, days)], True)
 
 
 class SpotCrimeSensor(Entity):
     """Representation of a Spot Crime Sensor."""
 
-    def __init__(self, hass, name, latitude, longitude, radius,
+    def __init__(self, name, latitude, longitude, radius,
                  include, exclude, days):
         """Initialize the Spot Crime sensor."""
         import spotcrime
-        self._hass = hass
         self._name = name
         self._include = include
         self._exclude = exclude
@@ -76,6 +74,9 @@ class SpotCrimeSensor(Entity):
         self._attributes = None
         self._state = None
         self._previous_incidents = set()
+        self._attributes = {
+             ATTR_ATTRIBUTION: spotcrime.ATTRIBUTION
+        }
 
     @property
     def name(self):
@@ -103,25 +104,21 @@ class SpotCrimeSensor(Entity):
                 ATTR_LATITUDE: incident.get('lat'),
                 ATTR_LONGITUDE: incident.get('lon')
             })
-        self._hass.bus.fire(EVENT_INCIDENT, data)
+        self.hass.bus.fire(EVENT_INCIDENT, data)
 
     def update(self):
         """Update device state."""
         import spotcrime
         incident_counts = defaultdict(int)
         incidents = self._spotcrime.get_incidents()
-        fire_events = len(self._previous_incidents) > 0
         if len(incidents) < len(self._previous_incidents):
             self._previous_incidents = set()
         for incident in incidents:
             incident_type = slugify(incident.get('type'))
             incident_counts[incident_type] += 1
-            if (fire_events and incident.get('id')
+            if (self._previous_incidents and incident.get('id')
                     not in self._previous_incidents):
                 self._incident_event(incident)
             self._previous_incidents.add(incident.get('id'))
-        self._attributes = {
-            ATTR_ATTRIBUTION: spotcrime.ATTRIBUTION
-        }
         self._attributes.update(incident_counts)
         self._state = len(incidents)
