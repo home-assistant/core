@@ -219,7 +219,7 @@ class Cloud:
 
         # Fetching keyset can fail if internet is not up yet.
         if not success:
-            self.hass.helpers.async_call_later(5, self.async_start)
+            self.hass.helpers.event.async_call_later(5, self.async_start)
             return
 
         def load_config():
