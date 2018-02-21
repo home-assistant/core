@@ -104,7 +104,7 @@ def async_setup(hass, config):
 def common_attributes(entity):
     """Return the device state attributes."""
     attributes = {
-        'INSTEON Address': entity.address.human,
+        'INSTEON Address': entity.address,
         'INSTEON Group': entity.group
     }
     return attributes
