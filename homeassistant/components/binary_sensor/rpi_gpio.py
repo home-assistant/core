@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.rpi_gpio/
 """
 import logging
+import time
 
 import voluptuous as vol
 
@@ -16,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BOUNCETIME = 'bouncetime'
+CONF_BOUNCETIME = 'bouncetime'  # ms
 CONF_INVERT_LOGIC = 'invert_logic'
 CONF_PORTS = 'ports'
 CONF_PULL_MODE = 'pull_mode'
@@ -66,14 +67,49 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
         self._bouncetime = bouncetime
         self._invert_logic = invert_logic
         self._state = None
+        self._retry_read_interval = 10  # ms
 
         rpi_gpio.setup_input(self._port, self._pull_mode)
 
         def read_gpio(port):
             """Read state from GPIO."""
-            self._state = rpi_gpio.read_input(self._port)
+            # NOTE: This is RPi.GPIO callback, so it is in separate thread,
+            #       but also only one thread is used for callbacks,
+            #       so it's safe to time.sleep() inside
+            # NOTE: Not sure if const time interval between GPIO reads
+            #       or divide _bouncetime  by const number of tries?
+            retry_count = int(self._bouncetime / self._retry_read_interval)
+            while retry_count >= 0:
+                new_state = rpi_gpio.read_input(self._port)
+                # Reading GPIO not always returns valid state
+                # (noise? RPi.GPIO issue/race? )
+                # Let's try few times during bouncetime
+                # until we get expected result from GPIO
+                if new_state != self._state:
+                    break
+                _LOGGER.debug("Different than expected state read "
+                              "in edge detection handler. "
+                              "Repating GPIO read in %d ms, retries left: %r",
+                              self._retry_read_interval, retry_count)
+                time.sleep(self._retry_read_interval / 1000.0)
+                retry_count -= 1
+            self._state = new_state
             self.schedule_update_ha_state()
 
+        # As edge detection seems be reliable with RPi.GPIO==0.6.1
+        # it would be best to use separate handlers
+        # for raising and falling cases changing state of switch
+        # without reading GPIO which proves to be unreliable/ noise affected:
+        #        rpi_gpio.rising_edge_detect(self._port,
+        #                                    rising_edge_handler,
+        #                                    self._bouncetime)
+        #        rpi_gpio.falling_edge_detect(self._port,
+        #                                     falling_edge_handler,
+        #                                     self._bouncetime)
+        # Unfortunately we are not able to have separate handlers
+        # for falling and rising edge due to:
+        #     RuntimeError: Conflicting edge detection
+        #                   already enabled for this GPIO channel
         rpi_gpio.edge_detect(self._port, read_gpio, self._bouncetime)
 
     @property
