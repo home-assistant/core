@@ -96,7 +96,7 @@ def _outlier(new_state, stats, states, **kwargs):
         stats['erasures'] = erasures+1
         Filter.logger.warning("Outlier in %s: %s",
                               Filter.sensor_name, float(new_state))
-        return states[-1] 
+        return states[-1]
     return new_state
 
 
