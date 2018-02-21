@@ -5,9 +5,10 @@ from unittest.mock import patch, Mock
 import pytest
 
 from homeassistant.setup import async_setup_component
+from homeassistant.components.hassio.handler import HassIO
 
 from tests.common import mock_coro
-from . import API_PASSWORD
+from . import API_PASSWORD, HASSIO_TOKEN
 
 
 @pytest.fixture
@@ -38,3 +39,12 @@ def hassio_client(hassio_env, hass, test_client):
             }
         }))
     yield hass.loop.run_until_complete(test_client(hass.http.app))
+
+
+@pytest.fixture
+def hassio_handler(hass, aioclient_mock):
+    """Create mock hassio handler."""
+    websession = hass.helpers.aiohttp_client.async_get_clientsession()
+
+    with patch.dict(os.environ, {'HASSIO_TOKEN': HASSIO_TOKEN}):
+        yield HassIO(hass.loop, websession, "127.0.0.1")

@@ -197,8 +197,7 @@ def async_setup(hass, config):
         """Update last available Home Assistant version."""
         data = yield from hassio.get_homeassistant_info()
         if data:
-            hass.data[DATA_HOMEASSISTANT_VERSION] = \
-                data['data']['last_version']
+            hass.data[DATA_HOMEASSISTANT_VERSION] = data['last_version']
 
         hass.helpers.event.async_track_point_in_utc_time(
             update_homeassistant_version, utcnow() + HASSIO_UPDATE_INTERVAL)
