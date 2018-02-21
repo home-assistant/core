@@ -4,9 +4,10 @@ Adds a simulated sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.simulated/
 """
-import logging
-import numpy as np
 import datetime as datetime
+import math
+import random
+import logging
 
 import voluptuous as vol
 
@@ -14,8 +15,6 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-
-REQUIREMENTS = ['numpy==1.14.0']
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = datetime.timedelta(seconds=1)
@@ -63,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     seed = config.get(CONF_SEED)
 
     if seed:
-        np.random.seed(seed)  # If a seed is configured, apply.
+        random.seed(seed)  # If a seed is configured, apply.
 
     sensor = SimulatedSensor(
         name, unit, amp, mean, period, phase, fwhm, seed
@@ -100,9 +99,9 @@ class SimulatedSensor(Entity):
         dt = self.time_delta().total_seconds()*1e6  # convert to  milliseconds
         w0 = self._period.total_seconds()*1e6
         s0 = self._fwhm/2
-        p0 = self._phase*np.pi/180  # Convert to radians
-        periodic = a0 * (np.sin((2*np.pi*dt/w0) + p0))
-        noise = np.random.normal(0, s0)
+        p0 = math.radians(self._phase)
+        periodic = a0 * (math.sin((2*math.pi*dt/w0) + p0))
+        noise = random.gauss(mu=0, sigma=s0)
         return m0 + periodic + noise
 
     def update(self):
@@ -134,8 +133,8 @@ class SimulatedSensor(Entity):
         attr = {
             'amplitude': self._amp,
             'mean': self._mean,
-            'period': str(int(self._period.total_seconds())) + " seconds",
-            'phase': str(self._phase) + " degrees",
+            'period': self._period.total_seconds(),
+            'phase': self._phase,
             'spread': self._fwhm,
             'seed': self._seed,
             }
