@@ -142,4 +142,6 @@ class InsteonPLMFan(FanEntity):
         """Register INSTEON update events."""
         _LOGGER.debug('Device %s added. Now registering callback.',
                       self.address)
-        self._insteon_device_state.register_updates(self.async_fan_update)
+        self.hass.async_add_job(
+            self._insteon_device_state.register_updates,
+            self.async_fan_update)
