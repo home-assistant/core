@@ -4,14 +4,13 @@ Support for INSTEON PowerLinc Modem.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon_plm/
 """
-import logging
 import asyncio
 import collections
-
+import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import (CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 
@@ -58,8 +57,8 @@ def async_setup(hass, config):
                 hass.async_add_job(
                     discovery.async_load_platform(
                         hass, platform, DOMAIN,
-                        discovered=[{'address': device.address.hex,
-                                     'state_key': state_key}],
+                        discovered={'address': device.address.hex,
+                                     'state_key': state_key},
                         hass_config=config))
 
     _LOGGER.info("Looking for PLM on %s", port)
@@ -102,16 +101,11 @@ def async_setup(hass, config):
     return True
 
 
-def common_attributes(entity, state):
+def common_attributes(entity):
     """Return the device state attributes."""
     attributes = {
         'INSTEON Address': entity.address.human,
-        'Description': entity.description,
-        'Model': entity.model,
-        'Category': '{:02x}'.format(entity.cat),
-        'Subcategory': '{:02x}'.format(entity.subcat),
-        'Product Key / Firmware': '{:02x}'.format(entity.product_key),
-        'Group': '{:02x}'.format(state.group)
+        'INSTEON Group': entity.group
     }
     return attributes
 
