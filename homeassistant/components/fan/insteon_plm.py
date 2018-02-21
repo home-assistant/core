@@ -35,9 +35,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     entities = []
     plm = hass.data['insteon_plm']
 
-    address = device_info['address']
+    address = discovery_info['address']
     device = plm.devices[address]
-    state_key = device_info['state_key']
+    state_key = discovery_info['state_key']
 
     entities.append(InsteonPLMFan(device, state_key, SUPPORT_SET_SPEED))
 

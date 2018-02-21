@@ -58,7 +58,7 @@ def async_setup(hass, config):
                     discovery.async_load_platform(
                         hass, platform, DOMAIN,
                         discovered={'address': device.address.hex,
-                                     'state_key': state_key},
+                                    'state_key': state_key},
                         hass_config=config))
 
     _LOGGER.info("Looking for PLM on %s", port)

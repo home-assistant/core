@@ -22,12 +22,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     entities = []
     plm = hass.data['insteon_plm']
 
-    for device_info in discovery_info:
-        address = device_info['address']
-        device = plm.devices[address]
-        state_key = device_info['state_key']
+    address = discovery_info['address']
+    device = plm.devices[address]
+    state_key = discovery_info['state_key']
 
-        entities.append(InsteonPLMSensorDevice(device, state_key))
+    entities.append(InsteonPLMSensorDevice(device, state_key))
 
     async_add_devices(entities)
 
