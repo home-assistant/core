@@ -319,6 +319,7 @@ class Recorder(threading.Thread):
                     with session_scope(session=self.get_session()) as session:
                         dbevent = Events.from_event(event)
                         session.add(dbevent)
+                        session.flush()
 
                         if event.event_type == EVENT_STATE_CHANGED:
                             dbstate = States.from_event(event)
