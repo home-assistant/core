@@ -210,7 +210,7 @@ def async_setup(hass, config):
     def async_handle_core_service(call):
         """Service handler for handling core services."""
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            yield from hassio.send_command('/homeassistant/stop')
+            yield from hassio.stop_homeassistant()
             return
 
         error = yield from async_check_config(hass)
@@ -222,7 +222,7 @@ def async_setup(hass, config):
             return
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            yield from hassio.send_command('/homeassistant/restart')
+            yield from hassio.restart_homeassistant()
 
     # Mock core services
     for service in (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
