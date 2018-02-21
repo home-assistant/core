@@ -101,6 +101,5 @@ class InsteonPLMBinarySensor(BinarySensorDevice):
         """Register INSTEON update events."""
         _LOGGER.debug('Device %s added. Now registering callback.',
                       self.address)
-        self.hass.async_add_job(
-            self._insteon_device_state.register_updates,
+        self._insteon_device_state.register_updates(
             self.async_binarysensor_update)
