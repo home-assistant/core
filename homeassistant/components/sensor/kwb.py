@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pykwb==0.0.8']
+REQUIREMENTS = ['pykwb==0.0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,3 +111,8 @@ class KWBSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._sensor.unit_of_measurement
+
+    def update(self):
+        """Check and restart pykwb."""
+        if not self._easyfire.is_alive():
+            self._easyfire.run_thread()
