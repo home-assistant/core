@@ -29,9 +29,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 NEST_MODE_HEAT_COOL = 'heat-cool'
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
-                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE |
-                 SUPPORT_AWAY_MODE | SUPPORT_FAN_MODE)
+# SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
+#                  SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE |
+#                  SUPPORT_AWAY_MODE | SUPPORT_FAN_MODE)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -94,8 +94,13 @@ class NestThermostat(ClimateDevice):
 
     @property
     def supported_features(self):
+        flags = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
+                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE)
+        # If the device has a fan, add the fan as feature
+        if self._has_fan:
+            flags = (flags | SUPPORT_FAN_MODE)
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        return flags
 
     @property
     def unique_id(self):
@@ -205,11 +210,14 @@ class NestThermostat(ClimateDevice):
     @property
     def fan_list(self):
         """List of available fan modes."""
-        return self._fan_list
+        if self._has_fan:
+            return self._fan_list
+        return None
 
     def set_fan_mode(self, fan):
         """Turn fan on/off."""
-        self.device.fan = fan.lower()
+        if self._has_fan:
+            self.device.fan = fan.lower()
 
     @property
     def min_temp(self):
