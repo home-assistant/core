@@ -23,25 +23,10 @@ class TestFilterSensor(unittest.TestCase):
             'sensor': {
                 'platform': 'filter',
                 'entity_id': 'sensor.test_monitored',
-                'filter': 'outlier2'
+                'filter': 'nonexisting'
             }
         }
         with assert_setup_component(0):
-            assert setup_component(self.hass, 'sensor', config)
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-    def test_setup(self):
-        """Test if filter loads."""
-        config = {
-            'sensor': {
-                'platform': 'filter',
-                'entity_id': 'sensor.test_monitored',
-                'filter': 'outlier'
-            }
-        }
-        with assert_setup_component(1):
             assert setup_component(self.hass, 'sensor', config)
 
         self.hass.start()
