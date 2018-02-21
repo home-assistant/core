@@ -372,7 +372,8 @@ class TestComponentLogbook(unittest.TestCase):
         eventB = self.create_state_changed_event(pointA, entity_id2, 20,
                                                  {'auto': True})
 
-        entries = list(logbook.humanify((eventA, eventB)))
+        events = logbook._exclude_events((eventA, eventB), {})
+        entries = list(logbook.humanify(events))
 
         self.assertEqual(1, len(entries))
         self.assert_entry(entries[0], pointA, 'bla', domain='switch',
@@ -389,7 +390,8 @@ class TestComponentLogbook(unittest.TestCase):
         eventB = self.create_state_changed_event(
             pointA, entity_id2, 20, last_changed=pointA, last_updated=pointB)
 
-        entries = list(logbook.humanify((eventA, eventB)))
+        events = logbook._exclude_events((eventA, eventB), {})
+        entries = list(logbook.humanify(events))
 
         self.assertEqual(1, len(entries))
         self.assert_entry(entries[0], pointA, 'bla', domain='switch',
