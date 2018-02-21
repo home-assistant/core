@@ -137,11 +137,11 @@ class InsteonPLMFan(FanEntity):
             hex_speed = SPEED_LOW
         return hex_speed
 
-    #@asyncio.coroutine
-    #def async_added_to_hass(self):
-    #    """Register INSTEON update events."""
-    #    _LOGGER.debug('Device %s added. Now registering callback.',
-    #                  self.address)
-    #    self.hass.async_add_job(
-    #        self._insteon_device_state.register_updates,
-    #        self.async_fan_update)
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register INSTEON update events."""
+        _LOGGER.debug('Device %s added. Now registering callback.',
+                      self.address)
+        self.hass.async_add_job(
+            self._insteon_device_state.register_updates,
+            self.async_fan_update)

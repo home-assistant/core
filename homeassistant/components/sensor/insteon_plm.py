@@ -83,11 +83,11 @@ class InsteonPLMSensorDevice(Entity):
         """Receive notification from transport that new data exists."""
         self.async_schedule_update_ha_state()
 
-    #@asyncio.coroutine
-    #def async_added_to_hass(self):
-    #    """Register INSTEON update events."""
-    #    _LOGGER.debug('Device %s added. Now registering callback.',
-    #                  self.address)
-    #    self.hass.async_add_job(
-    #        self._insteon_device_state.register_updates,
-    #        self.async_sensor_update)
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register INSTEON update events."""
+        _LOGGER.debug('Device %s added. Now registering callback.',
+                      self.address)
+        self.hass.async_add_job(
+            self._insteon_device_state.register_updates,
+            self.async_sensor_update)
