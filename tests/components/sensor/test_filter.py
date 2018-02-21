@@ -2,8 +2,8 @@
 import unittest
 
 from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant
-from tests.common import assert_setup_component
+from tests.common import get_test_home_assistant, assert_setup_component
+
 
 class TestFilterSensor(unittest.TestCase):
     """Test the Statistics sensor."""
@@ -31,9 +31,9 @@ class TestFilterSensor(unittest.TestCase):
 
         self.hass.start()
         self.hass.block_till_done()
-    
+
     def test_setup(self):
-        """Test if filter loads"""
+        """Test if filter loads."""
         config = {
             'sensor': {
                 'platform': 'filter',
@@ -48,7 +48,7 @@ class TestFilterSensor(unittest.TestCase):
         self.hass.block_till_done()
 
     def test_outlier(self):
-        """Test if filter outlier works"""
+        """Test if filter outlier works."""
         config = {
             'sensor': {
                 'platform': 'filter',
@@ -71,7 +71,7 @@ class TestFilterSensor(unittest.TestCase):
         self.assertEqual('22.0', state.state)
 
     def test_lowpass(self):
-        """Test if filter outlier works"""
+        """Test if filter lowpass works."""
         config = {
             'sensor': {
                 'platform': 'filter',
@@ -91,5 +91,4 @@ class TestFilterSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test')
-        self.assertEqual(15.2, round(float(state.state),1))
-
+        self.assertEqual(15.2, round(float(state.state), 1))
