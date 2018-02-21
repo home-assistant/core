@@ -18,6 +18,9 @@ flake8-docstrings==1.0.3
 asynctest>=0.11.1
 
 
+# homeassistant.components.homekit
+HAP-python==1.1.5
+
 # homeassistant.components.notify.html5
 PyJWT==1.5.3
 
@@ -72,7 +75,7 @@ hbmqtt==0.9.1
 holidays==0.9.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180216.0
+home-assistant-frontend==20180221.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -176,7 +179,7 @@ statsd==3.2.1
 uvcclient==0.10.1
 
 # homeassistant.components.config.config_entries
-voluptuous-serialize==0.1
+voluptuous-serialize==1
 
 # homeassistant.components.vultr
 vultr==0.1.2

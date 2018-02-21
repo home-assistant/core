@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.3.6']
+REQUIREMENTS = ['python-miio==0.3.7']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'

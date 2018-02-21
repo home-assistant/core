@@ -23,6 +23,9 @@ attrs==17.4.0
 # homeassistant.components.doorbird
 DoorBirdPy==0.1.2
 
+# homeassistant.components.homekit
+HAP-python==1.1.5
+
 # homeassistant.components.isy994
 PyISY==1.1.0
 
@@ -36,7 +39,7 @@ PyMVGLive==1.1.4
 PyMata==2.14
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.8.0
+PyXiaomiGateway==0.8.1
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
@@ -58,6 +61,9 @@ YesssSMS==0.1.1b3
 
 # homeassistant.components.abode
 abodepy==0.12.2
+
+# homeassistant.components.media_player.frontier_silicon
+afsapi==0.0.3
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
@@ -128,6 +134,9 @@ beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
 bellows==0.5.0
+
+# homeassistant.components.bmw_connected_drive
+bimmer_connected==0.3.0
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -210,7 +219,7 @@ defusedxml==0.5.0
 deluge-client==1.0.5
 
 # homeassistant.components.media_player.denonavr
-denonavr==0.5.5
+denonavr==0.6.0
 
 # homeassistant.components.media_player.directv
 directpy==0.2
@@ -292,9 +301,6 @@ freesms==0.1.2
 # homeassistant.components.switch.fritzdect
 fritzhome==1.0.4
 
-# homeassistant.components.media_player.frontier_silicon
-fsapi==0.0.7
-
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
 
@@ -350,7 +356,7 @@ hipnotify==1.0.8
 holidays==0.9.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180216.0
+home-assistant-frontend==20180221.0
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -448,7 +454,7 @@ liffylights==0.9.4
 lightify==1.0.6.1
 
 # homeassistant.components.light.limitlessled
-limitlessled==1.0.8
+limitlessled==1.1.0
 
 # homeassistant.components.linode
 linode-api==4.1.4b2
@@ -895,7 +901,7 @@ python-digitalocean==1.13.2
 python-ecobee-api==0.0.15
 
 # homeassistant.components.climate.eq3btsmart
-# python-eq3bt==0.1.8
+# python-eq3bt==0.1.9
 
 # homeassistant.components.sensor.etherscan
 python-etherscan-api==0.0.3
@@ -925,7 +931,7 @@ python-juicenet==0.0.5
 # homeassistant.components.remote.xiaomi_miio
 # homeassistant.components.switch.xiaomi_miio
 # homeassistant.components.vacuum.xiaomi_miio
-python-miio==0.3.6
+python-miio==0.3.7
 
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
@@ -1208,7 +1214,7 @@ uvcclient==0.10.1
 venstarcolortouch==0.6
 
 # homeassistant.components.config.config_entries
-voluptuous-serialize==0.1
+voluptuous-serialize==1
 
 # homeassistant.components.volvooncall
 volvooncall==0.4.0
