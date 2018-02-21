@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
-from homeassistant.core import valid_entity_id
+from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify as util_slugify
@@ -145,6 +145,31 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
         value = [ent_id.strip() for ent_id in value.split(',')]
 
     return [entity_id(ent_id) for ent_id in value]
+
+
+class EntitiesDomain():
+    """Class validator if entities belong to domain."""
+
+    def __init__(self, domain: str):
+        """Initialize validator."""
+        self.domain = domain
+
+    def __call__(self, value: Union[str, Sequence]) -> Sequence[str]:
+        """Validate user input."""
+        if value is None or value == []:
+            raise vol.Invalid("Entities can not be None")
+        if isinstance(value, str):
+            value = [ent_id for ent_id in value.split(',')]
+
+        entities = []
+        for ent_id in value:
+            ent_id = entity_id(ent_id.strip())
+            if split_entity_id(ent_id)[0] == self.domain:
+                entities.append(ent_id)
+            else:
+                raise vol.Invalid("Entity ID does not belog to domain")
+
+        return entities
 
 
 def enum(enumClass):
