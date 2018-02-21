@@ -4,7 +4,6 @@ Sensor for monitoring the contents of a folder.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.folder/
 """
-from datetime import datetime as dt
 from datetime import timedelta
 import glob
 import logging
@@ -13,7 +12,6 @@ import os
 import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.template import DATE_STR_FORMAT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
@@ -24,7 +22,7 @@ CONF_FOLDER_PATHS = 'folder'
 CONF_FILTER = 'filter'
 DEFAULT_FILTER = '*'
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FOLDER_PATHS): cv.isdir,
@@ -32,19 +30,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_sorted_files_list(folder_path, filter_term):
-    """Return the sorted list of files, applying filter."""
+def get_files_list(folder_path, filter_term):
+    """Return the list of files, applying filter."""
     query = folder_path + filter_term
     files_list = glob.glob(query)
-    sorted_files_list = sorted(files_list, key=os.path.getmtime)
-    return sorted_files_list
+    return files_list
 
 
-def get_last_updated(recent_modified_file):
-    """Return the time a file was last modified."""
-    modified_time = os.path.getmtime(recent_modified_file)
-    modified_time_datetime = dt.fromtimestamp(modified_time)
-    return modified_time_datetime.strftime(DATE_STR_FORMAT)
+def get_size(files_list):
+    """Return the sum of the size in bytes of files in the list."""
+    size_list = [os.stat(f).st_size for f in files_list]
+    return sum(size_list)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -68,21 +64,16 @@ class Folder(Entity):
         folder_path = os.path.join(folder_path, '')  # If no trailing / add it
         self._folder_path = folder_path   # Need to check its a valid path
         self._filter_term = filter_term
-        self._sorted_files_list = []
         self._number_of_files = None
-        self._recent_modified_file = None
-        self._last_updated = None
+        self._size = None
         self._name = os.path.split(os.path.split(folder_path)[0])[1]
+        self._unit_of_measurement = 'MB'
 
     def update(self):
         """Update the sensor."""
-        self._sorted_files_list = get_sorted_files_list(
-            self._folder_path, self._filter_term)
-
-        self._recent_modified_file = self._sorted_files_list[-1]
-
-        self._last_updated = get_last_updated(
-            self._recent_modified_file)
+        files_list = get_files_list(self._folder_path, self._filter_term)
+        self._number_of_files = len(files_list)
+        self._size = get_size(files_list)
 
     @property
     def name(self):
@@ -92,7 +83,9 @@ class Folder(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._last_updated
+        decimals = 2
+        size_mb = round(self._size/1e6, decimals)
+        return size_mb
 
     @property
     def icon(self):
@@ -105,7 +98,12 @@ class Folder(Entity):
         attr = {
             'path': self._folder_path,
             'filter': self._filter_term,
-            'modified_file': os.path.split(self._recent_modified_file)[1],
-            'number_of_files': len(self._sorted_files_list)
+            'number_of_files': self._number_of_files,
+            'bytes': self._size,
             }
         return attr
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return self._unit_of_measurement
