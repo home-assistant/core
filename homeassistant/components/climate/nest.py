@@ -55,7 +55,8 @@ class NestThermostat(ClimateDevice):
         self._fan_list = [STATE_ON, STATE_AUTO]
 
         # Set the default supported features
-        self._support_flags = flags = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE)
+        self._support_flags = (SUPPORT_TARGET_TEMPERATURE |
+                               SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE)
 
         # Not all nest devices support cooling and heating remove unused
         self._operation_list = [STATE_OFF]
@@ -69,7 +70,8 @@ class NestThermostat(ClimateDevice):
 
         if self.device.can_heat and self.device.can_cool:
             self._operation_list.append(STATE_AUTO)
-            self._support_flags = (self._support_flags | SUPPORT_TARGET_TEMPERATURE_HIGH |
+            self._support_flags = (self._support_flags |
+                                   SUPPORT_TARGET_TEMPERATURE_HIGH |
                                    SUPPORT_TARGET_TEMPERATURE_LOW)
 
         self._operation_list.append(STATE_ECO)
