@@ -71,6 +71,22 @@ class HassIO(object):
         return self.send_command("/homeassistant/info", method="get")
 
     @_api_bool
+    def restart_homeassistant(self):
+        """Restart Home-Assistant container.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/homeassistant/restart")
+
+    @_api_bool
+    def stop_homeassistant(self):
+        """Restart Home-Assistant container.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/homeassistant/stop")
+
+    @_api_bool
     def update_hass_api(self, http_config):
         """Update Home Assistant API data on Hass.io.
 
