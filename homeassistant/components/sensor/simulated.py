@@ -1,7 +1,7 @@
 """
 Adds a simulated sensor.
 
-For more details about this platform, refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.simulated/
 """
 import datetime as datetime
@@ -87,13 +87,13 @@ class SimulatedSensor(Entity):
         self._state = None
 
     def time_delta(self):
-        """"Return the time difference between the current measurement
-        and the start of the session."""
+        """"Return the time delta."""
         dt0 = self._start_time
         dt1 = datetime.datetime.now()
         return dt1 - dt0
 
     def signal_calc(self):
+        """Calculate the signal."""
         m0 = self._mean
         a0 = self._amp
         dt = self.time_delta().total_seconds()*1e6  # convert to  milliseconds
@@ -105,6 +105,7 @@ class SimulatedSensor(Entity):
         return m0 + periodic + noise
 
     def update(self):
+        """Update the sensor."""
         self._state = self.signal_calc()
 
     @property
