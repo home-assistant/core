@@ -126,8 +126,8 @@ def is_hassio(hass):
 @asyncio.coroutine
 def async_check_config(hass):
     """Check configuration over Hass.io API."""
-    result = yield from hass.data[DOMAIN].send_command(
-        '/homeassistant/check', timeout=300)
+    hassio = hass.data[DOMAIN]
+    result = yield from hassio.check_homeassistant_config()
 
     if not result:
         return "Hass.io config check API error"
@@ -197,8 +197,7 @@ def async_setup(hass, config):
         """Update last available Home Assistant version."""
         data = yield from hassio.get_homeassistant_info()
         if data:
-            hass.data[DATA_HOMEASSISTANT_VERSION] = \
-                data['data']['last_version']
+            hass.data[DATA_HOMEASSISTANT_VERSION] = data['last_version']
 
         hass.helpers.event.async_track_point_in_utc_time(
             update_homeassistant_version, utcnow() + HASSIO_UPDATE_INTERVAL)
@@ -210,7 +209,7 @@ def async_setup(hass, config):
     def async_handle_core_service(call):
         """Service handler for handling core services."""
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            yield from hassio.send_command('/homeassistant/stop')
+            yield from hassio.stop_homeassistant()
             return
 
         error = yield from async_check_config(hass)
@@ -222,7 +221,7 @@ def async_setup(hass, config):
             return
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            yield from hassio.send_command('/homeassistant/restart')
+            yield from hassio.restart_homeassistant()
 
     # Mock core services
     for service in (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
