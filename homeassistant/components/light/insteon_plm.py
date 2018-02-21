@@ -24,6 +24,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Insteon PLM device."""
     entities = []
     plm = hass.data['insteon_plm']
+    _LOGGER.debug("Got here light")
+    _LOGGER.debug(discovery_info)
 
     address = discovery_info['address']
     device = plm.devices[address]
@@ -114,6 +116,4 @@ class InsteonPLMDimmerDevice(Light):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register INSTEON update events."""
-        _LOGGER.debug('Device %s added. Now registering callback.',
-                      self.address)
         self._insteon_device_state.register_updates(self.async_light_update)
