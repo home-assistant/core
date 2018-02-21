@@ -60,5 +60,5 @@ class TestFolderSensor(unittest.TestCase):
             setup_component(self.hass, 'sensor', config))
         assert len(self.hass.states.entity_ids()) == 1
         state = self.hass.states.get('sensor.test_folder')
-        #assert state.state == '0.0'
+        assert state.state == '0.0'
         assert state.attributes.get('number_of_files') == 1
