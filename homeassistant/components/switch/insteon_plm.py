@@ -99,10 +99,14 @@ class InsteonPLMSwitchDevice(SwitchDevice):
         """Turn device off."""
         self._insteon_device_state.off()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Register INSTEON update events."""
-        self._insteon_device_state.register_updates(self.async_switch_update)
+    #@asyncio.coroutine
+    #def async_added_to_hass(self):
+    #    """Register INSTEON update events."""
+    #    _LOGGER.debug('Device %s added. Now registering callback.',
+    #                  self.address)
+    #    self.hass.async_add_job(
+    #        self._insteon_device_state.register_updates,
+    #        self.async_switch_update)
 
 
 class InsteonPLMOpenClosedDevice(SwitchDevice):
@@ -162,11 +166,11 @@ class InsteonPLMOpenClosedDevice(SwitchDevice):
         """Turn device off."""
         self._insteon_device_state.close()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Register INSTEON update events."""
-        _LOGGER.debug('Device %s added. Now registering callback.',
-                      self.address)
-        self.hass.async_add_job(
-            self._insteon_device_state.register_updates,
-            self.async_relay_update)
+    #@asyncio.coroutine
+    #def async_added_to_hass(self):
+    #    """Register INSTEON update events."""
+    #    _LOGGER.debug('Device %s added. Now registering callback.',
+    #                  self.address)
+    #    self.hass.async_add_job(
+    #        self._insteon_device_state.register_updates,
+    #        self.async_relay_update)
