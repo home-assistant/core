@@ -126,8 +126,8 @@ def is_hassio(hass):
 @asyncio.coroutine
 def async_check_config(hass):
     """Check configuration over Hass.io API."""
-    result = yield from hass.data[DOMAIN].send_command(
-        '/homeassistant/check', timeout=300)
+    hassio = hass.data[DOMAIN]
+    result = yield from hassio.check_homeassistant_config()
 
     if not result:
         return "Hass.io config check API error"
