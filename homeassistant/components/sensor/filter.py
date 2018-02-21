@@ -1,23 +1,6 @@
 """
 Support for filtering for sensor values.
 
-Example configuration:
-
-sensor:
-  - platform: simulated
-    name: 'simulated relative humidity'
-    unit: '%'
-    amplitude: 0 # Turns off sine wave
-    mean: 50
-    spread: 10
-    seed: 999
-
-  - platform: filter
-    entity_id: sensor.simulated_relative_humidity
-    name: lowpass
-    options:
-      time_constant: 10
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.filter/
 """
@@ -41,6 +24,7 @@ ATTR_PRE_FILTER = 'pre_filter_state'
 
 CONF_FILTER_OPTIONS = 'options'
 CONF_FILTER_NAME = 'filter'
+CONF_WINDOW_SIZE = 'window_size'
 
 DEFAULT_NAME_TEMPLATE = "{} filter {}"
 ICON = 'mdi: chart-line-variant'
@@ -48,15 +32,16 @@ ICON = 'mdi: chart-line-variant'
 # ALL filter arguments must be OPTIONAL
 FILTER_SCHEMA = vol.Schema({
     vol.Optional('time_constant'): vol.Coerce(int),
-    vol.Optional('constant'): vol.Coerce(float)
+    vol.Optional('radius'): vol.Coerce(float)
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_FILTER_NAME):
         vol.In(list(FILTERS)),
-    vol.Optional(CONF_FILTER_OPTIONS): FILTER_SCHEMA,
     vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(CONF_WINDOW_SIZE): vol.Coerce(int),
+    vol.Optional(CONF_FILTER_OPTIONS): FILTER_SCHEMA,
 })
 
 
@@ -65,12 +50,13 @@ async def async_setup_platform(hass, config, async_add_devices,
     """Set up the Filter sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     filter_name = config.get(CONF_FILTER_NAME)
+    wsize = config.get(CONF_WINDOW_SIZE)
     name = config.get(CONF_NAME)
     if name is None:
         name = DEFAULT_NAME_TEMPLATE.format(entity_id, filter_name)
 
     async_add_devices([
-            FilterSensor(hass, name, entity_id, filter_name,
+            FilterSensor(hass, name, entity_id, filter_name, wsize,
                          config.get(CONF_FILTER_OPTIONS, dict()))
         ], True)
 
@@ -78,14 +64,14 @@ async def async_setup_platform(hass, config, async_add_devices,
 class FilterSensor(Entity):
     """Representation of a Filter sensor."""
 
-    def __init__(self, hass, name, entity_id, filter_name, filter_args):
+    def __init__(self, hass, name, entity_id, filter_name, wsize, filter_args):
         """Initialize the Filter sensor."""
         self._name = name
         self._filter_name = filter_name
         self._unit_of_measurement = None
         self._pre_filter_state = self._state = None
 
-        self._filterdata = self.filterdata_factory(filter_name,
+        self._filterdata = self.filterdata_factory(filter_name, wsize,
                                                    **filter_args)(self._name)
 
         @callback
@@ -152,7 +138,7 @@ class FilterSensor(Entity):
 
         return state_attr
 
-    def filterdata_factory(self, filter_function, **kwargs):
+    def filterdata_factory(self, filter_function, window_size, **kwargs):
         """Factory to create filters with user provided arguments."""
         class FilterData(object):
             def __init__(self, sensor_name):
@@ -161,7 +147,7 @@ class FilterSensor(Entity):
                 self.entity_id = sensor_name
 
             @property
-            @Filter(filter_function, **kwargs)
+            @Filter(filter_function, window_size, **kwargs)
             def data(self):
                 return self._data
 

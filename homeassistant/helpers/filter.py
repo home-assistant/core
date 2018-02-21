@@ -57,7 +57,11 @@ class Filter(object):
             except TypeError:
                 return None
 
-            self.states.append(filtered_state)
+            if filtered_state is None:
+                filtered_state = self.states[-1]
+                self.states.popleft()
+            else:
+                self.states.append(filtered_state)
 
             """ filter_stats makes available few statistics to the sensor """
             sensor_object.filter_stats = self.filter_stats
@@ -79,24 +83,24 @@ def _outlier(new_state, stats, states, **kwargs):
         new_state (float): new value to the series
         stats (dict): used to feedback stats on the filter
         states (deque): previous data series
-        constant (int): median multiplier/band range
+        radius (float): band radius
 
     Returns:
         the original new_state case not an outlier
         the median of the window case it's an outlier
 
     """
-    constant = kwargs.pop('constant', 0.10)
+    radius = kwargs.pop('radius', 5)
     erasures = stats.get('erasures', 0)
 
     if (len(states) > 1 and
             abs(new_state - statistics.median(states)) >
-            constant*statistics.median(states)):
+            radius):
 
         stats['erasures'] = erasures+1
         Filter.logger.warning("Outlier in %s: %s",
                               Filter.sensor_name, float(new_state))
-        return statistics.median(states)
+        return None 
     return new_state
 
 
