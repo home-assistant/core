@@ -17,7 +17,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
-
 CONF_FOLDER_PATHS = 'folder'
 CONF_FILTER = 'filter'
 DEFAULT_FILTER = '*'
