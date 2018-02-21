@@ -32,9 +32,10 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the INSTEON PLM device class for the hass platform."""
-    _LOGGER.debug("Got here fan")
     entities = []
     plm = hass.data['insteon_plm']
+    _LOGGER.debug("Got here fan")
+    _LOGGER.debug(discovery_info)
 
     address = discovery_info['address']
     device = plm.devices[address]
