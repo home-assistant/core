@@ -5,17 +5,17 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.swiss_public_transport/
 """
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['python_opendata_transport==0.0.3']
 
@@ -51,36 +51,36 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Swiss public transport sensor."""
+    from opendata_transport import OpendataTransport, exceptions
+
     name = config.get(CONF_NAME)
     start = config.get(CONF_START)
     destination = config.get(CONF_DESTINATION)
 
-    connection = SwissPublicTransportSensor(hass, start, destination, name)
-    yield from connection.async_update()
+    session = async_get_clientsession(hass)
+    opendata = OpendataTransport(start, destination, hass.loop, session)
 
-    if connection.state is None:
+    try:
+        yield from opendata.async_get_data()
+    except exceptions.OpendataTransportError:
         _LOGGER.error(
             "Check at http://transport.opendata.ch/examples/stationboard.html "
             "if your station names are valid")
-        return False
+        return
 
-    async_add_devices([connection])
+    async_add_devices(
+        [SwissPublicTransportSensor(opendata, start, destination, name)])
 
 
 class SwissPublicTransportSensor(Entity):
     """Implementation of an Swiss public transport sensor."""
 
-    def __init__(self, hass, start, destination, name):
+    def __init__(self, opendata, start, destination, name):
         """Initialize the sensor."""
-        from opendata_transport import OpendataTransport
-
-        self.hass = hass
+        self._opendata = opendata
         self._name = name
         self._from = start
         self._to = destination
-        self._websession = async_get_clientsession(self.hass)
-        self._opendata = OpendataTransport(
-            self._from, self._to, self.hass.loop, self._websession)
 
     @property
     def name(self):
@@ -131,4 +131,3 @@ class SwissPublicTransportSensor(Entity):
             yield from self._opendata.async_get_data()
         except OpendataTransportError:
             _LOGGER.error("Unable to retrieve data from transport.opendata.ch")
-            self._opendata = None

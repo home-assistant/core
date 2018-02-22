@@ -61,7 +61,7 @@ def repr_helper(inp: Any) -> str:
 
 
 def convert(value: T, to_type: Callable[[T], U],
-            default: Optional[U]=None) -> Optional[U]:
+            default: Optional[U] = None) -> Optional[U]:
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
@@ -164,6 +164,7 @@ class OrderedSet(MutableSet):
         """Check if key is in set."""
         return key in self.map
 
+    # pylint: disable=arguments-differ
     def add(self, key):
         """Add an element to the end of the set."""
         if key not in self.map:
@@ -180,6 +181,7 @@ class OrderedSet(MutableSet):
         curr = begin[1]
         curr[2] = begin[1] = self.map[key] = [key, curr, begin]
 
+    # pylint: disable=arguments-differ
     def discard(self, key):
         """Discard an element from the set."""
         if key in self.map:
@@ -227,7 +229,7 @@ class OrderedSet(MutableSet):
         return '%s(%r)' % (self.__class__.__name__, list(self))
 
     def __eq__(self, other):
-        """Return the comparision."""
+        """Return the comparison."""
         if isinstance(other, OrderedSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
@@ -299,7 +301,7 @@ class Throttle(object):
                 return None
 
             # Check if method is never called or no_throttle is given
-            force = not throttle[1] or kwargs.pop('no_throttle', False)
+            force = kwargs.pop('no_throttle', False) or not throttle[1]
 
             try:
                 if force or utcnow() - throttle[1] > self.min_time:

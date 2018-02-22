@@ -7,11 +7,10 @@ https://home-assistant.io/components/abode/
 import asyncio
 import logging
 from functools import partial
-from os import path
+from requests.exceptions import HTTPError, ConnectTimeout
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_DATE, ATTR_TIME, ATTR_ENTITY_ID, CONF_USERNAME,
     CONF_PASSWORD, CONF_EXCLUDE, CONF_NAME, CONF_LIGHTS,
@@ -19,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
-from requests.exceptions import HTTPError, ConnectTimeout
 
 REQUIREMENTS = ['abodepy==0.12.2']
 
@@ -188,22 +186,16 @@ def setup_hass_services(hass):
         for device in target_devices:
             device.trigger()
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))[DOMAIN]
-
     hass.services.register(
         DOMAIN, SERVICE_SETTINGS, change_setting,
-        descriptions.get(SERVICE_SETTINGS),
         schema=CHANGE_SETTING_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_CAPTURE_IMAGE, capture_image,
-        descriptions.get(SERVICE_CAPTURE_IMAGE),
         schema=CAPTURE_IMAGE_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_TRIGGER, trigger_quick_action,
-        descriptions.get(SERVICE_TRIGGER),
         schema=TRIGGER_SCHEMA)
 
 

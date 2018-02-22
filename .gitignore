@@ -16,7 +16,9 @@ Icon
 # Thumbnails
 ._*
 
+# IntelliJ IDEA
 .idea
+*.iml
 
 # pytest
 .cache
@@ -74,6 +76,7 @@ pip-selfcheck.json
 venv
 .venv
 Pipfile*
+share/*
 
 # vimmy stuff
 *.swp
@@ -97,3 +100,6 @@ desktop.ini
 /home-assistant.pyproj
 /home-assistant.sln
 /.vs/*
+
+# mypy
+/.mypy_cache/*

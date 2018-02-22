@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.soundtouch/
 """
 import logging
 
-from os import path
 import re
 import voluptuous as vol
 
@@ -15,8 +14,7 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     SUPPORT_VOLUME_SET, SUPPORT_TURN_ON, SUPPORT_PLAY, MediaPlayerDevice,
-    PLATFORM_SCHEMA)
-from homeassistant.config import load_yaml_config_file
+    DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, CONF_PORT,
                                  STATE_PAUSED, STATE_PLAYING,
                                  STATE_UNAVAILABLE)
@@ -25,7 +23,6 @@ REQUIREMENTS = ['libsoundtouch==0.7.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'media_player'
 SERVICE_PLAY_EVERYWHERE = 'soundtouch_play_everywhere'
 SERVICE_CREATE_ZONE = 'soundtouch_create_zone'
 SERVICE_ADD_ZONE_SLAVE = 'soundtouch_add_zone_slave'
@@ -107,9 +104,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
         add_devices([soundtouch_device])
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     def service_handle(service):
         """Handle the applying of a service."""
         master_device_id = service.data.get('master')
@@ -140,19 +134,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hass.services.register(DOMAIN, SERVICE_PLAY_EVERYWHERE,
                            service_handle,
-                           descriptions.get(SERVICE_PLAY_EVERYWHERE),
                            schema=SOUNDTOUCH_PLAY_EVERYWHERE)
     hass.services.register(DOMAIN, SERVICE_CREATE_ZONE,
                            service_handle,
-                           descriptions.get(SERVICE_CREATE_ZONE),
                            schema=SOUNDTOUCH_CREATE_ZONE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_REMOVE_ZONE_SLAVE,
                            service_handle,
-                           descriptions.get(SERVICE_REMOVE_ZONE_SLAVE),
                            schema=SOUNDTOUCH_REMOVE_ZONE_SCHEMA)
     hass.services.register(DOMAIN, SERVICE_ADD_ZONE_SLAVE,
                            service_handle,
-                           descriptions.get(SERVICE_ADD_ZONE_SLAVE),
                            schema=SOUNDTOUCH_ADD_ZONE_SCHEMA)
 
 
@@ -306,7 +296,7 @@ class SoundTouchDevice(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        _LOGGER.debug("Starting media with media_id: " + str(media_id))
+        _LOGGER.debug("Starting media with media_id: %s", media_id)
         if re.match(r'http://', str(media_id)):
             # URL
             _LOGGER.debug("Playing URL %s", str(media_id))
@@ -317,11 +307,10 @@ class SoundTouchDevice(MediaPlayerDevice):
             preset = next([preset for preset in presets if
                            preset.preset_id == str(media_id)].__iter__(), None)
             if preset is not None:
-                _LOGGER.debug("Playing preset: " + preset.name)
+                _LOGGER.debug("Playing preset: %s", preset.name)
                 self._device.select_preset(preset)
             else:
-                _LOGGER.warning(
-                    "Unable to find preset with id " + str(media_id))
+                _LOGGER.warning("Unable to find preset with id %s", media_id)
 
     def create_zone(self, slaves):
         """
@@ -333,8 +322,8 @@ class SoundTouchDevice(MediaPlayerDevice):
         if not slaves:
             _LOGGER.warning("Unable to create zone without slaves")
         else:
-            _LOGGER.info(
-                "Creating zone with master " + str(self.device.config.name))
+            _LOGGER.info("Creating zone with master %s",
+                         self.device.config.name)
             self.device.create_zone([slave.device for slave in slaves])
 
     def remove_zone_slave(self, slaves):
@@ -351,8 +340,8 @@ class SoundTouchDevice(MediaPlayerDevice):
         if not slaves:
             _LOGGER.warning("Unable to find slaves to remove")
         else:
-            _LOGGER.info("Removing slaves from zone with master " +
-                         str(self.device.config.name))
+            _LOGGER.info("Removing slaves from zone with master %s",
+                         self.device.config.name)
             self.device.remove_zone_slave([slave.device for slave in slaves])
 
     def add_zone_slave(self, slaves):
@@ -367,7 +356,6 @@ class SoundTouchDevice(MediaPlayerDevice):
         if not slaves:
             _LOGGER.warning("Unable to find slaves to add")
         else:
-            _LOGGER.info(
-                "Adding slaves to zone with master " + str(
-                    self.device.config.name))
+            _LOGGER.info("Adding slaves to zone with master %s",
+                         self.device.config.name)
             self.device.add_zone_slave([slave.device for slave in slaves])

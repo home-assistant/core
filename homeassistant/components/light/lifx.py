@@ -4,36 +4,33 @@ Support for the LIFX platform that implements lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.lifx/
 """
-import logging
 import asyncio
-import sys
-import math
-from os import path
-from functools import partial
 from datetime import timedelta
+from functools import partial
+import logging
+import math
+import sys
 
 import voluptuous as vol
 
-from homeassistant.components.light import (
-    Light, DOMAIN, PLATFORM_SCHEMA, LIGHT_TURN_ON_SCHEMA,
-    ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_NAME, ATTR_RGB_COLOR,
-    ATTR_XY_COLOR, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_TRANSITION, ATTR_EFFECT,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_XY_COLOR, SUPPORT_TRANSITION, SUPPORT_EFFECT,
-    VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT,
-    preprocess_turn_on_alternatives)
-from homeassistant.config import load_yaml_config_file
-from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant import util
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_NAME, ATTR_COLOR_TEMP,
+    ATTR_EFFECT, ATTR_KELVIN, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_XY_COLOR,
+    DOMAIN, LIGHT_TURN_ON_SCHEMA, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
+    SUPPORT_XY_COLOR, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
+    preprocess_turn_on_alternatives)
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.service import extract_entity_ids
-import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.6.0', 'aiolifx_effects==0.1.2']
+REQUIREMENTS = ['aiolifx==0.6.1', 'aiolifx_effects==0.1.2']
 
 UDP_BROADCAST_PORT = 56700
 
@@ -157,20 +154,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     return True
 
 
-def lifxwhite(device):
-    """Return whether this is a white-only bulb."""
-    features = aiolifx().products.features_map.get(device.product, None)
-    if features:
-        return not features["color"]
-    return False
-
-
-def lifxmultizone(device):
-    """Return whether this is a multizone bulb/strip."""
-    features = aiolifx().products.features_map.get(device.product, None)
-    if features:
-        return features["multizone"]
-    return False
+def lifx_features(device):
+    """Return a feature map for this device, or a default map if unknown."""
+    return aiolifx().products.features_map.get(device.product) or \
+        aiolifx().products.features_map.get(1)
 
 
 def find_hsbk(**kwargs):
@@ -220,13 +207,10 @@ class LIFXManager(object):
         self.async_add_devices = async_add_devices
         self.effects_conductor = aiolifx_effects().Conductor(loop=hass.loop)
 
-        descriptions = load_yaml_config_file(
-            path.join(path.dirname(__file__), 'services.yaml'))
+        self.register_set_state()
+        self.register_effects()
 
-        self.register_set_state(descriptions)
-        self.register_effects(descriptions)
-
-    def register_set_state(self, descriptions):
+    def register_set_state(self):
         """Register the LIFX set_state service call."""
         @asyncio.coroutine
         def async_service_handle(service):
@@ -241,10 +225,9 @@ class LIFXManager(object):
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_LIFX_SET_STATE, async_service_handle,
-            descriptions.get(SERVICE_LIFX_SET_STATE),
             schema=LIFX_SET_STATE_SCHEMA)
 
-    def register_effects(self, descriptions):
+    def register_effects(self):
         """Register the LIFX effects as hass service calls."""
         @asyncio.coroutine
         def async_service_handle(service):
@@ -256,17 +239,14 @@ class LIFXManager(object):
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_EFFECT_PULSE, async_service_handle,
-            descriptions.get(SERVICE_EFFECT_PULSE),
             schema=LIFX_EFFECT_PULSE_SCHEMA)
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_EFFECT_COLORLOOP, async_service_handle,
-            descriptions.get(SERVICE_EFFECT_COLORLOOP),
             schema=LIFX_EFFECT_COLORLOOP_SCHEMA)
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_EFFECT_STOP, async_service_handle,
-            descriptions.get(SERVICE_EFFECT_STOP),
             schema=LIFX_EFFECT_STOP_SCHEMA)
 
     @asyncio.coroutine
@@ -315,12 +295,12 @@ class LIFXManager(object):
 
     @callback
     def register(self, device):
-        """Handler for newly detected bulb."""
+        """Handle newly detected bulb."""
         self.hass.async_add_job(self.async_register(device))
 
     @asyncio.coroutine
     def async_register(self, device):
-        """Handler for newly detected bulb."""
+        """Handle newly detected bulb."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
             entity.registered = True
@@ -342,12 +322,12 @@ class LIFXManager(object):
                 device.retry_count = MESSAGE_RETRIES
                 device.unregister_timeout = UNAVAILABLE_GRACE
 
-                if lifxwhite(device):
-                    entity = LIFXWhite(device, self.effects_conductor)
-                elif lifxmultizone(device):
+                if lifx_features(device)["multizone"]:
                     entity = LIFXStrip(device, self.effects_conductor)
-                else:
+                elif lifx_features(device)["color"]:
                     entity = LIFXColor(device, self.effects_conductor)
+                else:
+                    entity = LIFXWhite(device, self.effects_conductor)
 
                 _LOGGER.debug("%s register READY", entity.who)
                 self.entities[device.mac_addr] = entity
@@ -418,6 +398,11 @@ class LIFXLight(Light):
         return self.registered
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self.device.mac_addr
+
+    @property
     def name(self):
         """Return the name of the device."""
         return self.device.label
@@ -426,6 +411,29 @@ class LIFXLight(Light):
     def who(self):
         """Return a string identifying the device."""
         return "%s (%s)" % (self.device.ip_addr, self.name)
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        kelvin = lifx_features(self.device)['max_kelvin']
+        return math.floor(color_util.color_temperature_kelvin_to_mired(kelvin))
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        kelvin = lifx_features(self.device)['min_kelvin']
+        return math.ceil(color_util.color_temperature_kelvin_to_mired(kelvin))
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        support = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_EFFECT
+
+        device_features = lifx_features(self.device)
+        if device_features['min_kelvin'] != device_features['max_kelvin']:
+            support |= SUPPORT_COLOR_TEMP
+
+        return support
 
     @property
     def brightness(self):
@@ -572,22 +580,6 @@ class LIFXWhite(LIFXLight):
     """Representation of a white-only LIFX light."""
 
     @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        return math.floor(color_util.color_temperature_kelvin_to_mired(6500))
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        return math.ceil(color_util.color_temperature_kelvin_to_mired(2700))
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_TRANSITION |
-                SUPPORT_EFFECT)
-
-    @property
     def effect_list(self):
         """Return the list of supported effects for this light."""
         return [
@@ -600,20 +592,11 @@ class LIFXColor(LIFXLight):
     """Representation of a color LIFX light."""
 
     @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        return math.floor(color_util.color_temperature_kelvin_to_mired(9000))
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        return math.ceil(color_util.color_temperature_kelvin_to_mired(2500))
-
-    @property
     def supported_features(self):
         """Flag supported features."""
-        return (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_TRANSITION |
-                SUPPORT_EFFECT | SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR)
+        support = super().supported_features
+        support |= SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR
+        return support
 
     @property
     def effect_list(self):

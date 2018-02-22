@@ -10,12 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT, CONF_TOKEN)
+    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_HOST, CONF_PORT, CONF_TOKEN,
+    CONF_SSL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['plexapi==3.0.3']
+REQUIREMENTS = ['plexapi==3.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ CONF_SERVER = 'server'
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Plex'
 DEFAULT_PORT = 32400
+DEFAULT_SSL = False
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -35,6 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_SERVER): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
 })
 
 
@@ -48,11 +51,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     plex_host = config.get(CONF_HOST)
     plex_port = config.get(CONF_PORT)
     plex_token = config.get(CONF_TOKEN)
-    plex_url = 'http://{}:{}'.format(plex_host, plex_port)
 
-    add_devices([PlexSensor(
-        name, plex_url, plex_user, plex_password, plex_server,
-        plex_token)], True)
+    plex_url = '{}://{}:{}'.format('https' if config.get(CONF_SSL) else 'http',
+                                   plex_host, plex_port)
+
+    import plexapi.exceptions
+
+    try:
+        add_devices([PlexSensor(
+            name, plex_url, plex_user, plex_password, plex_server,
+            plex_token)], True)
+    except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
+            plexapi.exceptions.NotFound) as error:
+        _LOGGER.error(error)
+        return
 
 
 class PlexSensor(Entity):

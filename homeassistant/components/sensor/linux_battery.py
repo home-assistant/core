@@ -35,17 +35,25 @@ ATTR_STATUS = 'status'
 ATTR_VOLTAGE_MIN_DESIGN = 'voltage_min_design'
 ATTR_VOLTAGE_NOW = 'voltage_now'
 
+ATTR_HEALTH = 'health'
+ATTR_STATUS = 'status'
+
 CONF_BATTERY = 'battery'
+CONF_SYSTEM = 'system'
 
 DEFAULT_BATTERY = 1
 DEFAULT_NAME = 'Battery'
 DEFAULT_PATH = '/sys/class/power_supply'
+DEFAULT_SYSTEM = 'linux'
+
+SYSTEMS = ['android', 'linux']
 
 ICON = 'mdi:battery'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SYSTEM, default=DEFAULT_SYSTEM): vol.In(SYSTEMS),
 })
 
 
@@ -53,20 +61,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Linux Battery sensor."""
     name = config.get(CONF_NAME)
     battery_id = config.get(CONF_BATTERY)
+    system = config.get(CONF_SYSTEM)
 
     try:
-        os.listdir(os.path.join(DEFAULT_PATH, 'BAT{}'.format(battery_id)))
+        if system == 'android':
+            os.listdir(os.path.join(DEFAULT_PATH, 'battery'))
+        else:
+            os.listdir(os.path.join(DEFAULT_PATH, 'BAT{}'.format(battery_id)))
     except FileNotFoundError:
         _LOGGER.error("No battery found")
         return False
 
-    add_devices([LinuxBatterySensor(name, battery_id)], True)
+    add_devices([LinuxBatterySensor(name, battery_id, system)], True)
 
 
 class LinuxBatterySensor(Entity):
     """Representation of a Linux Battery sensor."""
 
-    def __init__(self, name, battery_id):
+    def __init__(self, name, battery_id, system):
         """Initialize the battery sensor."""
         import batinfo
         self._battery = batinfo.Batteries()
@@ -74,6 +86,7 @@ class LinuxBatterySensor(Entity):
         self._name = name
         self._battery_stat = None
         self._battery_id = battery_id - 1
+        self._system = system
         self._unit_of_measurement = '%'
 
     @property
@@ -99,6 +112,13 @@ class LinuxBatterySensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
+        if self._system == 'android':
+            return {
+                ATTR_NAME: self._battery_stat.name,
+                ATTR_PATH: self._battery_stat.path,
+                ATTR_HEALTH: self._battery_stat.health,
+                ATTR_STATUS: self._battery_stat.status,
+            }
         return {
             ATTR_NAME: self._battery_stat.name,
             ATTR_PATH: self._battery_stat.path,

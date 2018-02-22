@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     serport = connection.connection(ipaddress, port)
     serport.open()
 
-    for thermostat, tstat in tstats.items():
+    for tstat in tstats.values():
         add_devices([
             HeatmiserV3Thermostat(
                 heatmiser, tstat.get(CONF_ID), tstat.get(CONF_NAME), serport)

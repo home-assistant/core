@@ -5,14 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.knx/
 """
 import asyncio
+
 import voluptuous as vol
 
-from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 CONF_ADDRESS = 'address'
 CONF_TYPE = 'type'
@@ -28,19 +29,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up sensor(s) for KNX platform."""
-    if DATA_KNX not in hass.data \
-            or not hass.data[DATA_KNX].initialized:
-        return False
-
     if discovery_info is not None:
         async_add_devices_discovery(hass, discovery_info, async_add_devices)
     else:
         async_add_devices_config(hass, config, async_add_devices)
-
-    return True
 
 
 @callback
@@ -55,7 +49,7 @@ def async_add_devices_discovery(hass, discovery_info, async_add_devices):
 
 @callback
 def async_add_devices_config(hass, config, async_add_devices):
-    """Set up sensor for KNX platform configured within plattform."""
+    """Set up sensor for KNX platform configured within platform."""
     import xknx
     sensor = xknx.devices.Sensor(
         hass.data[DATA_KNX].xknx,
@@ -70,7 +64,7 @@ class KNXSensor(Entity):
     """Representation of a KNX sensor."""
 
     def __init__(self, hass, device):
-        """Initialization of KNXSensor."""
+        """Initialize of a KNX sensor."""
         self.device = device
         self.hass = hass
         self.async_register_callbacks()
@@ -80,7 +74,7 @@ class KNXSensor(Entity):
         """Register callbacks to update hass after device was changed."""
         @asyncio.coroutine
         def after_update_callback(device):
-            """Callback after device was updated."""
+            """Call after device was updated."""
             # pylint: disable=unused-argument
             yield from self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
@@ -89,6 +83,11 @@ class KNXSensor(Entity):
     def name(self):
         """Return the name of the KNX device."""
         return self.device.name
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self.hass.data[DATA_KNX].connected
 
     @property
     def should_poll(self):

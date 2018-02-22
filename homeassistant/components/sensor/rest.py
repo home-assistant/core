@@ -13,10 +13,11 @@ from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE,
-    CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, CONF_VERIFY_SSL, CONF_USERNAME,
-    CONF_PASSWORD, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION, CONF_HEADERS)
+    CONF_AUTHENTICATION, CONF_FORCE_UPDATE, CONF_HEADERS, CONF_NAME,
+    CONF_METHOD, CONF_PASSWORD, CONF_PAYLOAD, CONF_RESOURCE,
+    CONF_UNIT_OF_MEASUREMENT, CONF_USERNAME,
+    CONF_VALUE_TEMPLATE, CONF_VERIFY_SSL,
+    HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -25,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'REST Sensor'
 DEFAULT_VERIFY_SSL = True
+DEFAULT_FORCE_UPDATE = False
 
 CONF_JSON_ATTRS = 'json_attributes'
 METHODS = ['POST', 'GET']
@@ -43,6 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 })
 
 
@@ -59,6 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     json_attrs = config.get(CONF_JSON_ATTRS)
+    force_update = config.get(CONF_FORCE_UPDATE)
 
     if value_template is not None:
         value_template.hass = hass
@@ -74,14 +78,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rest.update()
 
     add_devices([RestSensor(
-        hass, rest, name, unit, value_template, json_attrs)], True)
+        hass, rest, name, unit, value_template, json_attrs, force_update
+    )], True)
 
 
 class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
-    def __init__(self, hass, rest, name,
-                 unit_of_measurement, value_template, json_attrs):
+    def __init__(self, hass, rest, name, unit_of_measurement,
+                 value_template, json_attrs, force_update):
         """Initialize the REST sensor."""
         self._hass = hass
         self.rest = rest
@@ -91,6 +96,7 @@ class RestSensor(Entity):
         self._value_template = value_template
         self._json_attrs = json_attrs
         self._attributes = None
+        self._force_update = force_update
 
     @property
     def name(self):
@@ -111,6 +117,11 @@ class RestSensor(Entity):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def force_update(self):
+        """Force update."""
+        return self._force_update
 
     def update(self):
         """Get the latest data from REST API and update the state."""

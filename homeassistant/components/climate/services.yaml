@@ -80,7 +80,22 @@ set_swing_mode:
       example: 'climate.nest'
     swing_mode:
       description: New value of swing mode.
-      example: 1
+      example:
+
+turn_on:
+  description: Turn climate device on.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.kitchen'
+
+turn_off:
+  description: Turn climate device off.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.kitchen'
+
 ecobee_set_fan_min_on_time:
   description: Set the minimum fan on time.
   fields:
@@ -100,3 +115,40 @@ ecobee_resume_program:
     resume_all:
       description: Resume all events and return to the scheduled program. This default to false which removes only the top event.
       example: true
+
+nuheat_resume_program:
+  description: Resume the programmed schedule.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.kitchen'
+
+econet_add_vacation:
+  description: Add a vacation to your water heater.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.water_heater'
+    start_date:
+      description: The timestamp of when the vacation should start. (Optional, defaults to now)
+      example: 1513186320
+    end_date:
+      description: The timestamp of when the vacation should end.
+      example: 1513445520
+
+econet_delete_vacation:
+  description: Delete your existing vacation from your water heater.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.water_heater'
+
+sensibo_assume_state:
+  description: Set Sensibo device to external state.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change.
+      example: 'climate.kitchen'
+    state:
+      description: State to set.
+      example: 'idle'

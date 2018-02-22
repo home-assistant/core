@@ -1,10 +1,11 @@
 """Support for powering relays in a DoorBird video doorbell."""
 import datetime
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.doorbird import DOMAIN as DOORBIRD_DOMAIN
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_SWITCHES
 import homeassistant.helpers.config_validation as cv
 
@@ -62,12 +63,12 @@ class DoorBirdSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """Get the name of the switch."""
+        """Return the name of the switch."""
         return SWITCHES[self._switch]["name"]
 
     @property
     def icon(self):
-        """Get an icon to display."""
+        """Return the icon to display."""
         return "mdi:{}".format(SWITCHES[self._switch]["icon"][self._state])
 
     @property
@@ -86,9 +87,9 @@ class DoorBirdSwitch(SwitchDevice):
         self._assume_off = now + SWITCHES[self._switch]["time"]
 
     def turn_off(self, **kwargs):
-        """The relays are time-based."""
-        raise NotImplementedError("DoorBird relays cannot be manually turned "
-                                  "off.")
+        """Turn off the relays is not needed. They are time-based."""
+        raise NotImplementedError(
+            "DoorBird relays cannot be manually turned off.")
 
     def update(self):
         """Wait for the correct amount of assumed time to pass."""

@@ -27,7 +27,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
 
-REQUIREMENTS = ['pywebpush==1.3.0', 'PyJWT==1.5.3']
+REQUIREMENTS = ['pywebpush==1.5.0', 'PyJWT==1.5.3']
 
 DEPENDENCIES = ['frontend']
 
@@ -136,7 +136,7 @@ def _load_config(filename):
 class JSONBytesDecoder(json.JSONEncoder):
     """JSONEncoder to decode bytes objects to unicode."""
 
-    # pylint: disable=method-hidden
+    # pylint: disable=method-hidden, arguments-differ
     def default(self, obj):
         """Decode object if it's a bytes object, else defer to base class."""
         if isinstance(obj, bytes):
@@ -169,15 +169,35 @@ class HTML5PushRegistrationView(HomeAssistantView):
             return self.json_message(
                 humanize_error(data, ex), HTTP_BAD_REQUEST)
 
-        name = ensure_unique_string('unnamed device', self.registrations)
+        name = self.find_registration_name(data)
+        previous_registration = self.registrations.get(name)
 
         self.registrations[name] = data
 
-        if not save_json(self.json_path, self.registrations):
+        try:
+            hass = request.app['hass']
+
+            yield from hass.async_add_job(save_json, self.json_path,
+                                          self.registrations)
+            return self.json_message(
+                'Push notification subscriber registered.')
+        except HomeAssistantError:
+            if previous_registration is not None:
+                self.registrations[name] = previous_registration
+            else:
+                self.registrations.pop(name)
+
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
 
-        return self.json_message('Push notification subscriber registered.')
+    def find_registration_name(self, data):
+        """Find a registration name matching data or generate a unique one."""
+        endpoint = data.get(ATTR_SUBSCRIPTION).get(ATTR_ENDPOINT)
+        for key, registration in self.registrations.items():
+            subscription = registration.get(ATTR_SUBSCRIPTION)
+            if subscription.get(ATTR_ENDPOINT) == endpoint:
+                return key
+        return ensure_unique_string('unnamed device', self.registrations)
 
     @asyncio.coroutine
     def delete(self, request):
@@ -202,7 +222,12 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         reg = self.registrations.pop(found)
 
-        if not save_json(self.json_path, self.registrations):
+        try:
+            hass = request.app['hass']
+
+            yield from hass.async_add_job(save_json, self.json_path,
+                                          self.registrations)
+        except HomeAssistantError:
             self.registrations[found] = reg
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
@@ -230,12 +255,12 @@ class HTML5PushCallbackView(HomeAssistantView):
         # 2a. If decode is successful, return the payload.
         # 2b. If decode is unsuccessful, return a 401.
 
-        target_check = jwt.decode(token, options={'verify_signature': False})
+        target_check = jwt.decode(token, verify=False)
         if target_check[ATTR_TARGET] in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
             try:
-                return jwt.decode(token, key)
+                return jwt.decode(token, key, algorithms=["ES256", "HS256"])
             except jwt.exceptions.DecodeError:
                 pass
 

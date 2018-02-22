@@ -21,7 +21,9 @@ from homeassistant.const import (
     CONF_OPTIMISTIC, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON,
     CONF_RGB, CONF_STATE, CONF_VALUE_TEMPLATE, CONF_WHITE_VALUE, CONF_XY)
 from homeassistant.components.mqtt import (
-    CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC)
+    CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
+    MqttAvailability)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -95,7 +97,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE):
         vol.In(VALUES_ON_COMMAND_TYPE),
-})
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 @asyncio.coroutine
@@ -148,16 +150,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_BRIGHTNESS_SCALE),
         config.get(CONF_WHITE_VALUE_SCALE),
         config.get(CONF_ON_COMMAND_TYPE),
+        config.get(CONF_AVAILABILITY_TOPIC),
+        config.get(CONF_PAYLOAD_AVAILABLE),
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
     )])
 
 
-class MqttLight(Light):
+class MqttLight(MqttAvailability, Light):
     """Representation of a MQTT light."""
 
     def __init__(self, name, effect_list, topic, templates, qos,
                  retain, payload, optimistic, brightness_scale,
-                 white_value_scale, on_command_type):
+                 white_value_scale, on_command_type, availability_topic,
+                 payload_available, payload_not_available):
         """Initialize MQTT light."""
+        super().__init__(availability_topic, qos, payload_available,
+                         payload_not_available)
         self._name = name
         self._effect_list = effect_list
         self._topic = topic
@@ -208,10 +216,9 @@ class MqttLight(Light):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe to MQTT events.
+        """Subscribe to MQTT events."""
+        yield from super().async_added_to_hass()
 
-        This method is a coroutine.
-        """
         templates = {}
         for key, tpl in list(self._templates.items()):
             if tpl is None:
@@ -424,7 +431,7 @@ class MqttLight(Light):
 
             tpl = self._templates[CONF_RGB_COMMAND_TEMPLATE]
             if tpl:
-                colors = {'red', 'green', 'blue'}
+                colors = ('red', 'green', 'blue')
                 variables = {key: val for key, val in
                              zip(colors, kwargs[ATTR_RGB_COLOR])}
                 rgb_color_str = tpl.async_render(variables)

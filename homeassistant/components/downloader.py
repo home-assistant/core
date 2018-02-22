@@ -79,7 +79,7 @@ def setup(hass, config):
 
                 if req.status_code != 200:
                     _LOGGER.warning(
-                        "downloading '%s' failed, stauts_code=%d",
+                        "downloading '%s' failed, status_code=%d",
                         url,
                         req.status_code)
 

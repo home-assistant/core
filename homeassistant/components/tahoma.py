@@ -13,9 +13,8 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import (slugify)
 
-REQUIREMENTS = ['tahoma-api==0.0.10']
+REQUIREMENTS = ['tahoma-api==0.0.11']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +35,16 @@ TAHOMA_COMPONENTS = [
     'sensor', 'cover'
 ]
 
+TAHOMA_TYPES = {
+    'rts:RollerShutterRTSComponent': 'cover',
+    'rts:CurtainRTSComponent': 'cover',
+    'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
+    'io:RollerShutterVeluxIOComponent': 'cover',
+    'io:RollerShutterGenericIOComponent': 'cover',
+    'io:WindowOpenerVeluxIOComponent': 'cover',
+    'io:LightIOSystemSensor': 'sensor',
+}
+
 
 def setup(hass, config):
     """Activate Tahoma component."""
@@ -48,14 +57,14 @@ def setup(hass, config):
     try:
         api = TahomaApi(username, password)
     except RequestException:
-        _LOGGER.exception("Error communicating with Tahoma API")
+        _LOGGER.exception("Error when trying to log in to the Tahoma API")
         return False
 
     try:
         api.get_setup()
         devices = api.get_devices()
     except RequestException:
-        _LOGGER.exception("Cannot fetch informations from Tahoma API")
+        _LOGGER.exception("Error when getting devices from the Tahoma API")
         return False
 
     hass.data[DOMAIN] = {
@@ -68,6 +77,8 @@ def setup(hass, config):
         if all(ext not in _device.type for ext in exclude):
             device_type = map_tahoma_device(_device)
             if device_type is None:
+                _LOGGER.warning('Unsupported type %s for Tahoma device %s',
+                                _device.type, _device.label)
                 continue
             hass.data[DOMAIN]['devices'][device_type].append(_device)
 
@@ -78,12 +89,8 @@ def setup(hass, config):
 
 
 def map_tahoma_device(tahoma_device):
-    """Map tahoma classes to Home Assistant types."""
-    if tahoma_device.type.lower().find("shutter") != -1:
-        return 'cover'
-    elif tahoma_device.type == 'io:LightIOSystemSensor':
-        return 'sensor'
-    return None
+    """Map Tahoma device types to Home Assistant components."""
+    return TAHOMA_TYPES.get(tahoma_device.type)
 
 
 class TahomaDevice(Entity):
@@ -93,14 +100,7 @@ class TahomaDevice(Entity):
         """Initialize the device."""
         self.tahoma_device = tahoma_device
         self.controller = controller
-        self._unique_id = TAHOMA_ID_FORMAT.format(
-            slugify(tahoma_device.label), slugify(tahoma_device.url))
         self._name = self.tahoma_device.label
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this cover."""
-        return self._unique_id
 
     @property
     def name(self):
@@ -117,4 +117,4 @@ class TahomaDevice(Entity):
         from tahoma_api import Action
         action = Action(self.tahoma_device.url)
         action.add_command(cmd_name, *args)
-        self.controller.apply_actions('', [action])
+        self.controller.apply_actions('HomeAssistant', [action])

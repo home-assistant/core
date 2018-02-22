@@ -1,36 +1,23 @@
 """
 Vizio SmartCast TV support.
 
-Usually only 2016+ models come with SmartCast capabilities.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.vizio/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.util as util
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
-    SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
-    MediaPlayerDevice
-)
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_UNKNOWN,
-    STATE_OFF,
-    STATE_ON,
-    CONF_NAME,
-    CONF_HOST,
-    CONF_ACCESS_TOKEN
-)
+    CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON,
+    STATE_UNKNOWN)
 from homeassistant.helpers import config_validation as cv
+import homeassistant.util as util
 
 REQUIREMENTS = ['pyvizio==0.0.2']
 
@@ -39,13 +26,16 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SUPPRESS_WARNING = 'suppress_warning'
 CONF_VOLUME_STEP = 'volume_step'
 
-ICON = 'mdi:television'
 DEFAULT_NAME = 'Vizio SmartCast'
 DEFAULT_VOLUME_STEP = 1
-DEVICE_NAME = 'Python Vizio'
 DEVICE_ID = 'pyvizio'
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+DEVICE_NAME = 'Python Vizio'
+
+ICON = 'mdi:television'
+
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+
 SUPPORTED_COMMANDS = SUPPORT_TURN_ON | SUPPORT_TURN_OFF \
                      | SUPPORT_SELECT_SOURCE \
                      | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK \
@@ -70,14 +60,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     device = VizioDevice(host, token, name, volume_step)
     if device.validate_setup() is False:
-        _LOGGER.error('Failed to setup Vizio TV platform, '
-                      'please check if host and API key are correct.')
-        return False
+        _LOGGER.error("Failed to setup Vizio TV platform, "
+                      "please check if host and API key are correct")
+        return
 
     if config.get(CONF_SUPPRESS_WARNING):
         from requests.packages import urllib3
-        _LOGGER.warning('InsecureRequestWarning is disabled '
-                        'because of Vizio platform configuration.')
+        _LOGGER.warning("InsecureRequestWarning is disabled "
+                        "because of Vizio platform configuration")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     add_devices([device], True)
 
@@ -184,5 +174,5 @@ class VizioDevice(MediaPlayerDevice):
         self._device.vol_down(num=self._volume_step)
 
     def validate_setup(self):
-        """Validating if host is available and key is correct."""
+        """Validate if host is available and key is correct."""
         return self._device.get_current_volume() is not None

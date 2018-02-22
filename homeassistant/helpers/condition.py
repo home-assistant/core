@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, CONF_CONDITION,
     WEEKDAYS, CONF_STATE, CONF_ZONE, CONF_BEFORE,
     CONF_AFTER, CONF_WEEKDAY, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
-    CONF_BELOW, CONF_ABOVE)
+    CONF_BELOW, CONF_ABOVE, STATE_UNAVAILABLE, STATE_UNKNOWN)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.sun import get_astral_event_date
@@ -47,7 +47,7 @@ def _threaded_factory(async_factory):
     return factory
 
 
-def async_from_config(config: ConfigType, config_validation: bool=True):
+def async_from_config(config: ConfigType, config_validation: bool = True):
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
@@ -70,7 +70,7 @@ def async_from_config(config: ConfigType, config_validation: bool=True):
 from_config = _threaded_factory(async_from_config)
 
 
-def async_and_from_config(config: ConfigType, config_validation: bool=True):
+def async_and_from_config(config: ConfigType, config_validation: bool = True):
     """Create multi condition matcher using 'AND'."""
     if config_validation:
         config = cv.AND_CONDITION_SCHEMA(config)
@@ -101,7 +101,7 @@ def async_and_from_config(config: ConfigType, config_validation: bool=True):
 and_from_config = _threaded_factory(async_and_from_config)
 
 
-def async_or_from_config(config: ConfigType, config_validation: bool=True):
+def async_or_from_config(config: ConfigType, config_validation: bool = True):
     """Create multi condition matcher using 'OR'."""
     if config_validation:
         config = cv.OR_CONDITION_SCHEMA(config)
@@ -159,6 +159,9 @@ def async_numeric_state(hass: HomeAssistant, entity, below=None, above=None,
         except TemplateError as ex:
             _LOGGER.error("Template error: %s", ex)
             return False
+
+    if value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        return False
 
     try:
         value = float(value)

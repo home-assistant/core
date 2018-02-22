@@ -96,7 +96,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ComfoConnectSensor(Entity):
     """Representation of a ComfoConnect sensor."""
 
-    def __init__(self, hass, name, ccb: ComfoConnectBridge, sensor_type):
+    def __init__(self, hass, name, ccb: ComfoConnectBridge,
+                 sensor_type) -> None:
         """Initialize the ComfoConnect sensor."""
         self._ccb = ccb
         self._sensor_type = sensor_type

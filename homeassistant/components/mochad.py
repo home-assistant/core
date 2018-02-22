@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mochad/
 """
 import logging
+import threading
 
 import voluptuous as vol
 
@@ -13,7 +14,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 
-REQUIREMENTS = ['pymochad==0.1.1']
+REQUIREMENTS = ['pymochad==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +23,8 @@ CONTROLLER = None
 CONF_COMM_TYPE = 'comm_type'
 
 DOMAIN = 'mochad'
+
+REQ_LOCK = threading.Lock()
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

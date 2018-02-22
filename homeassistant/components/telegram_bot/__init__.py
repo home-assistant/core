@@ -8,7 +8,6 @@ import asyncio
 import io
 from functools import partial
 import logging
-import os
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
@@ -16,7 +15,6 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_COMMAND, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
     CONF_PLATFORM, CONF_TIMEOUT, HTTP_DIGEST_AUTHENTICATION)
@@ -24,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['python-telegram-bot==8.1.1']
+REQUIREMENTS = ['python-telegram-bot==9.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,6 +96,7 @@ BASE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
     vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+    vol.Optional(CONF_TIMEOUT): vol.Coerce(float),
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend({
@@ -216,9 +215,6 @@ def async_setup(hass, config):
         return False
 
     p_config = config[DOMAIN][0]
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     p_type = p_config.get(CONF_PLATFORM)
 
@@ -301,7 +297,7 @@ def async_setup(hass, config):
     for service_notif, schema in SERVICE_MAP.items():
         hass.services.async_register(
             DOMAIN, service_notif, async_send_telegram_message,
-            descriptions.get(service_notif), schema=schema)
+            schema=schema)
 
     return True
 
@@ -335,7 +331,7 @@ class TelegramNotificationService:
         This can be one of (message_id, inline_message_id) from a msg dict,
         returning a tuple.
         **You can use 'last' as message_id** to edit
-        the last sended message in the chat_id.
+        the message last sent in the chat_id.
         """
         message_id = inline_message_id = None
         if ATTR_MESSAGEID in msg_data:
@@ -359,7 +355,7 @@ class TelegramNotificationService:
             chat_ids = [t for t in target if t in self.allowed_chat_ids]
             if chat_ids:
                 return chat_ids
-            _LOGGER.warning("Unallowed targets: %s, using default: %s",
+            _LOGGER.warning("Disallowed targets: %s, using default: %s",
                             target, self._default_user)
         return [self._default_user]
 

@@ -18,7 +18,7 @@ def test_subscribing_config_topic(hass, mqtt_mock):
     assert mqtt_mock.async_subscribe.called
     call_args = mqtt_mock.async_subscribe.mock_calls[0][1]
     assert call_args[0] == discovery_topic + '/#'
-    assert call_args[1] == 0
+    assert call_args[2] == 0
 
 
 @asyncio.coroutine

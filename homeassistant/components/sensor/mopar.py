@@ -4,34 +4,35 @@ Sensor for Mopar vehicles.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mopar/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_PIN,
-                                 ATTR_ATTRIBUTION, ATTR_COMMAND,
-                                 LENGTH_KILOMETERS)
-from homeassistant.util import Throttle
+from homeassistant.components.sensor import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, ATTR_COMMAND, CONF_PASSWORD, CONF_PIN, CONF_USERNAME,
+    LENGTH_KILOMETERS)
 import homeassistant.helpers.config_validation as cv
-
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['motorparts==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(days=7)
-DOMAIN = 'mopar'
 ATTR_VEHICLE_INDEX = 'vehicle_index'
-SERVICE_REMOTE_COMMAND = 'remote_command'
+
 COOKIE_FILE = 'mopar_cookies.pickle'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(days=7)
+
+SERVICE_REMOTE_COMMAND = 'mopar_remote_command'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_PIN): cv.positive_int
+    vol.Required(CONF_PIN): cv.positive_int,
 })
 
 REMOTE_COMMAND_SCHEMA = vol.Schema({
@@ -42,17 +43,16 @@ REMOTE_COMMAND_SCHEMA = vol.Schema({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Mopar platform."""
+    """Set up the Mopar platform."""
     import motorparts
     cookie = hass.config.path(COOKIE_FILE)
     try:
-        session = motorparts.get_session(config.get(CONF_USERNAME),
-                                         config.get(CONF_PASSWORD),
-                                         config.get(CONF_PIN),
-                                         cookie_path=cookie)
+        session = motorparts.get_session(
+            config.get(CONF_USERNAME), config.get(CONF_PASSWORD),
+            config.get(CONF_PIN), cookie_path=cookie)
     except motorparts.MoparError:
-        _LOGGER.error("failed to login")
-        return False
+        _LOGGER.error("Failed to login")
+        return
 
     def _handle_service(service):
         """Handle service call."""
@@ -68,12 +68,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data = MoparData(session)
     add_devices([MoparSensor(data, index)
-                 for index, _ in enumerate(data.vehicles)],
-                True)
-    return True
+                 for index, _ in enumerate(data.vehicles)], True)
 
 
-# pylint: disable=too-few-public-methods
 class MoparData(object):
     """Container for Mopar vehicle data.
 
@@ -92,11 +89,11 @@ class MoparData(object):
     def update(self, **kwargs):
         """Update data."""
         import motorparts
-        _LOGGER.info("updating vehicle data")
+        _LOGGER.info("Updating vehicle data")
         try:
             self.vehicles = motorparts.get_summary(self._session)['vehicles']
         except motorparts.MoparError:
-            _LOGGER.exception("failed to get summary")
+            _LOGGER.exception("Failed to get summary")
             return
         for index, _ in enumerate(self.vehicles):
             try:
@@ -104,7 +101,7 @@ class MoparData(object):
                 self.tow_guides[index] = motorparts.get_tow_guide(
                     self._session, index)
             except motorparts.MoparError:
-                _LOGGER.warning("failed to update for vehicle index %s", index)
+                _LOGGER.warning("Failed to update for vehicle index %s", index)
 
 
 class MoparSensor(Entity):
@@ -133,9 +130,9 @@ class MoparSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {} {}'.format(self._vehicle['year'],
-                                 self._vehicle['make'],
-                                 self._vehicle['model'])
+        return '{} {} {}'.format(
+            self._vehicle['year'], self._vehicle['make'],
+            self._vehicle['model'])
 
     @property
     def state(self):

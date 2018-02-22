@@ -4,30 +4,29 @@ Support for interface with an LG webOS Smart TV.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.webostv/
 """
-import logging
 import asyncio
 from datetime import timedelta
+import logging
 from urllib.parse import urlparse
+
+# pylint: disable=unused-import
+from typing import Dict  # noqa: F401
 
 import voluptuous as vol
 
-import homeassistant.util as util
 from homeassistant.components.media_player import (
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL,
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+    MEDIA_TYPE_CHANNEL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_CUSTOMIZE, CONF_TIMEOUT, STATE_OFF,
-    STATE_PLAYING, STATE_PAUSED,
-    STATE_UNKNOWN, CONF_NAME, CONF_FILENAME)
+    CONF_CUSTOMIZE, CONF_FILENAME, CONF_HOST, CONF_NAME, CONF_TIMEOUT,
+    STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
+import homeassistant.util as util
 
-REQUIREMENTS = ['pylgtv==0.1.7',
-                'websockets==3.2',
-                'wakeonlan==0.2.2']
+REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2']
 
 _CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
@@ -48,17 +47,16 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 CUSTOMIZE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_SOURCES):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_SOURCES): vol.All(cv.ensure_list, [cv.string]),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
     vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string,
-    vol.Optional(CONF_TIMEOUT, default=8): cv.positive_int,
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_TIMEOUT, default=8): cv.positive_int,
 })
 
 
@@ -142,7 +140,7 @@ def request_configuration(
 
     # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
-        """The actions to do when our configuration callback is called."""
+        """Handle actions when configuration callback is called."""
         setup_tv(host, name, customize, config, timeout, hass,
                  add_devices, turn_on_action)
 
@@ -176,6 +174,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._state = STATE_UNKNOWN
         self._source_list = {}
         self._app_list = {}
+        self._channel = None
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -191,10 +190,12 @@ class LgWebOSDevice(MediaPlayerDevice):
                 self._state = STATE_OFF
                 self._current_source = None
                 self._current_source_id = None
+                self._channel = None
 
             if self._state is not STATE_OFF:
                 self._muted = self._client.get_muted()
                 self._volume = self._client.get_volume()
+                self._channel = self._client.get_current_channel()
 
                 self._source_list = {}
                 self._app_list = {}
@@ -227,6 +228,7 @@ class LgWebOSDevice(MediaPlayerDevice):
             self._state = STATE_OFF
             self._current_source = None
             self._current_source_id = None
+            self._channel = None
 
     @property
     def name(self):
@@ -262,6 +264,13 @@ class LgWebOSDevice(MediaPlayerDevice):
     def media_content_type(self):
         """Content type of current playing media."""
         return MEDIA_TYPE_CHANNEL
+
+    @property
+    def media_title(self):
+        """Title of current playing media."""
+        if (self._channel is not None) and ('channelName' in self._channel):
+            return self._channel['channelName']
+        return None
 
     @property
     def media_image_url(self):
@@ -322,14 +331,17 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        if self._source_list.get(source).get('title'):
-            self._current_source_id = self._source_list[source]['id']
-            self._current_source = self._source_list[source]['title']
-            self._client.launch_app(self._source_list[source]['id'])
-        elif self._source_list.get(source).get('label'):
-            self._current_source_id = self._source_list[source]['id']
-            self._current_source = self._source_list[source]['label']
-            self._client.set_input(self._source_list[source]['id'])
+        source_dict = self._source_list.get(source)
+        if source_dict is None:
+            _LOGGER.warning("Source %s not found for %s", source, self.name)
+            return
+        self._current_source_id = source_dict['id']
+        if source_dict.get('title'):
+            self._current_source = source_dict['title']
+            self._client.launch_app(source_dict['id'])
+        elif source_dict.get('label'):
+            self._current_source = source_dict['label']
+            self._client.set_input(source_dict['id'])
 
     def media_play(self):
         """Send play command."""

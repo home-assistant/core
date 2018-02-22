@@ -1,7 +1,7 @@
 """Support for Xiaomi curtain."""
 import logging
 
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverDevice, ATTR_POSITION
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
 
@@ -41,7 +41,7 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self.current_cover_position < 0
+        return self.current_cover_position <= 0
 
     def close_cover(self, **kwargs):
         """Close the cover."""
@@ -55,11 +55,12 @@ class XiaomiGenericCover(XiaomiDevice, CoverDevice):
         """Stop the cover."""
         self._write_to_hub(self._sid, **{self._data_key['status']: 'stop'})
 
-    def set_cover_position(self, position, **kwargs):
+    def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
+        position = kwargs.get(ATTR_POSITION)
         self._write_to_hub(self._sid, **{self._data_key['pos']: str(position)})
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if ATTR_CURTAIN_LEVEL in data:
             self._pos = int(data[ATTR_CURTAIN_LEVEL])

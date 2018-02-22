@@ -88,7 +88,7 @@ def validate_station(station):
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_ZONE_ID, 'Deprecated partial station ID'): cv.string,
     vol.Inclusive(CONF_WMO_ID, 'Deprecated partial station ID'): cv.string,
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_STATION): validate_station,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),

@@ -9,7 +9,6 @@ import logging
 from datetime import timedelta
 
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.components.tahoma import (
     DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
 
@@ -36,7 +35,6 @@ class TahomaSensor(TahomaDevice, Entity):
         """Initialize the sensor."""
         self.current_value = None
         super().__init__(tahoma_device, controller)
-        self.entity_id = ENTITY_ID_FORMAT.format(self.unique_id)
 
     @property
     def state(self):

@@ -5,6 +5,8 @@ import os
 import re
 from urllib.parse import urlparse
 from socket import _GLOBAL_DEFAULT_TIMEOUT
+import logging
+import inspect
 
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
@@ -430,6 +432,22 @@ def ensure_list_csv(value: Any) -> Sequence:
     return ensure_list(value)
 
 
+def deprecated(key):
+    """Log key as deprecated."""
+    module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
+
+    def validator(config):
+        """Check if key is in config and log warning."""
+        if key in config:
+            logging.getLogger(module_name).warning(
+                "The '%s' option (with value '%s') is deprecated, please "
+                "remove it from your configuration.", key, config[key])
+
+        return config
+
+    return validator
+
+
 # Validator helpers
 
 def key_dependency(key, dependency):
@@ -457,6 +475,7 @@ EVENT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required('event'): string,
     vol.Optional('event_data'): dict,
+    vol.Optional('event_data_template'): {match_all: template_complex}
 })
 
 SERVICE_SCHEMA = vol.All(vol.Schema({

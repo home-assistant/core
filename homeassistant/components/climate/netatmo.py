@@ -24,7 +24,7 @@ CONF_RELAY = 'relay'
 CONF_THERMOSTAT = 'thermostat'
 
 DEFAULT_AWAY_TEMPERATURE = 14
-# # The default offeset is 2 hours (when you use the thermostat itself)
+# # The default offset is 2 hours (when you use the thermostat itself)
 DEFAULT_TIME_OFFSET = 7200
 # # Return cached results if last scan was less then this time ago
 # # NetAtmo Data is uploaded to server every hour
@@ -78,11 +78,6 @@ class NetatmoThermostat(ClimateDevice):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._target_temperature
 
     @property
     def temperature_unit(self):

@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.owntracks_http/
 """
 import asyncio
+import re
 
 from aiohttp.web_exceptions import HTTPInternalServerError
 
@@ -43,8 +44,11 @@ class OwnTracksView(HomeAssistantView):
         """Handle an OwnTracks message."""
         hass = request.app['hass']
 
+        subscription = self.context.mqtt_topic
+        topic = re.sub('/#$', '', subscription)
+
         message = yield from request.json()
-        message['topic'] = 'owntracks/{}/{}'.format(user, device)
+        message['topic'] = '{}/{}/{}'.format(topic, user, device)
 
         try:
             yield from async_handle_message(hass, self.context, message)

@@ -242,7 +242,7 @@ class RoombaVacuum(VacuumDevice):
             self.vacuum.set_preference, 'vacHigh', str(high_perf))
 
     @asyncio.coroutine
-    def async_send_command(self, command, params, **kwargs):
+    def async_send_command(self, command, params=None, **kwargs):
         """Send raw command."""
         _LOGGER.debug("async_send_command %s (%s), %s",
                       command, params, kwargs)

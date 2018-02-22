@@ -33,6 +33,8 @@ from homeassistant.helpers import config_per_platform, extract_domain_configs
 _LOGGER = logging.getLogger(__name__)
 
 DATA_PERSISTENT_ERRORS = 'bootstrap_persistent_errors'
+RE_YAML_ERROR = re.compile(r"homeassistant\.util\.yaml")
+RE_ASCII = re.compile(r"\033\[[^m]*m")
 HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
 YAML_CONFIG_FILE = 'configuration.yaml'
 VERSION_FILE = '.HA_VERSION'
@@ -110,6 +112,9 @@ sensor:
 tts:
   - platform: google
 
+# Cloud
+cloud:
+
 group: !include groups.yaml
 automation: !include automations.yaml
 script: !include scripts.yaml
@@ -157,7 +162,7 @@ def get_default_config_dir() -> str:
     return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
-def ensure_config_exists(config_dir: str, detect_location: bool=True) -> str:
+def ensure_config_exists(config_dir: str, detect_location: bool = True) -> str:
     """Ensure a configuration file exists in given configuration directory.
 
     Creating a default one if needed.
@@ -652,19 +657,23 @@ def async_check_ha_config_file(hass):
     proc = yield from asyncio.create_subprocess_exec(
         sys.executable, '-m', 'homeassistant', '--script',
         'check_config', '--config', hass.config.config_dir,
-        stdout=asyncio.subprocess.PIPE, loop=hass.loop)
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT, loop=hass.loop)
+
     # Wait for the subprocess exit
-    stdout_data, dummy = yield from proc.communicate()
-    result = yield from proc.wait()
+    log, _ = yield from proc.communicate()
+    exit_code = yield from proc.wait()
 
-    if not result:
-        return None
+    # Convert to ASCII
+    log = RE_ASCII.sub('', log.decode())
 
-    return re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))
+    if exit_code != 0 or RE_YAML_ERROR.search(log):
+        return log
+    return None
 
 
 @callback
-def async_notify_setup_error(hass, component, link=False):
+def async_notify_setup_error(hass, component, display_link=False):
     """Print a persistent notification.
 
     This method must be run in the event loop.
@@ -676,7 +685,7 @@ def async_notify_setup_error(hass, component, link=False):
     if errors is None:
         errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
 
-    errors[component] = errors.get(component) or link
+    errors[component] = errors.get(component) or display_link
 
     message = 'The following components and platforms could not be set up:\n\n'
 

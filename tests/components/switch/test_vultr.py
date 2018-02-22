@@ -1,5 +1,8 @@
 """Test the Vultr switch platform."""
+import json
 import unittest
+from unittest.mock import patch
+
 import requests_mock
 import pytest
 import voluptuous as vol
@@ -57,12 +60,12 @@ class TestVultrSwitchSetup(unittest.TestCase):
             'https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567',
             text=load_fixture('vultr_account_info.json'))
 
-        mock.get(
-            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
-            text=load_fixture('vultr_server_list.json'))
-
-        # Setup hub
-        base_vultr.setup(self.hass, VALID_CONFIG)
+        with patch(
+            'vultr.Vultr.server_list',
+            return_value=json.loads(
+                load_fixture('vultr_server_list.json'))):
+            # Setup hub
+            base_vultr.setup(self.hass, VALID_CONFIG)
 
         # Setup each of our test configs
         for config in self.configs:
@@ -128,36 +131,30 @@ class TestVultrSwitchSetup(unittest.TestCase):
     @requests_mock.Mocker()
     def test_turn_on(self, mock):
         """Test turning a subscription on."""
-        mock.get(
-            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
-            text=load_fixture('vultr_server_list.json'))
+        with patch(
+            'vultr.Vultr.server_list',
+            return_value=json.loads(load_fixture('vultr_server_list.json'))), \
+                patch('vultr.Vultr.server_start') as mock_start:
+            for device in self.DEVICES:
+                if device.name == 'Failed Server':
+                    device.turn_on()
 
-        mock.post(
-            'https://api.vultr.com/v1/server/start?api_key=ABCDEFG1234567')
-
-        for device in self.DEVICES:
-            if device.name == 'Failed Server':
-                device.turn_on()
-
-        # Turn on, force date update
-        self.assertEqual(2, mock.call_count)
+        # Turn on
+        self.assertEqual(1, mock_start.call_count)
 
     @requests_mock.Mocker()
     def test_turn_off(self, mock):
         """Test turning a subscription off."""
-        mock.get(
-            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
-            text=load_fixture('vultr_server_list.json'))
+        with patch(
+            'vultr.Vultr.server_list',
+            return_value=json.loads(load_fixture('vultr_server_list.json'))), \
+                patch('vultr.Vultr.server_halt') as mock_halt:
+            for device in self.DEVICES:
+                if device.name == 'A Server':
+                    device.turn_off()
 
-        mock.post(
-            'https://api.vultr.com/v1/server/halt?api_key=ABCDEFG1234567')
-
-        for device in self.DEVICES:
-            if device.name == 'A Server':
-                device.turn_off()
-
-        # Turn off, force update
-        self.assertEqual(2, mock.call_count)
+        # Turn off
+        self.assertEqual(1, mock_halt.call_count)
 
     def test_invalid_switch_config(self):
         """Test config type failures."""
@@ -173,11 +170,12 @@ class TestVultrSwitchSetup(unittest.TestCase):
             'https://api.vultr.com/v1/account/info?api_key=ABCDEFG1234567',
             text=load_fixture('vultr_account_info.json'))
 
-        mock.get(
-            'https://api.vultr.com/v1/server/list?api_key=ABCDEFG1234567',
-            text=load_fixture('vultr_server_list.json'))
-
-        base_vultr.setup(self.hass, VALID_CONFIG)
+        with patch(
+            'vultr.Vultr.server_list',
+            return_value=json.loads(
+                load_fixture('vultr_server_list.json'))):
+            # Setup hub
+            base_vultr.setup(self.hass, VALID_CONFIG)
 
         bad_conf = {}  # No subscription
 

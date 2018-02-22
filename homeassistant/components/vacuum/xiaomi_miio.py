@@ -7,7 +7,6 @@ https://home-assistant.io/components/vacuum.xiaomi_miio/
 import asyncio
 from functools import partial
 import logging
-import os
 
 import voluptuous as vol
 
@@ -16,17 +15,16 @@ from homeassistant.components.vacuum import (
     SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VACUUM_SERVICE_SCHEMA, VacuumDevice)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.3.2']
+REQUIREMENTS = ['python-miio==0.3.7']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Vacuum cleaner'
-ICON = 'mdi:google-circles-group'
+ICON = 'mdi:roomba'
 PLATFORM = 'xiaomi_miio'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -130,16 +128,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     for vacuum_service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[vacuum_service].get(
             'schema', VACUUM_SERVICE_SCHEMA)
         hass.services.async_register(
             DOMAIN, vacuum_service, async_service_handler,
-            description=descriptions.get(vacuum_service), schema=schema)
+            schema=schema)
 
 
 class MiroboVacuum(VacuumDevice):
@@ -347,9 +341,9 @@ class MiroboVacuum(VacuumDevice):
 
     @asyncio.coroutine
     def async_remote_control_move(self,
-                                  rotation: int=0,
-                                  velocity: float=0.3,
-                                  duration: int=1500):
+                                  rotation: int = 0,
+                                  velocity: float = 0.3,
+                                  duration: int = 1500):
         """Move vacuum with remote control mode."""
         yield from self._try_command(
             "Unable to move with remote control the vacuum: %s",
@@ -358,9 +352,9 @@ class MiroboVacuum(VacuumDevice):
 
     @asyncio.coroutine
     def async_remote_control_move_step(self,
-                                       rotation: int=0,
-                                       velocity: float=0.2,
-                                       duration: int=1500):
+                                       rotation: int = 0,
+                                       velocity: float = 0.2,
+                                       duration: int = 1500):
         """Move vacuum one step with remote control mode."""
         yield from self._try_command(
             "Unable to remote control the vacuum: %s",

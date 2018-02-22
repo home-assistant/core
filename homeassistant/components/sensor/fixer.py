@@ -4,14 +4,14 @@ Currency exchange rate support that comes from fixer.io.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fixer/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION, CONF_BASE)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_BASE, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['fixerio==0.1.1']
@@ -28,7 +28,7 @@ CONF_TARGET = 'target'
 DEFAULT_BASE = 'USD'
 DEFAULT_NAME = 'Exchange rate'
 
-ICON = 'mdi:currency'
+ICON = 'mdi:currency-usd'
 
 SCAN_INTERVAL = timedelta(days=1)
 
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fixer.io sensor."""
-    from fixerio import (Fixerio, exceptions)
+    from fixerio import Fixerio, exceptions
 
     name = config.get(CONF_NAME)
     base = config.get(CONF_BASE)

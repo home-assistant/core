@@ -20,8 +20,9 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, STATE_ON, STATE_OFF, STATE_PLAYING,
     STATE_PAUSED, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['liveboxplaytv==2.0.0']
+REQUIREMENTS = ['liveboxplaytv==2.0.2', 'pyteleloisirs==3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,19 +77,32 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         self._channel_list = {}
         self._current_channel = None
         self._current_program = None
+        self._media_duration = None
+        self._media_remaining_time = None
         self._media_image_url = None
+        self._media_last_updated = None
 
     @asyncio.coroutine
     def async_update(self):
         """Retrieve the latest data."""
+        import pyteleloisirs
         try:
             self._state = self.refresh_state()
             # Update current channel
             channel = self._client.channel
             if channel is not None:
-                self._current_program = yield from \
-                    self._client.async_get_current_program_name()
                 self._current_channel = channel
+                program = yield from \
+                    self._client.async_get_current_program()
+                if program and self._current_program != program.get('name'):
+                    self._current_program = program.get('name')
+                    # Media progress info
+                    self._media_duration = \
+                        pyteleloisirs.get_program_duration(program)
+                    rtime = pyteleloisirs.get_remaining_time(program)
+                    if rtime != self._media_remaining_time:
+                        self._media_remaining_time = rtime
+                        self._media_last_updated = dt_util.utcnow()
                 # Set media image to current program if a thumbnail is
                 # available. Otherwise we'll use the channel's image.
                 img_size = 800
@@ -100,7 +114,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
                     chan_img_url = \
                         self._client.get_current_channel_image(img_size)
                     self._media_image_url = chan_img_url
-                self.refresh_channel_list()
         except requests.ConnectionError:
             self._state = None
 
@@ -149,8 +162,25 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
             if self._current_program:
                 return '{}: {}'.format(self._current_channel,
                                        self._current_program)
-            else:
-                return self._current_channel
+            return self._current_channel
+
+    @property
+    def media_duration(self):
+        """Duration of current playing media in seconds."""
+        return self._media_duration
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        return self._media_remaining_time
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        return self._media_last_updated
 
     @property
     def supported_features(self):

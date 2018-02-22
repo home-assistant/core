@@ -5,7 +5,9 @@ from unittest.mock import patch, MagicMock, PropertyMock
 from aiohttp import WSMsgType, client_exceptions
 import pytest
 
+from homeassistant.setup import async_setup_component
 from homeassistant.components.cloud import iot, auth_api
+from tests.components.alexa import test_smart_home as test_alexa
 from tests.common import mock_coro
 
 
@@ -15,7 +17,8 @@ def mock_client():
     client = MagicMock()
     type(client).closed = PropertyMock(side_effect=[False, True])
 
-    with patch('asyncio.sleep'), \
+    # Trigger cancelled error to avoid reconnect.
+    with patch('asyncio.sleep', side_effect=asyncio.CancelledError), \
             patch('homeassistant.components.cloud.iot'
                   '.async_get_clientsession') as session:
         session().ws_connect.return_value = mock_coro(client)
@@ -158,10 +161,10 @@ def test_cloud_getting_disconnected_by_server(mock_client, caplog, mock_cloud):
         type=WSMsgType.CLOSING,
     ))
 
-    yield from conn.connect()
+    with patch('asyncio.sleep', side_effect=[None, asyncio.CancelledError]):
+        yield from conn.connect()
 
-    assert 'Connection closed: Connection cancelled.' in caplog.text
-    assert 'connect' in str(mock_cloud.hass.async_add_job.mock_calls[-1][1][0])
+    assert 'Connection closed' in caplog.text
 
 
 @asyncio.coroutine
@@ -175,7 +178,6 @@ def test_cloud_receiving_bytes(mock_client, caplog, mock_cloud):
     yield from conn.connect()
 
     assert 'Connection closed: Received non-Text message' in caplog.text
-    assert 'connect' in str(mock_cloud.hass.async_add_job.mock_calls[-1][1][0])
 
 
 @asyncio.coroutine
@@ -190,19 +192,17 @@ def test_cloud_sending_invalid_json(mock_client, caplog, mock_cloud):
     yield from conn.connect()
 
     assert 'Connection closed: Received invalid JSON.' in caplog.text
-    assert 'connect' in str(mock_cloud.hass.async_add_job.mock_calls[-1][1][0])
 
 
 @asyncio.coroutine
 def test_cloud_check_token_raising(mock_client, caplog, mock_cloud):
-    """Test cloud sending invalid JSON."""
+    """Test cloud unable to check token."""
     conn = iot.CloudIoT(mock_cloud)
-    mock_client.receive.side_effect = auth_api.CloudError
+    mock_cloud.hass.async_add_job.side_effect = auth_api.CloudError("BLA")
 
     yield from conn.connect()
 
-    assert 'Unable to connect: Unable to refresh token.' in caplog.text
-    assert 'connect' in str(mock_cloud.hass.async_add_job.mock_calls[-1][1][0])
+    assert 'Unable to connect: BLA' in caplog.text
 
 
 @asyncio.coroutine
@@ -254,3 +254,97 @@ def test_refresh_token_before_expiration_fails(hass, mock_cloud):
 
     assert len(mock_check_token.mock_calls) == 1
     assert len(mock_create.mock_calls) == 1
+
+
+@asyncio.coroutine
+def test_handler_alexa(hass):
+    """Test handler Alexa."""
+    hass.states.async_set(
+        'switch.test', 'on', {'friendly_name': "Test switch"})
+    hass.states.async_set(
+        'switch.test2', 'on', {'friendly_name': "Test switch 2"})
+
+    with patch('homeassistant.components.cloud.Cloud.async_start',
+               return_value=mock_coro()):
+        setup = yield from async_setup_component(hass, 'cloud', {
+            'cloud': {
+                'alexa': {
+                    'filter': {
+                        'exclude_entities': 'switch.test2'
+                    },
+                    'entity_config': {
+                        'switch.test': {
+                            'name': 'Config name',
+                            'description': 'Config description',
+                            'display_categories': 'LIGHT'
+                        }
+                    }
+                }
+            }
+        })
+        assert setup
+
+    resp = yield from iot.async_handle_alexa(
+        hass, hass.data['cloud'],
+        test_alexa.get_new_request('Alexa.Discovery', 'Discover'))
+
+    endpoints = resp['event']['payload']['endpoints']
+
+    assert len(endpoints) == 1
+    device = endpoints[0]
+
+    assert device['description'] == 'Config description'
+    assert device['friendlyName'] == 'Config name'
+    assert device['displayCategories'] == ['LIGHT']
+    assert device['manufacturerName'] == 'Home Assistant'
+
+
+@asyncio.coroutine
+def test_handler_google_actions(hass):
+    """Test handler Google Actions."""
+    hass.states.async_set(
+        'switch.test', 'on', {'friendly_name': "Test switch"})
+    hass.states.async_set(
+        'switch.test2', 'on', {'friendly_name': "Test switch 2"})
+
+    with patch('homeassistant.components.cloud.Cloud.async_start',
+               return_value=mock_coro()):
+        setup = yield from async_setup_component(hass, 'cloud', {
+            'cloud': {
+                'google_actions': {
+                    'filter': {
+                        'exclude_entities': 'switch.test2'
+                    },
+                    'entity_config': {
+                        'switch.test': {
+                            'name': 'Config name',
+                            'type': 'light',
+                            'aliases': 'Config alias'
+                        }
+                    }
+                }
+            }
+        })
+        assert setup
+
+    reqid = '5711642932632160983'
+    data = {'requestId': reqid, 'inputs': [{'intent': 'action.devices.SYNC'}]}
+
+    with patch('homeassistant.components.cloud.Cloud._decode_claims',
+               return_value={'cognito:username': 'myUserName'}):
+        resp = yield from iot.async_handle_google_actions(
+            hass, hass.data['cloud'], data)
+
+    assert resp['requestId'] == reqid
+    payload = resp['payload']
+
+    assert payload['agentUserId'] == 'myUserName'
+
+    devices = payload['devices']
+    assert len(devices) == 1
+
+    device = devices[0]
+    assert device['id'] == 'switch.test'
+    assert device['name']['name'] == 'Config name'
+    assert device['name']['nicknames'] == ['Config alias']
+    assert device['type'] == 'action.devices.types.LIGHT'

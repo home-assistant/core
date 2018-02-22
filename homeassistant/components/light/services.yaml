@@ -159,3 +159,13 @@ lifx_effect_stop:
     entity_id:
       description: Name(s) of entities to stop effects on. Leave out to stop effects everywhere.
       example: 'light.bedroom'
+
+xiaomi_miio_set_scene:
+  description: Set a fixed scene.
+  fields:
+    entity_id:
+      description: Name of the light entity.
+      example: 'light.xiaomi_miio'
+    scene:
+      description: Number of the fixed scene, between 1 and 4.
+      example: 1

@@ -17,13 +17,13 @@ import jinja2
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.auth import is_trusted_ip
+from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20171204.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20180221.1', 'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -35,7 +35,7 @@ CONF_EXTRA_HTML_URL = 'extra_html_url'
 CONF_EXTRA_HTML_URL_ES5 = 'extra_html_url_es5'
 CONF_FRONTEND_REPO = 'development_repo'
 CONF_JS_VERSION = 'javascript_version'
-JS_DEFAULT_OPTION = 'es5'
+JS_DEFAULT_OPTION = 'auto'
 JS_OPTIONS = ['es5', 'latest', 'auto']
 
 DEFAULT_THEME_COLOR = '#03A9F4'
@@ -49,7 +49,7 @@ MANIFEST_JSON = {
     'lang': 'en-US',
     'name': 'Home Assistant',
     'short_name': 'Assistant',
-    'start_url': '/',
+    'start_url': '/states',
     'theme_color': DEFAULT_THEME_COLOR
 }
 
@@ -260,10 +260,10 @@ def async_register_panel(hass, component_name, path, md5=None,
     component_name: name of the web component
     path: path to the HTML of the web component
           (required unless url is provided)
-    md5: the md5 hash of the web component (for versioning in url, optional)
+    md5: the md5 hash of the web component (for versioning in URL, optional)
     sidebar_title: title to show in the sidebar (optional)
     sidebar_icon: icon to show next to title in sidebar (optional)
-    url_path: name to use in the url (defaults to component_name)
+    url_path: name to use in the URL (defaults to component_name)
     config: config to be passed into the web component
     """
     panel = ExternalPanel(component_name, path, md5, sidebar_title,
@@ -299,11 +299,17 @@ def async_setup(hass, config):
     hass.data[DATA_JS_VERSION] = js_version = conf.get(CONF_JS_VERSION)
 
     if is_dev:
-        hass.http.register_static_path(
-            "/home-assistant-polymer", repo_path, False)
+        for subpath in ["src", "build-translations", "build-temp", "build",
+                        "hass_frontend", "bower_components", "panels",
+                        "hassio"]:
+            hass.http.register_static_path(
+                "/home-assistant-polymer/{}".format(subpath),
+                os.path.join(repo_path, subpath),
+                False)
+
         hass.http.register_static_path(
             "/static/translations",
-            os.path.join(repo_path, "build-translations"), False)
+            os.path.join(repo_path, "build-translations/output"), False)
         sw_path_es5 = os.path.join(repo_path, "build-es5/service_worker.js")
         sw_path_latest = os.path.join(repo_path, "build/service_worker.js")
         static_path = os.path.join(repo_path, 'hass_frontend')
@@ -371,12 +377,11 @@ def async_setup(hass, config):
     for url in conf.get(CONF_EXTRA_HTML_URL_ES5, []):
         add_extra_html_url(hass, url, True)
 
-    yield from async_setup_themes(hass, conf.get(CONF_THEMES))
+    async_setup_themes(hass, conf.get(CONF_THEMES))
 
     return True
 
 
-@asyncio.coroutine
 def async_setup_themes(hass, themes):
     """Set up themes data and services."""
     hass.http.register_view(ThemesView)
@@ -403,7 +408,7 @@ def async_setup_themes(hass, themes):
 
     @callback
     def set_theme(call):
-        """Set backend-prefered theme."""
+        """Set backend-preferred theme."""
         data = call.data
         name = data[CONF_NAME]
         if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:
@@ -423,16 +428,9 @@ def async_setup_themes(hass, themes):
             hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
         update_theme_and_fire_event()
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
-    hass.services.async_register(DOMAIN, SERVICE_SET_THEME,
-                                 set_theme,
-                                 descriptions[SERVICE_SET_THEME],
-                                 SERVICE_SET_THEME_SCHEMA)
-    hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes,
-                                 descriptions[SERVICE_RELOAD_THEMES])
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_THEME, set_theme, schema=SERVICE_SET_THEME_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes)
 
 
 class IndexView(HomeAssistantView):
@@ -492,7 +490,7 @@ class IndexView(HomeAssistantView):
             panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_es5
 
         no_auth = '1'
-        if hass.config.api.api_password and not is_trusted_ip(request):
+        if hass.config.api.api_password and not request[KEY_AUTHENTICATED]:
             # do not try to auto connect on load
             no_auth = '0'
 
@@ -574,19 +572,26 @@ def _is_latest(js_option, request):
     if js_option != 'auto':
         return js_option == 'latest'
 
-    from user_agents import parse
-    useragent = parse(request.headers.get('User-Agent'))
+    useragent = request.headers.get('User-Agent')
+    if not useragent:
+        return False
 
-    # on iOS every browser is a Safari which we support from version 10.
+    from user_agents import parse
+    useragent = parse(useragent)
+
+    # on iOS every browser is a Safari which we support from version 11.
     if useragent.os.family == 'iOS':
-        return useragent.os.version[0] >= 10
+        # Was >= 10, temp setting it to 12 to work around issue #11387
+        return useragent.os.version[0] >= 12
 
     family_min_version = {
-        'Chrome': 50,   # Probably can reduce this
-        'Firefox': 41,  # Destructuring added in 41
-        'Opera': 40,    # Probably can reduce this
-        'Edge': 14,     # Maybe can reduce this
-        'Safari': 10,   # many features not supported by 9
+        'Chrome': 54,          # Object.values
+        'Chrome Mobile': 54,
+        'Firefox': 47,         # Object.values
+        'Firefox Mobile': 47,
+        'Opera': 41,           # Object.values
+        'Edge': 14,            # Array.prototype.includes added in 14
+        'Safari': 10,          # Many features not supported by 9
     }
     version = family_min_version.get(useragent.browser.family)
     return version and useragent.browser.version[0] >= version
