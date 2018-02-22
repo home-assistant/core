@@ -177,7 +177,6 @@ def test_entities_domain():
     )
 
     for value in options:
-        print(value)
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 

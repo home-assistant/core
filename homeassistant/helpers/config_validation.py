@@ -154,7 +154,9 @@ def entities_domain(domain: str):
         values = entity_ids(values)
         for ent_id in values:
             if split_entity_id(ent_id)[0] != domain:
-                raise vol.Invalid("Entity ID does not belong to domain")
+                raise vol.Invalid(
+                    "Entity ID '{}' does not belong to domain '{}'"
+                    .format(ent_id, domain))
         return values
     return validate
 
