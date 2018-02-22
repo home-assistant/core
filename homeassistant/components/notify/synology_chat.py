@@ -11,8 +11,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService,
-    PLATFORM_SCHEMA)
+    BaseNotificationService, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_RESOURCE, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
@@ -31,6 +30,7 @@ def get_service(hass, config, discovery_info=None):
 
     return SynologyChatNotificationService(
         hass, resource)
+
 
 class SynologyChatNotificationService(BaseNotificationService):
     """Implementation of a notification service for Synology Chat."""
