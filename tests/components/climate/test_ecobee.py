@@ -463,3 +463,4 @@ class TestEcobee(unittest.TestCase):
         self.thermostat.set_fan_mode('auto')
         self.data.ecobee.set_fan_mode.assert_has_calls(
             [mock.call(1, 'auto', 20, 40, 'nextTransition')])
+
