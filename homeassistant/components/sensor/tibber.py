@@ -9,6 +9,7 @@ import asyncio
 import logging
 
 from datetime import timedelta
+import aiohttp
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -16,9 +17,10 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['pyTibber==0.2.1']
+REQUIREMENTS = ['pyTibber==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,16 +35,25 @@ SCAN_INTERVAL = timedelta(minutes=1)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Tibber sensor."""
-    import Tibber
-    tibber = Tibber.Tibber(config[CONF_ACCESS_TOKEN],
-                           websession=async_get_clientsession(hass))
-    yield from tibber.update_info()
-    dev = []
-    for home in tibber.get_homes():
-        yield from home.update_info()
-        dev.append(TibberSensor(home))
+    import tibber
+    tibber_connection = tibber.Tibber(config[CONF_ACCESS_TOKEN],
+                                      websession=async_get_clientsession(hass))
 
-    async_add_devices(dev, True)
+    @asyncio.coroutine
+    def add_devices(*_):
+        """Add Tibber sensors."""
+        try:
+            yield from tibber_connection.update_info()
+            dev = []
+            for home in tibber_connection.get_homes():
+                yield from home.update_info()
+                dev.append(TibberSensor(home))
+            async_add_devices(dev, True)
+        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+            _LOGGER.error("Retrying in 15 minutes: %s", err)
+            async_call_later(hass, 15*60, add_devices)
+
+    yield from add_devices()
 
 
 class TibberSensor(Entity):
