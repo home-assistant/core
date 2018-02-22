@@ -643,6 +643,9 @@ pyHS100==0.3.0
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.21.1
 
+# homeassistant.components.media_player.braviatv_psk
+pySonyBraviaPSK==0.1.5
+
 # homeassistant.components.sensor.tibber
 pyTibber==0.2.1
 
