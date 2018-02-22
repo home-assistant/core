@@ -233,7 +233,7 @@ class FilterSensor(Entity):
 
             @property
             def stats(self):
-                """Statistics provided per filter."""
+                """Provides statistics on filter execution."""
                 return self.filter_stats
 
             def update(self, new_data):
