@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.history_average/
 import asyncio
 from operator import attrgetter
 from collections import defaultdict
+# from datetime import timedelta
 import logging
 import voluptuous as vol
 
@@ -54,9 +55,9 @@ def exactly_two_period_keys(conf):
 
 PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Optional(CONF_START, default=None): cv.template,
-    vol.Optional(CONF_END, default=None): cv.template,
-    vol.Optional(CONF_DURATION, default=None): cv.time_period,
+    vol.Optional(CONF_START): cv.template,
+    vol.Optional(CONF_END): cv.template,
+    vol.Optional(CONF_DURATION): cv.time_period,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=''): cv.string,
 }), exactly_two_period_keys)
@@ -159,8 +160,8 @@ class HistoryAverageSensor(Entity):
         def state_listener(entity, old_state, new_state):
             """Handle the sensor state changes."""
             self._history.append(new_state)
-            sorted(self._history, key=attrgetter('last_changed'))
-            self._hass.async_add_job(self.async_update_ha_state(True))
+            self._history = sorted(self._history, key=attrgetter('last_changed'))
+            self.async_schedule_update_ha_state(True)
 
         @callback
         def sensor_startup(event):
@@ -168,7 +169,7 @@ class HistoryAverageSensor(Entity):
             async_track_state_change(
                 self._hass, self._entity_id, state_listener)
 
-            self._hass.async_add_job(self.async_update_ha_state(True))
+            self.async_schedule_update_ha_state(True)
 
         self._hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, sensor_startup)
@@ -198,27 +199,17 @@ class HistoryAverageSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        def period_in_seconds(period):
-            """Get the period period duration in seconds."""
-            if len(period) != 2 or period[0] == period[1]:
-                return 0.0
-            return (period[1] - period[0]).total_seconds()
+        
+        # FIXME: timedelta is not JSON serializable
+        # period = self._period
+        # duration = 0
+        # if len(period) == 2:
+        #     duration = (period[1] - period[0]).total_seconds()
 
-        def pretty_duration(period):
-            """Format a duration in days, hours, minutes, seconds."""
-            seconds = period_in_seconds(period)
-            days, seconds = divmod(seconds, 86400)
-            hours, seconds = divmod(seconds, 3600)
-            minutes, seconds = divmod(seconds, 60)
-            if days > 0:
-                return '%dd %dh %dm' % (days, hours, minutes)
-            elif hours > 0:
-                return '%dh %dm' % (hours, minutes)
-            return '%dm' % minutes
-
-        return {
-            ATTR_DURATION: pretty_duration(self._period),
-        }
+        # return {
+        #     ATTR_DURATION: timedelta(seconds=duration),
+        # }
+        return {}
 
     @property
     def icon(self):
@@ -232,8 +223,6 @@ class HistoryAverageSensor(Entity):
         yield from self.asysnc_trim_history()
         start, end = self._period
 
-        _LOGGER.info(" - period start: %s", start)
-        _LOGGER.info(" - period end  : %s", end)
         now = dt_util.utcnow()
 
         # Compute timestamps
