@@ -5,17 +5,18 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.maxcul/
 """
 import logging
+import asyncio
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_ID
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 from homeassistant.components.maxcul import (
-    DATA_MAXCUL,
+    DATA_MAXCUL_CONNECTION,
     SIGNAL_PUSH_BUTTON_UPDATE
 )
 
@@ -41,9 +42,10 @@ STATE_ECO = 'eco'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the maxcul sensor platform."""
+    maxcul_connection = hass.data[DATA_MAXCUL_CONNECTION]
     devices = [
         MaxEcoSwitch(
-            hass,
+            maxcul_connection,
             device[CONF_ID],
             name
         )
@@ -56,18 +58,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MaxEcoSwitch(Entity):
     """Representation of a MAX! Eco Switch."""
 
-    def __init__(self, hass, device_id, name):
+    def __init__(self, maxcul_connection, device_id, name):
         """Initialize a new MAX! Eco Switch."""
+        self._device_id = device_id
+        self._name = name
+        self._is_on = None
+        self._maxcul_connection = maxcul_connection
+
+        self._maxcul_connection.add_paired_device(self._device_id)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Connect to eco switch update signal."""
         from maxcul import (
             ATTR_DEVICE_ID,
             ATTR_STATE
         )
-        self._device_id = device_id
-        self._name = name
-        self._is_on = None
-        self._maxcul_handle = hass.data[DATA_MAXCUL]
-
-        self._maxcul_handle.add_paired_device(self._device_id)
 
         @callback
         def update(payload):
@@ -78,9 +84,10 @@ class MaxEcoSwitch(Entity):
 
             self.async_schedule_update_ha_state()
 
-        dispatcher_connect(hass, SIGNAL_PUSH_BUTTON_UPDATE, update)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_PUSH_BUTTON_UPDATE, update)
 
-        self._maxcul_handle.wakeup(self._device_id)
+        self._maxcul_connection.wakeup(self._device_id)
 
     @property
     def should_poll(self):

@@ -28,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-DATA_MAXCUL = 'maxcul'
+DATA_MAXCUL_CONNECTION = 'maxcul'
 
 SIGNAL_THERMOSTAT_UPDATE = DOMAIN + '.thermostat_update'
 SIGNAL_PUSH_BUTTON_UPDATE = DOMAIN + '.push_button_update'
@@ -85,8 +85,10 @@ def setup(hass, config):
     )
     if device_id:
         params['sender_id'] = device_id
-    maxconn = hass.data[DATA_MAXCUL] = maxcul.MaxConnection(**params)
+    maxconn = maxcul.MaxConnection(**params)
     maxconn.start()
+
+    hass.data[DATA_MAXCUL_CONNECTION] = maxconn
 
     def _service_enable_pairing(service):
         duration = service.data.get(ATTR_DURATION)

@@ -5,10 +5,11 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.maxcul/
 """
 import logging
+import asyncio
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.climate import (
     ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     PLATFORM_SCHEMA,
@@ -21,7 +22,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.maxcul import (
-    DATA_MAXCUL, SIGNAL_THERMOSTAT_UPDATE
+    DATA_MAXCUL_CONNECTION, SIGNAL_THERMOSTAT_UPDATE
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +44,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Add a new MAX! thermostat."""
+    maxcul_connection = hass.data[DATA_MAXCUL_CONNECTION]
     devices = [
-        MaxCulClimate(hass, device[CONF_ID], name)
+        MaxCulClimate(
+            maxcul_connection,
+            device[CONF_ID],
+            name
+        )
         for name, device
         in config[CONF_DEVICES].items()
     ]
@@ -54,22 +60,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MaxCulClimate(ClimateDevice):
     """A MAX! thermostat backed by a CUL stick."""
 
-    def __init__(self, hass, device_id, name):
+    def __init__(self, maxcul_connection, device_id, name):
         """Initialize a new device for the given thermostat id."""
-        from maxcul import (
-            ATTR_DEVICE_ID, ATTR_DESIRED_TEMPERATURE,
-            ATTR_MEASURED_TEMPERATURE, ATTR_MODE,
-            ATTR_BATTERY_LOW
-        )
         self._name = name
         self._device_id = device_id
-        self._maxcul_handle = hass.data[DATA_MAXCUL]
+        self._maxcul_connection = maxcul_connection
         self._current_temperature = None
         self._target_temperature = None
         self._mode = None
         self._battery_low = None
 
-        self._maxcul_handle.add_paired_device(self._device_id)
+        self._maxcul_connection.add_paired_device(self._device_id)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Connect to thermostat update signal."""
+        from maxcul import (
+            ATTR_DEVICE_ID, ATTR_DESIRED_TEMPERATURE,
+            ATTR_MEASURED_TEMPERATURE, ATTR_MODE,
+            ATTR_BATTERY_LOW
+        )
 
         @callback
         def update(event):
@@ -94,9 +104,10 @@ class MaxCulClimate(ClimateDevice):
 
             self.async_schedule_update_ha_state()
 
-        dispatcher_connect(hass, SIGNAL_THERMOSTAT_UPDATE, update)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_THERMOSTAT_UPDATE, update)
 
-        self._maxcul_handle.wakeup(self._device_id)
+        self._maxcul_connection.wakeup(self._device_id)
 
     @property
     def supported_features(self):
@@ -165,7 +176,7 @@ class MaxCulClimate(ClimateDevice):
         if target_temperature is None:
             return False
 
-        return self._maxcul_handle.set_temperature(
+        return self._maxcul_connection.set_temperature(
             self._device_id,
             target_temperature,
             self._mode or MODE_MANUAL)
@@ -175,7 +186,7 @@ class MaxCulClimate(ClimateDevice):
         new_mode = MaxCulClimate._state_to_mode(operation_mode)
         if new_mode is None:
             return False
-        return self._maxcul_handle.set_temperature(
+        return self._maxcul_connection.set_temperature(
             self._device_id,
             self._target_temperature or DEFAULT_TEMPERATURE,
             new_mode)
