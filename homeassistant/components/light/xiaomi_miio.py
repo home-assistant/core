@@ -96,8 +96,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     if model is None:
         try:
-            light = Device(host, token)
-            device_info = light.info()
+            miio_device = Device(host, token)
+            device_info = miio_device.info()
             model = device_info.model
             _LOGGER.info("%s %s %s detected",
                          model,
