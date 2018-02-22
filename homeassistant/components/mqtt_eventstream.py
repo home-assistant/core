@@ -39,8 +39,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SUBSCRIBE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PUBLISH_EVENTSTREAM_RECEIVED, default=False):
             cv.boolean,
-        vol.Optional(CONF_IGNORE_EVENT, default=[]):
-            vol.All(cv.ensure_list, [vol.In(EVENT_TYPES)])
+        vol.Optional(CONF_IGNORE_EVENT, default=[]): cv.ensure_list
     }),
 }, extra=vol.ALLOW_EXTRA)
 
