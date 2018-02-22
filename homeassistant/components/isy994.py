@@ -83,9 +83,9 @@ NODE_FILTERS = {
     },
     'fan': {
         'uom': [],
-        'states': ['off', 'low', 'medium', 'high'],
+        'states': ['off', 'low', 'med', 'high'],
         'node_def_id': ['FanLincMotor'],
-        'insteon_type': []
+        'insteon_type': ['1.46.']
     },
     'cover': {
         'uom': ['97'],
@@ -173,6 +173,14 @@ def _check_for_insteon_type(hass: HomeAssistant, node,
     for domain in domains:
         if any([device_type.startswith(t) for t in
                 set(NODE_FILTERS[domain]['insteon_type'])]):
+
+            # Hacky special-case just for FanLinc, which has a light module
+            # as one of its nodes. Note that this special-case is not necessary
+            # on ISY 5.x firmware as it uses the superior NodeDefs method
+            if domain == 'fan' and int(node.nid[-1]) == 1:
+                hass.data[ISY994_NODES]['light'].append(node)
+                return True
+
             hass.data[ISY994_NODES][domain].append(node)
             return True
 
