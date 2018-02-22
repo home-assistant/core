@@ -74,6 +74,7 @@ def _setup_internal_discovery(hass: HomeAssistantType) -> None:
 
         _LOGGER.debug("Discovered new chromecast %s", mdns)
         try:
+            # pylint: disable=protected-access
             chromecast = pychromecast._get_chromecast_from_host(
                 mdns, blocking=True)
         except pychromecast.ChromecastConnectionError:

@@ -21,11 +21,13 @@ def cast_mock():
         yield
 
 
+# pylint: disable=invalid-name
 FakeUUID = UUID('57355bce-9364-4aa6-ac1e-eb849dccf9e2')
 
 
 def get_fake_chromecast(host='192.168.178.42', port=8009,
                         uuid: Optional[UUID] = FakeUUID):
+    """Generate a Fake Chromecast object with the specified arguments."""
     return MagicMock(host=host, port=port, uuid=uuid)
 
 
@@ -47,6 +49,7 @@ def async_setup_cast(hass, config=None, discovery_info=None):
 def async_setup_cast_internal_discovery(hass, config=None,
                                         discovery_info=None,
                                         no_from_host_patch=False):
+    """Setup the cast platform and the discovery."""
     listener = MagicMock(services={})
 
     with patch('pychromecast.start_discovery',
@@ -60,6 +63,7 @@ def async_setup_cast_internal_discovery(hass, config=None,
         discovery_callback = start_discovery.call_args[0][0]
 
     def discover_chromecast(service_name, chromecast):
+        """Discover a chromecast device."""
         listener.services[service_name] = (
             chromecast.host, chromecast.port, chromecast.uuid, None, None)
         if no_from_host_patch:
@@ -110,7 +114,6 @@ def test_stop_discovery_called_on_stop(hass):
 @asyncio.coroutine
 def test_internal_discovery_callback_only_generates_once(hass):
     """Test _get_chromecast_from_host only called once per device."""
-
     discover_cast, _ = yield from async_setup_cast_internal_discovery(
         hass, no_from_host_patch=True)
     chromecast = get_fake_chromecast()
@@ -166,12 +169,14 @@ def test_internal_discovery_callback_with_connection_error(hass):
 
 
 def test_create_cast_device_without_uuid(hass):
+    """Test create a cast device without a UUID."""
     chromecast = get_fake_chromecast(uuid=None)
     cast_device = cast._async_create_cast_device(hass, chromecast)
     assert cast_device is not None
 
 
 def test_create_cast_device_with_uuid(hass):
+    """Test create cast devices with UUID."""
     added_casts = hass.data[cast.ADDED_CAST_DEVICES_KEY] = {}
     chromecast = get_fake_chromecast()
     cast_device = cast._async_create_cast_device(hass, chromecast)
@@ -190,6 +195,7 @@ def test_create_cast_device_with_uuid(hass):
 
 @asyncio.coroutine
 def test_normal_chromecast_not_starting_discovery(hass):
+    """Test cast platform not starting discovery when not required."""
     chromecast = get_fake_chromecast()
 
     with patch('pychromecast.Chromecast', return_value=chromecast):
@@ -213,6 +219,7 @@ def test_normal_chromecast_not_starting_discovery(hass):
 
 @asyncio.coroutine
 def test_replay_past_chromecasts(hass):
+    """Test cast platform re-playing past chromecasts when adding new one."""
     cast_group1 = get_fake_chromecast(host='host1', port=42)
     cast_group2 = get_fake_chromecast(host='host2', port=42, uuid=UUID(
         '9462202c-e747-4af5-a66b-7dce0e1ebc09'))
