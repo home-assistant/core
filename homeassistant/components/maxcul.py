@@ -7,6 +7,7 @@ https://home-assistant.io/components/maxcul/
 import logging
 
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 

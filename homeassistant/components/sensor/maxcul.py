@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.maxcul/
 """
 import logging
 import asyncio
+
 import voluptuous as vol
 
 from homeassistant.core import callback
