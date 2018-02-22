@@ -5,18 +5,18 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.fronius/
 """
 import asyncio
-from concurrent.futures._base import TimeoutError
+from asyncio import TimeoutError
 from datetime import timedelta
 import logging
-
+import voluptuous as vol
 from aiohttp.client_exceptions import ServerDisconnectedError
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-import voluptuous as vol
 
 REQUIREMENTS = ['pyfronius==0.2']
 
