@@ -45,8 +45,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Filter sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     filter_name = config.get(CONF_FILTER_NAME)
