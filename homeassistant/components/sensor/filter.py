@@ -132,7 +132,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         name = DEFAULT_NAME_TEMPLATE.format(entity_id, filter_name)
 
     async_add_devices([
-            FilterSensor(hass, name, entity_id, filter_name, wsize,
+        FilterSensor(hass, name, entity_id, filter_name, wsize,
                          config.get(CONF_FILTER_OPTIONS, dict()))
         ], True)
 
@@ -217,7 +217,10 @@ class FilterSensor(Entity):
     def filterdata_factory(self, filter_function, window_size, **kwargs):
         """Factory to create filters with user provided arguments."""
         class FilterData(object):
+            """Support dynamic decorator arguments."""
+
             def __init__(self, sensor_name):
+                """Initialize adaptor."""
                 self._data = None
                 self.filter_stats = {}
                 self.entity_id = sensor_name
@@ -225,16 +228,20 @@ class FilterSensor(Entity):
             @property
             @Filter(filter_function, window_size, **kwargs)
             def data(self):
+                """Filtered data."""
                 return self._data
 
             @property
             def stats(self):
+                """Statistics provided per filter."""
                 return self.filter_stats
 
             def update(self, new_data):
+                """Update raw data.""" 
                 self._data = float(new_data)
 
         return FilterData
+
 
 class Filter(object):
     """Filter decorator."""
@@ -291,5 +298,3 @@ class Filter(object):
             return filtered_state
 
         return func_wrapper
-
-
