@@ -37,7 +37,7 @@ ATTR_AMOUNT = 'amount'
 ATTR_CHANGE = 'amount_change_30days'
 ATTR_CURRENCY = 'amount_currency'
 ATTR_LAST_UPDATED = 'amount_last_updated'
-ATTR_VAL_HIGH = 'valuation_range_high'
+ATTR_VAL_HI = 'valuation_range_high'
 ATTR_VAL_LOW = 'valuation_range_low'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -113,7 +113,7 @@ class ZestimateDataSensor(Entity):
                 attributes[ATTR_CURRENCY] = data[ATTR_CURRENCY]
                 attributes[ATTR_LAST_UPDATED] = data[ATTR_LAST_UPDATED]
                 attributes[ATTR_CHANGE] = data[ATTR_CHANGE]
-                attributes[ATTR_VAL_HIGH] = data[ATTR_VAL_HIGH]
+                attributes[ATTR_VAL_HI] = data[ATTR_VAL_HI]
                 attributes[ATTR_VAL_LOW] = data[ATTR_VAL_LOW]
 
             attributes[ATTR_LOCATION] = self.data.address
@@ -164,7 +164,7 @@ class ZestimateData(object):
             details[ATTR_CURRENCY] = data['amount']['@currency']
             details[ATTR_LAST_UPDATED] = data['last-updated']
             details[ATTR_CHANGE] = int(data['valueChange']['#text'])
-            details[ATTR_VAL_HIGH] = int(data['valuationRange']['high']['#text'])
+            details[ATTR_VAL_HI] = int(data['valuationRange']['high']['#text'])
             details[ATTR_VAL_LOW] = int(data['valuationRange']['low']['#text'])
 
             self.address = response['address']['street']
