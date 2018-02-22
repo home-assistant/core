@@ -10,7 +10,7 @@ def migrate_schema(instance):
     """Check if the schema needs to be upgraded."""
     from .models import SchemaChanges, SCHEMA_VERSION
 
-    with session_scope(session=instance.get_session()) as session:
+    with session_scope(recorder=instance) as session:
         res = session.query(SchemaChanges).order_by(
             SchemaChanges.change_id.desc()).first()
         current_version = getattr(res, 'schema_version', None)

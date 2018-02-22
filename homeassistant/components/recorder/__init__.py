@@ -179,6 +179,7 @@ class Recorder(threading.Thread):
         self.exclude_t = exclude.get(CONF_EVENT_TYPES, [])
 
         self.get_session = None
+        self.session_lock = threading.Lock()
 
     @callback
     def async_initialize(self):
@@ -231,7 +232,7 @@ class Recorder(threading.Thread):
         shutdown_task = object()
         hass_started = concurrent.futures.Future()
 
-        @callback
+        @asyncio.coroutine
         def register():
             """Post connection initialize."""
             self.async_db_ready.set_result(True)
@@ -265,16 +266,20 @@ class Recorder(threading.Thread):
                     self.hass.helpers.event.async_track_point_in_time(
                         async_purge, now + timedelta(days=self.purge_interval))
 
-                earliest = dt_util.utcnow() + timedelta(minutes=30)
-                run = latest = dt_util.utcnow() + \
-                    timedelta(days=self.purge_interval)
-                with session_scope(session=self.get_session()) as session:
-                    event = session.query(Events).first()
-                    if event is not None:
-                        session.expunge(event)
-                        run = dt_util.as_utc(event.time_fired) + \
-                            timedelta(days=self.keep_days+self.purge_interval)
-                run = min(latest, max(run, earliest))
+                def run_when():
+                    """Return the time to do the first purge."""
+                    earliest = dt_util.utcnow() + timedelta(minutes=30)
+                    run = latest = dt_util.utcnow() + \
+                        timedelta(days=self.purge_interval)
+                    with session_scope(recorder=self) as session:
+                        event = session.query(Events).first()
+                        if event is not None:
+                            session.expunge(event)
+                            run = dt_util.as_utc(event.time_fired) + timedelta(
+                                days=self.keep_days+self.purge_interval)
+                    return min(latest, max(run, earliest))
+
+                run = yield from self.hass.async_add_job(run_when)
                 self.hass.helpers.event.async_track_point_in_time(
                     async_purge, run)
 
@@ -316,7 +321,7 @@ class Recorder(threading.Thread):
                 if tries != 1:
                     time.sleep(CONNECT_RETRY_WAIT)
                 try:
-                    with session_scope(session=self.get_session()) as session:
+                    with session_scope(recorder=self) as session:
                         dbevent = Events.from_event(event)
                         session.add(dbevent)
                         session.flush()
@@ -398,7 +403,7 @@ class Recorder(threading.Thread):
         """Log the start of the current run."""
         from .models import RecorderRuns
 
-        with session_scope(session=self.get_session()) as session:
+        with session_scope(recorder=self) as session:
             for run in session.query(RecorderRuns).filter_by(end=None):
                 run.closed_incorrect = True
                 run.end = self.recording_start
@@ -416,7 +421,7 @@ class Recorder(threading.Thread):
 
     def _close_run(self):
         """Save end time for current run."""
-        with session_scope(session=self.get_session()) as session:
+        with session_scope(recorder=self) as session:
             self.run_info.end = dt_util.utcnow()
             session.add(self.run_info)
         self.run_info = None

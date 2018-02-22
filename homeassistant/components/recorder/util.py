@@ -12,23 +12,26 @@ QUERY_RETRY_WAIT = 0.1
 
 
 @contextmanager
-def session_scope(*, hass=None, session=None):
+def session_scope(*, hass=None, recorder=None):
     """Provide a transactional scope around a series of operations."""
-    if session is None and hass is not None:
-        session = hass.data[DATA_INSTANCE].get_session()
+    if recorder is None and hass is not None:
+        recorder = hass.data[DATA_INSTANCE]
 
-    if session is None:
+    if recorder is None:
         raise RuntimeError('Session required')
 
-    try:
-        yield session
-        session.commit()
-    except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.error("Error executing query: %s", err)
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    session = recorder.get_session()
+
+    with recorder.session_lock:
+        try:
+            yield session
+            session.commit()
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error("Error executing query: %s", err)
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
 
 def commit(session, work):

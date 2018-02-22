@@ -125,10 +125,11 @@ class TestRecorderPurge(unittest.TestCase):
             states = session.query(States)
             self.assertEqual(states.count(), 7)
 
-            # run purge_old_data()
-            purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+        purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
 
-            # we should only have 3 states left after purging
+        # we should only have 3 states left after purging
+        with session_scope(hass=self.hass) as session:
+            states = session.query(States)
             self.assertEqual(states.count(), 3)
 
     def test_purge_old_events(self):
@@ -140,10 +141,12 @@ class TestRecorderPurge(unittest.TestCase):
                 Events.event_type.like("EVENT_TEST%"))
             self.assertEqual(events.count(), 7)
 
-            # run purge_old_data()
-            purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
+        purge_old_data(self.hass.data[DATA_INSTANCE], 4, repack=False)
 
-            # no state to protect, now we should only have 2 events left
+        # no state to protect, now we should only have 2 events left
+        with session_scope(hass=self.hass) as session:
+            events = session.query(Events).filter(
+                Events.event_type.like("EVENT_TEST%"))
             self.assertEqual(events.count(), 2)
 
     def test_purge_method(self):
@@ -163,24 +166,29 @@ class TestRecorderPurge(unittest.TestCase):
 
             self.hass.data[DATA_INSTANCE].block_till_done()
 
-            # run purge method - no service data, use defaults
-            self.hass.services.call('recorder', 'purge')
-            self.hass.async_block_till_done()
+        # run purge method - no service data, use defaults
+        self.hass.services.call('recorder', 'purge')
+        self.hass.async_block_till_done()
 
-            # Small wait for recorder thread
-            self.hass.data[DATA_INSTANCE].block_till_done()
+        # Small wait for recorder thread
+        self.hass.data[DATA_INSTANCE].block_till_done()
 
-            # only purged old events
+        # only purged old events
+        with session_scope(hass=self.hass) as session:
+            states = session.query(States)
             self.assertEqual(states.count(), 5)
             self.assertEqual(events.count(), 5)
 
-            # run purge method - correct service data
-            self.hass.services.call('recorder', 'purge',
-                                    service_data=service_data)
-            self.hass.async_block_till_done()
+        # run purge method - correct service data
+        self.hass.services.call('recorder', 'purge',
+                                service_data=service_data)
+        self.hass.async_block_till_done()
 
-            # Small wait for recorder thread
-            self.hass.data[DATA_INSTANCE].block_till_done()
+        # Small wait for recorder thread
+        self.hass.data[DATA_INSTANCE].block_till_done()
+
+        with session_scope(hass=self.hass) as session:
+            states = session.query(States)
 
             # we should only have 3 states left after purging
             self.assertEqual(states.count(), 3)
@@ -198,11 +206,12 @@ class TestRecorderPurge(unittest.TestCase):
             self.assertFalse('EVENT_TEST_PURGE' in (
                 event.event_type for event in events.all()))
 
-            # run purge method - correct service data, with repack
-            service_data['repack'] = True
-            self.assertFalse(self.hass.data[DATA_INSTANCE].did_vacuum)
-            self.hass.services.call('recorder', 'purge',
-                                    service_data=service_data)
-            self.hass.async_block_till_done()
-            self.hass.data[DATA_INSTANCE].block_till_done()
-            self.assertTrue(self.hass.data[DATA_INSTANCE].did_vacuum)
+        # run purge method - correct service data, with repack
+        service_data['repack'] = True
+        self.assertFalse(self.hass.data[DATA_INSTANCE].did_vacuum)
+        self.hass.services.call('recorder', 'purge',
+                                service_data=service_data)
+        self.hass.async_block_till_done()
+        self.hass.data[DATA_INSTANCE].block_till_done()
+
+        self.assertTrue(self.hass.data[DATA_INSTANCE].did_vacuum)

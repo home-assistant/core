@@ -17,7 +17,7 @@ def purge_old_data(instance, purge_days, repack):
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
     _LOGGER.debug("Purging events before %s", purge_before)
 
-    with session_scope(session=instance.get_session()) as session:
+    with session_scope(recorder=instance) as session:
         delete_states = session.query(States) \
                             .filter((States.last_updated < purge_before))
 
