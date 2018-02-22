@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Add a new MAX! thermostat."""
     maxcul_connection = hass.data[DATA_MAXCUL_CONNECTION]
     devices = [
-        MaxCulClimate(
+        MaxThermostat(
             maxcul_connection,
             device[CONF_ID],
             name
@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices)
 
 
-class MaxCulClimate(ClimateDevice):
+class MaxThermostat(ClimateDevice):
     """A MAX! thermostat backed by a CUL stick."""
 
     def __init__(self, maxcul_connection, device_id, name):
@@ -186,7 +186,7 @@ class MaxCulClimate(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set the operation mode of this device."""
-        new_mode = MaxCulClimate._state_to_mode(operation_mode)
+        new_mode = self._state_to_mode(operation_mode)
         if new_mode is None:
             return
         self._maxcul_connection.set_temperature(
