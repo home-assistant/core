@@ -6,7 +6,8 @@ https://home-assistant.io/components/light.deconz/
 """
 import asyncio
 
-from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
+from homeassistant.components.deconz import (
+    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
     ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -17,8 +18,6 @@ from homeassistant.util.color import color_RGB_to_xy
 
 DEPENDENCIES = ['deconz']
 
-ATTR_LIGHT_GROUP = 'LightGroup'
-
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -26,8 +25,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    lights = hass.data[DECONZ_DATA].lights
-    groups = hass.data[DECONZ_DATA].groups
+    lights = hass.data[DATA_DECONZ].lights
+    groups = hass.data[DATA_DECONZ].groups
     entities = []
 
     for light in lights.values():
@@ -64,6 +63,7 @@ class DeconzLight(Light):
     def async_added_to_hass(self):
         """Subscribe to lights events."""
         self._light.register_async_callback(self.async_update_callback)
+        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._light.deconz_id
 
     @callback
     def async_update_callback(self, reason):

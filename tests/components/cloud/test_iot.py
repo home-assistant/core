@@ -17,7 +17,8 @@ def mock_client():
     client = MagicMock()
     type(client).closed = PropertyMock(side_effect=[False, True])
 
-    with patch('asyncio.sleep'), \
+    # Trigger cancelled error to avoid reconnect.
+    with patch('asyncio.sleep', side_effect=asyncio.CancelledError), \
             patch('homeassistant.components.cloud.iot'
                   '.async_get_clientsession') as session:
         session().ws_connect.return_value = mock_coro(client)
@@ -160,10 +161,10 @@ def test_cloud_getting_disconnected_by_server(mock_client, caplog, mock_cloud):
         type=WSMsgType.CLOSING,
     ))
 
-    yield from conn.connect()
+    with patch('asyncio.sleep', side_effect=[None, asyncio.CancelledError]):
+        yield from conn.connect()
 
-    assert 'Connection closed: Connection cancelled.' in caplog.text
-    assert 'connect' in str(mock_cloud.hass.async_add_job.mock_calls[-1][1][0])
+    assert 'Connection closed' in caplog.text
 
 
 @asyncio.coroutine
@@ -177,7 +178,6 @@ def test_cloud_receiving_bytes(mock_client, caplog, mock_cloud):
     yield from conn.connect()
 
     assert 'Connection closed: Received non-Text message' in caplog.text
-    assert 'connect' in str(mock_cloud.hass.async_add_job.mock_calls[-1][1][0])
 
 
 @asyncio.coroutine
@@ -192,19 +192,17 @@ def test_cloud_sending_invalid_json(mock_client, caplog, mock_cloud):
     yield from conn.connect()
 
     assert 'Connection closed: Received invalid JSON.' in caplog.text
-    assert 'connect' in str(mock_cloud.hass.async_add_job.mock_calls[-1][1][0])
 
 
 @asyncio.coroutine
 def test_cloud_check_token_raising(mock_client, caplog, mock_cloud):
-    """Test cloud sending invalid JSON."""
+    """Test cloud unable to check token."""
     conn = iot.CloudIoT(mock_cloud)
-    mock_client.receive.side_effect = auth_api.CloudError
+    mock_cloud.hass.async_add_job.side_effect = auth_api.CloudError("BLA")
 
     yield from conn.connect()
 
-    assert 'Unable to connect: Unable to refresh token.' in caplog.text
-    assert 'connect' in str(mock_cloud.hass.async_add_job.mock_calls[-1][1][0])
+    assert 'Unable to connect: BLA' in caplog.text
 
 
 @asyncio.coroutine

@@ -3,7 +3,7 @@ pyyaml>=3.11,<4
 pytz>=2017.02
 pip>=8.0.3
 jinja2>=2.10
-voluptuous==0.10.5
+voluptuous==0.11.1
 typing>=3,<4
 aiohttp==2.3.10
 yarl==1.1.0
@@ -13,5 +13,5 @@ astral==1.5
 certifi>=2017.4.17
 attrs==17.4.0
 
-# Breaks Python 3.6 and is not needed for our supported Pythons
+# Breaks Python 3.6 and is not needed for our supported Python versions
 enum34==1000000000.0.0

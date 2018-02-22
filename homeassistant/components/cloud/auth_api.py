@@ -1,7 +1,4 @@
 """Package to communicate with the authentication API."""
-import logging
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CloudError(Exception):

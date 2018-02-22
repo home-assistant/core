@@ -29,6 +29,9 @@ omit =
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
+    homeassistant/components/bmw_connected_drive.py
+    homeassistant/components/*/bmw_connected_drive.py
+
     homeassistant/components/android_ip_webcam.py
     homeassistant/components/*/android_ip_webcam.py
 
@@ -37,6 +40,9 @@ omit =
 
     homeassistant/components/asterisk_mbox.py
     homeassistant/components/*/asterisk_mbox.py
+
+    homeassistant/components/august.py
+    homeassistant/components/*/august.py
 
     homeassistant/components/axis.py
     homeassistant/components/*/axis.py
@@ -204,6 +210,9 @@ omit =
 
     homeassistant/components/skybell.py
     homeassistant/components/*/skybell.py
+
+    homeassistant/components/smappee.py
+    homeassistant/components/*/smappee.py
 
     homeassistant/components/tado.py
     homeassistant/components/*/tado.py
@@ -462,6 +471,7 @@ omit =
     homeassistant/components/media_player/vizio.py
     homeassistant/components/media_player/vlc.py
     homeassistant/components/media_player/volumio.py
+    homeassistant/components/media_player/xiaomi_tv.py
     homeassistant/components/media_player/yamaha.py
     homeassistant/components/media_player/yamaha_musiccast.py
     homeassistant/components/media_player/ziggo_mediabox_xl.py
@@ -551,6 +561,7 @@ omit =
     homeassistant/components/sensor/etherscan.py
     homeassistant/components/sensor/fastdotcom.py
     homeassistant/components/sensor/fedex.py
+    homeassistant/components/sensor/filesize.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/fritzbox_callmonitor.py

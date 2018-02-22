@@ -12,6 +12,8 @@ import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components import http
+from homeassistant.components.http.data_validator import (
+    RequestDataValidator)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import intent
 
@@ -148,7 +150,7 @@ class ConversationProcessView(http.HomeAssistantView):
     url = '/api/conversation/process'
     name = "api:conversation:process"
 
-    @http.RequestDataValidator(vol.Schema({
+    @RequestDataValidator(vol.Schema({
         vol.Required('text'): str,
     }))
     @asyncio.coroutine

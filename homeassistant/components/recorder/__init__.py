@@ -63,15 +63,15 @@ CONNECT_RETRY_WAIT = 3
 
 FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-        vol.Optional(CONF_DOMAINS, default=[]):
+        vol.Optional(CONF_ENTITIES): cv.entity_ids,
+        vol.Optional(CONF_DOMAINS):
             vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EVENT_TYPES, default=[]):
+        vol.Optional(CONF_EVENT_TYPES):
             vol.All(cv.ensure_list, [cv.string])
     }),
     vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-        vol.Optional(CONF_DOMAINS, default=[]):
+        vol.Optional(CONF_ENTITIES): cv.entity_ids,
+        vol.Optional(CONF_DOMAINS):
             vol.All(cv.ensure_list, [cv.string])
     })
 })
@@ -87,13 +87,14 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+@asyncio.coroutine
 def wait_connection_ready(hass):
     """
     Wait till the connection is ready.
 
     Returns a coroutine object.
     """
-    return hass.data[DATA_INSTANCE].async_db_ready
+    return (yield from hass.data[DATA_INSTANCE].async_db_ready)
 
 
 def run_information(hass, point_in_time: Optional[datetime] = None):
@@ -318,6 +319,7 @@ class Recorder(threading.Thread):
                     with session_scope(session=self.get_session()) as session:
                         dbevent = Events.from_event(event)
                         session.add(dbevent)
+                        session.flush()
 
                         if event.event_type == EVENT_STATE_CHANGED:
                             dbstate = States.from_event(event)

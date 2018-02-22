@@ -46,7 +46,7 @@ AUTO_SETUP_SCHEMA = vol.Schema({
             vol.All({
                 vol.Required(CONF_XPATH): cv.string,
                 vol.Required(CONF_NODE): cv.string,
-                vol.Optional(CONF_TYPE, default=None): cv.string,
+                vol.Optional(CONF_TYPE): cv.string,
                 vol.Optional(CONF_INVERTING, default=False): cv.boolean,
             })
         ]),

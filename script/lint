@@ -8,7 +8,7 @@ if [ "$1" = "--changed" ]; then
   echo "================================================="
   echo "FILES CHANGED (git diff upstream/dev --name-only)"
   echo "================================================="
-  echo  $files
+  printf "%s\n" $files
   echo "================"
   echo "LINT with flake8"
   echo "================"

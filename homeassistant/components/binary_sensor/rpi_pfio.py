@@ -26,7 +26,7 @@ DEFAULT_SETTLE_TIME = 20
 DEPENDENCIES = ['rpi_pfio']
 
 PORT_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_SETTLE_TIME, default=DEFAULT_SETTLE_TIME):
         cv.positive_int,
     vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     binary_sensors = []
     ports = config.get(CONF_PORTS)
     for port, port_entity in ports.items():
-        name = port_entity[CONF_NAME]
+        name = port_entity.get(CONF_NAME)
         settle_time = port_entity[CONF_SETTLE_TIME] / 1000
         invert_logic = port_entity[CONF_INVERT_LOGIC]
 
