@@ -43,7 +43,7 @@ class SynologyChatNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         data = {
-            'text': message 
+            'text': message
         }
 
         to_send = 'payload=' + json.dumps(data)
