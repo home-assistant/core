@@ -147,29 +147,16 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
     return [entity_id(ent_id) for ent_id in value]
 
 
-class EntitiesDomain():
-    """Class validator if entities belong to domain."""
-
-    def __init__(self, domain: str):
-        """Initialize validator."""
-        self.domain = domain
-
-    def __call__(self, value: Union[str, Sequence]) -> Sequence[str]:
-        """Validate user input."""
-        if value is None or value == []:
-            raise vol.Invalid("Entities can not be None")
-        if isinstance(value, str):
-            value = [ent_id for ent_id in value.split(',')]
-
-        entities = []
-        for ent_id in value:
-            ent_id = entity_id(ent_id.strip())
-            if split_entity_id(ent_id)[0] == self.domain:
-                entities.append(ent_id)
-            else:
-                raise vol.Invalid("Entity ID does not belog to domain")
-
-        return entities
+def entities_domain(domain: str):
+    """Validate that entities belong to domain."""
+    def validate(values: Union[str, Sequence]) -> Sequence[str]:
+        """Test if entitiy domain is domain."""
+        values = entity_ids(values)
+        for ent_id in values:
+            if split_entity_id(ent_id)[0] != domain:
+                raise vol.Invalid("Entity ID does not belong to domain")
+        return values
+    return validate
 
 
 def enum(enumClass):
