@@ -22,7 +22,7 @@ from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
 
 
-REQUIREMENTS = ['rflink==0.0.34']
+REQUIREMENTS = ['rflink==0.0.37']
 
 _LOGGER = logging.getLogger(__name__)
 
