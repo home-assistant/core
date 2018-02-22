@@ -4,8 +4,8 @@ Reads vehicle status from BMW connected drive portal.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.bmw_connected_drive/
 """
-import logging
 import asyncio
+import logging
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -48,7 +48,6 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         self._name = sensor_name
         self._device_class = device_class
         self._state = None
-        self._unit_of_measurement = None
 
     @property
     def should_poll(self) -> bool:
@@ -71,11 +70,6 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         return self._state
 
     @property
-    def unit_of_measurement(self) -> str:
-        """Get the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         vehicle_state = self._vehicle.state
@@ -88,8 +82,8 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             for lid in vehicle_state.lids:
                 result[lid.name] = lid.state.value
         elif self._attribute == 'all_windows_closed':
-            for lid in vehicle_state.windows:
-                result[lid.name] = lid.state.value
+            for window in vehicle_state.windows:
+                result[window.name] = window.state.value
         elif self._attribute == 'door_lock_state':
             result['door_lock_state'] = vehicle_state.door_lock_state.value
 

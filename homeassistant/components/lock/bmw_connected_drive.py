@@ -4,8 +4,9 @@ Support for BMW cars with BMW ConnectedDrive.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/lock.bmw_connected_drive/
 """
-import logging
 import asyncio
+import logging
+import time
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.components.lock import LockDevice
@@ -68,42 +69,38 @@ class BMWLock(LockDevice):
         """Return true if lock is locked."""
         return self._state == STATE_LOCKED
 
-    @asyncio.coroutine
-    def async_lock(self, **kwargs):
+    def lock(self, **kwargs):
         """Lock the car."""
         from bimmer_connected.remote_services import ExecutionState
 
-        _LOGGER.info("%s: locking doors", self._vehicle.modelName)
+        _LOGGER.debug("%s: locking doors", self._vehicle.modelName)
         status = self._vehicle.remote_services.trigger_remote_door_lock()
         self._state = STATE_LOCKED
-        self.async_schedule_update_ha_state()
         while status.state != ExecutionState.EXECUTED:
             status = self._vehicle.remote_services.get_remote_service_status()
-            yield from asyncio.sleep(1)
-        _LOGGER.info("%s: doors locked", self._vehicle.modelName)
-        yield from asyncio.sleep(10)
+            time.sleep(1)
+        _LOGGER.debug("%s: doors locked", self._vehicle.modelName)
+        time.sleep(10)
         self.hass.async_add_job(self._account.update)
 
-    @asyncio.coroutine
-    def async_unlock(self, **kwargs):
+    def unlock(self, **kwargs):
         """Unlock the car."""
         from bimmer_connected.remote_services import ExecutionState
 
-        _LOGGER.info("%s: unlocking doors", self._vehicle.modelName)
+        _LOGGER.debug("%s: unlocking doors", self._vehicle.modelName)
         status = self._vehicle.remote_services.trigger_remote_door_unlock()
         self._state = STATE_UNLOCKED
-        self.async_schedule_update_ha_state()
         while status.state != ExecutionState.EXECUTED:
             status = self._vehicle.remote_services.get_remote_service_status()
-            yield from asyncio.sleep(1)
-        _LOGGER.info("%s: doors unlocked", self._vehicle.modelName)
-        yield from asyncio.sleep(10)
+            time.sleep(1)
+        _LOGGER.debug("%s: doors unlocked", self._vehicle.modelName)
+        time.sleep(10)
         self.hass.async_add_job(self._account.update)
 
     def update(self):
         """Update state of the lock."""
-        _LOGGER.info("%s: updating data for %s", self._vehicle.modelName,
-                     self._attribute)
+        _LOGGER.debug("%s: updating data for %s", self._vehicle.modelName,
+                      self._attribute)
         vehicle_state = self._vehicle.state
 
         # Possible values: LOCKED, SECURED, SELECTIVELOCKED, UNLOCKED
