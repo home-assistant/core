@@ -190,7 +190,7 @@ class Thermostat(ClimateDevice):
         """Return the current fan state."""
         if 'fan' in self.thermostat['equipmentStatus']:
             return STATE_ON
-        return STATE_OFF
+        return STATE_AUTO
 
     @property
     def current_hold_mode(self):
@@ -350,11 +350,7 @@ class Thermostat(ClimateDevice):
 
     def set_fan_mode(self, fan, **kwargs):
         """Set the fan mode.  Valid values are "on" or "auto" """
-        if fan.lower() == 'on':
-            fan = 'on'
-        elif fan.lower() == 'auto':
-            fan = 'auto'
-        else:
+        if (fan.lower() != STATE_ON) and (fan.lower() != STATE_AUTO):
             error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
             _LOGGER.error(error)
             return
