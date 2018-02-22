@@ -391,6 +391,7 @@ class _AlexaTemperatureSensor(_AlexaInterface):
 
 @ENTITY_ADAPTERS.register(alert.DOMAIN)
 @ENTITY_ADAPTERS.register(automation.DOMAIN)
+@ENTITY_ADAPTERS.register(group.DOMAIN)
 @ENTITY_ADAPTERS.register(input_boolean.DOMAIN)
 class _GenericCapabilities(_AlexaEntity):
     """A generic, on/off device.
@@ -519,16 +520,6 @@ class _ScriptCapabilities(_AlexaEntity):
         can_cancel = bool(self.entity.attributes.get('can_cancel'))
         return [_AlexaSceneController(self.entity,
                                       supports_deactivation=can_cancel)]
-
-
-@ENTITY_ADAPTERS.register(group.DOMAIN)
-class _GroupCapabilities(_AlexaEntity):
-    def default_display_categories(self):
-        return [_DisplayCategory.SCENE_TRIGGER]
-
-    def interfaces(self):
-        return [_AlexaSceneController(self.entity,
-                                      supports_deactivation=True)]
 
 
 @ENTITY_ADAPTERS.register(sensor.DOMAIN)
@@ -773,6 +764,8 @@ def extract_entity(funct):
 def async_api_turn_on(hass, config, request, entity):
     """Process a turn on request."""
     domain = entity.domain
+    if entity.domain == group.DOMAIN:
+        domain = ha.DOMAIN
 
     service = SERVICE_TURN_ON
     if entity.domain == cover.DOMAIN:
@@ -928,10 +921,7 @@ def async_api_increase_color_temp(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_activate(hass, config, request, entity):
     """Process an activate request."""
-    if entity.domain == group.DOMAIN:
-        domain = ha.DOMAIN
-    else:
-        domain = entity.domain
+    domain = entity.domain
 
     yield from hass.services.async_call(domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id
@@ -955,10 +945,7 @@ def async_api_activate(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_deactivate(hass, config, request, entity):
     """Process a deactivate request."""
-    if entity.domain == group.DOMAIN:
-        domain = ha.DOMAIN
-    else:
-        domain = entity.domain
+    domain = entity.domain
 
     yield from hass.services.async_call(domain, SERVICE_TURN_OFF, {
         ATTR_ENTITY_ID: entity.entity_id
