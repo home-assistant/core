@@ -91,9 +91,9 @@ def _lowpass(new_state, stats, states, **kwargs):
         Filter.logger.error("unrecognized params passed in: %s", kwargs)
 
     try:
-        new_state_weight = 1.0 / time_constant
-        prev_state_weight = 1.0 - new_state_weight
-        filtered = prev_state_weight * states[-1] + new_state_weight * new_state
+        new_weight = 1.0 / time_constant
+        prev_weight = 1.0 - new_weight
+        filtered = prev_weight * states[-1] + new_weight * new_state
     except IndexError:
         # if we don't have enough states to run the filter
         # just accept the new value
@@ -233,7 +233,7 @@ class FilterSensor(Entity):
 
             @property
             def statistics(self):
-                """Provides statistics on filter execution."""
+                """Get statistics on filter execution."""
                 return self.filter_stats
 
             def update(self, new_data):
@@ -290,7 +290,7 @@ class Filter(object):
 
             self.states.append(filtered_state)
 
-            #filter_stats makes available few statistics to the sensor
+            # filter_stats makes available few statistics to the sensor
             sensor_object.filter_stats = self.filter_stats
 
             Filter.logger.debug("%s(%s) -> %s", self.filter_stats['filter'],
