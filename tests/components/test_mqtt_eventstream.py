@@ -30,7 +30,8 @@ class TestMqttEventStream(object):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def add_eventstream(self, sub_topic=None, pub_topic=None, ignore_event=None):
+    def add_eventstream(self, sub_topic=None, pub_topic=None,
+                        ignore_event=None):
         """Add a mqtt_eventstream component."""
         config = {}
         if sub_topic:
