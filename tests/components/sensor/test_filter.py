@@ -1,12 +1,12 @@
-"""The test for the filter sensor platform."""
+"""The test for the data filter sensor platform."""
 import unittest
 
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant, assert_setup_component
 
 
-class TestFilterSensor(unittest.TestCase):
-    """Test the Statistics sensor."""
+class TestDataFilterSensor(unittest.TestCase):
+    """Test the Data Filter sensor."""
 
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
@@ -21,7 +21,7 @@ class TestFilterSensor(unittest.TestCase):
         """Test if filter doesn't exist."""
         config = {
             'sensor': {
-                'platform': 'filter',
+                'platform': 'data_filter',
                 'entity_id': 'sensor.test_monitored',
                 'filter': 'nonexisting'
             }
@@ -36,7 +36,7 @@ class TestFilterSensor(unittest.TestCase):
         """Test if filter outlier works."""
         config = {
             'sensor': {
-                'platform': 'filter',
+                'platform': 'data_filter',
                 'name': 'test',
                 'entity_id': 'sensor.test_monitored',
                 'filter': 'outlier'
@@ -59,7 +59,7 @@ class TestFilterSensor(unittest.TestCase):
         """Test if filter lowpass works."""
         config = {
             'sensor': {
-                'platform': 'filter',
+                'platform': 'data_filter',
                 'name': 'test',
                 'entity_id': 'sensor.test_monitored',
                 'filter': 'lowpass'
