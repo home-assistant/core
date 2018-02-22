@@ -32,6 +32,8 @@ DEPENDENCIES = ['maxcul']
 
 DEFAULT_TEMPERATURE = 12
 
+SUPPORTED_OPERATIONS = [STATE_AUTO, STATE_MANUAL, STATE_BOOST, STATE_TEMPORARY]
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_ID): cv.positive_int
 })
@@ -163,21 +165,21 @@ class MaxCulClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return the current operation mode of this device."""
-        return MaxCulClimate._mode_to_state(self._mode)
+        return self._mode_to_state(self._mode)
 
     @property
     def operation_list(self):
         """All supported operation modes of this device."""
-        return [STATE_AUTO, STATE_MANUAL, STATE_BOOST, STATE_TEMPORARY]
+        return SUPPORTED_OPERATIONS
 
     def set_temperature(self, **kwargs):
         """Set the target temperature of this device."""
         from maxcul import MODE_MANUAL
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
         if target_temperature is None:
-            return False
+            return
 
-        return self._maxcul_connection.set_temperature(
+        self._maxcul_connection.set_temperature(
             self._device_id,
             target_temperature,
             self._mode or MODE_MANUAL)
@@ -186,8 +188,8 @@ class MaxCulClimate(ClimateDevice):
         """Set the operation mode of this device."""
         new_mode = MaxCulClimate._state_to_mode(operation_mode)
         if new_mode is None:
-            return False
-        return self._maxcul_connection.set_temperature(
+            return
+        self._maxcul_connection.set_temperature(
             self._device_id,
             self._target_temperature or DEFAULT_TEMPERATURE,
             new_mode)
