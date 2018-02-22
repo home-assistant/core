@@ -94,15 +94,15 @@ class SimulatedSensor(Entity):
 
     def signal_calc(self):
         """Calculate the signal."""
-        m0 = self._mean
-        a0 = self._amp
-        dt = self.time_delta().total_seconds()*1e6  # convert to  milliseconds
-        w0 = self._period.total_seconds()*1e6
-        s0 = self._fwhm/2
-        p0 = math.radians(self._phase)
-        periodic = a0 * (math.sin((2*math.pi*dt/w0) + p0))
-        noise = random.gauss(mu=0, sigma=s0)
-        return m0 + periodic + noise
+        mean = self._mean
+        amp = self._amp
+        time_delta = self.time_delta().total_seconds()*1e6  # to  milliseconds
+        period = self._period.total_seconds()*1e6
+        fwhm = self._fwhm/2
+        phase = math.radians(self._phase)
+        periodic = amp * (math.sin((2*math.pi*time_delta/period) + phase))
+        noise = random.gauss(mu=0, sigma=fwhm)
+        return mean + periodic + noise
 
     def update(self):
         """Update the sensor."""
