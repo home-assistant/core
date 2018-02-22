@@ -133,7 +133,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     async_add_devices([
         FilterSensor(hass, name, entity_id, filter_name, wsize,
-                         config.get(CONF_FILTER_OPTIONS, dict()))
+                     config.get(CONF_FILTER_OPTIONS, dict()))
         ], True)
 
 
@@ -237,7 +237,7 @@ class FilterSensor(Entity):
                 return self.filter_stats
 
             def update(self, new_data):
-                """Update raw data.""" 
+                """Update raw data."""
                 self._data = float(new_data)
 
         return FilterData
