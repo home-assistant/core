@@ -104,14 +104,15 @@ def _async_create_cast_device(hass, chromecast):
     if chromecast.uuid is None:
         # Found a cast without UUID, we don't store it because we won't be able
         # to update it anyway.
-        return CastDevice(chromecast)
+        return CastDevice(hass, chromecast)
 
     # Found a cast with UUID
     added_casts = hass.data[ADDED_CAST_DEVICES_KEY]
     old_cast_device = added_casts.get(chromecast.uuid)
     if old_cast_device is None:
         # -> New cast device
-        cast_device = added_casts[chromecast.uuid] = CastDevice(chromecast)
+        cast_device = CastDevice(hass, chromecast)
+        added_casts[chromecast.uuid] = cast_device
         return cast_device
 
     old_key = (old_cast_device.cast.host,
@@ -171,8 +172,9 @@ def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
 
         async_dispatcher_connect(hass, SIGNAL_CAST_DISCOVERED,
                                  async_cast_discovered)
-        # Re-play the callback for all past chromecasts
-        for chromecast in hass.data[KNOWN_CHROMECASTS_KEY].values():
+        # Re-play the callback for all past chromecasts, store the objects in
+        # a list to avoid concurrent modification resulting in exception.
+        for chromecast in list(hass.data[KNOWN_CHROMECASTS_KEY].values()):
             async_cast_discovered(chromecast)
 
         hass.async_add_job(_setup_internal_discovery, hass)
@@ -188,21 +190,18 @@ def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         if cast_device is not None:
             hass.data[KNOWN_CHROMECASTS_KEY][key] = chromecast
             async_add_devices([cast_device])
-        else:
-            # Some other entity already has this chromecast, throw this one
-            # away.
-            chromecast.disconnect(blocking=False)
 
 
 class CastDevice(MediaPlayerDevice):
     """Representation of a Cast device on the network."""
 
-    def __init__(self, chromecast):
+    def __init__(self, hass, chromecast):
         """Initialize the Cast device."""
         self.cast = None  # type: pychromecast.Chromecast
         self.cast_status = None
         self.media_status = None
         self.media_status_received = None
+        self._hass = hass
 
         self.async_set_chromecast(chromecast)
 
@@ -416,7 +415,7 @@ class CastDevice(MediaPlayerDevice):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        if self.cast.uuid:
+        if self.cast.uuid is not None:
             return str(self.cast.uuid)
         return None
 
@@ -446,5 +445,5 @@ class CastDevice(MediaPlayerDevice):
             return
         _LOGGER.debug("Disconnecting existing chromecast object")
         old_key = (self.cast.host, self.cast.port, self.cast.uuid)
-        self.hass.data[KNOWN_CHROMECASTS_KEY].pop(old_key)
+        self._hass.data[KNOWN_CHROMECASTS_KEY].pop(old_key)
         self.cast.disconnect(blocking=False)
