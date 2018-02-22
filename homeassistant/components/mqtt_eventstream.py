@@ -20,8 +20,6 @@ from homeassistant.core import EventOrigin, State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.remote import JSONEncoder
 
-import homeassistant.const as has_const
-
 DOMAIN = 'mqtt_eventstream'
 DEPENDENCIES = ['mqtt']
 
@@ -29,9 +27,6 @@ CONF_PUBLISH_TOPIC = 'publish_topic'
 CONF_SUBSCRIBE_TOPIC = 'subscribe_topic'
 CONF_PUBLISH_EVENTSTREAM_RECEIVED = 'publish_eventstream_received'
 CONF_IGNORE_EVENT = 'ignore_event'
-
-EVENT_TYPES = [has_const.__dict__[x]
-               for x in has_const.__dict__.keys() if x.startswith('EVENT_')]
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
