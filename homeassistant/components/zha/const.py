@@ -33,6 +33,7 @@ def populate_data():
 
     SINGLE_CLUSTER_DEVICE_CLASS.update({
         zcl.clusters.general.OnOff: 'switch',
+        zcl.clusters.measurement.RelativeHumidity: 'sensor',
         zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
         zcl.clusters.security.IasZone: 'binary_sensor',
     })

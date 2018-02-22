@@ -340,9 +340,11 @@ class HomeAssistantView(object):
         """Return a JSON response."""
         msg = json.dumps(
             result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
-        return web.Response(
+        response = web.Response(
             body=msg, content_type=CONTENT_TYPE_JSON, status=status_code,
             headers=headers)
+        response.enable_compression()
+        return response
 
     def json_message(self, message, status_code=200, message_code=None,
                      headers=None):

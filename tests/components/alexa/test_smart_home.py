@@ -515,17 +515,15 @@ def test_media_player(hass):
 
     call, _ = yield from assert_request_calls_service(
         'Alexa.StepSpeaker', 'AdjustVolume', 'media_player#test',
-        'media_player.volume_set',
+        'media_player.volume_up',
         hass,
         payload={'volumeSteps': 20})
-    assert call.data['volume_level'] == 0.95
 
     call, _ = yield from assert_request_calls_service(
         'Alexa.StepSpeaker', 'AdjustVolume', 'media_player#test',
-        'media_player.volume_set',
+        'media_player.volume_down',
         hass,
         payload={'volumeSteps': -20})
-    assert call.data['volume_level'] == 0.55
 
 
 @asyncio.coroutine
@@ -571,15 +569,11 @@ def test_group(hass):
     appliance = yield from discovery_test(device, hass)
 
     assert appliance['endpointId'] == 'group#test'
-    assert appliance['displayCategories'][0] == "SCENE_TRIGGER"
+    assert appliance['displayCategories'][0] == "OTHER"
     assert appliance['friendlyName'] == "Test group"
+    assert_endpoint_capabilities(appliance, 'Alexa.PowerController')
 
-    (capability,) = assert_endpoint_capabilities(
-        appliance,
-        'Alexa.SceneController')
-    assert capability['supportsDeactivation']
-
-    yield from assert_scene_controller_works(
+    yield from assert_power_controller_works(
         'group#test',
         'homeassistant.turn_on',
         'homeassistant.turn_off',
