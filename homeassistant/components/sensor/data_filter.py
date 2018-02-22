@@ -29,6 +29,11 @@ CONF_FILTER_OPTIONS = 'options'
 CONF_FILTER_NAME = 'filter'
 CONF_WINDOW_SIZE = 'window_size'
 
+CONF_OUTLIER_RADIUS = 'radius'
+
+CONF_LOWPASS_TIME_CONSTANT = 'time_constant'
+CONF_LOWPASS_PRECISION = 'precision'
+
 DEFAULT_NAME_TEMPLATE = "{} filter {}"
 ICON = 'mdi: chart-line-variant'
 
@@ -56,7 +61,7 @@ def _outlier(new_state, stats, states, **kwargs):
         the median of the window case it's an outlier
 
     """
-    radius = kwargs.pop('radius', 5)
+    radius = kwargs.pop(CONF_OUTLIER_RADIUS, 5)
     erasures = stats.get('erasures', 0)
 
     if (len(states) > 1 and
@@ -84,8 +89,8 @@ def _lowpass(new_state, stats, states, **kwargs):
         a new state value that has been smoothed by filter
 
     """
-    time_constant = kwargs.pop('time_constant', 4)
-    precision = kwargs.pop('precision', None)
+    time_constant = kwargs.pop(CONF_LOWPASS_TIME_CONSTANT, 4)
+    precision = kwargs.pop(CONF_LOWPASS_PRECISION, None)
 
     if len(kwargs) != 0:
         Filter.logger.error("unrecognized params passed in: %s", kwargs)
@@ -107,8 +112,9 @@ def _lowpass(new_state, stats, states, **kwargs):
 
 # ALL filter arguments must be OPTIONAL
 FILTER_SCHEMA = vol.Schema({
-    vol.Optional('time_constant'): vol.Coerce(int),
-    vol.Optional('radius'): vol.Coerce(float)
+    vol.Optional(CONF_LOWPASS_TIME_CONSTANT): vol.Coerce(int),
+    vol.Optional(CONF_LOWPASS_PRECISION): vol.Coerce(int),
+    vol.Optional(CONF_OUTLIER_RADIUS): vol.Coerce(float)
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -132,12 +138,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         name = DEFAULT_NAME_TEMPLATE.format(entity_id, filter_name)
 
     async_add_devices([
-        FilterSensor(hass, name, entity_id, filter_name, wsize,
+        DataFilterSensor(hass, name, entity_id, filter_name, wsize,
                      config.get(CONF_FILTER_OPTIONS, dict()))
         ], True)
 
 
-class FilterSensor(Entity):
+class DataFilterSensor(Entity):
     """Representation of a Filter sensor."""
 
     def __init__(self, hass, name, entity_id, filter_name, wsize, filter_args):
