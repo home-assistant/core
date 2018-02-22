@@ -160,7 +160,8 @@ class HistoryAverageSensor(Entity):
         def state_listener(entity, old_state, new_state):
             """Handle the sensor state changes."""
             self._history.append(new_state)
-            self._history = sorted(self._history, key=attrgetter('last_changed'))
+            self._history = sorted(self._history,
+                                   key=attrgetter('last_changed'))
             self.async_schedule_update_ha_state(True)
 
         @callback
@@ -199,8 +200,6 @@ class HistoryAverageSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        
-        # FIXME: timedelta is not JSON serializable
         # period = self._period
         # duration = 0
         # if len(period) == 2:
