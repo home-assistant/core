@@ -85,7 +85,7 @@ NODE_FILTERS = {
         'uom': [],
         'states': ['off', 'low', 'med', 'high'],
         'node_def_id': ['FanLincMotor'],
-        'insteon_type': []
+        'insteon_type': ['1.46.']
     },
     'cover': {
         'uom': ['97'],
