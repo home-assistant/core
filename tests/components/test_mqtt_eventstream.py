@@ -151,7 +151,6 @@ class TestMqttEventStream(object):
     @patch('homeassistant.components.mqtt.async_publish')
     def test_ignored_event_doesnt_send_over_stream(self, mock_pub):
         """"Test the ignoring of sending events if defined."""
-
         assert self.add_eventstream(pub_topic='bar',
                                     ignore_event=['state_changed'])
         self.hass.block_till_done()
@@ -179,7 +178,6 @@ class TestMqttEventStream(object):
     @patch('homeassistant.components.mqtt.async_publish')
     def test_wrong_ignored_event_sends_over_stream(self, mock_pub):
         """"Test the ignoring of sending events if defined."""
-
         assert self.add_eventstream(pub_topic='bar',
                                     ignore_event=['statee_changed'])
         self.hass.block_till_done()
