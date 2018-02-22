@@ -226,12 +226,9 @@ def test_replay_past_chromecasts(hass):
     discover_cast('service1', cast_group1)
     yield from hass.async_block_till_done()
     yield from hass.async_block_till_done()  # having jobs that add jobs
-    yield from hass.async_block_till_done()  # having jobs that add jobs
     assert add_dev1.call_count == 1
 
     add_dev2 = yield from async_setup_cast(
         hass, discovery_info={'host': 'host2', 'port': 42})
     yield from hass.async_block_till_done()
-    yield from hass.async_block_till_done()
-    yield from hass.async_block_till_done()  # having jobs that add jobs
     assert add_dev2.call_count == 1
