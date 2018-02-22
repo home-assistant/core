@@ -22,13 +22,14 @@ class TestSimulatedSensor(unittest.TestCase):
         self.hass.stop()
 
     def test_default_config(self):
-        """Test that an invalid path is caught."""
+        """Test default config."""
         config = {
             'sensor': {
                 'platform': 'simulated'}
         }
         self.assertTrue(
             setup_component(self.hass, 'sensor', config))
+        self.hass.block_till_done()
         assert len(self.hass.states.entity_ids()) == 1
         state = self.hass.states.get('sensor.simulated')
         assert state.attributes.get(
