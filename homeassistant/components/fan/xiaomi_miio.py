@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 })
 
-REQUIREMENTS = ['python-miio>=0.3.6']
+REQUIREMENTS = ['python-miio==0.3.7']
 
 ATTR_MODEL = 'model'
 
