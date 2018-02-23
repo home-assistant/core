@@ -99,19 +99,28 @@ SUPPORT_RESET_FILTER = 2048
 SUPPORT_SET_EXTRA_FEATURES = 4096
 SUPPORT_SET_TARGET_HUMIDITY = 8192
 
-SUPPORT_FLAGS_GENERIC = (SUPPORT_SET_SPEED | SUPPORT_SET_BUZZER |
+SUPPORT_FLAGS_GENERIC = (SUPPORT_SET_SPEED |
+                         SUPPORT_SET_BUZZER |
                          SUPPORT_SET_CHILD_LOCK)
 
 SUPPORT_FLAGS_AIRPURIFIER = (SUPPORT_FLAGS_GENERIC |
-                             SUPPORT_SET_LED | SUPPORT_SET_LED_BRIGHTNESS | SUPPORT_SET_FAVORITE_LEVEL |
-                             SUPPORT_SET_LEARN_MODE | SUPPORT_RESET_FILTER | SUPPORT_SET_EXTRA_FEATURES)
+                             SUPPORT_SET_LED |
+                             SUPPORT_SET_LED_BRIGHTNESS |
+                             SUPPORT_SET_FAVORITE_LEVEL |
+                             SUPPORT_SET_LEARN_MODE |
+                             SUPPORT_RESET_FILTER |
+                             SUPPORT_SET_EXTRA_FEATURES)
 
-SUPPORT_FLAGS_AIRPURIFIER_PRO = (SUPPORT_SET_SPEED | SUPPORT_SET_CHILD_LOCK |
-                                 SUPPORT_SET_LED | SUPPORT_SET_FAVORITE_LEVEL | SUPPORT_SET_AUTO_DETECT |
+SUPPORT_FLAGS_AIRPURIFIER_PRO = (SUPPORT_SET_SPEED |
+                                 SUPPORT_SET_CHILD_LOCK |
+                                 SUPPORT_SET_LED |
+                                 SUPPORT_SET_FAVORITE_LEVEL |
+                                 SUPPORT_SET_AUTO_DETECT |
                                  SUPPORT_SET_VOLUME)
 
 SUPPORT_FLAGS_AIRHUMIDIFIER = (SUPPORT_FLAGS_GENERIC |
-                               SUPPORT_SET_LED_BRIGHTNESS | SUPPORT_SET_TARGET_HUMIDITY)
+                               SUPPORT_SET_LED_BRIGHTNESS |
+                               SUPPORT_SET_TARGET_HUMIDITY)
 
 SERVICE_SET_BUZZER_ON = 'xiaomi_miio_set_buzzer_on'
 SERVICE_SET_BUZZER_OFF = 'xiaomi_miio_set_buzzer_off'
