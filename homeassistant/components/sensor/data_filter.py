@@ -92,7 +92,7 @@ def _lowpass(new_state, stats, states, **kwargs):
     time_constant = kwargs.pop(CONF_LOWPASS_TIME_CONSTANT, 4)
     precision = kwargs.pop(CONF_LOWPASS_PRECISION, None)
 
-    if len(kwargs) != 0:
+    if kwargs:
         Filter.logger.error("unrecognized params passed in: %s", kwargs)
 
     try:
@@ -106,8 +106,7 @@ def _lowpass(new_state, stats, states, **kwargs):
 
     if precision is None:
         return filtered
-    else:
-        return round(filtered, precision)
+    return round(filtered, precision)
 
 
 # ALL filter arguments must be OPTIONAL
