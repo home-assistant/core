@@ -15,10 +15,11 @@ import voluptuous as vol
 
 import homeassistant.components.hue as hue
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
-    ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
-    FLASH_LONG, FLASH_SHORT, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_COLOR_MODE, ATTR_EFFECT,
+    ATTR_FLASH, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_XY_COLOR,
+    EFFECT_COLORLOOP, EFFECT_RANDOM, FLASH_LONG, FLASH_SHORT,
+    PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR,
     SUPPORT_TRANSITION, SUPPORT_XY_COLOR, Light)
 from homeassistant.const import CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
@@ -255,6 +256,13 @@ class HueLight(Light):
         if self.is_group:
             return self.info['action'].get('ct')
         return self.info['state'].get('ct')
+
+    @property
+    def color_mode(self):
+        """Return the mode that was used to set the bulb color xy|hs|ct."""
+        if self.is_group:
+            return self.info['action'].get('colormode')
+        return self.info['state'].get('colormode')
 
     @property
     def is_on(self):
