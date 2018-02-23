@@ -84,8 +84,8 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 PROP_TO_ATTR = {
     'brightness': ATTR_BRIGHTNESS,
-    'color_temp': ATTR_COLOR_TEMP,
     'color_mode': ATTR_COLOR_MODE,
+    'color_temp': ATTR_COLOR_TEMP,
     'min_mireds': ATTR_MIN_MIREDS,
     'max_mireds': ATTR_MAX_MIREDS,
     'rgb_color': ATTR_RGB_COLOR,
