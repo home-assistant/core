@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device_list = fritz.get_devices()
         for device in device_list:
             if device.has_switch:
-                devices.append(FritzboxSwitch(hass, device, fritz))
+                devices.append(FritzboxSwitch(device, fritz))
 
     add_devices(devices)
 
@@ -40,9 +40,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FritzboxSwitch(SwitchDevice):
     """The switch class for Fritzbox switches."""
 
-    def __init__(self, hass, device, fritz):
+    def __init__(self, device, fritz):
         """Initialize the switch."""
-        self.units = hass.config.units
         self._device = device
         self._fritz = fritz
 
@@ -90,9 +89,10 @@ class FritzboxSwitch(SwitchDevice):
 
         if self._device.has_temperature_sensor:
             attrs[ATTR_TEMPERATURE] = "{}".format(
-                self.units.temperature(self._device.temperature, TEMP_CELSIUS))
+                self.hass.config.units.temperature(self._device.temperature,
+                                                   TEMP_CELSIUS))
             attrs[ATTR_TEMPERATURE_UNIT] = "{}".format(
-                self.units.temperature_unit)
+                self.hass.config.units.temperature_unit)
         return attrs
 
     @property
