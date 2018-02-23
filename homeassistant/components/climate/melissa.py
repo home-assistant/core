@@ -26,7 +26,7 @@ SUPPORT_FLAGS = (SUPPORT_FAN_MODE | SUPPORT_OPERATION_MODE |
                  SUPPORT_ON_OFF | SUPPORT_TARGET_TEMPERATURE)
 
 OP_MODES = [
-    STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT
+    STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT
 ]
 
 FAN_MODES = [
@@ -42,8 +42,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     all_devices = []
 
     for device in devices:
-        all_devices.append(MelissaClimate(
-            api, device['serial_number'], device))
+        if device['type'] == 'melissa':
+            all_devices.append(MelissaClimate(
+                api, device['serial_number'], device))
 
     add_devices(all_devices)
 
@@ -199,9 +200,7 @@ class MelissaClimate(ClimateDevice):
 
     def melissa_op_to_hass(self, mode):
         """Translate Melissa modes to hass states."""
-        if mode == self._api.MODE_AUTO:
-            return STATE_AUTO
-        elif mode == self._api.MODE_HEAT:
+        if mode == self._api.MODE_HEAT:
             return STATE_HEAT
         elif mode == self._api.MODE_COOL:
             return STATE_COOL
@@ -228,9 +227,7 @@ class MelissaClimate(ClimateDevice):
 
     def hass_mode_to_melissa(self, mode):
         """Translate hass states to melissa modes."""
-        if mode == STATE_AUTO:
-            return self._api.MODE_AUTO
-        elif mode == STATE_HEAT:
+        if mode == STATE_HEAT:
             return self._api.MODE_HEAT
         elif mode == STATE_COOL:
             return self._api.MODE_COOL
