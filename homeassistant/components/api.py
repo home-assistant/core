@@ -112,11 +112,13 @@ class APILoggerView(HomeAssistantView):
         loggers_to_update = {}
         for to_change, new_level in data.items():
             if new_level not in APILoggerView.LOGSEVERITY.values():
-                return self.json_message('Invalid log level: %s', HTTP_BAD_REQUEST)
+                return self.json_message('Invalid log level: %s' % new_level,
+                                         HTTP_BAD_REQUEST)
 
             if to_change not in current_loggers:
-                return self.json_message('Invalid logger specified: %s' % to_change,
-                                         HTTP_BAD_REQUEST)
+                return self.json_message(
+                    'Invalid logger specified: %s' % to_change,
+                    HTTP_BAD_REQUEST)
 
             loggers_to_update[to_change] = new_level
 
