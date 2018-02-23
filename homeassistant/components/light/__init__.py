@@ -55,6 +55,7 @@ ATTR_MIN_MIREDS = "min_mireds"
 ATTR_MAX_MIREDS = "max_mireds"
 ATTR_COLOR_NAME = "color_name"
 ATTR_WHITE_VALUE = "white_value"
+ATTR_COLOR_MODE = "color_mode"
 
 # Brightness of the light, 0..255 or percentage
 ATTR_BRIGHTNESS = "brightness"
@@ -84,6 +85,7 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 PROP_TO_ATTR = {
     'brightness': ATTR_BRIGHTNESS,
     'color_temp': ATTR_COLOR_TEMP,
+    'color_mode': ATTR_COLOR_MODE,
     'min_mireds': ATTR_MIN_MIREDS,
     'max_mireds': ATTR_MAX_MIREDS,
     'rgb_color': ATTR_RGB_COLOR,
