@@ -6,7 +6,6 @@ https://home-assistant.io/components/lock.bmw_connected_drive/
 """
 import asyncio
 import logging
-import time
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.components.lock import LockDevice
@@ -71,31 +70,15 @@ class BMWLock(LockDevice):
 
     def lock(self, **kwargs):
         """Lock the car."""
-        from bimmer_connected.remote_services import ExecutionState
-
         _LOGGER.debug("%s: locking doors", self._vehicle.modelName)
-        status = self._vehicle.remote_services.trigger_remote_door_lock()
+        self._vehicle.remote_services.trigger_remote_door_lock()
         self._state = STATE_LOCKED
-        while status.state != ExecutionState.EXECUTED:
-            status = self._vehicle.remote_services.get_remote_service_status()
-            time.sleep(1)
-        _LOGGER.debug("%s: doors locked", self._vehicle.modelName)
-        time.sleep(10)
-        self.hass.async_add_job(self._account.update)
 
     def unlock(self, **kwargs):
         """Unlock the car."""
-        from bimmer_connected.remote_services import ExecutionState
-
         _LOGGER.debug("%s: unlocking doors", self._vehicle.modelName)
-        status = self._vehicle.remote_services.trigger_remote_door_unlock()
+        self._vehicle.remote_services.trigger_remote_door_unlock()
         self._state = STATE_UNLOCKED
-        while status.state != ExecutionState.EXECUTED:
-            status = self._vehicle.remote_services.get_remote_service_status()
-            time.sleep(1)
-        _LOGGER.debug("%s: doors unlocked", self._vehicle.modelName)
-        time.sleep(10)
-        self.hass.async_add_job(self._account.update)
 
     def update(self):
         """Update state of the lock."""
