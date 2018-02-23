@@ -21,6 +21,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers import intent
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
@@ -228,7 +229,12 @@ def preprocess_turn_on_alternatives(params):
 
     color_name = params.pop(ATTR_COLOR_NAME, None)
     if color_name is not None:
-        params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+        try:
+            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+        except ValueError:
+            _LOGGER.warning('Got unknown color %s, falling back to white',
+                            color_name)
+            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb('white')
 
     kelvin = params.pop(ATTR_KELVIN, None)
     if kelvin is not None:
