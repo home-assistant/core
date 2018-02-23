@@ -37,7 +37,7 @@ DEFAULT_NAME = 'Group Light'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_ENTITIES): cv.entity_ids,
+    vol.Required(CONF_ENTITIES): cv.entities_domain('light')
 })
 
 SUPPORT_GROUP_LIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
