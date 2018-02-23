@@ -13,6 +13,7 @@ from homeassistant.core import callback
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['insteonplm==0.8.2']
 
@@ -73,7 +74,7 @@ def async_setup(hass, config):
         #
         # Override the device default capabilities for a specific address
         #
-        address = device_override.get('address', None)
+        address = device_override.get('address')
         if address is not None:
             if device_override.get('cat', False):
                 plm.devices.add_override(address,
@@ -99,15 +100,6 @@ def async_setup(hass, config):
     plm.devices.add_device_callback(async_plm_new_device)
 
     return True
-
-
-def common_attributes(entity):
-    """Return the device state attributes."""
-    attributes = {
-        'INSTEON Address': entity.address,
-        'INSTEON Group': entity.group
-    }
-    return attributes
 
 
 State = collections.namedtuple('Product', 'stateType platform')
@@ -159,3 +151,57 @@ class IPDB(object):
             if isinstance(key, state.stateType):
                 return state
         return None
+
+
+class InsteonPLMEntity(Entity):
+    """INSTEON abstract base entity."""
+
+    def __init__(self, device, state_key):
+        """Initialize the INSTEON PLM binary sensor."""
+        self._insteon_device_state = device.states[state_key]
+        self._insteon_device = device
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def address(self):
+        """Return the address of the node."""
+        return self._insteon_device.address.human
+
+    def group(self):
+        """Return the INSTEON group that the entity responds to."""
+        return self._insteon_device_state.group
+
+    @property
+    def name(self):
+        """Return the name of the node (used for Entity_ID)."""
+        name = ''
+        if self._insteon_device_state.group == 0x01:
+            name = self._insteon_device.id
+        else:
+            name = '{:s}_{:d}'.format(self._insteon_device.id,
+                                      self._insteon_device_state.group)
+        return name
+
+    @property
+    def device_state_attributes(self):
+        """Provide attributes for display on device card."""
+        attributes = {
+            'INSTEON Address': self.address,
+            'INSTEON Group': self.group
+        }
+        return attributes
+
+    @callback
+    def async_entity_update(self, deviceid, statename, val):
+        """Receive notification from transport that new data exists."""
+        self.async_schedule_update_ha_state()
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register INSTEON update events."""
+        self._insteon_device_state.register_updates(
+            self.async_entity_update)

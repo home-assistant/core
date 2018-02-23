@@ -7,10 +7,9 @@ https://home-assistant.io/components/light.insteon_plm/
 import asyncio
 import logging
 
-from homeassistant.core import callback
+from homeassistant.components.insteon_plm import InsteonPLMEntity
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     device = plm.devices[address]
     state_key = discovery_info['state_key']
 
-    _LOGGER.debug('Adding device %s with state name %s to Light platform.', 
+    _LOGGER.debug('Adding device %s with state name %s to Light platform.',
                   device.address.hex, device.states[state_key].name)
 
     entities.append(InsteonPLMDimmerDevice(device, state_key))
@@ -39,38 +38,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(entities)
 
 
-class InsteonPLMDimmerDevice(Light):
+class InsteonPLMDimmerDevice(InsteonPLMEntity, Light):
     """A Class for an Insteon device."""
-
-    def __init__(self, device, state_key):
-        """Initialize the light."""
-        self._insteon_device_state = device.states[state_key]
-        self._insteon_device = device
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def address(self):
-        """Return the address of the node."""
-        return self._insteon_device.address.human
-
-    def group(self):
-        """Return the INSTEON group that the entity responds to."""
-        return self._insteon_device_state.group
-
-    @property
-    def name(self):
-        """Return the name of the node (used for Entity_ID)."""
-        name = ''
-        if self._insteon_device_state.group == 0x01:
-            name = self._insteon_device.id
-        else:
-            name = '{:s}_{:d}'.format(self._insteon_device.id,
-                                      self._insteon_device_state.group)
-        return name
 
     @property
     def brightness(self):
@@ -88,17 +57,6 @@ class InsteonPLMDimmerDevice(Light):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
 
-    @property
-    def device_state_attributes(self):
-        """Provide attributes for display on device card."""
-        insteon_plm = get_component('insteon_plm')
-        return insteon_plm.common_attributes(self)
-
-    @callback
-    def async_light_update(self, entity_id, statename, val):
-        """Receive notification from transport that new data exists."""
-        self.async_schedule_update_ha_state()
-
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn device on."""
@@ -112,8 +70,3 @@ class InsteonPLMDimmerDevice(Light):
     def async_turn_off(self, **kwargs):
         """Turn device off."""
         self._insteon_device_state.off()
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Register INSTEON update events."""
-        self._insteon_device_state.register_updates(self.async_light_update)
