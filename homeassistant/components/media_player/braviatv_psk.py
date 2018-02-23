@@ -42,7 +42,7 @@ TV_NO_INFO = 'No info: TV resumed after pause'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PSK): cv.string,
-    vol.Optional(CONF_MAC, default=None): cv.string,
+    vol.Optional(CONF_MAC): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_AMP, default=False): cv.boolean,
     vol.Optional(CONF_ANDROID, default=True): cv.boolean,
