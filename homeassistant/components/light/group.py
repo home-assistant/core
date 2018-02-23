@@ -18,13 +18,15 @@ from homeassistant.components import light
 from homeassistant.const import (STATE_OFF, STATE_ON, SERVICE_TURN_ON,
                                  SERVICE_TURN_OFF, ATTR_ENTITY_ID, CONF_NAME,
                                  CONF_ENTITIES, STATE_UNAVAILABLE,
-                                 STATE_UNKNOWN, EVENT_HOMEASSISTANT_START)
+                                 STATE_UNKNOWN, ATTR_SUPPORTED_FEATURES)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_XY_COLOR,
-    SUPPORT_WHITE_VALUE, PLATFORM_SCHEMA)
+    SUPPORT_WHITE_VALUE, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, ATTR_XY_COLOR,
+    ATTR_RGB_COLOR, ATTR_WHITE_VALUE, ATTR_COLOR_TEMP, ATTR_MIN_MIREDS,
+    ATTR_MAX_MIREDS, ATTR_EFFECT_LIST, ATTR_EFFECT)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +49,7 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_devices, discovery_info=None) -> None:
     """Initialize light.group platform."""
     async_add_devices(
-        [GroupLight(hass, config.get(CONF_NAME), config[CONF_ENTITIES])])
+        [GroupLight(hass, config.get(CONF_NAME), config[CONF_ENTITIES])], True)
 
 
 class GroupLight(light.Light):
@@ -70,26 +72,24 @@ class GroupLight(light.Light):
         self._effect_list = None  # type: Optional[List[str]]
         self._effect = None  # type: Optional[str]
         self._supported_features = 0  # type: int
+        self._async_unsub_state_changed = None
 
     async def async_added_to_hass(self) -> None:
-        """Register callbacks"""
-
+        """Register callbacks."""
         @callback
         def async_state_changed_listener(entity_id: str, old_state: State,
                                          new_state: State):
             """Handle child updates."""
             self.async_schedule_update_ha_state(True)
 
-        @callback
-        def async_homeassistant_start(event):
-            """Track child state changes on startup."""
-            async_track_state_change(self.hass, self._entity_ids,
-                                     async_state_changed_listener)
+        self._async_unsub_state_changed = async_track_state_change(
+            self.hass, self._entity_ids, async_state_changed_listener)
 
-            self.async_schedule_update_ha_state(True)
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
-                                        async_homeassistant_start)
+    async def async_will_remove_from_hass(self):
+        """Callback when removed from HASS."""
+        if self._async_unsub_state_changed:
+            self._async_unsub_state_changed()
+            self._async_unsub_state_changed = None
 
     @property
     def name(self) -> str:
@@ -168,7 +168,7 @@ class GroupLight(light.Light):
             payload = deepcopy(kwargs)
             payload[ATTR_ENTITY_ID] = entity_id
             tasks.append(self.hass.services.async_call(
-                'light', service, payload, blocking=True))
+                light.DOMAIN, service, payload, blocking=True))
 
         if tasks:
             await asyncio.wait(tasks, loop=self.hass.loop)
@@ -188,35 +188,40 @@ class GroupLight(light.Light):
 
         self._state = _determine_on_off_state(states)
 
-        self._brightness = _reduce_attribute(on_states, 'brightness')
+        self._brightness = _reduce_attribute(on_states, ATTR_BRIGHTNESS)
+
         self._xy_color = _reduce_attribute(
-            on_states, 'xy_color', reduce=_average_tuple)
+            on_states, ATTR_XY_COLOR, reduce=_average_tuple)
+
         self._rgb_color = _reduce_attribute(
-            on_states, 'rgb_color', reduce=_average_tuple)
+            on_states, ATTR_RGB_COLOR, reduce=_average_tuple)
         if self._rgb_color is not None:
             self._rgb_color = tuple(map(int, self._rgb_color))
-        self._white_value = _reduce_attribute(on_states, 'white_value')
-        self._color_temp = _reduce_attribute(on_states, 'color_temp')
+
+        self._white_value = _reduce_attribute(on_states, ATTR_WHITE_VALUE)
+
+        self._color_temp = _reduce_attribute(on_states, ATTR_COLOR_TEMP)
         self._min_mireds = _reduce_attribute(
-            states, 'min_mireds', default=154, reduce=min)
+            states, ATTR_MIN_MIREDS, default=154, reduce=min)
         self._max_mireds = _reduce_attribute(
-            states, 'max_mireds', default=500, reduce=max)
+            states, ATTR_MAX_MIREDS, default=500, reduce=max)
 
         self._effect_list = None
-        all_effect_lists = list(_find_state_attributes(states, 'effect_list'))
+        all_effect_lists = list(
+            _find_state_attributes(states, ATTR_EFFECT_LIST))
         if all_effect_lists:
             # Merge all effects from all effect_lists with a union merge.
             self._effect_list = list(set().union(*all_effect_lists))
 
         self._effect = None
-        all_effects = list(_find_state_attributes(states, 'effect'))
+        all_effects = list(_find_state_attributes(on_states, ATTR_EFFECT))
         if all_effects:
             # Report the most common effect.
             effects_count = Counter(itertools.chain(all_effects))
             self._effect = effects_count.most_common(1)[0][0]
 
         self._supported_features = 0
-        for support in _find_state_attributes(states, 'supported_features'):
+        for support in _find_state_attributes(states, ATTR_SUPPORTED_FEATURES):
             # Merge supported features by emulating support for every feature
             # we find.
             self._supported_features |= support
@@ -239,9 +244,9 @@ def _find_state_attributes(states: List[State],
             yield value
 
 
-def _average(*args):
+def _average_int(*args):
     """Return the average of the supplied values."""
-    return sum(args) / len(args)
+    return int(sum(args) / len(args))
 
 
 def _average_tuple(*args):
@@ -252,7 +257,7 @@ def _average_tuple(*args):
 def _reduce_attribute(states: List[State],
                       key: str,
                       default: Optional[Any] = None,
-                      reduce: Callable[..., Any] = _average) -> Any:
+                      reduce: Callable[..., Any] = _average_int) -> Any:
     """Find the first attribute matching key from states.
 
     If none are found, return default.
@@ -261,6 +266,9 @@ def _reduce_attribute(states: List[State],
 
     if not attrs:
         return default
+
+    if len(attrs) == 1:
+        return attrs[0]
 
     return reduce(*attrs)
 

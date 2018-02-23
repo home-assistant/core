@@ -206,8 +206,9 @@ def async_turn_off(hass, entity_id=None, transition=None):
         DOMAIN, SERVICE_TURN_OFF, data))
 
 
+@callback
 @bind_hass
-def toggle(hass, entity_id=None, transition=None):
+def async_toggle(hass, entity_id=None, transition=None):
     """Toggle all or specified light."""
     data = {
         key: value for key, value in [
@@ -216,7 +217,14 @@ def toggle(hass, entity_id=None, transition=None):
         ] if value is not None
     }
 
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE, data))
+
+
+@bind_hass
+def toggle(hass, entity_id=None, transition=None):
+    """Toggle all or specified light."""
+    hass.add_job(async_toggle, hass, entity_id, transition)
 
 
 def preprocess_turn_on_alternatives(params):
