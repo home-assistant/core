@@ -28,7 +28,13 @@ DEFAULT_HOST = 'fritz.box'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DEVICES, default=[]):
-            vol.All(cv.ensure_list, [dict]),
+            vol.All(cv.ensure_list, [
+                vol.Schema({
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Required(CONF_USERNAME): cv.string,
+                }),
+            ]),
     })
 }, extra=vol.ALLOW_EXTRA)
 
