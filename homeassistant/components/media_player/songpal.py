@@ -7,7 +7,6 @@ https://home-assistant.io/components/media_player.songpal/
 import logging
 
 import voluptuous as vol
-from typing import List  # noqa: F401
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
@@ -38,13 +37,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config,
+                               async_add_devices, discovery_info=None):
     """Set up the Songpal platform."""
-    devices = []  # type: List[SongpalDevice]
+    devices = []
     if discovery_info is not None:
-        _LOGGER.debug("Got autodiscovered device: %s" % discovery_info)
-        devices.append(SongpalDevice(discovery_info["name"],
-                       discovery_info["properties"]["endpoint"]))
+        _LOGGER.debug("Got autodiscovered device: %s", discovery_info)
+        devices.append(
+            SongpalDevice(discovery_info["name"],
+                          discovery_info["properties"]["endpoint"]))
     else:
         songpal = SongpalDevice(config.get(CONF_NAME),
                                 config.get(CONF_ENDPOINT))
@@ -53,6 +54,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     async_add_devices(devices, True)
 
     async def async_service_handler(service):
+        """Service handler."""
         params = {key: value for key, value in service.data.items()
                   if key != ATTR_ENTITY_ID}
         entity_id = service.data.get("entity_id", None)
@@ -62,7 +64,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         for device in devices:
             if entity_id is None or device.entity_id == entity_id:
                 await device.async_set_sound_setting(params[PARAM_NAME],
-                                                    params[PARAM_VALUE])
+                                                     params[PARAM_VALUE])
 
     schema = vol.Schema({vol.Required(PARAM_NAME): cv.string,
                          vol.Required(PARAM_VALUE): cv.string})
@@ -86,6 +88,7 @@ class SongpalDevice(MediaPlayerDevice):
         self._available = False
         self._initialized = False
 
+        self._volume_control = None
         self._volume_min = 0
         self._volume_max = 1
         self._volume = 0
@@ -133,7 +136,7 @@ class SongpalDevice(MediaPlayerDevice):
 
         try:
             volumes = await self.dev.get_volume_information()
-            if len(volumes) == 0:
+            if not volumes:
                 _LOGGER.error("Got no volume controls, bailing out")
                 return
             if len(volumes) > 1:
@@ -141,20 +144,20 @@ class SongpalDevice(MediaPlayerDevice):
                                 volumes)
                 return
 
-            vol = volumes.pop()
-            _LOGGER.debug("Current volume: %s", vol)
-            self._volume_max = vol.maxVolume
-            self._volume_min = vol.minVolume
-            self._volume = vol.volume
-            self._volume_control = vol
+            volume = volumes.pop()
+            _LOGGER.debug("Current volume: %s", volume)
+            self._volume_max = volume.maxVolume
+            self._volume_min = volume.minVolume
+            self._volume = volume.volume
+            self._volume_control = volume
             self._is_muted = self._volume_control.is_muted
 
             status = await self.dev.get_power()
             self._state = status.status
-            _LOGGER.debug("Got state: %s" % status)
+            _LOGGER.debug("Got state: %s", status)
 
             inputs = await self.dev.get_inputs()
-            _LOGGER.debug("Got ins: %s" % inputs)
+            _LOGGER.debug("Got ins: %s", inputs)
             self._sources = inputs
 
             self._available = True
@@ -171,7 +174,7 @@ class SongpalDevice(MediaPlayerDevice):
                 await out.activate()
                 return
 
-        _LOGGER.error("Unable to find output: %s" % source)
+        _LOGGER.error("Unable to find output: %s", source)
 
     @property
     def source_list(self):
@@ -183,8 +186,7 @@ class SongpalDevice(MediaPlayerDevice):
         """Return current state."""
         if self._state:
             return STATE_ON
-        else:
-            return STATE_OFF
+        return STATE_OFF
 
     @property
     def source(self):
@@ -199,14 +201,14 @@ class SongpalDevice(MediaPlayerDevice):
     def volume_level(self):
         """Return volume level."""
         volume = self._volume / self._volume_max
-        _LOGGER.debug("Current volume: %s" % volume)
+        _LOGGER.debug("Current volume: %s", volume)
         return volume
 
     async def async_set_volume_level(self, volume):
         """Set volume level."""
-        vol = int(volume * self._volume_max)
-        _LOGGER.debug("Setting volume to %s" % vol)
-        return await self._volume_control.set_volume(vol)
+        volume = int(volume * self._volume_max)
+        _LOGGER.debug("Setting volume to %s", volume)
+        return await self._volume_control.set_volume(volume)
 
     async def async_volume_up(self):
         """Set volume up."""
@@ -226,7 +228,7 @@ class SongpalDevice(MediaPlayerDevice):
 
     async def async_mute_volume(self, mute):
         """Mute or unmute the device."""
-        _LOGGER.debug("Set mute: %s" % mute)
+        _LOGGER.debug("Set mute: %s", mute)
         return await self._volume_control.set_mute(mute)
 
     @property
