@@ -35,7 +35,7 @@ DEFAULT_MEAN = 0
 DEFAULT_PERIOD = 60
 DEFAULT_PHASE = 0
 DEFAULT_FWHM = 0
-DEFAULT_SEED = None
+DEFAULT_SEED = 999
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -60,9 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     phase = config.get(CONF_PHASE)
     fwhm = config.get(CONF_FWHM)
     seed = config.get(CONF_SEED)
-
-    if seed:
-        random.seed(seed)  # If a seed is configured, apply.
+    random.seed(seed)
 
     sensor = SimulatedSensor(
         name, unit, amp, mean, period, phase, fwhm, seed
