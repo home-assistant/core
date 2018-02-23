@@ -1,5 +1,5 @@
 """
-Support for filtering for sensor values.
+Support for filtering sensor values.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.filter/
@@ -259,7 +259,7 @@ class Filter(object):
         """Decorator constructor, selects algorithm and configures window.
 
         Args:
-            filter_algorithm (int): must be one of the defined filters
+            filter_algorithm (string): must be one of the defined filters
             window_size (int): size of the sliding window that holds previous
                                 values
             kwargs (dict): arguments to be passed to the specific filter
