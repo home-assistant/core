@@ -45,25 +45,24 @@ def setup(hass, config):
 
     fritz_list = []
 
-    if CONF_DEVICES in config[DOMAIN] and config[DOMAIN].get(CONF_DEVICES):
-        configured_devices = config[DOMAIN].get(CONF_DEVICES)
-        for device in configured_devices:
-            try:
-                host = device.get(CONF_HOST, DEFAULT_HOST)
-                username = device[CONF_USERNAME]
-                password = device[CONF_PASSWORD]
-                fritzbox = Fritzhome(host=host, user=username,
-                                     password=password)
-                fritzbox.login()
-                fritz_list.append(fritzbox)
-                _LOGGER.info("Connected to device %s", device)
-            except LoginError:
-                _LOGGER.warning("Login to Fritz!Box %s as %s failed",
-                                host, username)
-                continue
-            except KeyError:
-                _LOGGER.warning("Configuration error")
-                continue
+    configured_devices = config[DOMAIN].get(CONF_DEVICES)
+    for device in configured_devices:
+        try:
+            host = device.get(CONF_HOST, DEFAULT_HOST)
+            username = device[CONF_USERNAME]
+            password = device[CONF_PASSWORD]
+            fritzbox = Fritzhome(host=host, user=username,
+                                 password=password)
+            fritzbox.login()
+            fritz_list.append(fritzbox)
+            _LOGGER.info("Connected to device %s", device)
+        except LoginError:
+            _LOGGER.warning("Login to Fritz!Box %s as %s failed",
+                            host, username)
+            continue
+        except KeyError:
+            _LOGGER.warning("Configuration error")
+            continue
 
     hass.data[DOMAIN] = fritz_list
 
