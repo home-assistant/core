@@ -9,7 +9,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback, split_entity_id
+from homeassistant.core import callback
 from homeassistant.components.cover import (
     DOMAIN, PLATFORM_SCHEMA, CoverDevice, ATTR_POSITION,
     ATTR_CURRENT_POSITION, ATTR_TILT_POSITION, ATTR_CURRENT_TILT_POSITION,
@@ -35,23 +35,9 @@ KEY_STOP = 'stop'
 KEY_POSITION = 'position'
 
 
-def entities_domain(domain):
-    """Validate that entities belong to domain."""
-    def validate(values):
-        """Test if entitiy domain is domain."""
-        values = cv.entity_ids(values)
-        for ent_id in values:
-            if split_entity_id(ent_id)[0] != domain:
-                raise vol.Invalid(
-                    "Entity ID '{}' does not belong to domain '{}'"
-                    .format(ent_id, domain))
-        return values
-    return validate
-
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default='Group Cover'): cv.string,
-    vol.Required(CONF_ENTITIES): entities_domain(DOMAIN),
+    vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
 })
 
 
