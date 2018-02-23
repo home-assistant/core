@@ -256,34 +256,35 @@ class Recorder(threading.Thread):
                 self.hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_START, notify_hass_started)
 
-            if self.keep_days and self.purge_interval:
-                @callback
-                def async_purge(now):
-                    """Trigger the purge and schedule the next run."""
-                    self.queue.put(
-                        PurgeTask(self.keep_days, repack=not self.did_vacuum))
-                    self.hass.helpers.event.async_track_point_in_time(
-                        async_purge, now + timedelta(days=self.purge_interval))
-
-                earliest = dt_util.utcnow() + timedelta(minutes=30)
-                run = latest = dt_util.utcnow() + \
-                    timedelta(days=self.purge_interval)
-                with session_scope(session=self.get_session()) as session:
-                    event = session.query(Events).first()
-                    if event is not None:
-                        session.expunge(event)
-                        run = dt_util.as_utc(event.time_fired) + \
-                            timedelta(days=self.keep_days+self.purge_interval)
-                run = min(latest, max(run, earliest))
-                self.hass.helpers.event.async_track_point_in_time(
-                    async_purge, run)
-
         self.hass.add_job(register)
         result = hass_started.result()
 
         # If shutdown happened before HASS finished starting
         if result is shutdown_task:
             return
+
+        # Start periodic purge
+        if self.keep_days and self.purge_interval:
+            @callback
+            def async_purge(now):
+                """Trigger the purge and schedule the next run."""
+                self.queue.put(
+                    PurgeTask(self.keep_days, repack=not self.did_vacuum))
+                self.hass.helpers.event.async_track_point_in_time(
+                    async_purge, now + timedelta(days=self.purge_interval))
+
+            earliest = dt_util.utcnow() + timedelta(minutes=30)
+            run = latest = dt_util.utcnow() + \
+                timedelta(days=self.purge_interval)
+            with session_scope(session=self.get_session()) as session:
+                event = session.query(Events).first()
+                if event is not None:
+                    session.expunge(event)
+                    run = dt_util.as_utc(event.time_fired) + timedelta(
+                        days=self.keep_days+self.purge_interval)
+            run = min(latest, max(run, earliest))
+
+            self.hass.helpers.event.track_point_in_time(async_purge, run)
 
         while True:
             event = self.queue.get()
