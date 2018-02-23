@@ -9,6 +9,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,6 +91,11 @@ def setup(hass, config):
     maxconn.start()
 
     hass.data[DATA_MAXCUL_CONNECTION] = maxconn
+
+    def _shutdown(event):
+        maxconn.stop()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     def _service_enable_pairing(service):
         duration = service.data.get(ATTR_DURATION)
