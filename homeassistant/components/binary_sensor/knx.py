@@ -35,7 +35,7 @@ DEPENDENCIES = ['knx']
 AUTOMATION_SCHEMA = vol.Schema({
     vol.Optional(CONF_HOOK, default=CONF_DEFAULT_HOOK): cv.string,
     vol.Optional(CONF_COUNTER, default=CONF_DEFAULT_COUNTER): cv.port,
-    vol.Required(CONF_ACTION, default=None): cv.SCRIPT_SCHEMA
+    vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA
 })
 
 AUTOMATIONS_SCHEMA = vol.All(
