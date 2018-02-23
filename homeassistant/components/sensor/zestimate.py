@@ -31,8 +31,6 @@ ZESTIMATE = '{}:{}'.format(DEFAULT_NAME, NAME)
 
 ICON = 'mdi:home-variant'
 
-ATTR_LOCATION = 'location'
-ATTR_UPDATE = 'update'
 ATTR_AMOUNT = 'amount'
 ATTR_CHANGE = 'amount_change_30days'
 ATTR_CURRENCY = 'amount_currency'
@@ -53,7 +51,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Zestimate sensor."""
-    import xmltodict
 
     name = config.get(CONF_NAME)
     properties = config[CONF_ZPID]
@@ -62,32 +59,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for zpid in properties:
         params['zpid'] = zpid
-        try:
-            response = requests.get(_RESOURCE, params=params, timeout=5)
-            data = response.content.decode('utf-8')
-            data_dict = xmltodict.parse(data).get(ZESTIMATE)
-            error_code = int(data_dict['message']['code'])
-            if error_code != 0:
-                _LOGGER.error('The API returned: %s',
-                              data_dict['message']['text'])
-                return False
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error('The URL is not accessible')
-            return False
-
-        data = ZestimateData(params)
-        sensors.append(ZestimateDataSensor(name, data))
+        sensors.append(ZestimateDataSensor(name, params))
     add_devices(sensors, True)
 
 
 class ZestimateDataSensor(Entity):
     """Implementation of a Zestimate sensor."""
 
-    def __init__(self, name, data):
+    def __init__(self, name, params):
         """Initialize the sensor."""
-        self.data = data
         self._name = name
-        self.update()
+        self.params = params
+        self.data = None
+        self.address = None
+        self._state = None
 
     @property
     def name(self):
@@ -106,68 +91,54 @@ class ZestimateDataSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attributes = {}
-        if self.data.measurings is not None:
-            if ATTR_AMOUNT in self.data.measurings:
-                data = self.data.measurings
-                attributes[ATTR_AMOUNT] = data[ATTR_AMOUNT]
-                attributes[ATTR_CURRENCY] = data[ATTR_CURRENCY]
-                attributes[ATTR_LAST_UPDATED] = data[ATTR_LAST_UPDATED]
-                attributes[ATTR_CHANGE] = data[ATTR_CHANGE]
-                attributes[ATTR_VAL_HI] = data[ATTR_VAL_HI]
-                attributes[ATTR_VAL_LOW] = data[ATTR_VAL_LOW]
-
-            attributes[ATTR_LOCATION] = self.data.address
-            attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        if self.data is not None:
+            attributes['Amount'] = self.data[ATTR_AMOUNT]
+            attributes['Currency'] = self.data[ATTR_CURRENCY]
+            attributes['Last Update'] = self.data[ATTR_LAST_UPDATED]
+            attributes['+/- Change'] = self.data[ATTR_CHANGE]
+            attributes['Valuation Range High'] = self.data[ATTR_VAL_HI]
+            attributes['Valuation Range Low'] = self.data[ATTR_VAL_LOW]
+        attributes['Address'] = self.address
+        attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        if attributes is not None:
             return attributes
+        else:
+            return None
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
-        """Get the latest data and update the states."""
-        self.data.update()
-        if self.data.measurings is not None:
-            if ATTR_LAST_UPDATED not in self.data.measurings:
-                self._state = STATE_UNKNOWN
-            else:
-                self._state = self.data.measurings[ATTR_AMOUNT]
-
-
-class ZestimateData(object):
-    """The Class for handling data retrieval."""
-
-    def __init__(self, params):
-        """Initialize the data object."""
-        self.params = params
-        self.address = None
-        self.measurings = None
-
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from hydrodata.ch."""
+        """Get the latest data and update the states."""
         import xmltodict
-
-        details = {}
         try:
             response = requests.get(_RESOURCE, params=self.params, timeout=5)
+            data = response.content.decode('utf-8')
+            data_dict = xmltodict.parse(data).get(ZESTIMATE)
+            error_code = int(data_dict['message']['code'])
+            if error_code != 0:
+                _LOGGER.error('The API returned: %s',
+                              data_dict['message']['text'])
+                return False
         except requests.exceptions.ConnectionError:
             _LOGGER.error('Unable to retrieve data from %s', _RESOURCE)
+            return False
+        data = data_dict['response'][NAME]
+        details = {}
+        details[ATTR_AMOUNT] = data['amount']['#text']
+        details[ATTR_CURRENCY] = data['amount']['@currency']
+        details[ATTR_LAST_UPDATED] = data['last-updated']
+        details[ATTR_CHANGE] = int(data['valueChange']['#text'])
+        details[ATTR_VAL_HI] = int(data['valuationRange']['high']['#text'])
+        details[ATTR_VAL_LOW] = int(data['valuationRange']['low']['#text'])
+        self.address = data_dict['response']['address']['street']
+        self.data = details
 
-        try:
-            decoded = response.content.decode('utf-8')
-            to_dict = xmltodict.parse(decoded)
-            response = to_dict.get(ZESTIMATE)['response']
-            data = response[NAME]
-            details[ATTR_AMOUNT] = data['amount']['#text']
-            details[ATTR_CURRENCY] = data['amount']['@currency']
-            details[ATTR_LAST_UPDATED] = data['last-updated']
-            details[ATTR_CHANGE] = int(data['valueChange']['#text'])
-            details[ATTR_VAL_HI] = int(data['valuationRange']['high']['#text'])
-            details[ATTR_VAL_LOW] = int(data['valuationRange']['low']['#text'])
-
-            self.address = response['address']['street']
-            self.measurings = details
-        except AttributeError:
-            self.measurings = None
+        if self.data is not None:
+            self._state = self.data[ATTR_AMOUNT]
+        else:
+            self._state = STATE_UNKNOWN
+            _LOGGER.error('Unable to parase Zestimate data from response')
