@@ -150,7 +150,7 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
 def entities_domain(domain: str):
     """Validate that entities belong to domain."""
     def validate(values: Union[str, Sequence]) -> Sequence[str]:
-        """Test if entitiy domain is domain."""
+        """Test if entity domain is domain."""
         values = entity_ids(values)
         for ent_id in values:
             if split_entity_id(ent_id)[0] != domain:
