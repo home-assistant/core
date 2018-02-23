@@ -509,3 +509,38 @@ homeassistant:
       entity_id:
         description: The entity_id of the device to turn off.
         example: light.living_room
+
+xiaomi_aqara:
+  play_ringtone:
+    description:
+    fields:
+      gw_mac:
+        description: MAC address of the Xiaomi Aqara Gateway.
+        example: 34ce00880088
+      ringtone_id:
+        description: One of the allowed ringtone ids.
+        example: 8
+      ringtone_vol:
+        description: The volume in percent.
+        example: 30
+  stop_ringtone:
+    description:
+    fields:
+      gw_mac:
+        description: MAC address of the Xiaomi Aqara Gateway.
+        example: 34ce00880088
+  add_device:
+    description:
+    fields:
+      gw_mac:
+        description: MAC address of the Xiaomi Aqara Gateway.
+        example: 34ce00880088
+  remove_device:
+    description:
+    fields:
+      gw_mac:
+        description: MAC address of the Xiaomi Aqara Gateway.
+        example: 34ce00880088
+      device_id:
+        description: Hardware address of the device to remove.
+        example: 158d0000000000
