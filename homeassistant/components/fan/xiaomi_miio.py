@@ -302,7 +302,7 @@ class XiaomiAirPurifier(FanEntity):
 
         yield from self._try_command(
             "Setting operation mode of the air purifier failed.",
-            self._air_purifier.set_mode, OperationMode(speed))
+            self._air_purifier.set_mode, OperationMode[speed.title()])
 
     @asyncio.coroutine
     def async_set_buzzer_on(self):
