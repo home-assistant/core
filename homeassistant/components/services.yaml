@@ -509,3 +509,11 @@ homeassistant:
       entity_id:
         description: The entity_id of the device to turn off.
         example: light.living_room
+
+maxcul:
+  enable_pairing:
+    description: Enable pairing of MAX! devices for a given duration
+    fields:
+      duration:
+        description: Duration for which pairing is possible in seconds
+        example: 30
