@@ -512,7 +512,7 @@ homeassistant:
 
 xiaomi_aqara:
   play_ringtone:
-    description:
+    description: Play a specific ringtone. The version of the gateway firmware must be 1.4.1_145 at least.
     fields:
       gw_mac:
         description: MAC address of the Xiaomi Aqara Gateway.
@@ -524,19 +524,19 @@ xiaomi_aqara:
         description: The volume in percent.
         example: 30
   stop_ringtone:
-    description:
+    description: Stops a playing ringtone immediately.
     fields:
       gw_mac:
         description: MAC address of the Xiaomi Aqara Gateway.
         example: 34ce00880088
   add_device:
-    description:
+    description: Enables the join permission of the Xiaomi Aqara Gateway for 30 seconds. A new device can be added afterwards by pressing the pairing button once.
     fields:
       gw_mac:
         description: MAC address of the Xiaomi Aqara Gateway.
         example: 34ce00880088
   remove_device:
-    description:
+    description: Removes a specific device. The removal is required if a device shall be paired with another gateway.
     fields:
       gw_mac:
         description: MAC address of the Xiaomi Aqara Gateway.
