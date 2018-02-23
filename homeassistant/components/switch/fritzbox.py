@@ -16,10 +16,6 @@ DEPENDENCIES = ['fritzbox']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_CONSUMPTION = 'current_consumption'
-ATTR_CURRENT_CONSUMPTION_UNIT = 'current_consumption_unit'
-ATTR_CURRENT_CONSUMPTION_UNIT_VALUE = 'W'
-
 ATTR_TOTAL_CONSUMPTION = 'total_consumption'
 ATTR_TOTAL_CONSUMPTION_UNIT = 'total_consumption_unit'
 ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = 'kWh'
@@ -87,10 +83,6 @@ class FritzboxSwitch(SwitchDevice):
         attrs = {}
 
         if self._device.has_powermeter:
-            attrs[ATTR_CURRENT_CONSUMPTION] = "{:.1f}".format(
-                (self._device.power or 0.0) / 1000)
-            attrs[ATTR_CURRENT_CONSUMPTION_UNIT] = "{}".format(
-                ATTR_CURRENT_CONSUMPTION_UNIT_VALUE)
             attrs[ATTR_TOTAL_CONSUMPTION] = "{:.3f}".format(
                 (self._device.energy or 0.0) / 100000)
             attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = "{}".format(
