@@ -15,9 +15,9 @@ from homeassistant.components.climate import (
     SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_HUMIDITY_HIGH,
     SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW, SUPPORT_FAN_MODE)
+    SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
 _CONFIGURING = {}
@@ -349,7 +349,7 @@ class Thermostat(ClimateDevice):
         self.update_without_throttle = True
 
     def set_fan_mode(self, fan, **kwargs):
-        """Set the fan mode.  Valid values are "on" or "auto" """
+        """Set the fan mode.  Valid values are "on" or "auto"."""
         if (fan.lower() != STATE_ON) and (fan.lower() != STATE_AUTO):
             error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
             _LOGGER.error(error)

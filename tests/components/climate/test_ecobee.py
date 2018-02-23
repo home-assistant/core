@@ -453,14 +453,15 @@ class TestEcobee(unittest.TestCase):
                          self.thermostat.climate_list)
 
     def test_set_fan_mode_on(self):
+        """Test set fan mode to on."""
         self.data.reset_mock()
         self.thermostat.set_fan_mode('on')
         self.data.ecobee.set_fan_mode.assert_has_calls(
             [mock.call(1, 'on', 20, 40, 'nextTransition')])
 
     def test_set_fan_mode_auto(self):
+        """Test set fan mode to auto."""
         self.data.reset_mock()
         self.thermostat.set_fan_mode('auto')
         self.data.ecobee.set_fan_mode.assert_has_calls(
             [mock.call(1, 'auto', 20, 40, 'nextTransition')])
-
