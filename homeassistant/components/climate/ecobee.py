@@ -348,7 +348,7 @@ class Thermostat(ClimateDevice):
 
         self.update_without_throttle = True
 
-    def set_fan_mode(self, fan, **kwargs):
+    def set_fan_mode(self, fan, entity_id=None):
         """Set the fan mode.  Valid values are "on" or "auto"."""
         if (fan.lower() != STATE_ON) and (fan.lower() != STATE_AUTO):
             error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
@@ -360,7 +360,7 @@ class Thermostat(ClimateDevice):
         self.data.ecobee.set_fan_mode(self.thermostat_index, fan, cool_temp,
                                       heat_temp, self.hold_preference())
 
-        _LOGGER.info("Setting fan mode to: {}".format(fan))
+        _LOGGER.info("Setting fan mode to: %s", fan)
 
     def set_temp_hold(self, temp):
         """Set temperature hold in modes other than auto."""
