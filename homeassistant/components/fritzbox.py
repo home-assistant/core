@@ -64,6 +64,9 @@ def setup(hass, config):
             _LOGGER.warning("Configuration error")
             continue
 
+    if not fritz_list:
+        return False
+
     hass.data[DOMAIN] = fritz_list
 
     def logout_fritzboxes(event):
