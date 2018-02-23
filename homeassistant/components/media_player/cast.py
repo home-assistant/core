@@ -182,7 +182,8 @@ def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     else:
         # Manually add a "normal" Chromecast, we can do that without discovery.
         try:
-            chromecast = pychromecast.Chromecast(*want_host)
+            chromecast = yield from hass.async_add_job(
+                pychromecast.Chromecast, *want_host)
         except pychromecast.ChromecastConnectionError:
             _LOGGER.warning("Can't set up chromecast on %s", want_host[0])
             raise
