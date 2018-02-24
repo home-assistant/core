@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pymaxcul==0.1.9']
+REQUIREMENTS = ['pymaxcul==0.1.10']
 
 DOMAIN = 'maxcul'
 
