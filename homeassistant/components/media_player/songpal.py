@@ -40,6 +40,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENDPOINT): cv.string,
 })
 
+SET_SOUND_SCHEMA = vol.Schema({
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(PARAM_NAME): cv.string,
+        vol.Required(PARAM_VALUE): cv.string})
+
 
 async def async_setup_platform(hass, config,
                                async_add_devices, discovery_info=None):
@@ -77,14 +82,9 @@ async def async_setup_platform(hass, config,
                 await device.async_set_sound_setting(params[PARAM_NAME],
                                                      params[PARAM_VALUE])
 
-    schema = vol.Schema({
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(PARAM_NAME): cv.string,
-        vol.Required(PARAM_VALUE): cv.string})
-
     hass.services.async_register(
         DOMAIN, SET_SOUND_SETTING, async_service_handler,
-        schema=schema)
+        schema=SET_SOUND_SCHEMA)
 
 
 class SongpalDevice(MediaPlayerDevice):
