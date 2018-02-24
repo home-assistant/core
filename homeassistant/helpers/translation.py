@@ -30,65 +30,40 @@ def flatten(data):
     return recursive_flatten('', data)
 
 
-@asyncio.coroutine
-@bind_hass
-def async_get_translations(hass, language):
-    """Return translations for all components."""
-    if TRANSLATION_STRING_CACHE not in hass.data:
-        hass.data[TRANSLATION_STRING_CACHE] = {}
-    if language not in hass.data[TRANSLATION_STRING_CACHE]:
-        hass.data[TRANSLATION_STRING_CACHE][language] = {}
-    translation_cache = hass.data[TRANSLATION_STRING_CACHE][language]
+def component_translation_file(component, language):
+    """Return the translation json file location for a component."""
+    if '.' in component:
+        name = component.split('.', 1)[1]
+    else:
+        name = component
 
-    def component_translation_file(component):
-        """Return the translation json file location for a component."""
-        if '.' in component:
-            name = component.split('.', 1)[1]
-        else:
-            name = component
+    module = get_component(component)
+    component_path = path.dirname(module.__file__)
 
-        module = get_component(component)
-        component_path = path.dirname(module.__file__)
+    # If loading translations for the package root, (__init__.py), the
+    # prefix should be skipped.
+    if module.__name__ == module.__package__:
+        filename = '{}.json'.format(language)
+    else:
+        filename = '{}.{}.json'.format(name, language)
 
-        # If loading translations for the package root, (__init__.py), the
-        # prefix should be skipped.
-        if module.__name__ == module.__package__:
-            filename = '{}.json'.format(language)
-        else:
-            filename = '{}.{}.json'.format(name, language)
+    return path.join(component_path, 'translations', filename)
 
-        return path.join(component_path, 'translations', filename)
 
-    def load_translations_files(translation_files):
-        """Load and parse translation.json files."""
-        loaded = {}
-        for translation_file in translation_files:
-            try:
-                loaded[translation_file] = load_json(translation_file)
-            except FileNotFoundError:
-                loaded[translation_file] = {}
+def load_translations_files(translation_files):
+    """Load and parse translation.json files."""
+    loaded = {}
+    for translation_file in translation_files:
+        try:
+            loaded[translation_file] = load_json(translation_file)
+        except FileNotFoundError:
+            loaded[translation_file] = {}
 
-        return loaded
+    return loaded
 
-    # Get the set of components
-    components = hass.config.components
 
-    # Load missing files
-    missing = set()
-    for component in components:
-        if component not in translation_cache:
-            missing.add(component_translation_file(component))
-
-    if missing:
-        loaded = yield from hass.async_add_job(
-            load_translations_files, missing)
-
-    # Update cache
-    for component in components:
-        if component not in translation_cache:
-            json_file = component_translation_file(component)
-            translation_cache[component] = loaded[json_file]
-
+def build_resources(translation_cache, components):
+    """Build the resources response for the given components."""
     # Build response
     resources = {}
     for component in components:
@@ -104,6 +79,40 @@ def async_get_translations(hass, language):
         # Since clients cannot determine which platform an entity belongs to,
         # all translations for a domain will be returned together.
         resources[domain].update(translation_cache[component])
+
+    return resources
+
+
+@asyncio.coroutine
+@bind_hass
+def async_get_translations(hass, language):
+    """Return translations for all components."""
+    if TRANSLATION_STRING_CACHE not in hass.data:
+        hass.data[TRANSLATION_STRING_CACHE] = {}
+    if language not in hass.data[TRANSLATION_STRING_CACHE]:
+        hass.data[TRANSLATION_STRING_CACHE][language] = {}
+    translation_cache = hass.data[TRANSLATION_STRING_CACHE][language]
+
+    # Get the set of components
+    components = hass.config.components
+
+    # Load missing files
+    missing = set()
+    for component in components:
+        if component not in translation_cache:
+            missing.add(component_translation_file(component, language))
+
+    if missing:
+        loaded = yield from hass.async_add_job(
+            load_translations_files, missing)
+
+    # Update cache
+    for component in components:
+        if component not in translation_cache:
+            json_file = component_translation_file(component, language)
+            translation_cache[component] = loaded[json_file]
+
+    resources = build_resources(translation_cache, components)
 
     # Return the component translations resources under the 'component'
     # translation namespace
