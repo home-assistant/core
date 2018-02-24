@@ -49,16 +49,17 @@ class AsyncHandler(object):
         """Wrap close to handler."""
         self.emit(None)
 
-    async def async_close(self, blocking=False):
+    @asyncio.coroutine
+    def async_close(self, blocking=False):
         """Close the handler.
 
         When blocking=True, will wait till closed.
         """
-        await self._queue.put(None)
+        yield from self._queue.put(None)
 
         if blocking:
             while self._thread.is_alive():
-                await asyncio.sleep(0, loop=self.loop)
+                yield from asyncio.sleep(0, loop=self.loop)
 
     def emit(self, record):
         """Process a record."""
