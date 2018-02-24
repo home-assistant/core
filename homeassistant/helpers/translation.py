@@ -42,15 +42,23 @@ def async_get_translations(hass, language):
 
     def component_translation_file(component):
         """Return the translation json file location for a component."""
-        component_path = path.dirname(get_component(component).__file__)
-        # Temporarily load the English source files, instead of the Lokalise
-        # downloaded files for the requested language.
         if '.' in component:
-            platform = component.split('.', 1)[1]
-            filename = 'strings.{}.json'.format(platform)
+            name = component.split('.', 1)[1]
         else:
-            filename = 'strings.json'
-        return path.join(component_path, filename)
+            name = component
+
+
+        module = get_component(component)
+        component_path = path.dirname(module.__file__)
+
+        # If loading translations for the package root, (__init__.py), the
+        # prefix should be skipped.
+        if module.__name__ == module.__package__:
+            filename = '{}.json'.format(language)
+        else:
+            filename = '{}.{}.json'.format(name, language)
+
+        return path.join(component_path, 'translations', filename)
 
     def load_translations_files(translation_files):
         """Load and parse translation.json files."""
