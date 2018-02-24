@@ -5,6 +5,8 @@ There are two different types of discoveries that can be fired/listened for.
  - listen_platform/discover_platform is for platforms. These are used by
    components to allow discovery of their platforms.
 """
+import asyncio
+
 from homeassistant import setup, core
 from homeassistant.loader import bind_hass
 from homeassistant.const import (
@@ -56,16 +58,17 @@ def discover(hass, service, discovered=None, component=None, hass_config=None):
         async_discover(hass, service, discovered, component, hass_config))
 
 
+@asyncio.coroutine
 @bind_hass
-async def async_discover(hass, service, discovered=None, component=None,
-                         hass_config=None):
+def async_discover(hass, service, discovered=None, component=None,
+                   hass_config=None):
     """Fire discovery event. Can ensure a component is loaded."""
     if component in DEPENDENCY_BLACKLIST:
         raise HomeAssistantError(
             'Cannot discover the {} component.'.format(component))
 
     if component is not None and component not in hass.config.components:
-        await setup.async_setup_component(
+        yield from setup.async_setup_component(
             hass, component, hass_config)
 
     data = {
@@ -131,9 +134,10 @@ def load_platform(hass, component, platform, discovered=None,
                             hass_config))
 
 
+@asyncio.coroutine
 @bind_hass
-async def async_load_platform(hass, component, platform, discovered=None,
-                              hass_config=None):
+def async_load_platform(hass, component, platform, discovered=None,
+                        hass_config=None):
     """Load a component and platform dynamically.
 
     Target components will be loaded and an EVENT_PLATFORM_DISCOVERED will be
@@ -144,7 +148,7 @@ async def async_load_platform(hass, component, platform, discovered=None,
 
     Use `listen_platform` to register a callback for these events.
 
-    Warning: Do not await this inside a setup method to avoid a dead lock.
+    Warning: Do not yield from this inside a setup method to avoid a dead lock.
     Use `hass.async_add_job(async_load_platform(..))` instead.
 
     This method is a coroutine.
@@ -156,7 +160,7 @@ async def async_load_platform(hass, component, platform, discovered=None,
     setup_success = True
 
     if component not in hass.config.components:
-        setup_success = await setup.async_setup_component(
+        setup_success = yield from setup.async_setup_component(
             hass, component, hass_config)
 
     # No need to fire event if we could not setup component
