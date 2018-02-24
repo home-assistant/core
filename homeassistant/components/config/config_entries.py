@@ -139,8 +139,8 @@ class ConfigManagerFlowResourceView(HomeAssistantView):
 
         return self.json(result)
 
-    @asyncio.coroutine
     @RequestDataValidator(vol.Schema(dict), allow_empty=True)
+    @asyncio.coroutine
     def post(self, request, flow_id, data):
         """Handle a POST request."""
         hass = request.app['hass']
