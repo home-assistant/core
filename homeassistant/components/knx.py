@@ -334,9 +334,8 @@ class KNXExposeSensor(object):
         async_track_state_change(
             self.hass, self.entity_id, self._async_entity_changed)
 
-    @asyncio.coroutine
-    def _async_entity_changed(self, entity_id, old_state, new_state):
+    async def _async_entity_changed(self, entity_id, old_state, new_state):
         """Callback after entity changed."""
         if new_state is None:
             return
-        yield from self.device.set(float(new_state.state))
+        await self.device.set(float(new_state.state))
