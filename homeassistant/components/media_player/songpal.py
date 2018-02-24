@@ -26,13 +26,17 @@ SUPPORT_SONGPAL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | \
 _LOGGER = logging.getLogger(__name__)
 
 
+PLATFORM = "songpal"
+
 SET_SOUND_SETTING = "songpal_set_sound_setting"
+
 PARAM_NAME = "name"
 PARAM_VALUE = "value"
 
 CONF_ENDPOINT = "endpoint"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_ENDPOINT): cv.string,
 })
 
@@ -40,34 +44,44 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config,
                                async_add_devices, discovery_info=None):
     """Set up the Songpal platform."""
-    devices = []
-    if discovery_info is not None:
-        _LOGGER.debug("Got autodiscovered device: %s", discovery_info)
-        devices.append(
-            SongpalDevice(discovery_info["name"],
-                          discovery_info["properties"]["endpoint"]))
-    else:
-        songpal = SongpalDevice(config.get(CONF_NAME),
-                                config.get(CONF_ENDPOINT))
-        devices.append(songpal)
 
-    async_add_devices(devices, True)
+    if PLATFORM not in hass.data:
+        hass.data[PLATFORM] = {}
+
+    if discovery_info is not None:
+        name = discovery_info["name"]
+        endpoint = discovery_info["properties"]["endpoint"]
+        _LOGGER.debug("Got autodiscovered %s - endpoint: %s", name, endpoint)
+
+        device = SongpalDevice(name, endpoint)
+    else:
+        name = config.get(CONF_NAME)
+        endpoint = config.get(CONF_ENDPOINT)
+        device = SongpalDevice(name, endpoint)
+
+    hass.data[PLATFORM][endpoint] = device
+
+    async_add_devices([device], True)
 
     async def async_service_handler(service):
         """Service handler."""
+        entity_id = service.data.get("entity_id", None)
         params = {key: value for key, value in service.data.items()
                   if key != ATTR_ENTITY_ID}
-        entity_id = service.data.get("entity_id", None)
-        _LOGGER.debug("Calling %s (entity: %s) with params %s",
-                      service, entity_id, params)
 
-        for device in devices:
-            if entity_id is None or device.entity_id == entity_id:
+        for device in hass.data[PLATFORM].values():
+            if device.entity_id == entity_id or entity_id is None:
+                _LOGGER.debug("Calling %s (entity: %s) with params %s",
+                              service, entity_id, params)
+
                 await device.async_set_sound_setting(params[PARAM_NAME],
                                                      params[PARAM_VALUE])
 
-    schema = vol.Schema({vol.Required(PARAM_NAME): cv.string,
-                         vol.Required(PARAM_VALUE): cv.string})
+    schema = vol.Schema({
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(PARAM_NAME): cv.string,
+        vol.Required(PARAM_VALUE): cv.string})
+
     hass.services.async_register(
         DOMAIN, SET_SOUND_SETTING, async_service_handler,
         schema=schema)
@@ -81,8 +95,8 @@ class SongpalDevice(MediaPlayerDevice):
         import songpal
         self._name = name
         self.endpoint = endpoint
-        self._dev = songpal.Protocol(self.endpoint)
-        self._sysinfo = None  # type: songpal.Sysinfo
+        self.dev = songpal.Protocol(self.endpoint)
+        self._sysinfo = None
 
         self._state = False
         self._available = False
@@ -111,23 +125,16 @@ class SongpalDevice(MediaPlayerDevice):
         """Return availability of the device."""
         return self._available
 
-    @property
-    def dev(self):
-        """Property for accessing the device handle."""
-        return self._dev
-
     async def async_set_sound_setting(self, name, value):
         """Change a setting on the device."""
-        res = await self.dev.set_sound_settings(name, value)
-
-        return res
+        await self.dev.set_sound_settings(name, value)
 
     async def async_update(self):
         """Fetch updates from the device."""
         from songpal import SongpalException
         if not self._initialized:
             try:
-                await self._dev.get_supported_methods()
+                await self.dev.get_supported_methods()
                 self._sysinfo = await self.dev.get_system_info()
                 self._initialized = True
             except SongpalException as ex:
@@ -195,13 +202,12 @@ class SongpalDevice(MediaPlayerDevice):
             if out.active:
                 return out.title
 
-        _LOGGER.error("Unable to find active output!")
+        return None
 
     @property
     def volume_level(self):
         """Return volume level."""
         volume = self._volume / self._volume_max
-        _LOGGER.debug("Current volume: %s", volume)
         return volume
 
     async def async_set_volume_level(self, volume):
@@ -212,11 +218,11 @@ class SongpalDevice(MediaPlayerDevice):
 
     async def async_volume_up(self):
         """Set volume up."""
-        return self._volume_control.set_volume("+1")
+        return await self._volume_control.set_volume("+1")
 
     async def async_volume_down(self):
         """Set volume down."""
-        return self._volume_control.set_volume("-1")
+        return await self._volume_control.set_volume("-1")
 
     async def async_turn_on(self):
         """Turn the device on."""
