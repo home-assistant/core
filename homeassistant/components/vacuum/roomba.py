@@ -8,6 +8,8 @@ import asyncio
 import logging
 import voluptuous as vol
 
+import async_timeout
+
 from homeassistant.components.vacuum import (
     VacuumDevice, PLATFORM_SCHEMA, SUPPORT_BATTERY, SUPPORT_FAN_SPEED,
     SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS,
@@ -90,7 +92,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     )
     _LOGGER.info("Initializing communication with host %s (username: %s)",
                  host, username)
-    yield from hass.async_add_job(roomba.connect)
+
+    try:
+        with async_timeout.timeout(10):
+            yield from hass.async_add_job(roomba.connect)
+    except asyncio.TimeoutError:
+        _LOGGER.error("Could not connect to Roomba %s", host)
+        return False
+
     roomba_vac = RoombaVacuum(name, roomba)
     hass.data[PLATFORM][host] = roomba_vac
 
