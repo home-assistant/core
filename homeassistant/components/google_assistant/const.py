@@ -13,6 +13,7 @@ CONF_CLIENT_ID = 'client_id'
 CONF_ALIASES = 'aliases'
 CONF_AGENT_USER_ID = 'agent_user_id'
 CONF_API_KEY = 'api_key'
+CONF_ROOM_HINT = 'room'
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [

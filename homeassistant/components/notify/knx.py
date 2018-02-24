@@ -4,7 +4,7 @@ KNX/IP notification service.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/notify.knx/
 """
-import asyncio
+
 import voluptuous as vol
 
 from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
@@ -24,8 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_get_service(hass, config, discovery_info=None):
+async def async_get_service(hass, config, discovery_info=None):
     """Get the KNX notification service."""
     return async_get_service_discovery(hass, discovery_info) \
         if discovery_info is not None else \
@@ -72,23 +71,20 @@ class KNXNotificationService(BaseNotificationService):
             ret[device.name] = device.name
         return ret
 
-    @asyncio.coroutine
-    def async_send_message(self, message="", **kwargs):
+    async def async_send_message(self, message="", **kwargs):
         """Send a notification to knx bus."""
         if "target" in kwargs:
-            yield from self._async_send_to_device(message, kwargs["target"])
+            await self._async_send_to_device(message, kwargs["target"])
         else:
-            yield from self._async_send_to_all_devices(message)
+            await self._async_send_to_all_devices(message)
 
-    @asyncio.coroutine
-    def _async_send_to_all_devices(self, message):
+    async def _async_send_to_all_devices(self, message):
         """Send a notification to knx bus to all connected devices."""
         for device in self.devices:
-            yield from device.set(message)
+            await device.set(message)
 
-    @asyncio.coroutine
-    def _async_send_to_device(self, message, names):
+    async def _async_send_to_device(self, message, names):
         """Send a notification to knx bus to device with given names."""
         for device in self.devices:
             if device.name in names:
-                yield from device.set(message)
+                await device.set(message)
