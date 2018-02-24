@@ -236,7 +236,7 @@ def preprocess_turn_on_alternatives(params):
         except ValueError:
             _LOGGER.warning('Got unknown color %s, falling back to white',
                             color_name)
-            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb('white')
+            params[ATTR_RGB_COLOR] = (255, 255, 255)
 
     kelvin = params.pop(ATTR_KELVIN, None)
     if kelvin is not None:
