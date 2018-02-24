@@ -26,7 +26,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     state_name = device.states[state_key].name
 
-    _LOGGER.debug('Adding device %s with state name %s to Switch platform.',
+    _LOGGER.debug('Adding device %s entity %s to Switch platform.',
                   device.address.hex, device.states[state_key].name)
 
     new_entity = None
@@ -34,8 +34,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         new_entity = InsteonPLMSwitchDevice(device, state_key)
     elif state_name == 'openClosedRelay':
         new_entity = InsteonPLMOpenClosedDevice(device, state_key)
-
-    _LOGGER.debug('Created Switch device with address %s', new_entity.address)
 
     if new_entity is not None:
         async_add_devices([new_entity])

@@ -23,21 +23,18 @@ SENSOR_TYPES = {'openClosedSensor': 'opening',
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the INSTEON PLM device class for the hass platform."""
-    entities = []
     plm = hass.data['insteon_plm']
-    _LOGGER.debug("Got here binary_sensor")
-    _LOGGER.debug(discovery_info)
 
     address = discovery_info['address']
     device = plm.devices[address]
     state_key = discovery_info['state_key']
 
-    _LOGGER.debug('Adding device %s state name %s to Binary Sensor platform.',
+    _LOGGER.debug('Adding device %s entity %s to Binary Sensor platform.',
                   device.address.hex, device.states[state_key].name)
 
-    entities.append(InsteonPLMBinarySensor(device, state_key))
+    new_entity = InsteonPLMBinarySensor(device, state_key)
 
-    async_add_devices(entities)
+    async_add_devices([new_entity])
 
 
 class InsteonPLMBinarySensor(InsteonPLMEntity, BinarySensorDevice):
@@ -45,7 +42,7 @@ class InsteonPLMBinarySensor(InsteonPLMEntity, BinarySensorDevice):
 
     def __init__(self, device, state_key):
         """Initialize the INSTEON PLM binary sensor."""
-        InsteonPLMEntity.__init__(device, state_key)
+        InsteonPLMEntity.__init__(self, device, state_key)
         self._sensor_type = SENSOR_TYPES.get(self._insteon_device_state.name)
 
     @property

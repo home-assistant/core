@@ -171,6 +171,7 @@ class InsteonPLMEntity(Entity):
         """Return the address of the node."""
         return self._insteon_device.address.human
 
+    @property
     def group(self):
         """Return the INSTEON group that the entity responds to."""
         return self._insteon_device_state.group

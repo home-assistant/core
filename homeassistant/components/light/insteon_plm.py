@@ -21,21 +21,18 @@ MAX_BRIGHTNESS = 255
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Insteon PLM device."""
-    entities = []
     plm = hass.data['insteon_plm']
-    _LOGGER.debug("Got here light")
-    _LOGGER.debug(discovery_info)
 
     address = discovery_info['address']
     device = plm.devices[address]
     state_key = discovery_info['state_key']
 
-    _LOGGER.debug('Adding device %s with state name %s to Light platform.',
+    _LOGGER.debug('Adding device %s entity %s to Light platform.',
                   device.address.hex, device.states[state_key].name)
 
-    entities.append(InsteonPLMDimmerDevice(device, state_key))
+    new_entity = InsteonPLMDimmerDevice(device, state_key)
 
-    async_add_devices(entities)
+    async_add_devices([new_entity])
 
 
 class InsteonPLMDimmerDevice(InsteonPLMEntity, Light):
