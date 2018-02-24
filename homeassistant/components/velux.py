@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/velux/
 """
 import logging
-import asyncio
 
 import voluptuous as vol
 
@@ -28,13 +27,12 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the velux component."""
     from pyvlx import PyVLXException
     try:
         hass.data[DATA_VELUX] = VeluxModule(hass, config)
-        yield from hass.data[DATA_VELUX].async_start()
+        await hass.data[DATA_VELUX].async_start()
 
     except PyVLXException as ex:
         _LOGGER.exception("Can't connect to velux interface: %s", ex)
@@ -58,7 +56,6 @@ class VeluxModule:
             host=host,
             password=password)
 
-    @asyncio.coroutine
-    def async_start(self):
+    async def async_start(self):
         """Start velux component."""
-        yield from self.pyvlx.load_scenes()
+        await self.pyvlx.load_scenes()
