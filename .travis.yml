@@ -28,4 +28,13 @@ cache:
 install: pip install -U tox coveralls
 language: python
 script: travis_wait 30 tox --develop
+services:
+  - docker
+before_deploy:
+  - docker pull lokalise/lokalise-cli
+deploy:
+  provider: script
+  script: script/travis_deploy
+  on:
+    branch: dev
 after_success: coveralls
