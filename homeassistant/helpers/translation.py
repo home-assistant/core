@@ -123,12 +123,13 @@ def async_get_component_resources(hass, language):
 @bind_hass
 def async_get_translations(hass, language):
     """Return all backend translations."""
-    if language is 'en':
+    if language == 'en':
         resources = yield from async_get_component_resources(hass, language)
     else:
         # Fetch the English resources, as a fallback for missing keys
         resources = yield from async_get_component_resources(hass, 'en')
-        native_resources = yield from async_get_component_resources(hass, language)
+        native_resources = yield from async_get_component_resources(
+            hass, language)
         resources.update(native_resources)
 
     return resources
