@@ -552,7 +552,7 @@ class TranslationsView(HomeAssistantView):
 
     @asyncio.coroutine
     def get(self, request, language):
-        """Return themes."""
+        """Return translations."""
         hass = request.app['hass']
 
         resources = yield from async_get_translations(hass, language)
