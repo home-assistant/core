@@ -292,7 +292,7 @@ class SetIntentHandler(intent.IntentHandler):
 
         response = intent_obj.create_response()
 
-        if len(speech_parts) == 0:
+        if not speech_parts:  # No attributes changed
             speech = 'Turned on {}'.format(state.name)
         else:
             parts = ['Changed {} to'.format(state.name)]
