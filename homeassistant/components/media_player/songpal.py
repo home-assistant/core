@@ -41,9 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SET_SOUND_SCHEMA = vol.Schema({
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(PARAM_NAME): cv.string,
-        vol.Required(PARAM_VALUE): cv.string})
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(PARAM_NAME): cv.string,
+    vol.Required(PARAM_VALUE): cv.string})
 
 
 async def async_setup_platform(hass, config,
