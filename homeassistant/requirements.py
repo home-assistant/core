@@ -23,7 +23,7 @@ async def async_process_requirements(hass, name, requirements):
     pip_install = partial(pkg_util.install_package,
                           **pip_kwargs(hass.config.config_dir))
 
-    with (await pip_lock):
+    async with pip_lock:
         for req in requirements:
             ret = await hass.async_add_job(pip_install, req)
             if not ret:
