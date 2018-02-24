@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, CONF_PORT,
-    TEMP_CELSIUS, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 
@@ -74,7 +75,8 @@ def import_types():
 def get_accessory(hass, state):
     """Take state and return an accessory object if supported."""
     if state.domain == 'sensor':
-        if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS:
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if unit == TEMP_CELSIUS or unit == TEMP_FAHRENHEIT:
             _LOGGER.debug("Add \"%s\" as \"%s\"",
                           state.entity_id, 'TemperatureSensor')
             return TYPES['TemperatureSensor'](hass, state.entity_id,

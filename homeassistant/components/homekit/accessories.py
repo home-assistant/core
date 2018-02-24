@@ -25,6 +25,7 @@ def add_preload_service(acc, service, chars=None, opt_chars=None):
     from pyhap.loader import get_serv_loader, get_char_loader
     service = get_serv_loader().get(service)
     if chars:
+        chars = chars if isinstance(chars, list) else [chars]
         for char_name in chars:
             char = get_char_loader().get(char_name)
             service.add_characteristic(char)
@@ -35,6 +36,11 @@ def add_preload_service(acc, service, chars=None, opt_chars=None):
             service.add_opt_characteristic(opt_char)
     acc.add_service(service)
     return service
+
+
+def override_properties(char, new_properties):
+    """Override characteristic property values."""
+    char.properties.update(new_properties)
 
 
 class HomeAccessory(Accessory):

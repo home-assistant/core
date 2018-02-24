@@ -16,3 +16,6 @@ SERV_WINDOW_COVERING = 'WindowCovering'
 CHAR_CURRENT_POSITION = 'CurrentPosition'
 CHAR_TARGET_POSITION = 'TargetPosition'
 CHAR_POSITION_STATE = 'PositionState'
+
+# Properties
+PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}
