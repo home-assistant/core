@@ -9,6 +9,8 @@ import logging
 import requests
 
 from homeassistant.components.fritzbox import DOMAIN as FRITZBOX_DOMAIN
+from homeassistant.components.fritzbox import (
+    ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_BATTERY_LOW, ATTR_STATE_LOCKED)
 from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO, STATE_HEAT, STATE_MANUAL,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
@@ -25,10 +27,6 @@ OPERATION_LIST = [STATE_HEAT, STATE_ECO]
 
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
-
-ATTR_STATE_DEVICE_LOCKED = 'device_locked'
-ATTR_STATE_LOCKED = 'locked'
-ATTR_STATE_LOW_BAT = 'low_battery'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -138,7 +136,7 @@ class FritzboxThermostat(ClimateDevice):
         attrs = {
             ATTR_STATE_DEVICE_LOCKED: self._device.device_lock,
             ATTR_STATE_LOCKED: self._device.lock,
-            ATTR_STATE_LOW_BAT: self._device.battery_low,
+            ATTR_STATE_BATTERY_LOW: self._device.battery_low,
         }
         return attrs
 

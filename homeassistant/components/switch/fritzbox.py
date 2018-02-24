@@ -9,6 +9,8 @@ import logging
 import requests
 
 from homeassistant.components.fritzbox import DOMAIN as FRITZBOX_DOMAIN
+from homeassistant.components.fritzbox import (
+    ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_LOCKED)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
@@ -87,12 +89,18 @@ class FritzboxSwitch(SwitchDevice):
             attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = "{}".format(
                 ATTR_TOTAL_CONSUMPTION_UNIT_VALUE)
 
+        if self._device.has_switch:
+            attrs[ATTR_STATE_DEVICE_LOCKED] = self._device.device_lock
+            attrs[ATTR_STATE_LOCKED] = self._device.lock
+
         if self._device.has_temperature_sensor:
             attrs[ATTR_TEMPERATURE] = "{}".format(
                 self.hass.config.units.temperature(self._device.temperature,
                                                    TEMP_CELSIUS))
             attrs[ATTR_TEMPERATURE_UNIT] = "{}".format(
                 self.hass.config.units.temperature_unit)
+            attrs[ATTR_STATE_DEVICE_LOCKED] = self._device.device_lock
+            attrs[ATTR_STATE_LOCKED] = self._device.lock
         return attrs
 
     @property

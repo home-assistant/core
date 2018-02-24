@@ -22,6 +22,10 @@ SUPPORTED_DOMAINS = ['climate', 'switch']
 
 DOMAIN = 'fritzbox'
 
+ATTR_STATE_DEVICE_LOCKED = 'device_locked'
+ATTR_STATE_LOCKED = 'locked'
+ATTR_STATE_BATTERY_LOW = 'battery_low'
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -57,9 +61,6 @@ def setup(hass, config):
         except LoginError:
             _LOGGER.warning("Login to Fritz!Box %s as %s failed",
                             host, username)
-            continue
-        except KeyError:
-            _LOGGER.warning("Configuration error")
             continue
 
     if not fritz_list:
