@@ -340,6 +340,12 @@ class Entity(object):
         else:
             self.hass.states.async_remove(self.entity_id)
 
+    @callback
+    def async_registry_updated(self, old, new):
+        """Called when the entity registry has been updated."""
+        self.registry_name = new.name
+        self.async_schedule_update_ha_state()
+
     def __eq__(self, other):
         """Return the comparison."""
         if not isinstance(other, self.__class__):
