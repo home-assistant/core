@@ -7,7 +7,7 @@ from homeassistant.setup import setup_component
 import homeassistant.loader as loader
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
+    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_SUPPORTED_FEATURES)
 import homeassistant.components.light as light
 from homeassistant.helpers.intent import IntentHandleError
 
@@ -309,7 +309,7 @@ class TestLight(unittest.TestCase):
 async def test_set_color_intent(hass):
     """Test the set color intent."""
     hass.states.async_set('light.hello_2', 'off', {
-        light.ATTR_SUPPORTED_FEATURES: light.SUPPORT_RGB_COLOR
+        ATTR_SUPPORTED_FEATURES: light.SUPPORT_RGB_COLOR
     })
     hass.states.async_set('switch.hello', 'off')
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)

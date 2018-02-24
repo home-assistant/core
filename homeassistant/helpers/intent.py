@@ -88,6 +88,30 @@ class IntentUnexpectedError(IntentError):
     """Unexpected error while handling intent."""
 
 
+@callback
+@bind_hass
+def async_match_state(hass, name, states=None):
+    """Find a state that matches the name."""
+    if states is None:
+        states = hass.states.async_all()
+
+    entity = _fuzzymatch(name, states, lambda state: state.name)
+
+    if entity is None:
+        raise IntentHandleError('Unable to find entity {}'.format(name))
+
+    return entity
+
+
+@callback
+def async_test_feature(state, feature, feature_name):
+    """Find a state that matches the name."""
+    if state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & feature == 0:
+        raise IntentHandleError(
+            'Entity {} does not support {}'.format(
+                state.name, feature_name))
+
+
 class IntentHandler:
     """Intent handler registration."""
 
@@ -158,7 +182,7 @@ class ServiceIntentHandler(IntentHandler):
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
         response = intent_obj.create_response()
-        state = intent_obj.match_state(slots['name']['value'])
+        state = async_match_state(hass, slots['name']['value'])
 
 <<<<<<< HEAD
         name = slots['name']['value']
@@ -204,29 +228,6 @@ class Intent:
     def create_response(self):
         """Create a response."""
         return IntentResponse(self)
-
-    @callback
-    def match_state(self, name, states=None):
-        """Find a state that matches the name."""
-        if states is None:
-            states = self.hass.states.async_all()
-
-        entity = _fuzzymatch(name, states, lambda state: state.name)
-
-        if entity is None:
-            raise IntentHandleError('Unable to find entity {}'.format(name))
-
-        return entity
-
-    @callback
-    def test_feature(self, state, feature, feature_name):
-        """Find a state that matches the name."""
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES)
-
-        if features is None or features & feature == 0:
-            raise IntentHandleError(
-                'Entity {} does not support {}'.format(
-                    state.name, feature_name))
 
 
 class IntentResponse:

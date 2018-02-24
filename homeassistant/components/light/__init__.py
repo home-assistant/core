@@ -15,7 +15,7 @@ import voluptuous as vol
 from homeassistant.components import group
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    STATE_ON, ATTR_SUPPORTED_FEATURES)
+    STATE_ON)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -261,12 +261,11 @@ class SetColorIntentHandler(intent.IntentHandler):
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        response = intent_obj.create_response()
-        state = intent_obj.match_state(
+        state = hass.helpers.intent.async_match_state(
             slots['name']['value'],
             [state for state in hass.states.async_all()
              if state.domain == DOMAIN])
-        intent_obj.test_feature(state, SUPPORT_RGB_COLOR, 'changing colors')
+        intent.async_test_feature(state, SUPPORT_RGB_COLOR, 'changing colors')
 
         await hass.services.async_call(
             DOMAIN, SERVICE_TURN_ON, {
@@ -274,8 +273,9 @@ class SetColorIntentHandler(intent.IntentHandler):
                 ATTR_RGB_COLOR: slots['color']['value']
             })
 
-        # Use original passed in value of the color because we don't represent
-        # that internally.
+        # Use original passed in value of the color because we don't have human
+        # readable names for that internally.
+        response = intent_obj.create_response()
         response.async_set_speech('Changed the color of {} to {}'.format(
             state.name, intent_obj.slots['color']['value']))
         return response
