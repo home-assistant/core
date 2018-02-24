@@ -240,20 +240,18 @@ def preprocess_turn_on_alternatives(params):
         params[ATTR_BRIGHTNESS] = int(255 * brightness_pct/100)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Expose light control via state machine and services."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LIGHTS)
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
     # load profiles from files
-    profiles_valid = yield from Profiles.load_profiles(hass)
+    profiles_valid = await Profiles.load_profiles(hass)
     if not profiles_valid:
         return False
 
-    @asyncio.coroutine
-    def async_handle_light_service(service):
+    async def async_handle_light_service(service):
         """Handle a turn light on or off service call."""
         # Get the validated data
         params = service.data.copy()
@@ -267,18 +265,18 @@ def async_setup(hass, config):
         update_tasks = []
         for light in target_lights:
             if service.service == SERVICE_TURN_ON:
-                yield from light.async_turn_on(**params)
+                await light.async_turn_on(**params)
             elif service.service == SERVICE_TURN_OFF:
-                yield from light.async_turn_off(**params)
+                await light.async_turn_off(**params)
             else:
-                yield from light.async_toggle(**params)
+                await light.async_toggle(**params)
 
             if not light.should_poll:
                 continue
             update_tasks.append(light.async_update_ha_state(True))
 
         if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks, loop=hass.loop)
 
     # Listen for light on and light off service calls.
     hass.services.async_register(
@@ -302,8 +300,7 @@ class Profiles:
     _all = None
 
     @classmethod
-    @asyncio.coroutine
-    def load_profiles(cls, hass):
+    async def load_profiles(cls, hass):
         """Load and cache profiles."""
         def load_profile_data(hass):
             """Load built-in profiles and custom profiles."""
@@ -333,7 +330,7 @@ class Profiles:
                         return None
             return profiles
 
-        cls._all = yield from hass.async_add_job(load_profile_data, hass)
+        cls._all = await hass.async_add_job(load_profile_data, hass)
         return cls._all is not None
 
     @classmethod
