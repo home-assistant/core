@@ -8,6 +8,7 @@ import logging
 
 DEPENDENCIES = ['qwikswitch']
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Add lights from the main Qwikswitch component."""

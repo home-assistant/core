@@ -4,18 +4,21 @@ Support for Qwikswitch devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/qwikswitch/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_URL)
+from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.switch import SwitchDevice
 
-REQUIREMENTS = ['pyqwikswitch==0.4']
+REQUIREMENTS = ['pyqwikswitch==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,7 +81,18 @@ class QSToggleEntity(object):
         new = kwargs.get(ATTR_BRIGHTNESS, 255)
         self._qsusb.set_value(self._id, new)
 
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the device on."""
+        new = kwargs.get(ATTR_BRIGHTNESS, 255)
+        self._qsusb.set_value(self._id, new)
+
     def turn_off(self, **kwargs):  # pylint: disable=unused-argument
+        """Turn the device off."""
+        self._qsusb.set_value(self._id, 0)
+
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):  # pylint: disable=unused-argument
         """Turn the device off."""
         self._qsusb.set_value(self._id, 0)
 
@@ -103,9 +117,10 @@ class QSLight(QSToggleEntity, Light):
         return SUPPORT_BRIGHTNESS if self._dim else None
 
 
-def setup(hass, config):
-    """Set up the QSUSB component."""
-    from pyqwikswitch.threaded import QSUsb
+@asyncio.coroutine
+def async_setup(hass, config):
+    """Setup qwiskswitch component."""
+    from pyqwikswitch.async import QSUsb
     from pyqwikswitch import (
         CMD_BUTTONS, QS_CMD, QSDATA, QS_ID, QS_NAME, QS_TYPE, QSType)
 
@@ -119,19 +134,19 @@ def setup(hass, config):
     url = config[DOMAIN][CONF_URL]
     dimmer_adjust = config[DOMAIN][CONF_DIMMER_ADJUST]
 
-
     def callback_value_changed(qsdevices, key, new): \
             # pylint: disable=unused-argument
         """Update entiry values based on device change."""
         entity = hass.data[DOMAIN].get(key)
-        _LOGGER.debug("callback_value_changed %s=%s [%s]", entity, new, key)
         if entity is not None:
             entity.schedule_update_ha_state()  # Part of Entity/ToggleEntity
 
-    qsusb = QSUsb(url=url, dim_adj=dimmer_adjust,
+    session = async_get_clientsession(hass)
+    qsusb = QSUsb(url=url, dim_adj=dimmer_adjust, session=session,
                   callback_value_changed=callback_value_changed)
 
-    def _stop(event):  # pylint: disable=unused-argument
+    @callback
+    def async_stop(event):  # pylint: disable=unused-argument
         """Stop the listener queue and clean up."""
         nonlocal qsusb
         qsusb.stop()
@@ -139,10 +154,10 @@ def setup(hass, config):
         hass.data[DOMAIN] = {}
         _LOGGER.info("Waiting for long poll to QSUSB to time out")
 
-    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, _stop)
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, async_stop)
 
     # Discover all devices in QSUSB
-    qsusb.update_from_devices()
+    yield from qsusb.update_from_devices()
     hass.data[DOMAIN]['switch'] = []
     hass.data[DOMAIN]['light'] = []
     for _id, item in qsusb.devices:
@@ -151,19 +166,18 @@ def setup(hass, config):
             item[QSDATA][QS_NAME] = item[QSDATA][QS_NAME][:-7]  # Remove switch
             new_dev = QSSwitch(_id, qsusb)
             hass.data[DOMAIN]['switch'].append(new_dev)
-            hass.data[DOMAIN][_id] = new_dev
         elif item[QS_TYPE] in [QSType.relay, QSType.dimmer]:
             new_dev = QSLight(_id, qsusb)
             hass.data[DOMAIN]['light'].append(new_dev)
-            hass.data[DOMAIN][_id] = new_dev
         else:
             _LOGGER.warning("Ignored unknown QSUSB device: %s", item)
+            continue
+        hass.data[DOMAIN][_id] = new_dev
 
     # Load platforms
     for comp_name in ('switch', 'light'):
         if hass.data[DOMAIN][comp_name]:
             load_platform(hass, comp_name, 'qwikswitch', {}, config)
-
 
     def callback_qs_listen(item):
         """Typically a button press or update signal."""
@@ -171,17 +185,18 @@ def setup(hass, config):
             return
 
         # If button pressed, fire a hass event
-        if item.get(QS_CMD, '') in cmd_buttons:
-            hass.bus.fire('qwikswitch.button.' + item.get(QS_ID, '@no_id'))
+        if item.get(QS_CMD, '') in cmd_buttons and QS_ID in item:
+            hass.bus.async_fire('qwikswitch.button.{}'.format(item[QS_ID]))
             return
 
         # Update all ha_objects
-        qsusb.update_from_devices()
+        hass.async_add_job(qsusb.update_from_devices)
 
-    def _start(event):  # pylint: disable=unused-argument
+    @callback
+    def async_start(event):  # pylint: disable=unused-argument
         """Start listening."""
-        qsusb.listen(callback_qs_listen, 30)
+        hass.async_add_job(qsusb.listen, callback_qs_listen)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_start)
 
     return True
