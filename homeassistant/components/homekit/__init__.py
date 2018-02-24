@@ -103,8 +103,7 @@ class HomeKit():
     def setup_bridge(self, pin):
         """Setup the bridge component to track all accessories."""
         from .accessories import HomeBridge
-        self.bridge = HomeBridge(BRIDGE_NAME, pincode=pin)
-        self.bridge.set_accessory_info('homekit.bridge')
+        self.bridge = HomeBridge(BRIDGE_NAME, 'homekit.bridge', pin)
 
     def start_driver(self, event):
         """Start the accessory driver."""

@@ -5,9 +5,8 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
-from .accessories import HomeAccessory
-from .const import (
-    SERVICES_TEMPERATURE_SENSOR, CHAR_CURRENT_TEMPERATURE)
+from .accessories import HomeAccessory, add_preload_service
+from .const import SERV_TEMPERATURE_SENSOR, CHAR_CURRENT_TEMPERATURE
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,16 +21,13 @@ class TemperatureSensor(HomeAccessory):
 
     def __init__(self, hass, entity_id, display_name):
         """Initialize a TemperatureSensor accessory object."""
-        super().__init__(display_name)
-        self.set_category(self.ALL_CATEGORIES.SENSOR)
-        self.set_accessory_info(entity_id)
-        self.add_preload_service(SERVICES_TEMPERATURE_SENSOR)
+        super().__init__(display_name, entity_id, 'SENSOR')
 
         self._hass = hass
         self._entity_id = entity_id
 
-        self.service_temp = self.get_service(SERVICES_TEMPERATURE_SENSOR)
-        self.char_temp = self.service_temp. \
+        self.serv_temp = add_preload_service(self, SERV_TEMPERATURE_SENSOR)
+        self.char_temp = self.serv_temp. \
             get_characteristic(CHAR_CURRENT_TEMPERATURE)
 
     def run(self):
