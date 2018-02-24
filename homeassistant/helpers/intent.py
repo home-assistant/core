@@ -4,6 +4,7 @@ import re
 
 import voluptuous as vol
 
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -33,6 +34,8 @@ def async_register(hass, handler):
     if intents is None:
         intents = hass.data[DATA_KEY] = {}
 
+    assert handler.intent_type is not None, 'intent_type cannot be None'
+
     if handler.intent_type in intents:
         _LOGGER.warning('Intent %s is being overwritten by %s.',
                         handler.intent_type, handler)
@@ -58,33 +61,31 @@ async def async_handle(hass, platform, intent_type, slots=None,
     except vol.Invalid as err:
         raise InvalidSlotInfo(
             'Received invalid slot info for {}'.format(intent_type)) from err
+    except IntentHandleError:
+        raise
     except Exception as err:
-        raise IntentHandleError(
+        raise IntentUnexpectedError(
             'Error handling {}'.format(intent_type)) from err
 
 
 class IntentError(HomeAssistantError):
     """Base class for intent related errors."""
 
-    pass
-
 
 class UnknownIntent(IntentError):
     """When the intent is not registered."""
-
-    pass
 
 
 class InvalidSlotInfo(IntentError):
     """When the slot data is invalid."""
 
-    pass
-
 
 class IntentHandleError(IntentError):
     """Error while handling intent."""
 
-    pass
+
+class IntentUnexpectedError(IntentError):
+    """Unexpected error while handling intent."""
 
 
 class IntentHandler:
@@ -122,16 +123,17 @@ class IntentHandler:
         return '<{} - {}>'.format(self.__class__.__name__, self.intent_type)
 
 
-def fuzzymatch(name, entities):
+def _fuzzymatch(name, items, key):
     """Fuzzy matching function."""
     matches = []
     pattern = '.*?'.join(name)
     regex = re.compile(pattern, re.IGNORECASE)
-    for entity_id, entity_name in entities.items():
-        match = regex.search(entity_name)
+    for item in items:
+        match = regex.search(key(item))
         if match:
-            matches.append((len(match.group()), match.start(), entity_id))
-    return [x for _, _, x in sorted(matches)]
+            matches.append((len(match.group()), match.start(), item))
+
+    return sorted(matches)[0][2] if matches else None
 
 
 class ServiceIntentHandler(IntentHandler):
@@ -156,7 +158,9 @@ class ServiceIntentHandler(IntentHandler):
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
         response = intent_obj.create_response()
+        state = intent_obj.match_state(slots['name']['value'])
 
+<<<<<<< HEAD
         name = slots['name']['value']
         entities = {state.entity_id: state.name for state
                     in hass.states.async_all()}
@@ -172,13 +176,14 @@ class ServiceIntentHandler(IntentHandler):
             _LOGGER.error("Could not find entity id matching %s", name)
             return response
 
+=======
+>>>>>>> Add Light Set Color intent
         await hass.services.async_call(
             self.domain, self.service, {
-                ATTR_ENTITY_ID: entity_id
+                ATTR_ENTITY_ID: state.entity_id
             })
 
-        response.async_set_speech(
-            self.speech.format(name))
+        response.async_set_speech(self.speech.format(state.name))
         return response
 
 
@@ -199,6 +204,29 @@ class Intent:
     def create_response(self):
         """Create a response."""
         return IntentResponse(self)
+
+    @callback
+    def match_state(self, name, states=None):
+        """Find a state that matches the name."""
+        if states is None:
+            states = self.hass.states.async_all()
+
+        entity = _fuzzymatch(name, states, lambda state: state.name)
+
+        if entity is None:
+            raise IntentHandleError('Unable to find entity {}'.format(name))
+
+        return entity
+
+    @callback
+    def test_feature(self, state, feature, feature_name):
+        """Find a state that matches the name."""
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+        if features is None or features & feature == 0:
+            raise IntentHandleError(
+                'Entity {} does not support {}'.format(
+                    state.name, feature_name))
 
 
 class IntentResponse:

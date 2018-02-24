@@ -9,8 +9,10 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 import homeassistant.components.light as light
+from homeassistant.helpers.intent import IntentHandleError
 
-from tests.common import mock_service, get_test_home_assistant
+from tests.common import (
+    async_mock_service, mock_service, get_test_home_assistant)
 
 
 class TestLight(unittest.TestCase):
@@ -302,3 +304,57 @@ class TestLight(unittest.TestCase):
         self.assertEqual(
             {light.ATTR_XY_COLOR: (.4, .6), light.ATTR_BRIGHTNESS: 100},
             data)
+
+
+async def test_set_color_intent(hass):
+    """Test the set color intent."""
+    hass.states.async_set('light.hello_2', 'off', {
+        light.ATTR_SUPPORTED_FEATURES: light.SUPPORT_RGB_COLOR
+    })
+    hass.states.async_set('switch.hello', 'off')
+    calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
+    hass.helpers.intent.async_register(light.SetColorIntentHandler())
+
+    result = await hass.helpers.intent.async_handle(
+        'test', light.INTENT_SET_COLOR, {
+            'name': {
+                'value': 'Hello',
+            },
+            'color': {
+                'value': 'blue'
+            }
+        })
+    await hass.async_block_till_done()
+
+    assert result.speech['plain']['speech'] == \
+        'Changed the color of hello 2 to blue'
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == light.DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data.get(ATTR_ENTITY_ID) == 'light.hello_2'
+    assert call.data.get(light.ATTR_RGB_COLOR) == (0, 0, 255)
+
+
+async def test_set_color_intent_tests_feature(hass):
+    """Test the set color intent."""
+    hass.states.async_set('light.hello', 'off')
+    calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
+    hass.helpers.intent.async_register(light.SetColorIntentHandler())
+
+    try:
+        await hass.helpers.intent.async_handle(
+            'test', light.INTENT_SET_COLOR, {
+                'name': {
+                    'value': 'Hello',
+                },
+                'color': {
+                    'value': 'blue'
+                }
+            })
+        assert False, 'handling intent should have raised'
+    except IntentHandleError as err:
+        assert str(err) == 'Entity hello does not support changing colors'
+
+    assert len(calls) == 0

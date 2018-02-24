@@ -15,7 +15,7 @@ import voluptuous as vol
 from homeassistant.components import group
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    STATE_ON)
+    STATE_ON, ATTR_SUPPORTED_FEATURES)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -136,6 +136,8 @@ PROFILE_SCHEMA = vol.Schema(
     vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte))
 )
 
+INTENT_SET_COLOR = 'HassLightSetColor'
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -246,6 +248,39 @@ def preprocess_turn_on_alternatives(params):
         params[ATTR_BRIGHTNESS] = int(255 * brightness_pct/100)
 
 
+class SetColorIntentHandler(intent.IntentHandler):
+    """Handle set color intents."""
+
+    intent_type = INTENT_SET_COLOR
+    slot_schema = {
+        'name': cv.string,
+        'color': color_util.color_name_to_rgb
+    }
+
+    async def async_handle(self, intent_obj):
+        """Handle the hass intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        response = intent_obj.create_response()
+        state = intent_obj.match_state(
+            slots['name']['value'],
+            [state for state in hass.states.async_all()
+             if state.domain == DOMAIN])
+        intent_obj.test_feature(state, SUPPORT_RGB_COLOR, 'changing colors')
+
+        await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, {
+                ATTR_ENTITY_ID: state.entity_id,
+                ATTR_RGB_COLOR: slots['color']['value']
+            })
+
+        # Use original passed in value of the color because we don't represent
+        # that internally.
+        response.async_set_speech('Changed the color of {} to {}'.format(
+            state.name, intent_obj.slots['color']['value']))
+        return response
+
+
 async def async_setup(hass, config):
     """Expose light control via state machine and services."""
     component = EntityComponent(
@@ -296,6 +331,8 @@ async def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, async_handle_light_service,
         schema=LIGHT_TOGGLE_SCHEMA)
+
+    hass.helpers.intent.async_register(SetColorIntentHandler())
 
     return True
 
