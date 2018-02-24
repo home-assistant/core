@@ -393,3 +393,4 @@ async def test_intent_set_color_and_brightness(hass):
     assert call.service == SERVICE_TURN_ON
     assert call.data.get(ATTR_ENTITY_ID) == 'light.hello_2'
     assert call.data.get(light.ATTR_RGB_COLOR) == (0, 0, 255)
+    assert call.data.get(light.ATTR_BRIGHTNESS_PCT) == 20
