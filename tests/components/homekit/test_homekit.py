@@ -1,18 +1,17 @@
 """Tests for the HomeKit component."""
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import voluptuous as vol
 
 from homeassistant import setup
 from homeassistant.core import Event
 from homeassistant.components.homekit import (
-    CONF_PIN_CODE, BRIDGE_NAME, HomeKit, valid_pin)
-from homeassistant.components.homekit.covers import Window
-from homeassistant.components.homekit.sensors import TemperatureSensor
+    CONF_PIN_CODE, BRIDGE_NAME, HOMEKIT_FILE, HomeKit, valid_pin)
 from homeassistant.const import (
     CONF_PORT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.util import get_local_ip
 
 from tests.common import get_test_home_assistant
 
@@ -28,7 +27,7 @@ CONFIG = {
 
 
 class TestHomeKit(unittest.TestCase):
-    """Test setup of the HomeKit component and the HomeKit class."""
+    """Test setup of HomeKit component and HomeKit class."""
 
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -82,18 +81,15 @@ class TestHomeKit(unittest.TestCase):
         for value in ('123-45-678', '234-56-789'):
             self.assertTrue(schema(value))
 
-    @patch('pyhap.accessory_driver.AccessoryDriver.persist')
-    @patch('pyhap.accessory_driver.AccessoryDriver.stop')
-    @patch('pyhap.accessory_driver.AccessoryDriver.start')
+    @patch('pyhap.accessory_driver.AccessoryDriver')
+    @patch('pyhap.accessory.Bridge.add_accessory')
     @patch(HOMEKIT_PATH + '.import_types')
     @patch(HOMEKIT_PATH + '.get_accessory')
     def test_homekit_pyhap_interaction(
             self, mock_get_accessory, mock_import_types,
-            mock_driver_start, mock_driver_stop, mock_file_persist):
-        """Test the interaction between the HomeKit class and pyhap."""
-        acc1 = TemperatureSensor(self.hass, 'sensor.temp', 'Temperature')
-        acc2 = Window(self.hass, 'cover.hall_window', 'Cover')
-        mock_get_accessory.side_effect = [acc1, acc2]
+            mock_add_accessory, mock_acc_driver):
+        """Test interaction between the HomeKit class and pyhap."""
+        mock_get_accessory.side_effect = ['TemperatureSensor', 'Window']
 
         homekit = HomeKit(self.hass, 51826)
         homekit.setup_bridge(b'123-45-678')
@@ -108,17 +104,20 @@ class TestHomeKit(unittest.TestCase):
 
         homekit.start_driver(Event(EVENT_HOMEASSISTANT_START))
 
+        ip_address = get_local_ip()
+        path = self.hass.config.path(HOMEKIT_FILE)
+
         self.assertEqual(mock_get_accessory.call_count, 2)
         self.assertEqual(mock_import_types.call_count, 1)
-        self.assertEqual(mock_driver_start.call_count, 1)
+        self.assertEqual(mock_acc_driver.mock_calls,
+                         [call(homekit.bridge, 51826, ip_address, path),
+                          call().start()])
 
-        accessories = homekit.bridge.accessories
-        self.assertEqual(accessories[2], acc1)
-        self.assertEqual(accessories[3], acc2)
-
-        mock_driver_stop.assert_not_called()
+        self.assertEqual(mock_add_accessory.mock_calls,
+                         [call('TemperatureSensor'), call('Window')])
 
         self.hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
         self.hass.block_till_done()
 
-        self.assertEqual(mock_driver_stop.call_count, 1)
+        self.assertEqual(mock_acc_driver.mock_calls[2], call().stop())
+        self.assertEqual(len(mock_acc_driver.mock_calls), 3)
