@@ -15,17 +15,20 @@ from collections import OrderedDict
 from itertools import chain
 import logging
 import os
+import weakref
 
 import attr
 
 from ..core import callback, split_entity_id
+from ..loader import bind_hass
 from ..util import ensure_unique_string, slugify
 from ..util.yaml import load_yaml, save_yaml
 
 PATH_REGISTRY = 'entity_registry.yaml'
+DATA_REGISTRY = 'entity_registry'
 SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
-
+_UNDEF = object()
 DISABLED_HASS = 'hass'
 DISABLED_USER = 'user'
 
@@ -34,6 +37,8 @@ DISABLED_USER = 'user'
 class RegistryEntry:
     """Entity Registry Entry."""
 
+    # pylint: disable=no-member
+
     entity_id = attr.ib(type=str)
     unique_id = attr.ib(type=str)
     platform = attr.ib(type=str)
@@ -41,16 +46,26 @@ class RegistryEntry:
     disabled_by = attr.ib(
         type=str, default=None,
         validator=attr.validators.in_((DISABLED_HASS, DISABLED_USER, None)))
-    domain = attr.ib(type=str, default=None, init=False, repr=False)
+    update_listeners = attr.ib(type=list, default=attr.Factory(list),
+                               repr=False)
+    domain = attr.ib(type=str, init=False, repr=False)
 
-    def __attrs_post_init__(self):
-        """Computed properties."""
-        object.__setattr__(self, "domain", split_entity_id(self.entity_id)[0])
+    @domain.default
+    def _domain_default(self):
+        """Compute domain value."""
+        return split_entity_id(self.entity_id)[0]
 
     @property
     def disabled(self):
         """Return if entry is disabled."""
         return self.disabled_by is not None
+
+    def add_update_listener(self, listener):
+        """Listen for when entry is updated.
+
+        Listener: Callback function(old_entry, new_entry)
+        """
+        self.update_listeners.append(weakref.ref(listener))
 
 
 class EntityRegistry:
@@ -101,6 +116,39 @@ class EntityRegistry:
                      domain, platform, entity_id)
         self.async_schedule_save()
         return entity
+
+    @callback
+    def async_update_entity(self, entity_id, *, name=_UNDEF):
+        """Update properties of an entity."""
+        old = self.entities[entity_id]
+
+        changes = {}
+
+        if name is not _UNDEF and name != old.name:
+            changes['name'] = name
+
+        if not changes:
+            return old
+
+        new = self.entities[entity_id] = attr.evolve(old, **changes)
+
+        to_remove = []
+        for listener_ref in new.update_listeners:
+            listener = listener_ref()
+            if listener is None:
+                to_remove.append(listener)
+            else:
+                try:
+                    listener.async_registry_updated(old, new)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception('Error calling update listener')
+
+        for ref in to_remove:
+            new.update_listeners.remove(ref)
+
+        self.async_schedule_save()
+
+        return new
 
     @asyncio.coroutine
     def async_ensure_loaded(self):
@@ -154,7 +202,20 @@ class EntityRegistry:
             data[entry.entity_id] = {
                 'unique_id': entry.unique_id,
                 'platform': entry.platform,
+                'name': entry.name,
             }
 
         yield from self.hass.async_add_job(
             save_yaml, self.hass.config.path(PATH_REGISTRY), data)
+
+
+@bind_hass
+async def async_get_registry(hass) -> EntityRegistry:
+    """Return entity registry instance."""
+    registry = hass.data.get(DATA_REGISTRY)
+
+    if registry is None:
+        registry = hass.data[DATA_REGISTRY] = EntityRegistry(hass)
+
+    await registry.async_ensure_loaded()
+    return registry
