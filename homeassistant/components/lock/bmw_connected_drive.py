@@ -71,6 +71,8 @@ class BMWLock(LockDevice):
     def lock(self, **kwargs):
         """Lock the car."""
         _LOGGER.debug("%s: locking doors", self._vehicle.modelName)
+        # Optimistic state set here because it takes some time before the
+        # update callback response
         self._state = STATE_LOCKED
         self.schedule_update_ha_state()
         self._vehicle.remote_services.trigger_remote_door_lock()
@@ -78,6 +80,8 @@ class BMWLock(LockDevice):
     def unlock(self, **kwargs):
         """Unlock the car."""
         _LOGGER.debug("%s: unlocking doors", self._vehicle.modelName)
+        # Optimistic state set here because it takes some time before the
+        # update callback response
         self._state = STATE_UNLOCKED
         self.schedule_update_ha_state()
         self._vehicle.remote_services.trigger_remote_door_unlock()
