@@ -71,14 +71,16 @@ class BMWLock(LockDevice):
     def lock(self, **kwargs):
         """Lock the car."""
         _LOGGER.debug("%s: locking doors", self._vehicle.modelName)
-        self._vehicle.remote_services.trigger_remote_door_lock()
         self._state = STATE_LOCKED
+        self.schedule_update_ha_state()
+        self._vehicle.remote_services.trigger_remote_door_lock()
 
     def unlock(self, **kwargs):
         """Unlock the car."""
         _LOGGER.debug("%s: unlocking doors", self._vehicle.modelName)
-        self._vehicle.remote_services.trigger_remote_door_unlock()
         self._state = STATE_UNLOCKED
+        self.schedule_update_ha_state()
+        self._vehicle.remote_services.trigger_remote_door_unlock()
 
     def update(self):
         """Update state of the lock."""
