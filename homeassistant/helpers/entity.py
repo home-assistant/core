@@ -1,5 +1,4 @@
 """An abstract class for entities."""
-
 import asyncio
 import logging
 import functools as ft
