@@ -238,7 +238,6 @@ class KNXModule(object):
                 exposure.async_register()
                 self.exposures.append(exposure)
 
-
     async def telegram_received_cb(self, telegram):
         """Call invoked after a KNX telegram was received."""
         self.hass.bus.fire('knx_event', {
