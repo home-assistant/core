@@ -10,12 +10,11 @@ from homeassistant.util.async import (
 import homeassistant.util.dt as dt_util
 
 from .event import async_track_time_interval, async_track_point_in_time
-from .entity_registry import EntityRegistry
+from .entity_registry import async_get_registry
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
 PLATFORM_NOT_READY_RETRIES = 10
-DATA_REGISTRY = 'entity_registry'
 
 
 class EntityPlatform(object):
@@ -156,12 +155,7 @@ class EntityPlatform(object):
         hass = self.hass
         component_entities = set(hass.states.async_entity_ids(self.domain))
 
-        registry = hass.data.get(DATA_REGISTRY)
-
-        if registry is None:
-            registry = hass.data[DATA_REGISTRY] = EntityRegistry(hass)
-
-        yield from registry.async_ensure_loaded()
+        registry = yield from async_get_registry(hass)
 
         tasks = [
             self._async_add_entity(entity, update_before_add,
@@ -226,6 +220,7 @@ class EntityPlatform(object):
 
             entity.entity_id = entry.entity_id
             entity.registry_name = entry.name
+            entry.add_update_listener(entity)
 
         # We won't generate an entity ID if the platform has already set one
         # We will however make sure that platform cannot pick a registered ID
