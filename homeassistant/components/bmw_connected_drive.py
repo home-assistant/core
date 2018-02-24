@@ -86,7 +86,6 @@ class BMWConnectedDriveAccount(object):
 
     def update(self, *_):
         """Update the state of all vehicles.
-
         Notify all listeners about the update.
         """
         _LOGGER.debug('Updating vehicle state for account %s, '
