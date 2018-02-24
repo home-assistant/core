@@ -38,7 +38,7 @@ SIGNAL_SHUTTER_UPDATE = DOMAIN + '.shutter_update'
 
 ATTR_DURATION = 'duration'
 
-SERIVCE_ENABLE_PAIRING = 'enable_pairing'
+SERVICE_ENABLE_PAIRING = 'enable_pairing'
 
 SCHEMA_SERVICE_ENABLE_PAIRING = vol.Schema({
     vol.Optional('duration', default=30): cv.positive_int,
@@ -103,7 +103,7 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN,
-        SERIVCE_ENABLE_PAIRING,
+        SERVICE_ENABLE_PAIRING,
         _service_enable_pairing,
         schema=SCHEMA_SERVICE_ENABLE_PAIRING)
 
