@@ -47,7 +47,6 @@ def async_get_translations(hass, language):
         else:
             name = component
 
-
         module = get_component(component)
         component_path = path.dirname(module.__file__)
 

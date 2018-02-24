@@ -73,7 +73,8 @@ def main():
 
     os.makedirs("build", exist_ok=True)
 
-    json_util.save_json(os.path.join("build", "translations-upload.json"), translations)
+    json_util.save_json(
+        os.path.join("build", "translations-upload.json"), translations)
 
 
 if __name__ == '__main__':

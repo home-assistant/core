@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Merge all translation sources into a single JSON file."""
 import glob
-import itertools
 import os
 import re
 
@@ -63,7 +62,6 @@ def save_language_translations(lang, translations):
             path = get_platform_path(lang, component, platform)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             json_util.save_json(path, platform_translations)
-
 
 
 def main():
