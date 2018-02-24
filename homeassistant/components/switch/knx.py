@@ -4,7 +4,6 @@ Support for KNX/IP switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.knx/
 """
-import asyncio
 
 import voluptuous as vol
 
@@ -27,8 +26,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up switch(es) for KNX platform."""
     if discovery_info is not None:
         async_add_devices_discovery(hass, discovery_info, async_add_devices)
@@ -71,11 +70,10 @@ class KNXSwitch(SwitchDevice):
     @callback
     def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
-        @asyncio.coroutine
-        def after_update_callback(device):
+        async def after_update_callback(device):
             """Call after device was updated."""
             # pylint: disable=unused-argument
-            yield from self.async_update_ha_state()
+            await self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
 
     @property
@@ -98,12 +96,10 @@ class KNXSwitch(SwitchDevice):
         """Return true if device is on."""
         return self.device.state
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        yield from self.device.set_on()
+        await self.device.set_on()
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        yield from self.device.set_off()
+        await self.device.set_off()
