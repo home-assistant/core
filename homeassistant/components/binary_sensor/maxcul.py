@@ -80,12 +80,12 @@ class MaxShutterContact(BinarySensorDevice):
         )
 
         @callback
-        def update(event):
+        def update(payload):
             """Handle thermostat update events."""
-            device_id = event.data.get(ATTR_DEVICE_ID)
+            device_id = payload.get(ATTR_DEVICE_ID)
             if device_id != self._device_id:
                 return
-            self._is_open = event.data.get(ATTR_STATE, None)
+            self._is_open = payload.get(ATTR_STATE, None)
 
             self.async_schedule_update_ha_state()
 

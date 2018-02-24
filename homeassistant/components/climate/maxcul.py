@@ -85,16 +85,16 @@ class MaxThermostat(ClimateDevice):
         )
 
         @callback
-        def update(event):
+        def update(payload):
             """Handle thermostat update events."""
-            device_id = event.data.get(ATTR_DEVICE_ID)
+            device_id = payload.get(ATTR_DEVICE_ID)
             if device_id != self._device_id:
                 return
 
-            current_temperature = event.data.get(ATTR_MEASURED_TEMPERATURE)
-            target_temperature = event.data.get(ATTR_DESIRED_TEMPERATURE)
-            mode = event.data.get(ATTR_MODE)
-            battery_low = event.data.get(ATTR_BATTERY_LOW)
+            current_temperature = payload.get(ATTR_MEASURED_TEMPERATURE)
+            target_temperature = payload.get(ATTR_DESIRED_TEMPERATURE)
+            mode = payload.get(ATTR_MODE)
+            battery_low = payload.get(ATTR_BATTERY_LOW)
 
             if current_temperature is not None:
                 self._current_temperature = current_temperature
