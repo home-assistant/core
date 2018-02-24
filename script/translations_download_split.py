@@ -18,11 +18,11 @@ def get_component_path(lang, component):
     """Get the component translation path."""
     if os.path.isdir(os.path.join("homeassistant", "components", component)):
         return os.path.join(
-            "homeassistant", "components", component, "translations",
+            "homeassistant", "components", component, ".translations",
             "{}.json".format(lang))
     else:
         return os.path.join(
-            "homeassistant", "components", "translations",
+            "homeassistant", "components", ".translations",
             "{}.{}.json".format(component, lang))
 
 
@@ -31,11 +31,11 @@ def get_platform_path(lang, component, platform):
     if os.path.isdir(os.path.join(
             "homeassistant", "components", component, platform)):
         return os.path.join(
-            "homeassistant", "components", component, platform, "translations",
-            "{}.json".format(lang))
+            "homeassistant", "components", component, platform,
+            ".translations", "{}.json".format(lang))
     else:
         return os.path.join(
-            "homeassistant", "components", component, "translations",
+            "homeassistant", "components", component, ".translations",
             "{}.{}.json".format(platform, lang))
 
 

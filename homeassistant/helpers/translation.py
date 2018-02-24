@@ -47,7 +47,7 @@ def component_translation_file(component, language):
     else:
         filename = '{}.{}.json'.format(name, language)
 
-    return path.join(component_path, 'translations', filename)
+    return path.join(component_path, '.translations', filename)
 
 
 def load_translations_files(translation_files):
