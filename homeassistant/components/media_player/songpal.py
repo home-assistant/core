@@ -49,7 +49,7 @@ SET_SOUND_SCHEMA = vol.Schema({
 async def async_setup_platform(hass, config,
                                async_add_devices, discovery_info=None):
     """Set up the Songpal platform."""
-
+    from songpal import SongpalException
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
 
@@ -63,6 +63,12 @@ async def async_setup_platform(hass, config,
         name = config.get(CONF_NAME)
         endpoint = config.get(CONF_ENDPOINT)
         device = SongpalDevice(name, endpoint)
+
+    try:
+        await device.initialize()
+    except SongpalException as ex:
+        _LOGGER.error("Unable to get methods from songpal: %s", ex)
+        raise PlatformNotReady
 
     hass.data[PLATFORM][endpoint] = device
 
@@ -110,6 +116,11 @@ class SongpalDevice(MediaPlayerDevice):
 
         self._sources = []
 
+    async def initialize(self):
+        """Initialize the device."""
+        await self.dev.get_supported_methods()
+        self._sysinfo = await self.dev.get_system_info()
+
     @property
     def name(self):
         """Return name of the device."""
@@ -132,15 +143,6 @@ class SongpalDevice(MediaPlayerDevice):
     async def async_update(self):
         """Fetch updates from the device."""
         from songpal import SongpalException
-        if not self._initialized:
-            try:
-                await self.dev.get_supported_methods()
-                self._sysinfo = await self.dev.get_system_info()
-                self._initialized = True
-            except SongpalException as ex:
-                _LOGGER.error("Unable to get methods from songpal: %s", ex)
-                raise PlatformNotReady
-
         try:
             volumes = await self.dev.get_volume_information()
             if not volumes:
