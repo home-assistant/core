@@ -118,7 +118,6 @@ async def test_update_entity_no_changes(hass, client):
     assert state.name == 'name of entity'
 
 
-
 async def test_get_nonexisting_entity(client):
     """Test get entry."""
     resp = await client.get(

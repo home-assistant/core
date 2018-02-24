@@ -40,8 +40,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class DemoLight(Light):
     """Representation of a demo light."""
 
-    def __init__(self, unique_id, name, state, available=False, rgb=None, ct=None,
-                 brightness=180, xy_color=(.5, .5), white=200,
+    def __init__(self, unique_id, name, state, available=False, rgb=None,
+                 ct=None, brightness=180, xy_color=(.5, .5), white=200,
                  effect_list=None, effect=None):
         """Initialize the light."""
         self._unique_id = unique_id
