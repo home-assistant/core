@@ -97,6 +97,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices, True)
     return True
 
+
 class SyncThruSensor(Entity):
     """Implementation of an abstract Samsung Printer sensor platform."""
 
@@ -165,7 +166,7 @@ class SyncThruToner(SyncThruSensor):
     def update(self):
         """Get the latest data from SyncThru and update the state."""
         # Data fetching is taken care of through the Main sensor
-        
+
         if self.syncthru.isOnline():
             self._attributes = self.syncthru.tonerStatus(
                 ).get(self._color, {})
@@ -173,6 +174,7 @@ class SyncThruToner(SyncThruSensor):
                 'remaining', STATE_UNKNOWN)
             self._attributes[CONF_FRIENDLY_NAME] = "{} Toner {}".format(
                 self._color, self.syncthru.model())
+
 
 class SyncThruDrum(SyncThruSensor):
     """Implementation of a Samsung Printer toner sensor platform."""
@@ -196,6 +198,7 @@ class SyncThruDrum(SyncThruSensor):
             self._attributes[CONF_FRIENDLY_NAME] = "{} Drum {}".format(
                 self._color, self.syncthru.model())
 
+
 class SyncThruInputTray(SyncThruSensor):
     """Implementation of a Samsung Printer input tray sensor platform."""
 
@@ -208,7 +211,7 @@ class SyncThruInputTray(SyncThruSensor):
     def update(self):
         """Get the latest data from SyncThru and update the state."""
         # Data fetching is taken care of through the Main sensor
-        
+
         if self.syncthru.isOnline():
             self._attributes = self.syncthru.inputTrayStatus(
                 ).get(self._number, {})
@@ -218,6 +221,7 @@ class SyncThruInputTray(SyncThruSensor):
                 self._state = 'Ready'
             self._attributes[CONF_FRIENDLY_NAME] = "Tray {} {}".format(
                 self._number, self.syncthru.model())
+
 
 class SyncThruOutputTray(SyncThruSensor):
     """Implementation of a Samsung Printer input tray sensor platform."""
