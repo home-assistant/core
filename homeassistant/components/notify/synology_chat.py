@@ -1,8 +1,8 @@
 """
-RESTful platform for notify component.
+SynologyChat platform for notify component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.rest/
+https://home-assistant.io/components/notify.synologychat/
 """
 import logging
 import json
@@ -28,17 +28,15 @@ def get_service(hass, config, discovery_info=None):
     """Get the Synology Chat notification service."""
     resource = config.get(CONF_RESOURCE)
 
-    return SynologyChatNotificationService(
-        hass, resource)
+    return SynologyChatNotificationService(resource)
 
 
 class SynologyChatNotificationService(BaseNotificationService):
     """Implementation of a notification service for Synology Chat."""
 
-    def __init__(self, hass, resource):
+    def __init__(self, resource):
         """Initialize the service."""
         self._resource = resource
-        self._hass = hass
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
