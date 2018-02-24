@@ -2,7 +2,7 @@
 SynologyChat platform for notify component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.synologychat/
+https://home-assistant.io/components/notify.synology_chat/
 """
 import logging
 import json
