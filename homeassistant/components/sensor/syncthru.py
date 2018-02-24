@@ -138,9 +138,9 @@ class SyncThruSensor(Entity):
 
 class SyncThruMain(SyncThruSensor):
 
-    def __init__(self, hass, syncthru, name, color):
+    def __init__(self, hass, syncthru, name):
         """Initialize the sensor"""
-        super.__init__(hass, syncthru, name, color)
+        super.__init__(hass, syncthru, name)
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
@@ -157,7 +157,7 @@ class SyncThruToner(SyncThruSensor):
 
     def __init__(self, hass, syncthru, name, color):
         """Initialize the sensor"""
-        super.__init__(hass, syncthru, name, color)
+        super.__init__(hass, syncthru, name)
         self._name = "{} toner {}".format(name, color)
         self._color = color
         self._unit_of_measurement = '%'
@@ -179,7 +179,7 @@ class SyncThruDrum(SyncThruSensor):
 
     def __init__(self, hass, syncthru, name, color):
         """Initialize the sensor"""
-        super.__init__(hass, syncthru, name, color)
+        super.__init__(hass, syncthru, name)
         self._name = "{} drum {}".format(name, color)
         self._color = color
         self._unit_of_measurement = '%'
@@ -201,7 +201,7 @@ class SyncThruInputTray(SyncThruSensor):
 
     def __init__(self, hass, syncthru, name, number):
         """Initialize the sensor"""
-        super.__init__(hass, syncthru, name, color)
+        super.__init__(hass, syncthru, name)
         self._name = "{} tray {}".format(name, number)
         self._number = number
 
@@ -224,7 +224,7 @@ class SyncThruOutputTray(SyncThruSensor):
 
     def __init__(self, hass, syncthru, name, number):
         """Initialize the sensor"""
-        super.__init__(hass, syncthru, name, color)
+        super.__init__(hass, syncthru, name)
         self._name = "{} output tray {}".format(name, number)
         self._number = number
 
