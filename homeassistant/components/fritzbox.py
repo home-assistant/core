@@ -22,8 +22,6 @@ SUPPORTED_DOMAINS = ['climate', 'switch']
 
 DOMAIN = 'fritzbox'
 
-DEFAULT_HOST = 'fritz.box'
-
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
