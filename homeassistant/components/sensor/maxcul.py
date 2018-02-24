@@ -4,8 +4,8 @@ Support for MAX! Eco Switches through a CUL stick.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.maxcul/
 """
-import logging
 import asyncio
+import logging
 
 import voluptuous as vol
 

@@ -4,8 +4,8 @@ Support for MAX! thermostats using the maxcul component.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/climate.maxcul/
 """
-import logging
 import asyncio
+import logging
 
 import voluptuous as vol
 
