@@ -64,6 +64,7 @@ def setup(hass, config):
             continue
 
     if not fritz_list:
+        _LOGGER.info("No fritzboxes configured")
         return False
 
     hass.data[DOMAIN] = fritz_list
