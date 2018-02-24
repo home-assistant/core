@@ -1,4 +1,4 @@
-"""Support for Apple Homekit.
+"""Support for Apple HomeKit.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/homekit/
@@ -30,7 +30,7 @@ HOMEKIT_FILE = '.homekit.state'
 
 
 def valid_pin(value):
-    """Validate pincode value."""
+    """Validate pin code value."""
     match = _RE_VALID_PINCODE.findall(value.strip())
     if match == []:
         raise vol.Invalid("Pin must be in the format: '123-45-678'")
@@ -47,14 +47,14 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the homekit component."""
-    _LOGGER.debug("Begin setup homekit")
+    """Setup the HomeKit component."""
+    _LOGGER.debug("Begin setup HomeKit")
 
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
     pin = str.encode(conf.get(CONF_PIN_CODE))
 
-    homekit = Homekit(hass, port)
+    homekit = HomeKit(hass, port)
     homekit.setup_bridge(pin)
 
     hass.bus.async_listen_once(
@@ -63,7 +63,7 @@ def async_setup(hass, config):
 
 
 def import_types():
-    """Import all types from files in the homekit dir."""
+    """Import all types from files in the HomeKit dir."""
     _LOGGER.debug("Import type files.")
     # pylint: disable=unused-variable
     from .covers import Window  # noqa F401
@@ -90,11 +90,11 @@ def get_accessory(hass, state):
     return None
 
 
-class Homekit():
-    """Class to handle all actions between homekit and Home Assistant."""
+class HomeKit():
+    """Class to handle all actions between HomeKit and Home Assistant."""
 
     def __init__(self, hass, port):
-        """Initialize a homekit object."""
+        """Initialize a HomeKit object."""
         self._hass = hass
         self._port = port
         self.bridge = None

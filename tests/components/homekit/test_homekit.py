@@ -1,4 +1,4 @@
-"""Tests for the homekit component."""
+"""Tests for the HomeKit component."""
 
 import unittest
 from unittest.mock import patch
@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant import setup
 from homeassistant.core import Event
 from homeassistant.components.homekit import (
-    CONF_PIN_CODE, BRIDGE_NAME, Homekit, valid_pin)
+    CONF_PIN_CODE, BRIDGE_NAME, HomeKit, valid_pin)
 from homeassistant.components.homekit.covers import Window
 from homeassistant.components.homekit.sensors import TemperatureSensor
 from homeassistant.const import (
@@ -27,20 +27,20 @@ CONFIG = {
 }
 
 
-class TestHomekit(unittest.TestCase):
-    """Test the Multicover component."""
+class TestHomeKit(unittest.TestCase):
+    """Test setup of the HomeKit component and the HomeKit class."""
 
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
-        """Stop down everthing that was started."""
+        """Stop down everything that was started."""
         self.hass.stop()
 
-    @patch(HOMEKIT_PATH + '.Homekit.start_driver')
-    @patch(HOMEKIT_PATH + '.Homekit.setup_bridge')
-    @patch(HOMEKIT_PATH + '.Homekit.__init__')
+    @patch(HOMEKIT_PATH + '.HomeKit.start_driver')
+    @patch(HOMEKIT_PATH + '.HomeKit.setup_bridge')
+    @patch(HOMEKIT_PATH + '.HomeKit.__init__')
     def test_setup_min(self, mock_homekit, mock_setup_bridge,
                        mock_start_driver):
         """Test async_setup with minimal config option."""
@@ -57,9 +57,9 @@ class TestHomekit(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(mock_start_driver.call_count, 1)
 
-    @patch(HOMEKIT_PATH + '.Homekit.start_driver')
-    @patch(HOMEKIT_PATH + '.Homekit.setup_bridge')
-    @patch(HOMEKIT_PATH + '.Homekit.__init__')
+    @patch(HOMEKIT_PATH + '.HomeKit.start_driver')
+    @patch(HOMEKIT_PATH + '.HomeKit.setup_bridge')
+    @patch(HOMEKIT_PATH + '.HomeKit.__init__')
     def test_setup_parameters(self, mock_homekit, mock_setup_bridge,
                               mock_start_driver):
         """Test async_setup with full config option."""
@@ -90,12 +90,12 @@ class TestHomekit(unittest.TestCase):
     def test_homekit_pyhap_interaction(
             self, mock_get_accessory, mock_import_types,
             mock_driver_start, mock_driver_stop, mock_file_persist):
-        """Test the interaction between the homekit class and pyhap."""
+        """Test the interaction between the HomeKit class and pyhap."""
         acc1 = TemperatureSensor(self.hass, 'sensor.temp', 'Temperature')
         acc2 = Window(self.hass, 'cover.hall_window', 'Cover')
         mock_get_accessory.side_effect = [acc1, acc2]
 
-        homekit = Homekit(self.hass, 51826)
+        homekit = HomeKit(self.hass, 51826)
         homekit.setup_bridge(b'123-45-678')
 
         self.assertEqual(homekit.bridge.display_name, BRIDGE_NAME)
