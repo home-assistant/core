@@ -59,6 +59,8 @@ async def async_handle(hass, platform, intent_type, slots=None,
         result = await handler.async_handle(intent)
         return result
     except vol.Invalid as err:
+        _LOGGER.warning('Received invalid slot info for %s: %s',
+                        intent_type, err)
         raise InvalidSlotInfo(
             'Received invalid slot info for {}'.format(intent_type)) from err
     except IntentHandleError:
@@ -167,7 +169,7 @@ class ServiceIntentHandler(IntentHandler):
     """
 
     slot_schema = {
-        'name': cv.string,
+        vol.Required('name'): cv.string,
     }
 
     def __init__(self, intent_type, domain, service, speech):
