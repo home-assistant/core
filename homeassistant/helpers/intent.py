@@ -105,7 +105,7 @@ def async_match_state(hass, name, states=None):
 
 @callback
 def async_test_feature(state, feature, feature_name):
-    """Find a state that matches the name."""
+    """Test is state supports a feature."""
     if state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & feature == 0:
         raise IntentHandleError(
             'Entity {} does not support {}'.format(
@@ -181,32 +181,13 @@ class ServiceIntentHandler(IntentHandler):
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        response = intent_obj.create_response()
         state = async_match_state(hass, slots['name']['value'])
 
-<<<<<<< HEAD
-        name = slots['name']['value']
-        entities = {state.entity_id: state.name for state
-                    in hass.states.async_all()}
-
-        matches = fuzzymatch(name, entities)
-        entity_id = matches[0] if matches else None
-        _LOGGER.debug("%s matched entity: %s", name, entity_id)
+        await hass.services.async_call(self.domain, self.service, {
+            ATTR_ENTITY_ID: state.entity_id
+        })
 
         response = intent_obj.create_response()
-        if not entity_id:
-            response.async_set_speech(
-                "Could not find entity id matching {}.".format(name))
-            _LOGGER.error("Could not find entity id matching %s", name)
-            return response
-
-=======
->>>>>>> Add Light Set Color intent
-        await hass.services.async_call(
-            self.domain, self.service, {
-                ATTR_ENTITY_ID: state.entity_id
-            })
-
         response.async_set_speech(self.speech.format(state.name))
         return response
 
