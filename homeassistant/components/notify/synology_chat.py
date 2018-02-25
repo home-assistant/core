@@ -44,7 +44,7 @@ class SynologyChatNotificationService(BaseNotificationService):
             'text': message
         }
 
-        to_send = 'payload=' + json.dumps(data)
+        to_send = 'payload={}'.format(json.dumps(data))
 
         response = requests.post(self._resource, data=to_send, timeout=10)
 
