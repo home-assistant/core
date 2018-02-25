@@ -28,7 +28,7 @@ class TestHomekitSensors(unittest.TestCase):
         self.hass.bus.listen(EVENT_CALL_SERVICE, record_event)
 
     def tearDown(self):
-        """Stop down everthing that was started."""
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_window_set_cover_position(self):
