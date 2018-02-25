@@ -220,6 +220,10 @@ def setup(hass, config):
                         json['fields'][key] = float(
                             RE_DECIMAL.sub('', new_value))
 
+                # Infinity is not a valid float in InfluxDB
+                if (key, float("inf")) in json['fields'].items():
+                    del json['fields'][key]
+
         json['tags'].update(tags)
 
         return json
