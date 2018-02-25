@@ -1,5 +1,4 @@
 """Translation string lookup helpers."""
-import asyncio
 import logging
 # pylint: disable=unused-import
 from typing import Optional  # NOQA
@@ -80,9 +79,8 @@ def build_resources(translation_cache, components):
     return resources
 
 
-@asyncio.coroutine
 @bind_hass
-def async_get_component_resources(hass, language):
+async def async_get_component_resources(hass, language):
     """Return translation resources for all components."""
     if TRANSLATION_STRING_CACHE not in hass.data:
         hass.data[TRANSLATION_STRING_CACHE] = {}
@@ -100,7 +98,7 @@ def async_get_component_resources(hass, language):
             missing.add(component_translation_file(component, language))
 
     if missing:
-        loaded = yield from hass.async_add_job(
+        loaded = await hass.async_add_job(
             load_translations_files, missing)
 
     # Update cache
@@ -116,16 +114,15 @@ def async_get_component_resources(hass, language):
     return flatten({'component': resources})
 
 
-@asyncio.coroutine
 @bind_hass
-def async_get_translations(hass, language):
+async def async_get_translations(hass, language):
     """Return all backend translations."""
     if language == 'en':
-        resources = yield from async_get_component_resources(hass, language)
+        resources = await async_get_component_resources(hass, language)
     else:
         # Fetch the English resources, as a fallback for missing keys
-        resources = yield from async_get_component_resources(hass, 'en')
-        native_resources = yield from async_get_component_resources(
+        resources = await async_get_component_resources(hass, 'en')
+        native_resources = await async_get_component_resources(
             hass, language)
         resources.update(native_resources)
 
