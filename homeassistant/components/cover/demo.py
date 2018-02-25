@@ -5,7 +5,8 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE)
+    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, ATTR_POSITION,
+    ATTR_TILT_POSITION)
 from homeassistant.helpers.event import track_utc_time_change
 
 
@@ -137,8 +138,9 @@ class DemoCover(CoverDevice):
         self._listen_cover_tilt()
         self._requested_closing_tilt = False
 
-    def set_cover_position(self, position, **kwargs):
+    def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
+        position = kwargs.get(ATTR_POSITION)
         self._set_position = round(position, -1)
         if self._position == position:
             return
@@ -146,8 +148,9 @@ class DemoCover(CoverDevice):
         self._listen_cover()
         self._requested_closing = position < self._position
 
-    def set_cover_tilt_position(self, tilt_position, **kwargs):
+    def set_cover_tilt_position(self, **kwargs):
         """Move the cover til to a specific position."""
+        tilt_position = kwargs.get(ATTR_TILT_POSITION)
         self._set_tilt_position = round(tilt_position, -1)
         if self._tilt_position == tilt_position:
             return

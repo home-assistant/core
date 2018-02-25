@@ -6,8 +6,9 @@ import logging
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.http import (
-    HomeAssistantView, RequestDataValidator)
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.data_validator import (
+    RequestDataValidator)
 
 from . import auth_api
 from .const import DOMAIN, REQUEST_TIMEOUT

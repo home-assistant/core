@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOSTS): cv.ensure_list,
     vol.Required(CONF_HOME_INTERVAL, default=0): cv.positive_int,
     vol.Optional(CONF_EXCLUDE, default=[]):
-        vol.All(cv.ensure_list, vol.Length(min=1)),
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_OPTIONS, default=DEFAULT_OPTIONS):
         cv.string
 })
@@ -41,9 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Nmap scanner."""
-    scanner = NmapDeviceScanner(config[DOMAIN])
-
-    return scanner if scanner.success_init else None
+    return NmapDeviceScanner(config[DOMAIN])
 
 
 Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
@@ -76,7 +74,6 @@ class NmapDeviceScanner(DeviceScanner):
         self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(minutes=minutes)
 
-        self.success_init = self._update_info()
         _LOGGER.info("Scanner initialized")
 
     def scan_devices(self):
@@ -85,10 +82,10 @@ class NmapDeviceScanner(DeviceScanner):
 
         return [device.mac for device in self.last_results]
 
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        filter_named = [device.name for device in self.last_results
-                        if device.mac == mac]
+        filter_named = [result.name for result in self.last_results
+                        if result.mac == device]
 
         if filter_named:
             return filter_named[0]

@@ -84,7 +84,7 @@ def elevation(latitude, longitude):
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE
 # pylint: disable=invalid-name, unused-variable, invalid-sequence-index
 def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
-             miles: bool=False) -> Optional[float]:
+             miles: bool = False) -> Optional[float]:
     """
     Vincenty formula (inverse method) to calculate the distance.
 

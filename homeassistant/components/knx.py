@@ -14,7 +14,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['xknx==0.7.18']
+REQUIREMENTS = ['xknx==0.8.3']
 
 DOMAIN = "knx"
 DATA_KNX = "data_knx"
@@ -120,7 +120,6 @@ class KNXModule(object):
         self.hass = hass
         self.config = config
         self.connected = False
-        self.initialized = True
         self.init_xknx()
         self.register_callbacks()
 
@@ -216,7 +215,7 @@ class KNXModule(object):
     @asyncio.coroutine
     def service_send_to_knx_bus(self, call):
         """Service for sending an arbitrary KNX message to the KNX bus."""
-        from xknx.knx import Telegram, Address, DPTBinary, DPTArray
+        from xknx.knx import Telegram, GroupAddress, DPTBinary, DPTArray
         attr_payload = call.data.get(SERVICE_KNX_ATTR_PAYLOAD)
         attr_address = call.data.get(SERVICE_KNX_ATTR_ADDRESS)
 
@@ -226,7 +225,7 @@ class KNXModule(object):
                 return DPTBinary(attr_payload)
             return DPTArray(attr_payload)
         payload = calculate_payload(attr_payload)
-        address = Address(attr_address)
+        address = GroupAddress(attr_address)
 
         telegram = Telegram()
         telegram.payload = payload

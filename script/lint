@@ -4,11 +4,15 @@
 cd "$(dirname "$0")/.."
 
 if [ "$1" = "--changed" ]; then
-  export files="`git diff upstream/dev --name-only | grep -e '\.py$'`"
+  export files="`git diff upstream/dev... --name-only | grep -e '\.py$'`"
   echo "================================================="
-  echo "FILES CHANGED (git diff upstream/dev --name-only)"
+  echo "FILES CHANGED (git diff upstream/dev... --name-only)"
   echo "================================================="
-  echo  $files
+  if $files >/dev/null; then
+    echo "No python file changed"
+    exit
+  fi
+  printf "%s\n" $files
   echo "================"
   echo "LINT with flake8"
   echo "================"

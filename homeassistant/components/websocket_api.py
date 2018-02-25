@@ -81,7 +81,7 @@ CALL_SERVICE_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('type'): TYPE_CALL_SERVICE,
     vol.Required('domain'): str,
     vol.Required('service'): str,
-    vol.Optional('service_data', default=None): dict
+    vol.Optional('service_data'): dict
 })
 
 GET_STATES_MESSAGE_SCHEMA = vol.Schema({
@@ -451,7 +451,7 @@ class ActiveConnection:
         def call_service_helper(msg):
             """Call a service and fire complete message."""
             yield from self.hass.services.async_call(
-                msg['domain'], msg['service'], msg['service_data'], True)
+                msg['domain'], msg['service'], msg.get('service_data'), True)
             self.send_message_outside(result_message(msg['id']))
 
         self.hass.async_add_job(call_service_helper(msg))

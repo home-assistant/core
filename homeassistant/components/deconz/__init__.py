@@ -4,6 +4,7 @@ Support for deCONZ devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/deconz/
 """
+
 import asyncio
 import logging
 
@@ -17,11 +18,12 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==27']
+REQUIREMENTS = ['pydeconz==30']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'deconz'
+DATA_DECONZ_ID = 'deconz_entities'
 
 CONFIG_FILE = 'deconz.conf'
 
@@ -34,12 +36,15 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_FIELD = 'field'
+SERVICE_ENTITY = 'entity'
 SERVICE_DATA = 'data'
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Required(SERVICE_FIELD): cv.string,
+    vol.Exclusive(SERVICE_FIELD, 'deconz_id'): cv.string,
+    vol.Exclusive(SERVICE_ENTITY, 'deconz_id'): cv.entity_id,
     vol.Required(SERVICE_DATA): dict,
 })
+
 
 CONFIG_INSTRUCTIONS = """
 Unlock your deCONZ gateway to register with Home Assistant.
@@ -100,6 +105,7 @@ def async_setup_deconz(hass, config, deconz_config):
         return False
 
     hass.data[DOMAIN] = deconz
+    hass.data[DATA_DECONZ_ID] = {}
 
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
         hass.async_add_job(discovery.async_load_platform(
@@ -112,6 +118,7 @@ def async_setup_deconz(hass, config, deconz_config):
 
         Field is a string representing a specific device in deCONZ
         e.g. field='/lights/1/state'.
+        Entity_id can be used to retrieve the proper field.
         Data is a json object with what data you want to alter
         e.g. data={'on': true}.
         {
@@ -121,9 +128,17 @@ def async_setup_deconz(hass, config, deconz_config):
         See Dresden Elektroniks REST API documentation for details:
         http://dresden-elektronik.github.io/deconz-rest-doc/rest/
         """
-        deconz = hass.data[DOMAIN]
         field = call.data.get(SERVICE_FIELD)
+        entity_id = call.data.get(SERVICE_ENTITY)
         data = call.data.get(SERVICE_DATA)
+        deconz = hass.data[DOMAIN]
+        if entity_id:
+            entities = hass.data.get(DATA_DECONZ_ID)
+            if entities:
+                field = entities.get(entity_id)
+            if field is None:
+                _LOGGER.error('Could not find the entity %s', entity_id)
+                return
         yield from deconz.async_put_state(field, data)
     hass.services.async_register(
         DOMAIN, 'configure', async_configure, schema=SERVICE_SCHEMA)

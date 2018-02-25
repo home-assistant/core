@@ -26,6 +26,9 @@ PATH_REGISTRY = 'entity_registry.yaml'
 SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
+DISABLED_HASS = 'hass'
+DISABLED_USER = 'user'
+
 
 @attr.s(slots=True, frozen=True)
 class RegistryEntry:
@@ -35,11 +38,19 @@ class RegistryEntry:
     unique_id = attr.ib(type=str)
     platform = attr.ib(type=str)
     name = attr.ib(type=str, default=None)
+    disabled_by = attr.ib(
+        type=str, default=None,
+        validator=attr.validators.in_((DISABLED_HASS, DISABLED_USER, None)))
     domain = attr.ib(type=str, default=None, init=False, repr=False)
 
     def __attrs_post_init__(self):
         """Computed properties."""
         object.__setattr__(self, "domain", split_entity_id(self.entity_id)[0])
+
+    @property
+    def disabled(self):
+        """Return if entry is disabled."""
+        return self.disabled_by is not None
 
 
 class EntityRegistry:
@@ -116,7 +127,8 @@ class EntityRegistry:
                     entity_id=entity_id,
                     unique_id=info['unique_id'],
                     platform=info['platform'],
-                    name=info.get('name')
+                    name=info.get('name'),
+                    disabled_by=info.get('disabled_by')
                 )
 
         self.entities = entities

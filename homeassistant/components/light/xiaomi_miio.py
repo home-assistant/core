@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.3.6']
+REQUIREMENTS = ['python-miio==0.3.7']
 
 # The light does not accept cct values < 1
 CCT_MIN = 1
@@ -242,7 +242,7 @@ class XiaomiPhilipsGenericLight(Light):
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @asyncio.coroutine
-    def async_set_scene(self, scene: int=1):
+    def async_set_scene(self, scene: int = 1):
         """Set the fixed scene."""
         yield from self._try_command(
             "Setting a fixed scene failed.",
@@ -259,10 +259,6 @@ class XiaomiPhilipsGenericLight(Light):
 
 class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
     """Representation of a Xiaomi Philips Light Ball."""
-
-    def __init__(self, name, light, device_info):
-        """Initialize the light device."""
-        super().__init__(name, light, device_info)
 
     @property
     def color_temp(self):
@@ -293,6 +289,28 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
                 color_temp, self.max_mireds,
                 self.min_mireds, CCT_MIN, CCT_MAX)
 
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            percent_brightness = ceil(100 * brightness / 255.0)
+
+        if ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP in kwargs:
+            _LOGGER.debug(
+                "Setting brightness and color temperature: "
+                "%s %s%%, %s mireds, %s%% cct",
+                brightness, percent_brightness,
+                color_temp, percent_color_temp)
+
+            result = yield from self._try_command(
+                "Setting brightness and color temperature failed: "
+                "%s bri, %s cct",
+                self._light.set_brightness_and_color_temperature,
+                percent_brightness, percent_color_temp)
+
+            if result:
+                self._color_temp = color_temp
+                self._brightness = brightness
+
+        elif ATTR_COLOR_TEMP in kwargs:
             _LOGGER.debug(
                 "Setting color temperature: "
                 "%s mireds, %s%% cct",
@@ -305,7 +323,7 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
             if result:
                 self._color_temp = color_temp
 
-        if ATTR_BRIGHTNESS in kwargs:
+        elif ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
             percent_brightness = ceil(100 * brightness / 255.0)
 
@@ -320,8 +338,9 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
             if result:
                 self._brightness = brightness
 
-        self._state = yield from self._try_command(
-            "Turning the light on failed.", self._light.on)
+        else:
+            self._state = yield from self._try_command(
+                "Turning the light on failed.", self._light.on)
 
     @asyncio.coroutine
     def async_update(self):
@@ -345,10 +364,6 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
 class XiaomiPhilipsCeilingLamp(XiaomiPhilipsLightBall, Light):
     """Representation of a Xiaomi Philips Ceiling Lamp."""
 
-    def __init__(self, name, light, device_info):
-        """Initialize the light device."""
-        super().__init__(name, light, device_info)
-
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
@@ -363,6 +378,4 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsLightBall, Light):
 class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight, Light):
     """Representation of a Xiaomi Philips Eyecare Lamp 2."""
 
-    def __init__(self, name, light, device_info):
-        """Initialize the light device."""
-        super().__init__(name, light, device_info)
+    pass

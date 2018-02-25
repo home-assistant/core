@@ -188,8 +188,8 @@ def find_possible_pt2262_device(device_id):
     for dev_id, device in RFX_DEVICES.items():
         if hasattr(device, 'is_lighting4') and len(dev_id) == len(device_id):
             size = None
-            for i in range(0, len(dev_id)):
-                if dev_id[i] != device_id[i]:
+            for i, (char1, char2) in enumerate(zip(dev_id, device_id)):
+                if char1 != char2:
                     break
                 size = i
 

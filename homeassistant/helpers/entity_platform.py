@@ -216,6 +216,14 @@ class EntityPlatform(object):
             entry = registry.async_get_or_create(
                 self.domain, self.platform_name, entity.unique_id,
                 suggested_object_id=suggested_object_id)
+
+            if entry.disabled:
+                self.logger.info(
+                    "Not adding entity %s because it's disabled",
+                    entry.name or entity.name or
+                    '"{} {}"'.format(self.platform_name, entity.unique_id))
+                return
+
             entity.entity_id = entry.entity_id
             entity.registry_name = entry.name
 
