@@ -29,9 +29,6 @@ class TestFilterSensor(unittest.TestCase):
         with assert_setup_component(0):
             assert setup_component(self.hass, 'sensor', config)
 
-        self.hass.start()
-        self.hass.block_till_done()
-
     def test_outlier(self):
         """Test if filter outlier works."""
         config = {
