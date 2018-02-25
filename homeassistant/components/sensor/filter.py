@@ -119,24 +119,19 @@ class SensorFilter(Entity):
 
             self._state = new_state.state
             for filt in self._filters:
-                filtered_state = filt.filter_state(self._state)
-                _LOGGER.debug("%s(%s) -> %s", filt.name, self._state,
-                              filtered_state)
-                self._state = filtered_state
-                filt.states.append(filtered_state)
+                try:
+                    filtered_state = filt.filter_state(self._state)
+                    _LOGGER.debug("%s(%s) -> %s", filt.name, self._state,
+                                  filtered_state)
+                    self._state = filtered_state
+                    filt.states.append(filtered_state)
+                except ValueError:
+                    _LOGGER.warning("Could not convert state to number")
 
             self.async_schedule_update_ha_state(True)
 
-        @callback
-        def filter_sensor_startup(event):
-            """Update filter on startup."""
-            async_track_state_change(
-                self.hass, self._entity, filter_sensor_state_listener)
-
-            self.async_schedule_update_ha_state(True)
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, filter_sensor_startup)
+        async_track_state_change(
+            self.hass, self._entity, filter_sensor_state_listener)
 
     @property
     def name(self):
@@ -167,7 +162,6 @@ class SensorFilter(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         state_attr = {
-            ATTR_UNIT_OF_MEASUREMENT: self._unit_of_measurement,
             ATTR_ENTITY_ID: self._entity
         }
         for filt in self._filters:
