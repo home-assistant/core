@@ -319,6 +319,8 @@ class XiaomiButton(XiaomiBinarySensor):
             click_type = 'double'
         elif value == 'both_click':
             click_type = 'both'
+        elif value == 'shake':
+            click_type = 'shake'
         else:
             return False
 
