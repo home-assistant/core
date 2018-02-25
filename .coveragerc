@@ -432,7 +432,6 @@ omit =
     homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/bluesound.py
     homeassistant/components/media_player/braviatv.py
-    homeassistant/components/media_player/braviatv_psk.py
     homeassistant/components/media_player/cast.py
     homeassistant/components/media_player/clementine.py
     homeassistant/components/media_player/cmus.py
