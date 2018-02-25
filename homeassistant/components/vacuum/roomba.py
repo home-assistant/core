@@ -16,6 +16,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 
@@ -94,11 +95,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                  host, username)
 
     try:
-        with async_timeout.timeout(10):
+        with async_timeout.timeout(9):
             yield from hass.async_add_job(roomba.connect)
     except asyncio.TimeoutError:
-        _LOGGER.error("Could not connect to Roomba %s", host)
-        return False
+        raise PlatformNotReady
 
     roomba_vac = RoombaVacuum(name, roomba)
     hass.data[PLATFORM][host] = roomba_vac
