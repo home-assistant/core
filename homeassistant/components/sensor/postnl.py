@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=1800)):
-        vol.All(cv.time_period, cv.positive_timedelta),
+    vol.All(cv.time_period, cv.positive_timedelta),
 })
 
 # pylint: disable=unused-argument
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         api = PostNL_API(username, password)
 
     except Exception:
-        _LOGGER.exception('Wrong Credentials')
+        _LOGGER.exception("Can't connect to the PostNL webservice")
         return False
 
     add_devices([PostNLSensor(username, password, name, update_interval)], True)
@@ -61,7 +61,6 @@ class PostNLSensor(Entity):
     def __init__(self, username, password, name, interval):
         """Initialize the sensor."""
         self.friendly_name = name
-        # self._name = DOMAIN + '_' + name
         self._name = name
         self._attributes = None
         self._state = None
@@ -87,8 +86,8 @@ class PostNLSensor(Entity):
 
         if self._state == 1:
             return 'package'
-        else:
-            return 'packages'
+
+        return 'packages'
 
     def _update(self):
         """Update device state."""
@@ -96,13 +95,15 @@ class PostNLSensor(Entity):
 
         api = PostNL_API(self._username, self._password)
         shipments = api.get_relevant_shipments()
-        status_counts = defaultdict(str)
+        status_counts = {}
 
         def parse_date(date):
-            return datetime.strptime(date.group(1).replace(' ', '')[:-6], '%Y-%m-%dT%H:%M:%S').strftime('%d-%m-%Y')
+            return datetime.strptime(date.group(1)
+                                     .replace(' ', '')[:-6], '%Y-%m-%dT%H:%M:%S').strftime('%d-%m-%Y')
 
         def parse_time(date):
-            return datetime.strptime(date.group(1).replace(' ', '')[:-6], '%Y-%m-%dT%H:%M:%S').strftime('%H:%M')
+            return datetime.strptime(date.group(1)
+                                     .replace(' ', '')[:-6], '%Y-%m-%dT%H:%M:%S').strftime('%H:%M')
 
         for shipment in shipments:
             status = shipment['status']['formatted']['short']
@@ -113,9 +114,10 @@ class PostNLSensor(Entity):
             status_counts[name] = status
 
         self._attributes = {
-            ATTR_ATTRIBUTION: 'Information provided by PostNL'
+            ATTR_ATTRIBUTION: 'Information provided by PostNL',
+            **status_counts
         }
-        self._attributes.update(status_counts)
+
         self._state = len(status_counts)
 
     @property
