@@ -65,10 +65,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is not None:
         host = discovery_info.get(CONF_HOST)
         name = discovery_info.get(CONF_NAME, DEFAULT_NAME)
-        _LOGGER.debug("Discovered a new Samsung Printer: %s" % discovery_info)
+        _LOGGER.debug("Discovered a new Samsung Printer: %s", discovery_info)
         # Test if the discovered device actually is a syncthru printer
         if not test_syncthru(host):
-            _LOGGER.error("No SyncThru Printer found at %s" % host)
+            _LOGGER.error("No SyncThru Printer found at %s", host)
             return False
         monitored = DEFAULT_MONITORED_CONDITIONS
     else:
@@ -138,10 +138,7 @@ class SyncThruSensor(Entity):
 
 
 class SyncThruMain(SyncThruSensor):
-
-    def __init__(self, hass, syncthru, name):
-        """Initialize the sensor"""
-        super().__init__(hass, syncthru, name)
+    """Implementaion of the main device sensor, monitoring the general state"""
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
@@ -149,7 +146,7 @@ class SyncThruMain(SyncThruSensor):
         self._state = self.syncthru.deviceStatus()
 
         if self.syncthru.isOnline():
-            self._attributes[CONF_FRIENDLY_NAME] = self.syncthru.model()
+            self._name = self.syncthru.model()
             self._state = self.syncthru.deviceStatus()
 
 
@@ -172,7 +169,7 @@ class SyncThruToner(SyncThruSensor):
                 ).get(self._color, {})
             self._state = self._attributes.get(
                 'remaining', STATE_UNKNOWN)
-            self._attributes[CONF_FRIENDLY_NAME] = "{} Toner {}".format(
+            self._name = "{} Toner {}".format(
                 self._color, self.syncthru.model())
 
 
@@ -195,7 +192,7 @@ class SyncThruDrum(SyncThruSensor):
                 ).get(self._color, {})
             self._state = self._attributes.get(
                 'remaining', STATE_UNKNOWN)
-            self._attributes[CONF_FRIENDLY_NAME] = "{} Drum {}".format(
+            self._name = "{} Drum {}".format(
                 self._color, self.syncthru.model())
 
 
@@ -219,7 +216,7 @@ class SyncThruInputTray(SyncThruSensor):
                 'newError', STATE_UNKNOWN)
             if self._state == '':
                 self._state = 'Ready'
-            self._attributes[CONF_FRIENDLY_NAME] = "Tray {} {}".format(
+            self._name = "Tray {} {}".format(
                 self._number, self.syncthru.model())
 
 
@@ -243,5 +240,5 @@ class SyncThruOutputTray(SyncThruSensor):
                 'status', STATE_UNKNOWN)
             if self._state == '':
                 self._state = 'Ready'
-            self._attributes[CONF_FRIENDLY_NAME] = "Output Tray {} {}".format(
+            self._name = "Output Tray {} {}".format(
                 self._number, self.syncthru.model())
