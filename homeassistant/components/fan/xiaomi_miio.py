@@ -762,7 +762,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice, FanEntity):
 
         from miio.airhumidifier import OperationMode
 
-        _LOGGER.debug("Setting the operation mode to: " + speed)
+        _LOGGER.debug("Setting the operation mode to: %s", speed)
 
         yield from self._try_command(
             "Setting operation mode of the miio device failed.",
