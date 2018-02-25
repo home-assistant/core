@@ -222,7 +222,7 @@ class YrData(object):
 
         # Update all devices
         tasks = []
-        if len(ordered_entries) > 0:
+        if ordered_entries:
             for dev in self.devices:
                 new_state = None
 
@@ -254,5 +254,5 @@ class YrData(object):
                     dev._state = new_state
                     tasks.append(dev.async_update_ha_state())
 
-        if len(tasks) > 0:
+        if tasks:
             yield from asyncio.wait(tasks, loop=self.hass.loop)

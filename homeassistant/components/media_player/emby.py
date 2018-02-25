@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_PORT, default=None): cv.port,
+    vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_AUTO_HIDE, default=DEFAULT_AUTO_HIDE): cv.boolean,
 })
 

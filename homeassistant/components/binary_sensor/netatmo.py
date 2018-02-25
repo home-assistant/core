@@ -50,10 +50,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CAMERAS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_HOME): cv.string,
-    vol.Optional(CONF_PRESENCE_SENSORS, default=PRESENCE_SENSOR_TYPES):
+    vol.Optional(CONF_PRESENCE_SENSORS, default=list(PRESENCE_SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(PRESENCE_SENSOR_TYPES)]),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_WELCOME_SENSORS, default=WELCOME_SENSOR_TYPES):
+    vol.Optional(CONF_WELCOME_SENSORS, default=list(WELCOME_SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(WELCOME_SENSOR_TYPES)]),
 })
 

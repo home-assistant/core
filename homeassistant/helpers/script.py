@@ -33,7 +33,7 @@ CONF_WAIT_TEMPLATE = 'wait_template'
 
 
 def call_from_config(hass: HomeAssistant, config: ConfigType,
-                     variables: Optional[Sequence]=None) -> None:
+                     variables: Optional[Sequence] = None) -> None:
     """Call a script based on a config entry."""
     Script(hass, cv.SCRIPT_SCHEMA(config)).run(variables)
 
@@ -41,7 +41,7 @@ def call_from_config(hass: HomeAssistant, config: ConfigType,
 class Script():
     """Representation of a script."""
 
-    def __init__(self, hass: HomeAssistant, sequence, name: str=None,
+    def __init__(self, hass: HomeAssistant, sequence, name: str = None,
                  change_listener=None) -> None:
         """Initialize the script."""
         self.hass = hass
@@ -69,7 +69,7 @@ class Script():
             self.async_run(variables), self.hass.loop).result()
 
     @asyncio.coroutine
-    def async_run(self, variables: Optional[Sequence]=None) -> None:
+    def async_run(self, variables: Optional[Sequence] = None) -> None:
         """Run script.
 
         This method is a coroutine.

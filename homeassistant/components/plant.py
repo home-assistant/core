@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from collections import deque
 import voluptuous as vol
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.const import (
     STATE_OK, STATE_PROBLEM, STATE_UNKNOWN, TEMP_CELSIUS, ATTR_TEMPERATURE,
     CONF_SENSORS, ATTR_UNIT_OF_MEASUREMENT)
@@ -198,8 +199,8 @@ class Plant(Entity):
             self._brightness_history.add_measurement(self._brightness,
                                                      new_state.last_updated)
         else:
-            raise _LOGGER.error("Unknown reading from sensor %s: %s",
-                                entity_id, value)
+            raise HomeAssistantError(
+                "Unknown reading from sensor {}: {}".format(entity_id, value))
         if ATTR_UNIT_OF_MEASUREMENT in new_state.attributes:
             self._unit_of_measurement[reading] = \
                 new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)

@@ -24,7 +24,7 @@ SLOW_SETUP_WARNING = 10
 
 
 def setup_component(hass: core.HomeAssistant, domain: str,
-                    config: Optional[Dict]=None) -> bool:
+                    config: Optional[Dict] = None) -> bool:
     """Set up a component and all its dependencies."""
     return run_coroutine_threadsafe(
         async_setup_component(hass, domain, config), loop=hass.loop).result()
@@ -32,7 +32,7 @@ def setup_component(hass: core.HomeAssistant, domain: str,
 
 @asyncio.coroutine
 def async_setup_component(hass: core.HomeAssistant, domain: str,
-                          config: Optional[Dict]=None) -> bool:
+                          config: Optional[Dict] = None) -> bool:
     """Set up a component and all its dependencies.
 
     This method is a coroutine.
@@ -123,7 +123,7 @@ def _async_setup_component(hass: core.HomeAssistant,
         return False
 
     try:
-        yield from _process_deps_reqs(hass, config, domain, component)
+        yield from async_process_deps_reqs(hass, config, domain, component)
     except HomeAssistantError as err:
         log_error(str(err))
         return False
@@ -164,6 +164,9 @@ def _async_setup_component(hass: core.HomeAssistant,
                   "Disabling component.")
         loader.set_component(domain, None)
         return False
+
+    for entry in hass.config_entries.async_entries(domain):
+        yield from entry.async_setup(hass, component=component)
 
     hass.config.components.add(component.DOMAIN)
 
@@ -206,7 +209,8 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
         return platform
 
     try:
-        yield from _process_deps_reqs(hass, config, platform_path, platform)
+        yield from async_process_deps_reqs(
+            hass, config, platform_path, platform)
     except HomeAssistantError as err:
         log_error(str(err))
         return None
@@ -215,7 +219,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
 
 
 @asyncio.coroutine
-def _process_deps_reqs(hass, config, name, module):
+def async_process_deps_reqs(hass, config, name, module):
     """Process all dependencies and requirements for a module.
 
     Module is a Python module of either a component or platform.

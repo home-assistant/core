@@ -46,8 +46,8 @@ TEST_REQUIREMENTS = (
     'ephem',
     'evohomeclient',
     'feedparser',
-    'fuzzywuzzy',
     'gTTS-token',
+    'HAP-python',
     'ha-ffmpeg',
     'haversine',
     'hbmqtt',
@@ -83,6 +83,7 @@ TEST_REQUIREMENTS = (
     'sqlalchemy',
     'statsd',
     'uvcclient',
+    'voluptuous-serialize',
     'warrant',
     'yahoo-finance',
     'pythonwhois',
@@ -92,6 +93,9 @@ TEST_REQUIREMENTS = (
 
 IGNORE_PACKAGES = (
     'homeassistant.components.recorder.models',
+    'homeassistant.components.homekit.accessories',
+    'homeassistant.components.homekit.covers',
+    'homeassistant.components.homekit.sensors'
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
@@ -107,7 +111,7 @@ URL_PIN = ('https://home-assistant.io/developers/code_review_platform/'
 CONSTRAINT_PATH = os.path.join(os.path.dirname(__file__),
                                '../homeassistant/package_constraints.txt')
 CONSTRAINT_BASE = """
-# Breaks Python 3.6 and is not needed for our supported Pythons
+# Breaks Python 3.6 and is not needed for our supported Python versions
 enum34==1000000000.0.0
 """
 

@@ -35,7 +35,7 @@ DEPENDENCIES = ['knx']
 AUTOMATION_SCHEMA = vol.Schema({
     vol.Optional(CONF_HOOK, default=CONF_DEFAULT_HOOK): cv.string,
     vol.Optional(CONF_COUNTER, default=CONF_DEFAULT_COUNTER): cv.port,
-    vol.Required(CONF_ACTION, default=None): cv.SCRIPT_SCHEMA
+    vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA
 })
 
 AUTOMATIONS_SCHEMA = vol.All(
@@ -49,16 +49,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE_CLASS): cv.string,
     vol.Optional(CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT):
         cv.positive_int,
-    vol.Optional(CONF_AUTOMATION, default=None): AUTOMATIONS_SCHEMA,
+    vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up binary sensor(s) for KNX platform."""
-    if DATA_KNX not in hass.data or not hass.data[DATA_KNX].initialized:
-        return
-
     if discovery_info is not None:
         async_add_devices_discovery(hass, discovery_info, async_add_devices)
     else:

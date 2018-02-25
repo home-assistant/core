@@ -21,8 +21,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
+from homeassistant.util import slugify
 
-REQUIREMENTS = ['PyXiaomiGateway==0.8.0']
+REQUIREMENTS = ['PyXiaomiGateway==0.8.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +69,7 @@ SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema({
 
 GATEWAY_CONFIG = vol.Schema({
     vol.Optional(CONF_MAC, default=None): vol.Any(GW_MAC, None),
-    vol.Optional(CONF_KEY, default=None):
+    vol.Optional(CONF_KEY):
         vol.All(cv.string, vol.Length(min=16, max=16)),
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=9898): cv.port,
@@ -90,11 +91,9 @@ def _fix_conf_defaults(config):
     return config
 
 
-DEFAULT_GATEWAY_CONFIG = [{CONF_MAC: None, CONF_KEY: None}]
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_GATEWAYS, default=DEFAULT_GATEWAY_CONFIG):
+        vol.Optional(CONF_GATEWAYS, default={}):
             vol.All(cv.ensure_list, [GATEWAY_CONFIG], [_fix_conf_defaults]),
         vol.Optional(CONF_INTERFACE, default='any'): cv.string,
         vol.Optional(CONF_DISCOVERY_RETRY, default=3): cv.positive_int
@@ -205,12 +204,13 @@ def setup(hass, config):
 class XiaomiDevice(Entity):
     """Representation a base Xiaomi device."""
 
-    def __init__(self, device, name, xiaomi_hub):
+    def __init__(self, device, device_type, xiaomi_hub):
         """Initialize the Xiaomi device."""
         self._state = None
         self._is_available = True
         self._sid = device['sid']
-        self._name = '{}_{}'.format(name, self._sid)
+        self._name = '{}_{}'.format(device_type, self._sid)
+        self._type = device_type
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
         self._device_state_attributes = {}
@@ -218,6 +218,14 @@ class XiaomiDevice(Entity):
         xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
         self.parse_data(device['data'], device['raw_data'])
         self.parse_voltage(device['data'])
+
+        if hasattr(self, '_data_key') \
+                and self._data_key:  # pylint: disable=no-member
+            self._unique_id = slugify("{}-{}".format(
+                self._data_key,  # pylint: disable=no-member
+                self._sid))
+        else:
+            self._unique_id = slugify("{}-{}".format(self._type, self._sid))
 
     def _add_push_data_job(self, *args):
         self.hass.add_job(self.push_data, *args)
@@ -231,6 +239,11 @@ class XiaomiDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self) -> str:
+        """Return an unique ID."""
+        return self._unique_id
 
     @property
     def available(self):

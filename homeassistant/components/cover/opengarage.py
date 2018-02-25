@@ -115,18 +115,18 @@ class OpenGarageCover(CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        if self._state == STATE_UNKNOWN:
+        if self._state in [STATE_UNKNOWN, STATE_OFFLINE]:
             return None
         return self._state in [STATE_CLOSED, STATE_OPENING]
 
-    def close_cover(self):
+    def close_cover(self, **kwargs):
         """Close the cover."""
         if self._state not in [STATE_CLOSED, STATE_CLOSING]:
             self._state_before_move = self._state
             self._state = STATE_CLOSING
             self._push_button()
 
-    def open_cover(self):
+    def open_cover(self, **kwargs):
         """Open the cover."""
         if self._state not in [STATE_OPEN, STATE_OPENING]:
             self._state_before_move = self._state

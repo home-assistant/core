@@ -33,7 +33,8 @@ from .const import (
     TRAIT_ONOFF, TRAIT_BRIGHTNESS, TRAIT_COLOR_TEMP,
     TRAIT_RGB_COLOR, TRAIT_SCENE, TRAIT_TEMPERATURE_SETTING,
     TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_THERMOSTAT,
-    CONF_ALIASES, CLIMATE_SUPPORTED_MODES, CLIMATE_MODE_HEATCOOL
+    CONF_ALIASES, CONF_ROOM_HINT, CLIMATE_SUPPORTED_MODES,
+    CLIMATE_MODE_HEATCOOL
 )
 
 HANDLERS = Registry()
@@ -123,6 +124,11 @@ def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
     aliases = entity_config.get(CONF_ALIASES)
     if aliases:
         device['name']['nicknames'] = aliases
+
+    # add room hint if annotated
+    room = entity_config.get(CONF_ROOM_HINT)
+    if room:
+        device['roomHint'] = room
 
     # add trait if entity supports feature
     if class_data[2]:
@@ -237,7 +243,10 @@ def query_response_sensor(
 def query_response_climate(
         entity: Entity, config: Config, units: UnitSystem) -> dict:
     """Convert a climate entity to a QUERY response."""
-    mode = entity.attributes.get(climate.ATTR_OPERATION_MODE).lower()
+    mode = entity.attributes.get(climate.ATTR_OPERATION_MODE)
+    if mode is None:
+        mode = entity.state
+    mode = mode.lower()
     if mode not in CLIMATE_SUPPORTED_MODES:
         mode = 'heat'
     attrs = entity.attributes

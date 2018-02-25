@@ -87,7 +87,7 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
         self.send_keypress(KEY_STOP)
         self._state = STATE_IDLE
 
-    def play_media(self, media_type, media_id):
+    def play_media(self, media_type, media_id, **kwargs):
         """Not supported."""
         raise NotImplementedError()
 

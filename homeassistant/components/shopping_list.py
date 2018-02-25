@@ -1,8 +1,6 @@
 """Component to manage a shopping list."""
 import asyncio
-import json
 import logging
-import os
 import uuid
 
 import voluptuous as vol
@@ -10,9 +8,11 @@ import voluptuous as vol
 from homeassistant.const import HTTP_NOT_FOUND, HTTP_BAD_REQUEST
 from homeassistant.core import callback
 from homeassistant.components import http
+from homeassistant.components.http.data_validator import (
+    RequestDataValidator)
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
-
+from homeassistant.util.json import load_json, save_json
 
 DOMAIN = 'shopping_list'
 DEPENDENCIES = ['http']
@@ -99,18 +99,13 @@ class ShoppingData:
         """Load items."""
         def load():
             """Load the items synchronously."""
-            path = self.hass.config.path(PERSISTENCE)
-            if not os.path.isfile(path):
-                return []
-            with open(path) as file:
-                return json.loads(file.read())
+            return load_json(self.hass.config.path(PERSISTENCE), default=[])
 
         self.items = yield from self.hass.async_add_job(load)
 
     def save(self):
         """Save the items."""
-        with open(self.hass.config.path(PERSISTENCE), 'wt') as file:
-            file.write(json.dumps(self.items, sort_keys=True, indent=4))
+        save_json(self.hass.config.path(PERSISTENCE), self.items)
 
 
 class AddItemIntent(intent.IntentHandler):
@@ -199,7 +194,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     url = '/api/shopping_list/item'
     name = "api:shopping_list:item"
 
-    @http.RequestDataValidator(vol.Schema({
+    @RequestDataValidator(vol.Schema({
         vol.Required('name'): str,
     }))
     @asyncio.coroutine

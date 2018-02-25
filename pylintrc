@@ -13,6 +13,7 @@ reports=no
 # too-many-* - are not enforced for the sake of readability
 # too-few-* - same as too-many-*
 # abstract-method - with intro of async there are always methods missing
+# inconsistent-return-statements - doesn't handle raise
 
 generated-members=botocore.errorfactory
 
@@ -23,6 +24,7 @@ disable=
   cyclic-import,
   duplicate-code,
   global-statement,
+  inconsistent-return-statements,
   locally-disabled,
   not-context-manager,
   redefined-variable-type,

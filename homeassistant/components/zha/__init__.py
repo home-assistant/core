@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zha/
 """
 import asyncio
+import collections
 import enum
 import logging
 
@@ -44,8 +45,7 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_RADIO_TYPE, default=RadioType.ezsp):
-            cv.enum(RadioType),
+        vol.Optional(CONF_RADIO_TYPE, default='ezsp'): cv.enum(RadioType),
         CONF_USB_PATH: cv.string,
         vol.Optional(CONF_BAUDRATE, default=57600): cv.positive_int,
         CONF_DATABASE: cv.string,
@@ -55,12 +55,17 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 ATTR_DURATION = 'duration'
+ATTR_IEEE = 'ieee_address'
 
 SERVICE_PERMIT = 'permit'
+SERVICE_REMOVE = 'remove'
 SERVICE_SCHEMAS = {
     SERVICE_PERMIT: vol.Schema({
         vol.Optional(ATTR_DURATION, default=60):
             vol.All(vol.Coerce(int), vol.Range(1, 254)),
+    }),
+    SERVICE_REMOVE: vol.Schema({
+        vol.Required(ATTR_IEEE): cv.string,
     }),
 }
 
@@ -116,6 +121,18 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, SERVICE_PERMIT, permit,
                                  schema=SERVICE_SCHEMAS[SERVICE_PERMIT])
 
+    @asyncio.coroutine
+    def remove(service):
+        """Remove a node from the network."""
+        from bellows.types import EmberEUI64, uint8_t
+        ieee = service.data.get(ATTR_IEEE)
+        ieee = EmberEUI64([uint8_t(p, base=16) for p in ieee.split(':')])
+        _LOGGER.info("Removing node %s", ieee)
+        yield from APPLICATION_CONTROLLER.remove(ieee)
+
+    hass.services.async_register(DOMAIN, SERVICE_REMOVE, remove,
+                                 schema=SERVICE_SCHEMAS[SERVICE_REMOVE])
+
     return True
 
 
@@ -126,6 +143,7 @@ class ApplicationListener:
         """Initialize the listener."""
         self._hass = hass
         self._config = config
+        self._device_registry = collections.defaultdict(list)
         hass.data[DISCOVERY_KEY] = hass.data.get(DISCOVERY_KEY, {})
 
     def device_joined(self, device):
@@ -147,7 +165,8 @@ class ApplicationListener:
 
     def device_removed(self, device):
         """Handle device being removed from the network."""
-        pass
+        for device_entity in self._device_registry[device.ieee]:
+            self._hass.async_add_job(device_entity.async_remove())
 
     @asyncio.coroutine
     def async_device_initialized(self, device, join):
@@ -164,7 +183,7 @@ class ApplicationListener:
 
             component = None
             profile_clusters = ([], [])
-            device_key = '%s-%s' % (str(device.ieee), endpoint_id)
+            device_key = "{}-{}".format(device.ieee, endpoint_id)
             node_config = self._config[DOMAIN][CONF_DEVICE_CONFIG].get(
                 device_key, {})
 
@@ -189,10 +208,12 @@ class ApplicationListener:
                                 for c in profile_clusters[1]
                                 if c in endpoint.out_clusters]
                 discovery_info = {
+                    'application_listener': self,
                     'endpoint': endpoint,
                     'in_clusters': {c.cluster_id: c for c in in_clusters},
                     'out_clusters': {c.cluster_id: c for c in out_clusters},
                     'new_join': join,
+                    'unique_id': device_key,
                 }
                 discovery_info.update(discovered_info)
                 self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
@@ -213,14 +234,17 @@ class ApplicationListener:
                     continue
 
                 component = zha_const.SINGLE_CLUSTER_DEVICE_CLASS[cluster_type]
+                cluster_key = "{}-{}".format(device_key, cluster_id)
                 discovery_info = {
+                    'application_listener': self,
                     'endpoint': endpoint,
                     'in_clusters': {cluster.cluster_id: cluster},
                     'out_clusters': {},
                     'new_join': join,
+                    'unique_id': cluster_key,
+                    'entity_suffix': '_{}'.format(cluster_id),
                 }
                 discovery_info.update(discovered_info)
-                cluster_key = '%s-%s' % (device_key, cluster_id)
                 self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
 
                 yield from discovery.async_load_platform(
@@ -231,6 +255,10 @@ class ApplicationListener:
                     self._config,
                 )
 
+    def register_entity(self, ieee, entity_obj):
+        """Record the creation of a hass entity associated with ieee."""
+        self._device_registry[ieee].append(entity_obj)
+
 
 class Entity(entity.Entity):
     """A base class for ZHA entities."""
@@ -238,30 +266,32 @@ class Entity(entity.Entity):
     _domain = None  # Must be overridden by subclasses
 
     def __init__(self, endpoint, in_clusters, out_clusters, manufacturer,
-                 model, **kwargs):
+                 model, application_listener, unique_id, **kwargs):
         """Init ZHA entity."""
         self._device_state_attributes = {}
-        ieeetail = ''.join([
-            '%02x' % (o, ) for o in endpoint.device.ieee[-4:]
-        ])
+        ieee = endpoint.device.ieee
+        ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
         if manufacturer and model is not None:
-            self.entity_id = '%s.%s_%s_%s_%s' % (
+            self.entity_id = "{}.{}_{}_{}_{}{}".format(
                 self._domain,
                 slugify(manufacturer),
                 slugify(model),
                 ieeetail,
                 endpoint.endpoint_id,
+                kwargs.get('entity_suffix', ''),
             )
-            self._device_state_attributes['friendly_name'] = '%s %s' % (
+            self._device_state_attributes['friendly_name'] = "{} {}".format(
                 manufacturer,
                 model,
             )
         else:
-            self.entity_id = "%s.zha_%s_%s" % (
+            self.entity_id = "{}.zha_{}_{}{}".format(
                 self._domain,
                 ieeetail,
                 endpoint.endpoint_id,
+                kwargs.get('entity_suffix', ''),
             )
+
         for cluster in in_clusters.values():
             cluster.add_listener(self)
         for cluster in out_clusters.values():
@@ -270,6 +300,19 @@ class Entity(entity.Entity):
         self._in_clusters = in_clusters
         self._out_clusters = out_clusters
         self._state = ha_const.STATE_UNKNOWN
+        self._unique_id = unique_id
+
+        application_listener.register_entity(ieee, self)
+
+    @property
+    def unique_id(self) -> str:
+        """Return an unique ID."""
+        return self._unique_id
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return self._device_state_attributes
 
     def attribute_updated(self, attribute, value):
         """Handle an attribute updated on this cluster."""
@@ -278,11 +321,6 @@ class Entity(entity.Entity):
     def zdo_command(self, tsn, command_id, args):
         """Handle a ZDO command received on this cluster."""
         pass
-
-    @property
-    def device_state_attributes(self):
-        """Return device specific state attributes."""
-        return self._device_state_attributes
 
 
 @asyncio.coroutine
@@ -335,8 +373,7 @@ def get_discovery_info(hass, discovery_info):
 
     discovery_key = discovery_info.get('discovery_key', None)
     all_discovery_info = hass.data.get(DISCOVERY_KEY, {})
-    discovery_info = all_discovery_info.get(discovery_key, None)
-    return discovery_info
+    return all_discovery_info.get(discovery_key, None)
 
 
 @asyncio.coroutine

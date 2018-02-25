@@ -14,7 +14,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['tahoma-api==0.0.11']
+REQUIREMENTS = ['tahoma-api==0.0.12']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 TAHOMA_COMPONENTS = [
-    'sensor', 'cover'
+    'scene', 'sensor', 'cover'
 ]
 
 TAHOMA_TYPES = {
@@ -57,19 +57,21 @@ def setup(hass, config):
     try:
         api = TahomaApi(username, password)
     except RequestException:
-        _LOGGER.exception("Error communicating with Tahoma API")
+        _LOGGER.exception("Error when trying to log in to the Tahoma API")
         return False
 
     try:
         api.get_setup()
         devices = api.get_devices()
+        scenes = api.get_action_groups()
     except RequestException:
-        _LOGGER.exception("Cannot fetch information from Tahoma API")
+        _LOGGER.exception("Error when getting devices from the Tahoma API")
         return False
 
     hass.data[DOMAIN] = {
         'controller': api,
-        'devices': defaultdict(list)
+        'devices': defaultdict(list),
+        'scenes': []
     }
 
     for device in devices:
@@ -81,6 +83,9 @@ def setup(hass, config):
                                 _device.type, _device.label)
                 continue
             hass.data[DOMAIN]['devices'][device_type].append(_device)
+
+    for scene in scenes:
+        hass.data[DOMAIN]['scenes'].append(scene)
 
     for component in TAHOMA_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
