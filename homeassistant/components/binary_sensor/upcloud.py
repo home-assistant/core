@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.upcloud import (
-    UpCloudServerMixin, CONF_SERVERS, DATA_UPCLOUD)
+    UpCloudServerEntity, CONF_SERVERS, DATA_UPCLOUD)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,9 +34,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices, True)
 
 
-class UpCloudBinarySensor(UpCloudServerMixin, BinarySensorDevice):
+class UpCloudBinarySensor(UpCloudServerEntity, BinarySensorDevice):
     """Representation of an UpCloud server sensor."""
 
     def __init__(self, upcloud, uuid):
         """Initialize a new UpCloud sensor."""
-        UpCloudServerMixin.__init__(self, upcloud, uuid)
+        UpCloudServerEntity.__init__(self, upcloud, uuid)

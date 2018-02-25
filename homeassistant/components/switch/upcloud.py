@@ -8,10 +8,11 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.const import STATE_OFF
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.components.upcloud import (
-    UpCloudServerMixin, CONF_SERVERS, DATA_UPCLOUD)
+    UpCloudServerEntity, CONF_SERVERS, DATA_UPCLOUD)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,27 +34,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices, True)
 
 
-class UpCloudSwitch(UpCloudServerMixin, SwitchDevice):
+class UpCloudSwitch(UpCloudServerEntity, SwitchDevice):
     """Representation of an UpCloud server switch."""
 
     def __init__(self, upcloud, uuid):
         """Initialize a new UpCloud server switch."""
-        UpCloudServerMixin.__init__(self, upcloud, uuid)
+        UpCloudServerEntity.__init__(self, upcloud, uuid)
 
     def turn_on(self, **kwargs):
         """Start the server."""
-        try:
-            state = self.data.state
-        except AttributeError:
-            return
-        if state == 'stopped':
+        if self.state == STATE_OFF:
             self.data.start()
 
     def turn_off(self, **kwargs):
         """Stop the server."""
-        try:
-            state = self.data.state
-        except AttributeError:
-            return
-        if state == 'started':
+        if self.is_on:
             self.data.stop()

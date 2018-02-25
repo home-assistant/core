@@ -4,14 +4,20 @@ Support for UpCloud.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/upcloud/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from homeassistant.util import Throttle
+from homeassistant.const import (
+    CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL,
+    STATE_ON, STATE_OFF, STATE_PROBLEM, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import track_time_interval
 
 REQUIREMENTS = ['upcloud-api==0.4.2']
 
@@ -35,12 +41,22 @@ DEFAULT_COMPONENT_DEVICE_CLASS = 'power'
 
 UPCLOUD_PLATFORMS = ['binary_sensor', 'switch']
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(seconds=60)
+
+SIGNAL_UPDATE_UPCLOUD = "upcloud_update"
+
+STATE_MAP = {
+    "started": STATE_ON,
+    "stopped": STATE_OFF,
+    "error": STATE_PROBLEM,
+}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+            cv.time_period,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -52,17 +68,25 @@ def setup(hass, config):
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
+    scan_interval = conf.get(CONF_SCAN_INTERVAL)
 
     manager = upcloud_api.CloudManager(username, password)
 
     try:
         manager.authenticate()
+        hass.data[DATA_UPCLOUD] = UpCloud(manager)
     except upcloud_api.UpCloudAPIError:
         _LOGGER.error("Authentication failed.")
         return False
 
-    hass.data[DATA_UPCLOUD] = UpCloud(manager)
-    hass.data[DATA_UPCLOUD].update()
+    def upcloud_update(event_time):
+        """Call UpCloud to update information."""
+        _LOGGER.debug("Updating UpCloud component")
+        hass.data[DATA_UPCLOUD].update()
+        dispatcher_send(hass, SIGNAL_UPDATE_UPCLOUD)
+
+    # Call the UpCloud API to refresh data
+    track_time_interval(hass, upcloud_update, scan_interval)
 
     return True
 
@@ -75,22 +99,20 @@ class UpCloud(object):
         self.data = {}
         self.manager = manager
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Use the data from UpCloud API."""
+        """Update data from UpCloud API."""
         self.data = {
             server.uuid: server for server in self.manager.get_servers()
         }
 
 
-class UpCloudServerMixin(object):
-    """Common properties for UpCloud server components."""
+class UpCloudServerEntity(Entity):
+    """Entity class for UpCloud servers."""
 
     def __init__(self, upcloud, uuid):
-        """Initialize a new UpCloud server mixin."""
+        """Initialize the UpCloud server entity."""
         self._upcloud = upcloud
         self.uuid = uuid
-        self.data = None
 
     @property
     def name(self):
@@ -100,18 +122,33 @@ class UpCloudServerMixin(object):
         except (AttributeError, KeyError, TypeError):
             return DEFAULT_COMPONENT_NAME.format(self.uuid)
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_UPCLOUD, self._update_callback)
+
+    def _update_callback(self):
+        """Call update method."""
+        self.schedule_update_ha_state(True)
+
     @property
     def icon(self):
         """Return the icon of this server."""
         return 'mdi:server' if self.is_on else 'mdi:server-off'
 
     @property
+    def state(self):
+        """Return state of the server."""
+        try:
+            return STATE_MAP.get(self.data.state, STATE_UNKNOWN)
+        except AttributeError:
+            return STATE_UNKNOWN
+
+    @property
     def is_on(self):
         """Return true if the server is on."""
-        try:
-            return self.data.state == 'started'
-        except AttributeError:
-            return False
+        return self.state == STATE_ON
 
     @property
     def device_class(self):
@@ -128,6 +165,5 @@ class UpCloudServerMixin(object):
         }
 
     def update(self):
-        """Update state of sensor."""
-        self._upcloud.update()
+        """Update data of the UpCloud server."""
         self.data = self._upcloud.data.get(self.uuid)
