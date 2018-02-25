@@ -283,7 +283,8 @@ class SshConnection(_Connection):
             lines = self._ssh.before.split(b'\n')[1:-1]
             return [line.decode('utf-8') for line in lines]
         except exceptions.EOF as err:
-            _LOGGER.error("Connection refused. SSH enabled? %s", err)
+            _LOGGER.error("Connection refused. SSH enabled? Check known_hosts "
+                          "under the homeassistant user home directory.")
             self.disconnect()
             return None
         except pxssh.ExceptionPxssh as err:
