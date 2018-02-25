@@ -283,15 +283,15 @@ class SshConnection(_Connection):
             lines = self._ssh.before.split(b'\n')[1:-1]
             return [line.decode('utf-8') for line in lines]
         except exceptions.EOF as err:
-            _LOGGER.error("Connection refused. SSH enabled?")
+            _LOGGER.error("Connection refused. SSH enabled? %s", err)
             self.disconnect()
             return None
         except pxssh.ExceptionPxssh as err:
-            _LOGGER.error("Unexpected SSH error: %s", str(err))
+            _LOGGER.error("Unexpected SSH error: %s", err)
             self.disconnect()
             return None
         except AssertionError as err:
-            _LOGGER.error("Connection to router unavailable: %s", str(err))
+            _LOGGER.error("Connection to router unavailable: %s", err)
             self.disconnect()
             return None
 
