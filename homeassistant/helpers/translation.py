@@ -54,10 +54,7 @@ def load_translations_files(translation_files):
     """Load and parse translation.json files."""
     loaded = {}
     for translation_file in translation_files:
-        try:
-            loaded[translation_file] = load_json(translation_file)
-        except FileNotFoundError:
-            loaded[translation_file] = {}
+        loaded[translation_file] = load_json(translation_file)
 
     return loaded
 
