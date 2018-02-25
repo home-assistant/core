@@ -29,7 +29,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     device = plm.devices[address]
     state_key = discovery_info['state_key']
 
-    _LOGGER.debug('Adding device %s entity %s to Binary Sensor platform.',
+    _LOGGER.debug('Adding device %s entity %s to Binary Sensor platform',
                   device.address.hex, device.states[state_key].name)
 
     new_entity = InsteonPLMBinarySensor(device, state_key)
@@ -42,7 +42,7 @@ class InsteonPLMBinarySensor(InsteonPLMEntity, BinarySensorDevice):
 
     def __init__(self, device, state_key):
         """Initialize the INSTEON PLM binary sensor."""
-        InsteonPLMEntity.__init__(self, device, state_key)
+        super().__init__(device, state_key)
         self._sensor_type = SENSOR_TYPES.get(self._insteon_device_state.name)
 
     @property

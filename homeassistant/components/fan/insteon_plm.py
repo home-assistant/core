@@ -37,7 +37,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     device = plm.devices[address]
     state_key = discovery_info['state_key']
 
-    _LOGGER.debug('Adding device %s entity %s to Fan platform.',
+    _LOGGER.debug('Adding device %s entity %s to Fan platform',
                   device.address.hex, device.states[state_key].name)
 
     new_entity = InsteonPLMFan(device, state_key)
@@ -68,12 +68,12 @@ class InsteonPLMFan(InsteonPLMEntity, FanEntity):
         """Turn on the entity."""
         if speed is None:
             speed = SPEED_MEDIUM
-        self.async_set_speed(speed)
+        yield from self.async_set_speed(speed)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs) -> None:
         """Turn off the entity."""
-        self.async_set_speed(SPEED_OFF)
+        yield from self.async_set_speed(SPEED_OFF)
 
     @asyncio.coroutine
     def async_set_speed(self, speed: str) -> None:

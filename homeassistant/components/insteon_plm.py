@@ -22,12 +22,28 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'insteon_plm'
 
 CONF_OVERRIDE = 'device_override'
+CONF_ADDRESS = 'address'
+CONF_CAT = 'cat'
+CONF_SUBCAT = 'subcat'
+CONF_FIRMWARE = 'firmware'
+CONF_PRODUCT_KEY = 'product_key'
+CONF_PLATFORM = "platform"
+
+CONF_DEVICE_OVERRIDE_SCHEMA =  vol.All(
+    cv.deprecated(CONF_PLATFORM), vol.All(vol.Schema({
+        vol.Required(CONF_ADDRESS): cv.string,
+        vol.Optional(CONF_CAT): cv.byte,
+        vol.Optional(CONF_SUBCAT): cv.byte,
+        vol.Optional(CONF_FIRMWARE): cv.byte,
+        vol.Optional(CONF_PRODUCT_KEY): cv.byte,
+        vol.Optional(CONF_PLATFORM): cv.string,
+        })))
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): cv.string,
         vol.Optional(CONF_OVERRIDE): vol.All(
-            cv.ensure_list_csv, vol.Length(min=1))
+            cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA])
         })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -40,6 +56,7 @@ def async_setup(hass, config):
     ipdb = IPDB()
 
     conf = config[DOMAIN]
+    _LOGGER.debug(conf)
     port = conf.get(CONF_PORT)
     overrides = conf.get(CONF_OVERRIDE, [])
 
@@ -75,23 +92,13 @@ def async_setup(hass, config):
         # Override the device default capabilities for a specific address
         #
         address = device_override.get('address')
-        if address is not None:
-            if device_override.get('cat', False):
-                plm.devices.add_override(address,
-                                         'cat',
-                                         device_override['cat'])
-            if device_override.get('subcat', False):
-                plm.devices.add_override(address,
-                                         'subcat',
-                                         device_override['subcat'])
-            if device_override.get('firmware', False):
-                plm.devices.add_override(address,
-                                         'product_key',
-                                         device_override['firmware'])
-            if device_override.get('product_key', False):
-                plm.devices.add_override(address,
-                                         'product_key',
-                                         device_override['product_key'])
+        for prop in device_override:
+            if prop in [CONF_ADDRESS, CONF_CAT, CONF_SUBCAT]:
+                plm.devices.add_override(address, prop,
+                                         device_override[prop])
+            elif prop in [CONF_FIRMWARE, CONF_PRODUCT_KEY]:
+                plm.devices.add_override(address, CONF_PRODUCT_KEY,
+                                         device_override[prop])
 
     hass.data['insteon_plm'] = plm
 

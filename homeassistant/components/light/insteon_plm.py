@@ -27,7 +27,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     device = plm.devices[address]
     state_key = discovery_info['state_key']
 
-    _LOGGER.debug('Adding device %s entity %s to Light platform.',
+    _LOGGER.debug('Adding device %s entity %s to Light platform',
                   device.address.hex, device.states[state_key].name)
 
     new_entity = InsteonPLMDimmerDevice(device, state_key)
