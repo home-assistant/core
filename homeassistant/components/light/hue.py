@@ -287,17 +287,17 @@ class HueLight(Light):
             if self.info.get('manufacturername') == 'OSRAM':
                 color_hue, sat = color_util.color_xy_to_hs(
                     *kwargs[ATTR_XY_COLOR])
-                command['hue'] = color_hue
-                command['sat'] = sat
+                command['hue'] = color_hue / 360 * 65535
+                command['sat'] = sat / 100 * 255
             else:
                 command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
             if self.info.get('manufacturername') == 'OSRAM':
                 hsv = color_util.color_RGB_to_hsv(
                     *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-                command['hue'] = hsv[0]
-                command['sat'] = hsv[1]
-                command['bri'] = hsv[2]
+                command['hue'] = hsv[0] / 360 * 65535
+                command['sat'] = hsv[1] / 100 * 255
+                command['bri'] = hsv[2] / 100 * 255
             else:
                 xyb = color_util.color_RGB_to_xy(
                     *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
