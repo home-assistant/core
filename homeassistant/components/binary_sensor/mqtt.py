@@ -112,7 +112,7 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
             # Evaluate message payload filter
             if self._filter is not None:
                 valid_message = (self._filter
-					.async_render_with_possible_json_value(payload, ""))
+                    .async_render_with_possible_json_value(payload, ""))
                 if valid_message != "True":
                     return
 
