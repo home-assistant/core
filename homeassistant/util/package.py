@@ -88,17 +88,17 @@ def get_user_site(deps_dir: str) -> str:
     return lib_dir
 
 
-@asyncio.coroutine
-def async_get_user_site(deps_dir: str, loop: asyncio.AbstractEventLoop) -> str:
+async def async_get_user_site(deps_dir: str,
+                              loop: asyncio.AbstractEventLoop) -> str:
     """Return user local library path.
 
     This function is a coroutine.
     """
     args, env = _get_user_site(deps_dir)
-    process = yield from asyncio.create_subprocess_exec(
+    process = await asyncio.create_subprocess_exec(
         *args, loop=loop, stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
         env=env)
-    stdout, _ = yield from process.communicate()
+    stdout, _ = await process.communicate()
     lib_dir = stdout.decode().strip()
     return lib_dir
