@@ -1,5 +1,4 @@
 """Service calling related helpers."""
-import asyncio
 import logging
 # pylint: disable=unused-import
 from typing import Optional  # NOQA
@@ -36,10 +35,9 @@ def call_from_config(hass, config, blocking=False, variables=None,
                                validate_config), hass.loop).result()
 
 
-@asyncio.coroutine
 @bind_hass
-def async_call_from_config(hass, config, blocking=False, variables=None,
-                           validate_config=True):
+async def async_call_from_config(hass, config, blocking=False, variables=None,
+                                 validate_config=True):
     """Call a service based on a config hash."""
     if validate_config:
         try:
@@ -79,7 +77,7 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
     if CONF_SERVICE_ENTITY_ID in config:
         service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
 
-    yield from hass.services.async_call(
+    await hass.services.async_call(
         domain, service_name, service_data, blocking)
 
 
@@ -115,9 +113,8 @@ def extract_entity_ids(hass, service_call, expand_group=True):
         return service_ent_id
 
 
-@asyncio.coroutine
 @bind_hass
-def async_get_all_descriptions(hass):
+async def async_get_all_descriptions(hass):
     """Return descriptions (i.e. user documentation) for all service calls."""
     if SERVICE_DESCRIPTION_CACHE not in hass.data:
         hass.data[SERVICE_DESCRIPTION_CACHE] = {}
@@ -156,7 +153,7 @@ def async_get_all_descriptions(hass):
                 break
 
     if missing:
-        loaded = yield from hass.async_add_job(load_services_files, missing)
+        loaded = await hass.async_add_job(load_services_files, missing)
 
     # Build response
     catch_all_yaml_file = domain_yaml_file(ha.DOMAIN)
