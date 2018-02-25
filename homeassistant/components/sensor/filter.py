@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 FILTER_NAME_LOWPASS = 'lowpass'
 FILTER_NAME_OUTLIER = 'outlier'
+FILTER_NAME_THROTTLE = 'throttle'
 
 CONF_FILTERS = 'filters'
 CONF_FILTER_NAME = 'filter'
@@ -56,12 +57,17 @@ FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
                  default=DEFAULT_FILTER_TIME_CONSTANT): vol.Coerce(int),
 })
 
+FILTER_THROTTLE_SCHEMA = FILTER_SCHEMA.extend({
+    vol.Required(CONF_FILTER_NAME): FILTER_NAME_THROTTLE,
+})
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_FILTERS): vol.All(cv.ensure_list,
                                         [vol.Any(FILTER_OUTLIER_SCHEMA,
-                                                 FILTER_LOWPASS_SCHEMA)])
+                                                 FILTER_LOWPASS_SCHEMA,
+                                                 FILTER_THROTTLE_SCHEMA)])
 })
 
 
@@ -88,6 +94,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                                          precision=precision,
                                          entity=entity_id,
                                          time_constant=time_constant))
+        elif _filter[CONF_FILTER_NAME] == FILTER_NAME_THROTTLE:
+            filters.append(ThrottleFilter(window_size=window_size,
+                                        precision=precision,
+                                        entity=entity_id))
 
     async_add_devices([SensorFilter(name, entity_id, filters)])
 
@@ -122,13 +132,18 @@ class SensorFilter(Entity):
             for filt in self._filters:
                 try:
                     filtered_state = filt.filter_state(self._state)
-                    _LOGGER.debug("%s(%s, %s) -> %s", filt.name, self._entity,
-                                  self._state, filtered_state)
-                    self._state = filtered_state
-                    filt.states.append(filtered_state)
+                    _LOGGER.debug("%s(%s, %s) -> %s", filt.name,
+                                  self._entity,
+                                  self._state,
+                                  "skip" if filt.skip else filtered_state)
+                    if filt.skip:
+                        return
                 except ValueError:
                     _LOGGER.warning("Could not convert state: %s to number",
                                     self._state)
+                finally:
+                    self._state = filtered_state
+                    filt.states.append(filtered_state)
 
             self.async_schedule_update_ha_state(True)
 
@@ -195,11 +210,17 @@ class Filter(object):
         self._stats = {}
         self._name = name
         self._entity = entity
+        self._skip = False
 
     @property
     def name(self):
         """Return filter name."""
         return self._name
+
+    @property
+    def skip(self):
+        """Return wether the current filter_state should be skipped."""
+        return self._skip
 
     @property
     def stats(self):
@@ -225,7 +246,6 @@ class OutlierFilter(Filter):
 
     Args:
         radius (float): band radius
-        window_size (int): see Filter()
     """
 
     def __init__(self, window_size, precision, entity, radius):
@@ -260,7 +280,6 @@ class LowPassFilter(Filter):
 
     Args:
         time_constant (int): time constant.
-        window_size (int): see Filter()
     """
 
     def __init__(self, window_size, precision, entity, time_constant):
@@ -282,3 +301,24 @@ class LowPassFilter(Filter):
             filtered = new_state
 
         return filtered
+
+
+class ThrottleFilter(Filter):
+    """Throttle Filter.
+
+    One sample per window.
+    """
+
+    def __init__(self, window_size, precision, entity):
+        """Initialize Filter."""
+        super().__init__(FILTER_NAME_THROTTLE, window_size, precision, entity)
+
+    def _filter_state(self, new_state):
+        """Implement the throttle filter."""
+        if not self.states or len(self.states) == self.states.maxlen:
+            self.states.clear()
+            self._skip = False
+        else:
+            self._skip = True
+
+        return new_state 
