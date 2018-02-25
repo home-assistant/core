@@ -952,6 +952,9 @@ python-roku==3.1.5
 # homeassistant.components.sensor.sochain
 python-sochain-api==0.0.2
 
+# homeassistant.components.sensor.syncthru
+pysyncthru==0.2.2
+
 # homeassistant.components.sensor.synologydsm
 python-synology==0.1.0
 

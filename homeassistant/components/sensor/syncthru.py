@@ -108,6 +108,7 @@ class SyncThruSensor(Entity):
         self._attributes = {}
         self._state = STATE_UNKNOWN
         self._name = name
+        self._friendly_name = name
         self._icon = 'mdi:printer'
         self._unit_of_measurement = None
 
@@ -134,6 +135,7 @@ class SyncThruSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
+        self._attributes[CONF_FRIENDLY_NAME] = self._friendly_name
         return self._attributes
 
 
@@ -146,7 +148,7 @@ class SyncThruMain(SyncThruSensor):
         self._state = self.syncthru.deviceStatus()
 
         if self.syncthru.isOnline():
-            self._name = self.syncthru.model()
+            self._friendly_name = self.syncthru.model()
             self._state = self.syncthru.deviceStatus()
 
 
@@ -169,7 +171,7 @@ class SyncThruToner(SyncThruSensor):
                 ).get(self._color, {})
             self._state = self._attributes.get(
                 'remaining', STATE_UNKNOWN)
-            self._name = "{} Toner {}".format(
+            self._friendly_name = "{} Toner {}".format(
                 self._color, self.syncthru.model())
 
 
@@ -192,7 +194,7 @@ class SyncThruDrum(SyncThruSensor):
                 ).get(self._color, {})
             self._state = self._attributes.get(
                 'remaining', STATE_UNKNOWN)
-            self._name = "{} Drum {}".format(
+            self._friendly_name = "{} Drum {}".format(
                 self._color, self.syncthru.model())
 
 
@@ -216,7 +218,7 @@ class SyncThruInputTray(SyncThruSensor):
                 'newError', STATE_UNKNOWN)
             if self._state == '':
                 self._state = 'Ready'
-            self._name = "Tray {} {}".format(
+            self._friendly_name = "Tray {} {}".format(
                 self._number, self.syncthru.model())
 
 
@@ -240,5 +242,5 @@ class SyncThruOutputTray(SyncThruSensor):
                 'status', STATE_UNKNOWN)
             if self._state == '':
                 self._state = 'Ready'
-            self._name = "Output Tray {} {}".format(
+            self._friendly_name = "Output Tray {} {}".format(
                 self._number, self.syncthru.model())
