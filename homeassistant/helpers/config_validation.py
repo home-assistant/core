@@ -147,6 +147,15 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
     return [entity_id(ent_id) for ent_id in value]
 
 
+def entity_domain(domain: str):
+    """Validate that entity belong to domain."""
+    def validate(value: Any) -> str:
+        """Test if entity domain is domain."""
+        ent_domain = entities_domain(domain)
+        return ent_domain(value)[0]
+    return validate
+
+
 def entities_domain(domain: str):
     """Validate that entities belong to domain."""
     def validate(values: Union[str, Sequence]) -> Sequence[str]:

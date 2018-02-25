@@ -164,6 +164,23 @@ def test_entity_ids():
     ]
 
 
+def test_entity_domain():
+    """Test entity domain validation."""
+    schema = vol.Schema(cv.entity_domain('sensor'))
+
+    options = (
+        'invalid_entity',
+        'cover.demo',
+    )
+
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            print(value)
+            schema(value)
+
+    assert schema('sensor.LIGHT') == 'sensor.light'
+
+
 def test_entities_domain():
     """Test entities domain validation."""
     schema = vol.Schema(cv.entities_domain('sensor'))
