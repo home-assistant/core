@@ -10,7 +10,7 @@ timer.
 After initializing, call EntityRegistry.async_ensure_loaded to load the data
 from disk.
 """
-import asyncio
+
 from collections import OrderedDict
 from itertools import chain
 import logging
@@ -150,8 +150,7 @@ class EntityRegistry:
 
         return new
 
-    @asyncio.coroutine
-    def async_ensure_loaded(self):
+    async def async_ensure_loaded(self):
         """Load the registry from disk."""
         if self.entities is not None:
             return
@@ -159,16 +158,15 @@ class EntityRegistry:
         if self._load_task is None:
             self._load_task = self.hass.async_add_job(self._async_load)
 
-        yield from self._load_task
+        await self._load_task
 
-    @asyncio.coroutine
-    def _async_load(self):
+    async def _async_load(self):
         """Load the entity registry."""
         path = self.hass.config.path(PATH_REGISTRY)
         entities = OrderedDict()
 
         if os.path.isfile(path):
-            data = yield from self.hass.async_add_job(load_yaml, path)
+            data = await self.hass.async_add_job(load_yaml, path)
 
             for entity_id, info in data.items():
                 entities[entity_id] = RegistryEntry(
@@ -192,8 +190,7 @@ class EntityRegistry:
             SAVE_DELAY, self.hass.async_add_job, self._async_save
         )
 
-    @asyncio.coroutine
-    def _async_save(self):
+    async def _async_save(self):
         """Save the entity registry to a file."""
         self._sched_save = None
         data = OrderedDict()
@@ -205,7 +202,7 @@ class EntityRegistry:
                 'name': entry.name,
             }
 
-        yield from self.hass.async_add_job(
+        await self.hass.async_add_job(
             save_yaml, self.hass.config.path(PATH_REGISTRY), data)
 
 

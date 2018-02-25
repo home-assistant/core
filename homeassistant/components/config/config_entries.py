@@ -97,10 +97,10 @@ class ConfigManagerFlowIndexView(HomeAssistantView):
             flow for flow in hass.config_entries.flow.async_progress()
             if flow['source'] != config_entries.SOURCE_USER])
 
-    @asyncio.coroutine
     @RequestDataValidator(vol.Schema({
         vol.Required('domain'): str,
     }))
+    @asyncio.coroutine
     def post(self, request, data):
         """Handle a POST request."""
         hass = request.app['hass']
@@ -139,8 +139,8 @@ class ConfigManagerFlowResourceView(HomeAssistantView):
 
         return self.json(result)
 
-    @asyncio.coroutine
     @RequestDataValidator(vol.Schema(dict), allow_empty=True)
+    @asyncio.coroutine
     def post(self, request, flow_id, data):
         """Handle a POST request."""
         hass = request.app['hass']
