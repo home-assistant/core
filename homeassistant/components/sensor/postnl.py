@@ -4,7 +4,6 @@ Sensor for PostNL packages.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.postnl/
 """
-from collections import defaultdict
 import logging
 from datetime import timedelta, datetime
 import re
