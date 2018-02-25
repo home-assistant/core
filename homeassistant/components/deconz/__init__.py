@@ -147,10 +147,11 @@ def async_setup_deconz(hass, config, deconz_config):
     @callback
     def deconz_shutdown(event):
         """
-        Wraps the call to deconz.close. Used as an argument to
-        EventBus.async_listen_once - EventBus calls this method with the
-        event as the first argument, which should not be passed on to
-        deconz.close.
+        Wrap the call to deconz.close.
+        
+        Used as an argument to EventBus.async_listen_once - EventBus calls
+        this method with the event as the first argument, which should not
+        be passed on to deconz.close.
         """
         deconz.close()
 
