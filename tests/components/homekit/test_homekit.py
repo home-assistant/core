@@ -11,7 +11,7 @@ from homeassistant.components.homekit import (
     CONF_PIN_CODE, BRIDGE_NAME, HOMEKIT_FILE, HomeKit, valid_pin)
 from homeassistant.const import (
     CONF_PORT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.util import get_local_ip
+# from homeassistant.util import get_local_ip
 
 from tests.common import get_test_home_assistant
 
@@ -102,9 +102,11 @@ class TestHomeKit(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        homekit.start_driver(Event(EVENT_HOMEASSISTANT_START))
+        with patch('homeassistant.util.get_local_ip',
+                   return_value='127.0.0.1'):
+            homekit.start_driver(Event(EVENT_HOMEASSISTANT_START))
 
-        ip_address = get_local_ip()
+        ip_address = '127.0.0.1'
         path = self.hass.config.path(HOMEKIT_FILE)
 
         self.assertEqual(mock_get_accessory.call_count, 2)
