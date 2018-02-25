@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
     SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE_HIGH,
     SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
 _CONFIGURING = {}
@@ -190,7 +190,7 @@ class Thermostat(ClimateDevice):
         """Return the current fan state."""
         if 'fan' in self.thermostat['equipmentStatus']:
             return STATE_ON
-        return STATE_OFF
+        return STATE_AUTO
 
     @property
     def current_hold_mode(self):
@@ -347,6 +347,21 @@ class Thermostat(ClimateDevice):
                       isinstance(cool_temp, (int, float)))
 
         self.update_without_throttle = True
+
+    def set_fan_mode(self, fan_mode):
+        """Set the fan mode.  Valid values are "on" or "auto"."""
+        if (fan_mode.lower() != STATE_ON) and (fan_mode.lower() != STATE_AUTO):
+            error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
+            _LOGGER.error(error)
+            return
+
+        cool_temp = self.thermostat['runtime']['desiredCool'] / 10.0
+        heat_temp = self.thermostat['runtime']['desiredHeat'] / 10.0
+        self.data.ecobee.set_fan_mode(self.thermostat_index, fan_mode,
+                                      cool_temp, heat_temp,
+                                      self.hold_preference())
+
+        _LOGGER.info("Setting fan mode to: %s", fan_mode)
 
     def set_temp_hold(self, temp):
         """Set temperature hold in modes other than auto."""
