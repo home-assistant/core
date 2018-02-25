@@ -10,7 +10,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (CONF_PORT, EVENT_HOMEASSISTANT_STOP,
+                                 CONF_PLATFORM)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
@@ -27,17 +28,16 @@ CONF_CAT = 'cat'
 CONF_SUBCAT = 'subcat'
 CONF_FIRMWARE = 'firmware'
 CONF_PRODUCT_KEY = 'product_key'
-CONF_PLATFORM = "platform"
 
-CONF_DEVICE_OVERRIDE_SCHEMA =  vol.All(
-    cv.deprecated(CONF_PLATFORM), vol.All(vol.Schema({
+CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
+    cv.deprecated(CONF_PLATFORM), vol.Schema({
         vol.Required(CONF_ADDRESS): cv.string,
         vol.Optional(CONF_CAT): cv.byte,
         vol.Optional(CONF_SUBCAT): cv.byte,
         vol.Optional(CONF_FIRMWARE): cv.byte,
         vol.Optional(CONF_PRODUCT_KEY): cv.byte,
         vol.Optional(CONF_PLATFORM): cv.string,
-        })))
+        }))
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -56,7 +56,6 @@ def async_setup(hass, config):
     ipdb = IPDB()
 
     conf = config[DOMAIN]
-    _LOGGER.debug(conf)
     port = conf.get(CONF_PORT)
     overrides = conf.get(CONF_OVERRIDE, [])
 
@@ -93,7 +92,7 @@ def async_setup(hass, config):
         #
         address = device_override.get('address')
         for prop in device_override:
-            if prop in [CONF_ADDRESS, CONF_CAT, CONF_SUBCAT]:
+            if prop in [CONF_CAT, CONF_SUBCAT]:
                 plm.devices.add_override(address, prop,
                                          device_override[prop])
             elif prop in [CONF_FIRMWARE, CONF_PRODUCT_KEY]:
