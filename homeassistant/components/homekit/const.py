@@ -16,3 +16,8 @@ SERVICES_WINDOW_COVERING = 'WindowCovering'
 CHAR_CURRENT_POSITION = 'CurrentPosition'
 CHAR_TARGET_POSITION = 'TargetPosition'
 CHAR_POSITION_STATE = 'PositionState'
+
+# Service: LightBulb
+SERVICES_LIGHTBULB = 'Lightbulb'
+CHAR_BRIGHTNESS = 'Brightness'
+CHAR_STATE = 'On'
