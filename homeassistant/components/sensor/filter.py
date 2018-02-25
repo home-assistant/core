@@ -96,8 +96,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                                          time_constant=time_constant))
         elif _filter[CONF_FILTER_NAME] == FILTER_NAME_THROTTLE:
             filters.append(ThrottleFilter(window_size=window_size,
-                                        precision=precision,
-                                        entity=entity_id))
+                                          precision=precision,
+                                          entity=entity_id))
 
     async_add_devices([SensorFilter(name, entity_id, filters)])
 
@@ -321,4 +321,4 @@ class ThrottleFilter(Filter):
         else:
             self._skip = True
 
-        return new_state 
+        return new_state
