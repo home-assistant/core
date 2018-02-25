@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 _RE_VALID_PINCODE = re.compile(r"^(\d{3}-\d{2}-\d{3})$")
 
 DOMAIN = 'homekit'
-REQUIREMENTS = ['HAP-python==1.1.5']
+REQUIREMENTS = ['HAP-python==1.1.7']
 
 BRIDGE_NAME = 'Home Assistant'
 CONF_PIN_CODE = 'pincode'
