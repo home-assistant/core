@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_DEVICE, CONF_EXPIRE_AFTER, CONF_ID, CONF_NAME, CONF_SENSORS, CONF_TYPE,
+    CONF_DEVICE, CONF_EXPIRE_AFTER, CONF_ID, CONF_NAME,
+    CONF_SENSORS, CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv

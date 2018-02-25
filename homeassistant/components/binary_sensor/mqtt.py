@@ -82,7 +82,8 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
 
     def __init__(self, name, state_topic, availability_topic, device_class,
                  qos, force_update, expire_after,
-                 payload_on, payload_off, payload_available, payload_not_available,
+                 payload_on, payload_off,
+                 payload_available, payload_not_available,
                  filter_template, value_template):
         """Initialize the MQTT binary sensor."""
         super().__init__(availability_topic, qos, payload_available,
