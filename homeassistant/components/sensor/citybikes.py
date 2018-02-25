@@ -13,7 +13,8 @@ import async_timeout
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA, DOMAIN as PARENT_DOMAIN)
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
     ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE,
@@ -23,7 +24,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import location, distance
+from homeassistant.util import location, distance, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -251,12 +252,18 @@ class CityBikesStation(Entity):
         return self._station_data.get(ATTR_FREE_BIKES, STATE_UNKNOWN)
 
     @property
+    def entity_id(self):
+        """Return the entity ID."""
+        return "{}.{}_{}".format(PARENT_DOMAIN,
+                                 slugify(self._network.network_id),
+                                 slugify(self._station_id))
+
+    @property
     def name(self):
         """Return the name of the sensor."""
-        if self._base_name:
-            return "{} {} {}".format(self._network.network_id, self._base_name,
-                                     self._station_id)
-        return "{} {}".format(self._network.network_id, self._station_id)
+        if ATTR_NAME in self._station_data:
+            return self._station_data[ATTR_NAME]
+        return None
 
     @asyncio.coroutine
     def async_update(self):
