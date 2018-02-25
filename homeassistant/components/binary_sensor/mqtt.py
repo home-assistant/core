@@ -15,7 +15,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_ON,
-    CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS)
+    CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS, CONF_FILTER_TEMPLATE)
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_AVAILABILITY_TOPIC, CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, MqttAvailability)
@@ -36,6 +36,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_FILTER_TEMPLATE): cv.template,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
@@ -45,6 +46,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the MQTT binary sensor."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
+
+    filter_template = config.get(CONF_FILTER_TEMPLATE)
+    if filter_template is not None:
+        filter_template.hass = hass
 
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
@@ -61,6 +66,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_OFF),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+        filter_template,
         value_template
     )])
 
@@ -70,7 +76,7 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
 
     def __init__(self, name, state_topic, availability_topic, device_class,
                  qos, force_update, payload_on, payload_off, payload_available,
-                 payload_not_available, value_template):
+                 payload_not_available, filter_template, value_template):
         """Initialize the MQTT binary sensor."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
@@ -82,6 +88,7 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
         self._payload_off = payload_off
         self._qos = qos
         self._force_update = force_update
+        self._filter = filter_template
         self._template = value_template
 
     @asyncio.coroutine
@@ -92,6 +99,12 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
         @callback
         def state_message_received(topic, payload, qos):
             """Handle a new received MQTT state message."""
+            # Evaluate message payload filter
+            if self._filter is not None:
+                valid_message = self._filter.async_render_with_possible_json_value(payload, "")
+                if valid_message != "True":
+                    return
+
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload)
