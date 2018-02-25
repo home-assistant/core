@@ -322,6 +322,7 @@ class XiaomiButton(XiaomiBinarySensor):
         elif value == 'shake':
             click_type = 'shake'
         else:
+            _LOGGER.warning("Unsupported click_type detected: %s", value)
             return False
 
         self._hass.bus.fire('click', {
