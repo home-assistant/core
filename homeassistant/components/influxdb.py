@@ -232,6 +232,7 @@ def setup(hass, config):
         """Shut down the thread."""
         instance.queue.put(None)
         instance.join()
+        influx.close()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
