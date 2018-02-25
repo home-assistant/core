@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_DEVICE, CONF_ID, CONF_NAME, CONF_SENSORS, CONF_TYPE,
+    CONF_DEVICE, CONF_EXPIRE_AFTER, CONF_ID, CONF_NAME, CONF_SENSORS, CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_BAUD = 'baud'
 CONF_DATARATE = 'datarate'
-CONF_EXPIRE_AFTER = 'expire_after'
 CONF_FREQUENCY = 'frequency'
 CONF_JEELINK_LED = 'led'
 CONF_TOGGLE_INTERVAL = 'toggle_interval'

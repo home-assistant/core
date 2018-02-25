@@ -16,6 +16,7 @@ from homeassistant.components.mqtt import (
     CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, MqttAvailability)
 from homeassistant.const import (
+    CONF_EXPIRE_AFTER,
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
     CONF_UNIT_OF_MEASUREMENT, CONF_FILTER_TEMPLATE)
 from homeassistant.helpers.entity import Entity
@@ -26,7 +27,6 @@ from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXPIRE_AFTER = 'expire_after'
 CONF_JSON_ATTRS = 'json_attributes'
 
 DEFAULT_NAME = 'MQTT Sensor'

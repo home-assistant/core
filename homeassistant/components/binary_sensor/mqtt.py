@@ -15,6 +15,7 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
+    CONF_EXPIRE_AFTER,
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_ON,
     CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS, CONF_FILTER_TEMPLATE)
 from homeassistant.components.mqtt import (
@@ -25,8 +26,6 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_EXPIRE_AFTER = 'expire_after'
 
 DEFAULT_NAME = 'MQTT Binary sensor'
 
