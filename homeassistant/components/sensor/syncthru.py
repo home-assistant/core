@@ -104,7 +104,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return
 
 
-
 class SyncThruSensor(Entity):
     """Implementation of an abstract Samsung Printer sensor platform."""
 
@@ -175,7 +174,6 @@ class SyncThruToner(SyncThruSensor):
             self._state = self._attributes.get('remaining')
 
 
-
 class SyncThruDrum(SyncThruSensor):
     """Implementation of a Samsung Printer toner sensor platform."""
 
@@ -194,7 +192,6 @@ class SyncThruDrum(SyncThruSensor):
             self._attributes = self.syncthru.drumStatus(
                 ).get(self._color, {})
             self._state = self._attributes.get('remaining')
-
 
 
 class SyncThruInputTray(SyncThruSensor):
@@ -216,7 +213,6 @@ class SyncThruInputTray(SyncThruSensor):
             self._state = self._attributes.get('newError')
             if self._state == '':
                 self._state = 'Ready'
-
 
 
 class SyncThruOutputTray(SyncThruSensor):
