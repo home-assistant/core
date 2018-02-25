@@ -20,13 +20,14 @@ REQUIREMENTS = ['postnl_api==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 CONF_UPDATE_INTERVAL = 'update_interval'
-DOMAIN = 'postnl'
+DEFAULT_NAME = 'postnl'
 ICON = 'mdi:package-variant-closed'
+ATTRIBUTION = 'Information provided by PostNL'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=1800)):
     vol.All(cv.time_period, cv.positive_timedelta),
 })
@@ -71,7 +72,7 @@ class PostNLSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name or DOMAIN
+        return self._name
 
     @property
     def state(self):
@@ -110,7 +111,7 @@ class PostNLSensor(Entity):
             status_counts[name] = status
 
         self._attributes = {
-            ATTR_ATTRIBUTION: 'Information provided by PostNL',
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             **status_counts
         }
 
