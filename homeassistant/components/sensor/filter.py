@@ -33,6 +33,9 @@ CONF_FILTER_PRECISION = 'precision'
 CONF_FILTER_RADIUS = 'radius'
 CONF_FILTER_TIME_CONSTANT = 'time_constant'
 
+DEFAULT_FILTER_RADIUS = 2.0
+DEFAULT_FILTER_TIME_CONSTANT = 10
+
 NAME_TEMPLATE = "{} filter"
 ICON = 'mdi: chart-line-variant'
 
@@ -75,12 +78,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         precision = _filter.get(CONF_FILTER_PRECISION)
 
         if _filter['filter'] == FILTER_NAME_OUTLIER:
-            radius = _filter.get(CONF_FILTER_RADIUS)
+            radius = _filter.get(CONF_FILTER_RADIUS, DEFAULT_FILTER_RADIUS)
             filters.append(OutlierFilter(window_size=window_size,
                                          precision=precision,
                                          radius=radius))
         elif _filter['filter'] == FILTER_NAME_LOWPASS:
-            time_constant = _filter.get(CONF_FILTER_TIME_CONSTANT)
+            time_constant = _filter.get(CONF_FILTER_TIME_CONSTANT,
+                                        DEFAULT_FILTER_TIME_CONSTANT)
             filters.append(LowPassFilter(window_size=window_size,
                                          precision=precision,
                                          time_constant=time_constant))
@@ -221,7 +225,7 @@ class OutlierFilter(Filter):
         window_size (int): see Filter()
     """
 
-    def __init__(self, window_size, precision, radius=2.0):
+    def __init__(self, window_size, precision, radius):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision)
         self._radius = radius
@@ -249,7 +253,7 @@ class LowPassFilter(Filter):
         window_size (int): see Filter()
     """
 
-    def __init__(self, window_size, precision, time_constant=10):
+    def __init__(self, window_size, precision, time_constant):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_LOWPASS, window_size, precision)
         self._time_constant = time_constant
