@@ -81,16 +81,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     printer.update()
     devices = [SyncThruMain(hass, printer, name)]
 
-    for key in printer.tonerStatus(filter_supported=True).keys():
+    for key in printer.tonerStatus(filter_supported=True):
         if 'toner_' + str(key) in monitored:
             devices.append(SyncThruToner(hass, printer, name, key))
-    for key in printer.drumStatus(filter_supported=True).keys():
+    for key in printer.drumStatus(filter_supported=True):
         if 'drum_' + str(key) in monitored:
             devices.append(SyncThruDrum(hass, printer, name, key))
-    for key in printer.inputTrayStatus(filter_supported=True).keys():
+    for key in printer.inputTrayStatus(filter_supported=True):
         if 'tray_' + str(key) in monitored:
             devices.append(SyncThruInputTray(hass, printer, name, key))
-    for key in printer.outputTrayStatus().keys():
+    for key in printer.outputTrayStatus():
         if 'output_tray_' + str(key) in monitored:
             devices.append(SyncThruOutputTray(hass, printer, name, key))
 
