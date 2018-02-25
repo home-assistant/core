@@ -1,5 +1,4 @@
 """Module to coordinate user intentions."""
-import asyncio
 import logging
 import re
 
@@ -41,9 +40,9 @@ def async_register(hass, handler):
     intents[handler.intent_type] = handler
 
 
-@asyncio.coroutine
 @bind_hass
-def async_handle(hass, platform, intent_type, slots=None, text_input=None):
+async def async_handle(hass, platform, intent_type, slots=None,
+                       text_input=None):
     """Handle an intent."""
     handler = hass.data.get(DATA_KEY, {}).get(intent_type)
 
@@ -54,7 +53,7 @@ def async_handle(hass, platform, intent_type, slots=None, text_input=None):
 
     try:
         _LOGGER.info("Triggering intent handler %s", handler)
-        result = yield from handler.async_handle(intent)
+        result = await handler.async_handle(intent)
         return result
     except vol.Invalid as err:
         raise InvalidSlotInfo(
@@ -114,8 +113,7 @@ class IntentHandler:
 
         return self._slot_schema(slots)
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         raise NotImplementedError()
 
@@ -153,8 +151,7 @@ class ServiceIntentHandler(IntentHandler):
         self.service = service
         self.speech = speech
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
@@ -175,7 +172,7 @@ class ServiceIntentHandler(IntentHandler):
             _LOGGER.error("Could not find entity id matching %s", name)
             return response
 
-        yield from hass.services.async_call(
+        await hass.services.async_call(
             self.domain, self.service, {
                 ATTR_ENTITY_ID: entity_id
             })

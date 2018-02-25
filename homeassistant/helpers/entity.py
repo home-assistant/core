@@ -332,11 +332,10 @@ class Entity(object):
             if self.parallel_updates:
                 self.parallel_updates.release()
 
-    @asyncio.coroutine
-    def async_remove(self):
+    async def async_remove(self):
         """Remove entity from Home Assistant."""
         if self.platform is not None:
-            yield from self.platform.async_remove_entity(self.entity_id)
+            await self.platform.async_remove_entity(self.entity_id)
         else:
             self.hass.states.async_remove(self.entity_id)
 
