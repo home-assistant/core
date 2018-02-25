@@ -11,7 +11,6 @@ from homeassistant.components.homekit import (
     CONF_PIN_CODE, BRIDGE_NAME, HOMEKIT_FILE, HomeKit, valid_pin)
 from homeassistant.const import (
     CONF_PORT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-# from homeassistant.util import get_local_ip
 
 from tests.common import get_test_home_assistant
 
