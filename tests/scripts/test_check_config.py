@@ -1,10 +1,10 @@
 """Test check_config script."""
 import asyncio
 import logging
-import os
 import unittest
 
 import homeassistant.scripts.check_config as check_config
+from homeassistant.loader import set_component
 from tests.common import patch_yaml_files, get_test_config_dir
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,14 +36,6 @@ def change_yaml_files(check_dict):
             check_dict['yaml_files'].append('...' + key[len(root):])
 
 
-def tearDownModule(self):  # pylint: disable=invalid-name
-    """Clean files."""
-    # .HA_VERSION created during bootstrap's config update
-    path = get_test_config_dir('.HA_VERSION')
-    if os.path.isfile(path):
-        os.remove(path)
-
-
 class TestCheckConfig(unittest.TestCase):
     """Tests for the homeassistant.scripts.check_config module."""
 
@@ -57,6 +49,9 @@ class TestCheckConfig(unittest.TestCase):
             # Py35: RuntimeError
             # Py34: AssertionError
             asyncio.set_event_loop(asyncio.new_event_loop())
+
+        # Will allow seeing full diff
+        self.maxDiff = None
 
     # pylint: disable=no-self-use,invalid-name
     def test_config_platform_valid(self):
@@ -124,6 +119,9 @@ class TestCheckConfig(unittest.TestCase):
 
     def test_component_platform_not_found(self):
         """Test errors if component or platform not found."""
+        # Make sure they don't exist
+        set_component('beer', None)
+        set_component('light.beer', None)
         files = {
             'badcomponent.yaml': BASE_CONFIG + 'beer:',
             'badplatform.yaml': BASE_CONFIG + 'light:\n  platform: beer',
@@ -162,7 +160,6 @@ class TestCheckConfig(unittest.TestCase):
             'secrets.yaml': ('logger: debug\n'
                              'http_pw: abc123'),
         }
-        self.maxDiff = None
 
         with patch_yaml_files(files):
             config_path = get_test_config_dir('secret.yaml')
@@ -182,8 +179,6 @@ class TestCheckConfig(unittest.TestCase):
                                         'login_attempts_threshold': -1,
                                         'server_host': '0.0.0.0',
                                         'server_port': 8123,
-                                        'ssl_certificate': None,
-                                        'ssl_key': None,
                                         'trusted_networks': [],
                                         'use_x_forwarded_for': False}},
                 'except': {},
@@ -209,6 +204,23 @@ class TestCheckConfig(unittest.TestCase):
             assert err == {'group': ['a']}
             assert res['yaml_files'] == ['.../bad.yaml']
 
+            assert res['components'] == {}
+            assert res['secret_cache'] == {}
+            assert res['secrets'] == {}
+
+    def test_bootstrap_error(self): \
+            # pylint: disable=no-self-use,invalid-name
+        """Test a valid platform setup."""
+        files = {
+            'badbootstrap.yaml': BASE_CONFIG + 'automation: !include no.yaml',
+        }
+        with patch_yaml_files(files):
+            res = check_config.check(get_test_config_dir('badbootstrap.yaml'))
+            change_yaml_files(res)
+
+            err = res['except'].pop(check_config.ERROR_STR)
+            assert len(err) == 1
+            assert res['except'] == {}
             assert res['components'] == {}
             assert res['secret_cache'] == {}
             assert res['secrets'] == {}

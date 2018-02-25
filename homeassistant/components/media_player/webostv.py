@@ -270,8 +270,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         """Title of current playing media."""
         if (self._channel is not None) and ('channelName' in self._channel):
             return self._channel['channelName']
-        else:
-            return None
+        return None
 
     @property
     def media_image_url(self):

@@ -8,8 +8,9 @@ import pytest
 
 from homeassistant.core import callback
 from homeassistant.components import websocket_api as wapi, frontend
+from homeassistant.setup import async_setup_component
 
-from tests.common import mock_http_component_app, mock_coro
+from tests.common import mock_coro
 
 API_PASSWORD = 'test1234'
 
@@ -17,10 +18,10 @@ API_PASSWORD = 'test1234'
 @pytest.fixture
 def websocket_client(loop, hass, test_client):
     """Websocket client fixture connected to websocket server."""
-    websocket_app = mock_http_component_app(hass)
-    wapi.WebsocketAPIView().register(websocket_app.router)
+    assert loop.run_until_complete(
+        async_setup_component(hass, 'websocket_api'))
 
-    client = loop.run_until_complete(test_client(websocket_app))
+    client = loop.run_until_complete(test_client(hass.http.app))
     ws = loop.run_until_complete(client.ws_connect(wapi.URL))
 
     auth_ok = loop.run_until_complete(ws.receive_json())
@@ -35,10 +36,14 @@ def websocket_client(loop, hass, test_client):
 @pytest.fixture
 def no_auth_websocket_client(hass, loop, test_client):
     """Websocket connection that requires authentication."""
-    websocket_app = mock_http_component_app(hass, API_PASSWORD)
-    wapi.WebsocketAPIView().register(websocket_app.router)
+    assert loop.run_until_complete(
+        async_setup_component(hass, 'websocket_api', {
+            'http': {
+                'api_password': API_PASSWORD
+            }
+        }))
 
-    client = loop.run_until_complete(test_client(websocket_app))
+    client = loop.run_until_complete(test_client(hass.http.app))
     ws = loop.run_until_complete(client.ws_connect(wapi.URL))
 
     auth_ok = loop.run_until_complete(ws.receive_json())

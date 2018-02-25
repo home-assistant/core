@@ -56,10 +56,7 @@ GOOGLE_ENTITY_SCHEMA = vol.Schema({
 })
 
 ASSISTANT_SCHEMA = vol.Schema({
-    vol.Optional(
-        CONF_FILTER,
-        default=lambda: entityfilter.generate_filter([], [], [], [])
-    ): entityfilter.FILTER_SCHEMA,
+    vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
 })
 
 ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend({
@@ -222,7 +219,7 @@ class Cloud:
 
         # Fetching keyset can fail if internet is not up yet.
         if not success:
-            self.hass.helpers.async_call_later(5, self.async_start)
+            self.hass.helpers.event.async_call_later(5, self.async_start)
             return
 
         def load_config():

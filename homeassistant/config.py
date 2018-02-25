@@ -95,10 +95,6 @@ conversation:
 # Enables support for tracking state changes over time
 history:
 
-# Tracked history is kept for 10 days
-recorder:
-  purge_keep_days: 10
-
 # View all events in a logbook
 logbook:
 
@@ -166,7 +162,7 @@ def get_default_config_dir() -> str:
     return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
-def ensure_config_exists(config_dir: str, detect_location: bool=True) -> str:
+def ensure_config_exists(config_dir: str, detect_location: bool = True) -> str:
     """Ensure a configuration file exists in given configuration directory.
 
     Creating a default one if needed.
@@ -677,7 +673,7 @@ def async_check_ha_config_file(hass):
 
 
 @callback
-def async_notify_setup_error(hass, component, link=False):
+def async_notify_setup_error(hass, component, display_link=False):
     """Print a persistent notification.
 
     This method must be run in the event loop.
@@ -689,7 +685,7 @@ def async_notify_setup_error(hass, component, link=False):
     if errors is None:
         errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
 
-    errors[component] = errors.get(component) or link
+    errors[component] = errors.get(component) or display_link
 
     message = 'The following components and platforms could not be set up:\n\n'
 

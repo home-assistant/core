@@ -25,8 +25,8 @@ _CONF_INDIVIDUAL = 'individual'
 _ZABBIX_ID_LIST_SCHEMA = vol.Schema([int])
 _ZABBIX_TRIGGER_SCHEMA = vol.Schema({
     vol.Optional(_CONF_HOSTIDS, default=[]): _ZABBIX_ID_LIST_SCHEMA,
-    vol.Optional(_CONF_INDIVIDUAL, default=False): cv.boolean(True),
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(_CONF_INDIVIDUAL, default=False): cv.boolean,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 # SCAN_INTERVAL = 30

@@ -91,7 +91,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None or 'bridge_id' not in discovery_info:
         return
 
-    if config is not None and len(config) > 0:
+    if config is not None and config:
         # Legacy configuration, will be removed in 0.60
         config_str = yaml.dump([config])
         # Indent so it renders in a fixed-width font

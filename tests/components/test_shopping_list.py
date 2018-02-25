@@ -150,7 +150,6 @@ def test_api_update_fails(hass, test_client):
     assert resp.status == 404
 
     beer_id = hass.data['shopping_list'].items[0]['id']
-    client = yield from test_client(hass.http.app)
     resp = yield from client.post(
         '/api/shopping_list/item/{}'.format(beer_id), json={
             'name': 123,

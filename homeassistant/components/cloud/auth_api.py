@@ -1,7 +1,4 @@
 """Package to communicate with the authentication API."""
-import logging
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CloudError(Exception):
@@ -31,6 +28,8 @@ class InvalidCode(CloudError):
 class PasswordChangeRequired(CloudError):
     """Raised when a password change is required."""
 
+    # https://github.com/PyCQA/pylint/issues/1085
+    # pylint: disable=useless-super-delegation
     def __init__(self, message='Password change required.'):
         """Initialize a password change required error."""
         super().__init__(message)

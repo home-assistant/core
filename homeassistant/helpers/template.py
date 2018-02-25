@@ -271,8 +271,7 @@ class TemplateState(State):
         """Return an attribute of the state."""
         if name in TemplateState.__dict__:
             return object.__getattribute__(self, name)
-        else:
-            return getattr(object.__getattribute__(self, '_state'), name)
+        return getattr(object.__getattribute__(self, '_state'), name)
 
     def __repr__(self):
         """Representation of Template State."""

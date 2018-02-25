@@ -152,6 +152,6 @@ class Flexit(ClimateDevice):
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
         self.unit.set_temp(self._target_temperature)
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set new fan mode."""
-        self.unit.set_fan_speed(self._fan_list.index(fan))
+        self.unit.set_fan_speed(self._fan_list.index(fan_mode))

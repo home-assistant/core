@@ -11,6 +11,7 @@ from homeassistant import config
 from homeassistant.const import (
     STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
 import homeassistant.components as comps
+import homeassistant.helpers.intent as intent
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
 from homeassistant.util.async import run_coroutine_threadsafe
@@ -195,3 +196,96 @@ class TestComponentsCore(unittest.TestCase):
         self.hass.block_till_done()
         assert mock_check.called
         assert not mock_stop.called
+
+
+@asyncio.coroutine
+def test_turn_on_intent(hass):
+    """Test HassTurnOn intent."""
+    result = yield from comps.async_setup(hass, {})
+    assert result
+
+    hass.states.async_set('light.test_light', 'off')
+    calls = async_mock_service(hass, 'light', SERVICE_TURN_ON)
+
+    response = yield from intent.async_handle(
+        hass, 'test', 'HassTurnOn', {'name': {'value': 'test light'}}
+    )
+    yield from hass.async_block_till_done()
+
+    assert response.speech['plain']['speech'] == 'Turned on test light'
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == 'light'
+    assert call.service == 'turn_on'
+    assert call.data == {'entity_id': ['light.test_light']}
+
+
+@asyncio.coroutine
+def test_turn_off_intent(hass):
+    """Test HassTurnOff intent."""
+    result = yield from comps.async_setup(hass, {})
+    assert result
+
+    hass.states.async_set('light.test_light', 'on')
+    calls = async_mock_service(hass, 'light', SERVICE_TURN_OFF)
+
+    response = yield from intent.async_handle(
+        hass, 'test', 'HassTurnOff', {'name': {'value': 'test light'}}
+    )
+    yield from hass.async_block_till_done()
+
+    assert response.speech['plain']['speech'] == 'Turned off test light'
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == 'light'
+    assert call.service == 'turn_off'
+    assert call.data == {'entity_id': ['light.test_light']}
+
+
+@asyncio.coroutine
+def test_toggle_intent(hass):
+    """Test HassToggle intent."""
+    result = yield from comps.async_setup(hass, {})
+    assert result
+
+    hass.states.async_set('light.test_light', 'off')
+    calls = async_mock_service(hass, 'light', SERVICE_TOGGLE)
+
+    response = yield from intent.async_handle(
+        hass, 'test', 'HassToggle', {'name': {'value': 'test light'}}
+    )
+    yield from hass.async_block_till_done()
+
+    assert response.speech['plain']['speech'] == 'Toggled test light'
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == 'light'
+    assert call.service == 'toggle'
+    assert call.data == {'entity_id': ['light.test_light']}
+
+
+@asyncio.coroutine
+def test_turn_on_multiple_intent(hass):
+    """Test HassTurnOn intent with multiple similar entities.
+
+    This tests that matching finds the proper entity among similar names.
+    """
+    result = yield from comps.async_setup(hass, {})
+    assert result
+
+    hass.states.async_set('light.test_light', 'off')
+    hass.states.async_set('light.test_lights_2', 'off')
+    hass.states.async_set('light.test_lighter', 'off')
+    calls = async_mock_service(hass, 'light', SERVICE_TURN_ON)
+
+    response = yield from intent.async_handle(
+        hass, 'test', 'HassTurnOn', {'name': {'value': 'test lights'}}
+    )
+    yield from hass.async_block_till_done()
+
+    assert response.speech['plain']['speech'] == 'Turned on test lights'
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == 'light'
+    assert call.service == 'turn_on'
+    assert call.data == {'entity_id': ['light.test_lights_2']}

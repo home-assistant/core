@@ -118,6 +118,6 @@ class WinkLight(WinkDevice, Light):
 
         self.wink.set_state(True, **state_kwargs)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.wink.set_state(False)

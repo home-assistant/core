@@ -144,3 +144,53 @@ def async_million_state_changed_helper(hass):
     yield from event.wait()
 
     return timer() - start
+
+
+@benchmark
+@asyncio.coroutine
+def logbook_filtering_state(hass):
+    """Filter state changes."""
+    return _logbook_filtering(hass, 1, 1)
+
+
+@benchmark
+@asyncio.coroutine
+def logbook_filtering_attributes(hass):
+    """Filter attribute changes."""
+    return _logbook_filtering(hass, 1, 2)
+
+
+@benchmark
+@asyncio.coroutine
+def _logbook_filtering(hass, last_changed, last_updated):
+    from homeassistant.components import logbook
+
+    entity_id = 'test.entity'
+
+    old_state = {
+        'entity_id': entity_id,
+        'state': 'off'
+    }
+
+    new_state = {
+        'entity_id': entity_id,
+        'state': 'on',
+        'last_updated': last_updated,
+        'last_changed': last_changed
+    }
+
+    event = core.Event(EVENT_STATE_CHANGED, {
+        'entity_id': entity_id,
+        'old_state': old_state,
+        'new_state': new_state
+    })
+
+    events = [event] * 10**5
+
+    start = timer()
+
+    # pylint: disable=protected-access
+    events = logbook._exclude_events(events, {})
+    list(logbook.humanify(events))
+
+    return timer() - start

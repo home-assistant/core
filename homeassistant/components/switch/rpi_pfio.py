@@ -26,7 +26,7 @@ CONF_PORTS = 'ports'
 DEFAULT_INVERT_LOGIC = False
 
 PORT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_NAME, default=None): cv.string,
+    vol.Optional(ATTR_NAME): cv.string,
     vol.Optional(ATTR_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
 })
 
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     switches = []
     ports = config.get(CONF_PORTS)
     for port, port_entity in ports.items():
-        name = port_entity[ATTR_NAME]
+        name = port_entity.get(ATTR_NAME)
         invert_logic = port_entity[ATTR_INVERT_LOGIC]
 
         switches.append(RPiPFIOSwitch(port, name, invert_logic))
@@ -75,13 +75,13 @@ class RPiPFIOSwitch(ToggleEntity):
         """Return true if device is on."""
         return self._state
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         rpi_pfio.write_output(self._port, 0 if self._invert_logic else 1)
         self._state = True
         self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         rpi_pfio.write_output(self._port, 1 if self._invert_logic else 0)
         self._state = False

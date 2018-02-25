@@ -6,7 +6,8 @@ https://home-assistant.io/components/cover.vera/
 """
 import logging
 
-from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
+from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT, \
+    ATTR_POSITION
 from homeassistant.components.vera import (
     VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
@@ -44,9 +45,9 @@ class VeraCover(VeraDevice, CoverDevice):
             return 100
         return position
 
-    def set_cover_position(self, position, **kwargs):
+    def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        self.vera_device.set_level(position)
+        self.vera_device.set_level(kwargs.get(ATTR_POSITION))
         self.schedule_update_ha_state()
 
     @property

@@ -31,7 +31,7 @@ CONF_DEVICE_CACHE = 'harmony_device_cache'
 SERVICE_SYNC = 'harmony_sync'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(ATTR_ACTIVITY, default=None): cv.string,
+    vol.Required(ATTR_ACTIVITY): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS):
         vol.Coerce(float),
@@ -207,6 +207,7 @@ class HarmonyRemote(remote.RemoteDevice):
         """Start the PowerOff activity."""
         self._client.power_off()
 
+    # pylint: disable=arguments-differ
     def send_command(self, commands, **kwargs):
         """Send a list of commands to one device."""
         device = kwargs.get(ATTR_DEVICE)
