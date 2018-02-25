@@ -45,9 +45,6 @@ class TestFilterSensor(unittest.TestCase):
         with assert_setup_component(1):
             assert setup_component(self.hass, 'sensor', config)
 
-        self.hass.start()
-        self.hass.block_till_done()
-
         for value in self.values:
             self.hass.states.set(config['sensor']['entity_id'], value)
             self.hass.block_till_done()
@@ -71,9 +68,6 @@ class TestFilterSensor(unittest.TestCase):
         }
         with assert_setup_component(1):
             assert setup_component(self.hass, 'sensor', config)
-
-        self.hass.start()
-        self.hass.block_till_done()
 
         for value in self.values:
             self.hass.states.set(config['sensor']['entity_id'], value)

@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.filter/
 import asyncio
 import logging
 import statistics
-from collections import deque
+from collections import deque, Counter
 
 import voluptuous as vol
 
@@ -15,7 +15,8 @@ from homeassistant.util import slugify
 from homeassistant.core import callback
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, ATTR_ENTITY_ID)
+    CONF_NAME, CONF_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, ATTR_ENTITY_ID,
+    ATTR_ICON, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
@@ -36,7 +37,7 @@ DEFAULT_FILTER_RADIUS = 2.0
 DEFAULT_FILTER_TIME_CONSTANT = 10
 
 NAME_TEMPLATE = "{} filter"
-ICON = 'mdi: chart-line-variant'
+ICON = 'mdi:chart-line-variant'
 
 FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_FILTER_WINDOW_SIZE): vol.Coerce(int),
@@ -67,8 +68,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the template sensors."""
-    sensors = []
-
     name = config.get(CONF_NAME)
     entity_id = config.get(CONF_ENTITY_ID)
     filters = []
@@ -81,16 +80,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             radius = _filter.get(CONF_FILTER_RADIUS)
             filters.append(OutlierFilter(window_size=window_size,
                                          precision=precision,
+                                         entity=entity_id,
                                          radius=radius))
         elif _filter[CONF_FILTER_NAME] == FILTER_NAME_LOWPASS:
             time_constant = _filter.get(CONF_FILTER_TIME_CONSTANT)
             filters.append(LowPassFilter(window_size=window_size,
                                          precision=precision,
+                                         entity=entity_id,
                                          time_constant=time_constant))
 
-    sensors.append(SensorFilter(name, entity_id, filters))
-
-    async_add_devices(sensors)
+    async_add_devices([SensorFilter(name, entity_id, filters)])
 
 
 class SensorFilter(Entity):
@@ -103,6 +102,7 @@ class SensorFilter(Entity):
         self._unit_of_measurement = None
         self._state = None
         self._filters = filters
+        self._icon = ICON
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -112,13 +112,18 @@ class SensorFilter(Entity):
             """Handle device state changes."""
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
+            self._icon = new_state.attributes.get(ATTR_ICON, ICON)
 
             self._state = new_state.state
+
+            if self._state == STATE_UNKNOWN:
+                return
+
             for filt in self._filters:
                 try:
                     filtered_state = filt.filter_state(self._state)
-                    _LOGGER.debug("%s(%s) -> %s", filt.name, self._state,
-                                  filtered_state)
+                    _LOGGER.debug("%s(%s, %s) -> %s", filt.name, self._entity,
+                                  self._state, filtered_state)
                     self._state = filtered_state
                     filt.states.append(filtered_state)
                 except ValueError:
@@ -143,7 +148,7 @@ class SensorFilter(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return ICON
+        return self._icon
 
     @property
     def unit_of_measurement(self):
@@ -162,9 +167,13 @@ class SensorFilter(Entity):
             ATTR_ENTITY_ID: self._entity
         }
         for filt in self._filters:
-            state_attr.update({
-                slugify("{} stats".format(filt.name)): filt.stats
-            })
+            for filt_stat_key, filt_stat_value in filt.stats.items():
+                filt_stat = slugify("{} {}".format(filt.name, filt_stat_key))
+                _LOGGER.debug("stats(%s): %s: %s", self._entity,
+                              filt_stat, filt_stat_value)
+                state_attr.update({
+                    filt_stat: filt_stat_value
+                })
 
         return state_attr
 
@@ -175,14 +184,17 @@ class Filter(object):
     Args:
         window_size (int): size of the sliding window that holds previous
                                 values
+        precision (int): round filtered value to precision value
+        entity (string): used for debugging only
     """
 
-    def __init__(self, name, window_size=1, precision=None):
+    def __init__(self, name, window_size=1, precision=None, entity=None):
         """Initialize common attributes."""
         self.states = deque(maxlen=window_size)
         self.precision = precision
         self._stats = {}
         self._name = name
+        self._entity = entity
 
     @property
     def name(self):
@@ -216,22 +228,29 @@ class OutlierFilter(Filter):
         window_size (int): see Filter()
     """
 
-    def __init__(self, window_size, precision, radius):
+    def __init__(self, window_size, precision, entity, radius):
         """Initialize Filter."""
-        super().__init__(FILTER_NAME_OUTLIER, window_size, precision)
+        super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
         self._radius = radius
+        self._stats_internal = Counter()
 
     def _filter_state(self, new_state):
         """Implement the outlier filter."""
+        self._stats_internal['total_filtered'] += 1
         new_state = float(new_state)
+
+        self._stats['erasures'] = "{0:.2f}%".format(
+            100 * self._stats_internal['erasures']
+            / self._stats_internal['total_filtered']
+        )
+
         if (len(self.states) > 1 and
                 abs(new_state - statistics.median(self.states))
                 > self._radius):
 
-            erasures = self._stats.get('erasures', 0)
-            self._stats['erasures'] = erasures+1
+            self._stats_internal['erasures'] += 1
 
-            _LOGGER.debug("Outlier in %s: %s", self._name, new_state)
+            _LOGGER.debug("Outlier in %s: %s", self._entity, new_state)
             return self.states[-1]
         return new_state
 
@@ -244,9 +263,9 @@ class LowPassFilter(Filter):
         window_size (int): see Filter()
     """
 
-    def __init__(self, window_size, precision, time_constant):
+    def __init__(self, window_size, precision, entity, time_constant):
         """Initialize Filter."""
-        super().__init__(FILTER_NAME_LOWPASS, window_size, precision)
+        super().__init__(FILTER_NAME_LOWPASS, window_size, precision, entity)
         self._time_constant = time_constant
 
     def _filter_state(self, new_state):
