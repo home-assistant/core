@@ -51,21 +51,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception("Can't connect to the PostNL webservice")
         return False
 
-    add_devices([PostNLSensor(username, password, name, update_interval)], True)
+    add_devices([PostNLSensor(api, name, update_interval)], True)
 
 
 class PostNLSensor(Entity):
     """PostNL Sensor."""
 
-    def __init__(self, username, password, name, interval):
+    def __init__(self, api, name, interval):
         """Initialize the sensor."""
         self.friendly_name = name
         self._name = name
         self._attributes = None
         self._state = None
 
-        self._username = username
-        self._password = password
+        self._api = api
 
         self.update = Throttle(interval)(self._update)
 
@@ -90,10 +89,8 @@ class PostNLSensor(Entity):
 
     def _update(self):
         """Update device state."""
-        from postnl_api import PostNL_API
 
-        api = PostNL_API(self._username, self._password)
-        shipments = api.get_relevant_shipments()
+        shipments = self._api.get_relevant_shipments()
         status_counts = {}
 
         def parse_date(date):
