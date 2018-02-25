@@ -53,7 +53,7 @@ ROUTING_SCHEMA = vol.Schema({
 
 EXPOSE_SCHEMA = vol.Schema({
     vol.Required(CONF_KNX_EXPOSE_TYPE): cv.string,
-    vol.Optional(CONF_ENTITY_ID): cv.string,
+    vol.Optional(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_KNX_EXPOSE_ADDRESS): cv.string,
 })
 
