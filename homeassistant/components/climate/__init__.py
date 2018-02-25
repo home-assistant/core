@@ -669,16 +669,16 @@ class ClimateDevice(Entity):
         """
         return self.hass.async_add_job(self.set_humidity, humidity)
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         raise NotImplementedError()
 
-    def async_set_fan_mode(self, fan):
+    def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.set_fan_mode, fan)
+        return self.hass.async_add_job(self.set_fan_mode, fan_mode)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""

@@ -4,8 +4,7 @@ from unittest.mock import Mock, MagicMock, patch
 from homeassistant.setup import setup_component
 import homeassistant.components.mqtt as mqtt
 
-from tests.common import (
-    get_test_home_assistant, mock_coro, mock_http_component)
+from tests.common import get_test_home_assistant, mock_coro
 
 
 class TestMQTT:
@@ -14,7 +13,9 @@ class TestMQTT:
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        mock_http_component(self.hass, 'super_secret')
+        setup_component(self.hass, 'http', {
+            'api_password': 'super_secret'
+        })
 
     def teardown_method(self, method):
         """Stop everything that was started."""

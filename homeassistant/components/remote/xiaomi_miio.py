@@ -21,7 +21,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['python-miio==0.3.6']
+REQUIREMENTS = ['python-miio==0.3.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -210,8 +210,7 @@ class XiaomiMiioRemote(RemoteDevice):
         """Hide remote by default."""
         if self._is_hidden:
             return {'hidden': 'true'}
-        else:
-            return
+        return
 
     # pylint: disable=R0201
     @asyncio.coroutine

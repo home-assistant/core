@@ -10,7 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, Light)
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
+    SUPPORT_RGB_COLOR, Light)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -19,6 +20,8 @@ CONF_ADDRESS = 'address'
 CONF_STATE_ADDRESS = 'state_address'
 CONF_BRIGHTNESS_ADDRESS = 'brightness_address'
 CONF_BRIGHTNESS_STATE_ADDRESS = 'brightness_state_address'
+CONF_COLOR_ADDRESS = 'color_address'
+CONF_COLOR_STATE_ADDRESS = 'color_state_address'
 
 DEFAULT_NAME = 'KNX Light'
 DEPENDENCIES = ['knx']
@@ -29,16 +32,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_BRIGHTNESS_ADDRESS): cv.string,
     vol.Optional(CONF_BRIGHTNESS_STATE_ADDRESS): cv.string,
+    vol.Optional(CONF_COLOR_ADDRESS): cv.string,
+    vol.Optional(CONF_COLOR_STATE_ADDRESS): cv.string,
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up lights for KNX platform."""
-    if DATA_KNX not in hass.data \
-            or not hass.data[DATA_KNX].initialized:
-        return
-
     if discovery_info is not None:
         async_add_devices_discovery(hass, discovery_info, async_add_devices)
     else:
@@ -66,7 +67,9 @@ def async_add_devices_config(hass, config, async_add_devices):
         group_address_switch_state=config.get(CONF_STATE_ADDRESS),
         group_address_brightness=config.get(CONF_BRIGHTNESS_ADDRESS),
         group_address_brightness_state=config.get(
-            CONF_BRIGHTNESS_STATE_ADDRESS))
+            CONF_BRIGHTNESS_STATE_ADDRESS),
+        group_address_color=config.get(CONF_COLOR_ADDRESS),
+        group_address_color_state=config.get(CONF_COLOR_STATE_ADDRESS))
     hass.data[DATA_KNX].xknx.devices.add(light)
     async_add_devices([KNXLight(hass, light)])
 
@@ -120,6 +123,8 @@ class KNXLight(Light):
     @property
     def rgb_color(self):
         """Return the RBG color value."""
+        if self.device.supports_color:
+            return self.device.current_color()
         return None
 
     @property
@@ -153,6 +158,8 @@ class KNXLight(Light):
         flags = 0
         if self.device.supports_dimming:
             flags |= SUPPORT_BRIGHTNESS
+        if self.device.supports_color:
+            flags |= SUPPORT_RGB_COLOR
         return flags
 
     @asyncio.coroutine
@@ -160,6 +167,8 @@ class KNXLight(Light):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs and self.device.supports_dimming:
             yield from self.device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
+        elif ATTR_RGB_COLOR in kwargs:
+            yield from self.device.set_color(kwargs[ATTR_RGB_COLOR])
         else:
             yield from self.device.set_on()
 

@@ -13,7 +13,7 @@ except ImportError:
     keyring = None
 
 try:
-    import credstash  # pylint: disable=import-error
+    import credstash  # pylint: disable=import-error, no-member
 except ImportError:
     credstash = None
 
@@ -276,6 +276,7 @@ def _secret_yaml(loader: SafeLineLoader,
     global credstash  # pylint: disable=invalid-name
 
     if credstash:
+        # pylint: disable=no-member
         try:
             pwd = credstash.getSecret(node.value, table=_SECRET_NAMESPACE)
             if pwd:
