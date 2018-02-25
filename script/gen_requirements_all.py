@@ -31,7 +31,6 @@ COMMENT_REQUIREMENTS = (
     'envirophat',
     'i2csense',
     'credstash',
-    'pytradfri',
     'bme680',
 )
 
