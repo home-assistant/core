@@ -6,11 +6,10 @@ https://home-assistant.io/components/demo/
 """
 import datetime as datetime
 import math
-import random
+from random import Random
 import logging
 
 import voluptuous as vol
-from homeassistant.const import ATTR_BATTERY_LEVEL, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
@@ -28,11 +27,11 @@ CONF_PHASE = 'phase'
 CONF_FWHM = 'spread'
 CONF_SEED = 'seed'
 
-DEFAULT_NAME = 'simulated'
-DEFAULT_UNIT = 'value'
-DEFAULT_AMP = 1
-DEFAULT_MEAN = 0
-DEFAULT_PERIOD = 60
+DEFAULT_NAME = 'Outside Humidity'
+DEFAULT_UNIT = '%'
+DEFAULT_AMP = 0
+DEFAULT_MEAN = 54
+DEFAULT_PERIOD = 0
 DEFAULT_PHASE = 0
 DEFAULT_FWHM = 0
 DEFAULT_SEED = 999
@@ -60,56 +59,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     phase = config.get(CONF_PHASE)
     fwhm = config.get(CONF_FWHM)
     seed = config.get(CONF_SEED)
-    random.seed(seed)
 
     add_devices([
-        DemoSensor('Outside Temperature', 15.6, TEMP_CELSIUS, 12),
-        DemoSensor('Outside Humidity', 54, '%', None),
-        SimulatedSensor(name, unit, amp, mean, period, phase, fwhm, seed)
+        DemoSensor(name, unit, amp, mean, period, phase, fwhm, seed)
     ])
 
 
 class DemoSensor(Entity):
     """Representation of a Demo sensor."""
-
-    def __init__(self, name, state, unit_of_measurement, battery):
-        """Initialize the sensor."""
-        self._name = name
-        self._state = state
-        self._unit_of_measurement = unit_of_measurement
-        self._battery = battery
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo sensor."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        if self._battery:
-            return {
-                ATTR_BATTERY_LEVEL: self._battery,
-            }
-
-
-class SimulatedSensor(Entity):
-    """Class for simulated sensor."""
 
     def __init__(self, name, unit, amp, mean, period, phase, fwhm, seed):
         """Init the class."""
@@ -121,6 +78,7 @@ class SimulatedSensor(Entity):
         self._phase = phase  # phase in degrees
         self._fwhm = fwhm
         self._seed = seed
+        self._random = Random(seed)  # A local seeded Random
         self._start_time = datetime.datetime.now()
         self._state = None
 
@@ -138,8 +96,11 @@ class SimulatedSensor(Entity):
         period = self._period*1e6  # to milliseconds
         fwhm = self._fwhm/2
         phase = math.radians(self._phase)
-        periodic = amp * (math.sin((2*math.pi*time_delta/period) + phase))
-        noise = random.gauss(mu=0, sigma=fwhm)
+        if period == 0:
+            periodic = 0
+        else:
+            periodic = amp * (math.sin((2*math.pi*time_delta/period) + phase))
+        noise = self._random.gauss(mu=0, sigma=fwhm)
         return mean + periodic + noise
 
     def update(self):
