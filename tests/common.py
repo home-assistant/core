@@ -370,7 +370,7 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         logger=None,
         domain='test_domain',
         platform_name='test_platform',
-        scan_interval=timedelta(seconds=15),
+        scan_interval=timedelta(seconds=15),  # noqa: B008
         parallel_updates=0,
         entity_namespace=None,
         async_entities_added_callback=lambda: None
