@@ -12,13 +12,12 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     BaseNotificationService, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_RESOURCE, CONF_NAME)
+from homeassistant.const import CONF_RESOURCE
 import homeassistant.helpers.config_validation as cv
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
-    vol.Required(CONF_NAME): cv.string,
 })
 
 _LOGGER = logging.getLogger(__name__)
