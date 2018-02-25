@@ -1,6 +1,5 @@
 """Test the translation helper."""
 # pylint: disable=protected-access
-import asyncio
 from os import path
 
 import homeassistant.helpers.translation as translation
@@ -26,18 +25,17 @@ def test_flatten():
     }
 
 
-@asyncio.coroutine
-def test_component_translation_file(hass):
+async def test_component_translation_file(hass):
     """Test the component translation file function."""
-    assert (yield from async_setup_component(hass, 'switch', {
+    assert await async_setup_component(hass, 'switch', {
         'switch': {'platform': 'test'}
-    }))
-    assert (yield from async_setup_component(hass, 'test_standalone', {
+    })
+    assert await async_setup_component(hass, 'test_standalone', {
         'test_standalone'
-    }))
-    assert (yield from async_setup_component(hass, 'test_package', {
+    })
+    assert await async_setup_component(hass, 'test_package', {
         'test_package'
-    }))
+    })
 
     assert path.normpath(translation.component_translation_file(
         'switch.test', 'en')) == path.normpath(hass.config.path(
@@ -70,37 +68,36 @@ def test_load_translations_files(hass):
     }
 
 
-@asyncio.coroutine
-def test_get_translations(hass):
+async def test_get_translations(hass):
     """Test the get translations helper."""
-    translations = yield from translation.async_get_translations(hass, 'en')
+    translations = await translation.async_get_translations(hass, 'en')
     assert translations == {}
 
-    assert (yield from async_setup_component(hass, 'switch', {
+    assert await async_setup_component(hass, 'switch', {
         'switch': {'platform': 'test'}
-    }))
+    })
 
-    translations = yield from translation.async_get_translations(hass, 'en')
+    translations = await translation.async_get_translations(hass, 'en')
     assert translations == {
         'component.switch.state.string1': 'Value 1',
         'component.switch.state.string2': 'Value 2',
     }
 
-    translations = yield from translation.async_get_translations(hass, 'de')
+    translations = await translation.async_get_translations(hass, 'de')
     assert translations == {
         'component.switch.state.string1': 'German Value 1',
         'component.switch.state.string2': 'German Value 2',
     }
 
     # Test a partial translation
-    translations = yield from translation.async_get_translations(hass, 'es')
+    translations = await translation.async_get_translations(hass, 'es')
     assert translations == {
         'component.switch.state.string1': 'Spanish Value 1',
         'component.switch.state.string2': 'Value 2',
     }
 
     # Test that an untranslated language falls back to English.
-    translations = yield from translation.async_get_translations(
+    translations = await translation.async_get_translations(
         hass, 'invalid-language')
     assert translations == {
         'component.switch.state.string1': 'Value 1',
