@@ -1,4 +1,4 @@
-"""Constants used be the homekit component."""
+"""Constants used be the HomeKit component."""
 MANUFACTURER = 'HomeAssistant'
 
 # Service: AccessoryInfomation
