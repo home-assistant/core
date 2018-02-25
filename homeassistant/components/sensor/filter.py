@@ -45,25 +45,26 @@ FILTER_SCHEMA = vol.Schema({
 
 FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_OUTLIER,
-    vol.Optional(CONF_FILTER_RADIUS): vol.Coerce(float),
+    vol.Optional(CONF_FILTER_RADIUS,
+                 default=DEFAULT_FILTER_RADIUS): vol.Coerce(float),
 })
 
 FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_LOWPASS,
-    vol.Optional(CONF_FILTER_TIME_CONSTANT): vol.Coerce(int),
+    vol.Optional(CONF_FILTER_TIME_CONSTANT,
+                 default=DEFAULT_FILTER_TIME_CONSTANT): vol.Coerce(int),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Required(CONF_FILTERS): [vol.Any(FILTER_OUTLIER_SCHEMA,
-                                         FILTER_LOWPASS_SCHEMA)]
+    vol.Required(CONF_FILTERS): vol.All(cv.ensure_list,
+                                        [vol.Any(FILTER_OUTLIER_SCHEMA,
+                                                 FILTER_LOWPASS_SCHEMA)])
 })
 
 
 @asyncio.coroutine
-# pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the template sensors."""
     sensors = []
@@ -72,23 +73,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     entity_id = config.get(CONF_ENTITY_ID)
     filters = []
 
-    for _filter in config.get(CONF_FILTERS):
+    for _filter in config[CONF_FILTERS]:
         window_size = _filter.get(CONF_FILTER_WINDOW_SIZE)
         precision = _filter.get(CONF_FILTER_PRECISION)
 
-        if _filter['filter'] == FILTER_NAME_OUTLIER:
-            radius = _filter.get(CONF_FILTER_RADIUS, DEFAULT_FILTER_RADIUS)
+        if _filter[CONF_FILTER_NAME] == FILTER_NAME_OUTLIER:
+            radius = _filter.get(CONF_FILTER_RADIUS)
             filters.append(OutlierFilter(window_size=window_size,
                                          precision=precision,
                                          radius=radius))
-        elif _filter['filter'] == FILTER_NAME_LOWPASS:
-            time_constant = _filter.get(CONF_FILTER_TIME_CONSTANT,
-                                        DEFAULT_FILTER_TIME_CONSTANT)
+        elif _filter[CONF_FILTER_NAME] == FILTER_NAME_LOWPASS:
+            time_constant = _filter.get(CONF_FILTER_TIME_CONSTANT)
             filters.append(LowPassFilter(window_size=window_size,
                                          precision=precision,
                                          time_constant=time_constant))
 
-    sensors.append(SensorFilter(hass, name, entity_id, filters))
+    sensors.append(SensorFilter(name, entity_id, filters))
 
     async_add_devices(sensors)
 
@@ -96,11 +96,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class SensorFilter(Entity):
     """Representation of a Filter Sensor."""
 
-    filters = [FILTER_NAME_LOWPASS, FILTER_NAME_OUTLIER]
-
-    def __init__(self, hass, name, entity_id, filters):
+    def __init__(self, name, entity_id, filters):
         """Initialize the sensor."""
-        self.hass = hass
         self._name = name
         self._entity = entity_id
         self._unit_of_measurement = None
@@ -125,7 +122,8 @@ class SensorFilter(Entity):
                     self._state = filtered_state
                     filt.states.append(filtered_state)
                 except ValueError:
-                    _LOGGER.warning("Could not convert state to number")
+                    _LOGGER.warning("Could not convert state: %s to number",
+                                    self._state)
 
             self.async_schedule_update_ha_state(True)
 
@@ -180,10 +178,10 @@ class Filter(object):
     """
 
     def __init__(self, name, window_size=1, precision=None):
-        """Initialize common properties."""
+        """Initialize common attributes."""
         self.states = deque(maxlen=window_size)
         self.precision = precision
-        self._stats = dict()
+        self._stats = {}
         self._name = name
 
     @property
@@ -211,7 +209,7 @@ class Filter(object):
 class OutlierFilter(Filter):
     """BASIC outlier filter.
 
-    Determines if new state is in a band around the median
+    Determines if new state is in a band around the median.
 
     Args:
         radius (float): band radius
@@ -233,7 +231,7 @@ class OutlierFilter(Filter):
             erasures = self._stats.get('erasures', 0)
             self._stats['erasures'] = erasures+1
 
-            _LOGGER.warning("Outlier in %s: %s", self._name, new_state)
+            _LOGGER.debug("Outlier in %s: %s", self._name, new_state)
             return self.states[-1]
         return new_state
 
