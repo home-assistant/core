@@ -56,7 +56,7 @@ FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_FILTERS): vol.All(cv.ensure_list,
                                         [vol.Any(FILTER_OUTLIER_SCHEMA,
