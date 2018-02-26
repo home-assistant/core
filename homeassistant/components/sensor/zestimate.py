@@ -51,7 +51,6 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Zestimate sensor."""
-
     name = config.get(CONF_NAME)
     properties = config[CONF_ZPID]
     params = {'zws-id': config[CONF_API_KEY]}
@@ -136,7 +135,6 @@ class ZestimateDataSensor(Entity):
         details[ATTR_VAL_LOW] = int(data['valuationRange']['low']['#text'])
         self.address = data_dict['response']['address']['street']
         self.data = details
-
         if self.data is not None:
             self._state = self.data[ATTR_AMOUNT]
         else:
