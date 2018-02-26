@@ -31,7 +31,7 @@ CONF_DEVICE_CACHE = 'harmony_device_cache'
 SERVICE_SYNC = 'harmony_sync'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(ATTR_ACTIVITY): cv.string,
+    vol.Optional(ATTR_ACTIVITY): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS):
         vol.Coerce(float),
