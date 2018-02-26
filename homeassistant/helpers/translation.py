@@ -52,8 +52,8 @@ def component_translation_file(component, language):
 def load_translations_files(translation_files):
     """Load and parse translation.json files."""
     loaded = {}
-    for translation_file in translation_files:
-        loaded[translation_file] = load_json(translation_file)
+    for component, translation_file in translation_files.items():
+        loaded[component] = load_json(translation_file)
 
     return loaded
 
@@ -93,19 +93,19 @@ async def async_get_component_resources(hass, language):
 
     # Calculate the missing components
     missing_components = components - set(translation_cache)
-    missing_files = set()
+    missing_files = {}
     for component in missing_components:
-        missing_files.add(component_translation_file(component, language))
+        missing_files[component] = component_translation_file(
+            component, language)
 
     # Load missing files
     if missing_files:
-        loaded = await hass.async_add_job(
+        loaded_translations = await hass.async_add_job(
             load_translations_files, missing_files)
 
-    # Update cache
-    for component in missing_components:
-        json_file = component_translation_file(component, language)
-        translation_cache[component] = loaded[json_file]
+        # Update cache
+        for component, translation_data in loaded_translations.items():
+            translation_cache[component] = translation_data
 
     resources = build_resources(translation_cache, components)
 

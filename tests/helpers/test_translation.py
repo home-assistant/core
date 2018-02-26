@@ -57,14 +57,17 @@ def test_load_translations_files(hass):
         'custom_components', 'switch', '.translations', 'test.en.json')
     file2 = hass.config.path(
         'custom_components', 'switch', '.translations', 'invalid.json')
-    assert translation.load_translations_files([file1, file2]) == {
-        file1: {
+    assert translation.load_translations_files({
+        'switch.test': file1,
+        'invalid': file2
+    }) == {
+        'switch.test': {
             'state': {
                 'string1': 'Value 1',
                 'string2': 'Value 2',
             }
         },
-        file2: {},
+        'invalid': {},
     }
 
 
