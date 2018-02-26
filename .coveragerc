@@ -508,6 +508,7 @@ omit =
     homeassistant/components/notify/simplepush.py
     homeassistant/components/notify/slack.py
     homeassistant/components/notify/smtp.py
+    homeassistant/components/notify/synology_chat.py
     homeassistant/components/notify/syslog.py
     homeassistant/components/notify/telegram.py
     homeassistant/components/notify/telstra.py
@@ -564,6 +565,7 @@ omit =
     homeassistant/components/sensor/filesize.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
+    homeassistant/components/sensor/folder.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
     homeassistant/components/sensor/fritzbox_netmonitor.py
     homeassistant/components/sensor/gearbest.py
@@ -622,12 +624,14 @@ omit =
     homeassistant/components/sensor/serial.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/shodan.py
+    homeassistant/components/sensor/simulated.py
     homeassistant/components/sensor/skybeacon.py
     homeassistant/components/sensor/sma.py
     homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/sochain.py
     homeassistant/components/sensor/sonarr.py
     homeassistant/components/sensor/speedtest.py
+    homeassistant/components/sensor/spotcrime.py
     homeassistant/components/sensor/steam_online.py
     homeassistant/components/sensor/supervisord.py
     homeassistant/components/sensor/swiss_hydrological_data.py

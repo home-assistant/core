@@ -31,6 +31,8 @@ NO_TIMEOUT = {
     re.compile(r'^addons/[^/]*/rebuild$'),
     re.compile(r'^snapshots/.*/full$'),
     re.compile(r'^snapshots/.*/partial$'),
+    re.compile(r'^snapshots/[^/]*/upload$'),
+    re.compile(r'^snapshots/[^/]*/download$'),
 }
 
 NO_AUTH = {

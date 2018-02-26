@@ -115,7 +115,7 @@ class OpenGarageCover(CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        if self._state == STATE_UNKNOWN:
+        if self._state in [STATE_UNKNOWN, STATE_OFFLINE]:
             return None
         return self._state in [STATE_CLOSED, STATE_OPENING]
 

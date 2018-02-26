@@ -1,4 +1,4 @@
-"""Support for Apple Homekit.
+"""Support for Apple HomeKit.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/homekit/
@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, CONF_PORT,
-    TEMP_CELSIUS, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 
@@ -21,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 _RE_VALID_PINCODE = re.compile(r"^(\d{3}-\d{2}-\d{3})$")
 
 DOMAIN = 'homekit'
-REQUIREMENTS = ['HAP-python==1.1.5']
+REQUIREMENTS = ['HAP-python==1.1.7']
 
 BRIDGE_NAME = 'Home Assistant'
 CONF_PIN_CODE = 'pincode'
@@ -30,7 +31,7 @@ HOMEKIT_FILE = '.homekit.state'
 
 
 def valid_pin(value):
-    """Validate pincode value."""
+    """Validate pin code value."""
     match = _RE_VALID_PINCODE.findall(value.strip())
     if match == []:
         raise vol.Invalid("Pin must be in the format: '123-45-678'")
@@ -47,14 +48,14 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the homekit component."""
-    _LOGGER.debug("Begin setup homekit")
+    """Setup the HomeKit component."""
+    _LOGGER.debug("Begin setup HomeKit")
 
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
     pin = str.encode(conf.get(CONF_PIN_CODE))
 
-    homekit = Homekit(hass, port)
+    homekit = HomeKit(hass, port)
     homekit.setup_bridge(pin)
 
     hass.bus.async_listen_once(
@@ -63,7 +64,7 @@ def async_setup(hass, config):
 
 
 def import_types():
-    """Import all types from files in the homekit dir."""
+    """Import all types from files in the HomeKit dir."""
     _LOGGER.debug("Import type files.")
     # pylint: disable=unused-variable
     from .covers import Window  # noqa F401
@@ -74,7 +75,8 @@ def import_types():
 def get_accessory(hass, state):
     """Take state and return an accessory object if supported."""
     if state.domain == 'sensor':
-        if state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == TEMP_CELSIUS:
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if unit == TEMP_CELSIUS or unit == TEMP_FAHRENHEIT:
             _LOGGER.debug("Add \"%s\" as \"%s\"",
                           state.entity_id, 'TemperatureSensor')
             return TYPES['TemperatureSensor'](hass, state.entity_id,
@@ -90,11 +92,11 @@ def get_accessory(hass, state):
     return None
 
 
-class Homekit():
-    """Class to handle all actions between homekit and Home Assistant."""
+class HomeKit():
+    """Class to handle all actions between HomeKit and Home Assistant."""
 
     def __init__(self, hass, port):
-        """Initialize a homekit object."""
+        """Initialize a HomeKit object."""
         self._hass = hass
         self._port = port
         self.bridge = None
@@ -103,8 +105,7 @@ class Homekit():
     def setup_bridge(self, pin):
         """Setup the bridge component to track all accessories."""
         from .accessories import HomeBridge
-        self.bridge = HomeBridge(BRIDGE_NAME, pincode=pin)
-        self.bridge.set_accessory_info('homekit.bridge')
+        self.bridge = HomeBridge(BRIDGE_NAME, 'homekit.bridge', pin)
 
     def start_driver(self, event):
         """Start the accessory driver."""
