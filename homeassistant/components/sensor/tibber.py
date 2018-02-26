@@ -15,9 +15,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 
 REQUIREMENTS = ['pyTibber==0.3.0']
@@ -39,22 +39,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     tibber_connection = tibber.Tibber(config[CONF_ACCESS_TOKEN],
                                       websession=async_get_clientsession(hass))
 
-    @asyncio.coroutine
-    def add_devices(*_):
-        """Add Tibber sensors."""
-        try:
-            yield from tibber_connection.update_info()
-            dev = []
-            for home in tibber_connection.get_homes():
-                yield from home.update_info()
-                dev.append(TibberSensor(home))
-            async_add_devices(dev, True)
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-            _LOGGER.error("Retrying in 15 minutes: %s", err)
-            async_call_later(hass, 15*60, add_devices)
+    try:
+        yield from tibber_connection.update_info()
+        dev = []
+        for home in tibber_connection.get_homes():
+            yield from home.update_info()
+            dev.append(TibberSensor(home))
+    except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+        raise PlatformNotReady
 
-    yield from add_devices()
-
+    async_add_devices(dev, True)
 
 class TibberSensor(Entity):
     """Representation of an Tibber sensor."""
