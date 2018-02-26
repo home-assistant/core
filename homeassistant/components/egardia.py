@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_PORT, CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_NAME,
     EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pythonegardia==1.0.36']
+REQUIREMENTS = ['pythonegardia==1.0.38']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +40,14 @@ NOTIFICATION_ID = 'egardia_notification'
 NOTIFICATION_TITLE = 'Egardia'
 ATTR_DISCOVER_DEVICES = 'egardia_sensor'
 
+SERVER_CODE_SCHEMA = vol.Schema({
+    vol.Optional('arm'): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional('disarm'): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional('home'): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional('triggered'): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional('ignore'): vol.All(cv.ensure_list, [cv.string])
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
@@ -48,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_REPORT_SERVER_CODES): vol.All(cv.ensure_list),
+        vol.Optional(CONF_REPORT_SERVER_CODES): SERVER_CODE_SCHEMA,
         vol.Optional(CONF_REPORT_SERVER_ENABLED,
                      default=DEFAULT_REPORT_SERVER_ENABLED): cv.boolean,
         vol.Optional(CONF_REPORT_SERVER_PORT,
