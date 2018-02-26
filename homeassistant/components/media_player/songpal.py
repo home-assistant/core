@@ -147,14 +147,16 @@ class SongpalDevice(MediaPlayerDevice):
             volumes = await self.dev.get_volume_information()
             if not volumes:
                 _LOGGER.error("Got no volume controls, bailing out")
+                self._available = False
                 return
+
             if len(volumes) > 1:
                 _LOGGER.warning("Got %s volume controls, using the first one",
                                 volumes)
-                return
 
             volume = volumes.pop()
             _LOGGER.debug("Current volume: %s", volume)
+
             self._volume_max = volume.maxVolume
             self._volume_min = volume.minVolume
             self._volume = volume.volume
@@ -173,7 +175,7 @@ class SongpalDevice(MediaPlayerDevice):
         except SongpalException as ex:
             # if we were available, print out the exception
             if self._available:
-                _LOGGER.error("Got an exception %s", ex, exc_info=True)
+                _LOGGER.error("Got an exception: %s", ex)
             self._available = False
 
     async def async_select_source(self, source):
