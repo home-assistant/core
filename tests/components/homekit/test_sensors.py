@@ -12,6 +12,7 @@ from tests.common import get_test_home_assistant
 def test_calc_temperature():
     """Test if temperature in Celsius is calculated correctly."""
     assert calc_temperature(STATE_UNKNOWN) is None
+    assert calc_temperature('test') is None
 
     assert calc_temperature('20') == 20
     assert calc_temperature('20.12', TEMP_CELSIUS) == 20.12

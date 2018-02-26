@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.const import (
-    STATE_UNKNOWN, ATTR_UNIT_OF_MEASUREMENT, TEMP_FAHRENHEIT, TEMP_CELSIUS)
+    ATTR_UNIT_OF_MEASUREMENT, TEMP_FAHRENHEIT, TEMP_CELSIUS)
 from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
@@ -21,21 +21,19 @@ def calc_temperature(state, unit=TEMP_CELSIUS):
     Always return temperature as Celsius value.
     Conversion is handled on the device.
     """
-    if state == STATE_UNKNOWN:
+    try:
+        value = float(state)
+    except ValueError:
         return None
 
-    if unit == TEMP_FAHRENHEIT:
-        value = round((float(state) - 32) / 1.8, 2)
-    else:
-        value = float(state)
-    return value
+    return round((value - 32) / 1.8, 2) if unit == TEMP_FAHRENHEIT else value
 
 
 @TYPES.register('TemperatureSensor')
 class TemperatureSensor(HomeAccessory):
     """Generate a TemperatureSensor accessory for a temperature sensor.
 
-    Sensor entity must return temperature in °C, °F or STATE_UNKNOWN.
+    Sensor entity must return temperature in °C, °F.
     """
 
     def __init__(self, hass, entity_id, display_name):
