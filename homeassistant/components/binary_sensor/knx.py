@@ -25,6 +25,7 @@ CONF_DEFAULT_HOOK = 'on'
 CONF_COUNTER = 'counter'
 CONF_DEFAULT_COUNTER = 1
 CONF_ACTION = 'action'
+CONF_RESET_AFTER = 'reset_after'
 
 CONF__ACTION = 'turn_off_action'
 
@@ -48,6 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE_CLASS): cv.string,
     vol.Optional(CONF_SIGNIFICANT_BIT, default=CONF_DEFAULT_SIGNIFICANT_BIT):
         cv.positive_int,
+    vol.Optional(CONF_RESET_AFTER): cv.positive_int,
     vol.Optional(CONF_AUTOMATION): AUTOMATIONS_SCHEMA,
 })
 
@@ -81,7 +83,8 @@ def async_add_devices_config(hass, config, async_add_devices):
         name=name,
         group_address=config.get(CONF_ADDRESS),
         device_class=config.get(CONF_DEVICE_CLASS),
-        significant_bit=config.get(CONF_SIGNIFICANT_BIT))
+        significant_bit=config.get(CONF_SIGNIFICANT_BIT),
+        reset_after=config.get(CONF_RESET_AFTER))
     hass.data[DATA_KNX].xknx.devices.add(binary_sensor)
 
     entity = KNXBinarySensor(hass, binary_sensor)
