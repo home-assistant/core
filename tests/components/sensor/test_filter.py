@@ -75,3 +75,26 @@ class TestFilterSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test')
         self.assertEqual(18.05, round(float(state.state), 2))
+    
+    def test_throttle(self):
+        """Test if filter throttle works."""
+        config = {
+            'sensor': {
+                'platform': 'filter',
+                'name': 'test',
+                'entity_id': 'sensor.test_monitored',
+                'filters': [{
+                    'filter': 'throttle',
+                    'window_size': 3,
+                    }]
+            }
+        }
+        with assert_setup_component(1):
+            assert setup_component(self.hass, 'sensor', config)
+
+        for value in self.values:
+            self.hass.states.set(config['sensor']['entity_id'], value)
+            self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test')
+        self.assertEqual('21', state.state)
