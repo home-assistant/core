@@ -463,7 +463,8 @@ class FitbitSensor(Entity):
                         hours -= 12
                     elif hours == 0:
                         hours = 12
-                    self._state = '{}:{} {}'.format(hours, minutes, setting)
+                    self._state = '{}:{:02d} {}'.format(hours, minutes,
+                                                        setting)
                 else:
                     self._state = raw_state
             else:
