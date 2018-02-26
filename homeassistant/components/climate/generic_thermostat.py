@@ -127,6 +127,7 @@ class GenericThermostat(ClimateDevice):
         self._target_temp_high = target_temp
         self._saved_target_temp_low = target_temp
         self._target_temp_low = target_temp
+        self._has_auto_mode = False
 
         if ac_entity_id:
             self._operation_list.append(STATE_COOL)
@@ -140,6 +141,7 @@ class GenericThermostat(ClimateDevice):
                 SUPPORT_TARGET_TEMPERATURE_HIGH | \
                 SUPPORT_TARGET_TEMPERATURE_LOW
             self._operation_list.append(STATE_AUTO)
+            self._has_auto_mode = True
             self._saved_target_temp_high = target_temp_high
             self._saved_target_temp_low = target_temp_low
             self._target_temp_high = target_temp_high
@@ -185,7 +187,7 @@ class GenericThermostat(ClimateDevice):
         old_state = yield from async_get_last_state(self.hass,
                                                     self.entity_id)
         if old_state is not None:
-            if STATE_AUTO in self.operation_list:
+            if self._has_auto_mode:
                 if old_state.attributes.get(ATTR_TARGET_TEMP_LOW) \
                         is not None:
                     if self._target_temp_low is None:
@@ -230,7 +232,7 @@ class GenericThermostat(ClimateDevice):
         if self._current_operation not in self.operation_list:
             self.set_operation_mode(STATE_OFF)
 
-        if STATE_AUTO in self.operation_list and \
+        if self._has_auto_mode and \
                 (self._target_temp_low + self._hot_tolerance >=
                  self._target_temp_high - self._cold_tolerance):
             _LOGGER.error("Low and high too close."
@@ -244,10 +246,6 @@ class GenericThermostat(ClimateDevice):
             return STATE_OFF
         if self.is_on:
             if self.current_operation == STATE_AUTO:
-                if self._is_heating and self._is_cooling:
-                    # Emergency shut off
-                    _LOGGER.error("Both heat and cool on, turning off")
-                    self.set_operation_mode(STATE_OFF)
                 if self._is_heating:
                     return STATE_HEAT
                 if self._is_cooling:
@@ -285,7 +283,7 @@ class GenericThermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if STATE_AUTO in self.operation_list:
+        if self._has_auto_mode:
             return None
         if self.ac_entity_id:
             return self._target_temp_high
@@ -295,14 +293,14 @@ class GenericThermostat(ClimateDevice):
     @property
     def target_temperature_high(self):
         """Return the highbound target temperature we try to reach."""
-        if STATE_AUTO not in self.operation_list:
+        if not self._has_auto_mode:
             return None
         return self._target_temp_high
 
     @property
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
-        if STATE_AUTO not in self.operation_list:
+        if not self._has_auto_mode:
             return None
         return self._target_temp_low
 
@@ -330,7 +328,7 @@ class GenericThermostat(ClimateDevice):
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        if STATE_AUTO in self.operation_list:
+        if self._has_auto_mode:
             if kwargs.get(ATTR_TARGET_TEMP_HIGH) is not None and \
                     kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
                 self._target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
@@ -413,6 +411,7 @@ class GenericThermostat(ClimateDevice):
 
         if self.current_operation == STATE_OFF:
             return
+
         if self.min_cycle_duration:
             if self.ac_entity_id:
                 if self._is_cooling:
@@ -463,6 +462,11 @@ class GenericThermostat(ClimateDevice):
                     self._cold_tolerance
                 if too_cold:
                     self._heater_turn_on()
+
+        if self._is_heating and self._is_cooling:
+            # Emergency shut off
+            _LOGGER.error("Both heat and cool on, turning off")
+            self.set_operation_mode(STATE_OFF)
 
     @property
     def is_on(self):
@@ -537,7 +541,7 @@ class GenericThermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away mode on by setting it on away hold indefinitely."""
-        _LOGGER.info('Turning on away mode')
+        _LOGGER.debug('Turning on away mode')
         self._is_away = True
         self._saved_target_temp_low = self._target_temp_low
         self._target_temp_low = self._away_temp_heat
@@ -548,7 +552,7 @@ class GenericThermostat(ClimateDevice):
 
     def turn_away_mode_off(self):
         """Turn away off."""
-        _LOGGER.info('Turning off away mode')
+        _LOGGER.debug('Turning off away mode')
         self._is_away = False
         self._target_temp_high = self._saved_target_temp_high
         self._target_temp_low = self._saved_target_temp_low
