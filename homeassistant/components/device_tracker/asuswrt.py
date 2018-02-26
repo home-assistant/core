@@ -283,8 +283,7 @@ class SshConnection(_Connection):
             lines = self._ssh.before.split(b'\n')[1:-1]
             return [line.decode('utf-8') for line in lines]
         except exceptions.EOF as err:
-            _LOGGER.error("Connection refused. SSH enabled? Check known_hosts "
-                          "under the homeassistant user home directory.")
+            _LOGGER.error("Connection refused. %s", self._ssh.before)
             self.disconnect()
             return None
         except pxssh.ExceptionPxssh as err:
@@ -302,10 +301,10 @@ class SshConnection(_Connection):
 
         self._ssh = pxssh.pxssh()
         if self._ssh_key:
-            self._ssh.login(self._host, self._username,
+            self._ssh.login(self._host, self._username, quiet=False,
                             ssh_key=self._ssh_key, port=self._port)
         else:
-            self._ssh.login(self._host, self._username,
+            self._ssh.login(self._host, self._username, quiet=False,
                             password=self._password, port=self._port)
 
         super().connect()
