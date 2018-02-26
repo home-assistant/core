@@ -35,7 +35,7 @@ def valid_pin(value):
     match = re.match(_RE_VALID_PINCODE, str(value).strip())
     if not match:
         raise vol.Invalid("Pin must be in the format: '123-45-678'")
-    return match
+    return match.group(0)
 
 
 CONFIG_SCHEMA = vol.Schema({
