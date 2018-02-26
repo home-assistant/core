@@ -91,21 +91,21 @@ async def async_get_component_resources(hass, language):
     # Get the set of components
     components = hass.config.components
 
-    # Load missing files
-    missing = set()
-    for component in components:
-        if component not in translation_cache:
-            missing.add(component_translation_file(component, language))
+    # Calculate the missing components
+    missing_components = components - set(translation_cache)
+    missing_files = set()
+    for component in missing_components:
+        missing_files.add(component_translation_file(component, language))
 
-    if missing:
+    # Load missing files
+    if missing_files:
         loaded = await hass.async_add_job(
-            load_translations_files, missing)
+            load_translations_files, missing_files)
 
     # Update cache
-    for component in components:
-        if component not in translation_cache:
-            json_file = component_translation_file(component, language)
-            translation_cache[component] = loaded[json_file]
+    for component in missing_components:
+        json_file = component_translation_file(component, language)
+        translation_cache[component] = loaded[json_file]
 
     resources = build_resources(translation_cache, components)
 
