@@ -1,4 +1,4 @@
-c"""
+"""
 Interfaces with Egardia/Woonveilig alarm control panel.
 
 For more details about this platform, please refer to the documentation at
