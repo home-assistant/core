@@ -46,6 +46,7 @@ PATCHES = {}
 C_HEAD = 'bold'
 ERROR_STR = 'General Errors'
 
+
 @callback
 def mock_cb(*args):
     """Callback that returns None."""
