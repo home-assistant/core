@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MODEL, default=None): vol.In(
+    vol.Optional(CONF_MODEL): vol.In(
         ['zhimi.airpurifier.m1',
          'zhimi.airpurifier.m2',
          'zhimi.airpurifier.ma1',
@@ -43,7 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'zhimi.airpurifier.v5',
          'zhimi.airpurifier.v6',
          'zhimi.humidifier.v1',
-         'zhimi.humidifier.ca1', None]),
+         'zhimi.humidifier.ca1',
+         ]),
 
 })
 
