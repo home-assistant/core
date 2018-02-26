@@ -70,7 +70,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # Create handler
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
-    device = ChuangmiIr(host, token)
+    device = ChuangmiIr(host, token, 0, 0, False)
 
     # Check that we can communicate with device.
     try:
