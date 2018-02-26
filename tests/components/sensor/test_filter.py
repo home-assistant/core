@@ -1,6 +1,8 @@
 """The test for the data filter sensor platform."""
 import unittest
 
+from homeassistant.components.sensor.filter import (
+    LowPassFilter, OutlierFilter, ThrottleFilter)
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant, assert_setup_component
 
@@ -29,8 +31,8 @@ class TestFilterSensor(unittest.TestCase):
         with assert_setup_component(0):
             assert setup_component(self.hass, 'sensor', config)
 
-    def test_outlier(self):
-        """Test if filter outlier works."""
+    def test_chain(self):
+        """Test if filter chaining works."""
         config = {
             'sensor': {
                 'platform': 'filter',
@@ -39,6 +41,10 @@ class TestFilterSensor(unittest.TestCase):
                 'filters': [{
                     'filter': 'outlier',
                     'radius': 4.0
+                    }, {
+                        'filter': 'lowpass',
+                        'time_constant': 10,
+                        'precision': 2
                     }]
             }
         }
@@ -50,51 +56,36 @@ class TestFilterSensor(unittest.TestCase):
             self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test')
-        self.assertEqual('22.0', state.state)
+        self.assertEqual('20.25', state.state)
+
+    def test_outlier(self):
+        """Test if outlier filter works."""
+        filt = OutlierFilter(window_size=10,
+                             precision=2,
+                             entity=None,
+                             radius=4.0)
+        for state in self.values:
+            filtered = filt.filter_state(state)
+        self.assertEqual(22, filtered)
 
     def test_lowpass(self):
-        """Test if filter lowpass works."""
-        config = {
-            'sensor': {
-                'platform': 'filter',
-                'name': 'test',
-                'entity_id': 'sensor.test_monitored',
-                'filters': [{
-                    'filter': 'lowpass',
-                    'time_constant': 10,
-                    'precision': 2
-                    }]
-            }
-        }
-        with assert_setup_component(1):
-            assert setup_component(self.hass, 'sensor', config)
-
-        for value in self.values:
-            self.hass.states.set(config['sensor']['entity_id'], value)
-            self.hass.block_till_done()
-
-        state = self.hass.states.get('sensor.test')
-        self.assertEqual(18.05, round(float(state.state), 2))
+        """Test if lowpass filter works."""
+        filt = LowPassFilter(window_size=10,
+                             precision=2,
+                             entity=None,
+                             time_constant=10)
+        for state in self.values:
+            filtered = filt.filter_state(state)
+        self.assertEqual(18.05, filtered)
 
     def test_throttle(self):
-        """Test if filter throttle works."""
-        config = {
-            'sensor': {
-                'platform': 'filter',
-                'name': 'test',
-                'entity_id': 'sensor.test_monitored',
-                'filters': [{
-                    'filter': 'throttle',
-                    'window_size': 3,
-                    }]
-            }
-        }
-        with assert_setup_component(1):
-            assert setup_component(self.hass, 'sensor', config)
-
-        for value in self.values:
-            self.hass.states.set(config['sensor']['entity_id'], value)
-            self.hass.block_till_done()
-
-        state = self.hass.states.get('sensor.test')
-        self.assertEqual('21', state.state)
+        """Test if lowpass filter works."""
+        filt = ThrottleFilter(window_size=3,
+                              precision=2,
+                              entity=None)
+        filtered = []
+        for state in self.values:
+            new_state = filt.filter_state(state)
+            if not filt.skip:
+                filtered.append(new_state)
+        self.assertEqual([20, 21], filtered)
