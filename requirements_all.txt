@@ -24,7 +24,7 @@ attrs==17.4.0
 DoorBirdPy==0.1.2
 
 # homeassistant.components.homekit
-HAP-python==1.1.5
+HAP-python==1.1.7
 
 # homeassistant.components.isy994
 PyISY==1.1.0
