@@ -74,8 +74,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     timeout = config.get(CONF_TIMEOUT)
 
     try:
-        switch = RestSwitch(name, resource, method, headers, auth, body_on, body_off,
-                            is_on_template, timeout)
+        switch = RestSwitch(name, resource, method, headers, auth, body_on,
+                            body_off, is_on_template, timeout)
 
         req = yield from switch.get_device_state(hass)
         if req.status >= 400:
