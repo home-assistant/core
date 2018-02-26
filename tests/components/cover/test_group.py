@@ -41,9 +41,6 @@ class TestMultiCover(unittest.TestCase):
         with assert_setup_component(2, 'cover'):
             assert setup.setup_component(self.hass, 'cover', CONFIG)
 
-        self.hass.start()
-        self.hass.block_till_done()
-
         state = self.hass.states.get(GROUP_COVER)
         attr = state.attributes
 
@@ -57,9 +54,6 @@ class TestMultiCover(unittest.TestCase):
         """Test different current cover positions."""
         with assert_setup_component(2, 'cover'):
             setup.setup_component(self.hass, 'cover', CONFIG)
-
-        self.hass.start()
-        self.hass.block_till_done()
 
         self.assertEqual(self.hass.states.get(GROUP_COVER)
                          .attributes.get('current_position'), 100)
@@ -97,9 +91,6 @@ class TestMultiCover(unittest.TestCase):
         with assert_setup_component(2, 'cover'):
             assert setup.setup_component(self.hass, 'cover', CONFIG)
 
-        self.hass.start()
-        self.hass.block_till_done()
-
         self.hass.states.set(
             DEMO_TILT, 'open',
             {'current_tilt_position': 60, 'supported_features': 255})
@@ -120,9 +111,6 @@ class TestMultiCover(unittest.TestCase):
         """Test open cover function."""
         with assert_setup_component(2, 'cover'):
             assert setup.setup_component(self.hass, 'cover', CONFIG)
-
-        self.hass.start()
-        self.hass.block_till_done()
 
         cover.open_cover(self.hass, GROUP_COVER)
         self.hass.block_till_done()
@@ -146,9 +134,6 @@ class TestMultiCover(unittest.TestCase):
         with assert_setup_component(2, 'cover'):
             assert setup.setup_component(self.hass, 'cover', CONFIG)
 
-        self.hass.start()
-        self.hass.block_till_done()
-
         cover.close_cover(self.hass, GROUP_COVER)
         self.hass.block_till_done()
         for _ in range(10):
@@ -170,9 +155,6 @@ class TestMultiCover(unittest.TestCase):
         """Test stop cover function."""
         with assert_setup_component(2, 'cover'):
             assert setup.setup_component(self.hass, 'cover', CONFIG)
-
-        self.hass.start()
-        self.hass.block_till_done()
 
         cover.open_cover(self.hass, GROUP_COVER)
         self.hass.block_till_done()
@@ -200,9 +182,6 @@ class TestMultiCover(unittest.TestCase):
         with assert_setup_component(2, 'cover'):
             assert setup.setup_component(self.hass, 'cover', CONFIG)
 
-        self.hass.start()
-        self.hass.block_till_done()
-
         cover.set_cover_position(self.hass, 50, GROUP_COVER)
         self.hass.block_till_done()
         for _ in range(4):
@@ -225,9 +204,6 @@ class TestMultiCover(unittest.TestCase):
         with assert_setup_component(2, 'cover'):
             assert setup.setup_component(self.hass, 'cover', CONFIG)
 
-        self.hass.start()
-        self.hass.block_till_done()
-
         cover.open_cover_tilt(self.hass, GROUP_COVER)
         self.hass.block_till_done()
         for _ in range(5):
@@ -247,9 +223,6 @@ class TestMultiCover(unittest.TestCase):
         with assert_setup_component(2, 'cover'):
             assert setup.setup_component(self.hass, 'cover', CONFIG)
 
-        self.hass.start()
-        self.hass.block_till_done()
-
         cover.close_cover_tilt(self.hass, GROUP_COVER)
         self.hass.block_till_done()
         for _ in range(5):
@@ -268,9 +241,6 @@ class TestMultiCover(unittest.TestCase):
         """Test stop tilts function."""
         with assert_setup_component(2, 'cover'):
             assert setup.setup_component(self.hass, 'cover', CONFIG)
-
-        self.hass.start()
-        self.hass.block_till_done()
 
         cover.open_cover_tilt(self.hass, GROUP_COVER)
         self.hass.block_till_done()
@@ -294,9 +264,6 @@ class TestMultiCover(unittest.TestCase):
         """Test set tilt position function."""
         with assert_setup_component(2, 'cover'):
             assert setup.setup_component(self.hass, 'cover', CONFIG)
-
-        self.hass.start()
-        self.hass.block_till_done()
 
         cover.set_cover_tilt_position(self.hass, 80, GROUP_COVER)
         self.hass.block_till_done()
