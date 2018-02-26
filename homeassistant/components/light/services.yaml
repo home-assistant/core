@@ -176,6 +176,6 @@ xiaomi_miio_set_delayed_turn_off:
     entity_id:
       description: Name of the light entity.
       example: 'light.xiaomi_miio'
-    seconds:
-      description: Turn off delay in seconds.
-      example: 120
+    time_period:
+      description: Time period for the delayed turn off.
+      example: 5, '0:05', {'minutes': 5}

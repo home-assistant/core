@@ -33,11 +33,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MODEL, default=None): vol.In(
+    vol.Optional(CONF_MODEL): vol.In(
         ['philips.light.sread1',
          'philips.light.ceiling',
          'philips.light.zyceiling',
-         'philips.light.bulb', None]),
+         'philips.light.bulb']),
 })
 
 REQUIREMENTS = ['python-miio==0.3.6']
@@ -52,7 +52,7 @@ SUCCESS = ['ok']
 ATTR_MODEL = 'model'
 ATTR_SCENE = 'scene'
 ATTR_DELAYED_TURN_OFF = 'delayed_turn_off'
-ATTR_SECONDS = 'seconds'
+ATTR_TIME_PERIOD = 'time_period'
 
 SERVICE_SET_SCENE = 'xiaomi_miio_set_scene'
 SERVICE_SET_DELAYED_TURN_OFF = 'xiaomi_miio_set_delayed_turn_off'
@@ -67,8 +67,8 @@ SERVICE_SCHEMA_SET_SCENE = XIAOMI_MIIO_SERVICE_SCHEMA.extend({
 })
 
 SERVICE_SCHEMA_SET_DELAYED_TURN_OFF = XIAOMI_MIIO_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_SECONDS):
-        vol.All(vol.Coerce(int), vol.Range(min=0))
+    vol.Required(ATTR_TIME_PERIOD):
+        vol.All(cv.time_period, cv.positive_timedelta)
 })
 
 SERVICE_TO_METHOD = {
@@ -287,11 +287,11 @@ class XiaomiPhilipsGenericLight(Light):
             self._light.set_scene, scene)
 
     @asyncio.coroutine
-    def async_set_delayed_turn_off(self, seconds: int):
+    def async_set_delayed_turn_off(self, time_period: timedelta):
         """Set delay off. The unit is different per device."""
         yield from self._try_command(
             "Setting the delay off failed.",
-            self._light.delay_off, seconds)
+            self._light.delay_off, time_period.total_seconds())
 
     @staticmethod
     def translate(value, left_min, left_max, right_min, right_max):
