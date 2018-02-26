@@ -393,26 +393,31 @@ class XiaomiGenericDevice(FanEntity):
             "Turning the child lock of the miio device off failed.",
             self._device.set_child_lock, False)
 
+    # pylint: disable=no-self-use
     @asyncio.coroutine
     def async_set_led_on(self):
         """Turn the led on."""
         return
 
+    # pylint: disable=no-self-use
     @asyncio.coroutine
     def async_set_led_off(self):
         """Turn the led off."""
         return
 
+    # pylint: disable=no-self-use
     @asyncio.coroutine
     def async_set_favorite_level(self, level: int):
         """Set the favorite level."""
         return
 
+    # pylint: disable=no-self-use
     @asyncio.coroutine
     def async_set_led_brightness(self, brightness: int):
         """Set the led brightness."""
         return
 
+    # pylint: disable=no-self-use
     @asyncio.coroutine
     def async_set_target_humidity(self, humidity: int):
         """Set the target humidity."""
