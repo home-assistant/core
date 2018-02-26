@@ -273,27 +273,6 @@ class TestHistoryAverageSensor(unittest.TestCase):
         self.assertEqual(before_update1, sensor1.get_period())
         self.assertEqual(before_update2, sensor2.get_period())
 
-    def test_wrong_duration(self):
-        """Test when duration value is not a timedelta."""
-        self.start_hass()
-
-        config = {
-            'history': {
-            },
-            'sensor': {
-                'platform': 'history_average',
-                'entity_id': 'sensor.source',
-                'name': 'Test',
-                'start': '{{ now() }}',
-                'duration': 'TEST',
-            }
-        }
-
-        setup_component(self.hass, 'sensor', config)
-        self.assertEqual(self.hass.states.get('sensor.test'), None)
-        self.assertRaises(TypeError,
-                          setup_component(self.hass, 'sensor', config))
-
     def test_bad_template(self):
         """Test Exception when the template cannot be parsed."""
         self.start_hass()
