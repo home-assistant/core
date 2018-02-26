@@ -48,6 +48,7 @@ SERVICE_TO_METHOD = {
     SERVICE_TURN_OFF: {'method': 'async_turn_off'},
 }
 
+
 # pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
