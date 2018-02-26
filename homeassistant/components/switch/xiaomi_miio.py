@@ -30,8 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'qmi.powerstrip.v1',
          'zimi.powerstrip.v2',
          'chuangmi.plug.m1',
-         'chuangmi.plug.v2',
-         ]),
+         'chuangmi.plug.v2']),
 })
 
 REQUIREMENTS = ['python-miio==0.3.7']
