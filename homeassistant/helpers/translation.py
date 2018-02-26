@@ -117,13 +117,10 @@ async def async_get_component_resources(hass, language):
 @bind_hass
 async def async_get_translations(hass, language):
     """Return all backend translations."""
-    if language == 'en':
-        resources = await async_get_component_resources(hass, language)
-    else:
+    resources = await async_get_component_resources(hass, language)
+    if language != 'en':
         # Fetch the English resources, as a fallback for missing keys
-        resources = await async_get_component_resources(hass, 'en')
-        native_resources = await async_get_component_resources(
-            hass, language)
-        resources.update(native_resources)
+        base_resources = await async_get_component_resources(hass, 'en')
+        resources = {**base_resources, **resources}
 
     return resources
