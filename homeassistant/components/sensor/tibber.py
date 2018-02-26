@@ -50,6 +50,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     async_add_devices(dev, True)
 
+
 class TibberSensor(Entity):
     """Representation of an Tibber sensor."""
 
