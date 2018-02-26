@@ -75,7 +75,7 @@ class TestFilterSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test')
         self.assertEqual(18.05, round(float(state.state), 2))
-    
+
     def test_throttle(self):
         """Test if filter throttle works."""
         config = {
