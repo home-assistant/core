@@ -24,7 +24,7 @@ attrs==17.4.0
 DoorBirdPy==0.1.2
 
 # homeassistant.components.homekit
-HAP-python==1.1.5
+HAP-python==1.1.7
 
 # homeassistant.components.isy994
 PyISY==1.1.0
@@ -39,7 +39,7 @@ PyMVGLive==1.1.4
 PyMata==2.14
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.8.1
+PyXiaomiGateway==0.8.2
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
@@ -61,6 +61,9 @@ YesssSMS==0.1.1b3
 
 # homeassistant.components.abode
 abodepy==0.12.2
+
+# homeassistant.components.media_player.frontier_silicon
+afsapi==0.0.3
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
@@ -131,6 +134,9 @@ beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
 bellows==0.5.0
+
+# homeassistant.components.bmw_connected_drive
+bimmer_connected==0.3.0
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -295,9 +301,6 @@ freesms==0.1.2
 # homeassistant.components.switch.fritzdect
 fritzhome==1.0.4
 
-# homeassistant.components.media_player.frontier_silicon
-fsapi==0.0.7
-
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
 
@@ -353,7 +356,7 @@ hipnotify==1.0.8
 holidays==0.9.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180216.0
+home-assistant-frontend==20180221.1
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -410,7 +413,7 @@ influxdb==5.0.0
 insteonlocal==0.53
 
 # homeassistant.components.insteon_plm
-insteonplm==0.7.5
+insteonplm==0.8.2
 
 # homeassistant.components.verisure
 jsonpath==0.75
@@ -451,7 +454,7 @@ liffylights==0.9.4
 lightify==1.0.6.1
 
 # homeassistant.components.light.limitlessled
-limitlessled==1.0.8
+limitlessled==1.1.0
 
 # homeassistant.components.linode
 linode-api==4.1.4b2
@@ -625,7 +628,7 @@ py-canary==0.4.0
 py-cpuinfo==3.3.0
 
 # homeassistant.components.melissa
-py-melissa-climate==1.0.1
+py-melissa-climate==1.0.6
 
 # homeassistant.components.camera.synology
 py-synology==0.1.5
@@ -675,7 +678,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==1.0.3
+pychromecast==2.0.0
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -694,7 +697,7 @@ pycsspeechtts==1.0.2
 pydaikin==0.4
 
 # homeassistant.components.deconz
-pydeconz==28
+pydeconz==30
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -998,7 +1001,7 @@ pytouchline==0.7
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-# pytradfri[async]==4.1.0
+pytradfri[async]==4.1.0
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
@@ -1135,6 +1138,9 @@ somecomfort==0.5.0
 # homeassistant.components.sensor.speedtest
 speedtest-cli==2.0.0
 
+# homeassistant.components.sensor.spotcrime
+spotcrime==1.0.2
+
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
@@ -1150,7 +1156,7 @@ steamodd==4.21
 suds-py3==1.3.3.0
 
 # homeassistant.components.tahoma
-tahoma-api==0.0.11
+tahoma-api==0.0.13
 
 # homeassistant.components.sensor.tank_utility
 tank_utility==1.4.0
@@ -1211,7 +1217,7 @@ uvcclient==0.10.1
 venstarcolortouch==0.6
 
 # homeassistant.components.config.config_entries
-voluptuous-serialize==0.1
+voluptuous-serialize==1
 
 # homeassistant.components.volvooncall
 volvooncall==0.4.0

@@ -420,11 +420,11 @@ def test_proper_put_state_request(hue_client):
 
 
 # pylint: disable=invalid-name
-def perform_put_test_on_ceiling_lights(hass_hue, hue_client,
-                                       content_type='application/json'):
+async def perform_put_test_on_ceiling_lights(hass_hue, hue_client,
+                                             content_type='application/json'):
     """Test the setting of a light."""
     # Turn the office light off first
-    yield from hass_hue.services.async_call(
+    await hass_hue.services.async_call(
         light.DOMAIN, const.SERVICE_TURN_OFF,
         {const.ATTR_ENTITY_ID: 'light.ceiling_lights'},
         blocking=True)
@@ -433,14 +433,14 @@ def perform_put_test_on_ceiling_lights(hass_hue, hue_client,
     assert ceiling_lights.state == STATE_OFF
 
     # Go through the API to turn it on
-    office_result = yield from perform_put_light_state(
+    office_result = await perform_put_light_state(
         hass_hue, hue_client,
         'light.ceiling_lights', True, 56, content_type)
 
     assert office_result.status == 200
     assert 'application/json' in office_result.headers['content-type']
 
-    office_result_json = yield from office_result.json()
+    office_result_json = await office_result.json()
 
     assert len(office_result_json) == 2
 

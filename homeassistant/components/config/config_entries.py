@@ -8,7 +8,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
 
-REQUIREMENTS = ['voluptuous-serialize==0.1']
+REQUIREMENTS = ['voluptuous-serialize==1']
 
 
 @asyncio.coroutine
@@ -97,10 +97,10 @@ class ConfigManagerFlowIndexView(HomeAssistantView):
             flow for flow in hass.config_entries.flow.async_progress()
             if flow['source'] != config_entries.SOURCE_USER])
 
-    @asyncio.coroutine
     @RequestDataValidator(vol.Schema({
         vol.Required('domain'): str,
     }))
+    @asyncio.coroutine
     def post(self, request, data):
         """Handle a POST request."""
         hass = request.app['hass']
@@ -139,8 +139,8 @@ class ConfigManagerFlowResourceView(HomeAssistantView):
 
         return self.json(result)
 
-    @asyncio.coroutine
     @RequestDataValidator(vol.Schema(dict), allow_empty=True)
+    @asyncio.coroutine
     def post(self, request, flow_id, data):
         """Handle a POST request."""
         hass = request.app['hass']

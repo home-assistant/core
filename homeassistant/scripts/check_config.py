@@ -1,5 +1,5 @@
 """Script to ensure a configuration file exists."""
-import asyncio
+
 import argparse
 import logging
 import os
@@ -46,8 +46,7 @@ C_HEAD = 'bold'
 ERROR_STR = 'General Errors'
 
 
-@asyncio.coroutine
-def mock_coro(*args):
+async def mock_coro(*args):
     """Coroutine that returns None."""
     return None
 
@@ -181,8 +180,7 @@ def check(config_path):
     # pylint: disable=unused-variable
     def mock_get(comp_name):
         """Mock hass.loader.get_component to replace setup & setup_platform."""
-        @asyncio.coroutine
-        def mock_async_setup(*args):
+        async def mock_async_setup(*args):
             """Mock setup, only record the component name & config."""
             assert comp_name not in res['components'], \
                 "Components should contain a list of platforms"

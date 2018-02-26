@@ -4,7 +4,7 @@ Component to interface with binary sensors.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor/
 """
-import asyncio
+
 from datetime import timedelta
 import logging
 
@@ -47,13 +47,12 @@ DEVICE_CLASSES = [
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Track states and offer events for binary sensors."""
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
     return True
 
 

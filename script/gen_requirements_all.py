@@ -31,7 +31,6 @@ COMMENT_REQUIREMENTS = (
     'envirophat',
     'i2csense',
     'credstash',
-    'pytradfri',
     'bme680',
 )
 
@@ -111,7 +110,7 @@ URL_PIN = ('https://home-assistant.io/developers/code_review_platform/'
 CONSTRAINT_PATH = os.path.join(os.path.dirname(__file__),
                                '../homeassistant/package_constraints.txt')
 CONSTRAINT_BASE = """
-# Breaks Python 3.6 and is not needed for our supported Pythons
+# Breaks Python 3.6 and is not needed for our supported Python versions
 enum34==1000000000.0.0
 """
 

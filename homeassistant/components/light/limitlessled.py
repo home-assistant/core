@@ -19,7 +19,7 @@ from homeassistant.components.light import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import async_get_last_state
 
-REQUIREMENTS = ['limitlessled==1.0.8']
+REQUIREMENTS = ['limitlessled==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,9 @@ DEFAULT_TRANSITION = 0
 DEFAULT_VERSION = 6
 DEFAULT_FADE = False
 
-LED_TYPE = ['rgbw', 'rgbww', 'white', 'bridge-led']
+LED_TYPE = ['rgbw', 'rgbww', 'white', 'bridge-led', 'dimmer']
+
+EFFECT_NIGHT = 'night'
 
 RGB_BOUNDARY = 40
 
@@ -43,6 +45,7 @@ WHITE = [255, 255, 255]
 
 SUPPORT_LIMITLESSLED_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
                               SUPPORT_TRANSITION)
+SUPPORT_LIMITLESSLED_DIMMER = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
 SUPPORT_LIMITLESSLED_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
                             SUPPORT_FLASH | SUPPORT_RGB_COLOR |
                             SUPPORT_TRANSITION)
@@ -161,13 +164,20 @@ class LimitlessLEDGroup(Light):
         """Initialize a group."""
         from limitlessled.group.rgbw import RgbwGroup
         from limitlessled.group.white import WhiteGroup
+        from limitlessled.group.dimmer import DimmerGroup
         from limitlessled.group.rgbww import RgbwwGroup
         if isinstance(group, WhiteGroup):
             self._supported = SUPPORT_LIMITLESSLED_WHITE
+            self._effect_list = [EFFECT_NIGHT]
+        elif isinstance(group, DimmerGroup):
+            self._supported = SUPPORT_LIMITLESSLED_DIMMER
+            self._effect_list = []
         elif isinstance(group, RgbwGroup):
             self._supported = SUPPORT_LIMITLESSLED_RGB
+            self._effect_list = [EFFECT_COLORLOOP, EFFECT_NIGHT, EFFECT_WHITE]
         elif isinstance(group, RgbwwGroup):
             self._supported = SUPPORT_LIMITLESSLED_RGBWW
+            self._effect_list = [EFFECT_COLORLOOP, EFFECT_NIGHT, EFFECT_WHITE]
 
         self.group = group
         self.config = config
@@ -227,6 +237,11 @@ class LimitlessLEDGroup(Light):
         """Flag supported features."""
         return self._supported
 
+    @property
+    def effect_list(self):
+        """Return the list of supported effects for this light."""
+        return self._effect_list
+
     # pylint: disable=arguments-differ
     @state(False)
     def turn_off(self, transition_time, pipeline, **kwargs):
@@ -239,6 +254,12 @@ class LimitlessLEDGroup(Light):
     @state(True)
     def turn_on(self, transition_time, pipeline, **kwargs):
         """Turn on (or adjust property of) a group."""
+        # The night effect does not need a turned on light
+        if kwargs.get(ATTR_EFFECT) == EFFECT_NIGHT:
+            if EFFECT_NIGHT in self._effect_list:
+                pipeline.night_light()
+            return
+
         pipeline.on()
 
         # Set up transition.
@@ -278,7 +299,7 @@ class LimitlessLEDGroup(Light):
             pipeline.flash(duration=duration)
 
         # Add effects.
-        if ATTR_EFFECT in kwargs and self._supported & SUPPORT_EFFECT:
+        if ATTR_EFFECT in kwargs and self._effect_list:
             if kwargs[ATTR_EFFECT] == EFFECT_COLORLOOP:
                 from limitlessled.presets import COLORLOOP
                 self.repeating = True

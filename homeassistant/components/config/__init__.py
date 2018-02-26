@@ -13,7 +13,8 @@ from homeassistant.util.yaml import load_yaml, dump
 
 DOMAIN = 'config'
 DEPENDENCIES = ['http']
-SECTIONS = ('core', 'customize', 'group', 'hassbian', 'automation', 'script')
+SECTIONS = ('core', 'customize', 'group', 'hassbian', 'automation', 'script',
+            'entity_registry')
 ON_DEMAND = ('zwave',)
 FEATURE_FLAGS = ('config_entries',)
 
@@ -159,7 +160,7 @@ class EditKeyBasedConfigView(BaseEditConfigView):
 
     def _get_value(self, hass, data, config_key):
         """Get value."""
-        return data.get(config_key, {})
+        return data.get(config_key)
 
     def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
