@@ -13,8 +13,7 @@ import async_timeout
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA, DOMAIN as PARENT_DOMAIN)
+from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
     ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE,
@@ -42,7 +41,7 @@ CONF_NETWORK = 'network'
 CONF_STATIONS_LIST = 'stations'
 
 DEFAULT_ENDPOINT = 'https://api.citybik.es/{uri}'
-DOMAIN = 'citybikes'
+PLATFORM = 'citybikes'
 
 MONITORED_NETWORKS = 'monitored-networks'
 
@@ -133,8 +132,8 @@ def async_citybikes_request(hass, uri, schema):
 def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up the CityBikes platform."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {MONITORED_NETWORKS: {}}
+    if PLATFORM not in hass.data:
+        hass.data[PLATFORM] = {MONITORED_NETWORKS: {}}
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -149,14 +148,14 @@ def async_setup_platform(hass, config, async_add_devices,
         network_id = yield from CityBikesNetwork.get_closest_network_id(
             hass, latitude, longitude)
 
-    if network_id not in hass.data[DOMAIN][MONITORED_NETWORKS]:
+    if network_id not in hass.data[PLATFORM][MONITORED_NETWORKS]:
         network = CityBikesNetwork(hass, network_id)
-        hass.data[DOMAIN][MONITORED_NETWORKS][network_id] = network
+        hass.data[PLATFORM][MONITORED_NETWORKS][network_id] = network
         hass.async_add_job(network.async_refresh)
         async_track_time_interval(hass, network.async_refresh,
                                   SCAN_INTERVAL)
     else:
-        network = hass.data[DOMAIN][MONITORED_NETWORKS][network_id]
+        network = hass.data[PLATFORM][MONITORED_NETWORKS][network_id]
 
     yield from network.ready.wait()
 
@@ -244,19 +243,16 @@ class CityBikesStation(Entity):
         self._network = network
         self._station_id = station_id
         self._station_data = {}
-        self._base_name = base_name
+        if base_name:
+            uid = "_".join([network.network_id, base_name, station_id])
+        else:
+            uid = "_".join([network.network_id, station_id])
+        self.entity_id = ENTITY_ID_FORMAT.format(slugify(uid))
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._station_data.get(ATTR_FREE_BIKES, STATE_UNKNOWN)
-
-    @property
-    def entity_id(self):
-        """Return the entity ID."""
-        return "{}.{}_{}".format(PARENT_DOMAIN,
-                                 slugify(self._network.network_id),
-                                 slugify(self._station_id))
 
     @property
     def name(self):
@@ -284,7 +280,6 @@ class CityBikesStation(Entity):
                 ATTR_LATITUDE: self._station_data[ATTR_LATITUDE],
                 ATTR_LONGITUDE: self._station_data[ATTR_LONGITUDE],
                 ATTR_EMPTY_SLOTS: self._station_data[ATTR_EMPTY_SLOTS],
-                ATTR_FRIENDLY_NAME: self._station_data[ATTR_NAME],
                 ATTR_TIMESTAMP: self._station_data[ATTR_TIMESTAMP],
             }
         return {ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION}
