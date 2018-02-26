@@ -1,16 +1,18 @@
 """
 Adds a simulated sensor.
 
-For more details about this platform, refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.simulated/
 """
+import asyncio
 import datetime as datetime
 import math
-import random
+from random import Random
 import logging
 
 import voluptuous as vol
 
+import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_NAME
@@ -60,7 +62,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     phase = config.get(CONF_PHASE)
     fwhm = config.get(CONF_FWHM)
     seed = config.get(CONF_SEED)
-    random.seed(seed)
 
     sensor = SimulatedSensor(
         name, unit, amp, mean, period, phase, fwhm, seed
@@ -81,13 +82,14 @@ class SimulatedSensor(Entity):
         self._phase = phase  # phase in degrees
         self._fwhm = fwhm
         self._seed = seed
-        self._start_time = datetime.datetime.now()
+        self._random = Random(seed)  # A local seeded Random
+        self._start_time = dt_util.utcnow()
         self._state = None
 
     def time_delta(self):
         """"Return the time delta."""
         dt0 = self._start_time
-        dt1 = datetime.datetime.now()
+        dt1 = dt_util.utcnow()
         return dt1 - dt0
 
     def signal_calc(self):
@@ -98,11 +100,15 @@ class SimulatedSensor(Entity):
         period = self._period*1e6  # to milliseconds
         fwhm = self._fwhm/2
         phase = math.radians(self._phase)
-        periodic = amp * (math.sin((2*math.pi*time_delta/period) + phase))
-        noise = random.gauss(mu=0, sigma=fwhm)
+        if period == 0:
+            periodic = 0
+        else:
+            periodic = amp * (math.sin((2*math.pi*time_delta/period) + phase))
+        noise = self._random.gauss(mu=0, sigma=fwhm)
         return mean + periodic + noise
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Update the sensor."""
         self._state = self.signal_calc()
 
