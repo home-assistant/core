@@ -25,12 +25,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MODEL, default=None): vol.In(
+    vol.Optional(CONF_MODEL): vol.In(
         ['chuangmi.plug.v1',
          'qmi.powerstrip.v1',
          'zimi.powerstrip.v2',
          'chuangmi.plug.m1',
-         'chuangmi.plug.v2', None]),
+         'chuangmi.plug.v2',
+         ]),
 
 })
 
