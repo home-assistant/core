@@ -4,7 +4,6 @@ Allows the creation of a sensor that filters state property.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.filter/
 """
-import asyncio
 import logging
 import statistics
 from collections import deque, Counter
@@ -16,7 +15,7 @@ from homeassistant.core import callback
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, ATTR_ENTITY_ID,
-    ATTR_ICON, STATE_UNKNOWN)
+    ATTR_ICON, STATE_UNKNOWN, STATE_UNAVAILABLE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
@@ -71,8 +70,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the template sensors."""
     name = config.get(CONF_NAME)
     entity_id = config.get(CONF_ENTITY_ID)
@@ -114,19 +113,18 @@ class SensorFilter(Entity):
         self._filters = filters
         self._icon = ICON
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
         def filter_sensor_state_listener(entity, old_state, new_state):
             """Handle device state changes."""
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
-            self._icon = new_state.attributes.get(ATTR_ICON, ICON)
+            self._icon = new_state.attributes.get(ATTR_ICON, self._icon)
 
             self._state = new_state.state
 
-            if self._state == STATE_UNKNOWN:
+            if self._state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
                 return
 
             for filt in self._filters:
@@ -143,9 +141,8 @@ class SensorFilter(Entity):
                                     self._state)
                 finally:
                     self._state = filtered_state
-                    filt.states.append(filtered_state)
 
-            self.async_schedule_update_ha_state(True)
+            self.async_schedule_update_ha_state()
 
         async_track_state_change(
             self.hass, self._entity, filter_sensor_state_listener)
@@ -234,9 +231,10 @@ class Filter(object):
     def filter_state(self, new_state):
         """Implement a common interface for filters."""
         filtered = self._filter_state(new_state)
-        if self.precision is None:
-            return filtered
-        return round(filtered, self.precision)
+        if self.precision is not None:
+            filtered = round(filtered, self.precision)
+        self.states.append(filtered)
+        return filtered
 
 
 class OutlierFilter(Filter):
@@ -291,14 +289,12 @@ class LowPassFilter(Filter):
         """Implement the low pass filter."""
         new_state = float(new_state)
 
-        try:
-            new_weight = 1.0 / self._time_constant
-            prev_weight = 1.0 - new_weight
-            filtered = prev_weight * self.states[-1] + new_weight * new_state
-        except IndexError:
-            # if we don't have enough states to run the filter
-            # just accept the new value
-            filtered = new_state
+        if not self.states:
+            return new_state
+
+        new_weight = 1.0 / self._time_constant
+        prev_weight = 1.0 - new_weight
+        filtered = prev_weight * self.states[-1] + new_weight * new_state
 
         return filtered
 
