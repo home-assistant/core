@@ -1156,7 +1156,7 @@ steamodd==4.21
 suds-py3==1.3.3.0
 
 # homeassistant.components.tahoma
-tahoma-api==0.0.12
+tahoma-api==0.0.13
 
 # homeassistant.components.sensor.tank_utility
 tank_utility==1.4.0
