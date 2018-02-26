@@ -164,6 +164,55 @@ def test_entity_ids():
     ]
 
 
+def test_entity_domain():
+    """Test entity domain validation."""
+    schema = vol.Schema(cv.entity_domain('sensor'))
+
+    options = (
+        'invalid_entity',
+        'cover.demo',
+    )
+
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            print(value)
+            schema(value)
+
+    assert schema('sensor.LIGHT') == 'sensor.light'
+
+
+def test_entities_domain():
+    """Test entities domain validation."""
+    schema = vol.Schema(cv.entities_domain('sensor'))
+
+    options = (
+        None,
+        '',
+        'invalid_entity',
+        ['sensor.light', 'cover.demo'],
+        ['sensor.light', 'sensor_invalid'],
+    )
+
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    options = (
+        'sensor.light',
+        ['SENSOR.light'],
+        ['sensor.light', 'sensor.demo']
+    )
+    for value in options:
+        schema(value)
+
+    assert schema('sensor.LIGHT, sensor.demo ') == [
+        'sensor.light', 'sensor.demo'
+    ]
+    assert schema(['sensor.light', 'SENSOR.demo']) == [
+        'sensor.light', 'sensor.demo'
+    ]
+
+
 def test_ensure_list_csv():
     """Test ensure_list_csv."""
     schema = vol.Schema(cv.ensure_list_csv)
@@ -453,6 +502,7 @@ def test_deprecated(caplog):
     )
 
     deprecated_schema({'venus': True})
+    # pylint: disable=len-as-condition
     assert len(caplog.records) == 0
 
     deprecated_schema({'mars': True})
