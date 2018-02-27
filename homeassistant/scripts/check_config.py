@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from typing import Dict, List, Sequence
 
+from homeassistant.core import callback
 from homeassistant import bootstrap, loader, setup, config as config_util
 import homeassistant.util.yaml as yaml
 from homeassistant.exceptions import HomeAssistantError
@@ -35,9 +36,9 @@ MOCKS = {
                                    bootstrap._LOGGER.error),
 }
 SILENCE = (
-    'homeassistant.bootstrap.async_enable_logging',
+    'homeassistant.bootstrap.async_enable_logging',  # callback
     'homeassistant.bootstrap.clear_secret_cache',
-    'homeassistant.bootstrap.async_register_signal_handling',
+    'homeassistant.bootstrap.async_register_signal_handling',  # callback
     'homeassistant.config.process_ha_config_upgrade',
 )
 PATCHES = {}
@@ -46,8 +47,9 @@ C_HEAD = 'bold'
 ERROR_STR = 'General Errors'
 
 
-async def mock_coro(*args):
-    """Coroutine that returns None."""
+@callback
+def mock_cb(*args):
+    """Callback that returns None."""
     return None
 
 
@@ -246,7 +248,7 @@ def check(config_path):
 
     # Patches to skip functions
     for sil in SILENCE:
-        PATCHES[sil] = patch(sil, return_value=mock_coro())
+        PATCHES[sil] = patch(sil, return_value=mock_cb())
 
     # Patches with local mock functions
     for key, val in MOCKS.items():
