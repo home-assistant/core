@@ -28,6 +28,23 @@ SUPPORT_ECOVACS = (
 
 ECOVACS_FAN_SPEED_LIST = ['normal', 'high']
 
+# These consts represent bot statuses that can come from the `sucks` library
+# TODO: These should probably be exposed in the sucks library and just imported
+STATUS_AUTO = 'auto'
+STATUS_EDGE = 'edge'
+STATUS_SPOT = 'spot'
+STATUS_SINGLE_ROOM = 'single_room'
+STATUS_STOP = 'stop'
+STATUS_RETURNING = 'returning'
+STATUS_CHARGING = 'charging'
+STATUS_IDLE = 'idle'
+STATUS_ERROR = 'error'
+
+# Any status that represents active cleaning
+STATUSES_CLEANING = [STATUS_AUTO, STATUS_EDGE, STATUS_SPOT, STATUS_SINGLE_ROOM]
+# Any status that represents sitting on the charger
+STATUSES_CHARGING = [STATUS_CHARGING, STATUS_IDLE]
+
 ICON = "mdi:roomba"
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -52,47 +69,69 @@ class EcovacsVacuum(VacuumDevice):
             # In case there is no nickname defined, use the device id
             self._name = '{}'.format(self.device.vacuum['did'])
 
-        self._clean_status = None
-        self._charge_status = None
+        self._status = None
         self._fan_speed = None
         self._battery_level = None
-        self._state = None
         _LOGGER.debug("Vacuum initialized: %s", self.name)
 
     @asyncio.coroutine
     def async_added_to_hass(self) -> None:
         # Fire off some queries to get initial state
         from sucks import VacBotCommand
+        self.device.statusEvents.subscribe(self.on_status)
+        self.device.batteryEvents.subscribe(self.on_battery)
+        self.device.errorEvents.subscribe(self.on_error)
+
+        # TODO: Once sucks does internal state handling, these shouldn't be
+        # TODO: necessary. Perhaps this will be replaced by a single call to
+        # TODO: turn on state handling, or turn on each feature to track?
         self.device.run(VacBotCommand('GetCleanState', {}))
         self.device.run(VacBotCommand('GetChargeState', {}))
         self.device.run(VacBotCommand('GetBatteryInfo', {}))
 
-    def update(self):
-        self._clean_status = self.device.clean_status
-        self._charge_status = self.device.charge_status
-        self._fan_speed = 'unknown' # TODO: implement in sucks
+    def on_status(self, status):
+        """Handle the status of the robot changing."""
+        self._status = status
+        self.schedule_update_ha_state()
 
-        if (hasattr(self.device, 'battery_status')
-            and self.device.battery_status is not None):
-            self._battery_level = self.device.battery_status * 100
+    def on_battery(self, battery_level):
+        """Handle the battery level changing on the robot."""
+        self._battery_level = battery_level * 100
+        self.schedule_update_ha_state()
+
+    def on_error(self, error):
+        """Handle an error event from the robot.
+
+        This will not change the entity's state. If the error caused the state
+        to change, that will come through as a separate on_status event
+        """
+        self.hass.bus.fire('ecovacs_error', {
+            'entity_id': self.entity_id,
+            'error': error
+        })
+
+    @property
+    def should_poll(self) -> bool:
+        """Return True if entity has to be polled for state.
+        """
+        return False
+
+    @property
+    def unique_id(self) -> str:
+        """Return an unique ID."""
+        if hasattr(self.device.vacuum, 'did'):
+            return self.device.vacuum['did']
+        return None
 
     @property
     def is_on(self):
         """Return true if vacuum is currently cleaning."""
-        if self._clean_status is None:
-            return False
-        else:
-            return (
-                self._clean_status != 'stop'
-                and self._charge_status != 'charging')
+        return self._status in STATUSES_CLEANING
 
     @property
     def is_charging(self):
         """Return true if vacuum is currently charging."""
-        if self._charge_status is None:
-            return False
-        else:
-            return self._charge_status == 'charging'
+        return self._status in STATUSES_CHARGING
 
     @property
     def name(self):
@@ -172,7 +211,7 @@ class EcovacsVacuum(VacuumDevice):
         if self.is_on:
             from sucks import Clean
             self.device.run(Clean(
-                mode=self._clean_status, speed=fan_speed))
+                mode=self._status, speed=fan_speed))
 
     def send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
@@ -185,8 +224,6 @@ class EcovacsVacuum(VacuumDevice):
         data = super().state_attributes
 
         # TODO: attribute names should be consts
-        # TODO: Maybe don't need these attributes at all?
-        data['clean_status'] = self._clean_status
-        data['charge_status'] = self._charge_status
+        data['status'] = self._status
 
         return data
