@@ -588,7 +588,7 @@ class MQTT(object):
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg):
         """Message received callback."""
-        self.hass.async_add_job(self._mqtt_handle_message, msg)
+        self.hass.add_job(self._mqtt_handle_message, msg)
 
     @callback
     def _mqtt_handle_message(self, msg):
