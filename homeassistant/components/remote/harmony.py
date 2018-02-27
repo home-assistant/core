@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             port)
 
         # Ignore hub name when checking if this hub is known - ip and port only
-        if host and host[1:] in (h.host for h in DEVICES):
+        if host[1:] in ((h.host, h.port) for h in DEVICES):
             _LOGGER.debug("Discovered host already known: %s", host)
             return
     elif CONF_HOST in config:
@@ -139,7 +139,7 @@ class HarmonyRemote(remote.RemoteDevice):
         _LOGGER.debug("HarmonyRemote device init started for: %s", name)
         self._name = name
         self.host = host
-        self._port = port
+        self.port = port
         self._state = None
         self._current_activity = None
         self._default_activity = activity
