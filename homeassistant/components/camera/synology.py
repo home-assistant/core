@@ -39,7 +39,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices,
+                         discovery_info=None):
     """Set up a Synology IP Camera."""
     url = config.get(CONF_URL)
     username = config.get(CONF_USERNAME)
@@ -90,7 +91,8 @@ class SynologyCamera(Camera):
         self._verify_ssl = verify_ssl
 
         self._camera = self._surveillance.get_camera(camera_id)
-        self._motion_setting = self._surveillance.get_motion_setting(camera_id)
+        self._motion_setting = self._surveillance.get_motion_setting(
+            camera_id)
         self.is_streaming = self._camera.is_enabled
 
     def camera_image(self):
@@ -138,7 +140,7 @@ class SynologyCamera(Camera):
                 surveillance.update()
                 self._surveillance = surveillance
             except (requests.exceptions.RequestException, ValueError):
-                _LOGGER.exception("Error when initializing SurveillanceStation")
+                _LOGGER.exception("Error initializing SurveillanceStation")
 
     def update(self):
         """Update the status of the camera."""
