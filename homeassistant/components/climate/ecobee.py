@@ -169,18 +169,12 @@ class Thermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        desired_heat = self.thermostat['runtime']['desiredHeat'] / 10.0
-        desired_cool = self.thermostat['runtime']['desiredCool'] / 10.0
-
         if self.current_operation == STATE_AUTO:
-            if desired_heat == desired_cool:
-                return desired_heat
-            else:
-                return None
+            return None
         if self.current_operation == STATE_HEAT:
-            return desired_heat
+            return self.thermostat['runtime']['desiredHeat'] / 10.0
         elif self.current_operation == STATE_COOL:
-            return desired_cool
+            return self.thermostat['runtime']['desiredCool'] / 10.0
         return None
 
     @property
@@ -214,7 +208,7 @@ class Thermostat(ClimateDevice):
                 if event['type'] == 'hold':
                     if event['holdClimateRef'] == 'away':
                         if int(event['endDate'][0:4]) - \
-                           int(event['startDate'][0:4]) <= 1:
+                                int(event['startDate'][0:4]) <= 1:
                             # A temporary hold from away climate is a hold
                             return 'away'
                         # A permanent hold from away climate
@@ -236,7 +230,7 @@ class Thermostat(ClimateDevice):
     def current_operation(self):
         """Return current operation."""
         if self.operation_mode == 'auxHeatOnly' or \
-           self.operation_mode == 'heatPump':
+                        self.operation_mode == 'heatPump':
             return STATE_HEAT
         return self.operation_mode
 
@@ -352,7 +346,7 @@ class Thermostat(ClimateDevice):
                                        self.hold_preference())
         _LOGGER.debug("Setting ecobee hold_temp to: heat=%s, is=%s, "
                       "cool=%s, is=%s", heat_temp, isinstance(
-                          heat_temp, (int, float)), cool_temp,
+            heat_temp, (int, float)), cool_temp,
                       isinstance(cool_temp, (int, float)))
 
         self.update_without_throttle = True
@@ -383,7 +377,7 @@ class Thermostat(ClimateDevice):
         heatCoolMinDelta property.
         https://www.ecobee.com/home/developer/api/examples/ex5.shtml
         """
-        if self.current_operation == STATE_HEAT or self.current_operation ==\
+        if self.current_operation == STATE_HEAT or self.current_operation == \
                 STATE_COOL:
             heat_temp = temp
             cool_temp = temp
@@ -400,7 +394,8 @@ class Thermostat(ClimateDevice):
         temp = kwargs.get(ATTR_TEMPERATURE)
 
         if self.current_operation == STATE_AUTO and (low_temp is not None or
-                                                     high_temp is not None):
+                                                             high_temp is
+                                                         not None):
             self.set_auto_temp_hold(low_temp, high_temp)
         elif temp is not None:
             self.set_temp_hold(temp)
