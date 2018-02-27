@@ -178,4 +178,4 @@ xiaomi_miio_set_delayed_turn_off:
       example: 'light.xiaomi_miio'
     time_period:
       description: Time period for the delayed turn off.
-      example: 5, '0:05', {'minutes': 5}
+      example: "5, '0:05', {'minutes': 5}"
