@@ -8,6 +8,8 @@ import asyncio
 from functools import partial
 import logging
 from math import ceil
+from datetime import timedelta
+import datetime
 
 import voluptuous as vol
 
@@ -18,16 +20,24 @@ from homeassistant.components.light import (
 
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN, )
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Philips Light'
-PLATFORM = 'xiaomi_miio'
+DATA_KEY = 'light.xiaomi_miio'
+
+CONF_MODEL = 'model'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_MODEL): vol.In(
+        ['philips.light.sread1',
+         'philips.light.ceiling',
+         'philips.light.zyceiling',
+         'philips.light.bulb']),
 })
 
 REQUIREMENTS = ['python-miio==0.3.7']
@@ -36,25 +46,38 @@ REQUIREMENTS = ['python-miio==0.3.7']
 CCT_MIN = 1
 CCT_MAX = 100
 
+DELAYED_TURN_OFF_MAX_DEVIATION = 4
+
 SUCCESS = ['ok']
 ATTR_MODEL = 'model'
 ATTR_SCENE = 'scene'
+ATTR_DELAYED_TURN_OFF = 'delayed_turn_off'
+ATTR_TIME_PERIOD = 'time_period'
 
 SERVICE_SET_SCENE = 'xiaomi_miio_set_scene'
+SERVICE_SET_DELAYED_TURN_OFF = 'xiaomi_miio_set_delayed_turn_off'
 
 XIAOMI_MIIO_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-SERVICE_SCHEMA_SCENE = XIAOMI_MIIO_SERVICE_SCHEMA.extend({
+SERVICE_SCHEMA_SET_SCENE = XIAOMI_MIIO_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_SCENE):
         vol.All(vol.Coerce(int), vol.Clamp(min=1, max=4))
 })
 
+SERVICE_SCHEMA_SET_DELAYED_TURN_OFF = XIAOMI_MIIO_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_TIME_PERIOD):
+        vol.All(cv.time_period, cv.positive_timedelta)
+})
+
 SERVICE_TO_METHOD = {
+    SERVICE_SET_DELAYED_TURN_OFF: {
+        'method': 'async_set_delayed_turn_off',
+        'schema': SERVICE_SCHEMA_SET_DELAYED_TURN_OFF},
     SERVICE_SET_SCENE: {
         'method': 'async_set_scene',
-        'schema': SERVICE_SCHEMA_SCENE}
+        'schema': SERVICE_SCHEMA_SET_SCENE},
 }
 
 
@@ -63,46 +86,48 @@ SERVICE_TO_METHOD = {
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the light from config."""
     from miio import Device, DeviceException
-    if PLATFORM not in hass.data:
-        hass.data[PLATFORM] = {}
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {}
 
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
+    model = config.get(CONF_MODEL)
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
-    try:
-        light = Device(host, token)
-        device_info = light.info()
-        _LOGGER.info("%s %s %s initialized",
-                     device_info.model,
-                     device_info.firmware_version,
-                     device_info.hardware_version)
+    if model is None:
+        try:
+            miio_device = Device(host, token)
+            device_info = miio_device.info()
+            model = device_info.model
+            _LOGGER.info("%s %s %s detected",
+                         model,
+                         device_info.firmware_version,
+                         device_info.hardware_version)
+        except DeviceException:
+            raise PlatformNotReady
 
-        if device_info.model == 'philips.light.sread1':
-            from miio import PhilipsEyecare
-            light = PhilipsEyecare(host, token)
-            device = XiaomiPhilipsEyecareLamp(name, light, device_info)
-        elif device_info.model == 'philips.light.ceiling':
-            from miio import Ceil
-            light = Ceil(host, token)
-            device = XiaomiPhilipsCeilingLamp(name, light, device_info)
-        elif device_info.model == 'philips.light.bulb':
-            from miio import PhilipsBulb
-            light = PhilipsBulb(host, token)
-            device = XiaomiPhilipsLightBall(name, light, device_info)
-        else:
-            _LOGGER.error(
-                'Unsupported device found! Please create an issue at '
-                'https://github.com/rytilahti/python-miio/issues '
-                'and provide the following data: %s', device_info.model)
-            return False
+    if model == 'philips.light.sread1':
+        from miio import PhilipsEyecare
+        light = PhilipsEyecare(host, token)
+        device = XiaomiPhilipsEyecareLamp(name, light, model)
+    elif model in ['philips.light.ceiling', 'philips.light.zyceiling']:
+        from miio import Ceil
+        light = Ceil(host, token)
+        device = XiaomiPhilipsCeilingLamp(name, light, model)
+    elif model == 'philips.light.bulb':
+        from miio import PhilipsBulb
+        light = PhilipsBulb(host, token)
+        device = XiaomiPhilipsLightBall(name, light, model)
+    else:
+        _LOGGER.error(
+            'Unsupported device found! Please create an issue at '
+            'https://github.com/rytilahti/python-miio/issues '
+            'and provide the following data: %s', model)
+        return False
 
-    except DeviceException:
-        raise PlatformNotReady
-
-    hass.data[PLATFORM][host] = device
+    hass.data[DATA_KEY][host] = device
     async_add_devices([device], update_before_add=True)
 
     @asyncio.coroutine
@@ -113,10 +138,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                   if key != ATTR_ENTITY_ID}
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         if entity_ids:
-            target_devices = [dev for dev in hass.data[PLATFORM].values()
+            target_devices = [dev for dev in hass.data[DATA_KEY].values()
                               if dev.entity_id in entity_ids]
         else:
-            target_devices = hass.data[PLATFORM].values()
+            target_devices = hass.data[DATA_KEY].values()
 
         update_tasks = []
         for target_device in target_devices:
@@ -136,10 +161,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class XiaomiPhilipsGenericLight(Light):
     """Representation of a Xiaomi Philips Light."""
 
-    def __init__(self, name, light, device_info):
+    def __init__(self, name, light, model):
         """Initialize the light device."""
         self._name = name
-        self._device_info = device_info
+        self._model = model
 
         self._brightness = None
         self._color_temp = None
@@ -147,7 +172,9 @@ class XiaomiPhilipsGenericLight(Light):
         self._light = light
         self._state = None
         self._state_attrs = {
-            ATTR_MODEL: self._device_info.model,
+            ATTR_MODEL: self._model,
+            ATTR_SCENE: None,
+            ATTR_DELAYED_TURN_OFF: None,
         }
 
     @property
@@ -217,14 +244,14 @@ class XiaomiPhilipsGenericLight(Light):
 
             if result:
                 self._brightness = brightness
-
-        self._state = yield from self._try_command(
-            "Turning the light on failed.", self._light.on)
+        else:
+            yield from self._try_command(
+                "Turning the light on failed.", self._light.on)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        self._state = yield from self._try_command(
+        yield from self._try_command(
             "Turning the light off failed.", self._light.off)
 
     @asyncio.coroutine
@@ -236,9 +263,20 @@ class XiaomiPhilipsGenericLight(Light):
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.is_on
-            self._brightness = ceil((255/100.0) * state.brightness)
+            self._brightness = ceil((255 / 100.0) * state.brightness)
+
+            delayed_turn_off = self.delayed_turn_off_timestamp(
+                state.delay_off_countdown,
+                dt.utcnow(),
+                self._state_attrs[ATTR_DELAYED_TURN_OFF])
+
+            self._state_attrs.update({
+                ATTR_SCENE: state.scene,
+                ATTR_DELAYED_TURN_OFF: delayed_turn_off,
+            })
 
         except DeviceException as ex:
+            self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @asyncio.coroutine
@@ -248,6 +286,13 @@ class XiaomiPhilipsGenericLight(Light):
             "Setting a fixed scene failed.",
             self._light.set_scene, scene)
 
+    @asyncio.coroutine
+    def async_set_delayed_turn_off(self, time_period: timedelta):
+        """Set delay off. The unit is different per device."""
+        yield from self._try_command(
+            "Setting the delay off failed.",
+            self._light.delay_off, time_period.total_seconds())
+
     @staticmethod
     def translate(value, left_min, left_max, right_min, right_max):
         """Map a value from left span to right span."""
@@ -255,6 +300,28 @@ class XiaomiPhilipsGenericLight(Light):
         right_span = right_max - right_min
         value_scaled = float(value - left_min) / float(left_span)
         return int(right_min + (value_scaled * right_span))
+
+    @staticmethod
+    def delayed_turn_off_timestamp(countdown: int,
+                                   current: datetime,
+                                   previous: datetime):
+        """Update the turn off timestamp only if necessary."""
+        if countdown > 0:
+            new = current.replace(microsecond=0) + \
+                  timedelta(seconds=countdown)
+
+            if previous is None:
+                return new
+
+            lower = timedelta(seconds=-DELAYED_TURN_OFF_MAX_DEVIATION)
+            upper = timedelta(seconds=DELAYED_TURN_OFF_MAX_DEVIATION)
+            diff = previous - new
+            if lower < diff < upper:
+                return previous
+
+            return new
+
+        return None
 
 
 class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
@@ -339,7 +406,7 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
                 self._brightness = brightness
 
         else:
-            self._state = yield from self._try_command(
+            yield from self._try_command(
                 "Turning the light on failed.", self._light.on)
 
     @asyncio.coroutine
@@ -351,13 +418,24 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.is_on
-            self._brightness = ceil((255/100.0) * state.brightness)
+            self._brightness = ceil((255 / 100.0) * state.brightness)
             self._color_temp = self.translate(
                 state.color_temperature,
                 CCT_MIN, CCT_MAX,
                 self.max_mireds, self.min_mireds)
 
+            delayed_turn_off = self.delayed_turn_off_timestamp(
+                state.delay_off_countdown,
+                dt.utcnow(),
+                self._state_attrs[ATTR_DELAYED_TURN_OFF])
+
+            self._state_attrs.update({
+                ATTR_SCENE: state.scene,
+                ATTR_DELAYED_TURN_OFF: delayed_turn_off,
+            })
+
         except DeviceException as ex:
+            self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
