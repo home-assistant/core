@@ -365,23 +365,23 @@ class Thermostat(ClimateDevice):
 
     def set_temp_hold(self, temp):
         """Set temperature hold in modes other than auto.
+
         Ecobee API: It is good practice to set the heat and cool hold
         temperatures to be the same, if the thermostat is in either heat, cool,
         auxHeatOnly, or off mode. If the thermostat is in auto mode, an
         additional rule is required. The cool hold temperature must be greater
         than the heat hold temperature by at least the amount in the
         heatCoolMinDelta property.
-        https://www.ecobee.com/home/developer/api/examples/ex5.shtml"""
-
+        https://www.ecobee.com/home/developer/api/examples/ex5.shtml
+        """
         if self.current_operation == STATE_HEAT or self.current_operation ==\
                 STATE_COOL:
             heat_temp = temp
             cool_temp = temp
         else:
-            heat_cool_delta = self.thermostat['settings'][
-                                  'heatCoolMinDelta'] / 10
-            heat_temp = temp - heat_cool_delta
-            cool_temp = temp + heat_cool_delta
+            delta = self.thermostat['settings']['heatCoolMinDelta'] / 10
+            heat_temp = temp - delta
+            cool_temp = temp + delta
         self.set_auto_temp_hold(heat_temp, cool_temp)
 
     def set_temperature(self, **kwargs):
