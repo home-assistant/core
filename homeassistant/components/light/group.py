@@ -48,17 +48,15 @@ SUPPORT_GROUP_LIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_devices, discovery_info=None) -> None:
     """Initialize light.group platform."""
-    async_add_devices(
-        [GroupLight(hass, config.get(CONF_NAME), config[CONF_ENTITIES])], True)
+    async_add_devices([GroupLight(config.get(CONF_NAME),
+                                  config[CONF_ENTITIES])])
 
 
 class GroupLight(light.Light):
     """Representation of a group light."""
 
-    def __init__(self, hass: HomeAssistantType, name: str,
-                 entity_ids: List[str]) -> None:
+    def __init__(self, name: str, entity_ids: List[str]) -> None:
         """Initialize a group light."""
-        self.hass = hass  # type: HomeAssistantType
         self._name = name  # type: str
         self._entity_ids = entity_ids  # type: List[str]
         self._state = STATE_UNAVAILABLE  # type: str
@@ -163,15 +161,10 @@ class GroupLight(light.Light):
 
     async def _async_send_message(self, service, **kwargs):
         """Send a message to all entities in the group."""
-        tasks = []
         for entity_id in self._entity_ids:
             payload = deepcopy(kwargs)
             payload[ATTR_ENTITY_ID] = entity_id
-            tasks.append(self.hass.services.async_call(
-                light.DOMAIN, service, payload, blocking=True))
-
-        if tasks:
-            await asyncio.wait(tasks, loop=self.hass.loop)
+            await self.hass.services.async_call(light.DOMAIN, service, payload)
 
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to all lights in the group."""
@@ -191,10 +184,10 @@ class GroupLight(light.Light):
         self._brightness = _reduce_attribute(on_states, ATTR_BRIGHTNESS)
 
         self._xy_color = _reduce_attribute(
-            on_states, ATTR_XY_COLOR, reduce=_average_tuple)
+            on_states, ATTR_XY_COLOR, reduce=_mean_tuple)
 
         self._rgb_color = _reduce_attribute(
-            on_states, ATTR_RGB_COLOR, reduce=_average_tuple)
+            on_states, ATTR_RGB_COLOR, reduce=_mean_tuple)
         if self._rgb_color is not None:
             self._rgb_color = tuple(map(int, self._rgb_color))
 
@@ -244,13 +237,13 @@ def _find_state_attributes(states: List[State],
             yield value
 
 
-def _average_int(*args):
-    """Return the average of the supplied values."""
+def _mean_int(*args):
+    """Return the mean of the supplied values."""
     return int(sum(args) / len(args))
 
 
-def _average_tuple(*args):
-    """Return the average values along the columns of the supplied values."""
+def _mean_tuple(*args):
+    """Return the mean values along the columns of the supplied values."""
     return tuple(sum(l) / len(l) for l in zip(*args))
 
 
@@ -259,7 +252,7 @@ def _average_tuple(*args):
 def _reduce_attribute(states: List[State],
                       key: str,
                       default: Optional[Any] = None,
-                      reduce: Callable[..., Any] = _average_int) -> Any:
+                      reduce: Callable[..., Any] = _mean_int) -> Any:
     """Find the first attribute matching key from states.
 
     If none are found, return default.
