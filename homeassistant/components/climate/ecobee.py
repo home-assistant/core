@@ -364,18 +364,24 @@ class Thermostat(ClimateDevice):
         _LOGGER.info("Setting fan mode to: %s", fan_mode)
 
     def set_temp_hold(self, temp):
-        """Set temperature hold in modes other than auto."""
-        # Set arbitrary range when not in auto mode
-        if self.current_operation == STATE_HEAT:
+        """Set temperature hold in modes other than auto.
+        Ecobee API: It is good practice to set the heat and cool hold
+        temperatures to be the same, if the thermostat is in either heat, cool,
+        auxHeatOnly, or off mode. If the thermostat is in auto mode, an
+        additional rule is required. The cool hold temperature must be greater
+        than the heat hold temperature by at least the amount in the
+        heatCoolMinDelta property.
+        https://www.ecobee.com/home/developer/api/examples/ex5.shtml"""
+
+        if self.current_operation == STATE_HEAT or \
+                        self.current_operation == STATE_COOL:
             heat_temp = temp
-            cool_temp = temp + 20
-        elif self.current_operation == STATE_COOL:
-            heat_temp = temp - 20
             cool_temp = temp
         else:
-            # In auto mode set temperature between
-            heat_temp = temp - 10
-            cool_temp = temp + 10
+            heat_cool_delta = self.thermostat['settings'][
+                                  'heatCoolMinDelta'] / 10
+            heat_temp = temp - heat_cool_delta
+            cool_temp = temp + heat_cool_delta
         self.set_auto_temp_hold(heat_temp, cool_temp)
 
     def set_temperature(self, **kwargs):
