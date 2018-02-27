@@ -465,6 +465,7 @@ omit =
     homeassistant/components/media_player/russound_rio.py
     homeassistant/components/media_player/russound_rnet.py
     homeassistant/components/media_player/snapcast.py
+    homeassistant/components/media_player/songpal.py
     homeassistant/components/media_player/sonos.py
     homeassistant/components/media_player/spotify.py
     homeassistant/components/media_player/squeezebox.py
