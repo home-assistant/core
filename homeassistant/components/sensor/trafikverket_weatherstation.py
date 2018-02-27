@@ -113,17 +113,12 @@ class TrafikverketWeatherStation(Entity):
 
         # Checking JSON respons.
         try:
-            # loa (load) = loaded json
-            loa = json.loads(post.text)
-
-            # mea = measurement
-            mea = loa["RESPONSE"]["RESULT"][0]
-
-            # wea = weather station
-            wea = mea["WeatherStation"][0]["Measurement"]
+            data = json.loads(post.text)
+            result = data["RESPONSE"]["RESULT"][0]
+            final = result["WeatherStation"][0]["Measurement"]
         except KeyError:
             _LOGGER.error("Incorrect weather station or API key.")
             return None
 
         # air_vs_road contains "Air" or "Road" depending on user input.
-        self._state = wea[air_vs_road]["Temp"]
+        self._state = final[air_vs_road]["Temp"]
