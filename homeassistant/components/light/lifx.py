@@ -169,13 +169,15 @@ def find_hsbk(**kwargs):
     if ATTR_RGB_COLOR in kwargs:
         hue, saturation, brightness = \
             color_util.color_RGB_to_hsv(*kwargs[ATTR_RGB_COLOR])
-        saturation = convert_8_to_16(saturation)
-        brightness = convert_8_to_16(brightness)
+        hue = hue / 360 * 65535
+        saturation = saturation / 100 * 65535
+        brightness = brightness / 100 * 65535
         kelvin = 3500
 
     if ATTR_XY_COLOR in kwargs:
         hue, saturation = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
-        saturation = convert_8_to_16(saturation)
+        hue = hue / 360 * 65535
+        saturation = saturation / 100 * 65535
         kelvin = 3500
 
     if ATTR_COLOR_TEMP in kwargs:
@@ -612,8 +614,11 @@ class LIFXColor(LIFXLight):
         """Return the RGB value."""
         hue, sat, bri, _ = self.device.color
 
-        return color_util.color_hsv_to_RGB(
-            hue, convert_16_to_8(sat), convert_16_to_8(bri))
+        hue = hue / 65535 * 360
+        sat = sat / 65535 * 100
+        bri = bri / 65535 * 100
+
+        return color_util.color_hsv_to_RGB(hue, sat, bri)
 
 
 class LIFXStrip(LIFXColor):

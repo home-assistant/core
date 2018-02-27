@@ -44,16 +44,16 @@ class TestColorUtil(unittest.TestCase):
         self.assertEqual((0, 0, 0),
                          color_util.color_RGB_to_hsv(0, 0, 0))
 
-        self.assertEqual((0, 0, 255),
+        self.assertEqual((0, 0, 100),
                          color_util.color_RGB_to_hsv(255, 255, 255))
 
-        self.assertEqual((43690, 255, 255),
+        self.assertEqual((240, 100, 100),
                          color_util.color_RGB_to_hsv(0, 0, 255))
 
-        self.assertEqual((21845, 255, 255),
+        self.assertEqual((120, 100, 100),
                          color_util.color_RGB_to_hsv(0, 255, 0))
 
-        self.assertEqual((0, 255, 255),
+        self.assertEqual((0, 100, 100),
                          color_util.color_RGB_to_hsv(255, 0, 0))
 
     def test_color_hsv_to_RGB(self):
@@ -62,16 +62,16 @@ class TestColorUtil(unittest.TestCase):
                          color_util.color_hsv_to_RGB(0, 0, 0))
 
         self.assertEqual((255, 255, 255),
-                         color_util.color_hsv_to_RGB(0, 0, 255))
+                         color_util.color_hsv_to_RGB(0, 0, 100))
 
         self.assertEqual((0, 0, 255),
-                         color_util.color_hsv_to_RGB(43690, 255, 255))
+                         color_util.color_hsv_to_RGB(240, 100, 100))
 
         self.assertEqual((0, 255, 0),
-                         color_util.color_hsv_to_RGB(21845, 255, 255))
+                         color_util.color_hsv_to_RGB(120, 100, 100))
 
         self.assertEqual((255, 0, 0),
-                         color_util.color_hsv_to_RGB(0, 255, 255))
+                         color_util.color_hsv_to_RGB(0, 100, 100))
 
     def test_color_hsb_to_RGB(self):
         """Test color_hsb_to_RGB."""
@@ -92,19 +92,19 @@ class TestColorUtil(unittest.TestCase):
 
     def test_color_xy_to_hs(self):
         """Test color_xy_to_hs."""
-        self.assertEqual((8609, 255),
+        self.assertEqual((47.294, 100),
                          color_util.color_xy_to_hs(1, 1))
 
-        self.assertEqual((6950, 32),
+        self.assertEqual((38.182, 12.941),
                          color_util.color_xy_to_hs(.35, .35))
 
-        self.assertEqual((62965, 255),
+        self.assertEqual((345.882, 100),
                          color_util.color_xy_to_hs(1, 0))
 
-        self.assertEqual((21845, 255),
+        self.assertEqual((120, 100),
                          color_util.color_xy_to_hs(0, 1))
 
-        self.assertEqual((40992, 255),
+        self.assertEqual((225.176, 100),
                          color_util.color_xy_to_hs(0, 0))
 
     def test_rgb_hex_to_rgb_list(self):
