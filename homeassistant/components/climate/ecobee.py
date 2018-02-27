@@ -373,8 +373,8 @@ class Thermostat(ClimateDevice):
         heatCoolMinDelta property.
         https://www.ecobee.com/home/developer/api/examples/ex5.shtml"""
 
-        if self.current_operation == STATE_HEAT or \
-                        self.current_operation == STATE_COOL:
+        if self.current_operation == STATE_HEAT or self.current_operation ==\
+                STATE_COOL:
             heat_temp = temp
             cool_temp = temp
         else:
