@@ -364,3 +364,17 @@ bluesound_clear_sleep_timer:
     entity_id:
       description: Name(s) of entities that will have the timer cleared.
       example: 'media_player.bluesound_livingroom'
+
+songpal_set_sound_setting:
+  description: Change sound setting.
+  
+  fields:
+    entity_id:
+      description: Target device.
+      example: 'media_player.my_soundbar'
+    name:
+      description: Name of the setting.
+      example: 'nightMode'
+    value:
+      description: Value to set.
+      example: 'on'

@@ -958,6 +958,9 @@ python-roku==3.1.5
 # homeassistant.components.sensor.sochain
 python-sochain-api==0.0.2
 
+# homeassistant.components.media_player.songpal
+python-songpal==0.0.6
+
 # homeassistant.components.sensor.synologydsm
 python-synology==0.1.0
 
