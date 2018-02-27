@@ -232,10 +232,7 @@ class Filter(object):
         """Implement a common interface for filters."""
         filtered = self._filter_state(new_state)
         if self.precision is not None:
-            if self.precision < 1:
-                filtered = round(filtered / self.precision) * self.precision
-            else:
-                filtered = round(filtered, self.precision)
+            filtered = round(filtered, self.precision)
         self.states.append(filtered)
         return filtered
 
