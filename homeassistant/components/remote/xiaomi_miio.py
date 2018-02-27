@@ -70,7 +70,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # Create handler
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
-    device = ChuangmiIr(host, token, 0, 0, False)
+
+    # The Chuang Mi IR Remote Controller wants to be re-discovered every
+    # 5 minutes. As long as polling is disabled the device should be
+    # re-discovered (lazy_discover=False) in front of every command.
+    device = ChuangmiIr(host, token, lazy_discover=False)
 
     # Check that we can communicate with device.
     try:
