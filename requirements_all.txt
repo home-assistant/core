@@ -133,7 +133,7 @@ batinfo==0.4.2
 beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
-bellows==0.5.0
+bellows==0.5.1
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.3.0
@@ -165,10 +165,6 @@ boto3==1.4.7
 # homeassistant.scripts.credstash
 botocore==1.7.34
 
-# homeassistant.components.sensor.broadlink
-# homeassistant.components.switch.broadlink
-broadlink==0.5
-
 # homeassistant.components.sensor.buienradar
 # homeassistant.components.weather.buienradar
 buienradar==0.91
@@ -178,9 +174,6 @@ caldav==0.5.0
 
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
-
-# homeassistant.components.coinbase
-coinbase==2.0.7
 
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==4.2.1
@@ -219,7 +212,7 @@ defusedxml==0.5.0
 deluge-client==1.0.5
 
 # homeassistant.components.media_player.denonavr
-denonavr==0.6.0
+denonavr==0.6.1
 
 # homeassistant.components.media_player.directv
 directpy==0.2
@@ -356,7 +349,7 @@ hipnotify==1.0.8
 holidays==0.9.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180221.1
+home-assistant-frontend==20180227.0
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -369,6 +362,13 @@ httplib2==0.10.3
 
 # homeassistant.components.media_player.braviatv
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
+
+# homeassistant.components.coinbase
+https://github.com/balloob/coinbase-python/archive/3a35efe13ef728a1cc18204b4f25be1fcb1c6006.zip#coinbase==2.0.8a1
+
+# homeassistant.components.sensor.broadlink
+# homeassistant.components.switch.broadlink
+https://github.com/balloob/python-broadlink/archive/3580ff2eaccd267846f14246d6ede6e30671f7c6.zip#broadlink==0.5.1
 
 # homeassistant.components.media_player.spotify
 https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f86c90aa26b2.zip#spotipy==2.4.4
@@ -400,7 +400,7 @@ https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 # i2csense==0.0.4
 
 # homeassistant.components.light.iglo
-iglo==1.2.5
+iglo==1.2.6
 
 # homeassistant.components.ihc
 ihcsdk==2.1.1
@@ -1156,7 +1156,7 @@ steamodd==4.21
 suds-py3==1.3.3.0
 
 # homeassistant.components.tahoma
-tahoma-api==0.0.12
+tahoma-api==0.0.13
 
 # homeassistant.components.sensor.tank_utility
 tank_utility==1.4.0
@@ -1298,4 +1298,4 @@ ziggo-mediabox-xl==1.0.0
 zigpy-xbee==0.0.2
 
 # homeassistant.components.zha
-zigpy==0.0.1
+zigpy==0.0.3

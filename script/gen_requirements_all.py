@@ -113,6 +113,9 @@ CONSTRAINT_PATH = os.path.join(os.path.dirname(__file__),
 CONSTRAINT_BASE = """
 # Breaks Python 3.6 and is not needed for our supported Python versions
 enum34==1000000000.0.0
+
+# This is a old unmaintained library and is replaced with pycryptodome
+pycrypto==1000000000.0.0
 """
 
 
