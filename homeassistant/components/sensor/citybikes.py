@@ -17,13 +17,12 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
     ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE,
-    ATTR_FRIENDLY_NAME, STATE_UNKNOWN, LENGTH_METERS, LENGTH_FEET,
-    ATTR_ID)
+    STATE_UNKNOWN, LENGTH_METERS, LENGTH_FEET, ATTR_ID)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import location, distance, slugify
+from homeassistant.util import location, distance
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,7 +168,7 @@ def async_setup_platform(hass, config, async_add_devices,
 
         if radius > dist or stations_list.intersection((station_id,
                                                         station_uid)):
-            devices.append(CityBikesStation(network, station_id, name))
+            devices.append(CityBikesStation(hass, network, station_id, name))
 
     async_add_devices(devices, True)
 
@@ -238,7 +237,7 @@ class CityBikesNetwork:
 class CityBikesStation(Entity):
     """CityBikes API Sensor."""
 
-    def __init__(self, network, station_id, base_name=''):
+    def __init__(self, hass, network, station_id, base_name=''):
         """Initialize the sensor."""
         self._network = network
         self._station_id = station_id
@@ -247,7 +246,8 @@ class CityBikesStation(Entity):
             uid = "_".join([network.network_id, base_name, station_id])
         else:
             uid = "_".join([network.network_id, station_id])
-        self.entity_id = ENTITY_ID_FORMAT.format(slugify(uid))
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, uid,
+                                                  hass=hass)
 
     @property
     def state(self):
