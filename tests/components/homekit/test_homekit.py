@@ -73,7 +73,7 @@ class TestHomeKit(unittest.TestCase):
         """Test async_setup with invalid config option."""
         schema = vol.Schema(valid_pin)
 
-        for value in ('', '123-456-78', 'a23-45-678', '12345678'):
+        for value in ('', '123-456-78', 'a23-45-678', '12345678', 1234):
             with self.assertRaises(vol.MultipleInvalid):
                 schema(value)
 
