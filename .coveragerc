@@ -353,6 +353,7 @@ omit =
     homeassistant/components/cover/scsgate.py
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
+    homeassistant/components/device_tracker/asuswrt.py
     homeassistant/components/device_tracker/automatic.py
     homeassistant/components/device_tracker/bbox.py
     homeassistant/components/device_tracker/bluetooth_le_tracker.py
