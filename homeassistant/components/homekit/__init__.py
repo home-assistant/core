@@ -19,7 +19,7 @@ from homeassistant.util.decorator import Registry
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-_RE_VALID_PINCODE = re.compile(r"^(\d{3}-\d{2}-\d{3})$")
+_RE_VALID_PINCODE = r"^(\d{3}-\d{2}-\d{3})$"
 
 DOMAIN = 'homekit'
 REQUIREMENTS = ['HAP-python==1.1.7']
@@ -32,10 +32,10 @@ HOMEKIT_FILE = '.homekit.state'
 
 def valid_pin(value):
     """Validate pin code value."""
-    match = _RE_VALID_PINCODE.findall(value.strip())
-    if match == []:
+    match = re.match(_RE_VALID_PINCODE, str(value).strip())
+    if not match:
         raise vol.Invalid("Pin must be in the format: '123-45-678'")
-    return match[0]
+    return match.group(0)
 
 
 CONFIG_SCHEMA = vol.Schema({
