@@ -1,18 +1,21 @@
-"""Constants used be the homekit component."""
+"""Constants used be the HomeKit component."""
 MANUFACTURER = 'HomeAssistant'
 
 # Service: AccessoryInfomation
-SERVICES_ACCESSORY_INFO = 'AccessoryInformation'
+SERV_ACCESSORY_INFO = 'AccessoryInformation'
 CHAR_MODEL = 'Model'
 CHAR_MANUFACTURER = 'Manufacturer'
 CHAR_SERIAL_NUMBER = 'SerialNumber'
 
 # Service: TemperatureSensor
-SERVICES_TEMPERATURE_SENSOR = 'TemperatureSensor'
+SERV_TEMPERATURE_SENSOR = 'TemperatureSensor'
 CHAR_CURRENT_TEMPERATURE = 'CurrentTemperature'
 
 # Service: WindowCovering
-SERVICES_WINDOW_COVERING = 'WindowCovering'
+SERV_WINDOW_COVERING = 'WindowCovering'
 CHAR_CURRENT_POSITION = 'CurrentPosition'
 CHAR_TARGET_POSITION = 'TargetPosition'
 CHAR_POSITION_STATE = 'PositionState'
+
+# Properties
+PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}
