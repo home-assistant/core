@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.components.discovery import SERVICE_DECONZ
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -143,7 +144,18 @@ def async_setup_deconz(hass, config, deconz_config):
     hass.services.async_register(
         DOMAIN, 'configure', async_configure, schema=SERVICE_SCHEMA)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deconz.close)
+    @callback
+    def deconz_shutdown(event):
+        """
+        Wrap the call to deconz.close.
+
+        Used as an argument to EventBus.async_listen_once - EventBus calls
+        this method with the event as the first argument, which should not
+        be passed on to deconz.close.
+        """
+        deconz.close()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deconz_shutdown)
     return True
 
 
