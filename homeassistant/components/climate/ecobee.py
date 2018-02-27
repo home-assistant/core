@@ -230,7 +230,7 @@ class Thermostat(ClimateDevice):
     def current_operation(self):
         """Return current operation."""
         if self.operation_mode == 'auxHeatOnly' or \
-                        self.operation_mode == 'heatPump':
+                self.operation_mode == 'heatPump':
             return STATE_HEAT
         return self.operation_mode
 
@@ -345,8 +345,8 @@ class Thermostat(ClimateDevice):
                                        cool_temp_setpoint, heat_temp_setpoint,
                                        self.hold_preference())
         _LOGGER.debug("Setting ecobee hold_temp to: heat=%s, is=%s, "
-                      "cool=%s, is=%s", heat_temp, isinstance(
-            heat_temp, (int, float)), cool_temp,
+                      "cool=%s, is=%s", heat_temp,
+                      isinstance(heat_temp, (int, float)), cool_temp,
                       isinstance(cool_temp, (int, float)))
 
         self.update_without_throttle = True
@@ -393,9 +393,8 @@ class Thermostat(ClimateDevice):
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        if self.current_operation == STATE_AUTO and (low_temp is not None or
-                                                             high_temp is
-                                                         not None):
+        if self.current_operation == STATE_AUTO and \
+                (low_temp is not None or high_temp is not None):
             self.set_auto_temp_hold(low_temp, high_temp)
         elif temp is not None:
             self.set_temp_hold(temp)
