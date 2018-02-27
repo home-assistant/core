@@ -4,7 +4,6 @@ This component allows several lights to be grouped into one light.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.group/
 """
-import asyncio
 import logging
 import itertools
 from typing import List, Tuple, Optional, Iterator, Any, Callable
