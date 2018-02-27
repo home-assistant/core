@@ -96,7 +96,7 @@ class DarkSkyWeather(WeatherEntity):
     @property
     def humidity(self):
         """Return the humidity."""
-        return round(self._ds_currently.get('humidity') * 100.0, 2)
+        return self._ds_currently.get('humidity') * 100.0
 
     @property
     def wind_speed(self):
