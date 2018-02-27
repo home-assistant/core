@@ -119,7 +119,6 @@ class TahomaDevice(Entity):
 
     def apply_action(self, cmd_name, *args):
         """Apply Action to Device."""
-        from tahoma_api import Action
-        action = Action(self.tahoma_device.url)
+        action = api.Action(self.tahoma_device.url)
         action.add_command(cmd_name, *args)
         self.controller.apply_actions('HomeAssistant', [action])
