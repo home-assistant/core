@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 import homeassistant.const as const
 import homeassistant.components.climate.ecobee as ecobee
-from homeassistant.components.climate import STATE_AUTO
+from homeassistant.components.climate import (STATE_AUTO, STATE_OFF)
 
 
 class TestEcobee(unittest.TestCase):
@@ -83,17 +83,17 @@ class TestEcobee(unittest.TestCase):
 
     def test_desired_fan_mode(self):
         """Test desired fan mode property."""
-        self.assertEqual('on', self.thermostat.desired_fan_mode)
+        self.assertEqual('on', self.thermostat.current_fan_mode)
         self.ecobee['runtime']['desiredFanMode'] = 'auto'
-        self.assertEqual('auto', self.thermostat.desired_fan_mode)
+        self.assertEqual('auto', self.thermostat.current_fan_mode)
 
     def test_fan(self):
         """Test fan property."""
         self.assertEqual(const.STATE_ON, self.thermostat.fan)
         self.ecobee['equipmentStatus'] = ''
-        self.assertEqual(STATE_AUTO, self.thermostat.fan)
+        self.assertEqual(STATE_OFF, self.thermostat.fan)
         self.ecobee['equipmentStatus'] = 'heatPump, heatPump2'
-        self.assertEqual(STATE_AUTO, self.thermostat.fan)
+        self.assertEqual(STATE_OFF, self.thermostat.fan)
 
     def test_current_hold_mode_away_temporary(self):
         """Test current hold mode when away."""
@@ -180,43 +180,43 @@ class TestEcobee(unittest.TestCase):
         self.ecobee['equipmentStatus'] = 'heatPump2'
         self.assertEqual({'actual_humidity': 15,
                           'climate_list': ['Climate1', 'Climate2'],
-                          'fan': 'auto',
+                          'fan': 'off',
                           'fan_min_on_time': 10,
-                          'mode': 'Climate1',
+                          'climate_mode': 'Climate1',
                           'operation': 'heat'},
                          self.thermostat.device_state_attributes)
 
         self.ecobee['equipmentStatus'] = 'auxHeat2'
         self.assertEqual({'actual_humidity': 15,
                           'climate_list': ['Climate1', 'Climate2'],
-                          'fan': 'auto',
+                          'fan': 'off',
                           'fan_min_on_time': 10,
-                          'mode': 'Climate1',
+                          'climate_mode': 'Climate1',
                           'operation': 'heat'},
                          self.thermostat.device_state_attributes)
         self.ecobee['equipmentStatus'] = 'compCool1'
         self.assertEqual({'actual_humidity': 15,
                           'climate_list': ['Climate1', 'Climate2'],
-                          'fan': 'auto',
+                          'fan': 'off',
                           'fan_min_on_time': 10,
-                          'mode': 'Climate1',
+                          'climate_mode': 'Climate1',
                           'operation': 'cool'},
                          self.thermostat.device_state_attributes)
         self.ecobee['equipmentStatus'] = ''
         self.assertEqual({'actual_humidity': 15,
                           'climate_list': ['Climate1', 'Climate2'],
-                          'fan': 'auto',
+                          'fan': 'off',
                           'fan_min_on_time': 10,
-                          'mode': 'Climate1',
+                          'climate_mode': 'Climate1',
                           'operation': 'idle'},
                          self.thermostat.device_state_attributes)
 
         self.ecobee['equipmentStatus'] = 'Unknown'
         self.assertEqual({'actual_humidity': 15,
                           'climate_list': ['Climate1', 'Climate2'],
-                          'fan': 'auto',
+                          'fan': 'off',
                           'fan_min_on_time': 10,
-                          'mode': 'Climate1',
+                          'climate_mode': 'Climate1',
                           'operation': 'Unknown'},
                          self.thermostat.device_state_attributes)
 

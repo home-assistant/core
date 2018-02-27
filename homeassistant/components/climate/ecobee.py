@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
     SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_HUMIDITY_HIGH,
     SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE_LOW)
+    SUPPORT_TARGET_TEMPERATURE_LOW, STATE_OFF)
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
@@ -122,6 +122,7 @@ class Thermostat(ClimateDevice):
         self._climate_list = self.climate_list
         self._operation_list = ['auto', 'auxHeatOnly', 'cool',
                                 'heat', 'off']
+        self._fan_list = ['auto', 'on']
         self.update_without_throttle = False
 
     def update(self):
@@ -158,45 +159,52 @@ class Thermostat(ClimateDevice):
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        if self.current_operation == STATE_AUTO:
-            return self.thermostat['runtime']['desiredHeat'] / 10.0
-        return None
+        return self.thermostat['runtime']['desiredHeat'] / 10.0
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        if self.current_operation == STATE_AUTO:
-            return self.thermostat['runtime']['desiredCool'] / 10.0
-        return None
+        return self.thermostat['runtime']['desiredCool'] / 10.0
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
+        desired_heat = self.thermostat['runtime']['desiredHeat'] / 10.0
+        desired_cool = self.thermostat['runtime']['desiredCool'] / 10.0
+
         if self.current_operation == STATE_AUTO:
-            return None
+            if desired_heat == desired_cool:
+                return desired_heat
+            else:
+                return None
         if self.current_operation == STATE_HEAT:
-            return self.thermostat['runtime']['desiredHeat'] / 10.0
+            return desired_heat
         elif self.current_operation == STATE_COOL:
-            return self.thermostat['runtime']['desiredCool'] / 10.0
+            return desired_cool
         return None
 
     @property
-    def desired_fan_mode(self):
-        """Return the desired fan mode of operation."""
-        return self.thermostat['runtime']['desiredFanMode']
-
-    @property
     def fan(self):
-        """Return the current fan state."""
+        """Return the current fan status."""
         if 'fan' in self.thermostat['equipmentStatus']:
             return STATE_ON
-        return STATE_AUTO
+        return STATE_OFF
+
+    @property
+    def current_fan_mode(self):
+        """Return the fan setting."""
+        return self.thermostat['runtime']['desiredFanMode']
 
     @property
     def current_hold_mode(self):
         """Return current hold mode."""
         mode = self._current_hold_mode
         return None if mode == AWAY_MODE else mode
+
+    @property
+    def fan_list(self):
+        """Return the available fan modes."""
+        return self._fan_list
 
     @property
     def _current_hold_mode(self):
@@ -271,10 +279,11 @@ class Thermostat(ClimateDevice):
             operation = STATE_HEAT
         else:
             operation = status
+
         return {
             "actual_humidity": self.thermostat['runtime']['actualHumidity'],
             "fan": self.fan,
-            "mode": self.mode,
+            "climate_mode": self.mode,
             "operation": operation,
             "climate_list": self.climate_list,
             "fan_min_on_time": self.fan_min_on_time
