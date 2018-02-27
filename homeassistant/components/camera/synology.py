@@ -57,7 +57,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             timeout=timeout
         )
     except (requests.exceptions.RequestException, ValueError):
-        _LOGGER.exception("Error when initializing SurveillanceStation")
+        _LOGGER.exception("Error initializing SurveillanceStation")
         return False
 
     cameras = surveillance.get_all_cameras()
@@ -66,8 +66,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     devices = []
     for camera in cameras:
         if not config.get(CONF_WHITELIST):
-            device = SynologyCamera(surveillance, camera.camera_id,
-                                    url, username, password, timeout, verify_ssl)
+            device = SynologyCamera(surveillance, camera.camera_id, url,
+                                    username, password, timeout, verify_ssl)
             devices.append(device)
 
     async_add_devices(devices)
