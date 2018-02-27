@@ -10,7 +10,6 @@ from collections import deque, Counter
 
 import voluptuous as vol
 
-from homeassistant.util import slugify
 from homeassistant.core import callback
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -133,8 +132,9 @@ class SensorFilter(Entity):
                     _LOGGER.debug("%s(%s, %s) -> %s", filt.name,
                                   self._entity,
                                   self._state,
-                                  "skip" if filt.skip else filtered_state)
-                    if filt.skip:
+                                  "skip" if filt.skip_processing else
+                                  filtered_state)
+                    if filt.skip_processing:
                         return
                 except ValueError:
                     _LOGGER.warning("Could not convert state: %s to number",
@@ -180,7 +180,7 @@ class SensorFilter(Entity):
         }
         for filt in self._filters:
             for filt_stat_key, filt_stat_value in filt.stats.items():
-                filt_stat = slugify("{} {}".format(filt.name, filt_stat_key))
+                filt_stat = "{}_{}".format(filt.name, filt_stat_key)
                 _LOGGER.debug("stats(%s): %s: %s", self._entity,
                               filt_stat, filt_stat_value)
                 state_attr.update({
@@ -207,7 +207,7 @@ class Filter(object):
         self._stats = {}
         self._name = name
         self._entity = entity
-        self._skip = False
+        self._skip_processing = False
 
     @property
     def name(self):
@@ -215,9 +215,9 @@ class Filter(object):
         return self._name
 
     @property
-    def skip(self):
+    def skip_processing(self):
         """Return wether the current filter_state should be skipped."""
-        return self._skip
+        return self._skip_processing
 
     @property
     def stats(self):
@@ -316,8 +316,8 @@ class ThrottleFilter(Filter):
         """Implement the throttle filter."""
         if not self.states or len(self.states) == self.states.maxlen:
             self.states.clear()
-            self._skip = False
+            self._skip_processing = False
         else:
-            self._skip = True
+            self._skip_processing = True
 
         return new_state

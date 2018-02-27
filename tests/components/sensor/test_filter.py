@@ -86,6 +86,6 @@ class TestFilterSensor(unittest.TestCase):
         filtered = []
         for state in self.values:
             new_state = filt.filter_state(state)
-            if not filt.skip:
+            if not filt.skip_processing:
                 filtered.append(new_state)
         self.assertEqual([20, 21], filtered)
