@@ -7,8 +7,8 @@ https://home-assistant.io/components/sensor.trafikverket_weatherstation/
 import json
 import logging
 from datetime import timedelta
-import requests
 
+import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
