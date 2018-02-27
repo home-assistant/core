@@ -109,7 +109,7 @@ class TrafikverketWeatherStation(Entity):
             post = requests.post(url, data=xml.encode('utf-8'), timeout=5)
         except requests.exceptions.RequestException as err:
             _LOGGER.error("Please check network connection: %s", err)
-            return None
+            return
 
         # Checking JSON respons.
         try:
@@ -118,7 +118,7 @@ class TrafikverketWeatherStation(Entity):
             final = result["WeatherStation"][0]["Measurement"]
         except KeyError:
             _LOGGER.error("Incorrect weather station or API key.")
-            return None
+            return
 
         # air_vs_road contains "Air" or "Road" depending on user input.
         self._state = final[air_vs_road]["Temp"]
