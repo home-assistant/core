@@ -32,8 +32,7 @@ VALID_CONFIG_ROUTER_SSH = {DOMAIN: {
     CONF_PROTOCOL: 'ssh',
     CONF_MODE: 'router',
     CONF_PORT: '22'
-}
-}
+}}
 
 WL_DATA = [
     'assoclist 01:02:03:04:06:08\r',
@@ -249,7 +248,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.assertEqual(ssh.login.call_count, 1)
         self.assertEqual(
             ssh.login.call_args,
-            mock.call('fake_host', 'fake_user',
+            mock.call('fake_host', 'fake_user', quiet=False,
                       ssh_key=FAKEFILE, port=22)
         )
 
@@ -275,7 +274,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.assertEqual(ssh.login.call_count, 1)
         self.assertEqual(
             ssh.login.call_args,
-            mock.call('fake_host', 'fake_user',
+            mock.call('fake_host', 'fake_user', quiet=False,
                       password='fake_pass', port=22)
         )
 
