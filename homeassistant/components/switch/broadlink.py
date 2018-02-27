@@ -22,7 +22,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['broadlink==0.5']
+REQUIREMENTS = [
+    'https://github.com/balloob/python-broadlink/archive/'
+    '3580ff2eaccd267846f14246d6ede6e30671f7c6.zip#broadlink==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
