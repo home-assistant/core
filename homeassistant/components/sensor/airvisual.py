@@ -210,7 +210,7 @@ class AirQualityIndexSensor(AirVisualBaseSensor):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return 'PSI'
+        return 'AQI'
 
     def update(self):
         """Update the status of the sensor."""
