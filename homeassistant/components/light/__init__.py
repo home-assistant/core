@@ -162,8 +162,12 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
 def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
                   brightness_pct=None, rgb_color=None, xy_color=None,
                   color_temp=None, kelvin=None, white_value=None,
-                  profile=None, flash=None, effect=None, color_name=None):
-    """Turn all or specified light on."""
+                  profile=None, flash=None, effect=None, color_name=None,
+                  blocking=False):
+    """Turn all or specified light on.
+
+    This method must be run in the event loop and returns a coroutine.
+    """
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
@@ -182,7 +186,8 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
         ] if value is not None
     }
 
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
+    return hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, data, blocking=blocking))
 
 
 @bind_hass
@@ -193,8 +198,11 @@ def turn_off(hass, entity_id=None, transition=None):
 
 @callback
 @bind_hass
-def async_turn_off(hass, entity_id=None, transition=None):
-    """Turn all or specified light off."""
+def async_turn_off(hass, entity_id=None, transition=None, blocking=False):
+    """Turn all or specified light off.
+
+    This method must be run in the event loop and returns a coroutine.
+    """
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
@@ -202,14 +210,17 @@ def async_turn_off(hass, entity_id=None, transition=None):
         ] if value is not None
     }
 
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, data))
+    return hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, data, blocking=blocking))
 
 
 @callback
 @bind_hass
-def async_toggle(hass, entity_id=None, transition=None):
-    """Toggle all or specified light."""
+def async_toggle(hass, entity_id=None, transition=None, blocking=False):
+    """Toggle all or specified light.
+
+    This method must be run in the event loop and returns a coroutine.
+    """
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
@@ -217,8 +228,8 @@ def async_toggle(hass, entity_id=None, transition=None):
         ] if value is not None
     }
 
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_TOGGLE, data))
+    return hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE, data, blocking=blocking))
 
 
 @bind_hass

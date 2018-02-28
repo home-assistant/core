@@ -158,17 +158,13 @@ class GroupLight(light.Light):
 
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to all lights in the group."""
-        for entity_id in self._entity_ids:
-            payload = dict(kwargs)
-            payload[ATTR_ENTITY_ID] = entity_id
-            light.async_turn_on(self.hass, **payload)
+        kwargs[ATTR_ENTITY_ID] = self._entity_ids
+        await light.async_turn_on(self.hass, blocking=True, **kwargs)
 
     async def async_turn_off(self, **kwargs):
         """Forward the turn_off command to all lights in the group."""
-        for entity_id in self._entity_ids:
-            payload = dict(kwargs)
-            payload[ATTR_ENTITY_ID] = entity_id
-            light.async_turn_off(self.hass, **payload)
+        kwargs[ATTR_ENTITY_ID] = self._entity_ids
+        await light.async_turn_off(self.hass, blocking=True, **kwargs)
 
     async def async_update(self):
         """Query all members and determine the group state."""
