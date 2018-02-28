@@ -1,4 +1,5 @@
 """Helpers for listening to events."""
+from datetime import timedelta
 import functools as ft
 
 from homeassistant.loader import bind_hass
@@ -221,6 +222,14 @@ track_point_in_utc_time = threaded_listener_factory(
 
 @callback
 @bind_hass
+def async_call_later(hass, delay, action):
+    """Add a listener that is called in <delay>."""
+    return async_track_point_in_utc_time(
+        hass, action, dt_util.utcnow() + timedelta(seconds=delay))
+
+
+@callback
+@bind_hass
 def async_track_time_interval(hass, action, interval):
     """Add a listener that fires repetitively at every timedelta interval."""
     remove = None
@@ -231,7 +240,7 @@ def async_track_time_interval(hass, action, interval):
 
     @callback
     def interval_listener(now):
-        """Handle elaspsed intervals."""
+        """Handle elapsed intervals."""
         nonlocal remove
         remove = async_track_point_in_utc_time(
             hass, interval_listener, next_interval())

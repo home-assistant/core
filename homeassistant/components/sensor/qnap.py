@@ -7,6 +7,8 @@ https://home-assistant.io/components/sensor.qnap/
 import logging
 from datetime import timedelta
 
+import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
@@ -14,8 +16,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL, CONF_TIMEOUT, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-
-import voluptuous as vol
 
 REQUIREMENTS = ['qnapstats==0.2.4']
 
@@ -97,9 +97,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]),
-    vol.Optional(CONF_NICS, default=None): cv.ensure_list,
-    vol.Optional(CONF_DRIVES, default=None): cv.ensure_list,
-    vol.Optional(CONF_VOLUMES, default=None): cv.ensure_list,
+    vol.Optional(CONF_NICS): cv.ensure_list,
+    vol.Optional(CONF_DRIVES): cv.ensure_list,
+    vol.Optional(CONF_VOLUMES): cv.ensure_list,
 })
 
 
@@ -133,33 +133,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 api, variable, _MEMORY_MON_COND[variable]))
 
     # Network sensors
-    nics = config[CONF_NICS]
-    if nics is None:
-        nics = api.data["system_stats"]["nics"].keys()
-
-    for nic in nics:
+    for nic in config.get(CONF_NICS, api.data["system_stats"]["nics"]):
         sensors += [QNAPNetworkSensor(api, variable,
                                       _NETWORK_MON_COND[variable], nic)
                     for variable in config[CONF_MONITORED_CONDITIONS]
                     if variable in _NETWORK_MON_COND]
 
     # Drive sensors
-    drives = config[CONF_DRIVES]
-    if drives is None:
-        drives = api.data["smart_drive_health"].keys()
-
-    for drive in drives:
+    for drive in config.get(CONF_DRIVES, api.data["smart_drive_health"]):
         sensors += [QNAPDriveSensor(api, variable,
                                     _DRIVE_MON_COND[variable], drive)
                     for variable in config[CONF_MONITORED_CONDITIONS]
                     if variable in _DRIVE_MON_COND]
 
     # Volume sensors
-    volumes = config[CONF_VOLUMES]
-    if volumes is None:
-        volumes = api.data["volumes"].keys()
-
-    for volume in volumes:
+    for volume in config.get(CONF_VOLUMES, api.data["volumes"]):
         sensors += [QNAPVolumeSensor(api, variable,
                                      _VOLUME_MON_COND[variable], volume)
                     for variable in config[CONF_MONITORED_CONDITIONS]

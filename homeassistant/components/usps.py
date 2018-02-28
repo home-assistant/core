@@ -15,7 +15,7 @@ from homeassistant.helpers import (config_validation as cv, discovery)
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now
 
-REQUIREMENTS = ['myusps==1.2.2']
+REQUIREMENTS = ['myusps==1.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,6 +24,7 @@ DATA_USPS = 'data_usps'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 COOKIE = 'usps_cookies.pickle'
 CACHE = 'usps_cache'
+CONF_DRIVER = 'driver'
 
 USPS_TYPE = ['sensor', 'camera']
 
@@ -32,6 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
+        vol.Optional(CONF_DRIVER): cv.string
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -42,13 +44,15 @@ def setup(hass, config):
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
     name = conf.get(CONF_NAME)
+    driver = conf.get(CONF_DRIVER)
 
     import myusps
     try:
         cookie = hass.config.path(COOKIE)
         cache = hass.config.path(CACHE)
         session = myusps.get_session(username, password,
-                                     cookie_path=cookie, cache_path=cache)
+                                     cookie_path=cookie, cache_path=cache,
+                                     driver=driver)
     except myusps.USPSError:
         _LOGGER.exception('Could not connect to My USPS')
         return False
@@ -69,7 +73,7 @@ class USPSData(object):
     """
 
     def __init__(self, session, name):
-        """Initialize the data oject."""
+        """Initialize the data object."""
         self.session = session
         self.name = name
         self.packages = []

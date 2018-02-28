@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_PASSWORD)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import Template
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,8 +25,8 @@ CONF_BODY_ON = 'body_on'
 CONF_IS_ON_TEMPLATE = 'is_on_template'
 
 DEFAULT_METHOD = 'post'
-DEFAULT_BODY_OFF = Template('OFF')
-DEFAULT_BODY_ON = Template('ON')
+DEFAULT_BODY_OFF = 'OFF'
+DEFAULT_BODY_ON = 'ON'
 DEFAULT_NAME = 'REST Switch'
 DEFAULT_TIMEOUT = 10
 

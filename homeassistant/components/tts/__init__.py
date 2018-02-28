@@ -29,7 +29,7 @@ from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['mutagen==1.39']
+REQUIREMENTS = ['mutagen==1.40.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -411,7 +411,7 @@ class SpeechManager(object):
 
         if key not in self.mem_cache:
             if key not in self.file_cache:
-                raise HomeAssistantError("%s not in cache!", key)
+                raise HomeAssistantError("{} not in cache!".format(key))
             yield from self.async_file_to_mem(key)
 
         content, _ = mimetypes.guess_type(filename)

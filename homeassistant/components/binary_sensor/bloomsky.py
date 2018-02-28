@@ -24,7 +24,7 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
@@ -50,18 +50,12 @@ class BloomSkySensor(BinarySensorDevice):
         self._device_id = device['DeviceID']
         self._sensor_name = sensor_name
         self._name = '{} {}'.format(device['DeviceName'], sensor_name)
-        self._unique_id = 'bloomsky_binary_sensor {}'.format(self._name)
         self._state = None
 
     @property
     def name(self):
         """Return the name of the BloomSky device and this sensor."""
         return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this sensor."""
-        return self._unique_id
 
     @property
     def device_class(self):

@@ -119,24 +119,23 @@ class LinuxBatterySensor(Entity):
                 ATTR_HEALTH: self._battery_stat.health,
                 ATTR_STATUS: self._battery_stat.status,
             }
-        else:
-            return {
-                ATTR_NAME: self._battery_stat.name,
-                ATTR_PATH: self._battery_stat.path,
-                ATTR_ALARM: self._battery_stat.alarm,
-                ATTR_CAPACITY_LEVEL: self._battery_stat.capacity_level,
-                ATTR_CYCLE_COUNT: self._battery_stat.cycle_count,
-                ATTR_ENERGY_FULL: self._battery_stat.energy_full,
-                ATTR_ENERGY_FULL_DESIGN: self._battery_stat.energy_full_design,
-                ATTR_ENERGY_NOW: self._battery_stat.energy_now,
-                ATTR_MANUFACTURER: self._battery_stat.manufacturer,
-                ATTR_MODEL_NAME: self._battery_stat.model_name,
-                ATTR_POWER_NOW: self._battery_stat.power_now,
-                ATTR_SERIAL_NUMBER: self._battery_stat.serial_number,
-                ATTR_STATUS: self._battery_stat.status,
-                ATTR_VOLTAGE_MIN_DESIGN: self._battery_stat.voltage_min_design,
-                ATTR_VOLTAGE_NOW: self._battery_stat.voltage_now,
-            }
+        return {
+            ATTR_NAME: self._battery_stat.name,
+            ATTR_PATH: self._battery_stat.path,
+            ATTR_ALARM: self._battery_stat.alarm,
+            ATTR_CAPACITY_LEVEL: self._battery_stat.capacity_level,
+            ATTR_CYCLE_COUNT: self._battery_stat.cycle_count,
+            ATTR_ENERGY_FULL: self._battery_stat.energy_full,
+            ATTR_ENERGY_FULL_DESIGN: self._battery_stat.energy_full_design,
+            ATTR_ENERGY_NOW: self._battery_stat.energy_now,
+            ATTR_MANUFACTURER: self._battery_stat.manufacturer,
+            ATTR_MODEL_NAME: self._battery_stat.model_name,
+            ATTR_POWER_NOW: self._battery_stat.power_now,
+            ATTR_SERIAL_NUMBER: self._battery_stat.serial_number,
+            ATTR_STATUS: self._battery_stat.status,
+            ATTR_VOLTAGE_MIN_DESIGN: self._battery_stat.voltage_min_design,
+            ATTR_VOLTAGE_NOW: self._battery_stat.voltage_now,
+        }
 
     def update(self):
         """Get the latest data and updates the states."""

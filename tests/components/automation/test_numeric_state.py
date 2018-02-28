@@ -736,7 +736,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
-    def test_if_not_fires_on_entities_change_with_for_afte_stop(self):
+    def test_if_not_fires_on_entities_change_with_for_after_stop(self):
         """Test for not firing on entities change with for after stop."""
         assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {

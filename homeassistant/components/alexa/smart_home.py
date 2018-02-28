@@ -51,8 +51,8 @@ class _DisplayCategory(object):
 
     # Describes a combination of devices set to a specific state, when the
     # state change must occur in a specific order. For example, a "watch
-    # Neflix" scene might require the: 1. TV to be powered on & 2. Input set to
-    # HDMI1.    Applies to Scenes
+    # Netflix" scene might require the: 1. TV to be powered on & 2. Input set
+    # to HDMI1. Applies to Scenes
     ACTIVITY_TRIGGER = "ACTIVITY_TRIGGER"
 
     # Indicates media devices with video or photo capabilities.
@@ -328,8 +328,9 @@ class _AlexaBrightnessController(_AlexaInterface):
     def get_property(self, name):
         if name != 'brightness':
             raise _UnsupportedProperty(name)
-
-        return round(self.entity.attributes['brightness'] / 255.0 * 100)
+        if 'brightness' in self.entity.attributes:
+            return round(self.entity.attributes['brightness'] / 255.0 * 100)
+        return 0
 
 
 class _AlexaColorController(_AlexaInterface):
@@ -350,6 +351,11 @@ class _AlexaPercentageController(_AlexaInterface):
 class _AlexaSpeaker(_AlexaInterface):
     def name(self):
         return 'Alexa.Speaker'
+
+
+class _AlexaStepSpeaker(_AlexaInterface):
+    def name(self):
+        return 'Alexa.StepSpeaker'
 
 
 class _AlexaPlaybackController(_AlexaInterface):
@@ -385,6 +391,7 @@ class _AlexaTemperatureSensor(_AlexaInterface):
 
 @ENTITY_ADAPTERS.register(alert.DOMAIN)
 @ENTITY_ADAPTERS.register(automation.DOMAIN)
+@ENTITY_ADAPTERS.register(group.DOMAIN)
 @ENTITY_ADAPTERS.register(input_boolean.DOMAIN)
 class _GenericCapabilities(_AlexaEntity):
     """A generic, on/off device.
@@ -472,6 +479,11 @@ class _MediaPlayerCapabilities(_AlexaEntity):
         if supported & media_player.SUPPORT_VOLUME_SET:
             yield _AlexaSpeaker(self.entity)
 
+        step_volume_features = (media_player.SUPPORT_VOLUME_MUTE |
+                                media_player.SUPPORT_VOLUME_STEP)
+        if supported & step_volume_features:
+            yield _AlexaStepSpeaker(self.entity)
+
         playback_features = (media_player.SUPPORT_PLAY |
                              media_player.SUPPORT_PAUSE |
                              media_player.SUPPORT_STOP |
@@ -508,16 +520,6 @@ class _ScriptCapabilities(_AlexaEntity):
         can_cancel = bool(self.entity.attributes.get('can_cancel'))
         return [_AlexaSceneController(self.entity,
                                       supports_deactivation=can_cancel)]
-
-
-@ENTITY_ADAPTERS.register(group.DOMAIN)
-class _GroupCapabilities(_AlexaEntity):
-    def default_display_categories(self):
-        return [_DisplayCategory.SCENE_TRIGGER]
-
-    def interfaces(self):
-        return [_AlexaSceneController(self.entity,
-                                      supports_deactivation=True)]
 
 
 @ENTITY_ADAPTERS.register(sensor.DOMAIN)
@@ -667,7 +669,7 @@ def api_message(request,
         }
     }
 
-    # If a correlation token exsits, add it to header / Need by Async requests
+    # If a correlation token exists, add it to header / Need by Async requests
     token = request[API_HEADER].get('correlationToken')
     if token:
         response[API_EVENT][API_HEADER]['correlationToken'] = token
@@ -762,6 +764,8 @@ def extract_entity(funct):
 def async_api_turn_on(hass, config, request, entity):
     """Process a turn on request."""
     domain = entity.domain
+    if entity.domain == group.DOMAIN:
+        domain = ha.DOMAIN
 
     service = SERVICE_TURN_ON
     if entity.domain == cover.DOMAIN:
@@ -917,10 +921,7 @@ def async_api_increase_color_temp(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_activate(hass, config, request, entity):
     """Process an activate request."""
-    if entity.domain == group.DOMAIN:
-        domain = ha.DOMAIN
-    else:
-        domain = entity.domain
+    domain = entity.domain
 
     yield from hass.services.async_call(domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id
@@ -944,10 +945,7 @@ def async_api_activate(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_deactivate(hass, config, request, entity):
     """Process a deactivate request."""
-    if entity.domain == group.DOMAIN:
-        domain = ha.DOMAIN
-    else:
-        domain = entity.domain
+    domain = entity.domain
 
     yield from hass.services.async_call(domain, SERVICE_TURN_OFF, {
         ATTR_ENTITY_ID: entity.entity_id
@@ -1054,7 +1052,16 @@ def async_api_lock(hass, config, request, entity):
         ATTR_ENTITY_ID: entity.entity_id
     }, blocking=False)
 
-    return api_message(request)
+    # Alexa expects a lockState in the response, we don't know the actual
+    # lockState at this point but assume it is locked. It is reported
+    # correctly later when ReportState is called. The alt. to this approach
+    # is to implement DeferredResponse
+    properties = [{
+        'name': 'lockState',
+        'namespace': 'Alexa.LockController',
+        'value': 'LOCKED'
+    }]
+    return api_message(request, context={'properties': properties})
 
 
 # Not supported by Alexa yet
@@ -1153,6 +1160,34 @@ def async_api_adjust_volume(hass, config, request, entity):
     return api_message(request)
 
 
+@HANDLERS.register(('Alexa.StepSpeaker', 'AdjustVolume'))
+@extract_entity
+@asyncio.coroutine
+def async_api_adjust_volume_step(hass, config, request, entity):
+    """Process an adjust volume step request."""
+    # media_player volume up/down service does not support specifying steps
+    # each component handles it differently e.g. via config.
+    # For now we use the volumeSteps returned to figure out if we
+    # should step up/down
+    volume_step = request[API_PAYLOAD]['volumeSteps']
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+    }
+
+    if volume_step > 0:
+        yield from hass.services.async_call(
+            entity.domain, media_player.SERVICE_VOLUME_UP,
+            data, blocking=False)
+    elif volume_step < 0:
+        yield from hass.services.async_call(
+            entity.domain, media_player.SERVICE_VOLUME_DOWN,
+            data, blocking=False)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.StepSpeaker', 'SetMute'))
 @HANDLERS.register(('Alexa.Speaker', 'SetMute'))
 @extract_entity
 @asyncio.coroutine

@@ -35,19 +35,14 @@ CONF_LEVEL_TEMPLATE = 'level_template'
 LIGHT_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_VALUE_TEMPLATE, default=None): cv.template,
-    vol.Optional(CONF_ICON_TEMPLATE, default=None): cv.template,
-    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE, default=None): cv.template,
-    vol.Optional(CONF_LEVEL_ACTION, default=None): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_LEVEL_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
+    vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
-
-LIGHT_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    LIGHT_SCHEMA,
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LIGHTS): vol.Schema({cv.slug: LIGHT_SCHEMA}),
@@ -61,14 +56,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for device, device_config in config[CONF_LIGHTS].items():
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
-        state_template = device_config[CONF_VALUE_TEMPLATE]
+        state_template = device_config.get(CONF_VALUE_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(
             CONF_ENTITY_PICTURE_TEMPLATE)
         on_action = device_config[CONF_ON_ACTION]
         off_action = device_config[CONF_OFF_ACTION]
         level_action = device_config.get(CONF_LEVEL_ACTION)
-        level_template = device_config[CONF_LEVEL_TEMPLATE]
+        level_template = device_config.get(CONF_LEVEL_TEMPLATE)
 
         template_entity_ids = set()
 
@@ -242,7 +237,6 @@ class LightTemplate(Light):
     @asyncio.coroutine
     def async_update(self):
         """Update the state from the template."""
-        print("ASYNC UPDATE")
         if self._template is not None:
             try:
                 state = self._template.async_render().lower()
@@ -267,7 +261,7 @@ class LightTemplate(Light):
                 self._state = None
 
             if 0 <= int(brightness) <= 255:
-                self._brightness = brightness
+                self._brightness = int(brightness)
             else:
                 _LOGGER.error(
                     'Received invalid brightness : %s' +

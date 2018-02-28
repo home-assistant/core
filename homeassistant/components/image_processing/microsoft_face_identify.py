@@ -201,7 +201,7 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
             return
 
         # Parse data
-        knwon_faces = []
+        known_faces = []
         total = 0
         for face in detect:
             total += 1
@@ -215,9 +215,9 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
                     name = s_name
                     break
 
-            knwon_faces.append({
+            known_faces.append({
                 ATTR_NAME: name,
                 ATTR_CONFIDENCE: data['confidence'] * 100,
             })
 
-        self.async_process_faces(knwon_faces, total)
+        self.async_process_faces(known_faces, total)

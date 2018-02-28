@@ -8,6 +8,9 @@ import logging
 import socket
 from datetime import timedelta
 
+import sys
+
+import subprocess
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -20,7 +23,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['samsungctl==0.6.0', 'wakeonlan==0.2.2']
+REQUIREMENTS = ['samsungctl==0.6.0', 'wakeonlan==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,13 +92,13 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Initialize the Samsung device."""
         from samsungctl import exceptions
         from samsungctl import Remote
-        from wakeonlan import wol
+        import wakeonlan
         # Save a reference to the imported classes
         self._exceptions_class = exceptions
         self._remote_class = Remote
         self._name = name
         self._mac = mac
-        self._wol = wol
+        self._wol = wakeonlan
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -122,12 +125,19 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def update(self):
         """Update state of device."""
+        if sys.platform == 'win32':
+            _ping_cmd = ['ping', '-n 1', '-w', '1000', self._config['host']]
+        else:
+            _ping_cmd = ['ping', '-n', '-q', '-c1', '-W1',
+                         self._config['host']]
+
+        ping = subprocess.Popen(
+            _ping_cmd,
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(self._config[CONF_TIMEOUT])
-            sock.connect((self._config['host'], self._config['port']))
-            self._state = STATE_ON
-        except socket.error:
+            ping.communicate()
+            self._state = STATE_ON if ping.returncode == 0 else STATE_OFF
+        except subprocess.CalledProcessError:
             self._state = STATE_OFF
 
     def get_remote(self):

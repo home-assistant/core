@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_MAC, CONF_DEVICES, TEMP_CELSIUS, ATTR_TEMPERATURE, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-eq3bt==0.1.8']
+REQUIREMENTS = ['python-eq3bt==0.1.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices)
 
 
-# pylint: disable=import-error
+# pylint: disable=import-error, no-name-in-module
 class EQ3BTSmartThermostat(ClimateDevice):
     """Representation of an eQ-3 Bluetooth Smart thermostat."""
 
@@ -75,6 +75,8 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
         self._name = _name
         self._thermostat = eq3.Thermostat(_mac)
+        self._target_temperature = None
+        self._target_mode = None
 
     @property
     def supported_features(self):
@@ -116,6 +118,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
+        self._target_temperature = temperature
         self._thermostat.target_temperature = temperature
 
     @property
@@ -132,6 +135,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
+        self._target_mode = operation_mode
         self._thermostat.mode = self.reverse_modes[operation_mode]
 
     def turn_away_mode_off(self):
@@ -177,3 +181,15 @@ class EQ3BTSmartThermostat(ClimateDevice):
             self._thermostat.update()
         except BTLEException as ex:
             _LOGGER.warning("Updating the state failed: %s", ex)
+
+        if (self._target_temperature and
+                self._thermostat.target_temperature
+                != self._target_temperature):
+            self.set_temperature(temperature=self._target_temperature)
+        else:
+            self._target_temperature = None
+        if (self._target_mode and
+                self.modes[self._thermostat.mode] != self._target_mode):
+            self.set_operation_mode(operation_mode=self._target_mode)
+        else:
+            self._target_mode = None

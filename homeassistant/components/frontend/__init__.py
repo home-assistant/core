@@ -17,13 +17,13 @@ import jinja2
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.auth import is_trusted_ip
+from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180126.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20180227.0', 'user-agents==1.1.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -300,7 +300,8 @@ def async_setup(hass, config):
 
     if is_dev:
         for subpath in ["src", "build-translations", "build-temp", "build",
-                        "hass_frontend", "bower_components", "panels"]:
+                        "hass_frontend", "bower_components", "panels",
+                        "hassio"]:
             hass.http.register_static_path(
                 "/home-assistant-polymer/{}".format(subpath),
                 os.path.join(repo_path, subpath),
@@ -489,7 +490,7 @@ class IndexView(HomeAssistantView):
             panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_es5
 
         no_auth = '1'
-        if hass.config.api.api_password and not is_trusted_ip(request):
+        if hass.config.api.api_password and not request[KEY_AUTHENTICATED]:
             # do not try to auto connect on load
             no_auth = '0'
 
@@ -584,11 +585,13 @@ def _is_latest(js_option, request):
         return useragent.os.version[0] >= 12
 
     family_min_version = {
-        'Chrome': 50,   # Probably can reduce this
-        'Firefox': 43,  # Array.protopype.includes added in 43
-        'Opera': 40,    # Probably can reduce this
-        'Edge': 14,     # Array.protopype.includes added in 14
-        'Safari': 10,   # many features not supported by 9
+        'Chrome': 54,          # Object.values
+        'Chrome Mobile': 54,
+        'Firefox': 47,         # Object.values
+        'Firefox Mobile': 47,
+        'Opera': 41,           # Object.values
+        'Edge': 14,            # Array.prototype.includes added in 14
+        'Safari': 10,          # Many features not supported by 9
     }
     version = family_min_version.get(useragent.browser.family)
     return version and useragent.browser.version[0] >= version

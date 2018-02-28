@@ -1,7 +1,7 @@
 """
 Support for BME680 Sensor over SMBus.
 
-Temperature, humidity, pressure and volitile gas support.
+Temperature, humidity, pressure and volatile gas support.
 Air Quality calculation based on humidity and volatile gas.
 
 For more details about this platform, please refer to the documentation at
@@ -116,7 +116,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     return
 
 
-# pylint: disable=import-error
+# pylint: disable=import-error, no-member
 def _setup_bme680(config):
     """Set up and configure the BME680 sensor."""
     from smbus import SMBus

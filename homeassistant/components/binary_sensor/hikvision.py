@@ -56,7 +56,7 @@ CUSTOMIZE_SCHEMA = vol.Schema({
     })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
@@ -118,7 +118,7 @@ class HikvisionData(object):
     """Hikvision device event stream object."""
 
     def __init__(self, hass, url, port, name, username, password):
-        """Initialize the data oject."""
+        """Initialize the data object."""
         from pyhik.hikvision import HikCamera
         self._url = url
         self._port = port
@@ -212,7 +212,7 @@ class HikvisionBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self):
         """Return an unique ID."""
-        return '{}.{}'.format(self.__class__, self._id)
+        return self._id
 
     @property
     def is_on(self):

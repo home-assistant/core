@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=-1): cv.port,
+    vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
     vol.Optional(CONF_VERIFY_SSL, default=True): vol.Any(
         cv.boolean, cv.isfile),
@@ -45,13 +45,11 @@ class TomatoDeviceScanner(DeviceScanner):
     def __init__(self, config):
         """Initialize the scanner."""
         host, http_id = config[CONF_HOST], config[CONF_HTTP_ID]
-        port = config[CONF_PORT]
+        port = config.get(CONF_PORT)
         username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
         self.ssl, self.verify_ssl = config[CONF_SSL], config[CONF_VERIFY_SSL]
-        if port == -1:
-            port = 80
-            if self.ssl:
-                port = 443
+        if port is None:
+            port = 443 if self.ssl else 80
 
         self.req = requests.Request(
             'POST', 'http{}://{}:{}/update.cgi'.format(

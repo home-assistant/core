@@ -136,7 +136,7 @@ def _load_config(filename):
 class JSONBytesDecoder(json.JSONEncoder):
     """JSONEncoder to decode bytes objects to unicode."""
 
-    # pylint: disable=method-hidden
+    # pylint: disable=method-hidden, arguments-differ
     def default(self, obj):
         """Decode object if it's a bytes object, else defer to base class."""
         if isinstance(obj, bytes):
@@ -255,12 +255,12 @@ class HTML5PushCallbackView(HomeAssistantView):
         # 2a. If decode is successful, return the payload.
         # 2b. If decode is unsuccessful, return a 401.
 
-        target_check = jwt.decode(token, options={'verify_signature': False})
+        target_check = jwt.decode(token, verify=False)
         if target_check[ATTR_TARGET] in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
             try:
-                return jwt.decode(token, key)
+                return jwt.decode(token, key, algorithms=["ES256", "HS256"])
             except jwt.exceptions.DecodeError:
                 pass
 

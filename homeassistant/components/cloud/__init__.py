@@ -16,8 +16,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE, CONF_NAME, CONF_TYPE)
-from homeassistant.helpers import entityfilter
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import entityfilter, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 from homeassistant.components.alexa import smart_home as alexa_sh
@@ -57,10 +56,7 @@ GOOGLE_ENTITY_SCHEMA = vol.Schema({
 })
 
 ASSISTANT_SCHEMA = vol.Schema({
-    vol.Optional(
-        CONF_FILTER,
-        default=lambda: entityfilter.generate_filter([], [], [], [])
-    ): entityfilter.FILTER_SCHEMA,
+    vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
 })
 
 ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend({
@@ -105,12 +101,7 @@ def async_setup(hass, config):
     )
 
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
-
-    success = yield from cloud.initialize()
-
-    if not success:
-        return False
-
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, cloud.async_start)
     yield from http_api.async_setup(hass)
     return True
 
@@ -192,19 +183,6 @@ class Cloud:
 
         return self._gactions_config
 
-    @asyncio.coroutine
-    def initialize(self):
-        """Initialize and load cloud info."""
-        jwt_success = yield from self._fetch_jwt_keyset()
-
-        if not jwt_success:
-            return False
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, self._start_cloud)
-
-        return True
-
     def path(self, *parts):
         """Get config path inside cloud dir.
 
@@ -234,19 +212,34 @@ class Cloud:
                 'refresh_token': self.refresh_token,
             }, indent=4))
 
-    def _start_cloud(self, event):
+    @asyncio.coroutine
+    def async_start(self, _):
         """Start the cloud component."""
-        # Ensure config dir exists
-        path = self.hass.config.path(CONFIG_DIR)
-        if not os.path.isdir(path):
-            os.mkdir(path)
+        success = yield from self._fetch_jwt_keyset()
 
-        user_info = self.user_info_path
-        if not os.path.isfile(user_info):
+        # Fetching keyset can fail if internet is not up yet.
+        if not success:
+            self.hass.helpers.event.async_call_later(5, self.async_start)
             return
 
-        with open(user_info, 'rt') as file:
-            info = json.loads(file.read())
+        def load_config():
+            """Load config."""
+            # Ensure config dir exists
+            path = self.hass.config.path(CONFIG_DIR)
+            if not os.path.isdir(path):
+                os.mkdir(path)
+
+            user_info = self.user_info_path
+            if not os.path.isfile(user_info):
+                return None
+
+            with open(user_info, 'rt') as file:
+                return json.loads(file.read())
+
+        info = yield from self.hass.async_add_job(load_config)
+
+        if info is None:
+            return
 
         # Validate tokens
         try:

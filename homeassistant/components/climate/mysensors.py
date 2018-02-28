@@ -139,19 +139,18 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
             self.gateway.set_child_value(
                 self.node_id, self.child_id, value_type, value)
             if self.gateway.optimistic:
-                # O
-                # ptimistically assume that device has changed state
+                # Optimistically assume that device has changed state
                 self._values[value_type] = value
                 self.schedule_update_ha_state()
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_HVAC_SPEED, fan)
+            self.node_id, self.child_id, set_req.V_HVAC_SPEED, fan_mode)
         if self.gateway.optimistic:
             # Optimistically assume that device has changed state
-            self._values[set_req.V_HVAC_SPEED] = fan
+            self._values[set_req.V_HVAC_SPEED] = fan_mode
             self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):

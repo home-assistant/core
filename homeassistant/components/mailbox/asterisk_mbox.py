@@ -30,7 +30,7 @@ class AsteriskMailbox(Mailbox):
     """Asterisk VM Sensor."""
 
     def __init__(self, hass, name):
-        """Initialie Asterisk mailbox."""
+        """Initialize Asterisk mailbox."""
         super().__init__(hass, name)
         async_dispatcher_connect(
             self.hass, SIGNAL_MESSAGE_UPDATE, self._update_callback)
