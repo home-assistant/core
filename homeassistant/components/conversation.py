@@ -120,9 +120,9 @@ def async_setup(hass, config):
 
 def _create_matcher(utterance):
     """Create a regex that matches the utterance."""
-    parts = re.split(r'({\w+}|\[\w+\]\s+)', utterance)
+    parts = re.split(r'({\w+}|\[\w+\]\s*)', utterance)
     group_matcher = re.compile(r'{(\w+)}')
-    optional_matcher = re.compile(r'\[(\w+)\]\s+')
+    optional_matcher = re.compile(r'\[(\w+)\]\s*')
 
     pattern = ['^']
     for part in parts:
@@ -135,9 +135,9 @@ def _create_matcher(utterance):
 
         if group_match is not None:
             pattern.append(
-                '(?P<{}>{}?)'.format(group_match.groups()[0], r'[\w ]+'))
+                '(?P<{}>{}?)\s*'.format(group_match.groups()[0], r'[\w ]+'))
         elif optional_match is not None:
-            pattern.append(r'(?:{}\s+)?'.format(optional_match.groups()[0]))
+            pattern.append(r'(?:{}\s*)?'.format(optional_match.groups()[0]))
 
     pattern.append('$')
     return re.compile(''.join(pattern), re.I)
