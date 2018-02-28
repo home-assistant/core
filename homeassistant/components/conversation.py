@@ -137,7 +137,7 @@ def _create_matcher(utterance):
             pattern.append(
                 '(?P<{}>{}?)'.format(group_match.groups()[0], r'[\w ]+'))
         elif optional_match is not None:
-            pattern.append('(?:{}\s+)?'.format(optional_match.groups()[0]))
+            pattern.append(r'(?:{}\s+)?'.format(optional_match.groups()[0]))
 
     pattern.append('$')
     return re.compile(''.join(pattern), re.I)
