@@ -32,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Quiet down soco logging to just actual problems.
 logging.getLogger('soco').setLevel(logging.WARNING)
+logging.getLogger('soco.data_structures_entry').setLevel(logging.ERROR)
 _SOCO_SERVICES_LOGGER = logging.getLogger('soco.services')
 
 SUPPORT_SONOS = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
