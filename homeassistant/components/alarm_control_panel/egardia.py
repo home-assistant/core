@@ -18,7 +18,7 @@ from homeassistant.components.egardia import (
     REPORT_SERVER_CODES_IGNORE, CONF_REPORT_SERVER_CODES,
     CONF_REPORT_SERVER_ENABLED, CONF_REPORT_SERVER_PORT
     )
-REQUIREMENTS = ['pythonegardia==1.0.36']
+REQUIREMENTS = ['pythonegardia==1.0.38']
 
 _LOGGER = logging.getLogger(__name__)
 
