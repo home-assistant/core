@@ -28,6 +28,7 @@ DEVICE_CLASSES = [
     'gas',           # On means gas detected, Off means no gas (clear)
     'heat',          # On means hot, Off means normal
     'light',         # On means light detected, Off means no light
+    'lock',          # On means open (unlocked), Off means closed (locked)
     'moisture',      # On means wet, Off means dry
     'motion',        # On means motion detected, Off means no motion (clear)
     'moving',        # On means moving, Off means not moving (stopped)
