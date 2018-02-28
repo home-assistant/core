@@ -90,17 +90,17 @@ async def async_setup_platform(
         template_entity_ids = set()
 
         temp_ids = state_template.extract_entities()
-        if str(temp_ids) != MATCH_ALL:
+        if temp_ids != MATCH_ALL:
             template_entity_ids |= set(temp_ids)
 
         if speed_template:
             temp_ids = speed_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
+            if temp_ids != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
         if oscillating_template:
             temp_ids = oscillating_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
+            if temp_ids != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
         if not template_entity_ids:
