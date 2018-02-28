@@ -38,8 +38,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass,
+                               config,
+                               async_add_devices,
+                               discovery_info=None):
     """Set up a Yi Camera."""
     _LOGGER.debug('Received configuration: %s', config)
     async_add_devices([YiCamera(hass, config)], True)
@@ -107,31 +109,29 @@ class YiCamera(Camera):
             self.user, self.passwd, self.host, self.port, self.path,
             latest_dir, videos[-1])
 
-    @asyncio.coroutine
-    def async_camera_image(self):
+    async def async_camera_image(self):
         """Return a still image response from the camera."""
         from haffmpeg import ImageFrame, IMAGE_JPEG
 
-        url = yield from self.hass.async_add_job(self.get_latest_video_url)
+        url = await self.hass.async_add_job(self.get_latest_video_url)
         if url != self._last_url:
             ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
-            self._last_image = yield from asyncio.shield(ffmpeg.get_image(
+            self._last_image = await asyncio.shield(ffmpeg.get_image(
                 url, output_format=IMAGE_JPEG,
                 extra_cmd=self._extra_arguments), loop=self.hass.loop)
             self._last_url = url
 
         return self._last_image
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg import CameraMjpeg
 
         stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
-        yield from stream.open_camera(
+        await stream.open_camera(
             self._last_url, extra_cmd=self._extra_arguments)
 
-        yield from async_aiohttp_proxy_stream(
+        await async_aiohttp_proxy_stream(
             self.hass, request, stream,
             'multipart/x-mixed-replace;boundary=ffserver')
-        yield from stream.close()
+        await stream.close()
