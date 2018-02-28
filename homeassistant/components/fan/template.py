@@ -42,16 +42,16 @@ CONF_SET_OSCILLATING_ACTION = 'set_oscillating'
 _VALID_STATES = [STATE_ON, STATE_OFF, 'true', 'false']
 
 FAN_SCHEMA = vol.Schema({
-    vol.Optional(CONF_FRIENDLY_NAME, default=None): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_SPEED_TEMPLATE, default=None): cv.template,
-    vol.Optional(CONF_OSCILLATING_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_SPEED_TEMPLATE): cv.template,
+    vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
 
     vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
 
-    vol.Optional(CONF_SET_SPEED_ACTION, default=None): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_SET_OSCILLATING_ACTION, default=None): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_SET_SPEED_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
 
     vol.Optional(
         CONF_SPEED_LIST,
@@ -66,8 +66,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Template Fans."""
     fans = []
 
@@ -118,7 +117,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         )
 
     async_add_devices(fans)
-    return True
 
 
 class TemplateFan(FanEntity):
@@ -201,29 +199,26 @@ class TemplateFan(FanEntity):
         """Return the polling state."""
         return False
 
-    @asyncio.coroutine
-    def async_turn_on(self, speed: str=None) -> None:
+    async def async_turn_on(self, speed: str=None) -> None:
         """Turn on the fan.
 
         This method is a coroutine.
         """
         self._state = True
-        yield from self._on_script.async_run()
+        await self._on_script.async_run()
 
         if speed:
-            yield from self.async_set_speed(speed)
+            await self.async_set_speed(speed)
 
-    @asyncio.coroutine
-    def async_turn_off(self) -> None:
+    async def async_turn_off(self) -> None:
         """Turn off the fan.
 
         This method is a coroutine.
         """
         self._state = False
-        yield from self._off_script.async_run()
+        await self._off_script.async_run()
 
-    @asyncio.coroutine
-    def async_set_speed(self, speed: str) -> None:
+    async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan.
 
         This method is a coroutine.
@@ -233,15 +228,14 @@ class TemplateFan(FanEntity):
 
         if speed in self._speed_list:
             self._speed = speed
-            yield from self._set_speed_script.async_run({ATTR_SPEED: speed})
+            await self._set_speed_script.async_run({ATTR_SPEED: speed})
         else:
             _LOGGER.error(
                 'Received invalid speed: %s. ' +
                 'Expected: %s.',
                 speed, self._speed_list)
 
-    @asyncio.coroutine
-    def async_oscillate(self, oscillating: bool) -> None:
+    async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation of the fan.
 
         This method is a coroutine.
@@ -251,7 +245,7 @@ class TemplateFan(FanEntity):
 
         if oscillating is True or oscillating is False:
             self._oscillating = oscillating
-            yield from self._set_oscillating_script.async_run(
+            await self._set_oscillating_script.async_run(
                 {ATTR_OSCILLATING: oscillating}
             )
         else:
@@ -259,8 +253,7 @@ class TemplateFan(FanEntity):
                 'Received invalid oscillating: %s. ' +
                 'Expected True/False.', oscillating)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
         def template_fan_state_listener(entity, old_state, new_state):
@@ -278,8 +271,7 @@ class TemplateFan(FanEntity):
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, template_fan_startup)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update the state from the template."""
         _LOGGER.info('Updating fan %s', self._name)
 
