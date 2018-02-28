@@ -97,12 +97,12 @@ def async_match_state(hass, name, states=None):
     if states is None:
         states = hass.states.async_all()
 
-    entity = _fuzzymatch(name, states, lambda state: state.name)
+    state = _fuzzymatch(name, states, lambda state: state.name)
 
-    if entity is None:
+    if state is None:
         raise IntentHandleError('Unable to find entity {}'.format(name))
 
-    return entity
+    return state
 
 
 @callback
@@ -154,12 +154,13 @@ def _fuzzymatch(name, items, key):
     matches = []
     pattern = '.*?'.join(name)
     regex = re.compile(pattern, re.IGNORECASE)
-    for item in items:
+    for idx, item in enumerate(items):
         match = regex.search(key(item))
         if match:
-            matches.append((len(match.group()), match.start(), item))
+            # Add index so we pick first match in case same group and start
+            matches.append((len(match.group()), match.start(), idx, item))
 
-    return sorted(matches)[0][2] if matches else None
+    return sorted(matches)[0][3] if matches else None
 
 
 class ServiceIntentHandler(IntentHandler):
