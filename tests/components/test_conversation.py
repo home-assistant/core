@@ -311,3 +311,12 @@ def test_create_matcher():
     match = pattern.match('turn kitchen lights on')
     assert match is not None
     assert match.groupdict()['name'] == 'kitchen light'
+
+    # Optional 2 words
+    pattern = conversation._create_matcher('Turn [the great] {name} on')
+    match = pattern.match('turn the great kitchen lights on')
+    assert match is not None
+    assert match.groupdict()['name'] == 'kitchen lights'
+    match = pattern.match('turn kitchen lights on')
+    assert match is not None
+    assert match.groupdict()['name'] == 'kitchen lights'
