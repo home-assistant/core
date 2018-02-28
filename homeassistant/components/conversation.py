@@ -88,38 +88,52 @@ def async_setup(hass, config):
     def process(service):
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
-        yield from _process(hass, text)
+        try:
+            yield from _process(hass, text)
+        except intent.IntentHandleError as err:
+            _LOGGER.error('Error processing %s: %s', text, err)
 
     hass.services.async_register(
         DOMAIN, SERVICE_PROCESS, process, schema=SERVICE_PROCESS_SCHEMA)
 
     hass.http.register_view(ConversationProcessView)
 
-    async_register(hass, intent.INTENT_TURN_ON,
-                   ['Turn {name} on', 'Turn on {name}'])
-    async_register(hass, intent.INTENT_TURN_OFF,
-                   ['Turn {name} off', 'Turn off {name}'])
-    async_register(hass, intent.INTENT_TOGGLE,
-                   ['Toggle {name}', '{name} toggle'])
+    async_register(hass, intent.INTENT_TURN_ON, [
+        'Turn [the] [a] {name} on',
+        'Turn on [the] [a] [an] {name}',
+    ])
+    async_register(hass, intent.INTENT_TURN_OFF, [
+        'Turn [the] [a] [an] {name} off',
+        'Turn off [the] [a] [an] {name}',
+    ])
+    async_register(hass, intent.INTENT_TOGGLE, [
+        'Toggle [the] [a] [an] {name}',
+        '[the] [a] [an] {name} toggle',
+    ])
 
     return True
 
 
 def _create_matcher(utterance):
     """Create a regex that matches the utterance."""
-    parts = re.split(r'({\w+})', utterance)
+    parts = re.split(r'({\w+}|\[\w+\]\s+)', utterance)
     group_matcher = re.compile(r'{(\w+)}')
+    optional_matcher = re.compile(r'\[(\w+)\]\s+')
 
     pattern = ['^']
-
     for part in parts:
-        match = group_matcher.match(part)
+        group_match = group_matcher.match(part)
+        optional_match = optional_matcher.match(part)
 
-        if match is None:
+        if group_match is None and optional_match is None:
             pattern.append(part)
             continue
 
-        pattern.append('(?P<{}>{})'.format(match.groups()[0], r'[\w ]+'))
+        if group_match is not None:
+            pattern.append(
+                '(?P<{}>{})'.format(group_match.groups()[0], r'[\w ]+'))
+        elif optional_match is not None:
+            pattern.append('(?:{}\s+)?'.format(optional_match.groups()[0]))
 
     pattern.append('$')
     return re.compile(''.join(pattern), re.I)
@@ -158,7 +172,11 @@ class ConversationProcessView(http.HomeAssistantView):
         """Send a request for processing."""
         hass = request.app['hass']
 
-        intent_result = yield from _process(hass, data['text'])
+        try:
+            intent_result = yield from _process(hass, data['text'])
+        except intent.IntentHandleError as err:
+            intent_result = intent.IntentResponse()
+            intent_result.async_set_speech(str(err))
 
         if intent_result is None:
             intent_result = intent.IntentResponse()
