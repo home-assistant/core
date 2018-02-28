@@ -625,6 +625,7 @@ omit =
     homeassistant/components/sensor/ripple.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
+    homeassistant/components/sensor/sense.py
     homeassistant/components/sensor/sensehat.py
     homeassistant/components/sensor/serial.py
     homeassistant/components/sensor/serial_pm.py
