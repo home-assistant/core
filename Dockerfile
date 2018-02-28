@@ -18,18 +18,14 @@ VOLUME /config
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-# Copy build scripts
-COPY virtualization/Docker/ virtualization/Docker/
+# Copy source
+COPY . .
+
+# Run build scripts
 RUN virtualization/Docker/setup_docker_prereqs
 
 # Install hass component dependencies
-COPY requirements_all.txt requirements_all.txt
-# Uninstall enum34 because some dependencies install it but breaks Python 3.4+.
-# See PR #8103 for more info.
-RUN pip3 install --no-cache-dir -r requirements_all.txt && \
+RUN pip3 install --no-cache-dir -r requirements_all.txt -c homeassistant/package_constraints.txt && \
     pip3 install --no-cache-dir mysqlclient psycopg2 uvloop cchardet cython
-
-# Copy source
-COPY . .
 
 CMD [ "python", "-m", "homeassistant", "--config", "/config" ]
