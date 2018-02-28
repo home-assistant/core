@@ -1,11 +1,8 @@
 """Color util methods."""
-import logging
 import math
 import colorsys
 
 from typing import Tuple
-
-_LOGGER = logging.getLogger(__name__)
 
 # Official CSS3 colors from w3.org:
 # https://www.w3.org/TR/2010/PR-css3-color-20101028/#html4
@@ -171,8 +168,7 @@ def color_name_to_rgb(color_name):
     # spaces in it as well for matching purposes
     hex_value = COLORS.get(color_name.replace(' ', '').lower())
     if not hex_value:
-        _LOGGER.error('unknown color supplied %s default to white', color_name)
-        hex_value = COLORS['white']
+        raise ValueError('Unknown color')
 
     return hex_value
 

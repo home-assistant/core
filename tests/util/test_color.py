@@ -2,6 +2,9 @@
 import unittest
 import homeassistant.util.color as color_util
 
+import pytest
+import voluptuous as vol
+
 
 class TestColorUtil(unittest.TestCase):
     """Test color util methods."""
@@ -150,10 +153,10 @@ class TestColorUtil(unittest.TestCase):
         self.assertEqual((72, 61, 139),
                          color_util.color_name_to_rgb('darkslate blue'))
 
-    def test_color_name_to_rgb_unknown_name_default_white(self):
+    def test_color_name_to_rgb_unknown_name_raises_value_error(self):
         """Test color_name_to_rgb."""
-        self.assertEqual((255, 255, 255),
-                         color_util.color_name_to_rgb('not a color'))
+        with pytest.raises(ValueError):
+            color_util.color_name_to_rgb('not a color')
 
     def test_color_rgb_to_rgbw(self):
         """Test color_rgb_to_rgbw."""
@@ -280,3 +283,13 @@ class ColorTemperatureToRGB(unittest.TestCase):
         rgb = color_util.color_temperature_to_rgb(6500)
         self.assertGreater(rgb[0], rgb[1])
         self.assertGreater(rgb[0], rgb[2])
+
+
+def test_get_color_in_voluptuous():
+    """Test using the get method in color validation."""
+    schema = vol.Schema(color_util.color_name_to_rgb)
+
+    with pytest.raises(vol.Invalid):
+        schema('not a color')
+
+    assert schema('red') == (255, 0, 0)
