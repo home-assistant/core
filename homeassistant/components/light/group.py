@@ -8,15 +8,13 @@ import logging
 import itertools
 from typing import List, Tuple, Optional, Iterator, Any, Callable
 from collections import Counter
-from copy import deepcopy
 
 import voluptuous as vol
 
 from homeassistant.core import State, callback
 from homeassistant.components import light
-from homeassistant.const import (STATE_OFF, STATE_ON, SERVICE_TURN_ON,
-                                 SERVICE_TURN_OFF, ATTR_ENTITY_ID, CONF_NAME,
-                                 CONF_ENTITIES, STATE_UNAVAILABLE,
+from homeassistant.const import (STATE_OFF, STATE_ON, ATTR_ENTITY_ID,
+                                 CONF_NAME, CONF_ENTITIES, STATE_UNAVAILABLE,
                                  STATE_UNKNOWN, ATTR_SUPPORTED_FEATURES)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
@@ -158,24 +156,24 @@ class GroupLight(light.Light):
         """No polling needed for a group light."""
         return False
 
-    async def _async_send_message(self, service, **kwargs):
-        """Send a message to all entities in the group."""
-        for entity_id in self._entity_ids:
-            payload = deepcopy(kwargs)
-            payload[ATTR_ENTITY_ID] = entity_id
-            await self.hass.services.async_call(light.DOMAIN, service, payload)
-
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to all lights in the group."""
-        await self._async_send_message(SERVICE_TURN_ON, **kwargs)
+        for entity_id in self._entity_ids:
+            payload = dict(kwargs)
+            payload[ATTR_ENTITY_ID] = entity_id
+            light.async_turn_on(self.hass, **payload)
 
     async def async_turn_off(self, **kwargs):
         """Forward the turn_off command to all lights in the group."""
-        await self._async_send_message(SERVICE_TURN_OFF, **kwargs)
+        for entity_id in self._entity_ids:
+            payload = dict(kwargs)
+            payload[ATTR_ENTITY_ID] = entity_id
+            light.async_turn_off(self.hass, **payload)
 
     async def async_update(self):
         """Query all members and determine the group state."""
-        states = self._child_states()
+        all_states = [self.hass.states.get(x) for x in self._entity_ids]
+        states = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
 
         self._state = _determine_on_off_state(states)
@@ -221,11 +219,6 @@ class GroupLight(light.Light):
         # so that we don't break in the future when a new feature is added.
         self._supported_features &= SUPPORT_GROUP_LIGHT
 
-    def _child_states(self) -> List[State]:
-        """The states that the group is tracking."""
-        states = [self.hass.states.get(x) for x in self._entity_ids]
-        return list(filter(None, states))
-
 
 def _find_state_attributes(states: List[State],
                            key: str) -> Iterator[Any]:
@@ -269,12 +262,18 @@ def _reduce_attribute(states: List[State],
 
 def _determine_on_off_state(states: List[State]) -> str:
     """Helper method to determine the ON/OFF/... state of a light."""
-    s_states = [state.state for state in states]
-
-    if not s_states or all(state == STATE_UNAVAILABLE for state in s_states):
+    if not states:
         return STATE_UNAVAILABLE
-    elif any(state == STATE_ON for state in s_states):
-        return STATE_ON
-    elif all(state == STATE_UNKNOWN for state in s_states):
+    all_unavailable = True
+    all_unknown = True
+    for state_ in states:
+        state = state_.state
+        if state == STATE_ON:
+            return STATE_ON
+        all_unavailable = all_unavailable and state == STATE_UNAVAILABLE
+        all_unknown = all_unknown and state == STATE_UNKNOWN
+    if all_unavailable:
+        return STATE_UNAVAILABLE
+    if all_unknown:
         return STATE_UNKNOWN
     return STATE_OFF
