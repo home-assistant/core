@@ -50,6 +50,9 @@ class TestCheckConfig(unittest.TestCase):
             # Py34: AssertionError
             asyncio.set_event_loop(asyncio.new_event_loop())
 
+        # Will allow seeing full diff
+        self.maxDiff = None
+
     # pylint: disable=no-self-use,invalid-name
     def test_config_platform_valid(self):
         """Test a valid platform setup."""
@@ -176,8 +179,6 @@ class TestCheckConfig(unittest.TestCase):
                                         'login_attempts_threshold': -1,
                                         'server_host': '0.0.0.0',
                                         'server_port': 8123,
-                                        'ssl_certificate': None,
-                                        'ssl_key': None,
                                         'trusted_networks': [],
                                         'use_x_forwarded_for': False}},
                 'except': {},

@@ -22,7 +22,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['broadlink==0.5']
+REQUIREMENTS = [
+    'https://github.com/balloob/python-broadlink/archive/'
+    '3580ff2eaccd267846f14246d6ede6e30671f7c6.zip#broadlink==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,8 +47,8 @@ MP1_TYPES = ['mp1']
 SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_OFF, default=None): cv.string,
-    vol.Optional(CONF_COMMAND_ON, default=None): cv.string,
+    vol.Optional(CONF_COMMAND_OFF): cv.string,
+    vol.Optional(CONF_COMMAND_ON): cv.string,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
 })
 

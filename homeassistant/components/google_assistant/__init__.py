@@ -27,7 +27,7 @@ from .const import (
     CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSE_BY_DEFAULT, CONF_EXPOSED_DOMAINS,
     DEFAULT_EXPOSED_DOMAINS, CONF_AGENT_USER_ID, CONF_API_KEY,
     SERVICE_REQUEST_SYNC, REQUEST_SYNC_BASE_URL, CONF_ENTITY_CONFIG,
-    CONF_EXPOSE, CONF_ALIASES
+    CONF_EXPOSE, CONF_ALIASES, CONF_ROOM_HINT
 )
 from .auth import GoogleAssistantAuthView
 from .http import async_register_http
@@ -43,7 +43,8 @@ ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_TYPE): vol.In(MAPPING_COMPONENT),
     vol.Optional(CONF_EXPOSE): cv.boolean,
-    vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string])
+    vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_ROOM_HINT): cv.string
 })
 
 CONFIG_SCHEMA = vol.Schema(

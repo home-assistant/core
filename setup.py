@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Home Assistant setup script."""
-import os
 from setuptools import setup, find_packages
-import sys
 
 import homeassistant.const as hass_const
 
@@ -27,7 +25,6 @@ PROJECT_CLASSIFIERS = [
     'Intended Audience :: Developers',
     'License :: OSI Approved :: Apache Software License',
     'Operating System :: OS Independent',
-    'Programming Language :: Python :: 3.4',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
     'Topic :: Home Automation'
@@ -41,8 +38,6 @@ GITHUB_PATH = '{}/{}'.format(
     PROJECT_GITHUB_USERNAME, PROJECT_GITHUB_REPOSITORY)
 GITHUB_URL = 'https://github.com/{}'.format(GITHUB_PATH)
 
-
-HERE = os.path.abspath(os.path.dirname(__file__))
 DOWNLOAD_URL = '{}/archive/{}.zip'.format(GITHUB_URL, hass_const.__version__)
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
@@ -53,7 +48,7 @@ REQUIRES = [
     'pytz>=2017.02',
     'pip>=8.0.3',
     'jinja2>=2.10',
-    'voluptuous==0.10.5',
+    'voluptuous==0.11.1',
     'typing>=3,<4',
     'aiohttp==2.3.10',   # If updated, check if yarl also needs an update!
     'yarl==1.1.0',
@@ -66,9 +61,7 @@ REQUIRES = [
 
 MIN_PY_VERSION = '.'.join(map(
     str,
-    hass_const.REQUIRED_PYTHON_VER_WIN
-    if sys.platform.startswith('win')
-    else hass_const.REQUIRED_PYTHON_VER))
+    hass_const.REQUIRED_PYTHON_VER))
 
 setup(
     name=PROJECT_PACKAGE_NAME,

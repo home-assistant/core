@@ -180,7 +180,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
         }},
         vol.Optional(CONF_LOCAL_IP, default=DEFAULT_LOCAL_IP): cv.string,
-        vol.Optional(CONF_LOCAL_PORT, default=DEFAULT_LOCAL_PORT): cv.port,
+        vol.Optional(CONF_LOCAL_PORT): cv.port,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -310,7 +310,7 @@ def setup(hass, config):
     bound_system_callback = partial(_system_callback_handler, hass, config)
     hass.data[DATA_HOMEMATIC] = homematic = HMConnection(
         local=config[DOMAIN].get(CONF_LOCAL_IP),
-        localport=config[DOMAIN].get(CONF_LOCAL_PORT),
+        localport=config[DOMAIN].get(CONF_LOCAL_PORT, DEFAULT_LOCAL_PORT),
         remotes=remotes,
         systemcallback=bound_system_callback,
         interface_id='homeassistant'

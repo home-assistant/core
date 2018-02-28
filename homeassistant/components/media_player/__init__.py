@@ -31,7 +31,6 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
-from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
@@ -877,12 +876,6 @@ class MediaPlayerDevice(Entity):
         }
 
         return state_attr
-
-    def preload_media_image_url(self, url):
-        """Preload and cache a media image for future use."""
-        run_coroutine_threadsafe(
-            _async_fetch_image(self.hass, url), self.hass.loop
-        ).result()
 
 
 @asyncio.coroutine

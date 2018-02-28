@@ -21,6 +21,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers import intent
 from homeassistant.loader import bind_hass
 import homeassistant.util.color as color_util
 
@@ -135,6 +136,8 @@ PROFILE_SCHEMA = vol.Schema(
     vol.ExactSequence((str, cv.small_float, cv.small_float, cv.byte))
 )
 
+INTENT_SET = 'HassLightSet'
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -228,7 +231,12 @@ def preprocess_turn_on_alternatives(params):
 
     color_name = params.pop(ATTR_COLOR_NAME, None)
     if color_name is not None:
-        params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+        try:
+            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+        except ValueError:
+            _LOGGER.warning('Got unknown color %s, falling back to white',
+                            color_name)
+            params[ATTR_RGB_COLOR] = (255, 255, 255)
 
     kelvin = params.pop(ATTR_KELVIN, None)
     if kelvin is not None:
@@ -240,20 +248,79 @@ def preprocess_turn_on_alternatives(params):
         params[ATTR_BRIGHTNESS] = int(255 * brightness_pct/100)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+class SetIntentHandler(intent.IntentHandler):
+    """Handle set color intents."""
+
+    intent_type = INTENT_SET
+    slot_schema = {
+        vol.Required('name'): cv.string,
+        vol.Optional('color'): color_util.color_name_to_rgb,
+        vol.Optional('brightness'): vol.All(vol.Coerce(int), vol.Range(0, 100))
+    }
+
+    async def async_handle(self, intent_obj):
+        """Handle the hass intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        state = hass.helpers.intent.async_match_state(
+            slots['name']['value'],
+            [state for state in hass.states.async_all()
+             if state.domain == DOMAIN])
+
+        service_data = {
+            ATTR_ENTITY_ID: state.entity_id,
+        }
+        speech_parts = []
+
+        if 'color' in slots:
+            intent.async_test_feature(
+                state, SUPPORT_RGB_COLOR, 'changing colors')
+            service_data[ATTR_RGB_COLOR] = slots['color']['value']
+            # Use original passed in value of the color because we don't have
+            # human readable names for that internally.
+            speech_parts.append('the color {}'.format(
+                intent_obj.slots['color']['value']))
+
+        if 'brightness' in slots:
+            intent.async_test_feature(
+                state, SUPPORT_BRIGHTNESS, 'changing brightness')
+            service_data[ATTR_BRIGHTNESS_PCT] = slots['brightness']['value']
+            speech_parts.append('{}% brightness'.format(
+                slots['brightness']['value']))
+
+        await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, service_data)
+
+        response = intent_obj.create_response()
+
+        if not speech_parts:  # No attributes changed
+            speech = 'Turned on {}'.format(state.name)
+        else:
+            parts = ['Changed {} to'.format(state.name)]
+            for index, part in enumerate(speech_parts):
+                if index == 0:
+                    parts.append(' {}'.format(part))
+                elif index != len(speech_parts) - 1:
+                    parts.append(', {}'.format(part))
+                else:
+                    parts.append(' and {}'.format(part))
+            speech = ''.join(parts)
+
+        response.async_set_speech(speech)
+        return response
+
+
+async def async_setup(hass, config):
     """Expose light control via state machine and services."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LIGHTS)
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
     # load profiles from files
-    profiles_valid = yield from Profiles.load_profiles(hass)
+    profiles_valid = await Profiles.load_profiles(hass)
     if not profiles_valid:
         return False
 
-    @asyncio.coroutine
-    def async_handle_light_service(service):
+    async def async_handle_light_service(service):
         """Handle a turn light on or off service call."""
         # Get the validated data
         params = service.data.copy()
@@ -267,18 +334,18 @@ def async_setup(hass, config):
         update_tasks = []
         for light in target_lights:
             if service.service == SERVICE_TURN_ON:
-                yield from light.async_turn_on(**params)
+                await light.async_turn_on(**params)
             elif service.service == SERVICE_TURN_OFF:
-                yield from light.async_turn_off(**params)
+                await light.async_turn_off(**params)
             else:
-                yield from light.async_toggle(**params)
+                await light.async_toggle(**params)
 
             if not light.should_poll:
                 continue
             update_tasks.append(light.async_update_ha_state(True))
 
         if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks, loop=hass.loop)
 
     # Listen for light on and light off service calls.
     hass.services.async_register(
@@ -293,6 +360,8 @@ def async_setup(hass, config):
         DOMAIN, SERVICE_TOGGLE, async_handle_light_service,
         schema=LIGHT_TOGGLE_SCHEMA)
 
+    hass.helpers.intent.async_register(SetIntentHandler())
+
     return True
 
 
@@ -302,8 +371,7 @@ class Profiles:
     _all = None
 
     @classmethod
-    @asyncio.coroutine
-    def load_profiles(cls, hass):
+    async def load_profiles(cls, hass):
         """Load and cache profiles."""
         def load_profile_data(hass):
             """Load built-in profiles and custom profiles."""
@@ -333,7 +401,7 @@ class Profiles:
                         return None
             return profiles
 
-        cls._all = yield from hass.async_add_job(load_profile_data, hass)
+        cls._all = await hass.async_add_job(load_profile_data, hass)
         return cls._all is not None
 
     @classmethod

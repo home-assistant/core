@@ -283,7 +283,7 @@ def test_turn_on_multiple_intent(hass):
     )
     yield from hass.async_block_till_done()
 
-    assert response.speech['plain']['speech'] == 'Turned on test lights'
+    assert response.speech['plain']['speech'] == 'Turned on test lights 2'
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == 'light'

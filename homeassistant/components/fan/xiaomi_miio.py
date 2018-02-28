@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.fan import (FanEntity, PLATFORM_SCHEMA,
-                                          SUPPORT_SET_SPEED, DOMAIN)
+                                          SUPPORT_SET_SPEED, DOMAIN, )
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN,
                                  ATTR_ENTITY_ID, )
 from homeassistant.exceptions import PlatformNotReady
@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.3.6']
+REQUIREMENTS = ['python-miio==0.3.7']
 
 ATTR_TEMPERATURE = 'temperature'
 ATTR_HUMIDITY = 'humidity'
@@ -167,6 +167,7 @@ class XiaomiAirPurifier(FanEntity):
             ATTR_AVERAGE_AIR_QUALITY_INDEX: None,
             ATTR_PURIFY_VOLUME: None,
         }
+        self._skip_update = False
 
     @property
     def supported_features(self):
@@ -218,22 +219,34 @@ class XiaomiAirPurifier(FanEntity):
         """Turn the fan on."""
         if speed:
             # If operation mode was set the device must not be turned on.
-            yield from self.async_set_speed(speed)
-            return
+            result = yield from self.async_set_speed(speed)
+        else:
+            result = yield from self._try_command(
+                "Turning the air purifier on failed.", self._air_purifier.on)
 
-        yield from self._try_command(
-            "Turning the air purifier on failed.", self._air_purifier.on)
+        if result:
+            self._state = True
+            self._skip_update = True
 
     @asyncio.coroutine
     def async_turn_off(self: ToggleEntity, **kwargs) -> None:
         """Turn the fan off."""
-        yield from self._try_command(
+        result = yield from self._try_command(
             "Turning the air purifier off failed.", self._air_purifier.off)
+
+        if result:
+            self._state = False
+            self._skip_update = True
 
     @asyncio.coroutine
     def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
+
+        # On state change the device doesn't provide the new state immediately.
+        if self._skip_update:
+            self._skip_update = False
+            return
 
         try:
             state = yield from self.hass.async_add_job(
@@ -262,6 +275,7 @@ class XiaomiAirPurifier(FanEntity):
                     ATTR_LED_BRIGHTNESS] = state.led_brightness.value
 
         except DeviceException as ex:
+            self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
@@ -288,7 +302,7 @@ class XiaomiAirPurifier(FanEntity):
 
         yield from self._try_command(
             "Setting operation mode of the air purifier failed.",
-            self._air_purifier.set_mode, OperationMode[speed])
+            self._air_purifier.set_mode, OperationMode[speed.title()])
 
     @asyncio.coroutine
     def async_set_buzzer_on(self):
