@@ -9,12 +9,12 @@ from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_ID)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pytuya==5.0']
+REQUIREMENTS = ['pytuya==6.0']
 
 CONF_DEVICE_ID = 'device_id'
 CONF_LOCAL_KEY = 'local_key'
 
-DEFAULT_ID = 1
+DEFAULT_ID = '1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
