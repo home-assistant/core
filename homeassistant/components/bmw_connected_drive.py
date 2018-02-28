@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD
 )
 
-REQUIREMENTS = ['bimmer_connected==0.3.0']
+REQUIREMENTS = ['bimmer_connected==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
