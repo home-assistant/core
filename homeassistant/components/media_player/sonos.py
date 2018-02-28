@@ -120,6 +120,19 @@ class SonosData:
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sonos platform."""
     import soco
+    import soco.events
+    import soco.exceptions
+
+    orig_parse_event_xml = soco.events.parse_event_xml
+
+    def safe_parse_event_xml(xml):
+        """Avoid SoCo 0.14 event thread dying from invalid xml."""
+        try:
+            return orig_parse_event_xml(xml)
+        except soco.exceptions.SoCoException:
+            return {}
+
+    soco.events.parse_event_xml = safe_parse_event_xml
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
