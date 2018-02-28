@@ -5,7 +5,6 @@ import logging.handlers
 import os
 import sys
 from time import time
-from collections import OrderedDict
 
 from typing import Any, Optional, Dict
 
@@ -115,14 +114,6 @@ def async_from_config_dict(config: Dict[str, Any],
     # Merge packages
     conf_util.merge_packages_config(
         config, core_config.get(conf_util.CONF_PACKAGES, {}))
-
-    # Make a copy because we are mutating it.
-    # Use OrderedDict in case original one was one.
-    # Convert values to dictionaries if they are None
-    new_config = OrderedDict()
-    for key, value in config.items():
-        new_config[key] = value or {}
-    config = new_config
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     yield from hass.config_entries.async_load()

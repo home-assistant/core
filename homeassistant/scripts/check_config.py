@@ -1,4 +1,4 @@
-"""Script to ensure a configuration file exists."""
+"""Script to check the configuration file."""
 
 import argparse
 import logging
@@ -11,7 +11,7 @@ from unittest.mock import patch
 from typing import Dict, List, Sequence
 
 from homeassistant.core import callback
-from homeassistant import bootstrap, loader, setup, config as config_util
+from homeassistant import bootstrap, core, config as config_util, loader, setup
 import homeassistant.util.yaml as yaml
 from homeassistant.exceptions import HomeAssistantError
 
@@ -32,15 +32,19 @@ MOCKS = {
                       config_util._log_pkg_error),
     'logger_exception': ("homeassistant.setup._LOGGER.error",
                          setup._LOGGER.error),
-    'logger_exception_bootstrap': ("homeassistant.bootstrap._LOGGER.error",
-                                   bootstrap._LOGGER.error),
+    'logger_exception*': ("homeassistant.bootstrap._LOGGER.error",
+                          bootstrap._LOGGER.error),
 }
-SILENCE = (
+SILENCE = ((
     'homeassistant.bootstrap.async_enable_logging',  # callback
     'homeassistant.bootstrap.clear_secret_cache',
     'homeassistant.bootstrap.async_register_signal_handling',  # callback
     'homeassistant.config.process_ha_config_upgrade',
-)
+    'homeassistant.util.logging.AsyncHandler._process',
+), (  # New method's patches
+    'homeassistant.config.clear_secret_cache',
+))
+
 PATCHES = {}
 
 C_HEAD = 'bold'
@@ -88,6 +92,9 @@ def run(script_args: List) -> int:
         '-s', '--secrets',
         action='store_true',
         help="Show secret information")
+    parser.add_argument(
+        '--new', nargs='?', const=True, default=False,
+        help="Proof of concept config_checker")
 
     args = parser.parse_args()
 
@@ -103,7 +110,7 @@ def run(script_args: List) -> int:
     if args.info:
         domain_info = args.info.split(',')
 
-    res = check(config_path)
+    res = check(config_path, args.new)
     if args.files:
         print(color(C_HEAD, 'yaml files'), '(used /',
               color('red', 'not used') + ')')
@@ -158,7 +165,7 @@ def run(script_args: List) -> int:
     return len(res['except'])
 
 
-def check(config_path):
+def check(config_path, new_method=False):
     """Perform a check by mocking hass load functions."""
     logging.getLogger('homeassistant.core').setLevel(logging.WARNING)
     logging.getLogger('homeassistant.loader').setLevel(logging.WARNING)
@@ -239,15 +246,9 @@ def check(config_path):
     def mock_logger_exception(msg, *params):
         """Log logger.exceptions."""
         res['except'].setdefault(ERROR_STR, []).append(msg % params)
-        MOCKS['logger_exception'][1](msg, *params)
-
-    def mock_logger_exception_bootstrap(msg, *params):
-        """Log logger.exceptions."""
-        res['except'].setdefault(ERROR_STR, []).append(msg % params)
-        MOCKS['logger_exception_bootstrap'][1](msg, *params)
 
     # Patches to skip functions
-    for sil in SILENCE:
+    for sil in SILENCE[1 if new_method else 0]:
         PATCHES[sil] = patch(sil, return_value=mock_cb())
 
     # Patches with local mock functions
@@ -264,9 +265,17 @@ def check(config_path):
     yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
 
     try:
-        with patch('homeassistant.util.logging.AsyncHandler._process'):
+        if new_method:
+            hass = core.HomeAssistant()
+            config_dir = os.path.abspath(config_path)
+            hass.config.config_dir = config_dir
+            res['components'] = hass.loop.run_until_complete(
+                config_util.async_check_ha_config_file_new(hass, config_dir)
+            )
+        else:
             bootstrap.from_config_file(config_path, skip_pip=True)
         res['secret_cache'] = dict(yaml.__SECRET_CACHE)
+        bootstrap.clear_secret_cache()
     except Exception as err:  # pylint: disable=broad-except
         print(color('red', 'Fatal error while loading config:'), str(err))
         res['except'].setdefault(ERROR_STR, []).append(err)
@@ -276,7 +285,6 @@ def check(config_path):
             pat.stop()
         # Ensure !secrets point to the original function
         yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
-        bootstrap.clear_secret_cache()
 
     return res
 

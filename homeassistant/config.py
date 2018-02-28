@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import callback, DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component, get_platform
-from homeassistant.util.yaml import load_yaml, SECRET_YAML
+from homeassistant.util.yaml import clear_secret_cache, load_yaml, SECRET_YAML
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as date_util, location as loc_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
@@ -304,7 +304,12 @@ def load_yaml_config_file(config_path):
         _LOGGER.error(msg)
         raise HomeAssistantError(msg)
 
-    return conf_dict
+    # Make a copy because we are mutating it.
+    # Convert values to dictionaries if they are None
+    new_config = OrderedDict()
+    for key, value in conf_dict.items():
+        new_config[key] = value or {}
+    return new_config
 
 
 def process_ha_config_upgrade(hass):
@@ -667,6 +672,39 @@ async def async_check_ha_config_file(hass):
     if exit_code != 0 or RE_YAML_ERROR.search(log):
         return log
     return None
+
+
+async def async_check_ha_config_file_new(hass, config_path=None):
+    """Check if Home Assistant configuration file is valid."""
+    if not config_path:
+        config_path = hass.config.config_dir
+
+    try:
+        config = load_yaml_config_file(config_path)
+    finally:
+        clear_secret_cache()
+
+    # Validate and extract core config
+    core_config = CORE_CONFIG_SCHEMA(config.get(CONF_CORE, {}))
+    del config[CONF_CORE]
+
+    # Merge packages
+    merge_packages_config(
+        config, core_config.get(CONF_PACKAGES, {}))
+
+    # Filter out the repeating and common config section [homeassistant]
+    components = set(key.split(' ')[0] for key in config.keys())
+    print(components)
+
+    # To ADD config entries?
+    # hass.config_entries = config_entries.ConfigEntries(hass, config)
+    # yield from hass.config_entries.async_load()
+    # components.update(hass.config_entries.async_domains())
+
+    # Validate Components & platforms
+    # manually, without patches
+
+    return config
 
 
 @callback
