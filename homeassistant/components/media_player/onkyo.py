@@ -161,6 +161,11 @@ class OnkyoDevice(MediaPlayerDevice):
         return self._current_source
 
     @property
+    def media_title(self):
+        """Title of current playing media."""
+        return self._current_source
+
+    @property
     def source_list(self):
         """List of available input sources."""
         return self._source_list
