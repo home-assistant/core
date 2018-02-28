@@ -7,6 +7,7 @@ https://home-assistant.io/components/mqtt/#use-the-embedded-broker
 import asyncio
 import logging
 import tempfile
+import os
 
 import voluptuous as vol
 
@@ -37,7 +38,10 @@ def async_start(hass, server_config):
     from hbmqtt.broker import Broker, BrokerException
 
     try:
-        passwd = tempfile.NamedTemporaryFile()
+        # Create a temporary file to store the (hashed) credentials for HBMQTT.
+        # NOTE: Must use delete=False, otherwise Windows won't allow HBMQTT to
+        # open the file while we have it open.
+        passwd = tempfile.NamedTemporaryFile(delete=False)
 
         if server_config is None:
             server_config, client_config = generate_config(hass, passwd)
@@ -50,7 +54,10 @@ def async_start(hass, server_config):
         logging.getLogger(__name__).exception("Error initializing MQTT server")
         return False, None
     finally:
-        passwd.close()
+        try:
+            passwd.close()
+        finally:
+            os.remove(passwd.name)
 
     @asyncio.coroutine
     def async_shutdown_mqtt_server(event):
