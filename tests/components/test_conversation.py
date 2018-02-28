@@ -305,3 +305,10 @@ def test_create_matcher():
     match = pattern.match('turn on a kitchen light')
     assert match is not None
     assert match.groupdict()['name'] == 'kitchen light'
+
+    # Strip plural
+    pattern = conversation._create_matcher('Turn {name}[s] on')
+    print(pattern)
+    match = pattern.match('turn kitchen lights on')
+    assert match is not None
+    assert match.groupdict()['name'] == 'kitchen light'

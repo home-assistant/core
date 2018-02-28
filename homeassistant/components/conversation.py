@@ -98,17 +98,21 @@ def async_setup(hass, config):
 
     hass.http.register_view(ConversationProcessView)
 
+    # We strip trailing 's' from name because our state matcher will fail
+    # if a letter is not there. By removing 's' we can match singular and
+    # plural names.
+
     async_register(hass, intent.INTENT_TURN_ON, [
-        'Turn [the] [a] {name} on',
-        'Turn on [the] [a] [an] {name}',
+        'Turn [the] [a] {name}[s] on',
+        'Turn on [the] [a] [an] {name}[s]',
     ])
     async_register(hass, intent.INTENT_TURN_OFF, [
-        'Turn [the] [a] [an] {name} off',
-        'Turn off [the] [a] [an] {name}',
+        'Turn [the] [a] [an] {name}[s] off',
+        'Turn off [the] [a] [an] {name}[s]',
     ])
     async_register(hass, intent.INTENT_TOGGLE, [
-        'Toggle [the] [a] [an] {name}',
-        '[the] [a] [an] {name} toggle',
+        'Toggle [the] [a] [an] {name}[s]',
+        '[the] [a] [an] {name}[s] toggle',
     ])
 
     return True
@@ -131,7 +135,7 @@ def _create_matcher(utterance):
 
         if group_match is not None:
             pattern.append(
-                '(?P<{}>{})'.format(group_match.groups()[0], r'[\w ]+'))
+                '(?P<{}>{}?)'.format(group_match.groups()[0], r'[\w ]+'))
         elif optional_match is not None:
             pattern.append('(?:{}\s+)?'.format(optional_match.groups()[0]))
 
