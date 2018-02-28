@@ -107,7 +107,7 @@ RATING_MAPPING = [{
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ZIP_CODE): cv.positive_int,
+    vol.Required(CONF_ZIP_CODE): cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(CONDITIONS)]),
 })
@@ -209,11 +209,16 @@ class AllergyAverageSensor(BaseSensor):
         """Update the status of the sensor."""
         self.data.update()
 
-        data_attr = getattr(self.data, self._data_params['data_attr'])
-        indices = [
-            p['Index']
-            for p in data_attr['Location']['periods']
-        ]
+        try:
+            data_attr = getattr(self.data, self._data_params['data_attr'])
+            indices = [
+                p['Index']
+                for p in data_attr['Location']['periods']
+            ]
+        except KeyError:
+            _LOGGER.error("Pollen.com API didn't return any data")
+            return
+
         average = round(mean(indices), 1)
 
         self._attrs[ATTR_TREND] = calculate_trend(indices)
@@ -238,7 +243,12 @@ class AllergyIndexSensor(BaseSensor):
         """Update the status of the sensor."""
         self.data.update()
 
-        location_data = self.data.current_data['Location']
+        try:
+            location_data = self.data.current_data['Location']
+        except KeyError:
+            _LOGGER.error("Pollen.com API didn't return any data")
+            return
+
         [period] = [
             p for p in location_data['periods']
             if p['Type'] == self._data_params['key']
@@ -276,6 +286,7 @@ class DataBase(object):
         """Get data from a particular point in the API."""
         from pypollencom.exceptions import HTTPError
 
+        data = {}
         try:
             data = getattr(getattr(self._client, module), operation)()
             _LOGGER.debug('Received "%s_%s" data: %s', module,
