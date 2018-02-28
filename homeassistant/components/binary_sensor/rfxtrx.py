@@ -55,13 +55,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if device_id in rfxtrx.RFX_DEVICES:
             continue
 
-        if entity[CONF_DATA_BITS] is not None:
+        if entity.get(CONF_DATA_BITS) is not None:
             _LOGGER.debug(
                 "Masked device id: %s", rfxtrx.get_pt2262_deviceid(
-                    device_id, entity[CONF_DATA_BITS]))
+                    device_id, entity.get(CONF_DATA_BITS)))
 
         _LOGGER.debug("Add %s rfxtrx.binary_sensor (class %s)",
-                      entity[ATTR_NAME], entity[CONF_DEVICE_CLASS])
+                      entity[ATTR_NAME], entity.get(CONF_DEVICE_CLASS))
 
         device = RfxtrxBinarySensor(
             event, entity.get(CONF_NAME), entity.get(CONF_DEVICE_CLASS),
