@@ -6,6 +6,9 @@ https://home-assistant.io/components/media_player.plex/
 """
 import json
 import logging
+import asyncio
+import threading
+
 from datetime import timedelta
 
 import requests
@@ -47,9 +50,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.boolean,
 })
 
+PLEX_DATA = "plex"
+
+class PlexData:
+    """Storage class for platform global data."""
+
+    def __init__(self):
+        """Initialize the data."""
+        self.devices = []
+        self.topology_lock = threading.Lock()
+
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up the Plex platform."""
+    if PLEX_DATA not in hass.data:
+        hass.data[PLEX_DATA] = PlexData()
+
     # get config from plex.conf
     file_config = load_json(hass.config.path(PLEX_CONFIG_FILE))
 
@@ -132,11 +148,16 @@ def setup_plexserver(
 
     plex_clients = {}
     plex_sessions = {}
+
+    for device in hass.data[PLEX_DATA].devices:
+        plex_clients[device.unique_id] = device
+
     track_utc_time_change(hass, lambda now: update_devices(), second=30)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_devices():
         """Update the devices objects."""
+
         try:
             devices = plexserver.clients()
         except plexapi.exceptions.BadRequest:
@@ -301,12 +322,12 @@ class PlexClient(MediaPlayerDevice):
 
             # rename the entity id
             if self.machine_identifier:
-                self.entity_id = "%s.%s%s" % (
+                self.entity_id = "%s.%s%saaa" % (
                     'media_player', prefix,
                     self.machine_identifier.lower().replace('-', '_'))
             else:
                 if self.name:
-                    self.entity_id = "%s.%s%s" % (
+                    self.entity_id = "%s.%s%szzz" % (
                         'media_player', prefix,
                         self.name.lower().replace('-', '_'))
 
@@ -456,6 +477,14 @@ class PlexClient(MediaPlayerDevice):
         self._state = STATE_IDLE
         self._session = None
         self._clear_media_details()
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        if PLEX_DATA not in self.hass.data:
+            self.hass.data[PLEX_DATA] = PlexData()
+        if self.machine_identifier not in [x.unique_id for x in self.hass.data[PLEX_DATA].devices]:
+            self.hass.data[PLEX_DATA].devices.append(self)
 
     @property
     def unique_id(self):
