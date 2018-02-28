@@ -13,9 +13,7 @@ from homeassistant.components.homematicip import (DOMAIN,
                                                   EVENT_HOME_CHANGED,
                                                   EVENT_DEVICE_CHANGED)
 
-from homematicip.device import (HeatingThermostat,
-                                TemperatureHumiditySensorWithoutDisplay,
-                                TemperatureHumiditySensorDisplay)
+REQUIREMENTS = ['homematicip==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,6 +56,11 @@ HMIP_SABOTAGE = 'sabotage'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the HomematicIP sensors devices."""
+    # pylint: disable=import-error, no-name-in-module
+    from homematicip.device import (HeatingThermostat,
+                                    TemperatureHumiditySensorWithoutDisplay,
+                                    TemperatureHumiditySensorDisplay)
+
     _LOGGER.info('Setting up HomeMaticIP accespoint & generic devices')
     homeid = discovery_info['homeid']
     home = hass.data[DOMAIN][homeid]
@@ -145,7 +148,7 @@ class HomematicipGenericDevice(Entity):
             last = self._device.lastStatusUpdate
             if last is not None:
                 attr.update({ATTR_LASTSTATUS_UPDATE:
-                             last.strftime('%d-%m-%Y %H:%M:%S')})
+                             last.isoformat()})
         if hasattr(self._device, 'homeId'):
             attr.update({ATTR_HOME_ID: self._device.homeId})
         if hasattr(self._device, 'id'):

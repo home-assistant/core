@@ -14,11 +14,9 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-from homematicip.home import Home
+REQUIREMENTS = ['homematicip==0.8']
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['homematicip==0.8']
 
 DOMAIN = 'homematicip'
 
@@ -51,6 +49,8 @@ EVENT_JOURNAL_CHANGED = 'homematicip_journal_changed'
 
 def setup(hass, config):
     """Set up the HomematicIP component."""
+    # pylint: disable=import-error, no-name-in-module
+    from homematicip.home import Home
     hass.data.setdefault(DOMAIN, {})
     homes = hass.data[DOMAIN]
     accesspoints = config.get(DOMAIN, [])
