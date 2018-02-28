@@ -113,6 +113,7 @@ class UpCloudServerEntity(Entity):
         """Initialize the UpCloud server entity."""
         self._upcloud = upcloud
         self.uuid = uuid
+        self.data = None
 
     @property
     def name(self):
