@@ -52,6 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 PLEX_DATA = "plex"
 
+
 class PlexData:
     """Storage class for platform global data."""
 
@@ -483,7 +484,8 @@ class PlexClient(MediaPlayerDevice):
         """Callback when entity is added to hass."""
         if PLEX_DATA not in self.hass.data:
             self.hass.data[PLEX_DATA] = PlexData()
-        if self.machine_identifier not in [x.unique_id for x in self.hass.data[PLEX_DATA].devices]:
+        if self.machine_identifier not in \
+                [x.unique_id for x in self.hass.data[PLEX_DATA].devices]:
             self.hass.data[PLEX_DATA].devices.append(self)
 
     @property
