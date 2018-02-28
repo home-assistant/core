@@ -4,7 +4,6 @@ Support for functionality to have conversations with Home Assistant.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/conversation/
 """
-import asyncio
 import logging
 import re
 
@@ -67,8 +66,7 @@ def async_register(hass, intent_type, utterances):
             conf.append(_create_matcher(utterance))
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Register the process service."""
     config = config.get(DOMAIN, {})
     intents = hass.data.get(DOMAIN)
@@ -84,12 +82,11 @@ def async_setup(hass, config):
 
         conf.extend(_create_matcher(utterance) for utterance in utterances)
 
-    @asyncio.coroutine
-    def process(service):
+    async def process(service):
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         try:
-            yield from _process(hass, text)
+            await _process(hass, text)
         except intent.IntentHandleError as err:
             _LOGGER.error('Error processing %s: %s', text, err)
 
@@ -143,8 +140,7 @@ def _create_matcher(utterance):
     return re.compile(''.join(pattern), re.I)
 
 
-@asyncio.coroutine
-def _process(hass, text):
+async def _process(hass, text):
     """Process a line of text."""
     intents = hass.data.get(DOMAIN, {})
 
@@ -155,7 +151,7 @@ def _process(hass, text):
             if not match:
                 continue
 
-            response = yield from hass.helpers.intent.async_handle(
+            response = await hass.helpers.intent.async_handle(
                 DOMAIN, intent_type,
                 {key: {'value': value} for key, value
                  in match.groupdict().items()}, text)
@@ -171,13 +167,12 @@ class ConversationProcessView(http.HomeAssistantView):
     @RequestDataValidator(vol.Schema({
         vol.Required('text'): str,
     }))
-    @asyncio.coroutine
-    def post(self, request, data):
+    async def post(self, request, data):
         """Send a request for processing."""
         hass = request.app['hass']
 
         try:
-            intent_result = yield from _process(hass, data['text'])
+            intent_result = await _process(hass, data['text'])
         except intent.IntentHandleError as err:
             intent_result = intent.IntentResponse()
             intent_result.async_set_speech(str(err))
