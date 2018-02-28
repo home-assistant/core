@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<response>
+<Hosts>
+<Host>
+<ID>1</ID>
+<MacAddress>0C:70:E0:2B:9A:F6</MacAddress>
+<IpAddress>192.168.8.101</IpAddress>
+<HostName>first-host-name</HostName>
+<AssociatedTime>11111</AssociatedTime>
+<AssociatedSsid>ssid name</AssociatedSsid>
+</Host>
+<Host>
+<ID>2</ID>
+<MacAddress>6A:94:88:F6:C0:7B</MacAddress>
+<IpAddress>192.168.8.102</IpAddress>
+<HostName>second-host-name</HostName>
+<AssociatedTime>22222</AssociatedTime>
+<AssociatedSsid>ssid name</AssociatedSsid>
+</Host>
+<Host>
+<ID>3</ID>
+<MacAddress>C7:D7:D8:CB:E0:D0</MacAddress>
+<IpAddress>192.168.8.103</IpAddress>
+<HostName>third-host-name</HostName>
+<AssociatedTime>33333</AssociatedTime>
+<AssociatedSsid>ssid name</AssociatedSsid>
+</Host>
+</Hosts>
+</response>
