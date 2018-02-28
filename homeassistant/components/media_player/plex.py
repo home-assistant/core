@@ -323,12 +323,12 @@ class PlexClient(MediaPlayerDevice):
 
             # rename the entity id
             if self.machine_identifier:
-                self.entity_id = "%s.%s%saaa" % (
+                self.entity_id = "%s.%s%s" % (
                     'media_player', prefix,
                     self.machine_identifier.lower().replace('-', '_'))
             else:
                 if self.name:
-                    self.entity_id = "%s.%s%szzz" % (
+                    self.entity_id = "%s.%s%s" % (
                         'media_player', prefix,
                         self.name.lower().replace('-', '_'))
 
