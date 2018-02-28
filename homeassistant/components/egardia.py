@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_PORT, CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_NAME,
     EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pythonegardia==1.0.38']
+REQUIREMENTS = ['pythonegardia==1.0.36']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ ATTR_DISCOVER_DEVICES = 'egardia_sensor'
 SERVER_CODE_SCHEMA = vol.Schema({
     vol.Optional('arm'): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional('disarm'): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional('home'): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional('armhome'): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional('triggered'): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional('ignore'): vol.All(cv.ensure_list, [cv.string])
 })

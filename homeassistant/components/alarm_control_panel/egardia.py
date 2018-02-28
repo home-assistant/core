@@ -18,7 +18,7 @@ from homeassistant.components.egardia import (
     REPORT_SERVER_CODES_IGNORE, CONF_REPORT_SERVER_CODES,
     CONF_REPORT_SERVER_ENABLED, CONF_REPORT_SERVER_PORT
     )
-REQUIREMENTS = ['pythonegardia==1.0.38']
+REQUIREMENTS = ['pythonegardia==1.0.36']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ STATES = {
     'ARM': STATE_ALARM_ARMED_AWAY,
     'DAY HOME': STATE_ALARM_ARMED_HOME,
     'DISARM': STATE_ALARM_DISARMED,
-    'HOME': STATE_ALARM_ARMED_HOME,
+    'ARMHOME': STATE_ALARM_ARMED_HOME,
     'TRIGGERED': STATE_ALARM_TRIGGERED
 }
 
@@ -53,10 +53,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         self._egardiasystem = egardiasystem
         self._status = None
         self._rs_enabled = rs_enabled
-        if rs_codes is not None:
-            self._rs_codes = rs_codes[0]
-        else:
-            self._rs_codes = rs_codes
+        self._rs_codes = rs_codes
         self._rs_port = rs_port
 
     @asyncio.coroutine
@@ -98,7 +95,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         if self._rs_codes is not None:
             statuscode = str(statuscode).strip()
             for i in self._rs_codes:
-                val = str(self._rs_codes[i]).strip()
+                val = str(self._rs_codes[i][0]).strip()
                 if ',' in val:
                     splitted = val.split(',')
                     for code in splitted:
@@ -106,7 +103,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
                         if statuscode == code:
                             status = i.upper()
                             break
-                elif statuscode == val:
+                elif statuscode == str(val).strip():
                     status = i.upper()
                     break
         return status
@@ -116,8 +113,9 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         _LOGGER.debug("Parsing status %s", status)
         # Ignore the statuscode if it is IGNORE
         if status.lower().strip() != REPORT_SERVER_CODES_IGNORE:
-            _LOGGER.debug("Not ignoring status")
+            _LOGGER.debug("Not ignoring status %s", status)
             newstatus = STATES.get(status.upper())
+            _LOGGER.debug("newstatus %s", newstatus)
             self._status = newstatus
         else:
             _LOGGER.error("Ignoring status")
