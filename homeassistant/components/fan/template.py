@@ -4,7 +4,6 @@ Support for Template fans.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/fan.template/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -66,7 +65,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None
+):
     """Set up the Template Fans."""
     fans = []
 
@@ -74,10 +75,10 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
 
         state_template = device_config[CONF_VALUE_TEMPLATE]
-        speed_template = device_config[CONF_SPEED_TEMPLATE]
-        oscillating_template = device_config[
+        speed_template = device_config.get(CONF_SPEED_TEMPLATE)
+        oscillating_template = device_config.get(
             CONF_OSCILLATING_TEMPLATE
-        ]
+        )
 
         on_action = device_config[CONF_ON_ACTION]
         off_action = device_config[CONF_OFF_ACTION]
@@ -199,7 +200,8 @@ class TemplateFan(FanEntity):
         """Return the polling state."""
         return False
 
-    async def async_turn_on(self, speed: str=None) -> None:
+    # pylint: disable=arguments-differ
+    async def async_turn_on(self, speed: str = None) -> None:
         """Turn on the fan.
 
         This method is a coroutine.
@@ -210,6 +212,7 @@ class TemplateFan(FanEntity):
         if speed:
             await self.async_set_speed(speed)
 
+    # pylint: disable=arguments-differ
     async def async_turn_off(self) -> None:
         """Turn off the fan.
 
