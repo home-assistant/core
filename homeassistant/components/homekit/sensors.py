@@ -47,6 +47,7 @@ class TemperatureSensor(HomeAccessory):
         self.char_temp = self.serv_temp. \
             get_characteristic(CHAR_CURRENT_TEMPERATURE)
         override_properties(self.char_temp, PROP_CELSIUS)
+        self.char_temp.value = 0
         self.unit = None
 
     def run(self):

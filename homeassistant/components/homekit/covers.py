@@ -38,6 +38,9 @@ class Window(HomeAccessory):
             get_characteristic(CHAR_TARGET_POSITION)
         self.char_position_state = self.serv_cover. \
             get_characteristic(CHAR_POSITION_STATE)
+        self.char_current_position.value = 0
+        self.char_target_position.value = 0
+        self.char_position_state.value = 0
 
         self.char_target_position.setter_callback = self.move_cover
 

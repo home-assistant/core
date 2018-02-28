@@ -7,6 +7,13 @@ CHAR_MODEL = 'Model'
 CHAR_MANUFACTURER = 'Manufacturer'
 CHAR_SERIAL_NUMBER = 'SerialNumber'
 
+# Service: BridgingState
+SERV_BRIDGING_STATE = 'BridgingState'
+CHAR_REACHABLE = 'Reachable'
+CHAR_LINK_QUALITY = 'LinkQuality'
+CHAR_ACC_IDENTIFIER = 'AccessoryIdentifier'
+CHAR_CATEGORY = 'Category'
+
 # Service: TemperatureSensor
 SERV_TEMPERATURE_SENSOR = 'TemperatureSensor'
 CHAR_CURRENT_TEMPERATURE = 'CurrentTemperature'
