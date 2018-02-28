@@ -235,7 +235,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     else:
         _LOGGER.error(
             'Unsupported device found! Please create an issue at '
-            'https://github.com/rytilahti/python.miio/issues '
+            'https://github.com/syssi/xiaomi_airpurifier/issues '
             'and provide the following data: %s', model)
         return False
 
@@ -620,7 +620,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
             return
 
         yield from self._try_command(
-            "Turning the learn mode of the miio device on failed.",
+            "Turning the auto detect of the miio device on failed.",
             self._device.set_auto_detect, True)
 
     @asyncio.coroutine
@@ -630,7 +630,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
             return
 
         yield from self._try_command(
-            "Turning the learn mode of the miio device off failed.",
+            "Turning the auto detect of the miio device off failed.",
             self._device.set_auto_detect, False)
 
     @asyncio.coroutine
