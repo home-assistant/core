@@ -32,6 +32,7 @@ CONF_FILTER_PRECISION = 'precision'
 CONF_FILTER_RADIUS = 'radius'
 CONF_FILTER_TIME_CONSTANT = 'time_constant'
 
+DEFAULT_WINDOW_SIZE = 1
 DEFAULT_FILTER_RADIUS = 2.0
 DEFAULT_FILTER_TIME_CONSTANT = 10
 
@@ -39,7 +40,8 @@ NAME_TEMPLATE = "{} filter"
 ICON = 'mdi:chart-line-variant'
 
 FILTER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_FILTER_WINDOW_SIZE): vol.Coerce(int),
+    vol.Optional(CONF_FILTER_WINDOW_SIZE,
+                 default=DEFAULT_WINDOW_SIZE): vol.Coerce(int),
     vol.Optional(CONF_FILTER_PRECISION): vol.Coerce(int),
 })
 
@@ -121,26 +123,27 @@ class SensorFilter(Entity):
                 ATTR_UNIT_OF_MEASUREMENT)
             self._icon = new_state.attributes.get(ATTR_ICON, self._icon)
 
-            self._state = new_state.state
-
-            if self._state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
+            if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
                 return
 
-            for filt in self._filters:
-                try:
+            self._state = new_state.state
+
+            try:
+                for filt in self._filters:
                     filtered_state = filt.filter_state(self._state)
-                    _LOGGER.debug("%s(%s, %s) -> %s", filt.name,
+                    _LOGGER.debug("%s(%s=%s) -> %s", filt.name,
                                   self._entity,
                                   self._state,
                                   "skip" if filt.skip_processing else
                                   filtered_state)
                     if filt.skip_processing:
                         return
-                except ValueError:
-                    _LOGGER.warning("Could not convert state: %s to number",
-                                    self._state)
-                finally:
                     self._state = filtered_state
+            except ValueError:
+                _LOGGER.error("Could not convert state: %s to number",
+                              self._state)
+                self._state = STATE_UNAVAILABLE
+                return
 
             self.async_schedule_update_ha_state()
 
@@ -178,15 +181,6 @@ class SensorFilter(Entity):
         state_attr = {
             ATTR_ENTITY_ID: self._entity
         }
-        for filt in self._filters:
-            for filt_stat_key, filt_stat_value in filt.stats.items():
-                filt_stat = "{}_{}".format(filt.name, filt_stat_key)
-                _LOGGER.debug("stats(%s): %s: %s", self._entity,
-                              filt_stat, filt_stat_value)
-                state_attr.update({
-                    filt_stat: filt_stat_value
-                })
-
         return state_attr
 
 
@@ -204,7 +198,6 @@ class Filter(object):
         """Initialize common attributes."""
         self.states = deque(maxlen=window_size)
         self.precision = precision
-        self._stats = {}
         self._name = name
         self._entity = entity
         self._skip_processing = False
@@ -218,11 +211,6 @@ class Filter(object):
     def skip_processing(self):
         """Return wether the current filter_state should be skipped."""
         return self._skip_processing
-
-    @property
-    def stats(self):
-        """Return statistics of the filter."""
-        return self._stats
 
     def _filter_state(self, new_state):
         """Implement filter."""
@@ -254,21 +242,17 @@ class OutlierFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the outlier filter."""
-        self._stats_internal['total_filtered'] += 1
         new_state = float(new_state)
 
-        self._stats['erasures'] = "{0:.2f}%".format(
-            100 * self._stats_internal['erasures']
-            / self._stats_internal['total_filtered']
-        )
-
-        if (len(self.states) > 1 and
+        if (self.states and
                 abs(new_state - statistics.median(self.states))
                 > self._radius):
 
             self._stats_internal['erasures'] += 1
 
-            _LOGGER.debug("Outlier in %s: %s", self._entity, new_state)
+            _LOGGER.debug("Outlier nr. %s in %s: %s",
+                          self._stats_internal['erasures'],
+                          self._entity, new_state)
             return self.states[-1]
         return new_state
 

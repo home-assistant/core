@@ -43,6 +43,7 @@ class TestFilterSensor(unittest.TestCase):
                     'radius': 4.0
                     }, {
                         'filter': 'lowpass',
+                        'window_size': 4,
                         'time_constant': 10,
                         'precision': 2
                     }]
