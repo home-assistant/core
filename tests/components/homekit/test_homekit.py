@@ -1,20 +1,25 @@
 """Tests for the HomeKit component."""
 
 import unittest
-from unittest.mock import call, patch
+from unittest.mock import call, patch, ANY
 
 import voluptuous as vol
+
+# pylint: disable=unused-import
+from pyhap.accessory_driver import AccessoryDriver  # noqa F401
 
 from homeassistant import setup
 from homeassistant.core import Event
 from homeassistant.components.homekit import (
-    CONF_PIN_CODE, BRIDGE_NAME, HOMEKIT_FILE, HomeKit, valid_pin)
+    CONF_PIN_CODE, HOMEKIT_FILE, HomeKit, valid_pin)
 from homeassistant.const import (
     CONF_PORT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 from tests.common import get_test_home_assistant
+from tests.mock.homekit import get_patch_paths, PATH_HOMEKIT
 
-HOMEKIT_PATH = 'homeassistant.components.homekit'
+PATH_ACC, _ = get_patch_paths()
+IP_ADDRESS = '127.0.0.1'
 
 CONFIG_MIN = {'homekit': {}}
 CONFIG = {
@@ -36,39 +41,6 @@ class TestHomeKit(unittest.TestCase):
         """Stop down everything that was started."""
         self.hass.stop()
 
-    @patch(HOMEKIT_PATH + '.HomeKit.start_driver')
-    @patch(HOMEKIT_PATH + '.HomeKit.setup_bridge')
-    @patch(HOMEKIT_PATH + '.HomeKit.__init__')
-    def test_setup_min(self, mock_homekit, mock_setup_bridge,
-                       mock_start_driver):
-        """Test async_setup with minimal config option."""
-        mock_homekit.return_value = None
-
-        self.assertTrue(setup.setup_component(
-            self.hass, 'homekit', CONFIG_MIN))
-
-        mock_homekit.assert_called_once_with(self.hass, 51826)
-        mock_setup_bridge.assert_called_with(b'123-45-678')
-        mock_start_driver.assert_not_called()
-
-        self.hass.start()
-        self.hass.block_till_done()
-        self.assertEqual(mock_start_driver.call_count, 1)
-
-    @patch(HOMEKIT_PATH + '.HomeKit.start_driver')
-    @patch(HOMEKIT_PATH + '.HomeKit.setup_bridge')
-    @patch(HOMEKIT_PATH + '.HomeKit.__init__')
-    def test_setup_parameters(self, mock_homekit, mock_setup_bridge,
-                              mock_start_driver):
-        """Test async_setup with full config option."""
-        mock_homekit.return_value = None
-
-        self.assertTrue(setup.setup_component(
-            self.hass, 'homekit', CONFIG))
-
-        mock_homekit.assert_called_once_with(self.hass, 11111)
-        mock_setup_bridge.assert_called_with(b'987-65-432')
-
     def test_validate_pincode(self):
         """Test async_setup with invalid config option."""
         schema = vol.Schema(valid_pin)
@@ -80,45 +52,64 @@ class TestHomeKit(unittest.TestCase):
         for value in ('123-45-678', '234-56-789'):
             self.assertTrue(schema(value))
 
+    @patch(PATH_HOMEKIT + '.HomeKit')
+    def test_setup_min(self, mock_homekit):
+        """Test async_setup with minimal config option."""
+        self.assertTrue(setup.setup_component(
+            self.hass, 'homekit', CONFIG_MIN))
+
+        self.assertEqual(mock_homekit.mock_calls,
+                         [call(self.hass, 51826),
+                          call().setup_bridge(b'123-45-678')])
+        mock_homekit.reset_mock()
+
+        self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
+        self.hass.block_till_done()
+
+        self.assertEqual(mock_homekit.mock_calls,
+                         [call().start_driver(ANY)])
+
+    @patch(PATH_HOMEKIT + '.HomeKit')
+    def test_setup_parameters(self, mock_homekit):
+        """Test async_setup with full config option."""
+        self.assertTrue(setup.setup_component(
+            self.hass, 'homekit', CONFIG))
+
+        self.assertEqual(mock_homekit.mock_calls,
+                         [call(self.hass, 11111),
+                          call().setup_bridge(b'987-65-432')])
+
     @patch('pyhap.accessory_driver.AccessoryDriver')
-    @patch('pyhap.accessory.Bridge.add_accessory')
-    @patch(HOMEKIT_PATH + '.import_types')
-    @patch(HOMEKIT_PATH + '.get_accessory')
-    def test_homekit_pyhap_interaction(
-            self, mock_get_accessory, mock_import_types,
-            mock_add_accessory, mock_acc_driver):
+    def test_homekit_class(self, mock_acc_driver):
         """Test interaction between the HomeKit class and pyhap."""
-        mock_get_accessory.side_effect = ['TemperatureSensor', 'Window']
+        with patch(PATH_HOMEKIT + '.accessories.HomeBridge') as mock_bridge:
+            homekit = HomeKit(self.hass, 51826)
+            homekit.setup_bridge(b'123-45-678')
 
-        homekit = HomeKit(self.hass, 51826)
-        homekit.setup_bridge(b'123-45-678')
-
-        self.assertEqual(homekit.bridge.display_name, BRIDGE_NAME)
-
+        mock_bridge.reset_mock()
         self.hass.states.set('demo.demo1', 'on')
         self.hass.states.set('demo.demo2', 'off')
 
-        self.hass.start()
-        self.hass.block_till_done()
-
-        with patch('homeassistant.util.get_local_ip',
-                   return_value='127.0.0.1'):
+        with patch(PATH_HOMEKIT + '.get_accessory') as mock_get_acc, \
+            patch(PATH_HOMEKIT + '.import_types') as mock_import_types, \
+                patch('homeassistant.util.get_local_ip') as mock_ip:
+            mock_get_acc.side_effect = ['TempSensor', 'Window']
+            mock_ip.return_value = IP_ADDRESS
             homekit.start_driver(Event(EVENT_HOMEASSISTANT_START))
 
-        ip_address = '127.0.0.1'
         path = self.hass.config.path(HOMEKIT_FILE)
 
-        self.assertEqual(mock_get_accessory.call_count, 2)
         self.assertEqual(mock_import_types.call_count, 1)
+        self.assertEqual(mock_get_acc.call_count, 2)
+        self.assertEqual(mock_bridge.mock_calls,
+                         [call().add_accessory('TempSensor'),
+                          call().add_accessory('Window')])
         self.assertEqual(mock_acc_driver.mock_calls,
-                         [call(homekit.bridge, 51826, ip_address, path),
+                         [call(homekit.bridge, 51826, IP_ADDRESS, path),
                           call().start()])
-
-        self.assertEqual(mock_add_accessory.mock_calls,
-                         [call('TemperatureSensor'), call('Window')])
+        mock_acc_driver.reset_mock()
 
         self.hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
         self.hass.block_till_done()
 
-        self.assertEqual(mock_acc_driver.mock_calls[2], call().stop())
-        self.assertEqual(len(mock_acc_driver.mock_calls), 3)
+        self.assertEqual(mock_acc_driver.mock_calls, [call().stop()])
