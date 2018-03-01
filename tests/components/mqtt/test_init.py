@@ -28,6 +28,7 @@ def async_mock_mqtt_client(hass, config=None):
     with mock.patch('paho.mqtt.client.Client') as mock_client:
         mock_client().connect.return_value = 0
         mock_client().subscribe.return_value = (0, 0)
+        mock_client().unsubscribe.return_value = (0, 0)
         mock_client().publish.return_value = (0, 0)
         result = yield from async_setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: config
