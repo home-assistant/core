@@ -11,7 +11,7 @@ from homeassistant.helpers.event import async_track_state_change
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (SERV_THERMOSTAT, CHAR_CURRENT_HEATING_COOLING,
-                    CHAR_TARGET_HEATING_COOLING,CHAR_CURRENT_TEMPERATURE,
+                    CHAR_TARGET_HEATING_COOLING, CHAR_CURRENT_TEMPERATURE,
                     CHAR_TARGET_TEMPERATURE, CHAR_TEMP_DISPLAY_UNITS)
 
 _LOGGER = logging.getLogger(__name__)
