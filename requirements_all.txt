@@ -136,7 +136,7 @@ beautifulsoup4==4.6.0
 bellows==0.5.1
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.3.0
+bimmer_connected==0.4.1
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -268,7 +268,7 @@ evohomeclient==0.2.5
 fastdotcom==0.0.3
 
 # homeassistant.components.sensor.fedex
-fedexdeliverymanager==1.0.5
+fedexdeliverymanager==1.0.6
 
 # homeassistant.components.feedreader
 # homeassistant.components.sensor.geo_rss_events
@@ -1076,7 +1076,7 @@ russound_rio==0.1.4
 rxv==0.5.1
 
 # homeassistant.components.media_player.samsungtv
-samsungctl==0.6.0
+samsungctl[websocket]==0.7.1
 
 # homeassistant.components.satel_integra
 satel_integra==0.1.0
