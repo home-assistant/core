@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     is_on, turn_on, VALID_TRANSITION, ATTR_TRANSITION)
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import (
-    CONF_NAME, CONF_PLATFORM, CONF_LIGHTS, CONF_MODE)
+    CONF_NAME, CONF_PLATFORM, CONF_LIGHTS, CONF_MODE, STATE_ON, STATE_OFF)
 from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
@@ -24,6 +24,8 @@ from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy,
     color_temperature_kelvin_to_mired)
 from homeassistant.util.dt import now as dt_now
+from homeassistant.helpers.event import (
+    async_track_state_change as track_state_change)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,7 +146,8 @@ class FluxSwitch(SwitchDevice):
         self._mode = mode
         self._interval = interval
         self._transition = transition
-        self.unsub_tracker = None
+        self.time_unsub_tracker = None
+        self.light_unsub_tracker = None
 
     @property
     def name(self):
@@ -154,7 +157,7 @@ class FluxSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.unsub_tracker is not None
+        return self.time_unsub_tracker is not None
 
     def turn_on(self, **kwargs):
         """Turn on flux."""
@@ -164,23 +167,43 @@ class FluxSwitch(SwitchDevice):
         # Make initial update
         self.flux_update()
 
-        self.unsub_tracker = track_time_change(
+        self.time_unsub_tracker = track_time_change(
             self.hass, self.flux_update, second=[0, self._interval])
 
         self.schedule_update_ha_state()
 
+        self.light_unsub_tracker = track_state_change(self.hass,
+                                                      self._lights,
+                                                      self.handle_light_on,
+                                                      STATE_OFF,
+                                                      STATE_ON)
+
+    def handle_light_on(self, light, _old_state, _new_state):
+        """Update a light's values when it turns on."""
+        _LOGGER.info("Light %s turned on, updating it", light)
+        self.flux_update(lights=[light], transition=0)
+
     def turn_off(self, **kwargs):
         """Turn off flux."""
-        if self.unsub_tracker is not None:
-            self.unsub_tracker()
-            self.unsub_tracker = None
+        if self.time_unsub_tracker is not None:
+            self.time_unsub_tracker()
+            self.time_unsub_tracker = None
+
+        if self.light_unsub_tracker is not None:
+            self.light_unsub_tracker()
+            self.light_unsub_tracker = None
 
         self.schedule_update_ha_state()
 
-    def flux_update(self, now=None):
+    def flux_update(self, now=None, lights=None, transition=None):
         """Update all the lights using flux."""
         if now is None:
             now = dt_now()
+        if lights is None:
+            lights = self._lights
+        if transition is None:
+            transition = self._transition
+        _LOGGER.info("Updating lights: %s", lights)
 
         sunset = get_astral_event_date(self.hass, 'sunset', now.date())
         start_time = self.find_start_time(now)
@@ -239,22 +262,22 @@ class FluxSwitch(SwitchDevice):
         if self._disable_brightness_adjust:
             brightness = None
         if self._mode == MODE_XY:
-            set_lights_xy(self.hass, self._lights, x_val,
-                          y_val, brightness, self._transition)
+            set_lights_xy(self.hass, lights, x_val,
+                          y_val, brightness, transition)
             _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%% "
                          "of %s cycle complete at %s", x_val, y_val,
                          brightness, round(
                              percentage_complete * 100), time_state, now)
         elif self._mode == MODE_RGB:
-            set_lights_rgb(self.hass, self._lights, rgb, self._transition)
+            set_lights_rgb(self.hass, lights, rgb, transition)
             _LOGGER.info("Lights updated to rgb:%s, %s%% "
                          "of %s cycle complete at %s", rgb,
                          round(percentage_complete * 100), time_state, now)
         else:
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)
-            set_lights_temp(self.hass, self._lights, mired, brightness,
-                            self._transition)
+            set_lights_temp(self.hass, lights, mired, brightness,
+                            transition)
             _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%% "
                          "of %s cycle complete at %s", mired, brightness,
                          round(percentage_complete * 100), time_state, now)
