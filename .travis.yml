@@ -38,4 +38,5 @@ deploy:
   script: script/travis_deploy
   on:
     branch: dev
+    condition: $TOXENV = lint
 after_success: coveralls
