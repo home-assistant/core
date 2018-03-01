@@ -99,38 +99,43 @@ class SensorFilter(Entity):
         self._unit_of_measurement = None
         self._state = None
         self._filters = filters
-        self._icon = ICON
+        self._icon = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
         def filter_sensor_state_listener(entity, old_state, new_state):
             """Handle device state changes."""
-            self._unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT)
-            self._icon = new_state.attributes.get(ATTR_ICON, self._icon)
-
             if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
                 return
 
-            self._state = new_state.state
+            temp_state = new_state.state
 
             try:
                 for filt in self._filters:
-                    filtered_state = filt.filter_state(self._state)
+                    filtered_state = filt.filter_state(temp_state)
                     _LOGGER.debug("%s(%s=%s) -> %s", filt.name,
                                   self._entity,
-                                  self._state,
+                                  temp_state,
                                   "skip" if filt.skip_processing else
                                   filtered_state)
                     if filt.skip_processing:
                         return
-                    self._state = filtered_state
+                    temp_state = filtered_state
             except ValueError:
                 _LOGGER.error("Could not convert state: %s to number",
                               self._state)
-                self._state = STATE_UNAVAILABLE
                 return
+
+            self._state = temp_state
+
+            if self._icon is None:
+                self._icon = new_state.attributes.get(
+                    ATTR_ICON, ICON)
+
+            if self._unit_of_measurement is None:
+                self._unit_of_measurement = new_state.attributes.get(
+                    ATTR_UNIT_OF_MEASUREMENT)
 
             self.async_schedule_update_ha_state()
 
