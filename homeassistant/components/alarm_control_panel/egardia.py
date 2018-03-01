@@ -94,18 +94,13 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
         status = 'UNKNOWN'
         if self._rs_codes is not None:
             statuscode = str(statuscode).strip()
-            for i in self._rs_codes:
-                val = str(self._rs_codes[i][0]).strip()
-                if ',' in val:
-                    splitted = val.split(',')
-                    for code in splitted:
-                        code = str(code).strip()
-                        if statuscode == code:
-                            status = i.upper()
-                            break
-                elif statuscode == str(val).strip():
-                    status = i.upper()
-                    break
+            for statusgroup in self._rs_codes:
+                codes = self._rs_codes[statusgroup]
+                for code in codes:
+                    code = str(code).strip()
+                    if statuscode == code:
+                        status = statusgroup.upper()
+                        break
         return status
 
     def parsestatus(self, status):
