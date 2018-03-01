@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.plex/
 """
 import json
 import logging
+import datetime
 
 from datetime import timedelta
 
@@ -190,10 +191,17 @@ def setup_plexserver(
                 client.force_idle()
 
         if new_plex_clients:
+            print("************************Adding")
             add_devices_callback(new_plex_clients)
 
         for id in hass.data[PLEX_DATA].keys():
             plex_clients[id].set_availability(id in available_ids)
+            if plex_clients[id].unavailable_time is not None \
+                    and not plex_clients[id].marked_for_purge \
+                    and plex_clients[id].unavailable_time.seconds > 2:
+                print("Purging********************")
+                plex_clients[id].mark_for_purge
+                hass.helpers.event.async_call_later(60, plex_clients[id].async_remove())
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_sessions():
@@ -266,6 +274,8 @@ class PlexClient(MediaPlayerDevice):
         self._app_name = ''
         self._device = None
         self._is_device_available = False
+        self._marked_unavailable = None
+        self._marked_for_removal = False
         self._device_protocol_capabilities = None
         self._is_player_active = False
         self._is_player_available = False
@@ -417,7 +427,15 @@ class PlexClient(MediaPlayerDevice):
     def set_availability(self, available):
         if not available:
             self._clear_media_details()
+            if self._marked_unavailable is None:
+                self._marked_unavailable = datetime.datetime.now()
+        else:
+            self._marked_unavailable = None
+
         self._is_device_available = available
+
+    def mark_for_purge(self):
+        self._marked_for_removal = True
 
     def _set_player_state(self):
         if self._player_state == 'playing':
@@ -484,6 +502,17 @@ class PlexClient(MediaPlayerDevice):
     def available(self):
         """Returns the availability of the client"""
         return self._is_device_available
+
+    @property
+    def unavailable_time(self):
+        if self._marked_unavailable:
+            return datetime.datetime.now() - self._marked_unavailable
+        return None
+
+
+    @property
+    def marked_for_purge(self):
+        return self._marked_for_removal
 
     @property
     def name(self):
