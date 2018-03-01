@@ -87,6 +87,7 @@ def open(hass, entity_id=None, code=None):
 
     hass.services.call(DOMAIN, SERVICE_OPEN, data)
 
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for locks."""
