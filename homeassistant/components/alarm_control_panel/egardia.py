@@ -47,7 +47,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
     """Representation of a Egardia alarm."""
 
     def __init__(self, name, egardiasystem,
-                 rs_enabled=False, rs_codes={}, rs_port=52010):
+                 rs_enabled=False, rs_codes=None, rs_port=52010):
         """Initialize the Egardia alarm."""
         self._name = name
         self._egardiasystem = egardiasystem
