@@ -3,7 +3,9 @@
 
 cd "$(dirname "$0")/.."
 
-if [ "$1" = "--changed" ]; then
+if [ "$1" = "--all" ]; then
+  tox -e lint
+else
   export files="`git diff upstream/dev... --name-only | grep -e '\.py$'`"
   echo "================================================="
   echo "FILES CHANGED (git diff upstream/dev... --name-only)"
@@ -22,6 +24,4 @@ if [ "$1" = "--changed" ]; then
   echo "================"
   pylint $files
   echo
-else
-  tox -e lint
 fi
