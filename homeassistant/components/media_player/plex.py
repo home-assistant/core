@@ -197,20 +197,17 @@ def setup_plexserver(
                 client.force_idle()
 
         if new_plex_clients:
-            print("************************Adding")
             add_devices_callback(new_plex_clients)
 
         # Figure out if device is unavailable and if it should be removed
         for cid in hass.data[PLEX_DATA].keys():
             cclient = plex_clients[cid]
             config_purge_int = config.get(CONF_CLIENT_PURGE_INTERVAL)
-            print("Is marked: ", cclient.marked_for_purge)
             cclient.set_availability(cid in available_ids)
             if config.get(CONF_PURGE_UNAVAILABLE_CLIENTS)\
                     and cclient.unavailable_time is not None \
                     and cclient.marked_for_purge is not True \
                     and cclient.unavailable_time.seconds > config_purge_int:
-                print("Purging********************")
                 cclient.mark_for_purge()
                 hass.helpers.event.async_call_later(60, cclient.async_remove())
 
