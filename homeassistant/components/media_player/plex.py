@@ -414,7 +414,7 @@ class PlexClient(MediaPlayerDevice):
 
         self._media_image_url = thumb_url
 
-    def set_availability(self,available):
+    def set_availability(self, available):
         if not available:
             self._clear_media_details()
         self._is_device_available = available
