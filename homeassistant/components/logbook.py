@@ -47,6 +47,11 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+ALL_EVENT_TYPES = [
+    EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+]
+
 GROUP_BY_MINUTES = 15
 
 CONTINUOUS_DOMAINS = ['proximity', 'sensor']
@@ -266,15 +271,18 @@ def humanify(events):
 
 def _get_events(hass, config, start_day, end_day):
     """Get events for a period of time."""
-    from homeassistant.components.recorder.models import Events
+    from homeassistant.components.recorder.models import Events, States
     from homeassistant.components.recorder.util import (
         execute, session_scope)
 
     with session_scope(hass=hass) as session:
-        query = session.query(Events).order_by(
-            Events.time_fired).filter(
-                (Events.time_fired > start_day) &
-                (Events.time_fired < end_day))
+        query = session.query(Events).order_by(Events.time_fired) \
+            .outerjoin(States, (Events.event_id == States.event_id))  \
+            .filter(Events.event_type.in_(ALL_EVENT_TYPES)) \
+            .filter((Events.time_fired > start_day)
+                    & (Events.time_fired < end_day)) \
+            .filter((States.last_updated == States.last_changed)
+                    | (States.last_updated.is_(None)))
         events = execute(query)
     return humanify(_exclude_events(events, config))
 
