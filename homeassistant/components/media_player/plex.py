@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.plex/
 """
 import json
 import logging
+
 from datetime import timedelta
 
 import requests
@@ -47,9 +48,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.boolean,
 })
 
+PLEX_DATA = "plex"
+
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up the Plex platform."""
+    if PLEX_DATA not in hass.data:
+        hass.data[PLEX_DATA] = {}
+
     # get config from plex.conf
     file_config = load_json(hass.config.path(PLEX_CONFIG_FILE))
 
@@ -130,7 +136,7 @@ def setup_plexserver(
 
     _LOGGER.info('Connected to: %s://%s', http_prefix, host)
 
-    plex_clients = {}
+    plex_clients = hass.data[PLEX_DATA]
     plex_sessions = {}
     track_utc_time_change(hass, lambda now: update_devices(), second=30)
 
