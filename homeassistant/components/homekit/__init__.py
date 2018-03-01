@@ -68,6 +68,7 @@ def import_types():
     _LOGGER.debug("Import type files.")
     # pylint: disable=unused-variable
     from . import covers, sensors  # noqa F401
+    from . import security_systems, thermostats, switches  # noqa F401
 
 
 def get_accessory(hass, state):
@@ -86,6 +87,18 @@ def get_accessory(hass, state):
             _LOGGER.debug("Add \"%s\" as \"%s\"",
                           state.entity_id, 'Window')
             return TYPES['Window'](hass, state.entity_id, state.name)
+
+    elif state.domain == 'alarm_control_panel':
+        _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'SecuritySystem')
+        return TYPES['SecuritySystem'](hass, state.entity_id, state.name)
+
+    elif state.domain == 'climate':
+        _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'Thermostat')
+        return TYPES['Thermostat'](hass, state.entity_id, state.name)
+
+    elif state.domain == 'switch' or state.domain == 'remote':
+        _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'Switch')
+        return TYPES['Switch'](hass, state.entity_id, state.name)
 
     return None
 
