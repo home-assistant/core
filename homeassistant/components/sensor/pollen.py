@@ -16,7 +16,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_STATE, CONF_MONITORED_CONDITIONS
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, slugify
 
 REQUIREMENTS = ['pypollencom==1.1.1']
 _LOGGER = logging.getLogger(__name__)
@@ -107,7 +107,7 @@ RATING_MAPPING = [{
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ZIP_CODE): cv.positive_int,
+    vol.Required(CONF_ZIP_CODE): cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(CONDITIONS)]),
 })
@@ -125,6 +125,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         'allergy_index_data': AllergyIndexData(client),
         'disease_average_data': DiseaseData(client)
     }
+    classes = {
+        'AllergyAverageSensor': AllergyAverageSensor,
+        'AllergyIndexSensor': AllergyIndexSensor
+    }
 
     for data in datas.values():
         data.update()
@@ -132,11 +136,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for condition in config[CONF_MONITORED_CONDITIONS]:
         name, sensor_class, data_key, params, icon = CONDITIONS[condition]
-        sensors.append(globals()[sensor_class](
+        sensors.append(classes[sensor_class](
             datas[data_key],
             params,
             name,
-            icon
+            icon,
+            config[CONF_ZIP_CODE]
         ))
 
     add_devices(sensors, True)
@@ -154,7 +159,7 @@ def calculate_trend(list_of_nums):
 class BaseSensor(Entity):
     """Define a base class for all of our sensors."""
 
-    def __init__(self, data, data_params, name, icon):
+    def __init__(self, data, data_params, name, icon, unique_id):
         """Initialize the sensor."""
         self._attrs = {}
         self._icon = icon
@@ -162,6 +167,7 @@ class BaseSensor(Entity):
         self._data_params = data_params
         self._state = None
         self._unit = None
+        self._unique_id = unique_id
         self.data = data
 
     @property
@@ -186,6 +192,11 @@ class BaseSensor(Entity):
         return self._state
 
     @property
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return '{0}_{1}'.format(self._unique_id, slugify(self._name))
+
+    @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit
@@ -198,11 +209,16 @@ class AllergyAverageSensor(BaseSensor):
         """Update the status of the sensor."""
         self.data.update()
 
-        data_attr = getattr(self.data, self._data_params['data_attr'])
-        indices = [
-            p['Index']
-            for p in data_attr['Location']['periods']
-        ]
+        try:
+            data_attr = getattr(self.data, self._data_params['data_attr'])
+            indices = [
+                p['Index']
+                for p in data_attr['Location']['periods']
+            ]
+        except KeyError:
+            _LOGGER.error("Pollen.com API didn't return any data")
+            return
+
         average = round(mean(indices), 1)
 
         self._attrs[ATTR_TREND] = calculate_trend(indices)
@@ -227,7 +243,12 @@ class AllergyIndexSensor(BaseSensor):
         """Update the status of the sensor."""
         self.data.update()
 
-        location_data = self.data.current_data['Location']
+        try:
+            location_data = self.data.current_data['Location']
+        except KeyError:
+            _LOGGER.error("Pollen.com API didn't return any data")
+            return
+
         [period] = [
             p for p in location_data['periods']
             if p['Type'] == self._data_params['key']
@@ -265,6 +286,7 @@ class DataBase(object):
         """Get data from a particular point in the API."""
         from pypollencom.exceptions import HTTPError
 
+        data = {}
         try:
             data = getattr(getattr(self._client, module), operation)()
             _LOGGER.debug('Received "%s_%s" data: %s', module,

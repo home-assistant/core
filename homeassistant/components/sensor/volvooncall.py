@@ -42,12 +42,10 @@ class VolvoSensor(VolvoEntity):
             val /= 10  # L/1000km -> L/100km
             if 'mil' in self.unit_of_measurement:
                 return round(val, 2)
-            else:
-                return round(val, 1)
+            return round(val, 1)
         elif self._attribute == 'distance_to_empty':
             return int(floor(val))
-        else:
-            return int(round(val))
+        return int(round(val))
 
     @property
     def unit_of_measurement(self):
@@ -56,8 +54,7 @@ class VolvoSensor(VolvoEntity):
         if self._state.config[CONF_SCANDINAVIAN_MILES] and 'km' in unit:
             if self._attribute == 'average_fuel_consumption':
                 return 'L/mil'
-            else:
-                return unit.replace('km', 'mil')
+            return unit.replace('km', 'mil')
         return unit
 
     @property

@@ -91,7 +91,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None or 'bridge_id' not in discovery_info:
         return
 
-    if config is not None and len(config) > 0:
+    if config is not None and config:
         # Legacy configuration, will be removed in 0.60
         config_str = yaml.dump([config])
         # Indent so it renders in a fixed-width font
@@ -287,17 +287,17 @@ class HueLight(Light):
             if self.info.get('manufacturername') == 'OSRAM':
                 color_hue, sat = color_util.color_xy_to_hs(
                     *kwargs[ATTR_XY_COLOR])
-                command['hue'] = color_hue
-                command['sat'] = sat
+                command['hue'] = color_hue / 360 * 65535
+                command['sat'] = sat / 100 * 255
             else:
                 command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
             if self.info.get('manufacturername') == 'OSRAM':
                 hsv = color_util.color_RGB_to_hsv(
                     *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-                command['hue'] = hsv[0]
-                command['sat'] = hsv[1]
-                command['bri'] = hsv[2]
+                command['hue'] = hsv[0] / 360 * 65535
+                command['sat'] = hsv[1] / 100 * 255
+                command['bri'] = hsv[2] / 100 * 255
             else:
                 xyb = color_util.color_RGB_to_xy(
                     *(int(val) for val in kwargs[ATTR_RGB_COLOR]))

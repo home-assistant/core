@@ -22,8 +22,8 @@ SLOW_UPDATE_WARNING = 10
 
 
 def generate_entity_id(entity_id_format: str, name: Optional[str],
-                       current_ids: Optional[List[str]]=None,
-                       hass: Optional[HomeAssistant]=None) -> str:
+                       current_ids: Optional[List[str]] = None,
+                       hass: Optional[HomeAssistant] = None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     if current_ids is None:
         if hass is None:
@@ -42,8 +42,8 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
 
 @callback
 def async_generate_entity_id(entity_id_format: str, name: Optional[str],
-                             current_ids: Optional[List[str]]=None,
-                             hass: Optional[HomeAssistant]=None) -> str:
+                             current_ids: Optional[List[str]] = None,
+                             hass: Optional[HomeAssistant] = None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     if current_ids is None:
         if hass is None:
@@ -332,13 +332,18 @@ class Entity(object):
             if self.parallel_updates:
                 self.parallel_updates.release()
 
-    @asyncio.coroutine
-    def async_remove(self):
+    async def async_remove(self):
         """Remove entity from Home Assistant."""
         if self.platform is not None:
-            yield from self.platform.async_remove_entity(self.entity_id)
+            await self.platform.async_remove_entity(self.entity_id)
         else:
             self.hass.states.async_remove(self.entity_id)
+
+    @callback
+    def async_registry_updated(self, old, new):
+        """Called when the entity registry has been updated."""
+        self.registry_name = new.name
+        self.async_schedule_update_ha_state()
 
     def __eq__(self, other):
         """Return the comparison."""

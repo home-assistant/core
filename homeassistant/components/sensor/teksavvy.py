@@ -6,9 +6,11 @@ https://home-assistant.io/components/sensor.teksavvy/
 """
 from datetime import timedelta
 import logging
-
 import asyncio
 import async_timeout
+
+import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_MONITORED_VARIABLES, CONF_NAME)
@@ -16,7 +18,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,11 +31,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 REQUEST_TIMEOUT = 5  # seconds
 
 SENSOR_TYPES = {
-    'usage': ['Usage', PERCENT, 'mdi:percent'],
+    'usage': ['Usage Ratio', PERCENT, 'mdi:percent'],
     'usage_gb': ['Usage', GIGABYTES, 'mdi:download'],
     'limit': ['Data limit', GIGABYTES, 'mdi:download'],
     'onpeak_download': ['On Peak Download', GIGABYTES, 'mdi:download'],
-    'onpeak_upload': ['On Peak Upload ', GIGABYTES, 'mdi:upload'],
+    'onpeak_upload': ['On Peak Upload', GIGABYTES, 'mdi:upload'],
     'onpeak_total': ['On Peak Total', GIGABYTES, 'mdi:download'],
     'offpeak_download': ['Off Peak download', GIGABYTES, 'mdi:download'],
     'offpeak_upload': ['Off Peak Upload', GIGABYTES, 'mdi:upload'],
@@ -127,7 +128,9 @@ class TekSavvyData(object):
         self.websession = websession
         self.api_key = api_key
         self.bandwidth_cap = bandwidth_cap
-        self.data = {"limit": self.bandwidth_cap}
+        # Set unlimited users to infinite, otherwise the cap.
+        self.data = {"limit": self.bandwidth_cap} if self.bandwidth_cap > 0 \
+            else {"limit": float('inf')}
 
     @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -142,7 +145,8 @@ class TekSavvyData(object):
         if req.status != 200:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
-        else:
+
+        try:
             data = yield from req.json()
             for (api, ha_name) in API_HA_MAP:
                 self.data[ha_name] = float(data["value"][0][api])
@@ -151,9 +155,17 @@ class TekSavvyData(object):
             off_peak_download = self.data["offpeak_download"]
             off_peak_upload = self.data["offpeak_upload"]
             limit = self.data["limit"]
-            self.data["usage"] = 100*on_peak_download/self.bandwidth_cap
+            # Support "unlimited" users
+            if self.bandwidth_cap > 0:
+                self.data["usage"] = 100*on_peak_download/self.bandwidth_cap
+            else:
+                self.data["usage"] = 0
             self.data["usage_gb"] = on_peak_download
             self.data["onpeak_total"] = on_peak_download + on_peak_upload
-            self.data["offpeak_total"] = off_peak_download + off_peak_upload
+            self.data["offpeak_total"] =\
+                off_peak_download + off_peak_upload
             self.data["onpeak_remaining"] = limit - on_peak_download
             return True
+        except ValueError:
+            _LOGGER.error("JSON Decode Failed")
+            return False

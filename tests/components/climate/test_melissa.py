@@ -122,7 +122,7 @@ class TestMelissa(unittest.TestCase):
     def test_operation_list(self):
         """Test the operation list."""
         self.assertEqual(
-            [STATE_AUTO, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT],
+            [STATE_COOL, STATE_DRY, STATE_FAN_ONLY, STATE_HEAT],
             self.thermostat.operation_list
         )
 
@@ -202,7 +202,7 @@ class TestMelissa(unittest.TestCase):
         self.thermostat._cur_settings = None
         self.assertFalse(self.thermostat.send({
             'fan': self.api.FAN_LOW}))
-        self.assertNotEquals(SPEED_LOW, self.thermostat.current_fan_mode)
+        self.assertNotEqual(SPEED_LOW, self.thermostat.current_fan_mode)
         self.assertIsNone(self.thermostat._cur_settings)
 
     @mock.patch('homeassistant.components.climate.melissa._LOGGER.warning')
@@ -226,7 +226,6 @@ class TestMelissa(unittest.TestCase):
 
     def test_melissa_op_to_hass(self):
         """Test for translate melissa operations to hass."""
-        self.assertEqual(STATE_AUTO, self.thermostat.melissa_op_to_hass(0))
         self.assertEqual(STATE_FAN_ONLY, self.thermostat.melissa_op_to_hass(1))
         self.assertEqual(STATE_HEAT, self.thermostat.melissa_op_to_hass(2))
         self.assertEqual(STATE_COOL, self.thermostat.melissa_op_to_hass(3))
@@ -245,7 +244,6 @@ class TestMelissa(unittest.TestCase):
     @mock.patch('homeassistant.components.climate.melissa._LOGGER.warning')
     def test_hass_mode_to_melissa(self, mocked_warning):
         """Test for hass operations to melssa."""
-        self.assertEqual(0, self.thermostat.hass_mode_to_melissa(STATE_AUTO))
         self.assertEqual(
             1, self.thermostat.hass_mode_to_melissa(STATE_FAN_ONLY))
         self.assertEqual(2, self.thermostat.hass_mode_to_melissa(STATE_HEAT))

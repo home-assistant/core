@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/http/
 """
 import asyncio
-from functools import wraps
 from ipaddress import ip_network
 import json
 import logging
@@ -13,34 +12,27 @@ import os
 import ssl
 
 from aiohttp import web
-from aiohttp.hdrs import ACCEPT, ORIGIN, CONTENT_TYPE
 from aiohttp.web_exceptions import HTTPUnauthorized, HTTPMovedPermanently
 import voluptuous as vol
 
 from homeassistant.const import (
-    SERVER_PORT, CONTENT_TYPE_JSON, HTTP_HEADER_HA_AUTH,
-    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
-    HTTP_HEADER_X_REQUESTED_WITH)
+    SERVER_PORT, CONTENT_TYPE_JSON,
+    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,)
 from homeassistant.core import is_callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.remote as rem
 import homeassistant.util as hass_util
 from homeassistant.util.logging import HideSensitiveDataFilter
 
-from .auth import auth_middleware
-from .ban import ban_middleware
-from .const import (
-    KEY_BANS_ENABLED, KEY_AUTHENTICATED, KEY_LOGIN_THRESHOLD,
-    KEY_TRUSTED_NETWORKS, KEY_USE_X_FORWARDED_FOR)
+from .auth import setup_auth
+from .ban import setup_bans
+from .cors import setup_cors
+from .real_ip import setup_real_ip
+from .const import KEY_AUTHENTICATED, KEY_REAL_IP
 from .static import (
     CachingFileResponse, CachingStaticResource, staticresource_middleware)
-from .util import get_real_ip
 
 REQUIREMENTS = ['aiohttp_cors==0.6.0']
-
-ALLOWED_CORS_HEADERS = [
-    ORIGIN, ACCEPT, HTTP_HEADER_X_REQUESTED_WITH, CONTENT_TYPE,
-    HTTP_HEADER_HA_AUTH]
 
 DOMAIN = 'http'
 
@@ -81,22 +73,23 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SERVER_HOST = '0.0.0.0'
 DEFAULT_DEVELOPMENT = '0'
-DEFAULT_LOGIN_ATTEMPT_THRESHOLD = -1
+NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
 HTTP_SCHEMA = vol.Schema({
-    vol.Optional(CONF_API_PASSWORD, default=None): cv.string,
+    vol.Optional(CONF_API_PASSWORD): cv.string,
     vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
     vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
     vol.Optional(CONF_BASE_URL): cv.string,
-    vol.Optional(CONF_SSL_CERTIFICATE, default=None): cv.isfile,
-    vol.Optional(CONF_SSL_KEY, default=None): cv.isfile,
+    vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+    vol.Optional(CONF_SSL_KEY): cv.isfile,
     vol.Optional(CONF_CORS_ORIGINS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
     vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
         vol.All(cv.ensure_list, [ip_network]),
     vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD,
-                 default=DEFAULT_LOGIN_ATTEMPT_THRESHOLD): cv.positive_int,
+                 default=NO_LOGIN_ATTEMPT_THRESHOLD):
+        vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
     vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean
 })
 
@@ -113,11 +106,11 @@ def async_setup(hass, config):
     if conf is None:
         conf = HTTP_SCHEMA({})
 
-    api_password = conf[CONF_API_PASSWORD]
+    api_password = conf.get(CONF_API_PASSWORD)
     server_host = conf[CONF_SERVER_HOST]
     server_port = conf[CONF_SERVER_PORT]
-    ssl_certificate = conf[CONF_SSL_CERTIFICATE]
-    ssl_key = conf[CONF_SSL_KEY]
+    ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
+    ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf[CONF_CORS_ORIGINS]
     use_x_forwarded_for = conf[CONF_USE_X_FORWARDED_FOR]
     trusted_networks = conf[CONF_TRUSTED_NETWORKS]
@@ -128,7 +121,7 @@ def async_setup(hass, config):
         logging.getLogger('aiohttp.access').addFilter(
             HideSensitiveDataFilter(api_password))
 
-    server = HomeAssistantWSGI(
+    server = HomeAssistantHTTP(
         hass,
         server_host=server_host,
         server_port=server_port,
@@ -174,25 +167,29 @@ def async_setup(hass, config):
     return True
 
 
-class HomeAssistantWSGI(object):
-    """WSGI server for Home Assistant."""
+class HomeAssistantHTTP(object):
+    """HTTP server for Home Assistant."""
 
     def __init__(self, hass, api_password, ssl_certificate,
                  ssl_key, server_host, server_port, cors_origins,
                  use_x_forwarded_for, trusted_networks,
                  login_threshold, is_ban_enabled):
-        """Initialize the WSGI Home Assistant server."""
-        middlewares = [auth_middleware, staticresource_middleware]
+        """Initialize the HTTP Home Assistant server."""
+        app = self.app = web.Application(
+            middlewares=[staticresource_middleware])
+
+        # This order matters
+        setup_real_ip(app, use_x_forwarded_for)
 
         if is_ban_enabled:
-            middlewares.insert(0, ban_middleware)
+            setup_bans(hass, app, login_threshold)
 
-        self.app = web.Application(middlewares=middlewares)
-        self.app['hass'] = hass
-        self.app[KEY_USE_X_FORWARDED_FOR] = use_x_forwarded_for
-        self.app[KEY_TRUSTED_NETWORKS] = trusted_networks
-        self.app[KEY_BANS_ENABLED] = is_ban_enabled
-        self.app[KEY_LOGIN_THRESHOLD] = login_threshold
+        setup_auth(app, trusted_networks, api_password)
+
+        if cors_origins:
+            setup_cors(app, cors_origins)
+
+        app['hass'] = hass
 
         self.hass = hass
         self.api_password = api_password
@@ -200,20 +197,9 @@ class HomeAssistantWSGI(object):
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
+        self.is_ban_enabled = is_ban_enabled
         self._handler = None
         self.server = None
-
-        if cors_origins:
-            import aiohttp_cors
-
-            self.cors = aiohttp_cors.setup(self.app, defaults={
-                host: aiohttp_cors.ResourceOptions(
-                    allow_headers=ALLOWED_CORS_HEADERS,
-                    allow_methods='*',
-                ) for host in cors_origins
-            })
-        else:
-            self.cors = None
 
     def register_view(self, view):
         """Register a view with the WSGI server.
@@ -293,15 +279,7 @@ class HomeAssistantWSGI(object):
     @asyncio.coroutine
     def start(self):
         """Start the WSGI server."""
-        cors_added = set()
-        if self.cors is not None:
-            for route in list(self.app.router.routes()):
-                if hasattr(route, 'resource'):
-                    route = route.resource
-                if route in cors_added:
-                    continue
-                self.cors.add(route)
-                cors_added.add(route)
+        yield from self.app.startup()
 
         if self.ssl_certificate:
             try:
@@ -362,9 +340,11 @@ class HomeAssistantView(object):
         """Return a JSON response."""
         msg = json.dumps(
             result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
-        return web.Response(
+        response = web.Response(
             body=msg, content_type=CONTENT_TYPE_JSON, status=status_code,
             headers=headers)
+        response.enable_compression()
+        return response
 
     def json_message(self, message, status_code=200, message_code=None,
                      headers=None):
@@ -415,14 +395,13 @@ def request_handler_factory(view, handler):
         if not request.app['hass'].is_running:
             return web.Response(status=503)
 
-        remote_addr = get_real_ip(request)
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
         if view.requires_auth and not authenticated:
             raise HTTPUnauthorized()
 
         _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, remote_addr, authenticated)
+                     request.path, request.get(KEY_REAL_IP), authenticated)
 
         result = handler(request, **request.match_info)
 
@@ -449,41 +428,3 @@ def request_handler_factory(view, handler):
         return web.Response(body=result, status=status_code)
 
     return handle
-
-
-class RequestDataValidator:
-    """Decorator that will validate the incoming data.
-
-    Takes in a voluptuous schema and adds 'post_data' as
-    keyword argument to the function call.
-
-    Will return a 400 if no JSON provided or doesn't match schema.
-    """
-
-    def __init__(self, schema):
-        """Initialize the decorator."""
-        self._schema = schema
-
-    def __call__(self, method):
-        """Decorate a function."""
-        @asyncio.coroutine
-        @wraps(method)
-        def wrapper(view, request, *args, **kwargs):
-            """Wrap a request handler with data validation."""
-            try:
-                data = yield from request.json()
-            except ValueError:
-                _LOGGER.error('Invalid JSON received.')
-                return view.json_message('Invalid JSON.', 400)
-
-            try:
-                kwargs['data'] = self._schema(data)
-            except vol.Invalid as err:
-                _LOGGER.error('Data does not match schema: %s', err)
-                return view.json_message(
-                    'Message format incorrect: {}'.format(err), 400)
-
-            result = yield from method(view, request, *args, **kwargs)
-            return result
-
-        return wrapper
