@@ -12,7 +12,8 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.components import group
+from homeassistant.components.group import \
+    ENTITY_ID_FORMAT as GROUP_ENTITY_ID_FORMAT
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     STATE_ON)
@@ -29,7 +30,7 @@ DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'
-ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
+ENTITY_ID_ALL_LIGHTS = GROUP_ENTITY_ID_FORMAT.format('all_lights')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 

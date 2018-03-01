@@ -1,5 +1,10 @@
 """The tests for the Group Light platform."""
+from unittest.mock import MagicMock
+
+import asynctest
+
 from homeassistant.components import light
+from homeassistant.components.light import group
 from homeassistant.setup import async_setup_component
 
 
@@ -364,3 +369,49 @@ async def test_service_calls(hass):
     assert state.attributes['brightness'] == 128
     assert state.attributes['effect'] == 'Random'
     assert state.attributes['rgb_color'] == (42, 255, 255)
+
+
+async def test_invalid_service_calls(hass):
+    """Test invalid service call arguments get discarded."""
+    add_devices = MagicMock()
+    await group.async_setup_platform(hass, {
+        'entities': ['light.test1', 'light.test2']
+    }, add_devices)
+
+    assert add_devices.call_count == 1
+    grouped_light = add_devices.call_args[0][0][0]
+    grouped_light.hass = hass
+
+    with asynctest.patch.object(hass.services, 'async_call') as mock_call:
+        await grouped_light.async_turn_on(brightness=150, four_oh_four='404')
+        data = {
+            'entity_id': ['light.test1', 'light.test2'],
+            'brightness': 150
+        }
+        mock_call.assert_called_once_with('light', 'turn_on', data,
+                                          blocking=True)
+        mock_call.reset_mock()
+
+        await grouped_light.async_turn_off(transition=4, four_oh_four='404')
+        data = {
+            'entity_id': ['light.test1', 'light.test2'],
+            'transition': 4
+        }
+        mock_call.assert_called_once_with('light', 'turn_off', data,
+                                          blocking=True)
+        mock_call.reset_mock()
+
+        data = {
+            'brightness': 150,
+            'xy_color': (0.5, 0.42),
+            'rgb_color': (80, 120, 50),
+            'color_temp': 1234,
+            'white_value': 1,
+            'effect': 'Sunshine',
+            'transition': 4,
+            'flash': 'long'
+        }
+        await grouped_light.async_turn_on(**data)
+        data['entity_id'] = ['light.test1', 'light.test2']
+        mock_call.assert_called_once_with('light', 'turn_on', data,
+                                          blocking=True)
