@@ -5,6 +5,9 @@ This includes tests for all mock object types.
 
 from unittest.mock import patch
 
+# pylint: disable=unused-import
+from pyhap.loader import get_serv_loader, get_char_loader  # noqa F401
+
 from homeassistant.components.homekit.accessories import (
     set_accessory_info, add_preload_service, override_properties,
     HomeAccessory, HomeBridge)
@@ -15,9 +18,6 @@ from homeassistant.components.homekit.const import (
 from tests.mock.homekit import (
     get_patch_paths, mock_preload_service,
     MockTypeLoader, MockAccessory, MockService, MockChar)
-
-# pylint: disable=unused-import
-from pyhap.loader import get_serv_loader, get_char_loader  # noqa F401
 
 PATH_SERV = 'pyhap.loader.get_serv_loader'
 PATH_CHAR = 'pyhap.loader.get_char_loader'

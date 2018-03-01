@@ -5,6 +5,9 @@ from unittest.mock import call, patch, ANY
 
 import voluptuous as vol
 
+# pylint: disable=unused-import
+from pyhap.accessory_driver import AccessoryDriver  # noqa F401
+
 from homeassistant import setup
 from homeassistant.core import Event
 from homeassistant.components.homekit import (
@@ -14,9 +17,6 @@ from homeassistant.const import (
 
 from tests.common import get_test_home_assistant
 from tests.mock.homekit import get_patch_paths, PATH_HOMEKIT
-
-# pylint: disable=unused-import
-from pyhap.accessory_driver import AccessoryDriver  # noqa F401
 
 PATH_ACC, _ = get_patch_paths()
 IP_ADDRESS = '127.0.0.1'
