@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.plex/
 """
 import json
 import logging
-import threading
 
 from datetime import timedelta
 
