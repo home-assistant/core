@@ -16,8 +16,9 @@ from homeassistant.components.mqtt import (
     CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, MqttAvailability)
 from homeassistant.const import (
+    CONF_EXPIRE_AFTER,
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
-    CONF_UNIT_OF_MEASUREMENT)
+    CONF_UNIT_OF_MEASUREMENT, CONF_FILTER_TEMPLATE)
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
@@ -26,7 +27,6 @@ from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXPIRE_AFTER = 'expire_after'
 CONF_JSON_ATTRS = 'json_attributes'
 
 DEFAULT_NAME = 'MQTT Sensor'
@@ -38,6 +38,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+    vol.Optional(CONF_FILTER_TEMPLATE): cv.template,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
@@ -47,6 +48,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up MQTT Sensor."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
+
+    filter_template = config.get(CONF_FILTER_TEMPLATE)
+    if filter_template is not None:
+        filter_template.hass = hass
 
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
@@ -59,6 +64,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_UNIT_OF_MEASUREMENT),
         config.get(CONF_FORCE_UPDATE),
         config.get(CONF_EXPIRE_AFTER),
+        filter_template,
         value_template,
         config.get(CONF_JSON_ATTRS),
         config.get(CONF_AVAILABILITY_TOPIC),
@@ -71,7 +77,7 @@ class MqttSensor(MqttAvailability, Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
-                 force_update, expire_after, value_template,
+                 force_update, expire_after, filter_template, value_template,
                  json_attributes, availability_topic, payload_available,
                  payload_not_available):
         """Initialize the sensor."""
@@ -83,6 +89,7 @@ class MqttSensor(MqttAvailability, Entity):
         self._qos = qos
         self._unit_of_measurement = unit_of_measurement
         self._force_update = force_update
+        self._filter = filter_template
         self._template = value_template
         self._expire_after = expire_after
         self._expiration_trigger = None
@@ -97,6 +104,13 @@ class MqttSensor(MqttAvailability, Entity):
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT messages."""
+            # Evaluate message payload filter
+            if self._filter is not None:
+                valid_message = (self._filter
+                    .async_render_with_possible_json_value(payload, ""))
+                if valid_message != "True":
+                    return
+
             # auto-expire enabled?
             if self._expire_after is not None and self._expire_after > 0:
                 # Reset old trigger

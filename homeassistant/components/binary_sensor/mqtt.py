@@ -6,6 +6,7 @@ https://home-assistant.io/components/binary_sensor.mqtt/
 """
 import asyncio
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -14,12 +15,15 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
+    CONF_EXPIRE_AFTER,
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_ON,
-    CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS)
+    CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS, CONF_FILTER_TEMPLATE)
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_AVAILABILITY_TOPIC, CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, MqttAvailability)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +40,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
+    vol.Optional(CONF_FILTER_TEMPLATE): cv.template,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
@@ -45,6 +51,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the MQTT binary sensor."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
+
+    filter_template = config.get(CONF_FILTER_TEMPLATE)
+    if filter_template is not None:
+        filter_template.hass = hass
 
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
@@ -57,10 +67,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_DEVICE_CLASS),
         config.get(CONF_QOS),
         config.get(CONF_FORCE_UPDATE),
+        config.get(CONF_EXPIRE_AFTER),
         config.get(CONF_PAYLOAD_ON),
         config.get(CONF_PAYLOAD_OFF),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+        filter_template,
         value_template
     )])
 
@@ -69,8 +81,10 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
     """Representation a binary sensor that is updated by MQTT."""
 
     def __init__(self, name, state_topic, availability_topic, device_class,
-                 qos, force_update, payload_on, payload_off, payload_available,
-                 payload_not_available, value_template):
+                 qos, force_update, expire_after,
+                 payload_on, payload_off,
+                 payload_available, payload_not_available,
+                 filter_template, value_template):
         """Initialize the MQTT binary sensor."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
@@ -82,6 +96,9 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
         self._payload_off = payload_off
         self._qos = qos
         self._force_update = force_update
+        self._expire_after = expire_after
+        self._expiration_trigger = None
+        self._filter = filter_template
         self._template = value_template
 
     @asyncio.coroutine
@@ -92,6 +109,27 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
         @callback
         def state_message_received(topic, payload, qos):
             """Handle a new received MQTT state message."""
+            # Evaluate message payload filter
+            if self._filter is not None:
+                valid_message = (self._filter
+                    .async_render_with_possible_json_value(payload, ""))
+                if valid_message != "True":
+                    return
+
+            # auto-expire enabled?
+            if self._expire_after is not None and self._expire_after > 0:
+                # Reset old trigger
+                if self._expiration_trigger:
+                    self._expiration_trigger()
+                    self._expiration_trigger = None
+
+                # Set new trigger
+                expiration_at = (
+                    dt_util.utcnow() + timedelta(seconds=self._expire_after))
+
+                self._expiration_trigger = async_track_point_in_utc_time(
+                    self.hass, self.value_is_expired, expiration_at)
+
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload)
@@ -109,6 +147,13 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
 
         yield from mqtt.async_subscribe(
             self.hass, self._state_topic, state_message_received, self._qos)
+
+    @callback
+    def value_is_expired(self, *_):
+        """Triggered when value is expired."""
+        self._expiration_trigger = None
+        self._state = False
+        self.async_schedule_update_ha_state()
 
     @property
     def should_poll(self):
