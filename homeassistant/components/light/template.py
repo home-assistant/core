@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ENTITY_ID_FORMAT, Light, SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR)
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ENTITY_ID_FORMAT, Light, 
+    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR)
 from homeassistant.const import (
     CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_ENTITY_ID, CONF_FRIENDLY_NAME, STATE_ON, STATE_OFF,
@@ -112,7 +113,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             LightTemplate(
                 hass, device, friendly_name, state_template,
                 icon_template, entity_picture_template, on_action,
-                off_action, level_action, level_template, color_action, color_template, entity_ids)
+                off_action, level_action, level_template, 
+                color_action, color_template, entity_ids)
         )
 
     if not lights:
@@ -128,7 +130,8 @@ class LightTemplate(Light):
 
     def __init__(self, hass, device_id, friendly_name, state_template,
                  icon_template, entity_picture_template, on_action,
-                 off_action, level_action, level_template, color_action, color_template, entity_ids):
+                 off_action, level_action, level_template, 
+                 color_action, color_template, entity_ids):
         """Initialize the light."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -185,7 +188,7 @@ class LightTemplate(Light):
     def supported_features(self):
         """Flag supported features."""
         if self._level_script is not None and self._color_script is not None:
-            return SUPPORT_RGB_COLOR |SUPPORT_BRIGHTNESS
+            return SUPPORT_RGB_COLOR | SUPPORT_BRIGHTNESS
         elif self._level_script is not None:
             return SUPPORT_BRIGHTNESS
         elif self._color_script is not None:
@@ -321,7 +324,7 @@ class LightTemplate(Light):
                 self._state = None
 
             self._color = color
-            #TODO input check for colors
+            # TODO input check for colors
 
         for property_name, template in (
                 ('_icon', self._icon_template),
