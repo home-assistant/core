@@ -2,14 +2,17 @@
 import logging
 from threading import Timer
 
-from homeassistant.components.climate import (ATTR_CURRENT_TEMPERATURE, ATTR_TEMPERATURE, ATTR_OPERATION_MODE,
+from homeassistant.components.climate import (ATTR_CURRENT_TEMPERATURE,
+                                              ATTR_TEMPERATURE,
+                                              ATTR_OPERATION_MODE,
                                               STATE_HEAT, STATE_COOL)
 from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
 from .accessories import HomeAccessory
-from .const import (SERV_THERMOSTAT, CHAR_CURRENT_HEATING_COOLING, CHAR_TARGET_HEATING_COOLING,
-                    CHAR_CURRENT_TEMPERATURE, CHAR_TARGET_TEMPERATURE, CHAR_TEMP_DISPLAY_UNITS)
+from .const import (SERV_THERMOSTAT, CHAR_CURRENT_HEATING_COOLING,
+                    CHAR_TARGET_HEATING_COOLING,CHAR_CURRENT_TEMPERATURE,
+                    CHAR_TARGET_TEMPERATURE, CHAR_TEMP_DISPLAY_UNITS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,22 +42,28 @@ class Thermostat(HomeAccessory):
         self.display_units = None
 
         self.service_thermostat = self.get_service(SERV_THERMOSTAT)
-        self.char_current_heat_cool = self.service_thermostat.get_characteristic(CHAR_CURRENT_HEATING_COOLING)
-        self.char_target_heat_cool = self.service_thermostat.get_characteristic(CHAR_TARGET_HEATING_COOLING)
+        self.char_current_heat_cool = self.service_thermostat.\
+            get_characteristic(CHAR_CURRENT_HEATING_COOLING)
+        self.char_target_heat_cool = self.service_thermostat.\
+            get_characteristic(CHAR_TARGET_HEATING_COOLING)
         self.char_target_heat_cool.setter_callback = self.set_heat_cool
 
-        self.char_current_temp = self.service_thermostat.get_characteristic(CHAR_CURRENT_TEMPERATURE)
-        self.char_target_temp = self.service_thermostat.get_characteristic(CHAR_TARGET_TEMPERATURE)
+        self.char_current_temp = self.service_thermostat.\
+            get_characteristic(CHAR_CURRENT_TEMPERATURE)
+        self.char_target_temp = self.service_thermostat.\
+            get_characteristic(CHAR_TARGET_TEMPERATURE)
         self.char_target_temp.setter_callback = self.set_temperature_debounced
 
-        self.char_display_units = self.service_thermostat.get_characteristic(CHAR_TEMP_DISPLAY_UNITS)
+        self.char_display_units = self.service_thermostat.\
+            get_characteristic(CHAR_TEMP_DISPLAY_UNITS)
 
     def run(self):
         """Method called be object after driver is started."""
         state = self._hass.states.get(self._entity_id)
         self.update_thermostat(new_state=state)
 
-        async_track_state_change(self._hass, self._entity_id, self.update_thermostat)
+        async_track_state_change(self._hass, self._entity_id,
+                                 self.update_thermostat)
 
     def set_heat_cool(self, value):
         """Move operation mode to value if call came from homekit."""
@@ -64,10 +73,12 @@ class Thermostat(HomeAccessory):
             hass_value = HC_HOMEKIT_TO_HASS[value]
 
             self._hass.services.call('climate', 'set_operation_mode',
-                                     {'entity_id': self._entity_id, 'operation_mode': hass_value})
+                                     {'entity_id': self._entity_id,
+                                      'operation_mode': hass_value})
 
     def set_temperature_debounced(self, value):
-        _LOGGER.debug("%s: Call to set temperature to %.2f", self._entity_id, value)
+        _LOGGER.debug("%s: Call to set temperature to %.2f",
+                      self._entity_id, value)
 
         def perform_call():
             self.set_target_temperature(value)
@@ -83,12 +94,16 @@ class Thermostat(HomeAccessory):
     def set_target_temperature(self, value):
         """Set target temperature to value if call came from homekit."""
         if value != self.target_temperature:
-            _LOGGER.debug("%s: Set target temperature to %.2f", self._entity_id, value)
+            _LOGGER.debug("%s: Set target temperature to %.2f",
+                          self._entity_id, value)
             self.homekit_target_temperature = value
             self._hass.services.call('climate', 'set_temperature',
-                                     {'entity_id': self._entity_id, 'temperature': self.homekit_target_temperature})
+                                     {'entity_id': self._entity_id,
+                                      'temperature':
+                                          self.homekit_target_temperature})
 
-    def update_thermostat(self, entity_id=None, old_state=None, new_state=None):
+    def update_thermostat(self, entity_id=None,
+                          old_state=None, new_state=None):
         """Update security state after state changed."""
         if new_state is None:
             return
@@ -110,9 +125,11 @@ class Thermostat(HomeAccessory):
             self.display_units = UNIT_HASS_TO_HOMEKIT[display_units]
             self.char_display_units.set_value(self.display_units)
 
-        if self.homekit_target_heat_cool is None or self.homekit_target_heat_cool == self.current_heat_cool:
+        if self.homekit_target_heat_cool is None \
+                or self.homekit_target_heat_cool == self.current_heat_cool:
             self.char_target_heat_cool.set_value(self.current_heat_cool)
             self.homekit_target_heat_cool = None
 
-        if self.homekit_target_temperature is None or self.homekit_target_temperature == self.target_temperature:
+        if self.homekit_target_temperature is None \
+                or self.homekit_target_temperature == self.target_temperature:
             self.homekit_target_temperature = None
