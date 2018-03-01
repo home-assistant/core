@@ -11,7 +11,7 @@ from unittest.mock import patch
 from typing import Dict, List, Sequence
 
 from homeassistant.core import callback
-from homeassistant import bootstrap, core, config as config_util, loader, setup
+from homeassistant import bootstrap, core, config as config_util, loader
 import homeassistant.util.yaml as yaml
 from homeassistant.exceptions import HomeAssistantError
 
@@ -24,26 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 MOCKS = {
     'load': ("homeassistant.util.yaml.load_yaml", yaml.load_yaml),
     'load*': ("homeassistant.config.load_yaml", yaml.load_yaml),
-    'get': ("homeassistant.loader.get_component", loader.get_component),
     'secrets': ("homeassistant.util.yaml._secret_yaml", yaml._secret_yaml),
-    'except': ("homeassistant.config.async_log_exception",
-               config_util.async_log_exception),
-    'package_error': ("homeassistant.config._log_pkg_error",
-                      config_util._log_pkg_error),
-    'logger_exception': ("homeassistant.setup._LOGGER.error",
-                         setup._LOGGER.error),
-    'logger_exception*': ("homeassistant.bootstrap._LOGGER.error",
-                          bootstrap._LOGGER.error),
 }
-SILENCE = ((
-    'homeassistant.bootstrap.async_enable_logging',  # callback
-    'homeassistant.bootstrap.clear_secret_cache',
-    'homeassistant.bootstrap.async_register_signal_handling',  # callback
-    'homeassistant.config.process_ha_config_upgrade',
-    'homeassistant.util.logging.AsyncHandler._process',
-), (  # New method's patches
+SILENCE = (
     'homeassistant.config.clear_secret_cache',
-))
+)
 
 PATCHES = {}
 
@@ -92,25 +77,19 @@ def run(script_args: List) -> int:
         '-s', '--secrets',
         action='store_true',
         help="Show secret information")
-    parser.add_argument(
-        '--new', nargs='?', const=True, default=False,
-        help="Proof of concept config_checker")
 
     args = parser.parse_args()
 
     config_dir = os.path.join(os.getcwd(), args.config)
-    config_path = os.path.join(config_dir, 'configuration.yaml')
-    if not os.path.isfile(config_path):
-        print('Config does not exist:', config_path)
-        return 1
 
     print(color('bold', "Testing configuration at", config_dir))
+
+    res = check(config_dir, args.secrets)
 
     domain_info = []
     if args.info:
         domain_info = args.info.split(',')
 
-    res = check(config_path, args.new)
     if args.files:
         print(color(C_HEAD, 'yaml files'), '(used /',
               color('red', 'not used') + ')')
@@ -165,58 +144,22 @@ def run(script_args: List) -> int:
     return len(res['except'])
 
 
-def check(config_path, new_method=False):
+def check(config_dir, secrets=False):
     """Perform a check by mocking hass load functions."""
-    logging.getLogger('homeassistant.core').setLevel(logging.WARNING)
-    logging.getLogger('homeassistant.loader').setLevel(logging.WARNING)
-    logging.getLogger('homeassistant.setup').setLevel(logging.WARNING)
-    logging.getLogger('homeassistant.bootstrap').setLevel(logging.ERROR)
-    logging.getLogger('homeassistant.util.yaml').setLevel(logging.INFO)
     res = {
         'yaml_files': OrderedDict(),  # yaml_files loaded
         'secrets': OrderedDict(),  # secret cache and secrets loaded
         'except': OrderedDict(),  # exceptions raised (with config)
-        'components': OrderedDict(),  # successful components
-        'secret_cache': OrderedDict(),
+        'components': None,  # successful components
+        'secret_cache': None,
     }
+    logging.getLogger('homeassistant.loader').setLevel(logging.WARNING)
 
     # pylint: disable=unused-variable
     def mock_load(filename):
-        """Mock hass.util.load_yaml to save config files."""
+        """Mock hass.util.load_yaml to save config file names."""
         res['yaml_files'][filename] = True
         return MOCKS['load'][1](filename)
-
-    # pylint: disable=unused-variable
-    def mock_get(comp_name):
-        """Mock hass.loader.get_component to replace setup & setup_platform."""
-        async def mock_async_setup(*args):
-            """Mock setup, only record the component name & config."""
-            assert comp_name not in res['components'], \
-                "Components should contain a list of platforms"
-            res['components'][comp_name] = args[1].get(comp_name)
-            return True
-        module = MOCKS['get'][1](comp_name)
-
-        if module is None:
-            # Ensure list
-            msg = '{} not found: {}'.format(
-                'Platform' if '.' in comp_name else 'Component', comp_name)
-            res['except'].setdefault(ERROR_STR, []).append(msg)
-            return None
-
-        # Test if platform/component and overwrite setup
-        if '.' in comp_name:
-            module.async_setup_platform = mock_async_setup
-
-            if hasattr(module, 'setup_platform'):
-                del module.setup_platform
-        else:
-            module.async_setup = mock_async_setup
-
-            if hasattr(module, 'setup'):
-                del module.setup
-
-        return module
 
     # pylint: disable=unused-variable
     def mock_secrets(ldr, node):
@@ -228,31 +171,14 @@ def check(config_path, new_method=False):
         res['secrets'][node.value] = val
         return val
 
-    def mock_except(ex, domain, config,  # pylint: disable=unused-variable
-                    hass=None):
-        """Mock config.log_exception."""
-        MOCKS['except'][1](ex, domain, config, hass)
-        res['except'][domain] = config.get(domain, config)
-
-    def mock_package_error(  # pylint: disable=unused-variable
-            package, component, config, message):
-        """Mock config_util._log_pkg_error."""
-        MOCKS['package_error'][1](package, component, config, message)
-
-        pkg_key = 'homeassistant.packages.{}'.format(package)
-        res['except'][pkg_key] = config.get('homeassistant', {}) \
-            .get('packages', {}).get(package)
-
-    def mock_logger_exception(msg, *params):
-        """Log logger.exceptions."""
-        res['except'].setdefault(ERROR_STR, []).append(msg % params)
-
     # Patches to skip functions
-    for sil in SILENCE[1 if new_method else 0]:
+    for sil in SILENCE:
         PATCHES[sil] = patch(sil, return_value=mock_cb())
 
     # Patches with local mock functions
     for key, val in MOCKS.items():
+        if not secrets and key == 'secrets':
+            continue
         # The * in the key is removed to find the mock_function (side_effect)
         # This allows us to use one side_effect to patch multiple locations
         mock_function = locals()['mock_' + key.replace('*', '')]
@@ -261,30 +187,45 @@ def check(config_path, new_method=False):
     # Start all patches
     for pat in PATCHES.values():
         pat.start()
-    # Ensure !secrets point to the patched function
-    yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
+
+    if secrets:
+        # Ensure !secrets point to the patched function
+        yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
 
     try:
-        if new_method:
-            hass = core.HomeAssistant()
-            config_dir = os.path.abspath(config_path)
-            hass.config.config_dir = config_dir
-            res['components'] = hass.loop.run_until_complete(
-                config_util.async_check_ha_config_file_new(hass, config_dir)
-            )
-        else:
-            bootstrap.from_config_file(config_path, skip_pip=True)
-        res['secret_cache'] = dict(yaml.__SECRET_CACHE)
-        bootstrap.clear_secret_cache()
-    except Exception as err:  # pylint: disable=broad-except
-        print(color('red', 'Fatal error while loading config:'), str(err))
-        res['except'].setdefault(ERROR_STR, []).append(err)
+        class HassConfig():
+            """Hass object with config."""
+
+            def __init__(self, conf_dir):
+                """Init the config_dir."""
+                self.config = core.Config()
+                self.config.config_dir = conf_dir
+
+        loader.prepare(HassConfig(config_dir))
+
+        all_success, all_errors = config_util.check_ha_config_file(config_dir)
+
+        res['secret_cache'] = OrderedDict(yaml.__SECRET_CACHE)
+        res['components'] = all_success
+
+        for (msg, domain, config) in all_errors:
+            if not domain:
+                domain = ERROR_STR
+            res['except'].setdefault(domain, []).append(msg)
+            if config:
+                res['except'].setdefault(domain, []).append(config)
+
+    # except Exception as err:  # pylint: disable=broad-except
+    #     print(color('red', 'Fatal error while loading config:'), str(err))
+    #     res['except'].setdefault(ERROR_STR, []).append(str(err))
     finally:
         # Stop all patches
         for pat in PATCHES.values():
             pat.stop()
-        # Ensure !secrets point to the original function
-        yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
+        if secrets:
+            # Ensure !secrets point to the original function
+            yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
+        bootstrap.clear_secret_cache()
 
     return res
 

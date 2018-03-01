@@ -5,6 +5,7 @@ import logging.handlers
 import os
 import sys
 from time import time
+from collections import OrderedDict
 
 from typing import Any, Optional, Dict
 
@@ -110,6 +111,9 @@ def async_from_config_dict(config: Dict[str, Any],
 
     if not loader.PREPARED:
         yield from hass.async_add_job(loader.prepare, hass)
+
+    # Make a copy because we are mutating it.
+    config = OrderedDict(config)
 
     # Merge packages
     conf_util.merge_packages_config(

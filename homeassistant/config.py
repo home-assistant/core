@@ -304,12 +304,10 @@ def load_yaml_config_file(config_path):
         _LOGGER.error(msg)
         raise HomeAssistantError(msg)
 
-    # Make a copy because we are mutating it.
     # Convert values to dictionaries if they are None
-    new_config = OrderedDict()
     for key, value in conf_dict.items():
-        new_config[key] = value or {}
-    return new_config
+        conf_dict[key] = value or {}
+    return conf_dict
 
 
 def process_ha_config_upgrade(hass):
@@ -350,14 +348,22 @@ def process_ha_config_upgrade(hass):
 
 @callback
 def async_log_exception(ex, domain, config, hass):
+    """Log an error for configuration validation.
+
+    This method must be run in the event loop.
+    """
+    if hass is not None:
+        async_notify_setup_error(hass, domain, True)
+    _LOGGER.error(_format_config_error(ex, domain, config))
+
+
+@callback
+def _format_config_error(ex, domain, config):
     """Generate log exception for configuration validation.
 
     This method must be run in the event loop.
     """
     message = "Invalid config for [{}]: ".format(domain)
-    if hass is not None:
-        async_notify_setup_error(hass, domain, True)
-
     if 'extra keys not allowed' in ex.error_message:
         message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
                    .format(ex.path[-1], domain, domain,
@@ -374,7 +380,7 @@ def async_log_exception(ex, domain, config, hass):
         message += ('Please check the docs at '
                     'https://home-assistant.io/components/{}/'.format(domain))
 
-    _LOGGER.error(message)
+    return message
 
 
 async def async_process_ha_core_config(hass, config):
@@ -502,7 +508,7 @@ async def async_process_ha_core_config(hass, config):
 
 
 def _log_pkg_error(package, component, config, message):
-    """Log an error while merging."""
+    """Log an error while merging packages."""
     message = "Package {} setup failed. Component {} {}".format(
         package, component, message)
 
@@ -594,7 +600,7 @@ def merge_packages_config(config, packages):
 def async_process_component_config(hass, config, domain):
     """Check component configuration and return processed configuration.
 
-    Raise a vol.Invalid exception on error.
+    Returns None on error.
 
     This method must be run in the event loop.
     """
@@ -674,37 +680,114 @@ async def async_check_ha_config_file(hass):
     return None
 
 
-async def async_check_ha_config_file_new(hass, config_path=None):
+def check_ha_config_file(config_dir):
     """Check if Home Assistant configuration file is valid."""
-    if not config_path:
-        config_path = hass.config.config_dir
+    from unittest.mock import patch
 
+    all_errors = []
+    all_success = OrderedDict()
+
+    def _pack_error(package, component, config, message):
+        """Handle errors from packages: _log_pkg_error."""
+        print("XXXXXXXXXXXXXXXXXXXXX")
+        message = "Package {} setup failed. Component {} {}".format(
+            package, component, message)
+        domain = 'homeassistant.packages.{}.{}'.format(package, component)
+        pack_config = core_config[CONF_PACKAGES].get(package, config)
+        all_errors.append((message, domain, pack_config))
+
+    def _comp_error(ex, domain, config):
+        """Handle errors from components: async_log_exception."""
+        all_errors.append(
+            (_format_config_error(ex, domain, config), domain, config))
+
+    # Load configuration.yaml
     try:
+        config_path = find_config_file(config_dir)
+        if not config_path:
+            return {}, [("File configuration.yaml not found.", None, None)]
         config = load_yaml_config_file(config_path)
+    except HomeAssistantError as err:
+        return {}, [(str(err), None, None)]
     finally:
         clear_secret_cache()
 
-    # Validate and extract core config
-    core_config = CORE_CONFIG_SCHEMA(config.get(CONF_CORE, {}))
-    del config[CONF_CORE]
+    # Extract and validate core [homeassistant] config
+    try:
+        core_config = config.pop(CONF_CORE, {})
+        core_config = CORE_CONFIG_SCHEMA(core_config)
+        all_success[CONF_CORE] = core_config
+    except vol.Invalid as err:
+        all_errors.append(err, CONF_CORE, core_config)
+        core_config = {}
 
     # Merge packages
-    merge_packages_config(
-        config, core_config.get(CONF_PACKAGES, {}))
+    with patch('homeassistant.config._log_pkg_error', side_effect=_pack_error):
+        merge_packages_config(config, core_config.get(CONF_PACKAGES, {}))
 
-    # Filter out the repeating and common config section [homeassistant]
+    # Filter out repeating config sections
     components = set(key.split(' ')[0] for key in config.keys())
-    print(components)
 
-    # To ADD config entries?
-    # hass.config_entries = config_entries.ConfigEntries(hass, config)
-    # yield from hass.config_entries.async_load()
-    # components.update(hass.config_entries.async_domains())
+    # Process and validate config
+    for domain in components:
+        component = get_component(domain)
+        if not component:
+            all_errors.append(
+                ("Component not found: {}".format(domain), None, None))
+            continue
 
-    # Validate Components & platforms
-    # manually, without patches
+        if hasattr(component, 'CONFIG_SCHEMA'):
+            try:
+                config = component.CONFIG_SCHEMA(config)
+                all_success[domain] = config[domain]
+            except vol.Invalid as ex:
+                _comp_error(ex, domain, config)
+                continue
 
-    return config
+        if not hasattr(component, 'PLATFORM_SCHEMA'):
+            continue
+
+        platforms = []
+        for p_name, p_config in config_per_platform(config, domain):
+            # Validate component specific platform schema
+            try:
+                p_validated = component.PLATFORM_SCHEMA(p_config)
+            except vol.Invalid as ex:
+                _comp_error(ex, domain, config)
+                continue
+
+            # Not all platform components follow same pattern for platforms
+            # So if p_name is None we are not going to validate platform
+            # (the automation component is one of them)
+            if p_name is None:
+                platforms.append(p_validated)
+                continue
+
+            platform = get_platform(domain, p_name)
+
+            if platform is None:
+                all_errors.append(("Platform not found: {}.{}".format(
+                    domain, p_name), None, None))
+                continue
+
+            # Validate platform specific schema
+            if hasattr(platform, 'PLATFORM_SCHEMA'):
+                # pylint: disable=no-member
+                try:
+                    p_validated = platform.PLATFORM_SCHEMA(p_validated)
+                except vol.Invalid as ex:
+                    _comp_error(
+                        ex, '{}.{}'.format(domain, p_name), p_validated)
+                    continue
+
+            platforms.append(p_validated)
+
+        # Remove config for current component and add validated config back in.
+        for filter_comp in extract_domain_configs(config, domain):
+            del config[filter_comp]
+        all_success[domain] = platforms
+
+    return (all_success, all_errors)
 
 
 @callback
