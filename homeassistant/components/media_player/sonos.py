@@ -120,6 +120,19 @@ class SonosData:
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sonos platform."""
     import soco
+    import soco.events
+    import soco.exceptions
+
+    orig_parse_event_xml = soco.events.parse_event_xml
+
+    def safe_parse_event_xml(xml):
+        """Avoid SoCo 0.14 event thread dying from invalid xml."""
+        try:
+            return orig_parse_event_xml(xml)
+        except soco.exceptions.SoCoException:
+            return {}
+
+    soco.events.parse_event_xml = safe_parse_event_xml
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
@@ -452,14 +465,14 @@ class SonosDevice(MediaPlayerDevice):
 
     def process_avtransport_event(self, event):
         """Process a track change event coming from a coordinator."""
-        variables = event.variables
+        transport_info = self.soco.get_current_transport_info()
+        new_status = transport_info.get('current_transport_state')
 
         # Ignore transitions, we should get the target state soon
-        new_status = variables.get('transport_state')
         if new_status == 'TRANSITIONING':
             return
 
-        self._play_mode = variables.get('current_play_mode', self._play_mode)
+        self._play_mode = self.soco.play_mode
 
         if self.soco.is_playing_tv:
             self._refresh_linein(SOURCE_TV)
@@ -473,12 +486,12 @@ class SonosDevice(MediaPlayerDevice):
             )
 
             if _is_radio_uri(track_info['uri']):
-                self._refresh_radio(variables, media_info, track_info)
+                self._refresh_radio(event.variables, media_info, track_info)
             else:
-                self._refresh_music(variables, media_info, track_info)
+                update_position = (new_status != self._status)
+                self._refresh_music(update_position, media_info, track_info)
 
-        if new_status:
-            self._status = new_status
+        self._status = new_status
 
         self.schedule_update_ha_state()
 
@@ -586,9 +599,7 @@ class SonosDevice(MediaPlayerDevice):
             )
         else:
             # "On Now" field in the sonos pc app
-            current_track_metadata = variables.get(
-                'current_track_meta_data'
-            )
+            current_track_metadata = variables.get('current_track_meta_data')
             if current_track_metadata:
                 self._media_artist = \
                     current_track_metadata.radio_show.split(',')[0]
@@ -626,7 +637,7 @@ class SonosDevice(MediaPlayerDevice):
             if fav.reference.get_uri() == media_info['CurrentURI']:
                 self._source_name = fav.title
 
-    def _refresh_music(self, variables, media_info, track_info):
+    def _refresh_music(self, update_media_position, media_info, track_info):
         """Update state when playing music tracks."""
         self._extra_features = SUPPORT_PAUSE | SUPPORT_SHUFFLE_SET |\
             SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
@@ -659,25 +670,21 @@ class SonosDevice(MediaPlayerDevice):
         rel_time = _timespan_secs(position_info.get("RelTime"))
 
         # player no longer reports position?
-        update_media_position = rel_time is None and \
+        update_media_position |= rel_time is None and \
             self._media_position is not None
 
         # player started reporting position?
         update_media_position |= rel_time is not None and \
             self._media_position is None
 
-        if self._status != variables.get('transport_state'):
-            update_media_position = True
-        else:
-            # position jumped?
-            if rel_time is not None and self._media_position is not None:
-                time_diff = utcnow() - self._media_position_updated_at
-                time_diff = time_diff.total_seconds()
+        # position jumped?
+        if rel_time is not None and self._media_position is not None:
+            time_diff = utcnow() - self._media_position_updated_at
+            time_diff = time_diff.total_seconds()
 
-                calculated_position = self._media_position + time_diff
+            calculated_position = self._media_position + time_diff
 
-                update_media_position = \
-                    abs(calculated_position - rel_time) > 1.5
+            update_media_position |= abs(calculated_position - rel_time) > 1.5
 
         if update_media_position:
             self._media_position = rel_time
