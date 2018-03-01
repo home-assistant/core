@@ -89,7 +89,8 @@ def get_accessory(hass, state):
             return TYPES['Window'](hass, state.entity_id, state.name)
 
     elif state.domain == 'alarm_control_panel':
-        _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'SecuritySystem')
+        _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id,
+                      'SecuritySystem')
         return TYPES['SecuritySystem'](hass, state.entity_id, state.name)
 
     elif state.domain == 'climate':
