@@ -154,10 +154,13 @@ def setup_plexserver(
             return
 
         new_plex_clients = []
+        available_ids = []
         for device in devices:
             # For now, let's allow all deviceClass types
             if device.deviceClass in ['badClient']:
                 continue
+
+            available_ids.append(device.machineIdentifier)
 
             if device.machineIdentifier not in plex_clients:
                 new_client = PlexClient(config, device, None,
@@ -188,6 +191,9 @@ def setup_plexserver(
 
         if new_plex_clients:
             add_devices_callback(new_plex_clients)
+
+        for id in hass.data[PLEX_DATA].keys():
+            plex_clients[id].set_availability(id in available_ids)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_sessions():
@@ -259,6 +265,7 @@ class PlexClient(MediaPlayerDevice):
         """Initialize the Plex device."""
         self._app_name = ''
         self._device = None
+        self._is_device_available = False
         self._device_protocol_capabilities = None
         self._is_player_active = False
         self._is_player_available = False
@@ -407,6 +414,11 @@ class PlexClient(MediaPlayerDevice):
 
         self._media_image_url = thumb_url
 
+    def set_availability(self,available):
+        if not available:
+            self._clear_media_details()
+        self._is_device_available = available
+
     def _set_player_state(self):
         if self._player_state == 'playing':
             self._is_player_active = True
@@ -467,6 +479,11 @@ class PlexClient(MediaPlayerDevice):
     def unique_id(self):
         """Return the id of this plex client."""
         return self.machine_identifier
+
+    @property
+    def available(self):
+        """Returns the availability of the client"""
+        return self._is_device_available
 
     @property
     def name(self):
