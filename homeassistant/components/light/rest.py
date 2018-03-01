@@ -21,8 +21,8 @@ from homeassistant.components.light import (
     ATTR_EFFECT, SUPPORT_EFFECT, ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
     ATTR_TRANSITION, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_NAME, CONF_RESOURCE, CONF_TIMEOUT, CONF_METHOD, CONF_USERNAME,
-    CONF_PASSWORD)
+    CONF_NAME, CONF_URL_ON, CONF_URL_OFF, CONF_URL_STATE,
+    CONF_TIMEOUT, CONF_METHOD, CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import Template
@@ -70,7 +70,9 @@ DEFAULT_TIMEOUT = 10
 SUPPORT_REST_METHODS = ['post', 'put']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Required(CONF_URL_ON): cv.url,
+    vol.Required(CONF_URL_OFF): cv.url,
+    vol.Required(CONF_URL_STATE): cv.url,
     vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
     vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
     vol.Optional(CONF_BODY_BRIGHTNESS,
@@ -133,7 +135,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    resource = config.get(CONF_RESOURCE)
+    url_on = config.get(CONF_URL_ON)
+    url_off = config.get(CONF_URL_OFF)
+    url_state = config.get(CONF_URL_STATE)
 
     auth = None
     if username:
@@ -172,11 +176,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     timeout = config.get(CONF_TIMEOUT)
 
     try:
-        light = RestLight(name, resource, method, auth, body_on, body_off,
-                          body_brightness, body_color_temp, body_effect,
-                          body_rgb_color, body_transition, is_on_template,
-                          brightness_template, color_temp_template,
-                          effect_template, rgb_color_template, name_template,
+        light = RestLight(name, url_on, url_off, url_state, method, auth,
+                          body_on, body_off, body_brightness, body_color_temp,
+                          body_effect, body_rgb_color, body_transition,
+                          is_on_template, brightness_template,
+                          color_temp_template, effect_template,
+                          rgb_color_template, name_template,
                           supported_features_template, effect_list_template,
                           supported_features, timeout)
 
@@ -189,18 +194,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("Missing resource or schema in configuration. "
                       "Add http:// or https:// to your URL")
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("No route to resource/endpoint: %s", resource)
+        _LOGGER.error("No route to resource/endpoint: %s", url_state)
 
 
 class RestLight(Light):
     """Representation of a light that can be toggled using REST."""
 
-    def __init__(self, name, resource, method, auth, body_on, body_off,
-                 body_brightness, body_color_temp, body_effect, body_rgb_color,
-                 body_transition, is_on_template, brightness_template,
-                 color_temp_template, effect_template, rgb_color_template,
-                 name_template, supported_features_template,
-                 effect_list_template, supported_features, timeout):
+    def __init__(self, name, url_on, url_off, url_state, method, auth, body_on,
+                 body_off, body_brightness, body_color_temp, body_effect,
+                 body_rgb_color, body_transition, is_on_template,
+                 brightness_template, color_temp_template, effect_template,
+                 rgb_color_template, name_template,
+                 supported_features_template, effect_list_template,
+                 supported_features, timeout):
         """Initialize the REST light."""
         self._state = None
         self._brightness = None
@@ -211,7 +217,9 @@ class RestLight(Light):
         self._rgb_color = [None, None, None]
         self._transition = None
         self._name = name
-        self._resource = resource
+        self._url_on = url_on
+        self._url_off = url_off
+        self._url_state = url_state
         self._method = method
         self._auth = auth
         self._body_on = body_on
@@ -338,16 +346,16 @@ class RestLight(Light):
         body_on_t = json.dumps(body_on_dict)
 
         try:
-            req = yield from self.set_device_state(body_on_t)
+            req = yield from self.set_device_state(self._url_on, body_on_t)
 
             if req.status == 200:
                 self._state = True
             else:
                 _LOGGER.error(
                     "Can't turn on %s. Is resource/endpoint offline?",
-                    self._resource)
+                    self._url_on)
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error while turn on %s", self._resource)
+            _LOGGER.error("Error while turn on %s", self._url_on)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
@@ -355,24 +363,24 @@ class RestLight(Light):
         body_off_t = self._body_off.async_render()
 
         try:
-            req = yield from self.set_device_state(body_off_t)
+            req = yield from self.set_device_state(self._url_off, body_off_t)
             if req.status == 200:
                 self._state = False
             else:
                 _LOGGER.error(
                     "Can't turn off %s. Is resource/endpoint offline?",
-                    self._resource)
+                    self._url_off)
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error while turn off %s", self._resource)
+            _LOGGER.error("Error while turn off %s", self._url_off)
 
     @asyncio.coroutine
-    def set_device_state(self, body):
+    def set_device_state(self, endpoint, body):
         """Send a state update to the device."""
         websession = async_get_clientsession(self.hass)
 
         with async_timeout.timeout(self._timeout, loop=self.hass.loop):
             req = yield from getattr(websession, self._method)(
-                self._resource, auth=self._auth, data=bytes(body, 'utf-8'))
+                endpoint, auth=self._auth, data=bytes(body, 'utf-8'))
             return req
 
     @asyncio.coroutine
@@ -389,7 +397,7 @@ class RestLight(Light):
         websession = async_get_clientsession(hass)
 
         with async_timeout.timeout(self._timeout, loop=hass.loop):
-            req = yield from websession.get(self._resource, auth=self._auth)
+            req = yield from websession.get(self._url_state, auth=self._auth)
             text = yield from req.text()
 
         result = self._is_on_template.\
