@@ -51,20 +51,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 PLEX_DATA = "plex"
 
-
-class PlexData:
-    """Storage class for platform global data."""
-
-    def __init__(self):
-        """Initialize the data."""
-        self.devices = {}
-        self.topology_lock = threading.Lock()
-
-
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up the Plex platform."""
     if PLEX_DATA not in hass.data:
-        hass.data[PLEX_DATA] = PlexData()
+        hass.data[PLEX_DATA] = {}
 
     # get config from plex.conf
     file_config = load_json(hass.config.path(PLEX_CONFIG_FILE))
@@ -146,7 +136,7 @@ def setup_plexserver(
 
     _LOGGER.info('Connected to: %s://%s', http_prefix, host)
 
-    plex_clients = hass.data[PLEX_DATA].devices
+    plex_clients = hass.data[PLEX_DATA]
     plex_sessions = {}
     track_utc_time_change(hass, lambda now: update_devices(), second=30)
 
@@ -473,13 +463,6 @@ class PlexClient(MediaPlayerDevice):
         self._state = STATE_IDLE
         self._session = None
         self._clear_media_details()
-
-    async def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
-        if PLEX_DATA not in self.hass.data:
-            self.hass.data[PLEX_DATA] = PlexData()
-        if self.machine_identifier not in self.hass.data[PLEX_DATA].devices:
-            self.hass.data[PLEX_DATA].devices[self.machine_identifier] = self
 
     @property
     def unique_id(self):
