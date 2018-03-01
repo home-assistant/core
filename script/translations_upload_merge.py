@@ -2,12 +2,35 @@
 """Merge all translation sources into a single JSON file."""
 import glob
 import itertools
+import json
 import os
 import re
-
-from homeassistant.util import json as json_util
+from typing import Union, List, Dict
 
 FILENAME_FORMAT = re.compile(r'strings\.(?P<suffix>\w+)\.json')
+
+
+def load_json(filename: str) \
+        -> Union[List, Dict]:
+    """Load JSON data from a file and return as dict or list.
+
+    Defaults to returning empty dict if file is not found.
+    """
+    with open(filename, encoding='utf-8') as fdesc:
+        return json.loads(fdesc.read())
+    return {}
+
+
+def save_json(filename: str, data: Union[List, Dict]):
+    """Save JSON data to a file.
+
+    Returns True on success.
+    """
+    data = json.dumps(data, sort_keys=True, indent=4)
+    with open(filename, 'w', encoding='utf-8') as fdesc:
+        fdesc.write(data)
+        return True
+    return False
 
 
 def find_strings_files():
@@ -66,14 +89,14 @@ def main():
     for path in paths:
         component, platform = get_component_platform(path)
         parent = get_translation_dict(translations, component, platform)
-        strings = json_util.load_json(path)
+        strings = load_json(path)
         parent.update(strings)
 
     os.chdir(root)
 
     os.makedirs("build", exist_ok=True)
 
-    json_util.save_json(
+    save_json(
         os.path.join("build", "translations-upload.json"), translations)
 
 

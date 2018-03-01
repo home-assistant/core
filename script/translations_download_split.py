@@ -1,12 +1,35 @@
 #!/usr/bin/env python3
 """Merge all translation sources into a single JSON file."""
 import glob
+import json
 import os
 import re
-
-from homeassistant.util import json as json_util
+from typing import Union, List, Dict
 
 FILENAME_FORMAT = re.compile(r'strings\.(?P<suffix>\w+)\.json')
+
+
+def load_json(filename: str) \
+        -> Union[List, Dict]:
+    """Load JSON data from a file and return as dict or list.
+
+    Defaults to returning empty dict if file is not found.
+    """
+    with open(filename, encoding='utf-8') as fdesc:
+        return json.loads(fdesc.read())
+    return {}
+
+
+def save_json(filename: str, data: Union[List, Dict]):
+    """Save JSON data to a file.
+
+    Returns True on success.
+    """
+    data = json.dumps(data, sort_keys=True, indent=4)
+    with open(filename, 'w', encoding='utf-8') as fdesc:
+        fdesc.write(data)
+        return True
+    return False
 
 
 def get_language(path):
@@ -55,13 +78,13 @@ def save_language_translations(lang, translations):
         if base_translations:
             path = get_component_path(lang, component)
             os.makedirs(os.path.dirname(path), exist_ok=True)
-            json_util.save_json(path, base_translations)
+            save_json(path, base_translations)
 
         for platform, platform_translations in component_translations.get(
                 'platform', {}).items():
             path = get_platform_path(lang, component, platform)
             os.makedirs(os.path.dirname(path), exist_ok=True)
-            json_util.save_json(path, platform_translations)
+            save_json(path, platform_translations)
 
 
 def main():
@@ -73,7 +96,7 @@ def main():
     paths = glob.iglob("build/translations-download/*.json")
     for path in paths:
         lang = get_language(path)
-        translations = json_util.load_json(path)
+        translations = load_json(path)
         save_language_translations(lang, translations)
 
 
