@@ -736,7 +736,7 @@ pyfttt==0.3
 pyharmony==1.0.20
 
 # homeassistant.components.binary_sensor.hikvision
-pyhik==0.1.4
+pyhik==0.1.8
 
 # homeassistant.components.hive
 pyhiveapi==0.2.11
