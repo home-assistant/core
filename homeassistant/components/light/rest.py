@@ -254,32 +254,28 @@ class RestLight(Light):
         """Read back the brightness of the light."""
         if "brightness" in self._supported_features:
             return self._brightness
-        else:
-            return None
+        return None
 
     @property
     def color_temp(self):
         """Read back the color_temp of the light."""
         if "color_temp" in self._supported_features:
             return self._color_temp
-        else:
-            return None
+        return None
 
     @property
     def effect(self):
         """Read back the effect of the light."""
         if "effect" in self._supported_features:
             return self._effect
-        else:
-            return None
+        return None
 
     @property
     def rgb_color(self):
         """Read back the rgb_color of the light."""
         if "rgb_color" in self._supported_features:
             return self._rgb_color
-        else:
-            return None
+        return None
 
     @property
     def supported_features(self):
@@ -308,8 +304,7 @@ class RestLight(Light):
         """Return the list of supported effects."""
         if "effect" in self._supported_features:
             return self._effect_list
-        else:
-            return None
+        return None
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
