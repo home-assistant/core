@@ -17,7 +17,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyloopenergy==0.0.17']
+REQUIREMENTS = ['pyloopenergy==0.0.18']
 
 CONF_ELEC = 'electricity'
 CONF_GAS = 'gas'
