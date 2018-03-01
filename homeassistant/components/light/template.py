@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ENTITY_ID_FORMAT, Light, 
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ENTITY_ID_FORMAT, Light,
     SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR)
 from homeassistant.const import (
     CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE,
@@ -113,7 +113,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             LightTemplate(
                 hass, device, friendly_name, state_template,
                 icon_template, entity_picture_template, on_action,
-                off_action, level_action, level_template, 
+                off_action, level_action, level_template,
                 color_action, color_template, entity_ids)
         )
 
@@ -130,7 +130,7 @@ class LightTemplate(Light):
 
     def __init__(self, hass, device_id, friendly_name, state_template,
                  icon_template, entity_picture_template, on_action,
-                 off_action, level_action, level_template, 
+                 off_action, level_action, level_template,
                  color_action, color_template, entity_ids):
         """Initialize the light."""
         self.hass = hass
