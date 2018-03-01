@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.plex/
 """
 import json
 import logging
-import asyncio
 import threading
 
 from datetime import timedelta
@@ -58,7 +57,7 @@ class PlexData:
 
     def __init__(self):
         """Initialize the data."""
-        self.devices = []
+        self.devices = {}
         self.topology_lock = threading.Lock()
 
 
@@ -147,12 +146,8 @@ def setup_plexserver(
 
     _LOGGER.info('Connected to: %s://%s', http_prefix, host)
 
-    plex_clients = {}
+    plex_clients = hass.data[PLEX_DATA].devices
     plex_sessions = {}
-
-    for device in hass.data[PLEX_DATA].devices:
-        plex_clients[device.unique_id] = device
-
     track_utc_time_change(hass, lambda now: update_devices(), second=30)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
@@ -479,14 +474,12 @@ class PlexClient(MediaPlayerDevice):
         self._session = None
         self._clear_media_details()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Callback when entity is added to hass."""
         if PLEX_DATA not in self.hass.data:
             self.hass.data[PLEX_DATA] = PlexData()
-        if self.machine_identifier not in \
-                [x.unique_id for x in self.hass.data[PLEX_DATA].devices]:
-            self.hass.data[PLEX_DATA].devices.append(self)
+        if self.machine_identifier not in self.hass.data[PLEX_DATA].devices:
+            self.hass.data[PLEX_DATA].devices[self.machine_identifier] = self
 
     @property
     def unique_id(self):
