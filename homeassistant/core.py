@@ -1064,7 +1064,7 @@ class Config(object):
         """Check if the path is valid for access from outside."""
         assert path is not None
 
-        parent = pathlib.Path(path).parent
+        parent = pathlib.Path(path)
         try:
             parent = parent.resolve()  # pylint: disable=no-member
         except (FileNotFoundError, RuntimeError, PermissionError):
