@@ -46,7 +46,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             yield from home.update_info()
             dev.append(TibberSensor(home))
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        raise PlatformNotReady()
+        raise PlatformNotReady() from None
 
     async_add_devices(dev, True)
 
