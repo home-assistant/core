@@ -4,7 +4,7 @@ import logging
 from pyhap.accessory import Accessory, Bridge, Category
 
 from .const import (
-    SERV_ACCESSORY_INFO, MANUFACTURER,
+    SERV_ACCESSORY_INFO, SERV_BRIDGING_STATE, MANUFACTURER,
     CHAR_MODEL, CHAR_MANUFACTURER, CHAR_SERIAL_NUMBER)
 
 
@@ -46,17 +46,24 @@ def override_properties(char, new_properties):
 class HomeAccessory(Accessory):
     """Class to extend the Accessory class."""
 
-    def __init__(self, display_name, model, category='OTHER'):
+    def __init__(self, display_name, model, category='OTHER', **kwargs):
         """Initialize a Accessory object."""
-        super().__init__(display_name)
+        super().__init__(display_name, **kwargs)
         set_accessory_info(self, model)
         self.category = getattr(Category, category, Category.OTHER)
+
+    def _set_services(self):
+        add_preload_service(self, SERV_ACCESSORY_INFO)
 
 
 class HomeBridge(Bridge):
     """Class to extend the Bridge class."""
 
-    def __init__(self, display_name, model, pincode):
+    def __init__(self, display_name, model, pincode, **kwargs):
         """Initialize a Bridge object."""
-        super().__init__(display_name, pincode=pincode)
+        super().__init__(display_name, pincode=pincode, **kwargs)
         set_accessory_info(self, model)
+
+    def _set_services(self):
+        add_preload_service(self, SERV_ACCESSORY_INFO)
+        add_preload_service(self, SERV_BRIDGING_STATE)
