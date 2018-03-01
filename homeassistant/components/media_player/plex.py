@@ -436,7 +436,8 @@ class PlexClient(MediaPlayerDevice):
         self._media_image_url = thumb_url
 
     def set_availability(self, available):
-        """Sets the device as available/unavailable and notes the time it was set unavailable"""
+        """Sets the device as available/unavailable and
+            notes the time it was set unavailable"""
         if not available:
             self._clear_media_details()
             if self._marked_unavailable is None:
@@ -518,7 +519,7 @@ class PlexClient(MediaPlayerDevice):
 
     @property
     def unavailable_time(self):
-        """Returns the timedelta showing how long client has been unavailable"""
+        """Returns the timedelta of how long client has been unavailable"""
         if self._marked_unavailable:
             return datetime.datetime.now() - self._marked_unavailable
         return None
