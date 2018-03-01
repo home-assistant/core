@@ -22,8 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     devices = []
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
-        new_device = HMLock(conf)
-        devices.append(new_device)
+        devices.append(HMLock(conf))
 
     add_devices(devices)
 

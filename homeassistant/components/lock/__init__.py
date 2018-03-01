@@ -76,6 +76,17 @@ def unlock(hass, entity_id=None, code=None):
     hass.services.call(DOMAIN, SERVICE_UNLOCK, data)
 
 
+@bind_hass
+def open(hass, entity_id=None, code=None):
+    """Open all or specified locks."""
+    data = {}
+    if code:
+        data[ATTR_CODE] = code
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_OPEN, data)
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for locks."""

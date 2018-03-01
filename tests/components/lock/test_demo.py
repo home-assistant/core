@@ -9,6 +9,7 @@ from tests.common import get_test_home_assistant
 
 FRONT = 'lock.front_door'
 KITCHEN = 'lock.kitchen_door'
+OPENABLE_LOCK = 'lock.openable_lock'
 
 
 class TestLockDemo(unittest.TestCase):
@@ -48,3 +49,10 @@ class TestLockDemo(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertFalse(lock.is_locked(self.hass, FRONT))
+
+    def test_opening(self):
+        """Test the opening of a lock"""
+        lock.open(self.hass, OPENABLE_LOCK)
+        self.hass.block_till_done()
+
+        self.assertFalse(lock.is_locked(self.hass, OPENABLE_LOCK))
