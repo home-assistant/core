@@ -44,11 +44,6 @@ async def test_state_reporting(hass):
     await hass.async_block_till_done()
     assert hass.states.get('light.group_light').state == 'off'
 
-    hass.states.async_set('light.test1', 'unknown')
-    hass.states.async_set('light.test2', 'unknown')
-    await hass.async_block_till_done()
-    assert hass.states.get('light.group_light').state == 'unknown'
-
     hass.states.async_set('light.test1', 'unavailable')
     hass.states.async_set('light.test2', 'unavailable')
     await hass.async_block_till_done()

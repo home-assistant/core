@@ -13,9 +13,9 @@ import voluptuous as vol
 
 from homeassistant.core import State, callback
 from homeassistant.components import light
-from homeassistant.const import (STATE_OFF, STATE_ON, ATTR_ENTITY_ID,
-                                 CONF_NAME, CONF_ENTITIES, STATE_UNAVAILABLE,
-                                 STATE_UNKNOWN, ATTR_SUPPORTED_FEATURES)
+from homeassistant.const import (STATE_ON, ATTR_ENTITY_ID, CONF_NAME,
+                                 CONF_ENTITIES, STATE_UNAVAILABLE,
+                                 ATTR_SUPPORTED_FEATURES)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.components.light import (
@@ -23,7 +23,8 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_XY_COLOR,
     SUPPORT_WHITE_VALUE, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, ATTR_XY_COLOR,
     ATTR_RGB_COLOR, ATTR_WHITE_VALUE, ATTR_COLOR_TEMP, ATTR_MIN_MIREDS,
-    ATTR_MAX_MIREDS, ATTR_EFFECT_LIST, ATTR_EFFECT)
+    ATTR_MAX_MIREDS, ATTR_EFFECT_LIST, ATTR_EFFECT, ATTR_FLASH,
+    ATTR_TRANSITION)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +57,8 @@ class GroupLight(light.Light):
         """Initialize a group light."""
         self._name = name  # type: str
         self._entity_ids = entity_ids  # type: List[str]
-        self._state = STATE_UNAVAILABLE  # type: str
+        self._is_on = False  # type: bool
+        self._available = False  # type: bool
         self._brightness = None  # type: Optional[int]
         self._xy_color = None  # type: Optional[Tuple[float, float]]
         self._rgb_color = None  # type: Optional[Tuple[int, int, int]]
@@ -92,14 +94,14 @@ class GroupLight(light.Light):
         return self._name
 
     @property
-    def state(self) -> str:
-        """Return the state."""
-        return self._state
+    def is_on(self) -> bool:
+        """Return the on/off state of the light."""
+        return self._is_on
 
     @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self._state == STATE_ON
+    def available(self) -> bool:
+        """Return whether the light is available."""
+        return self._available
 
     @property
     def brightness(self) -> Optional[int]:
@@ -158,17 +160,44 @@ class GroupLight(light.Light):
 
     async def async_turn_on(self, **kwargs):
         """Forward the turn_on command to all lights in the group."""
-        for entity_id in self._entity_ids:
-            payload = dict(kwargs)
-            payload[ATTR_ENTITY_ID] = entity_id
-            light.async_turn_on(self.hass, **payload)
+        data = {ATTR_ENTITY_ID: self._entity_ids}
+
+        if ATTR_BRIGHTNESS in kwargs:
+            data[ATTR_BRIGHTNESS] = kwargs[ATTR_BRIGHTNESS]
+
+        if ATTR_XY_COLOR in kwargs:
+            data[ATTR_XY_COLOR] = kwargs[ATTR_XY_COLOR]
+
+        if ATTR_RGB_COLOR in kwargs:
+            data[ATTR_RGB_COLOR] = kwargs[ATTR_RGB_COLOR]
+
+        if ATTR_COLOR_TEMP in kwargs:
+            data[ATTR_COLOR_TEMP] = kwargs[ATTR_COLOR_TEMP]
+
+        if ATTR_WHITE_VALUE in kwargs:
+            data[ATTR_WHITE_VALUE] = kwargs[ATTR_WHITE_VALUE]
+
+        if ATTR_EFFECT in kwargs:
+            data[ATTR_EFFECT] = kwargs[ATTR_EFFECT]
+
+        if ATTR_TRANSITION in kwargs:
+            data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
+
+        if ATTR_FLASH in kwargs:
+            data[ATTR_FLASH] = kwargs[ATTR_FLASH]
+
+        await self.hass.services.async_call(
+            light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True)
 
     async def async_turn_off(self, **kwargs):
         """Forward the turn_off command to all lights in the group."""
-        for entity_id in self._entity_ids:
-            payload = dict(kwargs)
-            payload[ATTR_ENTITY_ID] = entity_id
-            light.async_turn_off(self.hass, **payload)
+        data = {ATTR_ENTITY_ID: self._entity_ids}
+
+        if ATTR_TRANSITION in kwargs:
+            data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
+
+        await self.hass.services.async_call(
+            light.DOMAIN, light.SERVICE_TURN_OFF, data, blocking=True)
 
     async def async_update(self):
         """Query all members and determine the group state."""
@@ -176,7 +205,9 @@ class GroupLight(light.Light):
         states = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
 
-        self._state = _determine_on_off_state(states)
+        self._is_on = len(on_states) > 0
+        self._available = any(state.state != STATE_UNAVAILABLE
+                              for state in states)
 
         self._brightness = _reduce_attribute(on_states, ATTR_BRIGHTNESS)
 
@@ -258,22 +289,3 @@ def _reduce_attribute(states: List[State],
         return attrs[0]
 
     return reduce(*attrs)
-
-
-def _determine_on_off_state(states: List[State]) -> str:
-    """Helper method to determine the ON/OFF/... state of a light."""
-    if not states:
-        return STATE_UNAVAILABLE
-    all_unavailable = True
-    all_unknown = True
-    for state_ in states:
-        state = state_.state
-        if state == STATE_ON:
-            return STATE_ON
-        all_unavailable = all_unavailable and state == STATE_UNAVAILABLE
-        all_unknown = all_unknown and state == STATE_UNKNOWN
-    if all_unavailable:
-        return STATE_UNAVAILABLE
-    if all_unknown:
-        return STATE_UNKNOWN
-    return STATE_OFF
