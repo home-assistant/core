@@ -43,7 +43,7 @@ def async_setup(hass, config):
     hass.http.register_view(ClearCompletedItemsView)
 
     hass.components.conversation.async_register(INTENT_ADD_ITEM, [
-        'Add {item} to my shopping list',
+        'Add [the] [a] [an] {item} to my shopping list',
     ])
     hass.components.conversation.async_register(INTENT_LAST_ITEMS, [
         'What is on my shopping list'
