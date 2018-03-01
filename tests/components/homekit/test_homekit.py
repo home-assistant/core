@@ -13,8 +13,7 @@ from homeassistant.const import (
     CONF_PORT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 from tests.common import get_test_home_assistant
-from tests.mock.homekit import (
-    get_patch_paths, mock_preload_service, PATH_HOMEKIT)
+from tests.mock.homekit import get_patch_paths, PATH_HOMEKIT
 
 PATH_ACC, _ = get_patch_paths()
 IP_ADDRESS = '127.0.0.1'
@@ -80,15 +79,15 @@ class TestHomeKit(unittest.TestCase):
     @patch('pyhap.accessory_driver.AccessoryDriver')
     def test_homekit_class(self, mock_acc_driver):
         """Test interaction between the HomeKit class and pyhap."""
-        with patch(PATH_ACC, side_effect=mock_preload_service):
+        with patch(PATH_HOMEKIT + '.accessories.HomeBridge') as mock_bridge:
             homekit = HomeKit(self.hass, 51826)
             homekit.setup_bridge(b'123-45-678')
 
+        mock_bridge.reset_mock()
         self.hass.states.set('demo.demo1', 'on')
         self.hass.states.set('demo.demo2', 'off')
 
-        with patch('pyhap.accessory.Bridge.add_accessory') as mock_bridge, \
-            patch(PATH_HOMEKIT + '.get_accessory') as mock_get_acc, \
+        with patch(PATH_HOMEKIT + '.get_accessory') as mock_get_acc, \
             patch(PATH_HOMEKIT + '.import_types') as mock_import_types, \
                 patch('homeassistant.util.get_local_ip') as mock_ip:
             mock_get_acc.side_effect = ['TempSensor', 'Window']
@@ -100,7 +99,8 @@ class TestHomeKit(unittest.TestCase):
         self.assertEqual(mock_import_types.call_count, 1)
         self.assertEqual(mock_get_acc.call_count, 2)
         self.assertEqual(mock_bridge.mock_calls,
-                         [call('TempSensor'), call('Window')])
+                         [call().add_accessory('TempSensor'),
+                          call().add_accessory('Window')])
         self.assertEqual(mock_acc_driver.mock_calls,
                          [call(homekit.bridge, 51826, IP_ADDRESS, path),
                           call().start()])
