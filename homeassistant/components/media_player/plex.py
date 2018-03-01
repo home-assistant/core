@@ -50,6 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 PLEX_DATA = "plex"
 
+
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up the Plex platform."""
     if PLEX_DATA not in hass.data:
@@ -142,7 +143,6 @@ def setup_plexserver(
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_devices():
         """Update the devices objects."""
-
         try:
             devices = plexserver.clients()
         except plexapi.exceptions.BadRequest:
