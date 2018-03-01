@@ -51,7 +51,7 @@ class TestLockDemo(unittest.TestCase):
         self.assertFalse(lock.is_locked(self.hass, FRONT))
 
     def test_opening(self):
-        """Test the opening of a lock"""
+        """Test the opening of a lock."""
         lock.open(self.hass, OPENABLE_LOCK)
         self.hass.block_till_done()
 
