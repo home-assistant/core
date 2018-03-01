@@ -228,7 +228,6 @@ def publish_template(hass: HomeAssistantType, topic, payload_template,
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
 
-@asyncio.coroutine
 @bind_hass
 async def async_subscribe(hass: HomeAssistantType, topic: str,
                           msg_callback: MessageCallbackType,
