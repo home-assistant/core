@@ -21,6 +21,7 @@ from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
 REQUIREMENTS = ['home-assistant-frontend==20180228.1']
@@ -379,6 +380,8 @@ def async_setup(hass, config):
 
     async_setup_themes(hass, conf.get(CONF_THEMES))
 
+    hass.http.register_view(TranslationsView)
+
     return True
 
 
@@ -538,6 +541,23 @@ class ThemesView(HomeAssistantView):
         return self.json({
             'themes': hass.data[DATA_THEMES],
             'default_theme': hass.data[DATA_DEFAULT_THEME],
+        })
+
+
+class TranslationsView(HomeAssistantView):
+    """View to return backend defined translations."""
+
+    url = '/api/translations/{language}'
+    name = 'api:translations'
+
+    @asyncio.coroutine
+    def get(self, request, language):
+        """Return translations."""
+        hass = request.app['hass']
+
+        resources = yield from async_get_translations(hass, language)
+        return self.json({
+            'resources': resources,
         })
 
 
