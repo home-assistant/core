@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.filter/
 import logging
 import statistics
 from collections import deque, Counter
+from numbers import Number
 
 import voluptuous as vol
 
@@ -16,6 +17,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, ATTR_ENTITY_ID,
     ATTR_ICON, STATE_UNKNOWN, STATE_UNAVAILABLE)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.decorator import Registry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
 
@@ -24,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 FILTER_NAME_LOWPASS = 'lowpass'
 FILTER_NAME_OUTLIER = 'outlier'
 FILTER_NAME_THROTTLE = 'throttle'
+FILTERS = Registry()
 
 CONF_FILTERS = 'filters'
 CONF_FILTER_NAME = 'filter'
@@ -33,6 +36,7 @@ CONF_FILTER_RADIUS = 'radius'
 CONF_FILTER_TIME_CONSTANT = 'time_constant'
 
 DEFAULT_WINDOW_SIZE = 1
+DEFAULT_PRECISION = 2
 DEFAULT_FILTER_RADIUS = 2.0
 DEFAULT_FILTER_TIME_CONSTANT = 10
 
@@ -42,7 +46,8 @@ ICON = 'mdi:chart-line-variant'
 FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_FILTER_WINDOW_SIZE,
                  default=DEFAULT_WINDOW_SIZE): vol.Coerce(int),
-    vol.Optional(CONF_FILTER_PRECISION): vol.Coerce(int),
+    vol.Optional(CONF_FILTER_PRECISION,
+                 default=DEFAULT_PRECISION): vol.Coerce(int),
 })
 
 FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend({
@@ -76,28 +81,10 @@ async def async_setup_platform(hass, config, async_add_devices,
     """Set up the template sensors."""
     name = config.get(CONF_NAME)
     entity_id = config.get(CONF_ENTITY_ID)
-    filters = []
 
-    for _filter in config[CONF_FILTERS]:
-        window_size = _filter.get(CONF_FILTER_WINDOW_SIZE)
-        precision = _filter.get(CONF_FILTER_PRECISION)
-
-        if _filter[CONF_FILTER_NAME] == FILTER_NAME_OUTLIER:
-            radius = _filter.get(CONF_FILTER_RADIUS)
-            filters.append(OutlierFilter(window_size=window_size,
-                                         precision=precision,
-                                         entity=entity_id,
-                                         radius=radius))
-        elif _filter[CONF_FILTER_NAME] == FILTER_NAME_LOWPASS:
-            time_constant = _filter.get(CONF_FILTER_TIME_CONSTANT)
-            filters.append(LowPassFilter(window_size=window_size,
-                                         precision=precision,
-                                         entity=entity_id,
-                                         time_constant=time_constant))
-        elif _filter[CONF_FILTER_NAME] == FILTER_NAME_THROTTLE:
-            filters.append(ThrottleFilter(window_size=window_size,
-                                          precision=precision,
-                                          entity=entity_id))
+    filters = [FILTERS[_filter.pop(CONF_FILTER_NAME)](
+        entity=entity_id, **_filter)
+               for _filter in config[CONF_FILTERS]]
 
     async_add_devices([SensorFilter(name, entity_id, filters)])
 
@@ -219,12 +206,13 @@ class Filter(object):
     def filter_state(self, new_state):
         """Implement a common interface for filters."""
         filtered = self._filter_state(new_state)
-        if self.precision is not None:
+        if isinstance(filtered, Number):
             filtered = round(float(filtered), self.precision)
         self.states.append(filtered)
         return filtered
 
 
+@FILTERS.register(FILTER_NAME_OUTLIER)
 class OutlierFilter(Filter):
     """BASIC outlier filter.
 
@@ -257,6 +245,7 @@ class OutlierFilter(Filter):
         return new_state
 
 
+@FILTERS.register(FILTER_NAME_LOWPASS)
 class LowPassFilter(Filter):
     """BASIC Low Pass Filter.
 
@@ -283,6 +272,7 @@ class LowPassFilter(Filter):
         return filtered
 
 
+@FILTERS.register(FILTER_NAME_THROTTLE)
 class ThrottleFilter(Filter):
     """Throttle Filter.
 
