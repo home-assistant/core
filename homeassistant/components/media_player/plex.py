@@ -200,7 +200,7 @@ def setup_plexserver(
             print("************************Adding")
             add_devices_callback(new_plex_clients)
 
-        # Figure out if device is unavailable and if it should be removed or not
+        # Figure out if device is unavailable and if it should be removed
         for cid in hass.data[PLEX_DATA].keys():
             cclient = plex_clients[cid]
             config_purge_int = config.get(CONF_CLIENT_PURGE_INTERVAL)
