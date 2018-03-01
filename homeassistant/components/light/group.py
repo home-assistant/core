@@ -29,8 +29,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'group'
-
 DEFAULT_NAME = 'Group Light'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
