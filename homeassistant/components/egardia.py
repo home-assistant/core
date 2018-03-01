@@ -56,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_REPORT_SERVER_CODES): SERVER_CODE_SCHEMA,
+        vol.Optional(CONF_REPORT_SERVER_CODES, default={}): SERVER_CODE_SCHEMA,
         vol.Optional(CONF_REPORT_SERVER_ENABLED,
                      default=DEFAULT_REPORT_SERVER_ENABLED): cv.boolean,
         vol.Optional(CONF_REPORT_SERVER_PORT,

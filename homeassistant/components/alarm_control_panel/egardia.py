@@ -47,7 +47,7 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
     """Representation of a Egardia alarm."""
 
     def __init__(self, name, egardiasystem,
-                 rs_enabled=False, rs_codes=None, rs_port=52010):
+                 rs_enabled=False, rs_codes={}, rs_port=52010):
         """Initialize the Egardia alarm."""
         self._name = name
         self._egardiasystem = egardiasystem
@@ -91,16 +91,10 @@ class EgardiaAlarm(alarm.AlarmControlPanel):
 
     def lookupstatusfromcode(self, statuscode):
         """Look at the rs_codes and returns the status from the code."""
-        status = 'UNKNOWN'
-        if self._rs_codes is not None:
-            statuscode = str(statuscode).strip()
-            for statusgroup in self._rs_codes:
-                codes = self._rs_codes[statusgroup]
-                for code in codes:
-                    code = str(code).strip()
-                    if statuscode == code:
-                        status = statusgroup.upper()
-                        break
+        status = next((
+            status_group.upper() for status_group, codes
+            in self._rs_codes.items() for code in codes
+            if statuscode == code), 'UNKNOWN')
         return status
 
     def parsestatus(self, status):
