@@ -809,6 +809,7 @@ class TestConfig(unittest.TestCase):
 
             valid = [
                 test_file,
+                tmp_dir
             ]
             for path in valid:
                 assert self.config.is_allowed_path(path)
