@@ -77,7 +77,7 @@ class ZhaFan(zha.Entity, FanEntity):
         return self._state != SPEED_OFF
 
     @asyncio.coroutine
-    def async_turn_on(self, speed: str=None, **kwargs) -> None:
+    def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the entity on."""
         if speed is None:
             speed = SPEED_MEDIUM
