@@ -8,11 +8,11 @@ from homeassistant.const import TEMP_CELSIUS
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'temperature': [TEMP_CELSIUS, 'thermometer'],
-    'humidity': ['%', 'water-percent'],
+    'temperature': [TEMP_CELSIUS, 'mdi:thermometer'],
+    'humidity': ['%', 'mdi:water-percent'],
     'illumination': ['lm'],
     'lux': ['lx'],
-    'pressure': ['hPa', 'gauge']
+    'pressure': ['hPa', 'mdi:gauge']
 }
 
 
