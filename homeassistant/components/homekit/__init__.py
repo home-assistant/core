@@ -64,12 +64,10 @@ def async_setup(hass, config):
 
 
 def import_types():
-    """Import all types from files in the HomeKit dir."""
+    """Import all types from files in the HomeKit directory."""
     _LOGGER.debug("Import type files.")
     # pylint: disable=unused-variable
-    from .covers import Window  # noqa F401
-    # pylint: disable=unused-variable
-    from .sensors import TemperatureSensor # noqa F401
+    from . import covers, sensors  # noqa F401
 
 
 def get_accessory(hass, state):
