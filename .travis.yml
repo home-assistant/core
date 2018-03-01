@@ -33,6 +33,7 @@ services:
 before_deploy:
   - docker pull lokalise/lokalise-cli
 deploy:
+  skip_cleanup: true
   provider: script
   script: script/travis_deploy
   on:
