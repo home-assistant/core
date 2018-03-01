@@ -38,21 +38,16 @@ CONF_COLOR_TEMPLATE = 'color_template'
 LIGHT_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_ICON_TEMPLATE): cv.template,
-    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
-    vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
-    vol.Optional(CONF_COLOR_ACTION): cv.SCRIPT_SCHEMA,
-    vol.Optional(CONF_COLOR_TEMPLATE): cv.template,
+    vol.Optional(CONF_VALUE_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_ICON_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_LEVEL_ACTION, default=None): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_LEVEL_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_COLOR_ACTION, default=None): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_COLOR_TEMPLATE, default=None): cv.template,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
-
-LIGHT_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    LIGHT_SCHEMA,
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LIGHTS): vol.Schema({cv.slug: LIGHT_SCHEMA}),
@@ -66,7 +61,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for device, device_config in config[CONF_LIGHTS].items():
         friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
-        state_template = device_config.get(CONF_VALUE_TEMPLATE)
+        state_template = device_config[CONF_VALUE_TEMPLATE]
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(
             CONF_ENTITY_PICTURE_TEMPLATE)
@@ -176,7 +171,7 @@ class LightTemplate(Light):
 
     @property
     def color(self):
-        """Return the color of the light."""
+        """Return the RGB color of the light."""
         return self._color
 
     @property
@@ -284,6 +279,7 @@ class LightTemplate(Light):
     @asyncio.coroutine
     def async_update(self):
         """Update the state from the template."""
+        print("ASYNC UPDATE")
         if self._template is not None:
             try:
                 state = self._template.async_render().lower()
@@ -308,7 +304,7 @@ class LightTemplate(Light):
                 self._state = None
 
             if 0 <= int(brightness) <= 255:
-                self._brightness = int(brightness)
+                self._brightness = brightness
             else:
                 _LOGGER.error(
                     'Received invalid brightness : %s' +
@@ -323,8 +319,17 @@ class LightTemplate(Light):
                 _LOGGER.error(ex)
                 self._state = None
 
-            self._color = color
-            # TODO input check for colors
+            self._color = []
+            for i in range(3):
+                if 0 <= int(color[i]) <= 255:
+                    self._color[i] = color[i]
+                else:
+                    _LOGGER.error(
+                        'Received invalid RGB color : %s' +
+                        'Expected: [0-255, 0-255, 0-255]',
+                        color)
+                    self._color = None
+                    break
 
         for property_name, template in (
                 ('_icon', self._icon_template),
