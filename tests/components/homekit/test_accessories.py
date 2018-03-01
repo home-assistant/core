@@ -16,6 +16,9 @@ from tests.mock.homekit import (
     get_patch_paths, mock_preload_service,
     MockTypeLoader, MockAccessory, MockService, MockChar)
 
+# pylint: disable=unused-import
+from pyhap.loader import get_serv_loader, get_char_loader  # noqa F401
+
 PATH_SERV = 'pyhap.loader.get_serv_loader'
 PATH_CHAR = 'pyhap.loader.get_char_loader'
 PATH_ACC, _ = get_patch_paths()
