@@ -106,7 +106,7 @@ def setup(hass, yaml_config):
     server.register_view(HueOneLightStateView(config))
     server.register_view(HueOneLightChangeView(config))
     server.register_view(HueGroupView(config))
-    
+
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr, config.listen_port,
         config.upnp_bind_multicast, config.advertise_ip,
