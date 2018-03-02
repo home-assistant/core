@@ -257,11 +257,15 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def reload_service_handler(service):
-        """Remove all groups and load new ones from config."""
+        """Remove all user-defined groups and load new ones from config."""
+        auto = list(filter(lambda e: not e.user_defined, component.entities))
+
         conf = yield from component.async_prepare_reload()
         if conf is None:
             return
         yield from _async_process_config(hass, conf, component)
+
+        yield from component.async_add_entities(auto)
 
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler,
@@ -407,7 +411,7 @@ class Group(Entity):
         self.group_off = None
         self.visible = visible
         self.control = control
-        self._user_defined = user_defined
+        self.user_defined = user_defined
         self._order = order
         self._assumed_state = False
         self._async_unsub_state_changed = None
@@ -497,7 +501,7 @@ class Group(Entity):
             ATTR_ENTITY_ID: self.tracking,
             ATTR_ORDER: self._order,
         }
-        if not self._user_defined:
+        if not self.user_defined:
             data[ATTR_AUTO] = True
         if self.view:
             data[ATTR_VIEW] = True
