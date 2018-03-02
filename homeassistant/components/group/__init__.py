@@ -258,8 +258,7 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def reload_service_handler(service):
         """Remove all user-defined groups and load new ones from config."""
-        # pylint: disable=protected-access
-        auto = list(filter(lambda e: not e._user_defined, component.entities))
+        auto = list(filter(lambda e: not e.user_defined, component.entities))
 
         conf = yield from component.async_prepare_reload()
         if conf is None:
@@ -412,7 +411,7 @@ class Group(Entity):
         self.group_off = None
         self.visible = visible
         self.control = control
-        self._user_defined = user_defined
+        self.user_defined = user_defined
         self._order = order
         self._assumed_state = False
         self._async_unsub_state_changed = None
@@ -502,7 +501,7 @@ class Group(Entity):
             ATTR_ENTITY_ID: self.tracking,
             ATTR_ORDER: self._order,
         }
-        if not self._user_defined:
+        if not self.user_defined:
             data[ATTR_AUTO] = True
         if self.view:
             data[ATTR_VIEW] = True
