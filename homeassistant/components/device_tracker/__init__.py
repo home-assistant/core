@@ -77,6 +77,7 @@ ATTR_MAC = 'mac'
 ATTR_NAME = 'name'
 ATTR_SOURCE_TYPE = 'source_type'
 ATTR_VENDOR = 'vendor'
+ATTR_CONSIDER_HOME = 'consider_home'
 
 SOURCE_TYPE_GPS = 'gps'
 SOURCE_TYPE_ROUTER = 'router'
@@ -205,7 +206,16 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         """Service to see a device."""
         args = {key: value for key, value in call.data.items() if key in
                 (ATTR_MAC, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_LOCATION_NAME,
-                 ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_ATTRIBUTES)}
+                 ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_ATTRIBUTES,
+                 ATTR_SOURCE_TYPE)}
+
+        try:
+            consider_home = call.data[ATTR_CONSIDER_HOME]
+        except KeyError:
+            pass
+        else:
+            args[ATTR_CONSIDER_HOME] = timedelta(seconds=int(consider_home))
+
         yield from tracker.async_see(**args)
 
     hass.services.async_register(DOMAIN, SERVICE_SEE, async_see_service)
@@ -243,12 +253,12 @@ class DeviceTracker(object):
             location_name: str = None, gps: GPSType = None, gps_accuracy=None,
             battery: str = None, attributes: dict = None,
             source_type: str = SOURCE_TYPE_GPS, picture: str = None,
-            icon: str = None):
+            icon: str = None, consider_home: timedelta = None):
         """Notify the device tracker that you see a device."""
         self.hass.add_job(
             self.async_see(mac, dev_id, host_name, location_name, gps,
                            gps_accuracy, battery, attributes, source_type,
-                           picture, icon)
+                           picture, icon, consider_home)
         )
 
     @asyncio.coroutine
@@ -256,7 +266,8 @@ class DeviceTracker(object):
                   host_name: str = None, location_name: str = None,
                   gps: GPSType = None, gps_accuracy=None, battery: str = None,
                   attributes: dict = None, source_type: str = SOURCE_TYPE_GPS,
-                  picture: str = None, icon: str = None):
+                  picture: str = None, icon: str = None,
+                  consider_home: timedelta = None):
         """Notify the device tracker that you see a device.
 
         This method is a coroutine.
@@ -275,7 +286,7 @@ class DeviceTracker(object):
         if device:
             yield from device.async_seen(
                 host_name, location_name, gps, gps_accuracy, battery,
-                attributes, source_type)
+                attributes, source_type, consider_home)
             if device.track:
                 yield from device.async_update_ha_state()
             return
@@ -283,7 +294,7 @@ class DeviceTracker(object):
         # If no device can be found, create it
         dev_id = util.ensure_unique_string(dev_id, self.devices.keys())
         device = Device(
-            self.hass, self.consider_home, self.track_new,
+            self.hass, consider_home or self.consider_home, self.track_new,
             dev_id, mac, (host_name or dev_id).replace('_', ' '),
             picture=picture, icon=icon,
             hide_if_away=self.defaults.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
@@ -478,12 +489,14 @@ class Device(Entity):
     def async_seen(self, host_name: str = None, location_name: str = None,
                    gps: GPSType = None, gps_accuracy=0, battery: str = None,
                    attributes: dict = None,
-                   source_type: str = SOURCE_TYPE_GPS):
+                   source_type: str = SOURCE_TYPE_GPS,
+                   consider_home: timedelta = None):
         """Mark the device as seen."""
         self.source_type = source_type
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
+        self.consider_home = consider_home or self.consider_home
 
         if battery:
             self.battery = battery
