@@ -212,7 +212,8 @@ class TestHueBridge(unittest.TestCase):
         mock_bridge = mock_phue.Bridge
         mock_bridge.side_effect = ConnectionRefusedError()
 
-        bridge = hue.HueBridge('localhost', self.hass, hue.PHUE_CONFIG_FILE)
+        bridge = hue.HueBridge(
+            'localhost', self.hass, hue.PHUE_CONFIG_FILE, None)
         bridge.setup()
         self.assertFalse(bridge.configured)
         self.assertTrue(bridge.config_request_id is None)
@@ -228,7 +229,8 @@ class TestHueBridge(unittest.TestCase):
         mock_phue.PhueRegistrationException = Exception
         mock_bridge.side_effect = mock_phue.PhueRegistrationException(1, 2)
 
-        bridge = hue.HueBridge('localhost', self.hass, hue.PHUE_CONFIG_FILE)
+        bridge = hue.HueBridge(
+            'localhost', self.hass, hue.PHUE_CONFIG_FILE, None)
         bridge.setup()
         self.assertFalse(bridge.configured)
         self.assertFalse(bridge.config_request_id is None)
@@ -250,7 +252,8 @@ class TestHueBridge(unittest.TestCase):
             None,
         ]
 
-        bridge = hue.HueBridge('localhost', self.hass, hue.PHUE_CONFIG_FILE)
+        bridge = hue.HueBridge(
+            'localhost', self.hass, hue.PHUE_CONFIG_FILE, None)
         bridge.setup()
         self.assertFalse(bridge.configured)
         self.assertFalse(bridge.config_request_id is None)
@@ -291,7 +294,8 @@ class TestHueBridge(unittest.TestCase):
             ConnectionRefusedError(),
         ]
 
-        bridge = hue.HueBridge('localhost', self.hass, hue.PHUE_CONFIG_FILE)
+        bridge = hue.HueBridge(
+            'localhost', self.hass, hue.PHUE_CONFIG_FILE, None)
         bridge.setup()
         self.assertFalse(bridge.configured)
         self.assertFalse(bridge.config_request_id is None)
@@ -332,7 +336,8 @@ class TestHueBridge(unittest.TestCase):
             mock_phue.PhueRegistrationException(1, 2),
         ]
 
-        bridge = hue.HueBridge('localhost', self.hass, hue.PHUE_CONFIG_FILE)
+        bridge = hue.HueBridge(
+            'localhost', self.hass, hue.PHUE_CONFIG_FILE, None)
         bridge.setup()
         self.assertFalse(bridge.configured)
         self.assertFalse(bridge.config_request_id is None)
@@ -364,7 +369,7 @@ class TestHueBridge(unittest.TestCase):
         """Test the hue_activate_scene service."""
         with patch('homeassistant.helpers.discovery.load_platform'):
             bridge = hue.HueBridge('localhost', self.hass,
-                                   hue.PHUE_CONFIG_FILE)
+                                   hue.PHUE_CONFIG_FILE, None)
             bridge.setup()
 
             # No args
