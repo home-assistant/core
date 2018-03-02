@@ -37,10 +37,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class UpCloudSwitch(UpCloudServerEntity, SwitchDevice):
     """Representation of an UpCloud server switch."""
 
-    def __init__(self, upcloud, uuid):
-        """Initialize a new UpCloud server switch."""
-        UpCloudServerEntity.__init__(self, upcloud, uuid)
-
     def turn_on(self, **kwargs):
         """Start the server."""
         if self.state == STATE_OFF:
