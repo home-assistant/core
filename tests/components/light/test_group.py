@@ -2,7 +2,6 @@
 from unittest.mock import MagicMock
 
 import asynctest
-import pytest
 
 from homeassistant.components import light
 from homeassistant.components.light import group
@@ -317,7 +316,6 @@ async def test_supported_features(hass):
     assert state.attributes['supported_features'] == 41
 
 
-@pytest.mark.skip
 async def test_service_calls(hass):
     """Test service calls."""
     await async_setup_component(hass, 'light', {'light': [

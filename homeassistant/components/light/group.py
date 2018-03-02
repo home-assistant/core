@@ -45,7 +45,7 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_devices, discovery_info=None) -> None:
     """Initialize light.group platform."""
     async_add_devices([GroupLight(config.get(CONF_NAME),
-                                  config[CONF_ENTITIES])])
+                                  config[CONF_ENTITIES])], True)
 
 
 class GroupLight(light.Light):
