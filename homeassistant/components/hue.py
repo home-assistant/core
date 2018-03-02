@@ -201,7 +201,7 @@ class HueBridge(object):
                             self.host)
             self.request_configuration()
             return
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error connecting with Hue bridge at %s",
                               self.host)
 
