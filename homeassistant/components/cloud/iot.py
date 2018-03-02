@@ -77,9 +77,9 @@ class CloudIoT:
             self.tries += 1
 
             try:
-                # Sleep 0, 5, 10, 15 ... 30 seconds between retries
+                # Sleep 2^tries seconds between retries
                 self.retry_task = hass.async_add_job(asyncio.sleep(
-                    min(30, (self.tries - 1) * 5), loop=hass.loop))
+                    2**min(9, self.tries), loop=hass.loop))
                 yield from self.retry_task
                 self.retry_task = None
             except asyncio.CancelledError:
