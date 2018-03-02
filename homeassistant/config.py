@@ -689,7 +689,6 @@ def check_ha_config_file(config_dir):
 
     def _pack_error(package, component, config, message):
         """Handle errors from packages: _log_pkg_error."""
-        print("XXXXXXXXXXXXXXXXXXXXX")
         message = "Package {} setup failed. Component {} {}".format(
             package, component, message)
         domain = 'homeassistant.packages.{}.{}'.format(package, component)
@@ -718,12 +717,13 @@ def check_ha_config_file(config_dir):
         core_config = CORE_CONFIG_SCHEMA(core_config)
         all_success[CONF_CORE] = core_config
     except vol.Invalid as err:
-        all_errors.append(err, CONF_CORE, core_config)
+        all_errors.append((err, CONF_CORE, core_config))
         core_config = {}
 
     # Merge packages
     with patch('homeassistant.config._log_pkg_error', side_effect=_pack_error):
         merge_packages_config(config, core_config.get(CONF_PACKAGES, {}))
+    del core_config[CONF_PACKAGES]
 
     # Filter out repeating config sections
     components = set(key.split(' ')[0] for key in config.keys())

@@ -66,8 +66,8 @@ def run(script_args: List) -> int:
         default=config_util.get_default_config_dir(),
         help="Directory that contains the Home Assistant configuration")
     parser.add_argument(
-        '-i', '--info',
-        default=None,
+        '-i', '--info', nargs='?',
+        default=None, const='all',
         help="Show a portion of the config")
     parser.add_argument(
         '-f', '--files',
@@ -78,7 +78,9 @@ def run(script_args: List) -> int:
         action='store_true',
         help="Show secret information")
 
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
+    if unknown:
+        print(color('red', "Unknown arguments:", ', '.join(unknown)))
 
     config_dir = os.path.join(os.getcwd(), args.config)
 
@@ -146,6 +148,7 @@ def run(script_args: List) -> int:
 
 def check(config_dir, secrets=False):
     """Perform a check by mocking hass load functions."""
+    logging.getLogger('homeassistant.loader').setLevel(logging.CRITICAL)
     res = {
         'yaml_files': OrderedDict(),  # yaml_files loaded
         'secrets': OrderedDict(),  # secret cache and secrets loaded
@@ -153,7 +156,6 @@ def check(config_dir, secrets=False):
         'components': None,  # successful components
         'secret_cache': None,
     }
-    logging.getLogger('homeassistant.loader').setLevel(logging.WARNING)
 
     # pylint: disable=unused-variable
     def mock_load(filename):
@@ -215,9 +217,9 @@ def check(config_dir, secrets=False):
             if config:
                 res['except'].setdefault(domain, []).append(config)
 
-    # except Exception as err:  # pylint: disable=broad-except
-    #     print(color('red', 'Fatal error while loading config:'), str(err))
-    #     res['except'].setdefault(ERROR_STR, []).append(str(err))
+    except Exception as err:  # pylint: disable=broad-except
+        print(color('red', 'Fatal error while loading config:'), str(err))
+        res['except'].setdefault(ERROR_STR, []).append(str(err))
     finally:
         # Stop all patches
         for pat in PATCHES.values():
