@@ -6,7 +6,7 @@ from aiohttp import WSMsgType, client_exceptions
 import pytest
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components.cloud import iot, auth_api
+from homeassistant.components.cloud import Cloud, iot, auth_api, MODE_DEV
 from tests.components.alexa import test_smart_home as test_alexa
 from tests.common import mock_coro
 
@@ -202,7 +202,7 @@ def test_cloud_check_token_raising(mock_client, caplog, mock_cloud):
 
     yield from conn.connect()
 
-    assert 'Unable to connect: BLA' in caplog.text
+    assert 'Unable to refresh token: BLA' in caplog.text
 
 
 @asyncio.coroutine
@@ -348,3 +348,17 @@ def test_handler_google_actions(hass):
     assert device['name']['name'] == 'Config name'
     assert device['name']['nicknames'] == ['Config alias']
     assert device['type'] == 'action.devices.types.LIGHT'
+
+
+async def test_refresh_token_expired(hass):
+    """Test handling Unauthenticated error raised if refresh token expired."""
+    cloud = Cloud(hass, MODE_DEV, None, None)
+
+    with patch('homeassistant.components.cloud.auth_api.check_token',
+               side_effect=auth_api.Unauthenticated) as mock_check_token, \
+            patch.object(hass.components.persistent_notification,
+                         'async_create') as mock_create:
+        await cloud.iot.connect()
+
+    assert len(mock_check_token.mock_calls) == 1
+    assert len(mock_create.mock_calls) == 1
