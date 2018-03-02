@@ -192,8 +192,8 @@ def setup_plexserver(
         if new_plex_clients:
             add_devices_callback(new_plex_clients)
 
-        for id in hass.data[PLEX_DATA].keys():
-            plex_clients[id].set_availability(id in available_ids)
+        for cid in hass.data[PLEX_DATA].keys():
+            plex_clients[cid].set_availability(cid in available_ids)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_sessions():
