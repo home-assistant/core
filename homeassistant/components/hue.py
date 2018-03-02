@@ -19,7 +19,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery, aiohttp_client
 from homeassistant import config_entries
 
-REQUIREMENTS = ['phue==1.0', 'aiohue==0.1.0']
+REQUIREMENTS = ['phue==1.0', 'aiohue==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
