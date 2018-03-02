@@ -59,20 +59,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for location_id in smappee.locations.keys():
             for sensor in SENSOR_TYPES:
                 if 'remote' in SENSOR_TYPES[sensor]:
-                        dev.append(SmappeeSensor(smappee, location_id,
-                                                 sensor,
-                                                 SENSOR_TYPES[sensor]))
-            for items in smappee.info[location_id].get('sensors'):
-                if items.get('id'):
-                    _LOGGER.debug("Remote sensors %s", items)
-                    for sensor in SENSOR_TYPES:
-                        if 'water' in SENSOR_TYPES[sensor]:
-                            dev.append(
-                                SmappeeSensor(
-                                    smappee,
-                                    location_id,
-                                    "%s:%s" % (sensor, items.get('id')),
-                                    SENSOR_TYPES[sensor]))
+                    dev.append(SmappeeSensor(smappee, location_id,
+                                             sensor,
+                                             SENSOR_TYPES[sensor]))
+                elif 'water' in SENSOR_TYPES[sensor]:
+                    for items in smappee.info[location_id].get('sensors'):
+                        dev.append(SmappeeSensor(
+                            smappee,
+                            location_id,
+                            "%s:%s" % (sensor, items.get('id')),
+                            SENSOR_TYPES[sensor]))
 
     if smappee.is_local_active:
         for location_id in smappee.locations.keys():
