@@ -29,7 +29,7 @@ REQUIREMENTS = ['pysensibo==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-ALL = 'all'
+ALL = ['all']
 TIMEOUT = 10
 
 SERVICE_ASSUME_STATE = 'sensibo_assume_state'

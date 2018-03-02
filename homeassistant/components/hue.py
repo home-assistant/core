@@ -192,7 +192,7 @@ class HueBridge(object):
             self.bridge = phue.Bridge(
                 self.host,
                 config_file_path=self.hass.config.path(self.filename))
-        except ConnectionRefusedError:  # Wrong host was given
+        except (ConnectionRefusedError, OSError):  # Wrong host was given
             _LOGGER.error("Error connecting to the Hue bridge at %s",
                           self.host)
             return
@@ -201,6 +201,9 @@ class HueBridge(object):
                             self.host)
             self.request_configuration()
             return
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unknown error connecting with Hue bridge at %s",
+                              self.host)
 
         # If we came here and configuring this host, mark as done
         if self.config_request_id:
