@@ -9,7 +9,7 @@ from homeassistant.components.climate import (ATTR_CURRENT_TEMPERATURE,
 from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import HomeAccessory, add_preload_service
 from .const import (SERV_THERMOSTAT, CHAR_CURRENT_HEATING_COOLING,
                     CHAR_TARGET_HEATING_COOLING, CHAR_CURRENT_TEMPERATURE,
                     CHAR_TARGET_TEMPERATURE, CHAR_TEMP_DISPLAY_UNITS)
@@ -41,7 +41,7 @@ class Thermostat(HomeAccessory):
         self.target_temperature = None
         self.display_units = None
 
-        self.service_thermostat = self.get_service(SERV_THERMOSTAT)
+        self.service_thermostat = add_preload_service(self, SERV_THERMOSTAT)
         self.char_current_heat_cool = self.service_thermostat.\
             get_characteristic(CHAR_CURRENT_HEATING_COOLING)
         self.char_target_heat_cool = self.service_thermostat.\
@@ -66,7 +66,7 @@ class Thermostat(HomeAccessory):
                                  self.update_thermostat)
 
     def set_heat_cool(self, value):
-        """Move operation mode to value if call came from homekit."""
+        """Move operation mode to value if call came from HomeKit."""
         if value != self.current_heat_cool and value in HC_HOMEKIT_TO_HASS:
             _LOGGER.debug("%s: Set heat-cool to %d", self._entity_id, value)
             self.homekit_target_heat_cool = value
@@ -92,7 +92,7 @@ class Thermostat(HomeAccessory):
         self._call_timer.start()
 
     def set_target_temperature(self, value):
-        """Set target temperature to value if call came from homekit."""
+        """Set target temperature to value if call came from HomeKit."""
         if value != self.target_temperature:
             _LOGGER.debug("%s: Set target temperature to %.2f",
                           self._entity_id, value)
@@ -125,9 +125,11 @@ class Thermostat(HomeAccessory):
             self.display_units = UNIT_HASS_TO_HOMEKIT[display_units]
             self.char_display_units.set_value(self.display_units)
 
-        if self.homekit_target_heat_cool is None \
+        if (self.homekit_target_heat_cool is None
+            and self.current_heat_cool is not None) \
                 or self.homekit_target_heat_cool == self.current_heat_cool:
-            self.char_target_heat_cool.set_value(self.current_heat_cool)
+            self.char_target_heat_cool.set_value(self.current_heat_cool,
+                                                 should_callback=False)
             self.homekit_target_heat_cool = None
 
         if self.homekit_target_temperature is None \

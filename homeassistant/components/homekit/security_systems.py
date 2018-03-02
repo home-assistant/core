@@ -1,16 +1,16 @@
 """Class to hold all alarm control panel accessories."""
 import logging
 
-from homeassistant.helpers.event import async_track_state_change
-
-from . import TYPES
-from .accessories import HomeAccessory
-from .const import (SERV_SECURITY_SYSTEM, CHAR_CURRENT_SECURITY_STATE,
-                    CHAR_TARGET_SECURITY_STATE)
 from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
                                  STATE_ALARM_ARMED_HOME,
                                  STATE_ALARM_ARMED_NIGHT,
                                  STATE_ALARM_DISARMED)
+from homeassistant.helpers.event import async_track_state_change
+
+from . import TYPES
+from .accessories import HomeAccessory, add_preload_service
+from .const import (SERV_SECURITY_SYSTEM, CHAR_CURRENT_SECURITY_STATE,
+                    CHAR_TARGET_SECURITY_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,10 +37,10 @@ class SecuritySystem(HomeAccessory):
         self.current_security_state = None
         self.homekit_target_security_state = None
 
-        self.service_alarm = self.get_service(SERV_SECURITY_SYSTEM)
-        self.char_current_state = self.service_alarm.\
+        self.service_alarm = add_preload_service(self, SERV_SECURITY_SYSTEM)
+        self.char_current_state = self.service_alarm. \
             get_characteristic(CHAR_CURRENT_SECURITY_STATE)
-        self.char_target_state = self.service_alarm.\
+        self.char_target_state = self.service_alarm. \
             get_characteristic(CHAR_TARGET_SECURITY_STATE)
 
         self.char_target_state.setter_callback = self.set_security_state
@@ -54,7 +54,7 @@ class SecuritySystem(HomeAccessory):
                                  self.update_security_state)
 
     def set_security_state(self, value):
-        """Move security state to value if call came from homekit."""
+        """Move security state to value if call came from HomeKit."""
         if value != self.current_security_state and value in HOMEKIT_TO_HASS:
             _LOGGER.debug("%s: Set security state to %d",
                           self._entity_id, value)
@@ -84,5 +84,6 @@ class SecuritySystem(HomeAccessory):
             if self.homekit_target_security_state is None or \
                     self.homekit_target_security_state \
                     == self.current_security_state:
-                self.char_target_state.set_value(self.current_security_state)
+                self.char_target_state.set_value(self.current_security_state,
+                                                 should_callback=False)
                 self.homekit_target_security_state = None

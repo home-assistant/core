@@ -97,7 +97,8 @@ def get_accessory(hass, state):
         _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'Thermostat')
         return TYPES['Thermostat'](hass, state.entity_id, state.name)
 
-    elif state.domain == 'switch' or state.domain == 'remote':
+    elif state.domain == 'switch' or state.domain == 'remote' \
+            or state.domain == 'input_boolean':
         _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'Switch')
         return TYPES['Switch'](hass, state.entity_id, state.name)
 
