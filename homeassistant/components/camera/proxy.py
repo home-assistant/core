@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.helpers import config_validation as cv
+
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     CONF_NAME, CONF_ENTITY_ID, HTTP_HEADER_HA_AUTH)
@@ -49,16 +50,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the Proxy camera platform."""
     async_add_devices([ProxyCamera(hass, config)])
 
-    return True
 
-
-@asyncio.coroutine
-def _read_frame(req):
+async def _read_frame(req):
     """Read a single frame from an MJPEG stream."""
     # based on https://gist.github.com/russss/1143799
     import cgi
@@ -71,18 +69,18 @@ def _read_frame(req):
         _LOGGER.error("Malformed MJPEG missing boundary")
         raise Exception("Can't find content-type")
 
-    line = yield from stream.readline()
+    line = await stream.readline()
     # Seek ahead to the first chunk
     while line.strip() != boundary:
-        line = yield from stream.readline()
+        line = await stream.readline()
     # Read in chunk headers
     while line.strip() != b'':
         parts = line.split(b':')
         if len(parts) > 1 and parts[0].lower() == b'content-length':
             # Grab chunk length
             length = int(parts[1].strip())
-        line = yield from stream.readline()
-    image = yield from stream.read(length)
+        line = await stream.readline()
+    image = await stream.read(length)
     return image
 
 
@@ -94,7 +92,7 @@ def _resize_image(image, opts):
     if not opts:
         return image
 
-    quality = opts.quality if opts.quality else DEFAULT_QUALITY
+    quality = opts.quality or DEFAULT_QUALITY
     new_width = opts.max_width
 
     img = Image.open(io.BytesIO(image))
@@ -143,7 +141,7 @@ class ImageOpts():
 
     def __bool__(self):
         """Bool evalution rules."""
-        return True if self.max_width or self.quality else False
+        return bool(self.max_width or self.quality)
 
 
 class ProxyCamera(Camera):
@@ -166,12 +164,11 @@ class ProxyCamera(Camera):
             config.get(CONF_MAX_STREAM_WIDTH),
             config.get(CONF_STREAM_QUALITY),
             True)
+
         self._image_refresh_rate = config.get(CONF_IMAGE_REFRESH_RATE)
-        self._cache_images = (
-            True
-            if (config.get(CONF_IMAGE_REFRESH_RATE)
-                or config.get(CONF_CACHE_IMAGES))
-            else False)
+        self._cache_images = bool(
+            config.get(CONF_IMAGE_REFRESH_RATE)
+            or config.get(CONF_CACHE_IMAGES))
         self._last_image_time = 0
         self._last_image = None
         self._headers = (
@@ -184,8 +181,7 @@ class ProxyCamera(Camera):
         return run_coroutine_threadsafe(
             self.async_camera_image(), self.hass.loop).result()
 
-    @asyncio.coroutine
-    def async_camera_image(self):
+    async def async_camera_image(self):
         """Return a still image response from the camera."""
         now = dt_util.utcnow()
 
@@ -199,9 +195,8 @@ class ProxyCamera(Camera):
         try:
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(10, loop=self.hass.loop):
-                response = yield from websession.get(url,
-                                                     headers=self._headers)
-            image = yield from response.read()
+                response = await websession.get(url, headers=self._headers)
+            image = await response.read()
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout getting camera image")
             return self._last_image
@@ -209,15 +204,14 @@ class ProxyCamera(Camera):
             _LOGGER.error("Error getting new camera image: %s", err)
             return self._last_image
 
-        image = yield from self.hass.async_add_job(
+        image = await self.hass.async_add_job(
             _resize_image, image, self._image_opts)
 
         if self._cache_images:
             self._last_image = image
         return image
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from camera images."""
         websession = async_get_clientsession(self.hass)
         url = "{}/api/camera_proxy_stream/{}".format(
@@ -225,13 +219,13 @@ class ProxyCamera(Camera):
         stream_coro = websession.get(url, headers=self._headers)
 
         if not self._stream_opts:
-            yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
+            await async_aiohttp_proxy_web(self.hass, request, stream_coro)
             return
 
         response = aiohttp.web.StreamResponse()
         response.content_type = ('multipart/x-mixed-replace; '
                                  'boundary=--frameboundary')
-        yield from response.prepare(request)
+        await response.prepare(request)
 
         def write(img_bytes):
             """Write image to stream."""
@@ -243,20 +237,24 @@ class ProxyCamera(Camera):
                 'utf-8') + img_bytes + b'\r\n')
 
         with async_timeout.timeout(10, loop=self.hass.loop):
-            req = yield from stream_coro
+            req = await stream_coro
+
         try:
             while True:
-                image = yield from _read_frame(req)
-                image = yield from self.hass.async_add_job(
+                image = await _read_frame(req)
+                if not image:
+                    break
+                image = await self.hass.async_add_job(
                     _resize_image, image, self._stream_opts)
                 write(image)
         except asyncio.CancelledError:
             _LOGGER.debug("Stream closed by frontend.")
+            req.close()
             response = None
 
         finally:
             if response is not None:
-                yield from response.write_eof()
+                await response.write_eof()
 
     @property
     def name(self):
