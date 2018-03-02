@@ -12,7 +12,8 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.components import group
+from homeassistant.components.group import \
+    ENTITY_ID_FORMAT as GROUP_ENTITY_ID_FORMAT
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     STATE_ON)
@@ -30,7 +31,7 @@ DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'
-ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
+ENTITY_ID_ALL_LIGHTS = GROUP_ENTITY_ID_FORMAT.format('all_lights')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
@@ -209,8 +210,9 @@ def async_turn_off(hass, entity_id=None, transition=None):
         DOMAIN, SERVICE_TURN_OFF, data))
 
 
+@callback
 @bind_hass
-def toggle(hass, entity_id=None, transition=None):
+def async_toggle(hass, entity_id=None, transition=None):
     """Toggle all or specified light."""
     data = {
         key: value for key, value in [
@@ -219,7 +221,14 @@ def toggle(hass, entity_id=None, transition=None):
         ] if value is not None
     }
 
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_TOGGLE, data))
+
+
+@bind_hass
+def toggle(hass, entity_id=None, transition=None):
+    """Toggle all or specified light."""
+    hass.add_job(async_toggle, hass, entity_id, transition)
 
 
 def preprocess_turn_on_alternatives(params):
