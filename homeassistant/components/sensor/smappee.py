@@ -31,7 +31,20 @@ SENSOR_TYPES = {
     'solar_today':
         ['Solar Today', 'mdi:white-balance-sunny', 'remote', 'kW', 'solar'],
     'power_today':
-        ['Power Today', 'mdi:power-plug', 'remote', 'kW', 'consumption']
+        ['Power Today', 'mdi:power-plug', 'remote', 'kW', 'consumption'],
+    'water_sensor_1':
+        ['Water Sensor 1', 'mdi:water', 'water', 'm3', 'value1'],
+    'water_sensor_2':
+        ['Water Sensor 2', 'mdi:water', 'water', 'm3', 'value2'],
+    'water_sensor_temperature':
+        ['Water Sensor Temperature', 'mdi:temperature-celsius',
+         'water', '°', 'temperature'],
+    'water_sensor_humidity':
+        ['Water Sensor Humidity', 'mdi:water-percent', 'water',
+         '%', 'humidity'],
+    'water_sensor_battery':
+        ['Water Sensor Battery', 'mdi:battery', 'water',
+         '%', 'battery']
 }
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -46,33 +59,50 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for sensor in SENSOR_TYPES:
             if 'remote' in SENSOR_TYPES[sensor]:
                 for location_id in smappee.locations.keys():
-                    dev.append(SmappeeSensor(smappee, location_id, sensor))
+                    dev.append(SmappeeSensor(smappee, location_id,
+                                             sensor,
+                                             SENSOR_TYPES[sensor]))
+        for items in smappee.info[location_id].get('sensors'):
+            if items.get('id'):
+                _LOGGER.debug("Remote sensors %s", items)
+                for sensor in SENSOR_TYPES:
+                    if 'water' in SENSOR_TYPES[sensor]:
+                        dev.append(
+                            SmappeeSensor(smappee,
+                                          location_id,
+                                          "%s:%s" % (sensor, items.get('id')),
+                                          SENSOR_TYPES[sensor]))
 
     if smappee.is_local_active:
         for sensor in SENSOR_TYPES:
             if 'local' in SENSOR_TYPES[sensor]:
                 if smappee.is_remote_active:
                     for location_id in smappee.locations.keys():
-                        dev.append(SmappeeSensor(smappee, location_id, sensor))
+                        dev.append(SmappeeSensor(smappee, location_id, sensor,
+                                                 SENSOR_TYPES[sensor]))
                 else:
-                    dev.append(SmappeeSensor(smappee, None, sensor))
+                    dev.append(SmappeeSensor(smappee, None, sensor,
+                                             SENSOR_TYPES[sensor]))
+
     add_devices(dev, True)
 
 
 class SmappeeSensor(Entity):
     """Implementation of a Smappee sensor."""
 
-    def __init__(self, smappee, location_id, sensor):
+    def __init__(self, smappee, location_id, sensor, attributes):
         """Initialize the sensor."""
         self._smappee = smappee
         self._location_id = location_id
+        self._attributes = attributes
         self._sensor = sensor
         self.data = None
         self._state = None
-        self._name = SENSOR_TYPES[self._sensor][0]
-        self._icon = SENSOR_TYPES[self._sensor][1]
-        self._unit_of_measurement = SENSOR_TYPES[self._sensor][3]
-        self._smappe_name = SENSOR_TYPES[self._sensor][4]
+        self._name = self._attributes[0]
+        self._icon = self._attributes[1]
+        self._type = self._attributes[2]
+        self._unit_of_measurement = self._attributes[3]
+        self._smappe_name = self._attributes[4]
 
     @property
     def name(self):
@@ -160,3 +190,12 @@ class SmappeeSensor(Entity):
                           if i['key'].endswith('phase5ActivePower')]
                 power = sum(value1 + value2 + value3) / 1000
                 self._state = round(power, 2)
+        elif self._type == 'water':
+            sensor_name, sensor_id = self._sensor.split(":")
+            data = self._smappee.sensor_consumption[self._location_id]\
+                .get(int(sensor_id))
+            if data:
+                consumption = data.get('records')[-1]
+                _LOGGER.debug("%s %s", self._sensor, consumption)
+                value = consumption.get(self._smappe_name)
+                self._state = value
