@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.zestimate/
 """
 from datetime import timedelta
 import logging
+
 import requests
 import voluptuous as vol
 
