@@ -1274,6 +1274,7 @@ xknx==0.8.3
 # homeassistant.components.sensor.swiss_hydrological_data
 # homeassistant.components.sensor.ted5000
 # homeassistant.components.sensor.yr
+# homeassistant.components.sensor.zestimate
 xmltodict==0.11.0
 
 # homeassistant.components.sensor.yahoo_finance
