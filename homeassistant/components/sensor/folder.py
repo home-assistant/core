@@ -84,9 +84,6 @@ class Folder(Entity):
         self._number_of_files = len(current_files)
         self._size = get_size(current_files)
 
-        deleted_files = []
-        added_files = []
-        modified_files = []
         previous_files = list(self._files_dict.keys())
 
         for file_path in current_files:
@@ -94,20 +91,17 @@ class Folder(Entity):
             file_mtime = get_timestamp(file_path)
 
             if file_path not in self._files_dict:
-                added_files.append(file_name)
                 self._hass.bus.fire('file_added', {'file': file_name})
                 self._files_dict[file_path] = file_mtime  # Add the entry
 
             elif (file_path in self._files_dict and  # If exists and modified
                     self._files_dict[file_path] != file_mtime):
-                        modified_files.append(file_name)
                         self._hass.bus.fire(
                             'file_modified', {'file': file_name})
                         self._files_dict[file_path] = file_mtime  # Reassign
 
         # Check if any files deleted
-        deleted_files = list(set(previous_files) - set(current_files))
-        for file_path in deleted_files:
+        for file_path in list(set(previous_files) - set(current_files)):
             file_name = os.path.split(file_path)[-1]
             self._hass.bus.fire('file_deleted', {'file': file_name})
             self._files_dict.pop(file_path, None)
