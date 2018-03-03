@@ -19,7 +19,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FOLDER_PATHS = 'folder'
+CONF_FOLDER_PATH = 'folder'
 CONF_FILTER = 'filter'
 CONF_RECURSIVE = 'recursive'
 DEFAULT_FILTER = '*'
@@ -33,7 +33,7 @@ SIGNAL_FILE_MODIFIED = 'file_modified'
 SCAN_INTERVAL = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FOLDER_PATHS): cv.isdir,
+    vol.Required(CONF_FOLDER_PATH): cv.isdir,
     vol.Optional(CONF_FILTER, default=DEFAULT_FILTER): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_RECURSIVE, default=DEFAULT_RECURSIVE): cv.boolean,
@@ -67,13 +67,13 @@ def get_size(files_list):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the folder sensor."""
-    path = config.get(CONF_FOLDER_PATHS)
+    folder_path = config.get(CONF_FOLDER_PATH)
 
-    if not hass.config.is_allowed_path(path):
-        _LOGGER.error("folder %s is not valid or allowed", path)
+    if not hass.config.is_allowed_path(folder_path):
+        _LOGGER.error("folder %s is not valid or allowed", folder_path)
     else:
         folder = Folder(
-            path,
+            folder_path,
             config.get(CONF_FILTER),
             config.get(CONF_NAME),
             config.get(CONF_RECURSIVE))
@@ -149,8 +149,9 @@ class Folder(Entity):
     def device_state_attributes(self):
         """Return other details about the sensor state."""
         attr = {
-            'path': self._folder_path,
-            'filter': self._filter_term,
+            CONF_FOLDER_PATH: self._folder_path,
+            CONF_FILTER: self._filter_term,
+            CONF_RECURSIVE: self._recursive,
             'number_of_files': self._number_of_files,
             'bytes': self._size,
             }
