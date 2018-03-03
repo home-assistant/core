@@ -4,6 +4,7 @@ Sensor for monitoring the contents of a folder.
 For more details about this platform, refer to the documentation at
 https://home-assistant.io/components/sensor.folder/
 """
+import datetime
 from datetime import timedelta
 import glob
 import logging
@@ -29,10 +30,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+def get_timestamp(file_path):
+    """Return the timestamp of file."""
+    mtime = os.stat(file_path).st_mtime
+    return datetime.datetime.fromtimestamp(mtime).isoformat()
+
+
 def get_files_list(folder_path, filter_term):
-    """Return the list of files, applying filter."""
+    """Return the list of file paths, applying filter."""
     query = folder_path + filter_term
     files_list = glob.glob(query)
+    files_list = [f for f in files_list if os.path.isfile(f)]
     return files_list
 
 
@@ -49,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not hass.config.is_allowed_path(path):
         _LOGGER.error("folder %s is not valid or allowed", path)
     else:
-        folder = Folder(path, config.get(CONF_FILTER))
+        folder = Folder(path, config.get(CONF_FILTER), hass)
         add_devices([folder], True)
 
 
@@ -58,21 +66,51 @@ class Folder(Entity):
 
     ICON = 'mdi:folder'
 
-    def __init__(self, folder_path, filter_term):
+    def __init__(self, folder_path, filter_term, hass):
         """Initialize the data object."""
         folder_path = os.path.join(folder_path, '')  # If no trailing / add it
         self._folder_path = folder_path   # Need to check its a valid path
         self._filter_term = filter_term
+        self._hass = hass
         self._number_of_files = None
+        self._files_dict = {}
         self._size = None
         self._name = os.path.split(os.path.split(folder_path)[0])[1]
         self._unit_of_measurement = 'MB'
 
     def update(self):
         """Update the sensor."""
-        files_list = get_files_list(self._folder_path, self._filter_term)
-        self._number_of_files = len(files_list)
-        self._size = get_size(files_list)
+        current_files = get_files_list(self._folder_path, self._filter_term)
+        self._number_of_files = len(current_files)
+        self._size = get_size(current_files)
+
+        deleted_files = []
+        added_files = []
+        modified_files = []
+        previous_files = list(self._files_dict.keys())
+
+        for file_path in current_files:
+            file_name = os.path.split(file_path)[-1]
+            file_mtime = get_timestamp(file_path)
+
+            if file_path not in self._files_dict:
+                added_files.append(file_name)
+                self._hass.bus.fire('file_added', {'file': file_name})
+                self._files_dict[file_path] = file_mtime  # Add the entry
+
+            elif (file_path in self._files_dict and  # If exists and modified
+                    self._files_dict[file_path] != file_mtime):
+                        modified_files.append(file_name)
+                        self._hass.bus.fire(
+                            'file_modified', {'file': file_name})
+                        self._files_dict[file_path] = file_mtime  # Reassign
+
+        # Check if any files deleted
+        deleted_files = list(set(previous_files) - set(current_files))
+        for file_path in deleted_files:
+            file_name = os.path.split(file_path)[-1]
+            self._hass.bus.fire('file_deleted', {'file': file_name})
+            self._files_dict.pop(file_path, None)
 
     @property
     def name(self):
