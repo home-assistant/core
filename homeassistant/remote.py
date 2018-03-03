@@ -86,7 +86,7 @@ class API(object):
         try:
             if method == METH_GET:
                 return requests.get(
-                    url, params=data, timeout=timeout, headers=self._headers)
+                    url, params=data, timeout=timeout, headers=self._headers, verify=False)
 
             return requests.request(
                 method, url, data=data, timeout=timeout,
