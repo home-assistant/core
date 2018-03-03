@@ -418,7 +418,7 @@ class CastDevice(MediaPlayerDevice):
 
     @property
     def unique_id(self) -> str:
-        """Return an unique ID."""
+        """Return a unique ID."""
         if self.cast.uuid is not None:
             return str(self.cast.uuid)
         return None
