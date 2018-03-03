@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['pyTibber==0.3.0']
+REQUIREMENTS = ['pyTibber==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,3 +103,9 @@ class TibberSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return self._unit_of_measurement
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        home = self._tibber_home.info['viewer']['home']
+        return home['meteringPointData']['consumptionEan']
