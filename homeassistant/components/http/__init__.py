@@ -25,6 +25,7 @@ import homeassistant.util as hass_util
 from homeassistant.util.logging import HideSensitiveDataFilter
 
 from .auth import setup_auth
+# from .auth_hmac import setup_auth_hmac
 from .ban import setup_bans
 from .cors import setup_cors
 from .real_ip import setup_real_ip
@@ -184,7 +185,9 @@ class HomeAssistantHTTP(object):
         if is_ban_enabled:
             setup_bans(hass, app, login_threshold)
 
-        setup_auth(app, trusted_networks, api_password)
+        setup_auth(hass, app, trusted_networks, api_password)
+
+        # setup_auth_hmac(hass, app)
 
         if cors_origins:
             setup_cors(app, cors_origins)
@@ -248,7 +251,8 @@ class HomeAssistantHTTP(object):
                 resource = CachingStaticResource
             else:
                 resource = web.StaticResource
-            self.app.router.register_resource(resource(url_path, path))
+            self.app.router.register_resource(resource(
+                url_path, path, follow_symlinks=True))
             return
 
         if cache_headers:
