@@ -207,18 +207,14 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         args = {key: value for key, value in call.data.items() if key in
                 (ATTR_MAC, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_LOCATION_NAME,
                  ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_ATTRIBUTES,
-                 ATTR_SOURCE_TYPE)}
-
-        try:
-            consider_home = call.data[ATTR_CONSIDER_HOME]
-        except KeyError:
-            pass
-        else:
-            args[ATTR_CONSIDER_HOME] = timedelta(seconds=int(consider_home))
+                 ATTR_SOURCE_TYPE, ATTR_CONSIDER_HOME)}
 
         yield from tracker.async_see(**args)
 
-    hass.services.async_register(DOMAIN, SERVICE_SEE, async_see_service)
+    hass.services.async_register(
+        DOMAIN, SERVICE_SEE, async_see_service,
+        schema=vol.Schema({ATTR_CONSIDER_HOME: cv.time_period},
+                          extra=vol.ALLOW_EXTRA))
 
     # restore
     yield from tracker.async_setup_tracked_device()
