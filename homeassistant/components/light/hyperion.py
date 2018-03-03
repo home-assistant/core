@@ -215,7 +215,7 @@ class Hyperion(Light):
 
             if not response['info']['activeLedColor']:
                 # Get the active effect
-                if response['info']['activeEffects']:
+                if response['info'].get('activeEffects'):
                     self._rgb_color = [175, 0, 255]
                     self._icon = 'mdi:lava-lamp'
                     try:
