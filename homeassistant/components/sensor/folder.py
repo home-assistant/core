@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,12 +22,18 @@ _LOGGER = logging.getLogger(__name__)
 CONF_FOLDER_PATHS = 'folder'
 CONF_FILTER = 'filter'
 DEFAULT_FILTER = '*'
+DEFAULT_NAME = 'folder'
+FILE = 'file'
+SIGNAL_FILE_ADDED = 'file_added'
+SIGNAL_FILE_DELETED = 'file_deleted'
+SIGNAL_FILE_MODIFIED = 'file_modified'
 
 SCAN_INTERVAL = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FOLDER_PATHS): cv.isdir,
     vol.Optional(CONF_FILTER, default=DEFAULT_FILTER): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -36,12 +43,13 @@ def get_timestamp(file_path):
     return datetime.datetime.fromtimestamp(mtime).isoformat()
 
 
-def get_files_list(folder_path, filter_term):
-    """Return the list of file paths, applying filter."""
+def get_files_dict(folder_path, filter_term):
+    """Return the dict of file paths and mod times, applying filter."""
     query = folder_path + filter_term
     files_list = glob.glob(query)
     files_list = [f for f in files_list if os.path.isfile(f)]
-    return files_list
+    files_dict = {f: get_timestamp(f) for f in files_list}
+    return files_dict
 
 
 def get_size(files_list):
@@ -57,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not hass.config.is_allowed_path(path):
         _LOGGER.error("folder %s is not valid or allowed", path)
     else:
-        folder = Folder(path, config.get(CONF_FILTER), hass)
+        folder = Folder(path, config.get(CONF_FILTER), config.get(CONF_NAME))
         add_devices([folder], True)
 
 
@@ -66,45 +74,45 @@ class Folder(Entity):
 
     ICON = 'mdi:folder'
 
-    def __init__(self, folder_path, filter_term, hass):
+    def __init__(self, folder_path, filter_term, name):
         """Initialize the data object."""
         folder_path = os.path.join(folder_path, '')  # If no trailing / add it
         self._folder_path = folder_path   # Need to check its a valid path
         self._filter_term = filter_term
-        self._hass = hass
-        self._number_of_files = None
-        self._files_dict = {}
-        self._size = None
-        self._name = os.path.split(os.path.split(folder_path)[0])[1]
+        self._files_record = get_files_dict(folder_path, filter_term)
+        self._number_of_files = len(self._files_record)
+        self._size = get_size(list(self._files_record.keys()))
+        if name == DEFAULT_NAME:
+            self._name = os.path.split(os.path.split(folder_path)[0])[1]
+        else:
+            self._name = name
         self._unit_of_measurement = 'MB'
 
     def update(self):
         """Update the sensor."""
-        current_files = get_files_list(self._folder_path, self._filter_term)
+        current_files = get_files_dict(self._folder_path, self._filter_term)
         self._number_of_files = len(current_files)
-        self._size = get_size(current_files)
+        self._size = get_size(list(current_files.keys()))
 
-        previous_files = list(self._files_dict.keys())
+        for file_path in set(
+                             list(current_files.keys()) +
+                             list(self._files_record.keys())):
 
-        for file_path in current_files:
-            file_name = os.path.split(file_path)[-1]
-            file_mtime = get_timestamp(file_path)
+            if file_path not in self._files_record:
+                self.hass.bus.fire(
+                    SIGNAL_FILE_ADDED, {FILE: file_path})
+                self._files_record[file_path] = current_files[file_path]
 
-            if file_path not in self._files_dict:
-                self._hass.bus.fire('file_added', {'file': file_name})
-                self._files_dict[file_path] = file_mtime  # Add the entry
+            elif file_path not in current_files:
+                self.hass.bus.fire(
+                    SIGNAL_FILE_DELETED, {FILE: file_path})
+                self._files_record.pop(file_path, None)
 
-            elif (file_path in self._files_dict and  # If exists and modified
-                    self._files_dict[file_path] != file_mtime):
-                        self._hass.bus.fire(
-                            'file_modified', {'file': file_name})
-                        self._files_dict[file_path] = file_mtime  # Reassign
-
-        # Check if any files deleted
-        for file_path in list(set(previous_files) - set(current_files)):
-            file_name = os.path.split(file_path)[-1]
-            self._hass.bus.fire('file_deleted', {'file': file_name})
-            self._files_dict.pop(file_path, None)
+            elif file_path in self._files_record and current_files:
+                if self._files_record[file_path] != current_files[file_path]:
+                    self.hass.bus.fire(
+                        SIGNAL_FILE_MODIFIED, {FILE: file_path})
+                    self._files_record[file_path] = current_files[file_path]
 
     @property
     def name(self):
