@@ -10,8 +10,8 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     'temperature': [TEMP_CELSIUS, 'mdi:thermometer'],
     'humidity': ['%', 'mdi:water-percent'],
-    'illumination': ['lm'],
-    'lux': ['lx'],
+    'illumination': ['lm', 'mdi:weather-sunset'],
+    'lux': ['lx', 'mdi:weather-sunset'],
     'pressure': ['hPa', 'mdi:gauge']
 }
 
