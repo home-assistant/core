@@ -129,7 +129,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         """Avoid SoCo 0.14 event thread dying from invalid xml."""
         try:
             return orig_parse_event_xml(xml)
-        except soco.exceptions.SoCoException:
+        # pylint: disable=broad-except
+        except Exception as ex:
+            _LOGGER.debug("Dodged exception: %s %s", type(ex), str(ex))
             return {}
 
     soco.events.parse_event_xml = safe_parse_event_xml
