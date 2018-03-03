@@ -403,7 +403,7 @@ https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 iglo==1.2.6
 
 # homeassistant.components.ihc
-ihcsdk==2.1.1
+ihcsdk==2.2.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
