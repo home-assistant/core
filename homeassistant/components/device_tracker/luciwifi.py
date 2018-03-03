@@ -87,10 +87,12 @@ class LuciWifiDeviceScanner(DeviceScanner):
         self._update_info()
         return self.last_results
 
-    @staticmethod
-    def get_device_name(device):
+    # Suppressing no-self-use warning
+    # pylint: disable=R0201
+    def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        return device.lower()
+        # We have no names
+        return None
 
     def _update_info(self):
         """Ensure the information from the Luci router is up to date.
