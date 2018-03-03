@@ -46,16 +46,42 @@ REQUIREMENTS = ['python-miio==0.3.7']
 CCT_MIN = 1
 CCT_MAX = 100
 
-DELAYED_TURN_OFF_MAX_DEVIATION = 4
+DELAYED_TURN_OFF_MAX_DEVIATION_SECONDS = 4
+DELAYED_TURN_OFF_MAX_DEVIATION_MINUTES = 1
 
 SUCCESS = ['ok']
 ATTR_MODEL = 'model'
 ATTR_SCENE = 'scene'
 ATTR_DELAYED_TURN_OFF = 'delayed_turn_off'
 ATTR_TIME_PERIOD = 'time_period'
+ATTR_SMART_NIGHT_LIGHT_MODE = 'smart_night_light_mode'
+ATTR_AUTOMATIC_COLOR_TEMPERATURE = 'automatic_color_temperature'
+ATTR_REMINDER = 'reminder'
+
+SUPPORT_SET_SCENE = 4
+SUPPORT_SET_DELAYED_TURN_OFF = 8
+SUPPORT_REMINDER = 16
+SUPPORT_SMART_NIGHT_LIGHT_MODE = 32
+
+SUPPORT_FLAGS_GENERIC = (SUPPORT_BRIGHTNESS | SUPPORT_SET_SCENE |
+                         SUPPORT_SET_DELAYED_TURN_OFF)
+
+SUPPORT_FLAGS_BULB = (SUPPORT_FLAGS_GENERIC | SUPPORT_COLOR_TEMP)
+
+SUPPORT_FLAGS_CEILING = (SUPPORT_FLAGS_GENERIC | SUPPORT_COLOR_TEMP)
+
+SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT = (SUPPORT_FLAGS_GENERIC |
+                                      SUPPORT_REMINDER |
+                                      SUPPORT_SMART_NIGHT_LIGHT_MODE)
+
+SUPPORT_FLAGS_SREAD1_AMBIENT_LIGHT = (SUPPORT_BRIGHTNESS)
 
 SERVICE_SET_SCENE = 'xiaomi_miio_set_scene'
 SERVICE_SET_DELAYED_TURN_OFF = 'xiaomi_miio_set_delayed_turn_off'
+SERVICE_REMINDER_ON = 'xiaomi_miio_reminder_on'
+SERVICE_REMINDER_OFF = 'xiaomi_miio_reminder_off'
+SERVICE_SMART_NIGHT_LIGHT_MODE_ON = 'xiaomi_miio_smart_night_light_mode_on'
+SERVICE_SMART_NIGHT_LIGHT_MODE_OFF = 'xiaomi_miio_smart_night_light_mode_off'
 
 XIAOMI_MIIO_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -78,6 +104,12 @@ SERVICE_TO_METHOD = {
     SERVICE_SET_SCENE: {
         'method': 'async_set_scene',
         'schema': SERVICE_SCHEMA_SET_SCENE},
+    SERVICE_REMINDER_ON: {'method': 'async_reminder_on'},
+    SERVICE_REMINDER_OFF: {'method': 'async_reminder_off'},
+    SERVICE_SMART_NIGHT_LIGHT_MODE_ON:
+        {'method': 'async_smart_night_light_mode_on'},
+    SERVICE_SMART_NIGHT_LIGHT_MODE_OFF:
+        {'method': 'async_smart_night_light_mode_off'},
 }
 
 
@@ -96,6 +128,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
+    devices = []
+
     if model is None:
         try:
             miio_device = Device(host, token)
@@ -112,23 +146,34 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         from miio import PhilipsEyecare
         light = PhilipsEyecare(host, token)
         device = XiaomiPhilipsEyecareLamp(name, light, model)
+        devices.append(device)
+        hass.data[DATA_KEY][host] = device
+
+        device = XiaomiPhilipsEyecareLampAmbientLight(name, light, model)
+        devices.append(device)
+        # The ambient light doesn't expose additional services.
+        # A hass.data[DATA_KEY] entry isn't needed.
     elif model in ['philips.light.ceiling', 'philips.light.zyceiling']:
         from miio import Ceil
         light = Ceil(host, token)
         device = XiaomiPhilipsCeilingLamp(name, light, model)
+        devices.append(device)
+        hass.data[DATA_KEY][host] = device
     elif model == 'philips.light.bulb':
         from miio import PhilipsBulb
         light = PhilipsBulb(host, token)
-        device = XiaomiPhilipsLightBall(name, light, model)
+        device = XiaomiPhilipsBulb(name, light, model)
+        devices.append(device)
+        hass.data[DATA_KEY][host] = device
     else:
         _LOGGER.error(
             'Unsupported device found! Please create an issue at '
-            'https://github.com/rytilahti/python-miio/issues '
+            'https://github.com/syssi/philipslight/issues '
             'and provide the following data: %s', model)
         return False
 
-    hass.data[DATA_KEY][host] = device
-    async_add_devices([device], update_before_add=True)
+
+    async_add_devices(devices, update_before_add=True)
 
     @asyncio.coroutine
     def async_service_handler(service):
@@ -210,7 +255,7 @@ class XiaomiPhilipsGenericLight(Light):
     @property
     def supported_features(self):
         """Return the supported features."""
-        return SUPPORT_BRIGHTNESS
+        return SUPPORT_FLAGS_GENERIC
 
     @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
@@ -282,15 +327,21 @@ class XiaomiPhilipsGenericLight(Light):
     @asyncio.coroutine
     def async_set_scene(self, scene: int = 1):
         """Set the fixed scene."""
+        if self.supported_features & SUPPORT_SET_SCENE == 0:
+            return
+
         yield from self._try_command(
             "Setting a fixed scene failed.",
             self._light.set_scene, scene)
 
     @asyncio.coroutine
     def async_set_delayed_turn_off(self, time_period: timedelta):
-        """Set delay off. The unit is different per device."""
+        """Set delayed turn off."""
+        if self.supported_features & SUPPORT_SET_DELAYED_TURN_OFF == 0:
+            return
+
         yield from self._try_command(
-            "Setting the delay off failed.",
+            "Setting the turn off delay failed.",
             self._light.delay_off, time_period.total_seconds())
 
     @staticmethod
@@ -313,8 +364,8 @@ class XiaomiPhilipsGenericLight(Light):
             if previous is None:
                 return new
 
-            lower = timedelta(seconds=-DELAYED_TURN_OFF_MAX_DEVIATION)
-            upper = timedelta(seconds=DELAYED_TURN_OFF_MAX_DEVIATION)
+            lower = timedelta(seconds=-DELAYED_TURN_OFF_MAX_DEVIATION_SECONDS)
+            upper = timedelta(seconds=DELAYED_TURN_OFF_MAX_DEVIATION_SECONDS)
             diff = previous - new
             if lower < diff < upper:
                 return previous
@@ -323,9 +374,29 @@ class XiaomiPhilipsGenericLight(Light):
 
         return None
 
+    @asyncio.coroutine
+    def async_smart_night_light_mode_on(self):
+        """Turn the smart night light mode on."""
+        return
 
-class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
-    """Representation of a Xiaomi Philips Light Ball."""
+    @asyncio.coroutine
+    def async_smart_night_light_mode_off(self):
+        """Turn the smart night light mode off."""
+        return
+
+    @asyncio.coroutine
+    def async_reminder_on(self):
+        """Enable the eye fatigue notification."""
+        return
+
+    @asyncio.coroutine
+    def async_reminder_off(self):
+        """Disable the eye fatigue notification."""
+        return
+
+
+class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight, Light):
+    """Representation of a Xiaomi Philips Bulb."""
 
     @property
     def color_temp(self):
@@ -345,7 +416,7 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
     @property
     def supported_features(self):
         """Return the supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
+        return SUPPORT_FLAGS_BULB
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
@@ -439,8 +510,17 @@ class XiaomiPhilipsLightBall(XiaomiPhilipsGenericLight, Light):
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
-class XiaomiPhilipsCeilingLamp(XiaomiPhilipsLightBall, Light):
+class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb, Light):
     """Representation of a Xiaomi Philips Ceiling Lamp."""
+
+    def __init__(self, name, light, model):
+        """Initialize the plug switch."""
+        XiaomiPhilipsBulb.__init__(self, name, light, model)
+
+        self._state_attrs.update({
+            ATTR_SMART_NIGHT_LIGHT_MODE: None,
+            ATTR_AUTOMATIC_COLOR_TEMPERATURE: None,
+        })
 
     @property
     def min_mireds(self):
@@ -452,8 +532,278 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsLightBall, Light):
         """Return the warmest color_temp that this light supports."""
         return 370
 
+    @property
+    def supported_features(self):
+        """Return the supported features."""
+        return SUPPORT_FLAGS_CEILING
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Fetch state from the device."""
+        from miio import DeviceException
+        try:
+            state = yield from self.hass.async_add_job(self._light.status)
+            _LOGGER.debug("Got new state: %s", state)
+
+            self._state = state.is_on
+            self._brightness = ceil((255 / 100.0) * state.brightness)
+            self._color_temp = self.translate(
+                state.color_temperature,
+                CCT_MIN, CCT_MAX,
+                self.max_mireds, self.min_mireds)
+
+            delayed_turn_off = self.delayed_turn_off_timestamp(
+                state.delay_off_countdown,
+                dt.utcnow(),
+                self._state_attrs[ATTR_DELAYED_TURN_OFF])
+
+            self._state_attrs.update({
+                ATTR_SCENE: state.scene,
+                ATTR_DELAYED_TURN_OFF: delayed_turn_off,
+                ATTR_SMART_NIGHT_LIGHT_MODE: state.smart_night_light,
+                ATTR_AUTOMATIC_COLOR_TEMPERATURE:
+                    state.automatic_color_temperature,
+            })
+
+        except DeviceException as ex:
+            self._state = None
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
+
 
 class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight, Light):
     """Representation of a Xiaomi Philips Eyecare Lamp 2."""
 
-    pass
+    def __init__(self, name, light, model):
+        """Initialize the plug switch."""
+        XiaomiPhilipsGenericLight.__init__(self, name, light, model)
+
+        self._state_attrs.update({
+            ATTR_REMINDER: None,
+            ATTR_SMART_NIGHT_LIGHT_MODE: None,
+        })
+
+    @property
+    def supported_features(self):
+        """Return the supported features."""
+        return SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT
+
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the light on."""
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            percent_brightness = ceil(100 * brightness / 255.0)
+
+            _LOGGER.debug(
+                "Setting brightness: %s %s%%",
+                brightness, percent_brightness)
+
+            result = yield from self._try_command(
+                "Setting brightness failed: %s",
+                self._light.set_brightness, percent_brightness)
+
+            if result:
+                self._brightness = brightness
+        else:
+            yield from self._try_command(
+                "Turning the eyecare light on failed.", self._light.eyecare_on)
+
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the light off."""
+        yield from self._try_command(
+            "Turning the eyecare light off failed.", self._light.eyecare_off)
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Fetch state from the device."""
+        from miio import DeviceException
+        try:
+            state = yield from self.hass.async_add_job(self._light.status)
+            _LOGGER.debug("Got new state: %s", state)
+
+            self._state = state.is_on
+            self._brightness = ceil((255 / 100.0) * state.brightness)
+
+            delayed_turn_off = self.delayed_turn_off_timestamp(
+                state.delay_off_countdown,
+                dt.utcnow(),
+                self._state_attrs[ATTR_DELAYED_TURN_OFF])
+
+            self._state_attrs.update({
+                ATTR_SCENE: state.scene,
+                ATTR_DELAYED_TURN_OFF: delayed_turn_off,
+                ATTR_REMINDER: state.reminder,
+                ATTR_SMART_NIGHT_LIGHT_MODE: state.smart_night_light
+            })
+
+        except DeviceException as ex:
+            self._state = None
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
+
+    @asyncio.coroutine
+    def async_set_delayed_turn_off(self, time_period: timedelta):
+        """Set delayed turn off."""
+        if self.supported_features & SUPPORT_SET_DELAYED_TURN_OFF == 0:
+            return
+
+        yield from self._try_command(
+            "Setting the turn off delay failed.",
+            self._light.delay_off, round(time_period.total_seconds()/60))
+
+
+    @asyncio.coroutine
+    def async_smart_night_light_mode_on(self):
+        """Turn the smart night light mode on."""
+        if self.supported_features & SUPPORT_SMART_NIGHT_LIGHT_MODE == 0:
+            return
+
+        yield from self._try_command(
+            "Turning on the smart night light mode failed.",
+            self._light.smart_night_light_on)
+
+    @asyncio.coroutine
+    def async_smart_night_light_mode_off(self):
+        """Turn the smart night light mode off."""
+        if self.supported_features & SUPPORT_SMART_NIGHT_LIGHT_MODE == 0:
+            return
+
+        yield from self._try_command(
+            "Turning off the smart night light mode failed.",
+            self._light.smart_night_light_off)
+
+    @asyncio.coroutine
+    def async_reminder_on(self):
+        """Enable the eye fatigue notification."""
+        if self.supported_features & SUPPORT_REMINDER == 0:
+            return
+
+        yield from self._try_command(
+            "Turning on the reminder failed.",
+            self._light.reminder_on)
+
+    @asyncio.coroutine
+    def async_reminder_off(self):
+        """Disable the eye fatigue notification."""
+        if self.supported_features & SUPPORT_REMINDER == 0:
+            return
+
+        yield from self._try_command(
+            "Turning off the reminder failed.",
+            self._light.reminder_off)
+
+    @staticmethod
+    def delayed_turn_off_timestamp(countdown: int,
+                                   current: datetime,
+                                   previous: datetime):
+        """Update the turn off timestamp only if necessary."""
+        if countdown > 0:
+            new = current.replace(second=0, microsecond=0) + \
+                  timedelta(minutes=countdown)
+
+            if previous is None:
+                return new
+
+            lower = timedelta(minutes=-DELAYED_TURN_OFF_MAX_DEVIATION_MINUTES)
+            upper = timedelta(minutes=DELAYED_TURN_OFF_MAX_DEVIATION_MINUTES)
+            diff = previous - new
+            if lower < diff < upper:
+                return previous
+
+            return new
+
+        return None
+
+
+class XiaomiPhilipsEyecareLampAmbientLight(Light):
+    """Representation of a Xiaomi Philips Eyecare Lamp Ambient Light."""
+
+    def __init__(self, name, light, model):
+        """Initialize the light device."""
+        self._name = name + ' Ambient Light'
+        self._light = light
+        self._model = model
+
+        self._brightness = None
+
+        self._state = None
+        self._state_attrs = {
+            ATTR_MODEL: self._model,
+        }
+
+    @property
+    def should_poll(self):
+        """Poll the light."""
+        return True
+
+    @property
+    def name(self):
+        """Return the name of the device if any."""
+        return self._name
+
+    @property
+    def available(self):
+        """Return true when state is known."""
+        return self._state is not None
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        return self._state_attrs
+
+    @property
+    def is_on(self):
+        """Return true if light is on."""
+        return self._state
+
+    @property
+    def brightness(self):
+        """Return the brightness of this light between 0..255."""
+        return self._brightness
+
+    @property
+    def supported_features(self):
+        """Return the supported features."""
+        return SUPPORT_FLAGS_SREAD1_AMBIENT_LIGHT
+
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the light on."""
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            percent_brightness = ceil(100 * brightness / 255.0)
+
+            _LOGGER.debug(
+                "Setting brightness of the ambient light: %s %s%%",
+                brightness, percent_brightness)
+
+            result = yield from self._try_command(
+                "Setting brightness of the ambient failed: %s",
+                self._light.set_ambient_brightness, percent_brightness)
+
+            if result:
+                self._brightness = brightness
+        else:
+            yield from self._try_command(
+                "Turning the ambient light on failed.", self._light.ambient_on)
+
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the light off."""
+        yield from self._try_command(
+            "Turning the ambient light off failed.", self._light.ambient_off)
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Fetch state from the device."""
+        from miio import DeviceException
+        try:
+            state = yield from self.hass.async_add_job(self._light.status)
+            _LOGGER.debug("Got new state: %s", state)
+
+            self._state = state.eyecare
+            self._brightness = ceil((255 / 100.0) * state.ambient_brightness)
+
+        except DeviceException as ex:
+            self._state = None
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
