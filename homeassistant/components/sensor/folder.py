@@ -100,6 +100,9 @@ class Folder(Entity):
         self._number_of_files = len(self._files_record)
         self._size = get_size(list(self._files_record.keys()))
         self._unit_of_measurement = 'MB'
+        self._last_added = None
+        self._last_deleted = None
+        self._last_modified = None
 
     def update(self):
         """Update the sensor."""
@@ -115,17 +118,20 @@ class Folder(Entity):
             if file_path not in self._files_record:
                 self.hass.bus.fire(
                     SIGNAL_FILE_ADDED, {FILE: file_path})
+                self._last_added = file_path
                 self._files_record[file_path] = current_files[file_path]
 
             elif file_path not in current_files:
                 self.hass.bus.fire(
                     SIGNAL_FILE_DELETED, {FILE: file_path})
+                self._last_deleted = file_path
                 self._files_record.pop(file_path, None)
 
             elif file_path in self._files_record and current_files:
                 if self._files_record[file_path] != current_files[file_path]:
                     self.hass.bus.fire(
                         SIGNAL_FILE_MODIFIED, {FILE: file_path})
+                    self._last_modified = file_path
                     self._files_record[file_path] = current_files[file_path]
 
     @property
@@ -154,6 +160,9 @@ class Folder(Entity):
             CONF_RECURSIVE: self._recursive,
             'number_of_files': self._number_of_files,
             'bytes': self._size,
+            'last_added': self._last_added,
+            'last_deleted': self._last_deleted,
+            'last_modified': self._last_modified
             }
         return attr
 
