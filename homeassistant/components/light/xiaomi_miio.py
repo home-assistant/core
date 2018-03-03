@@ -172,7 +172,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             'and provide the following data: %s', model)
         return False
 
-
     async_add_devices(devices, update_before_add=True)
 
     @asyncio.coroutine
@@ -650,7 +649,6 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight, Light):
         yield from self._try_command(
             "Setting the turn off delay failed.",
             self._light.delay_off, round(time_period.total_seconds()/60))
-
 
     @asyncio.coroutine
     def async_smart_night_light_mode_on(self):
