@@ -1,6 +1,6 @@
 """Module to help with parsing and generating configuration files."""
 import asyncio
-from collections import OrderedDict
+from collections import namedtuple, OrderedDict
 # pylint: disable=no-name-in-module
 from distutils.version import LooseVersion  # pylint: disable=import-error
 import logging
@@ -41,9 +41,9 @@ VERSION_FILE = '.HA_VERSION'
 CONFIG_DIR_NAME = '.homeassistant'
 DATA_CUSTOMIZE = 'hass_customize'
 
-FILE_MIGRATION = [
-    ['ios.conf', '.ios.conf'],
-]
+FILE_MIGRATION = (
+    ('ios.conf', '.ios.conf'),
+)
 
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
@@ -534,7 +534,7 @@ def _identify_config_schema(module):
     return '', schema
 
 
-def merge_packages_config(config, packages):
+def merge_packages_config(config, packages, _log_pkg_error=_log_pkg_error):
     """Merge packages into the top-level configuration. Mutate config."""
     # pylint: disable=too-many-nested-blocks
     PACKAGES_CONFIG_SCHEMA(packages)
@@ -682,10 +682,23 @@ async def async_check_ha_config_file(hass):
 
 def check_ha_config_file(config_dir):
     """Check if Home Assistant configuration file is valid."""
-    from unittest.mock import patch
+    CheckConfigError = namedtuple(  # pylint: disable=invalid-name
+        'CheckConfigError', "message domain config")
 
-    all_errors = []
-    all_success = OrderedDict()
+    class ConfigResult(OrderedDict):
+        """Configuration result with errors attribute."""
+
+        def __init__(self):
+            """Init ConfigResult."""
+            super().__init__()
+            self.errors = []
+
+        def add_error(self, message, domain=None, config=None):
+            """Add a single error."""
+            self.errors.append(CheckConfigError(str(message), domain, config))
+            return self
+
+    result = ConfigResult()
 
     def _pack_error(package, component, config, message):
         """Handle errors from packages: _log_pkg_error."""
@@ -693,21 +706,21 @@ def check_ha_config_file(config_dir):
             package, component, message)
         domain = 'homeassistant.packages.{}.{}'.format(package, component)
         pack_config = core_config[CONF_PACKAGES].get(package, config)
-        all_errors.append((message, domain, pack_config))
+        result.add_error(message, domain, pack_config)
 
     def _comp_error(ex, domain, config):
         """Handle errors from components: async_log_exception."""
-        all_errors.append(
-            (_format_config_error(ex, domain, config), domain, config))
+        result.add_error(
+            _format_config_error(ex, domain, config), domain, config)
 
     # Load configuration.yaml
     try:
         config_path = find_config_file(config_dir)
         if not config_path:
-            return {}, [("File configuration.yaml not found.", None, None)]
+            return result.add_error("File configuration.yaml not found.")
         config = load_yaml_config_file(config_path)
     except HomeAssistantError as err:
-        return {}, [(str(err), None, None)]
+        return result.add_error(err)
     finally:
         clear_secret_cache()
 
@@ -715,14 +728,14 @@ def check_ha_config_file(config_dir):
     try:
         core_config = config.pop(CONF_CORE, {})
         core_config = CORE_CONFIG_SCHEMA(core_config)
-        all_success[CONF_CORE] = core_config
+        result[CONF_CORE] = core_config
     except vol.Invalid as err:
-        all_errors.append((err, CONF_CORE, core_config))
+        result.add_error(err, CONF_CORE, core_config)
         core_config = {}
 
     # Merge packages
-    with patch('homeassistant.config._log_pkg_error', side_effect=_pack_error):
-        merge_packages_config(config, core_config.get(CONF_PACKAGES, {}))
+    merge_packages_config(
+        config, core_config.get(CONF_PACKAGES, {}), _pack_error)
     del core_config[CONF_PACKAGES]
 
     # Filter out repeating config sections
@@ -732,14 +745,13 @@ def check_ha_config_file(config_dir):
     for domain in components:
         component = get_component(domain)
         if not component:
-            all_errors.append(
-                ("Component not found: {}".format(domain), None, None))
+            result.add_error("Component not found: {}".format(domain))
             continue
 
         if hasattr(component, 'CONFIG_SCHEMA'):
             try:
                 config = component.CONFIG_SCHEMA(config)
-                all_success[domain] = config[domain]
+                result[domain] = config[domain]
             except vol.Invalid as ex:
                 _comp_error(ex, domain, config)
                 continue
@@ -766,8 +778,8 @@ def check_ha_config_file(config_dir):
             platform = get_platform(domain, p_name)
 
             if platform is None:
-                all_errors.append(("Platform not found: {}.{}".format(
-                    domain, p_name), None, None))
+                result.add_error(
+                    "Platform not found: {}.{}".format(domain, p_name))
                 continue
 
             # Validate platform specific schema
@@ -785,9 +797,9 @@ def check_ha_config_file(config_dir):
         # Remove config for current component and add validated config back in.
         for filter_comp in extract_domain_configs(config, domain):
             del config[filter_comp]
-        all_success[domain] = platforms
+        result[domain] = platforms
 
-    return (all_success, all_errors)
+    return result
 
 
 @callback

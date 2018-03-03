@@ -205,17 +205,15 @@ def check(config_dir, secrets=False):
 
         loader.prepare(HassConfig(config_dir))
 
-        all_success, all_errors = config_util.check_ha_config_file(config_dir)
+        res['components'] = config_util.check_ha_config_file(config_dir)
 
         res['secret_cache'] = OrderedDict(yaml.__SECRET_CACHE)
-        res['components'] = all_success
 
-        for (msg, domain, config) in all_errors:
-            if not domain:
-                domain = ERROR_STR
-            res['except'].setdefault(domain, []).append(msg)
-            if config:
-                res['except'].setdefault(domain, []).append(config)
+        for err in res['components'].errors:
+            domain = err.domain or ERROR_STR
+            res['except'].setdefault(domain, []).append(err.message)
+            if err.config:
+                res['except'].setdefault(domain, []).append(err.config)
 
     except Exception as err:  # pylint: disable=broad-except
         print(color('red', 'Fatal error while loading config:'), str(err))
