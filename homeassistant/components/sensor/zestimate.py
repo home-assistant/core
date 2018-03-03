@@ -4,11 +4,10 @@ Support for zestimate data from zillow.com.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.zestimate/
 """
-import logging
 from datetime import timedelta
-
-import voluptuous as vol
+import logging
 import requests
+import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_API_KEY,
@@ -32,7 +31,7 @@ ZESTIMATE = '{}:{}'.format(DEFAULT_NAME, NAME)
 ICON = 'mdi:home-variant'
 
 ATTR_AMOUNT = 'amount'
-ATTR_CHANGE = 'amount_change_30days'
+ATTR_CHANGE = 'amount_change_30_days'
 ATTR_CURRENCY = 'amount_currency'
 ATTR_LAST_UPDATED = 'amount_last_updated'
 ATTR_VAL_HI = 'valuation_range_high'
@@ -50,7 +49,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Zestimate sensor."""
+    """Set up the Zestimate sensor."""
     name = config.get(CONF_NAME)
     properties = config[CONF_ZPID]
     params = {'zws-id': config[CONF_API_KEY]}
@@ -84,25 +83,17 @@ class ZestimateDataSensor(Entity):
         try:
             return round(float(self._state), 1)
         except ValueError:
-            return STATE_UNKNOWN
+            return None
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attributes = {}
         if self.data is not None:
-            attributes['Amount'] = self.data[ATTR_AMOUNT]
-            attributes['Currency'] = self.data[ATTR_CURRENCY]
-            attributes['Last Update'] = self.data[ATTR_LAST_UPDATED]
-            attributes['+/- Change'] = self.data[ATTR_CHANGE]
-            attributes['Valuation Range High'] = self.data[ATTR_VAL_HI]
-            attributes['Valuation Range Low'] = self.data[ATTR_VAL_LOW]
-        attributes['Address'] = self.address
+            attributes = self.data
+        attributes['address'] = self.address
         attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
-        if attributes is not None:
-            return attributes
-        else:
-            return None
+        return attributes
 
     @property
     def icon(self):
@@ -121,10 +112,10 @@ class ZestimateDataSensor(Entity):
             if error_code != 0:
                 _LOGGER.error('The API returned: %s',
                               data_dict['message']['text'])
-                return False
+                return
         except requests.exceptions.ConnectionError:
             _LOGGER.error('Unable to retrieve data from %s', _RESOURCE)
-            return False
+            return
         data = data_dict['response'][NAME]
         details = {}
         details[ATTR_AMOUNT] = data['amount']['#text']
@@ -138,5 +129,5 @@ class ZestimateDataSensor(Entity):
         if self.data is not None:
             self._state = self.data[ATTR_AMOUNT]
         else:
-            self._state = STATE_UNKNOWN
+            self._state = None
             _LOGGER.error('Unable to parase Zestimate data from response')
