@@ -79,7 +79,7 @@ class AppleTvDevice(MediaPlayerDevice):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self.atv.metadata.device_id
 
     @property
