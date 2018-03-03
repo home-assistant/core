@@ -65,9 +65,11 @@ class HueGroupView(HomeAssistantView):
 
     @core.callback
     def put(self, request, username):
-        return self.json([{'error': {'address': '/groups/0/action/scene', 'type':7, 'description': 'invalid value, dummy for parameter, scene'}}])
+        return self.json([{'error': {'address': '/groups/0/action/scene',
+                           'type':7, 'description': 'invalid value, dummy ' +
+                           'for parameter, scene'}}])
 
-    
+
 class HueAllLightsStateView(HomeAssistantView):
     """Handle requests for getting and setting info about entities."""
 
