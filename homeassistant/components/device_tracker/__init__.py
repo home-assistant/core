@@ -101,17 +101,18 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 })
 SERVICE_SEE_PAYLOAD_SCHEMA = vol.Schema(vol.All(
     cv.has_at_least_one_key(ATTR_MAC, ATTR_DEV_ID), {
-    ATTR_MAC: cv.string,
-    ATTR_DEV_ID: cv.string,
-    ATTR_HOST_NAME: cv.string,
-    ATTR_LOCATION_NAME: cv.string,
-    ATTR_GPS: cv.gps,
-    ATTR_GPS_ACCURACY: cv.positive_int,
-    ATTR_BATTERY: cv.string,
-    ATTR_ATTRIBUTES: dict,
-    ATTR_SOURCE_TYPE: vol.In(SOURCE_TYPES),
-    ATTR_CONSIDER_HOME: cv.time_period,
-}))
+        ATTR_MAC: cv.string,
+        ATTR_DEV_ID: cv.string,
+        ATTR_HOST_NAME: cv.string,
+        ATTR_LOCATION_NAME: cv.string,
+        ATTR_GPS: cv.gps,
+        ATTR_GPS_ACCURACY: cv.positive_int,
+        ATTR_BATTERY: cv.string,
+        ATTR_ATTRIBUTES: dict,
+        ATTR_SOURCE_TYPE: vol.In(SOURCE_TYPES),
+        ATTR_CONSIDER_HOME: cv.time_period,
+    }))
+
 
 @bind_hass
 def is_on(hass: HomeAssistantType, entity_id: str = None):
