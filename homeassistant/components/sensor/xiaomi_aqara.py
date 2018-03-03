@@ -55,7 +55,7 @@ class XiaomiSensor(XiaomiDevice):
         """Return the icon to use in the frontend."""
         try:
             return SENSOR_TYPES.get(self._data_key)[1]
-        except TypeError:
+        except (TypeError, IndexError):
             return None
 
     @property
@@ -63,7 +63,7 @@ class XiaomiSensor(XiaomiDevice):
         """Return the unit of measurement of this entity, if any."""
         try:
             return SENSOR_TYPES.get(self._data_key)[0]
-        except TypeError:
+        except (TypeError, IndexError):
             return None
 
     @property
