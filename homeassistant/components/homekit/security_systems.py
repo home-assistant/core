@@ -27,12 +27,13 @@ STATE_TO_SERVICE = {STATE_ALARM_DISARMED: 'alarm_disarm',
 class SecuritySystem(HomeAccessory):
     """Generate an SecuritySystem accessory for an alarm control panel."""
 
-    def __init__(self, hass, entity_id, display_name):
+    def __init__(self, hass, entity_id, display_name, alarm_code=None):
         """Initialize a SecuritySystem accessory object."""
         super().__init__(display_name, entity_id, 'ALARM_SYSTEM')
 
         self._hass = hass
         self._entity_id = entity_id
+        self._alarm_code = alarm_code
 
         self.current_security_state = None
         self.homekit_target_security_state = None
@@ -62,8 +63,10 @@ class SecuritySystem(HomeAccessory):
             hass_value = HOMEKIT_TO_HASS[value]
             service = STATE_TO_SERVICE[hass_value]
 
-            self._hass.services.call('alarm_control_panel', service,
-                                     {'entity_id': self._entity_id})
+            params = {'entity_id': self._entity_id}
+            if self._alarm_code is not None:
+                params['code'] = self._alarm_code
+            self._hass.services.call('alarm_control_panel', service, params)
 
     def update_security_state(self, entity_id=None,
                               old_state=None, new_state=None):
