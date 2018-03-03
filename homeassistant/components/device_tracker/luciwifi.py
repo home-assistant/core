@@ -6,7 +6,6 @@ https://home-assistant.io/components/device_tracker.luciwifi/
 """
 import logging
 import requests
-import urllib3
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
@@ -14,7 +13,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_SSL, CONF_VERIFY_SSL)
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +48,9 @@ class LuciWifiDeviceScanner(DeviceScanner):
         self.password = config[CONF_PASSWORD]
         self.radio = config[CONF_RADIO]
         self.verify = config[CONF_VERIFY_SSL]
+        if not self.verify:
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         if config[CONF_SSL]:
             self.proto = 'https'
         else:
@@ -106,7 +107,7 @@ class LuciWifiDeviceScanner(DeviceScanner):
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.Timeout) as exception:
             _LOGGER.error("Cannot retrieve json from {}://{} : {}".format(
-                self.proto, self.host,exception.__class__.__name__))
+                self.proto, self.host, exception.__class__.__name__))
             return False
         if res.status_code != 200:
             _LOGGER.info("Logging in again, responsecode: {}".format(
