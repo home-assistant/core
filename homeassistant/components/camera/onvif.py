@@ -72,8 +72,7 @@ SERVICE_PTZ_SCHEMA = vol.Schema({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a ONVIF camera."""
     if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
         return
@@ -96,7 +95,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.services.async_register(DOMAIN, SERVICE_PTZ, handle_ptz,
                                  schema=SERVICE_PTZ_SCHEMA)
-    async_add_devices([ONVIFHassCamera(hass, config)])
+    add_devices([ONVIFHassCamera(hass, config)])
 
 
 class ONVIFHassCamera(Camera):
@@ -119,8 +118,7 @@ class ONVIFHassCamera(Camera):
                 config.get(CONF_USERNAME), config.get(CONF_PASSWORD)
             )
             media_service = camera.create_media_service()
-            
-            self._profiles = media.GetProfiles()
+            self._profiles = media_service.GetProfiles()
             self._profile_index = config.get(CONF_PROFILE)
             if self._profile_index >= len(self._profiles):
                 _LOGGER.warning("ONVIF Camera '%s' doesn't provide profile %d."
@@ -196,23 +194,3 @@ class ONVIFHassCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attrs = super().device_state_attributes
-        custom_attrs = {}
-        i = 0
-        for profile in self._profiles:
-            bounds = profile.VideoSourceConfiguration.Bounds.__dict__
-            custom_attrs.update({"Profile #" + str(i):
-                                 str(bounds["_width"])
-                                 + " x "
-                                 + str(bounds["_height"])})
-            i = i + 1
-        custom_attrs.update({"Active profile": str(self._profile_index)})
-        if attrs:
-            attrs.update(custom_attrs)
-        else:
-            attrs = custom_attrs
-        return attrs
