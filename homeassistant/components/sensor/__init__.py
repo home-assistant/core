@@ -85,7 +85,8 @@ def toggle(hass, entity_id=None):
 
 async def async_setup(hass, config):
     """Track states and offer events for sensors."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SENSORS)
     await component.async_setup(config)
 
     async def async_handle_sensor_service(service):
