@@ -54,7 +54,6 @@ class LuciWifiDeviceScanner(DeviceScanner):
             self.proto = 'https'
         else:
             self.proto = 'http'
-        self.session = requests.Session()
         self.last_results = []
         self.success_init = self.login()
         _LOGGER.info("Starting luci wifi scanner {}://{} radio:{}".format(
@@ -62,13 +61,16 @@ class LuciWifiDeviceScanner(DeviceScanner):
 
     def login(self):
         """Try to login to luci."""
+        self.session = requests.Session()
         url = '{}://{}/cgi-bin/luci/'.format(self.proto, self.host)
         data = {'luci_username': self.username, 'luci_password': self.password}
         try:
-            res = self.session.post(url, data=data, verify=self.verify)
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Cannot login {}://{}".format(
-                self.proto, self.host))
+            res = self.session.post(url, data=data,
+                                    verify=self.verify, timeout=5)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as exception:
+            _LOGGER.error("Cannot login {}://{} : {}".format(
+                self.proto, self.host, exception.__class__.__name__))
             return False
         if res.status_code == 302 or res.status_code == 200:
             _LOGGER.debug("login {}://{} status_code: {} succeeded".format(
@@ -100,10 +102,11 @@ class LuciWifiDeviceScanner(DeviceScanner):
         url = '{}://{}/cgi-bin/luci/admin/network/wireless_status/{}'.format(
             self.proto, self.host, self.radio)
         try:
-            res = self.session.get(url, verify=self.verify)
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Cannot retrieve json from {}://{}".format(
-                self.proto, self.host))
+            res = self.session.get(url, verify=self.verify, timeout=5)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as exception:
+            _LOGGER.error("Cannot retrieve json from {}://{} : {}".format(
+                self.proto, self.host,exception.__class__.__name__))
             return False
         if res.status_code != 200:
             _LOGGER.info("Logging in again, responsecode: {}".format(
