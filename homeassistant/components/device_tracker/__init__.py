@@ -83,6 +83,8 @@ SOURCE_TYPE_GPS = 'gps'
 SOURCE_TYPE_ROUTER = 'router'
 SOURCE_TYPE_BLUETOOTH = 'bluetooth'
 SOURCE_TYPE_BLUETOOTH_LE = 'bluetooth_le'
+SOURCE_TYPES = (SOURCE_TYPE_GPS, SOURCE_TYPE_ROUTER,
+                SOURCE_TYPE_BLUETOOTH, SOURCE_TYPE_BLUETOOTH_LE)
 
 NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(None, vol.Schema({
     vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
@@ -97,7 +99,19 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NEW_DEVICE_DEFAULTS,
                  default={}): NEW_DEVICE_DEFAULTS_SCHEMA
 })
-
+SERVICE_SEE_PAYLOAD_SCHEMA = vol.Schema(vol.All(
+    cv.has_at_least_one_key(ATTR_MAC, ATTR_DEV_ID), {
+    ATTR_MAC: cv.string,
+    ATTR_DEV_ID: cv.string,
+    ATTR_HOST_NAME: cv.string,
+    ATTR_LOCATION_NAME: cv.string,
+    ATTR_GPS: cv.gps,
+    ATTR_GPS_ACCURACY: cv.positive_int,
+    ATTR_BATTERY: cv.string,
+    ATTR_ATTRIBUTES: dict,
+    ATTR_SOURCE_TYPE: vol.In(SOURCE_TYPES),
+    ATTR_CONSIDER_HOME: cv.time_period,
+}))
 
 @bind_hass
 def is_on(hass: HomeAssistantType, entity_id: str = None):
@@ -204,17 +218,10 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     @asyncio.coroutine
     def async_see_service(call):
         """Service to see a device."""
-        args = {key: value for key, value in call.data.items() if key in
-                (ATTR_MAC, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_LOCATION_NAME,
-                 ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_ATTRIBUTES,
-                 ATTR_SOURCE_TYPE, ATTR_CONSIDER_HOME)}
-
-        yield from tracker.async_see(**args)
+        yield from tracker.async_see(**call.data)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SEE, async_see_service,
-        schema=vol.Schema({ATTR_CONSIDER_HOME: cv.time_period},
-                          extra=vol.ALLOW_EXTRA))
+        DOMAIN, SERVICE_SEE, async_see_service, SERVICE_SEE_PAYLOAD_SCHEMA)
 
     # restore
     yield from tracker.async_setup_tracked_device()
