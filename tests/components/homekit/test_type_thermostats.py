@@ -1,21 +1,18 @@
 """Test different accessory types: Thermostats."""
 import unittest
-from unittest.mock import patch
 
 from homeassistant.core import callback
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE, ATTR_TEMPERATURE,
-    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH,
-    ATTR_OPERATION_MODE, STATE_HEAT, STATE_AUTO)
-from homeassistant.components.homekit.thermostats import Thermostat, STATE_OFF
+    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, ATTR_OPERATION_MODE,
+    ATTR_OPERATION_LIST, STATE_COOL, STATE_HEAT, STATE_AUTO)
+from homeassistant.components.homekit.type_thermostats import (
+    Thermostat, STATE_OFF)
 from homeassistant.const import (
     ATTR_SERVICE, EVENT_CALL_SERVICE, ATTR_SERVICE_DATA,
     ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 
 from tests.common import get_test_home_assistant
-from tests.mock.homekit import get_patch_paths, mock_preload_service
-
-PATH_ACC, PATH_FILE = get_patch_paths('thermostats')
 
 
 class TestHomekitThermostats(unittest.TestCase):
@@ -39,12 +36,13 @@ class TestHomekitThermostats(unittest.TestCase):
 
     def test_default_thermostat(self):
         """Test if accessory and HA are updated accordingly."""
-        climate = 'climate.testclimate'
+        climate = 'climate.test'
 
-        with patch(PATH_ACC, side_effect=mock_preload_service):
-            with patch(PATH_FILE, side_effect=mock_preload_service):
-                acc = Thermostat(self.hass, climate, 'Climate', False)
-                acc.run()
+        acc = Thermostat(self.hass, climate, 'Climate', False, aid=2)
+        acc.run()
+
+        self.assertEqual(acc.aid, 2)
+        self.assertEqual(acc.category, 9)  # Thermostat
 
         self.assertEqual(acc.char_current_heat_cool.value, 0)
         self.assertEqual(acc.char_target_heat_cool.value, 0)
@@ -78,6 +76,30 @@ class TestHomekitThermostats(unittest.TestCase):
         self.assertEqual(acc.char_current_temp.value, 23.0)
         self.assertEqual(acc.char_display_units.value, 0)
 
+        self.hass.states.set(climate, STATE_COOL,
+                             {ATTR_OPERATION_MODE: STATE_COOL,
+                              ATTR_TEMPERATURE: 20.0,
+                              ATTR_CURRENT_TEMPERATURE: 25.0,
+                              ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_target_temp.value, 20.0)
+        self.assertEqual(acc.char_current_heat_cool.value, 2)
+        self.assertEqual(acc.char_target_heat_cool.value, 2)
+        self.assertEqual(acc.char_current_temp.value, 25.0)
+        self.assertEqual(acc.char_display_units.value, 0)
+
+        self.hass.states.set(climate, STATE_COOL,
+                             {ATTR_OPERATION_MODE: STATE_COOL,
+                              ATTR_TEMPERATURE: 20.0,
+                              ATTR_CURRENT_TEMPERATURE: 19.0,
+                              ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_target_temp.value, 20.0)
+        self.assertEqual(acc.char_current_heat_cool.value, 0)
+        self.assertEqual(acc.char_target_heat_cool.value, 2)
+        self.assertEqual(acc.char_current_temp.value, 19.0)
+        self.assertEqual(acc.char_display_units.value, 0)
+
         self.hass.states.set(climate, STATE_OFF,
                              {ATTR_OPERATION_MODE: STATE_OFF,
                               ATTR_TEMPERATURE: 22.0,
@@ -88,6 +110,45 @@ class TestHomekitThermostats(unittest.TestCase):
         self.assertEqual(acc.char_current_heat_cool.value, 0)
         self.assertEqual(acc.char_target_heat_cool.value, 0)
         self.assertEqual(acc.char_current_temp.value, 18.0)
+        self.assertEqual(acc.char_display_units.value, 0)
+
+        self.hass.states.set(climate, STATE_AUTO,
+                             {ATTR_OPERATION_MODE: STATE_AUTO,
+                              ATTR_OPERATION_LIST: [STATE_HEAT, STATE_COOL],
+                              ATTR_TEMPERATURE: 22.0,
+                              ATTR_CURRENT_TEMPERATURE: 18.0,
+                              ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_target_temp.value, 22.0)
+        self.assertEqual(acc.char_current_heat_cool.value, 1)
+        self.assertEqual(acc.char_target_heat_cool.value, 3)
+        self.assertEqual(acc.char_current_temp.value, 18.0)
+        self.assertEqual(acc.char_display_units.value, 0)
+
+        self.hass.states.set(climate, STATE_AUTO,
+                             {ATTR_OPERATION_MODE: STATE_AUTO,
+                              ATTR_OPERATION_LIST: [STATE_HEAT, STATE_COOL],
+                              ATTR_TEMPERATURE: 22.0,
+                              ATTR_CURRENT_TEMPERATURE: 25.0,
+                              ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_target_temp.value, 22.0)
+        self.assertEqual(acc.char_current_heat_cool.value, 2)
+        self.assertEqual(acc.char_target_heat_cool.value, 3)
+        self.assertEqual(acc.char_current_temp.value, 25.0)
+        self.assertEqual(acc.char_display_units.value, 0)
+
+        self.hass.states.set(climate, STATE_AUTO,
+                             {ATTR_OPERATION_MODE: STATE_AUTO,
+                              ATTR_OPERATION_LIST: [STATE_HEAT, STATE_COOL],
+                              ATTR_TEMPERATURE: 22.0,
+                              ATTR_CURRENT_TEMPERATURE: 22.0,
+                              ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_target_temp.value, 22.0)
+        self.assertEqual(acc.char_current_heat_cool.value, 0)
+        self.assertEqual(acc.char_target_heat_cool.value, 3)
+        self.assertEqual(acc.char_current_temp.value, 22.0)
         self.assertEqual(acc.char_display_units.value, 0)
 
         # Set from HomeKit
@@ -110,7 +171,7 @@ class TestHomekitThermostats(unittest.TestCase):
 
     def test_auto_thermostat(self):
         """Test if accessory and HA are updated accordingly."""
-        climate = 'climate.testclimate'
+        climate = 'climate.test'
 
         acc = Thermostat(self.hass, climate, 'Climate', True)
         acc.run()

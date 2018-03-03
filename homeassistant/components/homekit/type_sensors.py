@@ -36,16 +36,15 @@ class TemperatureSensor(HomeAccessory):
     Sensor entity must return temperature in °C, °F.
     """
 
-    def __init__(self, hass, entity_id, display_name):
+    def __init__(self, hass, entity_id, display_name, *args, **kwargs):
         """Initialize a TemperatureSensor accessory object."""
-        super().__init__(display_name, entity_id, 'SENSOR')
+        super().__init__(display_name, entity_id, 'SENSOR', *args, **kwargs)
 
         self._hass = hass
         self._entity_id = entity_id
 
-        self.serv_temp = add_preload_service(self, SERV_TEMPERATURE_SENSOR)
-        self.char_temp = self.serv_temp. \
-            get_characteristic(CHAR_CURRENT_TEMPERATURE)
+        serv_temp = add_preload_service(self, SERV_TEMPERATURE_SENSOR)
+        self.char_temp = serv_temp.get_characteristic(CHAR_CURRENT_TEMPERATURE)
         override_properties(self.char_temp, PROP_CELSIUS)
         self.char_temp.value = 0
         self.unit = None

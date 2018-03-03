@@ -1,19 +1,15 @@
 """Test different accessory types: Covers."""
 import unittest
-from unittest.mock import patch
 
 from homeassistant.core import callback
 from homeassistant.components.cover import (
     ATTR_POSITION, ATTR_CURRENT_POSITION)
-from homeassistant.components.homekit.covers import Window
+from homeassistant.components.homekit.type_covers import WindowCovering
 from homeassistant.const import (
     STATE_UNKNOWN, STATE_OPEN,
     ATTR_SERVICE, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE)
 
 from tests.common import get_test_home_assistant
-from tests.mock.homekit import get_patch_paths, mock_preload_service
-
-PATH_ACC, PATH_FILE = get_patch_paths('covers')
 
 
 class TestHomekitSensors(unittest.TestCase):
@@ -39,10 +35,11 @@ class TestHomekitSensors(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         window_cover = 'cover.window'
 
-        with patch(PATH_ACC, side_effect=mock_preload_service):
-            with patch(PATH_FILE, side_effect=mock_preload_service):
-                acc = Window(self.hass, window_cover, 'Cover')
-                acc.run()
+        acc = WindowCovering(self.hass, window_cover, 'Cover', aid=2)
+        acc.run()
+
+        self.assertEqual(acc.aid, 2)
+        self.assertEqual(acc.category, 14)  # WindowCovering
 
         self.assertEqual(acc.char_current_position.value, 0)
         self.assertEqual(acc.char_target_position.value, 0)

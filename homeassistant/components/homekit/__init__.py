@@ -3,77 +3,91 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/homekit/
 """
-import asyncio
 import logging
-import re
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, CONF_PORT,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
+from homeassistant.const import (
+    ATTR_CODE, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
+    CONF_PORT, CONF_ENTITIES, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.loader import bind_hass
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
+from .const import (
+    DOMAIN, HOMEKIT_FILE, CONF_AID, CONF_AUTO_START, CONF_EVENTS,
+    CONF_PIN_CODE, DEFAULT_PORT, DEFAULT_AUTO_START, DEFAULT_EVENTS,
+    SERVICE_HOMEKIT_START)
+from .util import (
+    validate_entities, validate_events_auto_start, show_setup_message)
 
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-_RE_VALID_PINCODE = r"^(\d{3}-\d{2}-\d{3})$"
-
-DOMAIN = 'homekit'
-REQUIREMENTS = ['HAP-python==1.1.7']
-
-BRIDGE_NAME = 'Home Assistant'
-CONF_PIN_CODE = 'pincode'
-
-HOMEKIT_FILE = '.homekit.state'
+REQUIREMENTS = ['HAP-python==1.1.7', 'pypng==0.0.18']
 
 
-def valid_pin(value):
+def pin_deprecated(value):
     """Validate pin code value."""
-    match = re.match(_RE_VALID_PINCODE, str(value).strip())
-    if not match:
-        raise vol.Invalid("Pin must be in the format: '123-45-678'")
-    return match.group(0)
+    _LOGGER.warning(
+        "Setting a custom pin code is no longer supported. Please remove "
+        "the 'pincode' option from your configuration. A valid pin code "
+        "will be generated automatically for you.")
 
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
-        vol.Optional(CONF_PORT, default=51826): vol.Coerce(int),
-        vol.Optional(CONF_PIN_CODE, default='123-45-678'): valid_pin,
-    })
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
+        vol.Optional(CONF_PIN_CODE): pin_deprecated,
+        vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
+        vol.Optional(CONF_EVENTS, default=DEFAULT_EVENTS): cv.ensure_list,
+        vol.Required(CONF_ENTITIES): validate_entities,
+    }, validate_events_auto_start)
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+@bind_hass
+def start(hass):
+    """Start HomeKit instance."""
+    hass.services.call(DOMAIN, SERVICE_HOMEKIT_START)
+
+
+async def async_setup(hass, config):
     """Setup the HomeKit component."""
     _LOGGER.debug("Begin setup HomeKit")
 
     conf = config[DOMAIN]
-    port = conf.get(CONF_PORT)
-    pin = str.encode(conf.get(CONF_PIN_CODE))
+    port = conf[CONF_PORT]
+    auto_start = conf[CONF_AUTO_START]
+    event_list = conf[CONF_EVENTS] + [EVENT_HOMEASSISTANT_START]
+    entities = conf[CONF_ENTITIES]
 
-    homekit = HomeKit(hass, port)
-    homekit.setup_bridge(pin)
+    homekit = HomeKit(hass, port, entities, event_list)
+    homekit.setup()
 
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_START, homekit.start_driver)
+    def handle_homekit_service_start(service):
+        """Handle start HomeKit service call."""
+        if homekit.started:
+            _LOGGER.warning("HomeKit is already running")
+            return
+        homekit.start()
+
+    hass.services.async_register(DOMAIN, SERVICE_HOMEKIT_START,
+                                 handle_homekit_service_start)
+
+    if not auto_start:
+        return True
+
+    for event in event_list:
+        hass.bus.async_listen_once(event, homekit.start_event_call)
+
     return True
 
 
-def import_types():
-    """Import all types from files in the HomeKit directory."""
-    _LOGGER.debug("Import type files.")
-    # pylint: disable=unused-variable
-    from . import (  # noqa F401
-        covers, security_systems, sensors, switches, thermostats)
-
-
-def get_accessory(hass, state):
+def get_accessory(hass, state, config):
     """Take state and return an accessory object if supported."""
     if state.domain == 'sensor':
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -81,76 +95,116 @@ def get_accessory(hass, state):
             _LOGGER.debug("Add \"%s\" as \"%s\"",
                           state.entity_id, 'TemperatureSensor')
             return TYPES['TemperatureSensor'](hass, state.entity_id,
-                                              state.name)
+                                              state.name, aid=config[CONF_AID])
 
     elif state.domain == 'cover':
         # Only add covers that support set_cover_position
-        if state.attributes.get(ATTR_SUPPORTED_FEATURES) & 4:
+        if state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & 4:
             _LOGGER.debug("Add \"%s\" as \"%s\"",
-                          state.entity_id, 'Window')
-            return TYPES['Window'](hass, state.entity_id, state.name)
+                          state.entity_id, 'WindowCovering')
+            return TYPES['WindowCovering'](hass, state.entity_id, state.name,
+                                           aid=config[CONF_AID])
 
     elif state.domain == 'alarm_control_panel':
         _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id,
                       'SecuritySystem')
-        return TYPES['SecuritySystem'](hass, state.entity_id, state.name)
+        return TYPES['SecuritySystem'](hass, state.entity_id, state.name,
+                                       alarm_code=config[ATTR_CODE],
+                                       aid=config[CONF_AID])
 
     elif state.domain == 'climate':
-        support_auto = False
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        support_temp_range = SUPPORT_TARGET_TEMPERATURE_LOW | \
+            SUPPORT_TARGET_TEMPERATURE_HIGH
         # Check if climate device supports auto mode
-        if (features & SUPPORT_TARGET_TEMPERATURE_HIGH) \
-                and (features & SUPPORT_TARGET_TEMPERATURE_LOW):
-            support_auto = True
+        support_auto = bool(features & support_temp_range)
+
         _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'Thermostat')
         return TYPES['Thermostat'](hass, state.entity_id,
-                                   state.name, support_auto)
+                                   state.name, support_auto,
+                                   aid=config[CONF_AID])
 
     elif state.domain == 'switch' or state.domain == 'remote' \
             or state.domain == 'input_boolean':
         _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'Switch')
-        return TYPES['Switch'](hass, state.entity_id, state.name)
+        return TYPES['Switch'](hass, state.entity_id, state.name,
+                               aid=config[CONF_AID])
 
+    _LOGGER.warning("The entity \"%s\" is not supported yet",
+                    state.entity_id)
     return None
 
 
 class HomeKit():
     """Class to handle all actions between HomeKit and Home Assistant."""
 
-    def __init__(self, hass, port):
+    def __init__(self, hass, port, config, start_events):
         """Initialize a HomeKit object."""
         self._hass = hass
         self._port = port
+        self._config = config
+        self._event_calls = len(start_events)
+        self._calls_received = 0
+        self.started = False
+
         self.bridge = None
         self.driver = None
 
-    def setup_bridge(self, pin):
-        """Setup the bridge component to track all accessories."""
-        from .accessories import HomeBridge
-        self.bridge = HomeBridge(BRIDGE_NAME, 'homekit.bridge', pin)
+    def setup(self):
+        """Setup bridge and accessory driver."""
+        from .accessories import HomeBridge, HomeDriver
 
-    def start_driver(self, event):
-        """Start the accessory driver."""
-        from pyhap.accessory_driver import AccessoryDriver
-        self._hass.bus.listen_once(
-            EVENT_HOMEASSISTANT_STOP, self.stop_driver)
+        self._hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, self.stop)
 
-        import_types()
-        _LOGGER.debug("Start adding accessories.")
-        for state in self._hass.states.all():
-            acc = get_accessory(self._hass, state)
-            if acc is not None:
-                self.bridge.add_accessory(acc)
-
-        ip_address = get_local_ip()
         path = self._hass.config.path(HOMEKIT_FILE)
-        self.driver = AccessoryDriver(self.bridge, self._port,
-                                      ip_address, path)
-        _LOGGER.debug("Driver started")
+        self.bridge = HomeBridge(self._hass)
+        self.driver = HomeDriver(self.bridge, self._port, get_local_ip(), path)
+
+    def add_bridge_accessory(self, state):
+        """Try adding accessory to bridge if configured beforehand."""
+        if not state or state.entity_id not in self._config:
+            return None
+        conf = self._config.pop(state.entity_id)
+        acc = get_accessory(self._hass, state, conf)
+        if acc is not None:
+            self.bridge.add_accessory(acc)
+
+    def start_event_call(self, event):
+        """Log event listener callbacks, call start if all events happened."""
+        self._calls_received += 1
+        if self._event_calls == self._calls_received:
+            self.start()
+
+    def start(self):
+        """Start the accessory driver."""
+        if self.started:
+            return
+        self.started = True
+
+        # pylint: disable=unused-variable
+        from . import (  # noqa F401
+            type_covers, type_security_systems, type_sensors,
+            type_switches, type_thermostats)
+
+        for state in self._hass.states.all():
+            self.add_bridge_accessory(state)
+        for entity_id in self._config:
+            _LOGGER.warning("The entity \"%s\" was not setup when HomeKit "
+                            "was started", entity_id)
+        self.bridge.set_broker(self.driver)
+
+        if not self.bridge.paired:
+            show_setup_message(self.bridge, self._hass)
+
+        _LOGGER.debug("Driver start")
         self.driver.start()
 
-    def stop_driver(self, event):
+    def stop(self, *args):
         """Stop the accessory driver."""
+        if not self.started:
+            return
+
         _LOGGER.debug("Driver stop")
-        if self.driver is not None:
+        if self.driver and self.driver.run_sentinel:
             self.driver.stop()
