@@ -54,7 +54,8 @@ class Switch(HomeAccessory):
             return
 
         self.current_on = (new_state.state == 'on')
-        self.char_on.set_value(self.current_on, should_callback=False)
+        if self.homekit_target_on is None:
+            self.char_on.set_value(self.current_on, should_callback=False)
         _LOGGER.debug("%s: Set current state to %s",
                       self._entity_id, self.current_on)
         if self.homekit_target_on is None \
