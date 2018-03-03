@@ -187,82 +187,82 @@ class GroupCover(CoverDevice):
         self.hass.async_add_job(set_cover_tilt_position, self.hass,
                                 tilt_position, self._tilts[KEY_POSITION])
 
+    def update_attr_is_closed(self):
+        """Return if all covers are closed."""
+        if not self._covers[KEY_OPEN_CLOSE]:
+            return False
+        for entity_id in self._covers[KEY_OPEN_CLOSE]:
+            state = self.hass.states.get(entity_id)
+            if state is None or state.state != STATE_CLOSED:
+                return False
+        return True
+
+    def update_attr_cover_position(self):
+        """Return current position for all covers.
+
+        None is unknown. pos if all have the same position.
+        Else 0 if closed or 100 is fully open.
+        """
+        position = -1
+        for entity_id in self._covers[KEY_POSITION]:
+            state = self.hass.states.get(entity_id)
+            pos = state.attributes.get(ATTR_CURRENT_POSITION)
+            if position == -1:
+                position = pos
+            elif position != pos:
+                position = -1
+                break
+
+        if position != -1:
+            return position
+
+        return 0 if self.is_closed else 100
+
+    def update_attr_tilt_position(self):
+        """Return current tilt position for all covers.
+
+        None is unknown. pos if all have the same tilt position.
+        Else 100 for tilt open.
+        """
+        if self._tilt is False:
+            return None
+
+        position = -1
+        for entity_id in self._tilts[KEY_POSITION]:
+            state = self.hass.states.get(entity_id)
+            pos = state.attributes.get(ATTR_CURRENT_TILT_POSITION)
+            if position == -1:
+                position = pos
+            elif position != pos:
+                position = -1
+                break
+
+        if position != -1:
+            return position
+
+        return 100
+
+    def update_attr_supported_features(self):
+        """Return supported features."""
+        supported_features = 0
+
+        if self._covers[KEY_OPEN_CLOSE]:
+            supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE
+
+        if self._covers[KEY_STOP]:
+            supported_features |= SUPPORT_STOP
+
+        if self._covers[KEY_POSITION]:
+            supported_features |= SUPPORT_SET_POSITION
+
+        if self._tilt:
+            supported_features |= TILT_FEATURES
+
+        return supported_features
+
     async def async_update(self):
         """Update state and attributes."""
-        def update_is_closed():
-            """Return if all covers are closed."""
-            if not self._covers[KEY_OPEN_CLOSE]:
-                return False
-            for entity_id in self._covers[KEY_OPEN_CLOSE]:
-                state = self.hass.states.get(entity_id)
-                if state is None or state.state != STATE_CLOSED:
-                    return False
-            return True
-
-        def update_cover_position():
-            """Return current position for all covers.
-
-            None is unknown. pos if all have the same position.
-            Else 0 if closed or 100 is fully open.
-            """
-            position = -1
-            for entity_id in self._covers[KEY_POSITION]:
-                state = self.hass.states.get(entity_id)
-                pos = state.attributes.get(ATTR_CURRENT_POSITION)
-                if position == -1:
-                    position = pos
-                elif position != pos:
-                    position = -1
-                    break
-
-            if position != -1:
-                return position
-
-            return 0 if self.is_closed else 100
-
-        def update_tilt_position():
-            """Return current tilt position for all covers.
-
-            None is unknown. pos if all have the same tilt position.
-            Else 100 for tilt open.
-            """
-            if self._tilt is False:
-                return None
-
-            position = -1
-            for entity_id in self._tilts[KEY_POSITION]:
-                state = self.hass.states.get(entity_id)
-                pos = state.attributes.get(ATTR_CURRENT_TILT_POSITION)
-                if position == -1:
-                    position = pos
-                elif position != pos:
-                    position = -1
-                    break
-
-            if position != -1:
-                return position
-
-            return 100
-
-        def update_supported_features():
-            """Return supported features."""
-            supported_features = 0
-
-            if self._covers[KEY_OPEN_CLOSE]:
-                supported_features |= SUPPORT_OPEN | SUPPORT_CLOSE
-
-            if self._covers[KEY_STOP]:
-                supported_features |= SUPPORT_STOP
-
-            if self._covers[KEY_POSITION]:
-                supported_features |= SUPPORT_SET_POSITION
-
-            if self._tilt:
-                supported_features |= TILT_FEATURES
-
-            return supported_features
-
-        self._is_closed = update_is_closed()
-        self._cover_position = update_cover_position()
-        self._tilt_position = update_tilt_position()
-        self._supported_features = update_supported_features()
+        self._is_closed = self.update_attr_is_closed()
+        self._cover_position = self.update_attr_cover_position()
+        self._tilt_position = self.update_attr_tilt_position()
+        self._supported_features = self.update_attr_supported_features()
