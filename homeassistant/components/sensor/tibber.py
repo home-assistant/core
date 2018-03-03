@@ -106,6 +106,6 @@ class TibberSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         home = self._tibber_home.info['viewer']['home']
         return home['meteringPointData']['consumptionEan']

@@ -367,7 +367,7 @@ class SonosDevice(MediaPlayerDevice):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._unique_id
 
     @property
