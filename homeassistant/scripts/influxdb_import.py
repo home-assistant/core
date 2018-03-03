@@ -28,6 +28,10 @@ def run(script_args: List) -> int:
         default=config_util.get_default_config_dir(),
         help="Directory that contains the Home Assistant configuration")
     parser.add_argument(
+        '--skip-pip',
+        action='store_true',
+        help='Skips pip install of required packages on startup')
+    parser.add_argument(
         '--uri',
         type=str,
         help="Connect to URI and import (if other than default sqlite) "
