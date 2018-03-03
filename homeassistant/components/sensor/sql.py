@@ -129,14 +129,16 @@ class SQLSensor(Entity):
         finally:
             sess.close()
 
+        if not result.returns_rows:
+            _LOGGER.error("%s returned no results", self._query)
+            self._state = None
+            self._attributes = {}
+            return
+
         for res in result:
             _LOGGER.debug(res.items())
             data = res[self._column_name]
             self._attributes = {k: str(v) for k, v in res.items()}
-
-        if data is None:
-            _LOGGER.error("%s returned no results", self._query)
-            return
 
         if self._template is not None:
             self._state = self._template.async_render_with_possible_json_value(
