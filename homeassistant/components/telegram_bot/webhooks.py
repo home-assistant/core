@@ -14,7 +14,8 @@ import voluptuous as vol
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.components.telegram_bot import (
-    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA)
+    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA,
+    CONF_PROXY_URL, CONF_PROXY_PARAMS)
 from homeassistant.const import (
     CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST,
     HTTP_UNAUTHORIZED, CONF_URL)
@@ -50,7 +51,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config):
     """Set up the Telegram webhooks platform."""
     import telegram
-    bot = telegram.Bot(config[CONF_API_KEY])
+    from telegram import Bot
+    from telegram.utils.request import Request
+
+    api_key = config.get(CONF_API_KEY)
+    proxy_url = config.get(CONF_PROXY_URL)
+    proxy_params = config.get(CONF_PROXY_PARAMS)
+
+    request = None
+    if proxy_url is not None:
+        request = Request(proxy_url=proxy_url,
+                          urllib3_proxy_kwargs=proxy_params)
+    bot = Bot(token=api_key, request=request)
 
     current_status = yield from hass.async_add_job(bot.getWebhookInfo)
     base_url = config.get(CONF_URL, hass.config.api.base_url)
