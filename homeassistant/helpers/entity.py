@@ -93,7 +93,7 @@ class Entity(object):
 
     @property
     def unique_id(self) -> str:
-        """Return an unique ID."""
+        """Return a unique ID."""
         return None
 
     @property
