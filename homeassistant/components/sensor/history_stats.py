@@ -106,8 +106,8 @@ class HistoryStatsSensor(Entity):
         self._unit_of_measurement = UNITS[sensor_type]
 
         self._period = (datetime.datetime.now(), datetime.datetime.now())
-        self.value = 0
-        self.count = 0
+        self.value = None
+        self.count = None
 
         def force_refresh(*args):
             """Force the component to refresh."""
@@ -127,6 +127,9 @@ class HistoryStatsSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        if self.value is None or self.count is None:
+            return None
+
         if self._type == CONF_TYPE_TIME:
             return round(self.value, 2)
 
@@ -149,6 +152,9 @@ class HistoryStatsSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
+        if self.value is None:
+            return {}
+
         hsh = HistoryStatsHelper
         return {
             ATTR_VALUE: hsh.pretty_duration(self.value),
