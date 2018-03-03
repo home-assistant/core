@@ -19,7 +19,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
-SCAN_INTERVAL = datetime.timedelta(seconds=1)
+SCAN_INTERVAL = datetime.timedelta(seconds=30)
 ICON = 'mdi:chart-line'
 
 CONF_UNIT = 'unit'
