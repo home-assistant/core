@@ -432,6 +432,10 @@ class SonosDevice(MediaPlayerDevice):
         """Add event subscriptions."""
         player = self.soco
 
+        # New player available, build the current group topology
+        for device in self.hass.data[DATA_SONOS].devices:
+            device.process_zonegrouptopology_event(None)
+
         queue = _ProcessSonosEventQueue(self.process_avtransport_event)
         player.avTransport.subscribe(auto_renew=True, event_queue=queue)
 
@@ -517,11 +521,11 @@ class SonosDevice(MediaPlayerDevice):
 
     def process_zonegrouptopology_event(self, event):
         """Process a zone group topology event coming from a player."""
-        if not hasattr(event, 'zone_player_uui_ds_in_group'):
+        if event and not hasattr(event, 'zone_player_uui_ds_in_group'):
             return
 
         with self.hass.data[DATA_SONOS].topology_lock:
-            group = event.zone_player_uui_ds_in_group
+            group = event and event.zone_player_uui_ds_in_group
             if group:
                 # New group information is pushed
                 coordinator_uid, *slave_uids = group.split(',')
