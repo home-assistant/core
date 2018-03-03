@@ -52,9 +52,8 @@ class HueUsernameView(HomeAssistantView):
 
 
 class HueGroupView(HomeAssistantView):
-    """Dummy Handler for group to get Logitech Pop working"""
-    """Credit to ahertz - https://github.com/bwssytems/ha-bridge/issues/623"""
-
+    """Dummy group handler to get Logitech Pop working."""
+    
     url = '/api/{username}/groups/0/action'
     name = 'emulated_hue:groups:state'
     requires_auth = False
@@ -65,6 +64,7 @@ class HueGroupView(HomeAssistantView):
 
     @core.callback
     def put(self, request, username):
+        """Dummy handler.""" 
         return self.json([{'error': {'address': '/groups/0/action/scene',
                            'type': 7, 'description': 'invalid value, dummy ' +
                                                      'for parameter, scene'}}])
