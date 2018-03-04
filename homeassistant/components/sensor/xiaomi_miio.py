@@ -11,7 +11,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN)
 from homeassistant.exceptions import PlatformNotReady
@@ -68,7 +68,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices([device], update_before_add=True)
 
 
-class XiaomiAirQualityMonitor(Entity):
+class XiaomiAirQualityMonitor(ToggleEntity):
     """Representation of a Xiaomi Air Quality Monitor."""
 
     def __init__(self, name, device, model):
