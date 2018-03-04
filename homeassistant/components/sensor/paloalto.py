@@ -1,5 +1,6 @@
 """
 Support for getting statistical data from a Palo Alto device.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.paloalto/
 """
