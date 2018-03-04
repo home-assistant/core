@@ -13,8 +13,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/rkabadi/pyedimax/archive/'
-                '365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1']
+REQUIREMENTS = ['pyedimax==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
