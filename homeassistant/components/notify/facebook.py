@@ -62,7 +62,6 @@ class FacebookNotificationService(BaseNotificationService):
         if targets[0] == 'BROADCAST':
 
             broadcast_create_body = {"messages": [body_message]}
-
             _LOGGER.debug("Broadcast body %s : ", broadcast_create_body)
 
             resp = requests.post(CR_BRD_MSG_URL,
