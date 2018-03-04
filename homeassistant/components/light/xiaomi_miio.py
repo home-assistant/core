@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'philips.light.bulb']),
 })
 
-REQUIREMENTS = ['python-miio==0.3.7']
+REQUIREMENTS = ['python-miio>=0.3.6']
 
 # The light does not accept cct values < 1
 CCT_MIN = 1
@@ -624,13 +624,13 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
                 self._brightness = brightness
         else:
             yield from self._try_command(
-                "Turning the eyecare light on failed.", self._light.eyecare_on)
+                "Turning the light on failed.", self._light.on)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the light off."""
         yield from self._try_command(
-            "Turning the eyecare light off failed.", self._light.eyecare_off)
+            "Turning the light off failed.", self._light.off)
 
     @asyncio.coroutine
     def async_update(self):
