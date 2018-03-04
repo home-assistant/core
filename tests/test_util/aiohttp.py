@@ -79,9 +79,9 @@ class AiohttpClientMocker:
         self._cookies.clear()
         self.mock_calls.clear()
 
-    def create_session(self):
+    def create_session(self, loop):
         """Create a ClientSession that is bound to this mocker."""
-        session = ClientSession()
+        session = ClientSession(loop=loop)
         session._request = self.match_request
         return session
 
@@ -212,5 +212,5 @@ def mock_aiohttp_client():
 
     with mock.patch(
         'homeassistant.helpers.aiohttp_client.async_create_clientsession',
-            side_effect=lambda *args: mocker.create_session()):
+            side_effect=lambda hass, *args: mocker.create_session(hass.loop)):
         yield mocker
