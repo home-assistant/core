@@ -18,9 +18,9 @@ from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import TemplateError
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_API_KEY, CONF_IP_ADDRESS, 
-                                 CONF_HOST, CONF_SSL, CONF_VERIFY_SSL, 
-                                 CONF_MONITORED_CONDITIONS, 
+from homeassistant.const import (CONF_NAME, CONF_API_KEY, CONF_IP_ADDRESS,
+                                 CONF_HOST, CONF_SSL, CONF_VERIFY_SSL,
+                                 CONF_MONITORED_CONDITIONS,
                                  CONF_UNIT_OF_MEASUREMENT)
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,8 +35,10 @@ CONST_CONFIG_ENDPOINT = '/api/?type=config&action=get&xpath=COMMAND'
 
 PA_OPS_ACTIVE_USERS = "<show><admins></admins></show>"
 PA_CONF_SYS_INFO = "<show><system><info></info></system></show>"
-PA_CONF_GP_USERS = "<show><global-protect-portal><current-user></current-user></global-protect-portal></show>"
-PA_CONF_TEMPERATURE = "<show><system><environmentals><thermal></thermal></environmentals></system></show>"
+PA_CONF_GP_USERS = 
+  "<show><global-protect-portal><current-user></current-user></global-protect-portal></show>"
+PA_CONF_TEMPERATURE = 
+  "<show><system><environmentals><thermal></thermal></environmentals></system></show>"
 
 SCAN_INTERVAL = timedelta(seconds=120)
 
@@ -67,6 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Palo Alto VPN User Sensor."""
@@ -75,7 +78,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     use_ssl = config.get(CONF_SSL)
     verify_ssl = config.get(CONF_VERIFY_SSL)
     api_key = config.get(CONF_API_KEY)
-    interval = config.get(SCAN_INTERVAL)
     sensors = []
 
     try:
@@ -126,6 +128,7 @@ class PaloAltoSensor(Entity):
         """Get the latest data and updates the state."""
         self._api.update()
 
+
 class PaloAltoApi(object):
     """The class for handling the data retrieval from Palo Alto Device."""
 
@@ -155,10 +158,10 @@ class PaloAltoApi(object):
         """Prepare the URL """
         uri_scheme = self.get_uri_scheme(use_ssl)
         if endpoint == EndPointType.Operational:
-            return "{}{}{}&key={}".format(uri_scheme, self._host, 
+            return "{}{}{}&key={}".format(uri_scheme, self._host,
                                           CONST_OPS_ENDPOINT, self._api_key)
         else:
-            return "{}{}{}&key={}".format(uri_scheme, self._host, 
+            return "{}{}{}&key={}".format(uri_scheme, self._host,
                                           CONST_CONFIG_ENDPOINT, self._api_key)
 
     def http_request(self, url):
@@ -179,10 +182,8 @@ class PaloAltoApi(object):
     def update(self):
 
         """Get Operational and Configuration urls"""
-        ops_url = self.get_resource(self._use_ssl, self._host, 
+        ops_url = self.get_resource(self._use_ssl, self._host,
                                     self._api_key, EndPointType.Operational)
-        conf_url = self.get_resource(self._use_ssl, self._host, 
-                                     self._api_key, EndPointType.Configuration)
 
         users_url = ops_url.replace(CONST_COMMAND, PA_OPS_ACTIVE_USERS)
         self._usersdata = self.http_request(users_url)
@@ -228,8 +229,10 @@ class PaloAltoApi(object):
         self._sensors["host_name"] = sys_node[0].find('hostname').text
         self._sensors["sw_version"] = sys_node[0].find('sw-version').text
         self._sensors["logdb_version"] = sys_node[0].find('logdb-version').text
-        self._sensors["operation_mode"] = sys_node[0].find('operational-mode').text
-        self._sensors["gp_version"] = sys_node[0].find('global-protect-client-package-version').text
+        self._sensors["operation_mode"] = 
+          sys_node[0].find('operational-mode').text
+        self._sensors["gp_version"] = 
+          sys_node[0].find('global-protect-client-package-version').text
 
     def parse_active_users(self):
         root = ET.fromstring(self._usersdata)
@@ -239,9 +242,9 @@ class PaloAltoApi(object):
         for item in nodes:
             count += 1
             users.append(item.find('admin').text)
-        
+
         if count > 0:
-            self._sensors["loggedin_users"] =  ', '.join(users)
+            self._sensors["loggedin_users"] = ', '.join(users)
         else:
             self._sensors["loggedin_users"] = "none"
 
@@ -253,6 +256,7 @@ class PaloAltoApi(object):
         self.parse_system_info()
         self.parse_active_users()
 
+        
 class EndPointType(Enum):
     Operational = "operational"
     Configuration = "configuration"
