@@ -59,7 +59,7 @@ class FacebookNotificationService(BaseNotificationService):
             return
 
         # broadcast message
-        if (targets[0] == 'BROADCAST'):
+        if targets[0] == 'BROADCAST':
 
             broadcast_create_body = {"messages": [body_message]}
 
