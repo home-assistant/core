@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Luci scanner."""
-    if config[DOMAIN][CONF_API] == 'jsonrpc':
+    if config[DOMAIN][CONF_API] in ['jsonrpc', 'luci']:
         scanner = LuciDeviceScanner(config[DOMAIN])
     elif config[DOMAIN][CONF_API] == 'ubus':
         dhcp_sw = config[DOMAIN][CONF_DHCP_SOFTWARE]
