@@ -4,7 +4,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.paloalto/
 """
 import ssl
-import json
 import logging
 import urllib.request
 import voluptuous as vol
@@ -12,16 +11,12 @@ import homeassistant.helpers.config_validation as cv
 import xml.etree.ElementTree as ET
 
 from enum import Enum
-from io import StringIO
-from datetime import datetime, timedelta
-from homeassistant.helpers import template
+from datetime import timedelta
 from homeassistant.helpers.entity import Entity
-from homeassistant.exceptions import TemplateError
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_API_KEY, CONF_IP_ADDRESS,
-                                 CONF_HOST, CONF_SSL, CONF_VERIFY_SSL,
-                                 CONF_MONITORED_CONDITIONS,
-                                 CONF_UNIT_OF_MEASUREMENT)
+                                 CONF_SSL, CONF_VERIFY_SSL,
+                                 CONF_MONITORED_CONDITIONS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,10 +30,10 @@ CONST_CONFIG_ENDPOINT = '/api/?type=config&action=get&xpath=COMMAND'
 
 PA_OPS_ACTIVE_USERS = "<show><admins></admins></show>"
 PA_CONF_SYS_INFO = "<show><system><info></info></system></show>"
-PA_CONF_GP_USERS = ("<show><global-protect-portal><current-user>"
-                    "</current-user></global-protect-portal></show>")
-PA_CONF_TEMPERATURE = ("<show><system><environmentals><thermal>"
-                        "</thermal></environmentals></system></show>")
+PA_CONF_GP_USERS = "<show><global-protect-portal><current-user>" \
+                    "</current-user></global-protect-portal></show>"
+PA_CONF_TEMPERATURE = "<show><system><environmentals><thermal>" \
+                        "</thermal></environmentals></system></show>"
 
 SCAN_INTERVAL = timedelta(seconds=120)
 
