@@ -129,9 +129,6 @@ py-canary==0.4.1
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 
-# homeassistant.components.switch.edimax
-pyedimax==0.1
-
 # homeassistant.components.litejet
 pylitejet==0.1
 
