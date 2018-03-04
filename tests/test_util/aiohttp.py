@@ -1,13 +1,10 @@
 """Aiohttp test utils."""
 import asyncio
 from contextlib import contextmanager
-import functools
 import json as _json
 from unittest import mock
 from urllib.parse import urlparse, parse_qs
 import yarl
-
-from aiohttp.client_exceptions import ClientResponseError
 
 
 class AiohttpClientMocker:
