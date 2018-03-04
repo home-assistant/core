@@ -6,6 +6,8 @@ from unittest import mock
 from urllib.parse import urlparse, parse_qs
 import yarl
 
+from aiohttp.client_exceptions import ClientResponseError
+
 
 class AiohttpClientMocker:
     """Mock Aiohttp client requests."""
