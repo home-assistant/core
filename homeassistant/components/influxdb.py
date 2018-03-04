@@ -45,6 +45,9 @@ TIMEOUT = 5
 RETRY_DELAY = 20
 QUEUE_BACKLOG_SECONDS = 30
 
+BATCH_TIMEOUT = 1
+BATCH_BUFFER_SIZE = 100
+
 COMPONENT_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
 })
@@ -259,7 +262,7 @@ class InfluxThread(threading.Thread):
     @staticmethod
     def batch_timeout():
         """Return number of seconds to wait for more events."""
-        return 1
+        return BATCH_TIMEOUT
 
     def get_events_json(self):
         """Return a batch of events formatted for writing."""
@@ -271,7 +274,7 @@ class InfluxThread(threading.Thread):
         dropped = 0
 
         try:
-            while len(json) < 100 and not self.shutdown:
+            while len(json) < BATCH_BUFFER_SIZE and not self.shutdown:
                 timeout = None if count == 0 else self.batch_timeout()
                 item = self.queue.get(timeout=timeout)
                 count += 1
