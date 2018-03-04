@@ -54,7 +54,11 @@ def get_scanner(hass, config):
             scanner = DnsmasqUbusDeviceScanner(config[DOMAIN])
         else:
             scanner = OdhcpdUbusDeviceScanner(config[DOMAIN])
+    elif config[DOMAIN][CONF_API] == 'wireless':
+        scanner = LuciWirelessDeviceScanner(config[DOMAIN])
     else:
+        _LOGGER.error("Unknown api %s using api: wireless",
+                      config[CONF_API])
         scanner = LuciWirelessDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
@@ -70,16 +74,17 @@ class LuciWirelessDeviceScanner(DeviceScanner):
         self.password = config[CONF_PASSWORD]
         self.radio = config[CONF_RADIO]
         self.verify = config[CONF_VERIFY_SSL]
-        self.dns_lookup = config[CONF_DNSLOOKUP]
-        self.missed_host = False
-        if not self.verify:
-            import urllib3
-            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         if config[CONF_SSL]:
             self.proto = 'https'
+            if not self.verify and config[CONF_SSL]:
+                import urllib3
+                urllib3.disable_warnings(
+                    urllib3.exceptions.InsecureRequestWarning)
         else:
             self.proto = 'http'
         self.last_results = []
+        self.dns_lookup = config[CONF_DNSLOOKUP]
+        self.missed_host = False
         self.success_init = self.login()
         text = self.get_wireless_info()
         if self.radio == 'autodetect':
@@ -257,7 +262,15 @@ class LuciDeviceScanner(DeviceScanner):
         self.host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-
+        self.verify = config[CONF_VERIFY_SSL]
+        if config[CONF_SSL]:
+            self.proto = 'https'
+            if not self.verify and config[CONF_SSL]:
+                import urllib3
+                urllib3.disable_warnings(
+                    urllib3.exceptions.InsecureRequestWarning)
+        else:
+            self.proto = 'http'
         self.last_results = {}
         self.refresh_token()
         self.mac2name = None
@@ -275,7 +288,7 @@ class LuciDeviceScanner(DeviceScanner):
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if self.mac2name is None:
-            url = 'http://{}/cgi-bin/luci/rpc/uci'.format(self.host)
+            url = '{}://{}/cgi-bin/luci/rpc/uci'.format(self.host, self.proto)
             result = self.json_rpc(url, 'get_all', 'dhcp',
                                    params={'auth': self.token})
             if result:
@@ -300,7 +313,7 @@ class LuciDeviceScanner(DeviceScanner):
 
         _LOGGER.info("Checking ARP")
 
-        url = 'http://{}/cgi-bin/luci/rpc/sys'.format(self.host)
+        url = '{}://{}/cgi-bin/luci/rpc/sys'.format(self.host, self.proto)
 
         try:
             result = self.json_rpc(url, 'net.arptable',
@@ -327,10 +340,13 @@ class LuciDeviceScanner(DeviceScanner):
         import json
         data = json.dumps({'method': method, 'params': args})
         try:
-            res = requests.post(url, data=data, timeout=5, **kwargs)
-        except requests.exceptions.Timeout:
-            _LOGGER.exception("Connection to the router timed out")
-            return
+            res = requests.post(url, data=data, verify=self.verify,
+                                timeout=5, **kwargs)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as exception:
+            _LOGGER.error("Cannot connect %s://%s : %s",
+                          self.proto, self.host, exception.__class__.__name__)
+            return False
         if res.status_code == 200:
             try:
                 result = res.json()
@@ -356,7 +372,7 @@ class LuciDeviceScanner(DeviceScanner):
 
     def get_token(self):
         """Get authentication token for the given host+username+password."""
-        url = 'http://{}/cgi-bin/luci/rpc/auth'.format(self.host)
+        url = '{}://{}/cgi-bin/luci/rpc/auth'.format(self.host, self.proto)
         return self.json_rpc(url, 'login', self.username, self.password)
 
 
@@ -386,9 +402,17 @@ class UbusDeviceScanner(DeviceScanner):
         host = config[CONF_HOST]
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-
+        self.verify = config[CONF_VERIFY_SSL]
+        if config[CONF_SSL]:
+            self.proto = 'https'
+            if not self.verify and config[CONF_SSL]:
+                import urllib3
+                urllib3.disable_warnings(
+                    urllib3.exceptions.InsecureRequestWarning)
+        else:
+            proto = 'http'
         self.last_results = {}
-        self.url = 'http://{}/ubus'.format(host)
+        self.url = '{}://{}/ubus'.format(host, proto)
 
         self.session_id = "00000000000000000000000000000000"
         self.get_session_id()
@@ -458,9 +482,11 @@ class UbusDeviceScanner(DeviceScanner):
                                       params]})
 
         try:
-            res = requests.post(url, data=data, timeout=5)
-        except requests.exceptions.Timeout:
-            return
+            res = requests.post(url, data=data, verify=self.verify, timeout=5)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as exception:
+            _LOGGER.error("Cannot connect %s : %s",
+                          self.url, exception.__class__.__name__)
         if res.status_code == 200:
             response = res.json()
             if 'error' in response:
