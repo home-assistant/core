@@ -129,14 +129,14 @@ class SQLSensor(Entity):
         finally:
             sess.close()
 
-        if not result.returns_rows:
+        if not result.returns_rows or result.rowcount == 0:
             _LOGGER.warning("%s returned no results", self._query)
             self._state = None
             self._attributes = {}
             return
 
         for res in result:
-            _LOGGER.debug(res.items())
+            _LOGGER.debug("result = %s", res.items())
             data = res[self._column_name]
             self._attributes = {k: str(v) for k, v in res.items()}
 

@@ -2,6 +2,7 @@
 import unittest
 
 from homeassistant.setup import setup_component
+from homeassistant.const import STATE_UNKNOWN
 
 from tests.common import get_test_home_assistant
 
@@ -35,3 +36,22 @@ class TestSQLSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.count_tables')
         self.assertEqual(state.state, '0')
+    
+    def test_no_results_query(self):
+        """Test the SQL sensor for no results."""
+        config = {
+            'sensor': {
+                'platform': 'sql',
+                'db_url': 'sqlite://',
+                'queries': [{
+                    'name': 'count_tables',
+                    'query': 'SELECT * value FROM sqlite_master;',
+                    'column': 'value',
+                }]
+            }
+        }
+
+        assert setup_component(self.hass, 'sensor', config)
+
+        state = self.hass.states.get('sensor.count_tables')
+        self.assertEqual(state.state, STATE_UNKNOWN)
