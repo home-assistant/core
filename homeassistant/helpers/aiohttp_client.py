@@ -35,14 +35,7 @@ def async_get_clientsession(hass, verify_ssl=True):
         key = DATA_CLIENTSESSION_NOTVERIFY
 
     if key not in hass.data:
-        connector = _async_get_connector(hass, verify_ssl)
-        clientsession = aiohttp.ClientSession(
-            loop=hass.loop,
-            connector=connector,
-            headers={USER_AGENT: SERVER_SOFTWARE}
-        )
-        _async_register_clientsession_shutdown(hass, clientsession)
-        hass.data[key] = clientsession
+        hass.data[key] = async_create_clientsession(hass, verify_ssl)
 
     return hass.data[key]
 
