@@ -65,6 +65,7 @@ TEST_REQUIREMENTS = (
     'pushbullet.py',
     'py-canary',
     'pydispatcher',
+    'pyedimax',
     'PyJWT',
     'pylitejet',
     'pymonoprice',
