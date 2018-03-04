@@ -79,6 +79,7 @@ class XiaomiAirQualityMonitor(ToggleEntity):
         self._unit_of_measurement = 'AQI'
 
         self._device = device
+        self._is_on = None
         self._state = None
         self._state_attrs = {
             ATTR_POWER: None,
@@ -123,6 +124,11 @@ class XiaomiAirQualityMonitor(ToggleEntity):
         """Return the state attributes of the device."""
         return self._state_attrs
 
+    @property
+    def is_on(self):
+        """Return true if sensor is on."""
+        return self._is_on
+
     @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a device command handling error messages."""
@@ -160,6 +166,7 @@ class XiaomiAirQualityMonitor(ToggleEntity):
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.aqi
+            self._is_on = state.is_on
             self._state_attrs.update({
                 ATTR_POWER: state.power,
                 ATTR_CHARGING: state.usb_power,
