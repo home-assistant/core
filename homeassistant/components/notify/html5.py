@@ -4,7 +4,6 @@ HTML5 Push Messaging notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.html5/
 """
-import asyncio
 import datetime
 import json
 import logging
@@ -155,11 +154,10 @@ class HTML5PushRegistrationView(HomeAssistantView):
         self.registrations = registrations
         self.json_path = json_path
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Accept the POST request for push registrations from a browser."""
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
@@ -177,8 +175,8 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             hass = request.app['hass']
 
-            yield from hass.async_add_job(save_json, self.json_path,
-                                          self.registrations)
+            await hass.async_add_job(save_json, self.json_path,
+                                     self.registrations)
             return self.json_message(
                 'Push notification subscriber registered.')
         except HomeAssistantError:
@@ -199,11 +197,10 @@ class HTML5PushRegistrationView(HomeAssistantView):
                 return key
         return ensure_unique_string('unnamed device', self.registrations)
 
-    @asyncio.coroutine
-    def delete(self, request):
+    async def delete(self, request):
         """Delete a registration."""
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
@@ -225,8 +222,8 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             hass = request.app['hass']
 
-            yield from hass.async_add_job(save_json, self.json_path,
-                                          self.registrations)
+            await hass.async_add_job(save_json, self.json_path,
+                                     self.registrations)
         except HomeAssistantError:
             self.registrations[found] = reg
             return self.json_message(
@@ -296,15 +293,14 @@ class HTML5PushCallbackView(HomeAssistantView):
                                      status_code=HTTP_UNAUTHORIZED)
         return payload
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Accept the POST request for push registrations event callback."""
         auth_check = self.check_authorization_header(request)
         if not isinstance(auth_check, dict):
             return auth_check
 
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
