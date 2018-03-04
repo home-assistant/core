@@ -2,9 +2,12 @@
 import asyncio
 from contextlib import contextmanager
 import json as _json
+import re
 from unittest import mock
-from urllib.parse import urlparse, parse_qs
-import yarl
+from urllib.parse import parse_qs
+
+from aiohttp import ClientSession
+from yarl import URL
 
 from aiohttp.client_exceptions import ClientResponseError
 
@@ -36,8 +39,11 @@ class AiohttpClientMocker:
             content = text.encode('utf-8')
         if content is None:
             content = b''
+
+        if not isinstance(url, re._pattern_type):
+            url = URL(url)
         if params:
-            url = str(yarl.URL(url).with_query(params))
+                url = url.with_query(params)
 
         self._mocks.append(AiohttpClientMockResponse(
             method, url, status, content, cookies, exc, headers))
@@ -73,11 +79,21 @@ class AiohttpClientMocker:
         self._cookies.clear()
         self.mock_calls.clear()
 
+    def create_session(self):
+        """Create a ClientSession that is bound to this mocker."""
+        session = ClientSession()
+        session._request = self.match_request
+        return session
+
     async def match_request(self, method, url, *, data=None, auth=None,
                             params=None, headers=None, allow_redirects=None,
                             timeout=None, json=None):
         """Match a request against pre-registered requests."""
         data = data or json
+        url = URL(url)
+        if params:
+            url = url.with_query(params)
+
         for response in self._mocks:
             if response.match_request(method, url, params):
                 self.mock_calls.append((method, url, data, headers))
@@ -98,8 +114,6 @@ class AiohttpClientMockResponse:
         """Initialize a fake response."""
         self.method = method
         self._url = url
-        self._url_parts = (None if hasattr(url, 'search')
-                           else urlparse(url.lower()))
         self.status = status
         self.response = response
         self.exc = exc
@@ -130,25 +144,17 @@ class AiohttpClientMockResponse:
         if method.lower() != self.method.lower():
             return False
 
-        if params:
-            url = str(yarl.URL(url).with_query(params))
-
         # regular expression matching
-        if self._url_parts is None:
-            return self._url.search(url) is not None
+        if isinstance(self._url, re._pattern_type):
+            return self._url.search(str(url)) is not None
 
-        req = urlparse(url.lower())
-
-        if self._url_parts.scheme and req.scheme != self._url_parts.scheme:
-            return False
-        if self._url_parts.netloc and req.netloc != self._url_parts.netloc:
-            return False
-        if (req.path or '/') != (self._url_parts.path or '/'):
+        if (self._url.scheme != url.scheme or self._url.host != url.host or
+                self._url.path != url.path):
             return False
 
         # Ensure all query components in matcher are present in the request
-        request_qs = parse_qs(req.query)
-        matcher_qs = parse_qs(self._url_parts.query)
+        request_qs = parse_qs(url.query_string)
+        matcher_qs = parse_qs(self._url.query_string)
         for key, vals in matcher_qs.items():
             for val in vals:
                 try:
@@ -204,6 +210,7 @@ def mock_aiohttp_client():
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
 
-    with mock.patch('aiohttp.ClientSession._request',
-                    side_effect=mocker.match_request):
+    with mock.patch(
+        'homeassistant.helpers.aiohttp_client.async_create_clientsession',
+            side_effect=lambda *args: mocker.create_session()):
         yield mocker
