@@ -70,7 +70,11 @@ class SpotCrimeSensor(Entity):
         self._exclude = exclude
         self.days = days
         self._spotcrime = spotcrime.SpotCrime(
+<<<<<<< 70760b5d3b2e4b66eb6aed4adea191093c554210
             (latitude, longitude), radius, None, None, self.days)
+=======
+            (latitude, longitude), radius, self._include, self._exclude, self.days)
+>>>>>>> Add spotcrime.py to dev
         self._attributes = None
         self._state = None
         self._previous_incidents = set()
