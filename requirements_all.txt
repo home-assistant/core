@@ -622,7 +622,7 @@ pushetta==1.0.15
 pwmled==1.2.1
 
 # homeassistant.components.august
-py-august==0.3.0
+py-august==0.4.0
 
 # homeassistant.components.canary
 py-canary==0.4.0
