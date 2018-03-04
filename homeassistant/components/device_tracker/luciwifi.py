@@ -17,6 +17,7 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 CONF_RADIO = 'radio'
+CONF_DNSLOOKUP = 'dnslookup'
 DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -24,10 +25,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(
-        CONF_RADIO, default='radio0.network1,radio1.network1'): cv.string,
+        CONF_RADIO, default='autodetect'): cv.string,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): vol.Any(
         cv.boolean, cv.isfile),
-    vol.Optional(CONF_SSL, default=False): cv.boolean
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_DNSLOOKUP, default=True): cv.boolean
 })
 
 
@@ -48,6 +50,8 @@ class LuciWifiDeviceScanner(DeviceScanner):
         self.password = config[CONF_PASSWORD]
         self.radio = config[CONF_RADIO]
         self.verify = config[CONF_VERIFY_SSL]
+        self.dns_lookup = config[CONF_DNSLOOKUP]
+        self.missed_host = False
         if not self.verify:
             import urllib3
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -57,8 +61,12 @@ class LuciWifiDeviceScanner(DeviceScanner):
             self.proto = 'http'
         self.last_results = []
         self.success_init = self.login()
-        _LOGGER.info("Starting luci wifi scanner {}://{} radio:{}".format(
-            self.proto, self.host, self.radio))
+        text = self.get_wireless_info()
+        if self.radio == 'autodetect':
+            self.detectradio(text)
+        self.parse_hosts(text)
+        _LOGGER.info("Starting luci wifi scanner %s://%s radio:%s",
+                     self.proto, self.host, config[CONF_RADIO])
 
     def login(self):
         """Try to login to luci."""
@@ -70,16 +78,69 @@ class LuciWifiDeviceScanner(DeviceScanner):
                                     verify=self.verify, timeout=5)
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.Timeout) as exception:
-            _LOGGER.error("Cannot login {}://{} : {}".format(
-                self.proto, self.host, exception.__class__.__name__))
+            _LOGGER.error("Cannot login %s://%s : %s",
+                          self.proto, self.host, exception.__class__.__name__)
             return False
         if res.status_code == 302 or res.status_code == 200:
-            _LOGGER.debug("login {}://{} status_code: {} succeeded".format(
-                self.proto, self.host, res.status_code))
+            _LOGGER.debug("login %s://%s status_code: %s succeeded",
+                          self.proto, self.host, res.status_code)
             return True
         else:
-            _LOGGER.error("Cannot login to {}://{} status_code: {}".format(
-                self.proto, self.host, res.status_code))
+            _LOGGER.error("Cannot login to %s://%s status_code: %d",
+                          self.proto, self.host, res.status_code)
+        return False
+
+    def get_wireless_info(self):
+        """Get the wireless html page which contains radio/network and hosts."""
+        url = '{}://{}/cgi-bin/luci/admin/network/wireless'.format(self.proto, self.host)
+        try:
+            res = self.session.post(url, verify=self.verify, timeout=5)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as exception:
+            _LOGGER.error("Cannot get wireless info %s://%s : %s",
+                          self.proto, self.host, exception.__class__.__name__)
+            return None
+        if res.status_code == 200:
+            _LOGGER.info("Retrieved wireless info from %s://%s",
+                         self.proto, self.host)
+            return res.text
+        return None
+
+    def detectradio(self, text):
+        """Try to find radios/networks."""
+        import json
+        startstring = 'var wifidevs = '
+        start = text.find(startstring)
+        if start > 0:
+            start += len(startstring)
+            endstring = ";\n"
+            end = text.find(endstring, start)
+            if end > 0:
+                radio = json.loads(text[start:end])
+                self.radio = ','.join(radio.keys())
+                _LOGGER.info("Found radio: %s on %s://%s",
+                             self.radio, self.proto, self.host)
+                return True
+        _LOGGER.error("Cannot autodetect radio from %s://%s",
+                      self.proto, self.host)
+        return False
+
+    def parse_hosts(self, text):
+        """Try to find hosts in luci."""
+        import json
+        startstring = 'var hosts = '
+        start = text.find(startstring)
+        if start > 0:
+            start += len(startstring)
+            endstring = ";\n"
+            end = text.find(endstring, start)
+            if end > 0:
+                _LOGGER.info("Found hosts")
+                self.hosts = json.loads(text[start:end])
+                self.missed_host = False
+                return True
+        _LOGGER.error("Cannot get hosts from %s://%s",
+                      self.proto, self.host)
         return False
 
     def scan_devices(self):
@@ -91,7 +152,32 @@ class LuciWifiDeviceScanner(DeviceScanner):
     # pylint: disable=R0201
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        # We have no names
+        try:
+            return self.hosts[device.upper()]['name']
+        except KeyError:
+            pass
+        try:
+            ipv4 = self.hosts[device.upper()]['ipv4']
+            if self.dns_lookup:
+                try:
+                    import socket
+                    name = socket.gethostbyaddr(ipv4)
+                    pos = name[0].find('.')
+                    _LOGGER.info("resolved %s for %s(%s)",
+                                 name[0], ipv4, device)
+                    return name[0][0:pos]
+                except socket.herror:
+                    return ipv4
+            else:
+                return ipv4
+        except KeyError:
+            pass
+        try:
+            if len(self.hosts[device.upper()]['ipv6']):
+                return None
+        except KeyError:
+            pass
+        self.missed_host = True
         return None
 
     def _update_info(self):
@@ -101,6 +187,9 @@ class LuciWifiDeviceScanner(DeviceScanner):
         """
         if not self.success_init:
             return False
+        if self.missed_host:
+            text = self.get_wireless_info()
+            self.parse_hosts(text)
 
         url = '{}://{}/cgi-bin/luci/admin/network/wireless_status/{}'.format(
             self.proto, self.host, self.radio)
@@ -108,12 +197,12 @@ class LuciWifiDeviceScanner(DeviceScanner):
             res = self.session.get(url, verify=self.verify, timeout=5)
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.Timeout) as exception:
-            _LOGGER.error("Cannot retrieve json from {}://{} : {}".format(
-                self.proto, self.host, exception.__class__.__name__))
+            _LOGGER.error("Cannot retrieve json from %s://%s : %s",
+                          self.proto, self.host, exception.__class__.__name__)
             return False
         if res.status_code != 200:
-            _LOGGER.info("Logging in again, responsecode: {}".format(
-                res.status_code))
+            _LOGGER.info("Logging in again, responsecode: %d",
+                         res.status_code)
             self.login()
             return False
 
@@ -130,6 +219,6 @@ class LuciWifiDeviceScanner(DeviceScanner):
                     results.append(k)
             self.last_results = results
             return True
-        except KeyError:
+        except (KeyError, TypeError):
             _LOGGER.exception("No result in response from luci")
         return False
