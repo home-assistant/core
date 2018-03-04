@@ -75,6 +75,9 @@ aiodns==1.1.1
 # homeassistant.components.http
 aiohttp_cors==0.6.0
 
+# homeassistant.components.hue
+aiohue==0.3.0
+
 # homeassistant.components.sensor.imap
 aioimaplib==0.7.13
 
