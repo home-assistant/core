@@ -62,7 +62,7 @@ async def mock_client(hass, test_client, registrations=None):
             }
         })
 
-    return (await test_client(hass.http.app))
+    return await test_client(hass.http.app)
 
 
 class TestHtml5Notify(object):
