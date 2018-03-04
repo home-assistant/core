@@ -126,7 +126,8 @@ _LOGGER = logging.getLogger(__name__)
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
-    'config_entry_example'
+    'config_entry_example',
+    'hue',
 ]
 
 SOURCE_USER = 'user'

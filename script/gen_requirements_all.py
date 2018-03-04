@@ -37,6 +37,7 @@ COMMENT_REQUIREMENTS = (
 TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
+    'aiohue',
     'apns2',
     'caldav',
     'coinmarketcap',

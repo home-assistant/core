@@ -323,8 +323,10 @@ def _timespan_secs(timespan):
 
 def _is_radio_uri(uri):
     """Return whether the URI is a radio stream."""
-    return uri.startswith('x-rincon-mp3radio:') or \
-        uri.startswith('x-sonosapi-stream:')
+    radio_schemes = (
+        'x-rincon-mp3radio:', 'x-sonosapi-stream:', 'x-sonosapi-radio:',
+        'hls-radio:')
+    return uri.startswith(radio_schemes)
 
 
 class SonosDevice(MediaPlayerDevice):
@@ -367,7 +369,7 @@ class SonosDevice(MediaPlayerDevice):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._unique_id
 
     @property

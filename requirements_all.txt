@@ -75,6 +75,9 @@ aiodns==1.1.1
 # homeassistant.components.http
 aiohttp_cors==0.6.0
 
+# homeassistant.components.hue
+aiohue==0.3.0
+
 # homeassistant.components.sensor.imap
 aioimaplib==0.7.13
 
@@ -616,10 +619,10 @@ pushetta==1.0.15
 pwmled==1.2.1
 
 # homeassistant.components.august
-py-august==0.3.0
+py-august==0.4.0
 
 # homeassistant.components.canary
-py-canary==0.4.0
+py-canary==0.4.1
 
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==3.3.0
@@ -1274,6 +1277,7 @@ xknx==0.8.3
 # homeassistant.components.sensor.swiss_hydrological_data
 # homeassistant.components.sensor.ted5000
 # homeassistant.components.sensor.yr
+# homeassistant.components.sensor.zestimate
 xmltodict==0.11.0
 
 # homeassistant.components.sensor.yahoo_finance

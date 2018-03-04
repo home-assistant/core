@@ -670,6 +670,7 @@ omit =
     homeassistant/components/sensor/worxlandroid.py
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/zamg.py
+    homeassistant/components/sensor/zestimate.py
     homeassistant/components/shiftr.py
     homeassistant/components/spc.py
     homeassistant/components/switch/acer_projector.py
