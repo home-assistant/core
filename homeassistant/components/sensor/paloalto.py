@@ -84,6 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except Exception as err:
         _LOGGER.error("Failed to setup Palo Alto Sensor. Error: " + str(err))
 
+
 class PaloAltoSensor(Entity):
     """Representation of a sensor."""
 
@@ -128,7 +129,7 @@ class PaloAltoApi(object):
     """The class for handling the data retrieval from Palo Alto Device."""
 
     def __init__(self, host, use_ssl, verify_ssl, api_key):
-        """Initialize the Palo Alto API """
+        """Initialize the Palo Alto API."""
         self._host = host
         self._use_ssl = use_ssl
         self._verify_ssl = verify_ssl
@@ -142,11 +143,11 @@ class PaloAltoApi(object):
 
     @property
     def data(self):
-        """Return data """
+        """Return data."""
         return self._sensors
 
     def get_uri_scheme(self, use_ssl):
-        """Return proper uril scheme based on config setting """
+        """Return proper uril scheme based on config setting."""
         return 'https://' if use_ssl else 'http://'
 
     def get_resource(self, use_ssl, host, api_key, endpoint):
@@ -160,7 +161,7 @@ class PaloAltoApi(object):
                                           CONST_CONFIG_ENDPOINT, self._api_key)
 
     def http_request(self, url):
-        """HTTP request to the Palo Alto device """
+        """HTTP request to the Palo Alto device."""
         content = None
         context = None
         try:
@@ -176,7 +177,7 @@ class PaloAltoApi(object):
 
     def update(self):
 
-        """Get Operational and Configuration urls"""
+        """Get Operational and Configuration urls."""
         ops_url = self.get_resource(self._use_ssl, self._host,
                                     self._api_key, EndPointType.Operational)
 
@@ -196,6 +197,7 @@ class PaloAltoApi(object):
         self.parse_data()
 
     def parse_globalprotect_users(self):
+        """Parses global protect users xml.""" 
         user_count = 0
         vpn_users = []
         root = ET.fromstring(self._gp_users)
@@ -211,12 +213,14 @@ class PaloAltoApi(object):
         self._sensors["gp_user_count"] = user_count
 
     def parse_temperature(self):
+        """Parses environment/temperature values."""
         root = ET.fromstring(self._temperature)
         nodes = root.findall('result/thermal/Slot1/entry/DegreesC')
         self._sensors["core_temp"] = round(float(nodes[0].text), 2)
         self._sensors["sys_temp"] = round(float(nodes[1].text), 2)
 
     def parse_system_info(self):
+        """Parses System Information."""
         root = ET.fromstring(self._sysinfo)
         sys_node = root.findall('result/system')
         self._sensors["up_time"] = sys_node[0].find('uptime').text
@@ -231,6 +235,7 @@ class PaloAltoApi(object):
                     'global-protect-client-package-version').text
 
     def parse_active_users(self):
+        """Parses Active Users XML."""
         root = ET.fromstring(self._usersdata)
         nodes = root.findall('result/admins/entry')
         count = 0
@@ -247,6 +252,7 @@ class PaloAltoApi(object):
         self._sensors["loggedin_user_count"] = count
 
     def parse_data(self):
+        """Parses data and populates sensors."""
         self.parse_globalprotect_users()
         self.parse_temperature()
         self.parse_system_info()
@@ -254,5 +260,6 @@ class PaloAltoApi(object):
 
 
 class EndPointType(Enum):
+    """Enum that indicates that type of endpoint that is."""
     Operational = "operational"
     Configuration = "configuration"
