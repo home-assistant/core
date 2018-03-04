@@ -385,9 +385,6 @@ https://github.com/jabesq/pybotvac/archive/v0.0.5.zip#pybotvac==0.0.5
 # homeassistant.components.switch.anel_pwrctrl
 https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
 
-# homeassistant.components.switch.edimax
-https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1
-
 # homeassistant.components.sensor.gtfs
 https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e2246267dd8.zip#pygtfs==0.1.3
 
@@ -713,6 +710,9 @@ pyebox==0.1.0
 
 # homeassistant.components.climate.econet
 pyeconet==0.0.5
+
+# homeassistant.components.switch.edimax
+pyedimax==0.1
 
 # homeassistant.components.eight_sleep
 pyeight==0.0.7
