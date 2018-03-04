@@ -21,7 +21,7 @@ CONF_FOLDER_PATHS = 'folder'
 CONF_FILTER = 'filter'
 DEFAULT_FILTER = '*'
 
-SCAN_INTERVAL = timedelta(seconds=1)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FOLDER_PATHS): cv.isdir,

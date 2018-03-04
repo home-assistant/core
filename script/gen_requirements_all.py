@@ -31,13 +31,13 @@ COMMENT_REQUIREMENTS = (
     'envirophat',
     'i2csense',
     'credstash',
-    'pytradfri',
     'bme680',
 )
 
 TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
+    'aiohue',
     'apns2',
     'caldav',
     'coinmarketcap',

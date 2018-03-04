@@ -129,7 +129,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         """Avoid SoCo 0.14 event thread dying from invalid xml."""
         try:
             return orig_parse_event_xml(xml)
-        except soco.exceptions.SoCoException:
+        # pylint: disable=broad-except
+        except Exception as ex:
+            _LOGGER.debug("Dodged exception: %s %s", type(ex), str(ex))
             return {}
 
     soco.events.parse_event_xml = safe_parse_event_xml
@@ -321,8 +323,10 @@ def _timespan_secs(timespan):
 
 def _is_radio_uri(uri):
     """Return whether the URI is a radio stream."""
-    return uri.startswith('x-rincon-mp3radio:') or \
-        uri.startswith('x-sonosapi-stream:')
+    radio_schemes = (
+        'x-rincon-mp3radio:', 'x-sonosapi-stream:', 'x-sonosapi-radio:',
+        'hls-radio:')
+    return uri.startswith(radio_schemes)
 
 
 class SonosDevice(MediaPlayerDevice):
@@ -365,7 +369,7 @@ class SonosDevice(MediaPlayerDevice):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._unique_id
 
     @property
