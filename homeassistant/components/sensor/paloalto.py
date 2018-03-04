@@ -35,10 +35,10 @@ CONST_CONFIG_ENDPOINT = '/api/?type=config&action=get&xpath=COMMAND'
 
 PA_OPS_ACTIVE_USERS = "<show><admins></admins></show>"
 PA_CONF_SYS_INFO = "<show><system><info></info></system></show>"
-PA_CONF_GP_USERS = "<show><global-protect-portal>" +
-    "<current-user></current-user></global-protect-portal></show>"
-PA_CONF_TEMPERATURE = "<show><system><environmentals>" +
-    "<thermal></thermal></environmentals></system></show>"
+PA_CONF_GP_USERS = ("<show><global-protect-portal><current-user>"
+                    "</current-user></global-protect-portal></show>")
+PA_CONF_TEMPERATURE = ("<show><system><environmentals><thermal>"
+                        "</thermal></environmentals></system></show>")
 
 SCAN_INTERVAL = timedelta(seconds=120)
 
@@ -224,20 +224,16 @@ class PaloAltoApi(object):
     def parse_system_info(self):
         root = ET.fromstring(self._sysinfo)
         sys_node = root.findall('result/system')
-        self._sensors["up_time"] =
-            sys_node[0].find('uptime').text
-        self._sensors["serial_no"] =
-            sys_node[0].find('serial').text
-        self._sensors["host_name"] =
-            sys_node[0].find('hostname').text
-        self._sensors["sw_version"] =
-            sys_node[0].find('sw-version').text
-        self._sensors["logdb_version"] =
-            sys_node[0].find('logdb-version').text
-        self._sensors["operation_mode"] =
-            sys_node[0].find('operational-mode').text
-        self._sensors["gp_version"] =
-            sys_node[0].find('global-protect-client-package-version').text
+        self._sensors["up_time"] = sys_node[0].find('uptime').text
+        self._sensors["serial_no"] = sys_node[0].find('serial').text
+        self._sensors["host_name"] = sys_node[0].find('hostname').text
+        self._sensors["sw_version"] = sys_node[0].find('sw-version').text
+        self._sensors["logdb_version"] = sys_node[0].find(
+                    'logdb-version').text
+        self._sensors["operation_mode"] = sys_node[0].find(
+                    'operational-mode').text
+        self._sensors["gp_version"] = sys_node[0].find(
+                    'global-protect-client-package-version').text
 
     def parse_active_users(self):
         root = ET.fromstring(self._usersdata)
