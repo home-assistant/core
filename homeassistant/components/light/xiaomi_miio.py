@@ -57,6 +57,7 @@ ATTR_TIME_PERIOD = 'time_period'
 ATTR_NIGHT_LIGHT_MODE = 'night_light_mode'
 ATTR_AUTOMATIC_COLOR_TEMPERATURE = 'automatic_color_temperature'
 ATTR_REMINDER = 'reminder'
+ATTR_EYECARE_MODE = 'eyecare_mode'
 
 SUPPORT_SET_SCENE = 4
 SUPPORT_SET_DELAYED_TURN_OFF = 8
@@ -641,6 +642,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
         self._state_attrs.update({
             ATTR_REMINDER: None,
             ATTR_NIGHT_LIGHT_MODE: None,
+            ATTR_EYECARE_MODE: None,
         })
 
     @property
@@ -668,7 +670,8 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
                 ATTR_SCENE: state.scene,
                 ATTR_DELAYED_TURN_OFF: delayed_turn_off,
                 ATTR_REMINDER: state.reminder,
-                ATTR_NIGHT_LIGHT_MODE: state.smart_night_light
+                ATTR_NIGHT_LIGHT_MODE: state.smart_night_light,
+                ATTR_EYECARE_MODE: state.eyecare,
             })
 
         except DeviceException as ex:
