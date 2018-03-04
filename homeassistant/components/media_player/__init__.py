@@ -24,7 +24,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP,
     SERVICE_VOLUME_SET, SERVICE_MEDIA_PAUSE, SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE, SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK)
+    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_PRESS_BUTTON)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -80,6 +80,7 @@ ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
 ATTR_MEDIA_SHUFFLE = 'shuffle'
+ATTR_MEDIA_BUTTON = 'button'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -138,6 +139,10 @@ MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean,
 })
 
+MEDIA_PLAYER_PRESS_BUTTON_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_BUTTON): cv.string,
+})
+
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: {'method': 'async_turn_on'},
     SERVICE_TURN_OFF: {'method': 'async_turn_off'},
@@ -169,6 +174,9 @@ SERVICE_TO_METHOD = {
     SERVICE_SHUFFLE_SET: {
         'method': 'async_set_shuffle',
         'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
+    SERVICE_PRESS_BUTTON: {
+        'method': 'async_press_button',
+        'schema': MEDIA_PLAYER_PRESS_BUTTON_SCHEMA},
 }
 
 ATTR_TO_PROPERTY = [
@@ -395,6 +403,8 @@ def async_setup(hass, config):
         elif service.service == SERVICE_SHUFFLE_SET:
             params[ATTR_MEDIA_SHUFFLE] = \
                 service.data.get(ATTR_MEDIA_SHUFFLE)
+        elif service.service == SERVICE_PRESS_BUTTON:
+            params['button'] = service.data.get(ATTR_MEDIA_BUTTON)
         target_players = component.async_extract_from_service(service)
 
         update_tasks = []
@@ -621,6 +631,17 @@ class MediaPlayerDevice(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(self.set_volume_level, volume)
+
+    def press_button(self, button):
+        """Send button command."""
+        raise NotImplementedError()
+
+    def async_press_button(self, button):
+        """Send button command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.press_button, button)
 
     def media_play(self):
         """Send play command."""

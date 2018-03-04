@@ -233,3 +233,9 @@ class RokuDevice(MediaPlayerDevice):
             else:
                 channel = self.roku[source]
                 channel.launch()
+
+    def press_button(self, button):
+        if self.current_app is not None:
+            method = getattr(self.roku, button)
+            if method is not None:
+                method()
