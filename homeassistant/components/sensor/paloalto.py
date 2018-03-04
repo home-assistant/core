@@ -197,7 +197,7 @@ class PaloAltoApi(object):
         self.parse_data()
 
     def parse_globalprotect_users(self):
-        """Parses global protect users xml.""" 
+        """Parses global protect users xml."""
         user_count = 0
         vpn_users = []
         root = ET.fromstring(self._gp_users)
