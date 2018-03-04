@@ -36,7 +36,7 @@ class TestSQLSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.count_tables')
         self.assertEqual(state.state, '0')
-    
+
     def test_no_results_query(self):
         """Test the SQL sensor for no results."""
         config = {
