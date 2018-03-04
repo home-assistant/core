@@ -107,7 +107,7 @@ SERVICE_SEE_PAYLOAD_SCHEMA = vol.Schema(vol.All(
         ATTR_LOCATION_NAME: cv.string,
         ATTR_GPS: cv.gps,
         ATTR_GPS_ACCURACY: cv.positive_int,
-        ATTR_BATTERY: cv.string,
+        ATTR_BATTERY: cv.positive_int,
         ATTR_ATTRIBUTES: dict,
         ATTR_SOURCE_TYPE: vol.In(SOURCE_TYPES),
         ATTR_CONSIDER_HOME: cv.time_period,
@@ -125,7 +125,7 @@ def is_on(hass: HomeAssistantType, entity_id: str = None):
 def see(hass: HomeAssistantType, mac: str = None, dev_id: str = None,
         host_name: str = None, location_name: str = None,
         gps: GPSType = None, gps_accuracy=None,
-        battery=None, attributes: dict = None):
+        battery: int = None, attributes: dict = None):
     """Call service to notify you see device."""
     data = {key: value for key, value in
             ((ATTR_MAC, mac),
@@ -254,10 +254,11 @@ class DeviceTracker(object):
                                 dev.mac)
 
     def see(self, mac: str = None, dev_id: str = None, host_name: str = None,
-            location_name: str = None, gps: GPSType = None, gps_accuracy=None,
-            battery: str = None, attributes: dict = None,
-            source_type: str = SOURCE_TYPE_GPS, picture: str = None,
-            icon: str = None, consider_home: timedelta = None):
+            location_name: str = None, gps: GPSType = None,
+            gps_accuracy: int = None, battery: int = None,
+            attributes: dict = None, source_type: str = SOURCE_TYPE_GPS,
+            picture: str = None, icon: str = None,
+            consider_home: timedelta = None):
         """Notify the device tracker that you see a device."""
         self.hass.add_job(
             self.async_see(mac, dev_id, host_name, location_name, gps,
@@ -266,12 +267,13 @@ class DeviceTracker(object):
         )
 
     @asyncio.coroutine
-    def async_see(self, mac: str = None, dev_id: str = None,
-                  host_name: str = None, location_name: str = None,
-                  gps: GPSType = None, gps_accuracy=None, battery: str = None,
-                  attributes: dict = None, source_type: str = SOURCE_TYPE_GPS,
-                  picture: str = None, icon: str = None,
-                  consider_home: timedelta = None):
+    def async_see(
+            self, mac: str = None, dev_id: str = None, host_name: str = None,
+            location_name: str = None, gps: GPSType = None,
+            gps_accuracy: int = None, battery: int = None,
+            attributes: dict = None, source_type: str = SOURCE_TYPE_GPS,
+            picture: str = None, icon: str = None,
+            consider_home: timedelta = None):
         """Notify the device tracker that you see a device.
 
         This method is a coroutine.
@@ -399,9 +401,10 @@ class Device(Entity):
     host_name = None  # type: str
     location_name = None  # type: str
     gps = None  # type: GPSType
-    gps_accuracy = 0
+    gps_accuracy = 0  # type: int
     last_seen = None  # type: dt_util.dt.datetime
-    battery = None  # type: str
+    consider_home = None  # type: dt_util.dt.timedelta
+    battery = None  # type: int
     attributes = None  # type: dict
     vendor = None  # type: str
     icon = None  # type: str
@@ -491,7 +494,7 @@ class Device(Entity):
 
     @asyncio.coroutine
     def async_seen(self, host_name: str = None, location_name: str = None,
-                   gps: GPSType = None, gps_accuracy=0, battery: str = None,
+                   gps: GPSType = None, gps_accuracy=0, battery: int = None,
                    attributes: dict = None,
                    source_type: str = SOURCE_TYPE_GPS,
                    consider_home: timedelta = None):
