@@ -31,9 +31,9 @@ class AiohttpClientMocker:
                 exc=None,
                 cookies=None):
         """Mock a request."""
-        if json:
+        if json is not None:
             text = _json.dumps(json)
-        if text:
+        if text is not None:
             content = text.encode('utf-8')
         if content is None:
             content = b''
@@ -74,11 +74,9 @@ class AiohttpClientMocker:
         self._cookies.clear()
         self.mock_calls.clear()
 
-    @asyncio.coroutine
-    # pylint: disable=unused-variable
-    def match_request(self, method, url, *, data=None, auth=None, params=None,
-                      headers=None, allow_redirects=None, timeout=None,
-                      json=None):
+    async def match_request(self, method, url, *, data=None, auth=None,
+                            params=None, headers=None, allow_redirects=None,
+                            timeout=None, json=None):
         """Match a request against pre-registered requests."""
         data = data or json
         for response in self._mocks:
@@ -207,12 +205,6 @@ def mock_aiohttp_client():
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
 
-    with mock.patch('aiohttp.ClientSession') as mock_session:
-        instance = mock_session()
-        instance.request = mocker.match_request
-
-        for method in ('get', 'post', 'put', 'options', 'delete'):
-            setattr(instance, method,
-                    functools.partial(mocker.match_request, method))
-
+    with mock.patch('aiohttp.ClientSession._request',
+                    side_effect=mocker.match_request):
         yield mocker

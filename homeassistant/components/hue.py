@@ -4,12 +4,14 @@ This component provides basic support for the Philips Hue system.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/hue/
 """
+import asyncio
 import json
 from functools import partial
 import logging
 import os
 import socket
 
+import async_timeout
 import requests
 import voluptuous as vol
 
@@ -212,6 +214,7 @@ class HueBridge(object):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error connecting with Hue bridge at %s",
                               self.host)
+            return
 
         # If we came here and configuring this host, mark as done
         if self.config_request_id:
@@ -296,7 +299,13 @@ class HueFlowHandler(config_entries.ConfigFlowHandler):
             self.host = user_input['host']
             return await self.async_step_link()
 
-        bridges = await discover_nupnp(websession=self._websession)
+        try:
+            with async_timeout.timeout(5):
+                bridges = await discover_nupnp(websession=self._websession)
+        except asyncio.TimeoutError:
+            return self.async_abort(
+                reason='Unable to discover Hue bridges.'
+            )
 
         if not bridges:
             return self.async_abort(
@@ -324,7 +333,7 @@ class HueFlowHandler(config_entries.ConfigFlowHandler):
             step_id='init',
             title='Pick Hue Bridge',
             data_schema=vol.Schema({
-                'host': vol.In(hosts)
+                vol.Required('host'): vol.In(hosts)
             })
         )
 
@@ -336,11 +345,13 @@ class HueFlowHandler(config_entries.ConfigFlowHandler):
         if user_input is not None:
             bridge = aiohue.Bridge(self.host, websession=self._websession)
             try:
-                # Create auth token
-                await bridge.create_user('home-assistant')
-                # Fetches name and id
-                await bridge.initialize()
-            except aiohue.LinkButtonNotPressed:
+                with async_timeout.timeout(5):
+                    # Create auth token
+                    await bridge.create_user('home-assistant')
+                    # Fetches name and id
+                    await bridge.initialize()
+            except (asyncio.TimeoutError, aiohue.RequestError,
+                    aiohue.LinkButtonNotPressed):
                 errors['base'] = 'Failed to register, please try again.'
             except aiohue.AiohueException:
                 errors['base'] = 'Unknown linking error occurred.'
