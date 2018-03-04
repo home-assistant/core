@@ -13,6 +13,7 @@ DEPENDENCIES = ['canary']
 
 SENSOR_VALUE_PRECISION = 2
 ATTR_AIR_QUALITY = "air_quality"
+ATTR_WIFI_STRENGTH = "wifi_strength"
 
 # Sensor types are defined like so:
 # sensor type name, unit_of_measurement, icon
@@ -20,12 +21,18 @@ SENSOR_TYPES = [
     ["temperature", TEMP_CELSIUS, "mdi:thermometer"],
     ["humidity", "%", "mdi:water-percent"],
     ["air_quality", None, "mdi:weather-windy"],
+    ["battery", "%", "mdi:battery"],
+    ["wifi", None, "mdi:wifi"]
 ]
 
 STATE_AIR_QUALITY_NORMAL = "normal"
 STATE_AIR_QUALITY_ABNORMAL = "abnormal"
 STATE_AIR_QUALITY_VERY_ABNORMAL = "very_abnormal"
 
+STATE_WIFI_STRENGTH_VERY_GOOD = "very_good"
+STATE_WIFI_STRENGTH_GOOD = "good"
+STATE_WIFI_STRENGTH_OK = "ok"
+STATE_WIFI_STRENGTH_NOT_GOOD = "not_good"
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Canary sensors."""
@@ -101,6 +108,27 @@ class CanarySensor(Entity):
 
         return None
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        if self._sensor_type[0] == "wifi" \
+                and self._sensor_value is not None:
+            wifi = None
+            if self._sensor_value >= -40:
+                wifi_strength = STATE_WIFI_STRENGTH_VERY_GOOD
+            elif self._sensor_value >= -67:
+                wifi_strength = STATE_WIFI_STRENGTH_GOOD
+            elif self._sensor_value >= -70:
+                wifi_strength = STATE_WIFI_STRENGTH_OK
+            elif self._sensor_value >= -80:
+                wifi_strength = STATE_WIFI_STRENGTH_NOT_GOOD
+
+            return {
+                ATTR_WIFI_STRENGTH: wifi_strength
+            }
+
+        return None
+
     def update(self):
         """Get the latest state of the sensor."""
         self._data.update()
@@ -113,6 +141,11 @@ class CanarySensor(Entity):
             canary_sensor_type = SensorType.TEMPERATURE
         elif self._sensor_type[0] == "humidity":
             canary_sensor_type = SensorType.HUMIDITY
+        elif self._sensor_type[0] == "battery":
+            canary_sensor_type = SensorType.BATTERY
+        elif self._sensor_type[0] == "wifi":
+            canary_sensor_type = SensorType.WIFI
+
 
         value = self._data.get_reading(self._device_id, canary_sensor_type)
 
