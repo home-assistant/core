@@ -108,7 +108,7 @@ async def async_setup(hass, config):
                                            hass.config.path(CONFIG_FILE))
 
     async def gateway_discovered(service, info,
-                                 allow_tradfri_groups=DEFAULT_ALLOW_TRADFRI_GROUPS):
+                                 allow_groups=DEFAULT_ALLOW_TRADFRI_GROUPS):
         """Run when a gateway is discovered."""
         host = info['host']
 
@@ -118,7 +118,7 @@ async def async_setup(hass, config):
             identity = known_hosts[host].get('identity', 'homeassistant')
             key = known_hosts[host].get('key')
             await _setup_gateway(hass, config, host, identity, key,
-                                 allow_tradfri_groups)
+                                 allow_groups)
         else:
             hass.async_add_job(request_configuration, hass, config, host)
 
