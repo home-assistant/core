@@ -40,8 +40,6 @@ class Watcher(Entity):
         self._observer.start()
 
     def fire_event(self, data):
-        _LOGGER.warning("WATCHDOG {} {}".format(
-            data["event_type"], data["src_path"]))
         self.hass.bus.fire(
             data["event_type"], {"path": data["src_path"]})
 
