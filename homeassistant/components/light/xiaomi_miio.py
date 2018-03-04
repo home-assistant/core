@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'philips.light.bulb']),
 })
 
-REQUIREMENTS = ['python-miio>=0.3.6']
+REQUIREMENTS = ['python-miio==0.3.7']
 
 # The light does not accept cct values < 1
 CCT_MIN = 1
@@ -62,6 +62,7 @@ SUPPORT_SET_SCENE = 4
 SUPPORT_SET_DELAYED_TURN_OFF = 8
 SUPPORT_REMINDER = 16
 SUPPORT_NIGHT_LIGHT_MODE = 32
+SUPPORT_EYECARE_MODE = 64
 
 SUPPORT_FLAGS_GENERIC = (SUPPORT_BRIGHTNESS | SUPPORT_SET_SCENE |
                          SUPPORT_SET_DELAYED_TURN_OFF)
@@ -72,7 +73,8 @@ SUPPORT_FLAGS_CEILING = (SUPPORT_FLAGS_GENERIC | SUPPORT_COLOR_TEMP)
 
 SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT = (SUPPORT_FLAGS_GENERIC |
                                       SUPPORT_REMINDER |
-                                      SUPPORT_NIGHT_LIGHT_MODE)
+                                      SUPPORT_NIGHT_LIGHT_MODE |
+                                      SUPPORT_EYECARE_MODE)
 
 SUPPORT_FLAGS_SREAD1_AMBIENT_LIGHT = (SUPPORT_BRIGHTNESS)
 
@@ -82,6 +84,8 @@ SERVICE_REMINDER_ON = 'xiaomi_miio_reminder_on'
 SERVICE_REMINDER_OFF = 'xiaomi_miio_reminder_off'
 SERVICE_NIGHT_LIGHT_MODE_ON = 'xiaomi_miio_night_light_mode_on'
 SERVICE_NIGHT_LIGHT_MODE_OFF = 'xiaomi_miio_night_light_mode_off'
+SERVICE_EYECARE_MODE_ON = 'xiaomi_miio_eyecare_mode_on'
+SERVICE_EYECARE_MODE_OFF = 'xiaomi_miio_eyecare_mode_off'
 
 XIAOMI_MIIO_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -106,10 +110,10 @@ SERVICE_TO_METHOD = {
         'schema': SERVICE_SCHEMA_SET_SCENE},
     SERVICE_REMINDER_ON: {'method': 'async_reminder_on'},
     SERVICE_REMINDER_OFF: {'method': 'async_reminder_off'},
-    SERVICE_NIGHT_LIGHT_MODE_ON:
-        {'method': 'async_night_light_mode_on'},
-    SERVICE_NIGHT_LIGHT_MODE_OFF:
-        {'method': 'async_night_light_mode_off'},
+    SERVICE_NIGHT_LIGHT_MODE_ON: {'method': 'async_night_light_mode_on'},
+    SERVICE_NIGHT_LIGHT_MODE_OFF: {'method': 'async_night_light_mode_off'},
+    SERVICE_EYECARE_MODE_ON: {'method': 'async_eyecare_mode_on'},
+    SERVICE_EYECARE_MODE_OFF: {'method': 'async_eyecare_mode_off'},
 }
 
 
@@ -314,6 +318,33 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
         return SUPPORT_FLAGS_GENERIC
 
     @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the light on."""
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            percent_brightness = ceil(100 * brightness / 255.0)
+
+            _LOGGER.debug(
+                "Setting brightness: %s %s%%",
+                brightness, percent_brightness)
+
+            result = yield from self._try_command(
+                "Setting brightness failed: %s",
+                self._light.set_brightness, percent_brightness)
+
+            if result:
+                self._brightness = brightness
+        else:
+            yield from self._try_command(
+                "Turning the light on failed.", self._light.on)
+
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the light off."""
+        yield from self._try_command(
+            "Turning the light off failed.", self._light.off)
+
+    @asyncio.coroutine
     def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
@@ -382,6 +413,18 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
     # pylint: disable=no-self-use
     @asyncio.coroutine
+    def async_reminder_on(self):
+        """Enable the eye fatigue notification."""
+        return
+
+    # pylint: disable=no-self-use
+    @asyncio.coroutine
+    def async_reminder_off(self):
+        """Disable the eye fatigue notification."""
+        return
+
+    # pylint: disable=no-self-use
+    @asyncio.coroutine
     def async_night_light_mode_on(self):
         """Turn the smart night light mode on."""
         return
@@ -394,14 +437,14 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
     # pylint: disable=no-self-use
     @asyncio.coroutine
-    def async_reminder_on(self):
-        """Enable the eye fatigue notification."""
+    def async_eyecare_mode_on(self):
+        """Turn the eyecare mode on."""
         return
 
     # pylint: disable=no-self-use
     @asyncio.coroutine
-    def async_reminder_off(self):
-        """Disable the eye fatigue notification."""
+    def async_eyecare_mode_off(self):
+        """Turn the eyecare mode off."""
         return
 
 
@@ -606,33 +649,6 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
         return SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT
 
     @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
-        """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
-            percent_brightness = ceil(100 * brightness / 255.0)
-
-            _LOGGER.debug(
-                "Setting brightness: %s %s%%",
-                brightness, percent_brightness)
-
-            result = yield from self._try_command(
-                "Setting brightness failed: %s",
-                self._light.set_brightness, percent_brightness)
-
-            if result:
-                self._brightness = brightness
-        else:
-            yield from self._try_command(
-                "Turning the light on failed.", self._light.on)
-
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
-        """Turn the light off."""
-        yield from self._try_command(
-            "Turning the light off failed.", self._light.off)
-
-    @asyncio.coroutine
     def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
@@ -670,6 +686,26 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
             self._light.delay_off, round(time_period.total_seconds()/60))
 
     @asyncio.coroutine
+    def async_reminder_on(self):
+        """Enable the eye fatigue notification."""
+        if self.supported_features & SUPPORT_REMINDER == 0:
+            return
+
+        yield from self._try_command(
+            "Turning on the reminder failed.",
+            self._light.reminder_on)
+
+    @asyncio.coroutine
+    def async_reminder_off(self):
+        """Disable the eye fatigue notification."""
+        if self.supported_features & SUPPORT_REMINDER == 0:
+            return
+
+        yield from self._try_command(
+            "Turning off the reminder failed.",
+            self._light.reminder_off)
+
+    @asyncio.coroutine
     def async_night_light_mode_on(self):
         """Turn the smart night light mode on."""
         if self.supported_features & SUPPORT_NIGHT_LIGHT_MODE == 0:
@@ -690,24 +726,24 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
             self._light.smart_night_light_off)
 
     @asyncio.coroutine
-    def async_reminder_on(self):
-        """Enable the eye fatigue notification."""
-        if self.supported_features & SUPPORT_REMINDER == 0:
+    def async_eyecare_mode_on(self):
+        """Turn the eyecare mode on."""
+        if self.supported_features & SUPPORT_EYECARE_MODE == 0:
             return
 
         yield from self._try_command(
-            "Turning on the reminder failed.",
-            self._light.reminder_on)
+            "Turning on the eyecare mode failed.",
+            self._light.eyecare_on)
 
     @asyncio.coroutine
-    def async_reminder_off(self):
-        """Disable the eye fatigue notification."""
-        if self.supported_features & SUPPORT_REMINDER == 0:
+    def async_eyecare_mode_off(self):
+        """Turn the eyecare mode off."""
+        if self.supported_features & SUPPORT_EYECARE_MODE == 0:
             return
 
         yield from self._try_command(
-            "Turning off the reminder failed.",
-            self._light.reminder_off)
+            "Turning off the eyecare mode failed.",
+            self._light.eyecare_off)
 
     @staticmethod
     def delayed_turn_off_timestamp(countdown: int,
