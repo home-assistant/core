@@ -36,11 +36,9 @@ CONST_CONFIG_ENDPOINT = '/api/?type=config&action=get&xpath=COMMAND'
 PA_OPS_ACTIVE_USERS = "<show><admins></admins></show>"
 PA_CONF_SYS_INFO = "<show><system><info></info></system></show>"
 PA_CONF_GP_USERS = "<show><global-protect-portal>" +
-                   "<current-user></current-user>" +
-                   "</global-protect-portal></show>"
+    "<current-user></current-user></global-protect-portal></show>"
 PA_CONF_TEMPERATURE = "<show><system><environmentals>" +
-                        "<thermal></thermal></environmentals>" +
-                        "</system></show>"
+    "<thermal></thermal></environmentals></system></show>"
 
 SCAN_INTERVAL = timedelta(seconds=120)
 
