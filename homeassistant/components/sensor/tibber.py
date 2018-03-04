@@ -88,10 +88,10 @@ class TibberSensor(Entity):
         await self._tibber_home.update_info()
         await self._tibber_home.update_price_info()
         data = self._tibber_home.info['viewer']['home']
-        self._device_state_attributes['App nickname'] = data['appNickname']
-        self._device_state_attributes['Grid company'] =\
+        self._device_state_attributes['app_nickname'] = data['appNickname']
+        self._device_state_attributes['grid_company'] =\
             data['meteringPointData']['gridCompany']
-        self._device_state_attributes['Estimated annual consumption'] =\
+        self._device_state_attributes['estimated_annual_consumption'] =\
             data['meteringPointData']['estimatedAnnualConsumption']
         _find_current_price()
 
