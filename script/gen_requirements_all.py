@@ -93,12 +93,10 @@ TEST_REQUIREMENTS = (
 
 IGNORE_PACKAGES = (
     'homeassistant.components.recorder.models',
-    'homeassistant.components.homekit.accessories',
-    'homeassistant.components.homekit.covers',
-    'homeassistant.components.homekit.security_systems',
-    'homeassistant.components.homekit.sensors',
-    'homeassistant.components.homekit.switches',
-    'homeassistant.components.homekit.thermostats'
+)
+
+IGNORE_PACKAGE_FAMILIES = (
+    'homeassistant.components.homekit',
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
@@ -153,6 +151,14 @@ def comment_requirement(req):
     return any(ign in req for ign in COMMENT_REQUIREMENTS)
 
 
+def check_package_family(package):
+    """Return true if package belongs to one of IGNORE_PACKAGE_FAMILIES."""
+    for family in IGNORE_PACKAGE_FAMILIES:
+        if family in package:
+            return True
+    return False
+
+
 def gather_modules():
     """Collect the information."""
     reqs = {}
@@ -164,9 +170,11 @@ def gather_modules():
         try:
             module = importlib.import_module(package)
         except ImportError:
-            if package not in IGNORE_PACKAGES:
-                errors.append(package)
-            continue
+            if package in IGNORE_PACKAGES:
+                continue
+            if check_package_family(package):
+                continue
+            errors.append(package)
 
         if not getattr(module, 'REQUIREMENTS', None):
             continue
