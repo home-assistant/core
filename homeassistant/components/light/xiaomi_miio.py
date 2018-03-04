@@ -202,23 +202,20 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             DOMAIN, xiaomi_miio_service, async_service_handler, schema=schema)
 
 
-class XiaomiPhilipsGenericLight(Light):
-    """Representation of a Xiaomi Philips Light."""
+class XiaomiPhilipsAbstractLight(Light):
+    """Representation of a Abstract Light."""
 
     def __init__(self, name, light, model):
         """Initialize the light device."""
         self._name = name
+        self._light = light
         self._model = model
 
         self._brightness = None
-        self._color_temp = None
 
-        self._light = light
         self._state = None
         self._state_attrs = {
             ATTR_MODEL: self._model,
-            ATTR_SCENE: None,
-            ATTR_DELAYED_TURN_OFF: None,
         }
 
     @property
@@ -254,7 +251,7 @@ class XiaomiPhilipsGenericLight(Light):
     @property
     def supported_features(self):
         """Return the supported features."""
-        return SUPPORT_FLAGS_GENERIC
+        return 0
 
     @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
@@ -274,29 +271,47 @@ class XiaomiPhilipsGenericLight(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
-            percent_brightness = ceil(100 * brightness / 255.0)
-
-            _LOGGER.debug(
-                "Setting brightness: %s %s%%",
-                brightness, percent_brightness)
-
-            result = yield from self._try_command(
-                "Setting brightness failed: %s",
-                self._light.set_brightness, percent_brightness)
-
-            if result:
-                self._brightness = brightness
-        else:
-            yield from self._try_command(
-                "Turning the light on failed.", self._light.on)
+        yield from self._try_command(
+            "Turning the light on failed.", self._light.on)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the light off."""
         yield from self._try_command(
             "Turning the light off failed.", self._light.off)
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Fetch state from the device."""
+        from miio import DeviceException
+        try:
+            state = yield from self.hass.async_add_job(self._light.status)
+            _LOGGER.debug("Got new state: %s", state)
+
+            self._state = state.is_on
+
+        except DeviceException as ex:
+            self._state = None
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
+
+
+class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
+    """Representation of a Xiaomi Philips Light."""
+
+    def __init__(self, name, light, model):
+        """Initialize the light device."""
+        XiaomiPhilipsAbstractLight.__init__(self, name, light, model)
+
+        self._color_temp = None
+        self._state_attrs.update({
+            ATTR_SCENE: None,
+            ATTR_DELAYED_TURN_OFF: None,
+        })
+
+    @property
+    def supported_features(self):
+        """Return the supported features."""
+        return SUPPORT_FLAGS_GENERIC
 
     @asyncio.coroutine
     def async_update(self):
@@ -342,14 +357,6 @@ class XiaomiPhilipsGenericLight(Light):
         yield from self._try_command(
             "Setting the turn off delay failed.",
             self._light.delay_off, time_period.total_seconds())
-
-    @staticmethod
-    def translate(value, left_min, left_max, right_min, right_max):
-        """Map a value from left span to right span."""
-        left_span = left_max - left_min
-        right_span = right_max - right_min
-        value_scaled = float(value - left_min) / float(left_span)
-        return int(right_min + (value_scaled * right_span))
 
     @staticmethod
     def delayed_turn_off_timestamp(countdown: int,
@@ -398,7 +405,7 @@ class XiaomiPhilipsGenericLight(Light):
         return
 
 
-class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight, Light):
+class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
     """Representation of a Xiaomi Philips Bulb."""
 
     @property
@@ -512,8 +519,16 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight, Light):
             self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
+    @staticmethod
+    def translate(value, left_min, left_max, right_min, right_max):
+        """Map a value from left span to right span."""
+        left_span = left_max - left_min
+        right_span = right_max - right_min
+        value_scaled = float(value - left_min) / float(left_span)
+        return int(right_min + (value_scaled * right_span))
 
-class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb, Light):
+
+class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
     """Representation of a Xiaomi Philips Ceiling Lamp."""
 
     def __init__(self, name, light, model):
@@ -573,7 +588,7 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb, Light):
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
-class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight, Light):
+class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
     """Representation of a Xiaomi Philips Eyecare Lamp 2."""
 
     def __init__(self, name, light, model):
@@ -717,71 +732,18 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight, Light):
         return None
 
 
-class XiaomiPhilipsEyecareLampAmbientLight(Light):
+class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
     """Representation of a Xiaomi Philips Eyecare Lamp Ambient Light."""
 
     def __init__(self, name, light, model):
         """Initialize the light device."""
         self._name = name + ' Ambient Light'
-        self._light = light
-        self._model = model
-
-        self._brightness = None
-
-        self._state = None
-        self._state_attrs = {
-            ATTR_MODEL: self._model,
-        }
-
-    @property
-    def should_poll(self):
-        """Poll the light."""
-        return True
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def available(self):
-        """Return true when state is known."""
-        return self._state is not None
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the device."""
-        return self._state_attrs
-
-    @property
-    def is_on(self):
-        """Return true if light is on."""
-        return self._state
-
-    @property
-    def brightness(self):
-        """Return the brightness of this light between 0..255."""
-        return self._brightness
+        XiaomiPhilipsAbstractLight.__init__(self, name, light, model)
 
     @property
     def supported_features(self):
         """Return the supported features."""
         return SUPPORT_FLAGS_SREAD1_AMBIENT_LIGHT
-
-    @asyncio.coroutine
-    def _try_command(self, mask_error, func, *args, **kwargs):
-        """Call a light command handling error messages."""
-        from miio import DeviceException
-        try:
-            result = yield from self.hass.async_add_job(
-                partial(func, *args, **kwargs))
-
-            _LOGGER.debug("Response received from light: %s", result)
-
-            return result == SUCCESS
-        except DeviceException as exc:
-            _LOGGER.error(mask_error, exc)
-            return False
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
