@@ -44,14 +44,15 @@ class TeslaDeviceTracker(object):
             _LOGGER.debug("Updating device position: %s", name)
             dev_id = slugify(device.uniq_name)
             location = device.get_location()
-            lat = location['latitude']
-            lon = location['longitude']
-            attrs = {
-                'trackr_id': dev_id,
-                'id': dev_id,
-                'name': name
-            }
-            self.see(
-                dev_id=dev_id, host_name=name,
-                gps=(lat, lon), attributes=attrs
-            )
+            if location:
+                lat = location['latitude']
+                lon = location['longitude']
+                attrs = {
+                    'trackr_id': dev_id,
+                    'id': dev_id,
+                    'name': name
+                }
+                self.see(
+                    dev_id=dev_id, host_name=name,
+                    gps=(lat, lon), attributes=attrs
+                )
