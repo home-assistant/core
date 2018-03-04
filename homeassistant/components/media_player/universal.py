@@ -154,7 +154,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         if allow_override and service_name in self._cmds:
             yield from async_call_from_config(
                 self.hass, self._cmds[service_name],
-                variables=service_data, blocking=True)
+                variables=service_data, blocking=True,
+                validate_config=False)
             return
 
         active_child = self._child_state

@@ -3,12 +3,18 @@
 
 cd "$(dirname "$0")/.."
 
-if [ "$1" = "--changed" ]; then
-  export files="`git diff upstream/dev --name-only | grep -e '\.py$'`"
+if [ "$1" = "--all" ]; then
+  tox -e lint
+else
+  export files="`git diff upstream/dev... --name-only | grep -e '\.py$'`"
   echo "================================================="
-  echo "FILES CHANGED (git diff upstream/dev --name-only)"
+  echo "FILES CHANGED (git diff upstream/dev... --name-only)"
   echo "================================================="
-  echo  $files
+  if [ -z "$files" ] ; then
+    echo "No python file changed"
+    exit
+  fi
+  printf "%s\n" $files
   echo "================"
   echo "LINT with flake8"
   echo "================"
@@ -18,6 +24,4 @@ if [ "$1" = "--changed" ]; then
   echo "================"
   pylint $files
   echo
-else
-  tox -e lint
 fi

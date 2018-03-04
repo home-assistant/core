@@ -8,16 +8,15 @@ from datetime import timedelta
 import logging
 
 import requests
-
 import voluptuous as vol
 
-from homeassistant.core import split_entity_id
 from homeassistant.components.image_processing import (
-    CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME, PLATFORM_SCHEMA,
+    CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE, PLATFORM_SCHEMA,
     ImageProcessingEntity)
+from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['numpy==1.13.3']
+REQUIREMENTS = ['numpy==1.14.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +42,7 @@ DEFAULT_TIMEOUT = 10
 SCAN_INTERVAL = timedelta(seconds=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_CLASSIFIER, default=None): {
+    vol.Optional(CONF_CLASSIFIER): {
         cv.string: vol.Any(
             cv.isfile,
             vol.Schema({
@@ -61,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def _create_processor_from_config(hass, camera_entity, config):
     """Create an OpenCV processor from configuration."""
-    classifier_config = config[CONF_CLASSIFIER]
+    classifier_config = config.get(CONF_CLASSIFIER)
     name = '{} {}'.format(
         config[CONF_NAME], split_entity_id(camera_entity)[1].replace('_', ' '))
 
@@ -73,7 +72,7 @@ def _create_processor_from_config(hass, camera_entity, config):
 
 def _get_default_classifier(dest_path):
     """Download the default OpenCV classifier."""
-    _LOGGER.info('Downloading default classifier')
+    _LOGGER.info("Downloading default classifier")
     req = requests.get(CASCADE_URL, stream=True)
     with open(dest_path, 'wb') as fil:
         for chunk in req.iter_content(chunk_size=1024):
@@ -84,18 +83,17 @@ def _get_default_classifier(dest_path):
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the OpenCV image processing platform."""
     try:
-        # Verify opencv python package is preinstalled
+        # Verify that the OpenCV python package is pre-installed
         # pylint: disable=unused-import,unused-variable
         import cv2  # noqa
     except ImportError:
-        _LOGGER.error("No opencv library found! " +
-                      "Install or compile for your system " +
-                      "following instructions here: " +
-                      "http://opencv.org/releases.html")
+        _LOGGER.error(
+            "No OpenCV library found! Install or compile for your system "
+            "following instructions here: http://opencv.org/releases.html")
         return
 
     entities = []
-    if config[CONF_CLASSIFIER] is None:
+    if CONF_CLASSIFIER not in config:
         dest_path = hass.config.path(DEFAULT_CLASSIFIER_PATH)
         _get_default_classifier(dest_path)
         config[CONF_CLASSIFIER] = {
@@ -105,8 +103,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for camera in config[CONF_SOURCE]:
         entities.append(OpenCVImageProcessor(
             hass, camera[CONF_ENTITY_ID], camera.get(CONF_NAME),
-            config[CONF_CLASSIFIER]
-        ))
+            config[CONF_CLASSIFIER]))
 
     add_devices(entities)
 
@@ -121,8 +118,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         if name:
             self._name = name
         else:
-            self._name = "OpenCV {0}".format(
-                split_entity_id(camera_entity)[1])
+            self._name = "OpenCV {0}".format(split_entity_id(camera_entity)[1])
         self._classifiers = classifiers
         self._matches = {}
         self._total_matches = 0
@@ -157,8 +153,8 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         import numpy
 
         # pylint: disable=no-member
-        cv_image = cv2.imdecode(numpy.asarray(bytearray(image)),
-                                cv2.IMREAD_UNCHANGED)
+        cv_image = cv2.imdecode(
+            numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
 
         for name, classifier in self._classifiers.items():
             scale = DEFAULT_SCALE

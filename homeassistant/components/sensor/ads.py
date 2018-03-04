@@ -3,33 +3,32 @@ Support for ADS sensors.
 
 For more details about this platform, please refer to the documentation.
 https://home-assistant.io/components/sensor.ads/
-
 """
 import asyncio
 import logging
+
 import voluptuous as vol
+
+from homeassistant.components import ads
+from homeassistant.components.ads import (
+    CONF_ADS_FACTOR, CONF_ADS_TYPE, CONF_ADS_VAR)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components import ads
-from homeassistant.components.ads import CONF_ADS_VAR, CONF_ADS_TYPE, \
-    CONF_ADS_FACTOR
-
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'ADS sensor'
+DEFAULT_NAME = "ADS sensor"
 DEPENDENCIES = ['ads']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADS_VAR): cv.string,
+    vol.Optional(CONF_ADS_FACTOR): cv.positive_int,
+    vol.Optional(CONF_ADS_TYPE, default=ads.ADSTYPE_INT):
+        vol.In([ads.ADSTYPE_INT, ads.ADSTYPE_UINT, ads.ADSTYPE_BYTE]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=''): cv.string,
-    vol.Optional(CONF_ADS_TYPE, default=ads.ADSTYPE_INT): vol.In(
-        [ads.ADSTYPE_INT, ads.ADSTYPE_UINT, ads.ADSTYPE_BYTE]
-    ),
-    vol.Optional(CONF_ADS_FACTOR): cv.positive_int,
 })
 
 
@@ -43,8 +42,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     factor = config.get(CONF_ADS_FACTOR)
 
-    entity = AdsSensor(ads_hub, ads_var, ads_type, name,
-                       unit_of_measurement, factor)
+    entity = AdsSensor(
+        ads_hub, ads_var, ads_type, name, unit_of_measurement, factor)
 
     add_devices([entity])
 
@@ -68,9 +67,9 @@ class AdsSensor(Entity):
         """Register device notification."""
         def update(name, value):
             """Handle device notifications."""
-            _LOGGER.debug('Variable %s changed its value to %d', name, value)
+            _LOGGER.debug("Variable %s changed its value to %d", name, value)
 
-            # if factor is set use it otherwise not
+            # If factor is set use it otherwise not
             if self.factor is None:
                 self._value = value
             else:
@@ -99,5 +98,5 @@ class AdsSensor(Entity):
 
     @property
     def should_poll(self):
-        """Return False because entity pushes its state to HA."""
+        """Return False because entity pushes its state."""
         return False

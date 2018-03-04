@@ -37,7 +37,7 @@ def setup(hass, base_config):
     from pylutron import Lutron
 
     hass.data[LUTRON_CONTROLLER] = None
-    hass.data[LUTRON_DEVICES] = {'light': []}
+    hass.data[LUTRON_DEVICES] = {'light': [], 'cover': []}
 
     config = base_config.get(DOMAIN)
     hass.data[LUTRON_CONTROLLER] = Lutron(
@@ -50,9 +50,12 @@ def setup(hass, base_config):
     # Sort our devices into types
     for area in hass.data[LUTRON_CONTROLLER].areas:
         for output in area.outputs:
-            hass.data[LUTRON_DEVICES]['light'].append((area.name, output))
+            if output.type == 'SYSTEM_SHADE':
+                hass.data[LUTRON_DEVICES]['cover'].append((area.name, output))
+            else:
+                hass.data[LUTRON_DEVICES]['light'].append((area.name, output))
 
-    for component in ('light',):
+    for component in ('light', 'cover'):
         discovery.load_platform(hass, component, DOMAIN, None, base_config)
     return True
 

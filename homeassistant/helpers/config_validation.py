@@ -5,6 +5,8 @@ import os
 import re
 from urllib.parse import urlparse
 from socket import _GLOBAL_DEFAULT_TIMEOUT
+import logging
+import inspect
 
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
@@ -16,7 +18,7 @@ from homeassistant.const import (
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
-from homeassistant.core import valid_entity_id
+from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify as util_slugify
@@ -143,6 +145,29 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
         value = [ent_id.strip() for ent_id in value.split(',')]
 
     return [entity_id(ent_id) for ent_id in value]
+
+
+def entity_domain(domain: str):
+    """Validate that entity belong to domain."""
+    def validate(value: Any) -> str:
+        """Test if entity domain is domain."""
+        ent_domain = entities_domain(domain)
+        return ent_domain(value)[0]
+    return validate
+
+
+def entities_domain(domain: str):
+    """Validate that entities belong to domain."""
+    def validate(values: Union[str, Sequence]) -> Sequence[str]:
+        """Test if entity domain is domain."""
+        values = entity_ids(values)
+        for ent_id in values:
+            if split_entity_id(ent_id)[0] != domain:
+                raise vol.Invalid(
+                    "Entity ID '{}' does not belong to domain '{}'"
+                    .format(ent_id, domain))
+        return values
+    return validate
 
 
 def enum(enumClass):
@@ -430,6 +455,22 @@ def ensure_list_csv(value: Any) -> Sequence:
     return ensure_list(value)
 
 
+def deprecated(key):
+    """Log key as deprecated."""
+    module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
+
+    def validator(config):
+        """Check if key is in config and log warning."""
+        if key in config:
+            logging.getLogger(module_name).warning(
+                "The '%s' option (with value '%s') is deprecated, please "
+                "remove it from your configuration.", key, config[key])
+
+        return config
+
+    return validator
+
+
 # Validator helpers
 
 def key_dependency(key, dependency):
@@ -457,6 +498,7 @@ EVENT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required('event'): string,
     vol.Optional('event_data'): dict,
+    vol.Optional('event_data_template'): {match_all: template_complex}
 })
 
 SERVICE_SCHEMA = vol.All(vol.Schema({

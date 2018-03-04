@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ThermostatDevice(ClimateDevice):
-    """Interface class for the oemthermostat modul."""
+    """Interface class for the oemthermostat module."""
 
     def __init__(self, hass, thermostat, name, away_temp):
         """Initialize the device."""

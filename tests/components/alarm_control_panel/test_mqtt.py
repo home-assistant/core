@@ -106,8 +106,8 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         alarm_control_panel.alarm_arm_home(self.hass)
         self.hass.block_till_done()
-        self.assertEqual(('alarm/command', 'ARM_HOME', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/command', 'ARM_HOME', 0, False)
 
     def test_arm_home_not_publishes_mqtt_with_invalid_code(self):
         """Test not publishing of MQTT messages with invalid code."""
@@ -139,8 +139,8 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         alarm_control_panel.alarm_arm_away(self.hass)
         self.hass.block_till_done()
-        self.assertEqual(('alarm/command', 'ARM_AWAY', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/command', 'ARM_AWAY', 0, False)
 
     def test_arm_away_not_publishes_mqtt_with_invalid_code(self):
         """Test not publishing of MQTT messages with invalid code."""
@@ -172,8 +172,8 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         alarm_control_panel.alarm_disarm(self.hass)
         self.hass.block_till_done()
-        self.assertEqual(('alarm/command', 'DISARM', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/command', 'DISARM', 0, False)
 
     def test_disarm_not_publishes_mqtt_with_invalid_code(self):
         """Test not publishing of MQTT messages with invalid code."""
@@ -191,6 +191,34 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         alarm_control_panel.alarm_disarm(self.hass, 'abcd')
         self.hass.block_till_done()
         self.assertEqual(call_count, self.mock_publish.call_count)
+
+    def test_default_availability_payload(self):
+        """Test availability by default payload with defined topic."""
+        assert setup_component(self.hass, alarm_control_panel.DOMAIN, {
+            alarm_control_panel.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'alarm/state',
+                'command_topic': 'alarm/command',
+                'code': '1234',
+                'availability_topic': 'availability-topic'
+            }
+        })
+
+        state = self.hass.states.get('alarm_control_panel.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'online')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('alarm_control_panel.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'offline')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('alarm_control_panel.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
 
     def test_custom_availability_payload(self):
         """Test availability by custom payload with defined topic."""
@@ -211,13 +239,3 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNAVAILABLE, state.state)
 
         fire_mqtt_message(self.hass, 'availability-topic', 'good')
-        self.hass.block_till_done()
-
-        state = self.hass.states.get('alarm_control_panel.test')
-        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
-
-        fire_mqtt_message(self.hass, 'availability-topic', 'nogood')
-        self.hass.block_till_done()
-
-        state = self.hass.states.get('alarm_control_panel.test')
-        self.assertEqual(STATE_UNAVAILABLE, state.state)

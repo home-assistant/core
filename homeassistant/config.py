@@ -33,6 +33,8 @@ from homeassistant.helpers import config_per_platform, extract_domain_configs
 _LOGGER = logging.getLogger(__name__)
 
 DATA_PERSISTENT_ERRORS = 'bootstrap_persistent_errors'
+RE_YAML_ERROR = re.compile(r"homeassistant\.util\.yaml")
+RE_ASCII = re.compile(r"\033\[[^m]*m")
 HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
 YAML_CONFIG_FILE = 'configuration.yaml'
 VERSION_FILE = '.HA_VERSION'
@@ -160,7 +162,7 @@ def get_default_config_dir() -> str:
     return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
-def ensure_config_exists(config_dir: str, detect_location: bool=True) -> str:
+def ensure_config_exists(config_dir: str, detect_location: bool = True) -> str:
     """Ensure a configuration file exists in given configuration directory.
 
     Creating a default one if needed.
@@ -258,8 +260,7 @@ def create_default_config(config_dir, detect_location=True):
         return None
 
 
-@asyncio.coroutine
-def async_hass_config_yaml(hass):
+async def async_hass_config_yaml(hass):
     """Load YAML from a Home Assistant configuration file.
 
     This function allow a component inside the asyncio loop to reload its
@@ -272,7 +273,7 @@ def async_hass_config_yaml(hass):
         conf = load_yaml_config_file(path)
         return conf
 
-    conf = yield from hass.async_add_job(_load_hass_yaml_config)
+    conf = await hass.async_add_job(_load_hass_yaml_config)
     return conf
 
 
@@ -371,8 +372,7 @@ def async_log_exception(ex, domain, config, hass):
     _LOGGER.error(message)
 
 
-@asyncio.coroutine
-def async_process_ha_core_config(hass, config):
+async def async_process_ha_core_config(hass, config):
     """Process the [homeassistant] section from the configuration.
 
     This method is a coroutine.
@@ -459,7 +459,7 @@ def async_process_ha_core_config(hass, config):
     # If we miss some of the needed values, auto detect them
     if None in (hac.latitude, hac.longitude, hac.units,
                 hac.time_zone):
-        info = yield from hass.async_add_job(
+        info = await hass.async_add_job(
             loc_util.detect_location_info)
 
         if info is None:
@@ -485,7 +485,7 @@ def async_process_ha_core_config(hass, config):
 
     if hac.elevation is None and hac.latitude is not None and \
        hac.longitude is not None:
-        elevation = yield from hass.async_add_job(
+        elevation = await hass.async_add_job(
             loc_util.elevation, hac.latitude, hac.longitude)
         hac.elevation = elevation
         discovered.append(('elevation', elevation))
@@ -646,28 +646,31 @@ def async_process_component_config(hass, config, domain):
     return config
 
 
-@asyncio.coroutine
-def async_check_ha_config_file(hass):
+async def async_check_ha_config_file(hass):
     """Check if Home Assistant configuration file is valid.
 
     This method is a coroutine.
     """
-    proc = yield from asyncio.create_subprocess_exec(
+    proc = await asyncio.create_subprocess_exec(
         sys.executable, '-m', 'homeassistant', '--script',
         'check_config', '--config', hass.config.config_dir,
-        stdout=asyncio.subprocess.PIPE, loop=hass.loop)
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT, loop=hass.loop)
+
     # Wait for the subprocess exit
-    stdout_data, dummy = yield from proc.communicate()
-    result = yield from proc.wait()
+    log, _ = await proc.communicate()
+    exit_code = await proc.wait()
 
-    if not result:
-        return None
+    # Convert to ASCII
+    log = RE_ASCII.sub('', log.decode())
 
-    return re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))
+    if exit_code != 0 or RE_YAML_ERROR.search(log):
+        return log
+    return None
 
 
 @callback
-def async_notify_setup_error(hass, component, link=False):
+def async_notify_setup_error(hass, component, display_link=False):
     """Print a persistent notification.
 
     This method must be run in the event loop.
@@ -679,7 +682,7 @@ def async_notify_setup_error(hass, component, link=False):
     if errors is None:
         errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
 
-    errors[component] = errors.get(component) or link
+    errors[component] = errors.get(component) or display_link
 
     message = 'The following components and platforms could not be set up:\n\n'
 

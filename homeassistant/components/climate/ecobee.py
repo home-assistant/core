@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.ecobee/
 """
 import logging
-from os import path
 
 import voluptuous as vol
 
@@ -14,10 +13,11 @@ from homeassistant.components.climate import (
     DOMAIN, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_IDLE, ClimateDevice,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_HUMIDITY_HIGH)
+    SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_HUMIDITY_HIGH,
+    SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE_HIGH,
+    SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_OFF, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
 _CONFIGURING = {}
@@ -48,7 +48,9 @@ RESUME_PROGRAM_SCHEMA = vol.Schema({
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE |
                  SUPPORT_HOLD_MODE | SUPPORT_OPERATION_MODE |
-                 SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH)
+                 SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH |
+                 SUPPORT_AUX_HEAT | SUPPORT_TARGET_TEMPERATURE_HIGH |
+                 SUPPORT_TARGET_TEMPERATURE_LOW)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -96,17 +98,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
             thermostat.schedule_update_ha_state(True)
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
     hass.services.register(
         DOMAIN, SERVICE_SET_FAN_MIN_ON_TIME, fan_min_on_time_set_service,
-        descriptions.get(SERVICE_SET_FAN_MIN_ON_TIME),
         schema=SET_FAN_MIN_ON_TIME_SCHEMA)
 
     hass.services.register(
         DOMAIN, SERVICE_RESUME_PROGRAM, resume_program_set_service,
-        descriptions.get(SERVICE_RESUME_PROGRAM),
         schema=RESUME_PROGRAM_SCHEMA)
 
 

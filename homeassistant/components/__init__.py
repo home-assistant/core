@@ -10,12 +10,12 @@ Component design guidelines:
 import asyncio
 import itertools as it
 import logging
-import os
 
 import homeassistant.core as ha
 import homeassistant.config as conf_util
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.helpers import intent
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
@@ -111,11 +111,6 @@ def async_reload_core_config(hass):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up general services related to Home Assistant."""
-    descriptions = yield from hass.async_add_job(
-        conf_util.load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
-
     @asyncio.coroutine
     def async_handle_turn_service(service):
         """Handle calls to homeassistant.turn_on/off."""
@@ -139,7 +134,7 @@ def async_setup(hass, config):
             # have been processed. If a service does not exist it causes a 10
             # second delay while we're blocking waiting for a response.
             # But services can be registered on other HA instances that are
-            # listening to the bus too. So as a in between solution, we'll
+            # listening to the bus too. So as an in between solution, we'll
             # block only if the service is defined in the current HA instance.
             blocking = hass.services.has_service(domain, service.service)
 
@@ -155,14 +150,18 @@ def async_setup(hass, config):
         yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service,
-        descriptions[ha.DOMAIN][SERVICE_TURN_OFF])
+        ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service)
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service,
-        descriptions[ha.DOMAIN][SERVICE_TURN_ON])
+        ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service)
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service,
-        descriptions[ha.DOMAIN][SERVICE_TOGGLE])
+        ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service)
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        intent.INTENT_TURN_ON, ha.DOMAIN, SERVICE_TURN_ON, "Turned {} on"))
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        intent.INTENT_TURN_OFF, ha.DOMAIN, SERVICE_TURN_OFF,
+        "Turned {} off"))
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        intent.INTENT_TOGGLE, ha.DOMAIN, SERVICE_TOGGLE, "Toggled {}"))
 
     @asyncio.coroutine
     def async_handle_core_service(call):
@@ -187,14 +186,11 @@ def async_setup(hass, config):
             hass.async_add_job(hass.async_stop(RESTART_EXIT_CODE))
 
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service,
-        descriptions[ha.DOMAIN][SERVICE_HOMEASSISTANT_STOP])
+        ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service)
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service,
-        descriptions[ha.DOMAIN][SERVICE_HOMEASSISTANT_RESTART])
+        ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service)
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service,
-        descriptions[ha.DOMAIN][SERVICE_CHECK_CONFIG])
+        ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service)
 
     @asyncio.coroutine
     def async_handle_reload_config(call):
@@ -209,7 +205,6 @@ def async_setup(hass, config):
             hass, conf.get(ha.DOMAIN) or {})
 
     hass.services.async_register(
-        ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config,
-        descriptions[ha.DOMAIN][SERVICE_RELOAD_CORE_CONFIG])
+        ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG, async_handle_reload_config)
 
     return True

@@ -99,6 +99,11 @@ class RestBinarySensor(BinarySensorDevice):
         return self._device_class
 
     @property
+    def available(self):
+        """Return the availability of this sensor."""
+        return self.rest.data is not None
+
+    @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         if self.rest.data is None:

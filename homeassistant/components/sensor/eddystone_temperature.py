@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_NAME, TEMP_CELSIUS, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP,
     EVENT_HOMEASSISTANT_START)
 
-REQUIREMENTS = ['beacontools[scan]==1.0.1']
+REQUIREMENTS = ['beacontools[scan]==1.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +122,7 @@ class EddystoneTemp(Entity):
 
 
 class Monitor(object):
-    """Continously scan for BLE advertisements."""
+    """Continuously scan for BLE advertisements."""
 
     def __init__(self, hass, devices, bt_device_id):
         """Construct interface object."""
@@ -150,7 +150,7 @@ class Monitor(object):
         self.scanning = False
 
     def start(self):
-        """Continously scan for BLE advertisements."""
+        """Continuously scan for BLE advertisements."""
         if not self.scanning:
             self.scanner.start()
             self.scanning = True

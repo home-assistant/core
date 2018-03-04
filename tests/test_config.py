@@ -255,18 +255,6 @@ class TestConfig(unittest.TestCase):
 
         return self.hass.states.get('test.test')
 
-    def test_entity_customization_false(self):
-        """Test entity customization through configuration."""
-        config = {CONF_LATITUDE: 50,
-                  CONF_LONGITUDE: 50,
-                  CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: {
-                      'test.test': {'hidden': False}}}
-
-        state = self._compute_state(config)
-
-        assert 'hidden' not in state.attributes
-
     def test_entity_customization(self):
         """Test entity customization through configuration."""
         config = {CONF_LATITUDE: 50,
@@ -531,7 +519,7 @@ class TestConfig(unittest.TestCase):
         """Check that restart propagates to stop."""
         process_mock = mock.MagicMock()
         attrs = {
-            'communicate.return_value': mock_coro(('output', 'error')),
+            'communicate.return_value': mock_coro((b'output', None)),
             'wait.return_value': mock_coro(0)}
         process_mock.configure_mock(**attrs)
         mock_create.return_value = mock_coro(process_mock)
@@ -546,7 +534,7 @@ class TestConfig(unittest.TestCase):
         process_mock = mock.MagicMock()
         attrs = {
             'communicate.return_value':
-                mock_coro(('\033[34mhello'.encode('utf-8'), 'error')),
+                mock_coro(('\033[34mhello'.encode('utf-8'), None)),
             'wait.return_value': mock_coro(1)}
         process_mock.configure_mock(**attrs)
         mock_create.return_value = mock_coro(process_mock)

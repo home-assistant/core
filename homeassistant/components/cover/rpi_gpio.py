@@ -90,11 +90,6 @@ class RPiGPIOCover(CoverDevice):
         rpi_gpio.write_output(self._relay_pin, not self._invert_relay)
 
     @property
-    def unique_id(self):
-        """Return the ID of this cover."""
-        return '{}.{}'.format(self.__class__, self._name)
-
-    @property
     def name(self):
         """Return the name of the cover if any."""
         return self._name
@@ -114,12 +109,12 @@ class RPiGPIOCover(CoverDevice):
         sleep(self._relay_time)
         rpi_gpio.write_output(self._relay_pin, not self._invert_relay)
 
-    def close_cover(self):
+    def close_cover(self, **kwargs):
         """Close the cover."""
         if not self.is_closed:
             self._trigger()
 
-    def open_cover(self):
+    def open_cover(self, **kwargs):
         """Open the cover."""
         if self.is_closed:
             self._trigger()

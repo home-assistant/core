@@ -75,14 +75,14 @@ class ZMSwitchMonitors(SwitchDevice):
         """Return True if entity is on."""
         return self._state
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the entity on."""
         zoneminder.change_state(
             'api/monitors/%i.json' % self._monitor_id,
             {'Monitor[Function]': self._on_state}
         )
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the entity off."""
         zoneminder.change_state(
             'api/monitors/%i.json' % self._monitor_id,

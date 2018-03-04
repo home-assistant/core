@@ -10,17 +10,19 @@ from aiohttp.web import middleware
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components import persistent_notification
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.yaml import dump
-from .const import (
-    KEY_BANS_ENABLED, KEY_BANNED_IPS, KEY_LOGIN_THRESHOLD,
-    KEY_FAILED_LOGIN_ATTEMPTS)
-from .util import get_real_ip
+from .const import KEY_REAL_IP
 
 _LOGGER = logging.getLogger(__name__)
+
+KEY_BANNED_IPS = 'ha_banned_ips'
+KEY_FAILED_LOGIN_ATTEMPTS = 'ha_failed_login_attempts'
+KEY_LOGIN_THRESHOLD = 'ha_login_threshold'
 
 NOTIFICATION_ID_BAN = 'ip-ban'
 NOTIFICATION_ID_LOGIN = 'http-login'
@@ -33,21 +35,31 @@ SCHEMA_IP_BAN_ENTRY = vol.Schema({
 })
 
 
+@callback
+def setup_bans(hass, app, login_threshold):
+    """Create IP Ban middleware for the app."""
+    @asyncio.coroutine
+    def ban_startup(app):
+        """Initialize bans when app starts up."""
+        app.middlewares.append(ban_middleware)
+        app[KEY_BANNED_IPS] = yield from hass.async_add_job(
+            load_ip_bans_config, hass.config.path(IP_BANS_FILE))
+        app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
+        app[KEY_LOGIN_THRESHOLD] = login_threshold
+
+    app.on_startup.append(ban_startup)
+
+
 @middleware
 @asyncio.coroutine
 def ban_middleware(request, handler):
     """IP Ban middleware."""
-    if not request.app[KEY_BANS_ENABLED]:
+    if KEY_BANNED_IPS not in request.app:
+        _LOGGER.error('IP Ban middleware loaded but banned IPs not loaded')
         return (yield from handler(request))
 
-    if KEY_BANNED_IPS not in request.app:
-        hass = request.app['hass']
-        request.app[KEY_BANNED_IPS] = yield from hass.async_add_job(
-            load_ip_bans_config, hass.config.path(IP_BANS_FILE))
-
     # Verify if IP is not banned
-    ip_address_ = get_real_ip(request)
-
+    ip_address_ = request[KEY_REAL_IP]
     is_banned = any(ip_ban.ip_address == ip_address_
                     for ip_ban in request.app[KEY_BANNED_IPS])
 
@@ -64,7 +76,7 @@ def ban_middleware(request, handler):
 @asyncio.coroutine
 def process_wrong_login(request):
     """Process a wrong login attempt."""
-    remote_addr = get_real_ip(request)
+    remote_addr = request[KEY_REAL_IP]
 
     msg = ('Login attempt or request with invalid authentication '
            'from {}'.format(remote_addr))
@@ -73,12 +85,10 @@ def process_wrong_login(request):
         request.app['hass'], msg, 'Login attempt failed',
         NOTIFICATION_ID_LOGIN)
 
-    if (not request.app[KEY_BANS_ENABLED] or
+    # Check if ban middleware is loaded
+    if (KEY_BANNED_IPS not in request.app or
             request.app[KEY_LOGIN_THRESHOLD] < 1):
         return
-
-    if KEY_FAILED_LOGIN_ATTEMPTS not in request.app:
-        request.app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
 
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
 
@@ -103,7 +113,7 @@ def process_wrong_login(request):
 class IpBan(object):
     """Represents banned IP address."""
 
-    def __init__(self, ip_ban: str, banned_at: datetime=None) -> None:
+    def __init__(self, ip_ban: str, banned_at: datetime = None) -> None:
         """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
         self.banned_at = banned_at or datetime.utcnow()

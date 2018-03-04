@@ -2,8 +2,8 @@
 # linters such as flake8 and pylint should be pinned, as new releases
 # make new things fail. Manually update these pins when pulling in a
 # new version
-flake8==3.3
-pylint==1.6.5
+flake8==3.5
+pylint==1.8.2
 mypy==0.560
 pydocstyle==1.1.1
 coveralls==1.2.0
@@ -14,23 +14,28 @@ pytest-timeout>=1.2.1
 pytest-sugar==0.9.0
 requests_mock==1.4
 mock-open==1.3.1
-flake8-docstrings==1.0.2
+flake8-docstrings==1.0.3
 asynctest>=0.11.1
-freezegun==0.3.9
 
+
+# homeassistant.components.homekit
+HAP-python==1.1.7
 
 # homeassistant.components.notify.html5
 PyJWT==1.5.3
 
 # homeassistant.components.media_player.sonos
-SoCo==0.13
+SoCo==0.14
 
 # homeassistant.components.device_tracker.automatic
-aioautomatic==0.6.4
+aioautomatic==0.6.5
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.6.0
+
+# homeassistant.components.hue
+aiohue==0.3.0
 
 # homeassistant.components.notify.apns
 apns2==0.3.0
@@ -39,7 +44,7 @@ apns2==0.3.0
 caldav==0.5.0
 
 # homeassistant.components.sensor.coinmarketcap
-coinmarketcap==4.1.1
+coinmarketcap==4.2.1
 
 # homeassistant.components.device_tracker.upc_connect
 defusedxml==0.5.0
@@ -57,9 +62,6 @@ evohomeclient==0.2.5
 # homeassistant.components.sensor.geo_rss_events
 feedparser==5.2.1
 
-# homeassistant.components.conversation
-fuzzywuzzy==0.16.0
-
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
 
@@ -73,14 +75,14 @@ haversine==0.4.5
 hbmqtt==0.9.1
 
 # homeassistant.components.binary_sensor.workday
-holidays==0.8.1
+holidays==0.9.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180102.0
+home-assistant-frontend==20180228.1
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
-influxdb==4.1.1
+influxdb==5.0.0
 
 # homeassistant.components.dyson
 libpurecoollink==0.4.2
@@ -94,7 +96,7 @@ mficlient==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
-numpy==1.13.3
+numpy==1.14.0
 
 # homeassistant.components.mqtt
 # homeassistant.components.shiftr
@@ -115,10 +117,14 @@ pilight==0.1.1
 pmsensor==0.4
 
 # homeassistant.components.prometheus
-prometheus_client==0.0.21
+prometheus_client==0.1.0
+
+# homeassistant.components.notify.pushbullet
+# homeassistant.components.sensor.pushbullet
+pushbullet.py==0.11.0
 
 # homeassistant.components.canary
-py-canary==0.2.3
+py-canary==0.4.1
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -134,6 +140,7 @@ pymonoprice==0.3
 pynx584==0.4
 
 # homeassistant.components.sensor.darksky
+# homeassistant.components.weather.darksky
 python-forecastio==1.3.5
 
 # homeassistant.components.sensor.whois
@@ -165,7 +172,8 @@ somecomfort==0.5.0
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.2.0
+# homeassistant.components.sensor.sql
+sqlalchemy==1.2.2
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -173,15 +181,17 @@ statsd==3.2.1
 # homeassistant.components.camera.uvc
 uvcclient==0.10.1
 
+# homeassistant.components.config.config_entries
+voluptuous-serialize==1
+
 # homeassistant.components.vultr
 vultr==0.1.2
 
 # homeassistant.components.wake_on_lan
 # homeassistant.components.media_player.panasonic_viera
 # homeassistant.components.media_player.samsungtv
-# homeassistant.components.media_player.webostv
 # homeassistant.components.switch.wake_on_lan
-wakeonlan==0.2.2
+wakeonlan==1.0.0
 
 # homeassistant.components.cloud
 warrant==0.6.1

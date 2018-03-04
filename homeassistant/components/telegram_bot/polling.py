@@ -93,7 +93,7 @@ class TelegramPoll(BaseTelegramBotEntity):
                 _json = yield from resp.json()
                 return _json
             else:
-                raise WrongHttpStatus('wrong status %s', resp.status)
+                raise WrongHttpStatus('wrong status {}'.format(resp.status))
         finally:
             if resp is not None:
                 yield from resp.release()

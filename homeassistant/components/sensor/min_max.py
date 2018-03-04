@@ -23,12 +23,14 @@ ATTR_MIN_VALUE = 'min_value'
 ATTR_MAX_VALUE = 'max_value'
 ATTR_COUNT_SENSORS = 'count_sensors'
 ATTR_MEAN = 'mean'
+ATTR_LAST = 'last'
 
 ATTR_TO_PROPERTY = [
     ATTR_COUNT_SENSORS,
     ATTR_MAX_VALUE,
     ATTR_MEAN,
     ATTR_MIN_VALUE,
+    ATTR_LAST,
 ]
 
 CONF_ENTITY_IDS = 'entity_ids'
@@ -40,6 +42,7 @@ SENSOR_TYPES = {
     ATTR_MIN_VALUE: 'min',
     ATTR_MAX_VALUE: 'max',
     ATTR_MEAN: 'mean',
+    ATTR_LAST: 'last',
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -116,7 +119,7 @@ class MinMaxSensor(Entity):
                      if self._sensor_type == v)).capitalize()
         self._unit_of_measurement = None
         self._unit_of_measurement_mismatch = False
-        self.min_value = self.max_value = self.mean = STATE_UNKNOWN
+        self.min_value = self.max_value = self.mean = self.last = STATE_UNKNOWN
         self.count_sensors = len(self._entity_ids)
         self.states = {}
 
@@ -142,6 +145,7 @@ class MinMaxSensor(Entity):
 
             try:
                 self.states[entity] = float(new_state.state)
+                self.last = float(new_state.state)
             except ValueError:
                 _LOGGER.warning("Unable to store state. "
                                 "Only numerical states are supported")

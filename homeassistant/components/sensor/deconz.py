@@ -4,12 +4,12 @@ Support for deCONZ sensor.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.deconz/
 """
-
 import asyncio
 
-from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
+from homeassistant.components.deconz import (
+    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
 from homeassistant.const import ATTR_BATTERY_LEVEL, CONF_EVENT, CONF_ID
-from homeassistant.core import callback, EventOrigin
+from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
@@ -17,22 +17,22 @@ from homeassistant.util import slugify
 DEPENDENCIES = ['deconz']
 
 ATTR_EVENT_ID = 'event_id'
-ATTR_ZHASWITCH = 'ZHASwitch'
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup sensor for deCONZ component."""
+    """Set up the deCONZ sensors."""
     if discovery_info is None:
         return
 
-    from pydeconz.sensor import DECONZ_SENSOR
-    sensors = hass.data[DECONZ_DATA].sensors
+    from pydeconz.sensor import DECONZ_SENSOR, SWITCH as DECONZ_REMOTE
+    sensors = hass.data[DATA_DECONZ].sensors
     entities = []
 
-    for sensor in sensors.values():
-        if sensor.type in DECONZ_SENSOR:
-            if sensor.type == ATTR_ZHASWITCH:
+    for key in sorted(sensors.keys(), key=int):
+        sensor = sensors[key]
+        if sensor and sensor.type in DECONZ_SENSOR:
+            if sensor.type in DECONZ_REMOTE:
                 DeconzEvent(hass, sensor)
                 if sensor.battery:
                     entities.append(DeconzBattery(sensor))
@@ -45,13 +45,14 @@ class DeconzSensor(Entity):
     """Representation of a sensor."""
 
     def __init__(self, sensor):
-        """Setup sensor and add update callback to get data from websocket."""
+        """Set up sensor and add update callback to get data from websocket."""
         self._sensor = sensor
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
+        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
 
     @callback
     def async_update_callback(self, reason):
@@ -76,8 +77,13 @@ class DeconzSensor(Entity):
         return self._sensor.name
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this sensor."""
+        return self._sensor.uniqueid
+
+    @property
     def device_class(self):
-        """Class of the sensor."""
+        """Return the class of the sensor."""
         return self._sensor.sensor_class
 
     @property
@@ -87,12 +93,12 @@ class DeconzSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this sensor."""
+        """Return the unit of measurement of this sensor."""
         return self._sensor.sensor_unit
 
     @property
     def available(self):
-        """Return True if sensor is available."""
+        """Return true if sensor is available."""
         return self._sensor.reachable
 
     @property
@@ -115,7 +121,7 @@ class DeconzBattery(Entity):
     def __init__(self, device):
         """Register dispatcher callback for update of battery state."""
         self._device = device
-        self._name = self._device.name + ' Battery Level'
+        self._name = '{} {}'.format(self._device.name, 'Battery Level')
         self._device_class = 'battery'
         self._unit_of_measurement = "%"
 
@@ -123,6 +129,7 @@ class DeconzBattery(Entity):
     def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self._device.register_async_callback(self.async_update_callback)
+        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._device.deconz_id
 
     @callback
     def async_update_callback(self, reason):
@@ -141,8 +148,13 @@ class DeconzBattery(Entity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for the device."""
+        return self._device.uniqueid
+
+    @property
     def device_class(self):
-        """Class of the sensor."""
+        """Return the class of the sensor."""
         return self._device_class
 
     @property

@@ -6,7 +6,6 @@ https://home-assistant.io/components/notify/
 """
 import asyncio
 import logging
-import os
 from functools import partial
 
 import voluptuous as vol
@@ -15,7 +14,6 @@ from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.util import slugify
@@ -71,10 +69,6 @@ def send_message(hass, message, title=None, data=None):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the notify services."""
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     targets = {}
 
     @asyncio.coroutine
@@ -151,7 +145,6 @@ def async_setup(hass, config):
                 targets[target_name] = target
                 hass.services.async_register(
                     DOMAIN, target_name, async_notify_message,
-                    descriptions.get(SERVICE_NOTIFY),
                     schema=NOTIFY_SERVICE_SCHEMA)
 
         platform_name = (
@@ -161,7 +154,7 @@ def async_setup(hass, config):
 
         hass.services.async_register(
             DOMAIN, platform_name_slug, async_notify_message,
-            descriptions.get(SERVICE_NOTIFY), schema=NOTIFY_SERVICE_SCHEMA)
+            schema=NOTIFY_SERVICE_SCHEMA)
 
         return True
 

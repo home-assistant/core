@@ -345,6 +345,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                         CONF_PLATFORM: 'test',
                         device_tracker.CONF_CONSIDER_HOME: 59,
                     }})
+                self.hass.block_till_done()
 
         self.assertEqual(STATE_HOME,
                          self.hass.states.get('device_tracker.dev1').state)
@@ -586,6 +587,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                         CONF_PLATFORM: 'test',
                         device_tracker.CONF_CONSIDER_HOME: 59,
                     }})
+                self.hass.block_till_done()
 
         state = self.hass.states.get('device_tracker.dev1')
         attrs = state.attributes
@@ -702,7 +704,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
 @asyncio.coroutine
 def test_async_added_to_hass(hass):
-    """Test resoring state."""
+    """Test restoring state."""
     attr = {
         device_tracker.ATTR_LONGITUDE: 18,
         device_tracker.ATTR_LATITUDE: -33,
