@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _CONFIGURING = {}
 
-REQUIREMENTS = ['py-august==0.3.0']
+REQUIREMENTS = ['py-august==0.4.0']
 
 DEFAULT_TIMEOUT = 10
 ACTIVITY_FETCH_LIMIT = 10
@@ -159,7 +159,7 @@ class AugustData:
         self._api = api
         self._access_token = access_token
         self._doorbells = self._api.get_doorbells(self._access_token) or []
-        self._locks = self._api.get_locks(self._access_token) or []
+        self._locks = self._api.get_operable_locks(self._access_token) or []
         self._house_ids = [d.house_id for d in self._doorbells + self._locks]
 
         self._doorbell_detail_by_id = {}
