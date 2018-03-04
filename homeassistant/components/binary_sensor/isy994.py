@@ -56,21 +56,14 @@ def setup_platform(hass, config: ConfigType,
         else:
             device_type = _detect_device_type(node)
             subnode_id = int(node.nid[-1])
-            if device_type == 'opening':
-                # Door/window sensors use an optional "negative" node
-                if subnode_id == 4:
+            if (device_type == 'opening' or device_type == 'moisture'):
+                # These sensors use an optional "negative" subnode 2 to snag
+                # all state changes
+                if subnode_id == 2:
+                    parent_device.add_negative_node(node)
+                elif subnode_id == 4:
                     # Subnode 4 is the heartbeat node, which we will represent
                     # as a separate binary_sensor
-                    device = ISYBinarySensorHeartbeat(node, parent_device)
-                    parent_device.add_heartbeat_device(device)
-                    devices.append(device)
-                elif subnode_id == 2:
-                    parent_device.add_negative_node(node)
-            elif device_type == 'moisture':
-                # Moisture nodes have a subnode 2, but we ignore it because
-                # it's just the inverse of the primary node.
-                if subnode_id == 4:
-                    # Heartbeat node
                     device = ISYBinarySensorHeartbeat(node, parent_device)
                     parent_device.add_heartbeat_device(device)
                     devices.append(device)
