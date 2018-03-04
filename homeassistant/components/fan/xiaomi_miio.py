@@ -122,6 +122,7 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIERPRO.update({
     ATTR_FILTER_TYPE: 'filter_type',
     ATTR_ILLUMINANCE: 'illuminance',
     ATTR_MOTOR2_SPEED: 'motor2_speed',
+    ATTR_VOLUME: 'volume',
 })
 
 AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER = {
@@ -372,8 +373,8 @@ class XiaomiGenericDevice(FanEntity):
         value = getattr(state, attribute)
         if isinstance(value, Enum):
             return value.value
-        else:
-            return value
+
+        return value
 
     @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
