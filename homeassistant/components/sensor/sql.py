@@ -24,9 +24,17 @@ CONF_QUERIES = 'queries'
 CONF_QUERY = 'query'
 CONF_COLUMN_NAME = 'column'
 
+
+def validate_sql_select(value):
+    """Validate that value is a SQL SELECT query."""
+    if not value.lstrip().lower().startswith('select'):
+        raise vol.Invalid('Only SELECT queries allowed')
+    return value
+
+
 _QUERY_SCHEME = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_QUERY): cv.string,
+    vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
     vol.Required(CONF_COLUMN_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
