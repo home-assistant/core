@@ -32,21 +32,21 @@ ICON = 'mdi:currency-usd'
 SCAN_INTERVAL = timedelta(minutes=1)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the Tibber sensor."""
     import tibber
     tibber_connection = tibber.Tibber(config[CONF_ACCESS_TOKEN],
                                       websession=async_get_clientsession(hass))
 
     try:
-        yield from tibber_connection.update_info()
+        await tibber_connection.update_info()
         dev = []
         for home in tibber_connection.get_homes():
-            yield from home.update_info()
+            await home.update_info()
             dev.append(TibberSensor(home))
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        raise PlatformNotReady() from None
+        raise PlatformNotReady()
 
     async_add_devices(dev, True)
 
@@ -59,25 +59,41 @@ class TibberSensor(Entity):
         self._tibber_home = tibber_home
         self._last_updated = None
         self._state = None
-        self._device_state_attributes = None
-        self._unit_of_measurement = None
-        self._name = 'Electricity price {}'.format(self._tibber_home.address1)
+        self._device_state_attributes = {}
+        self._unit_of_measurement = self._tibber_home.price_unit
+        self._name = 'Electricity price {}'.format(tibber_home.address1)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data and updates the states."""
+        now = dt_util.utcnow()
         if self._tibber_home.current_price_total and self._last_updated and \
            dt_util.as_utc(dt_util.parse_datetime(self._last_updated)).hour\
-           == dt_util.utcnow().hour:
+           == now.hour:
             return
 
-        yield from self._tibber_home.update_current_price_info()
+        def _find_current_price():
+            for key, price_total in self._tibber_home.price_total.items():
+                price_time = dt_util.as_utc(dt_util.parse_datetime(key))
+                time_diff = (now - price_time).total_seconds()/60
+                if time_diff >= 0 and time_diff < 60:
+                    self._state = round(price_total, 2)
+                    self._last_updated = key
+                    return True
+            return False
 
-        self._state = self._tibber_home.current_price_total
-        self._last_updated = self._tibber_home.current_price_info.\
-            get('startsAt')
-        self._device_state_attributes = self._tibber_home.current_price_info
-        self._unit_of_measurement = self._tibber_home.price_unit
+        if _find_current_price():
+            return
+
+        _LOGGER.debug("No cached data found, so asking for new data")
+        await self._tibber_home.update_info()
+        await self._tibber_home.update_price_info()
+        data = self._tibber_home.info['viewer']['home']
+        self._device_state_attributes['app_nickname'] = data['appNickname']
+        self._device_state_attributes['grid_company'] =\
+            data['meteringPointData']['gridCompany']
+        self._device_state_attributes['estimated_annual_consumption'] =\
+            data['meteringPointData']['estimatedAnnualConsumption']
+        _find_current_price()
 
     @property
     def device_state_attributes(self):
