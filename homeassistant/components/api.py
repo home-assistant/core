@@ -132,7 +132,6 @@ class APIEventStream(HomeAssistantView):
                     _LOGGER.debug('STREAM %s WRITING %s', id(stop_obj),
                                   msg.strip())
                     yield from response.write(msg.encode("UTF-8"))
-                    yield from response.drain()
                 except asyncio.TimeoutError:
                     yield from to_write.put(STREAM_PING_PAYLOAD)
 
