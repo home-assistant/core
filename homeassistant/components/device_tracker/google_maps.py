@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.google_maps/
 """
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -12,15 +13,17 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, SOURCE_TYPE_GPS)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['locationsharinglib==0.3.0']
+REQUIREMENTS = ['locationsharinglib==0.4.0']
 
-CREDENTIALS_FILE = 'google_maps_location_sharing.conf'
+CREDENTIALS_FILE = '.google_maps_location_sharing.cookies'
+
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -42,7 +45,6 @@ class GoogleMapsScanner(object):
         from locationsharinglib import Service
         from locationsharinglib.locationsharinglibexceptions import InvalidUser
 
-        self.hass = hass
         self.see = see
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
@@ -52,20 +54,18 @@ class GoogleMapsScanner(object):
                                    hass.config.path(CREDENTIALS_FILE))
             self._update_info()
 
-            track_utc_time_change(
-                self.hass, self._update_info, second=range(0, 60, 30))
+            track_time_interval(
+                hass, self._update_info, MIN_TIME_BETWEEN_SCANS)
 
             self.success_init = True
 
         except InvalidUser:
-            _LOGGER.error('You have specified invalid login credentials.')
+            _LOGGER.error('You have specified invalid login credentials')
             self.success_init = False
 
     def _update_info(self, now=None):
         for person in self.service.get_all_people():
             dev_id = 'google_maps_{0}'.format(slugify(person.id))
-            lat = person.latitude
-            lon = person.longitude
 
             attrs = {
                 'id': person.id,
@@ -76,10 +76,8 @@ class GoogleMapsScanner(object):
             }
             self.see(
                 dev_id=dev_id,
-                gps=(lat, lon),
+                gps=(person.latitude, person.longitude),
                 picture=person.picture_url,
                 source_type=SOURCE_TYPE_GPS,
                 attributes=attrs
             )
-
-        return True
