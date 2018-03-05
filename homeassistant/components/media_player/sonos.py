@@ -36,8 +36,9 @@ logging.getLogger('soco.data_structures_entry').setLevel(logging.ERROR)
 _SOCO_SERVICES_LOGGER = logging.getLogger('soco.services')
 
 SUPPORT_SONOS = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
-    SUPPORT_PLAY_MEDIA | SUPPORT_SEEK | SUPPORT_CLEAR_PLAYLIST |\
-    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | SUPPORT_STOP
+    SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_SELECT_SOURCE |\
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK |\
+    SUPPORT_PLAY_MEDIA | SUPPORT_SHUFFLE_SET | SUPPORT_CLEAR_PLAYLIST
 
 SERVICE_JOIN = 'sonos_join'
 SERVICE_UNJOIN = 'sonos_unjoin'
@@ -69,7 +70,7 @@ ATTR_SPEECH_ENHANCE = 'speech_enhance'
 
 ATTR_IS_COORDINATOR = 'is_coordinator'
 
-UPNP_ERRORS_TO_IGNORE = ['701']
+UPNP_ERRORS_TO_IGNORE = ['701', '711']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
@@ -344,7 +345,6 @@ class SonosDevice(MediaPlayerDevice):
         self._name = None
         self._coordinator = None
         self._status = None
-        self._extra_features = 0
         self._media_duration = None
         self._media_position = None
         self._media_position_updated_at = None
@@ -464,7 +464,6 @@ class SonosDevice(MediaPlayerDevice):
                 self._media_artist = None
                 self._media_album_name = None
                 self._media_title = None
-                self._extra_features = 0
                 self._source_name = None
 
     def process_avtransport_event(self, event):
@@ -485,15 +484,11 @@ class SonosDevice(MediaPlayerDevice):
         else:
             track_info = self.soco.get_current_track_info()
 
-            media_info = self.soco.avTransport.GetMediaInfo(
-                [('InstanceID', 0)]
-            )
-
             if _is_radio_uri(track_info['uri']):
-                self._refresh_radio(event.variables, media_info, track_info)
+                self._refresh_radio(event.variables, track_info)
             else:
                 update_position = (new_status != self._status)
-                self._refresh_music(update_position, media_info, track_info)
+                self._refresh_music(update_position, track_info)
 
         self._status = new_status
 
@@ -565,8 +560,6 @@ class SonosDevice(MediaPlayerDevice):
 
     def _refresh_linein(self, source):
         """Update state when playing from line-in/tv."""
-        self._extra_features = 0
-
         self._media_duration = None
         self._media_position = None
         self._media_position_updated_at = None
@@ -579,14 +572,13 @@ class SonosDevice(MediaPlayerDevice):
 
         self._source_name = source
 
-    def _refresh_radio(self, variables, media_info, track_info):
+    def _refresh_radio(self, variables, track_info):
         """Update state when streaming radio."""
-        self._extra_features = 0
-
         self._media_duration = None
         self._media_position = None
         self._media_position_updated_at = None
 
+        media_info = self.soco.avTransport.GetMediaInfo([('InstanceID', 0)])
         self._media_image_url = self._radio_artwork(media_info['CurrentURI'])
 
         self._media_artist = track_info.get('artist')
@@ -641,30 +633,8 @@ class SonosDevice(MediaPlayerDevice):
             if fav.reference.get_uri() == media_info['CurrentURI']:
                 self._source_name = fav.title
 
-    def _refresh_music(self, update_media_position, media_info, track_info):
+    def _refresh_music(self, update_media_position, track_info):
         """Update state when playing music tracks."""
-        self._extra_features = SUPPORT_PAUSE | SUPPORT_SHUFFLE_SET |\
-            SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
-
-        playlist_position = track_info.get('playlist_position')
-        if playlist_position in ('', 'NOT_IMPLEMENTED', None):
-            playlist_position = None
-        else:
-            playlist_position = int(playlist_position)
-
-        playlist_size = media_info.get('NrTracks')
-        if playlist_size in ('', 'NOT_IMPLEMENTED', None):
-            playlist_size = None
-        else:
-            playlist_size = int(playlist_size)
-
-        if playlist_position is not None and playlist_size is not None:
-            if playlist_position <= 1:
-                self._extra_features &= ~SUPPORT_PREVIOUS_TRACK
-
-            if playlist_position == playlist_size:
-                self._extra_features &= ~SUPPORT_NEXT_TRACK
-
         self._media_duration = _timespan_secs(track_info.get('duration'))
 
         position_info = self.soco.avTransport.GetPositionInfo(
@@ -775,7 +745,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_coordinator
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_SONOS | self._extra_features
+        return SUPPORT_SONOS
 
     @soco_error()
     def volume_up(self):
@@ -865,19 +835,19 @@ class SonosDevice(MediaPlayerDevice):
         """Send pause command."""
         self.soco.pause()
 
-    @soco_error()
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_next_track(self):
         """Send next track command."""
         self.soco.next()
 
-    @soco_error()
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_previous_track(self):
         """Send next track command."""
         self.soco.previous()
 
-    @soco_error()
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_seek(self, position):
         """Send seek command."""
