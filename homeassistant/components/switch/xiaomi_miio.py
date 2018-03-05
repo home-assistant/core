@@ -34,8 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'qmi.powerstrip.v1',
          'zimi.powerstrip.v2',
          'chuangmi.plug.m1',
-         'chuangmi.plug.v2',
-         ]),
+         'chuangmi.plug.v2']),
 
 })
 
@@ -201,12 +200,13 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             ATTR_TEMPERATURE: None,
             ATTR_MODEL: self._model,
         }
+        self._supported_features = SUPPORT_FLAGS_GENERIC
         self._skip_update = False
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_FLAGS_GENERIC
+        return self._supported_features
 
     @property
     def should_poll(self):
@@ -296,21 +296,25 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
+    # pylint: disable=no-self-use
     @asyncio.coroutine
     def async_set_power_mode(self, mode: str):
         """Set the power mode."""
         return
 
+    # pylint: disable=no-self-use
     @asyncio.coroutine
     def async_set_wifi_led_on(self):
         """Turn the wifi led on."""
         return
 
+    # pylint: disable=no-self-use
     @asyncio.coroutine
     def async_set_wifi_led_off(self):
         """Turn the wifi led on."""
         return
 
+    # pylint: disable=no-self-use
     @asyncio.coroutine
     def async_set_power_price(self, price: int):
         """Set the power price."""
@@ -323,6 +327,11 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
     def __init__(self, name, plug, model):
         """Initialize the plug switch."""
         XiaomiPlugGenericSwitch.__init__(self, name, plug, model)
+
+        if self._model == MODEL_POWER_STRIP_V2:
+            self._supported_features = SUPPORT_FLAGS_POWER_STRIP_V2
+        else:
+            self._supported_features = SUPPORT_FLAGS_POWER_STRIP_V1
 
         self._state_attrs.update({
             ATTR_LOAD_POWER: None,
@@ -340,10 +349,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._model == MODEL_POWER_STRIP_V2:
-            return SUPPORT_FLAGS_POWER_STRIP_V2
-        else:
-            return SUPPORT_FLAGS_POWER_STRIP_V1
+        return self._supported_features
 
     @asyncio.coroutine
     def async_update(self):
