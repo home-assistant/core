@@ -99,8 +99,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the HTTP API and debug interface."""
     conf = config.get(DOMAIN)
 
@@ -136,16 +135,14 @@ def async_setup(hass, config):
         is_ban_enabled=is_ban_enabled
     )
 
-    @asyncio.coroutine
-    def stop_server(event):
+    async def stop_server(event):
         """Stop the server."""
-        yield from server.stop()
+        await server.stop()
 
-    @asyncio.coroutine
-    def start_server(event):
+    async def start_server(event):
         """Start the server."""
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
-        yield from server.start()
+        await server.start()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server)
 
@@ -185,7 +182,7 @@ class HomeAssistantHTTP(object):
         if is_ban_enabled:
             setup_bans(hass, app, login_threshold)
 
-        setup_auth(hass, app, trusted_networks, api_password)
+        auth = setup_auth(hass, app, trusted_networks, api_password)
 
         # setup_auth_hmac(hass, app)
 
@@ -203,6 +200,7 @@ class HomeAssistantHTTP(object):
         self.is_ban_enabled = is_ban_enabled
         self._handler = None
         self.server = None
+        self.auth = auth
 
     def register_view(self, view):
         """Register a view with the WSGI server.
@@ -280,10 +278,9 @@ class HomeAssistantHTTP(object):
 
         self.app.router.add_route('GET', url_pattern, serve_file)
 
-    @asyncio.coroutine
-    def start(self):
+    async def start(self):
         """Start the WSGI server."""
-        yield from self.app.startup()
+        await self.app.startup()
 
         if self.ssl_certificate:
             try:
@@ -310,7 +307,7 @@ class HomeAssistantHTTP(object):
         self._handler = self.app.make_handler(loop=self.hass.loop)
 
         try:
-            self.server = yield from self.hass.loop.create_server(
+            self.server = await self.hass.loop.create_server(
                 self._handler, self.server_host, self.server_port, ssl=context)
         except OSError as error:
             _LOGGER.error("Failed to create HTTP server at port %d: %s",
@@ -320,16 +317,15 @@ class HomeAssistantHTTP(object):
         self.app._middlewares = tuple(self.app._prepare_middleware())
         self.app._frozen = False
 
-    @asyncio.coroutine
-    def stop(self):
+    async def stop(self):
         """Stop the WSGI server."""
         if self.server:
             self.server.close()
-            yield from self.server.wait_closed()
-        yield from self.app.shutdown()
+            await self.server.wait_closed()
+        await self.app.shutdown()
         if self._handler:
-            yield from self._handler.shutdown(10)
-        yield from self.app.cleanup()
+            await self._handler.shutdown(10)
+        await self.app.cleanup()
 
 
 class HomeAssistantView(object):
@@ -358,9 +354,8 @@ class HomeAssistantView(object):
             data['code'] = message_code
         return self.json(data, status_code, headers=headers)
 
-    @asyncio.coroutine
     # pylint: disable=no-self-use
-    def file(self, request, fil):
+    async def file(self, request, fil):
         """Return a file."""
         assert isinstance(fil, str), 'only string paths allowed'
         return web.FileResponse(fil)
@@ -393,8 +388,7 @@ def request_handler_factory(view, handler):
     assert asyncio.iscoroutinefunction(handler) or is_callback(handler), \
         "Handler should be a coroutine or a callback."
 
-    @asyncio.coroutine
-    def handle(request):
+    async def handle(request):
         """Handle incoming request."""
         if not request.app['hass'].is_running:
             return web.Response(status=503)
@@ -410,7 +404,7 @@ def request_handler_factory(view, handler):
         result = handler(request, **request.match_info)
 
         if asyncio.iscoroutine(result):
-            result = yield from result
+            result = await result
 
         if isinstance(result, web.StreamResponse):
             # The method handler returned a ready-made Response, how nice of it
