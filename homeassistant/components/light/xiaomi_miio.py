@@ -119,8 +119,7 @@ SERVICE_TO_METHOD = {
 
 
 # pylint: disable=unused-argument
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the light from config."""
     from miio import Device, DeviceException
     if DATA_KEY not in hass.data:
@@ -180,8 +179,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     async_add_devices(devices, update_before_add=True)
 
-    @asyncio.coroutine
-    def async_service_handler(service):
+    async def async_service_handler(service):
         """Map services to methods on Xiaomi Philips Lights."""
         method = SERVICE_TO_METHOD.get(service.service)
         params = {key: value for key, value in service.data.items()
@@ -195,11 +193,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         update_tasks = []
         for target_device in target_devices:
-            yield from getattr(target_device, method['method'])(**params)
+            await getattr(target_device, method['method'])(**params)
             update_tasks.append(target_device.async_update_ha_state(True))
 
         if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks, loop=hass.loop)
 
     for xiaomi_miio_service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[xiaomi_miio_service].get(
@@ -259,12 +257,11 @@ class XiaomiPhilipsAbstractLight(Light):
         """Return the supported features."""
         return 0
 
-    @asyncio.coroutine
     def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a light command handling error messages."""
         from miio import DeviceException
         try:
-            result = yield from self.hass.async_add_job(
+            result = await self.hass.async_add_job(
                 partial(func, *args, **kwargs))
 
             _LOGGER.debug("Response received from light: %s", result)
@@ -274,24 +271,21 @@ class XiaomiPhilipsAbstractLight(Light):
             _LOGGER.error(mask_error, exc)
             return False
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        yield from self._try_command(
+        await self._try_command(
             "Turning the light on failed.", self._light.on)
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        yield from self._try_command(
+        await self._try_command(
             "Turning the light off failed.", self._light.off)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
         try:
-            state = yield from self.hass.async_add_job(self._light.status)
+            state = await self.hass.async_add_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.is_on
@@ -319,8 +313,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
         """Return the supported features."""
         return SUPPORT_FLAGS_GENERIC
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
@@ -330,28 +323,26 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
                 "Setting brightness: %s %s%%",
                 brightness, percent_brightness)
 
-            result = yield from self._try_command(
+            result = await self._try_command(
                 "Setting brightness failed: %s",
                 self._light.set_brightness, percent_brightness)
 
             if result:
                 self._brightness = brightness
         else:
-            yield from self._try_command(
+            await self._try_command(
                 "Turning the light on failed.", self._light.on)
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        yield from self._try_command(
+        await self._try_command(
             "Turning the light off failed.", self._light.off)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
         try:
-            state = yield from self.hass.async_add_job(self._light.status)
+            state = await self.hass.async_add_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.is_on
@@ -371,23 +362,21 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
             self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
-    @asyncio.coroutine
-    def async_set_scene(self, scene: int = 1):
+    async def async_set_scene(self, scene: int = 1):
         """Set the fixed scene."""
         if self.supported_features & SUPPORT_SET_SCENE == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Setting a fixed scene failed.",
             self._light.set_scene, scene)
 
-    @asyncio.coroutine
-    def async_set_delayed_turn_off(self, time_period: timedelta):
+    async def async_set_delayed_turn_off(self, time_period: timedelta):
         """Set delayed turn off."""
         if self.supported_features & SUPPORT_SET_DELAYED_TURN_OFF == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Setting the turn off delay failed.",
             self._light.delay_off, time_period.total_seconds())
 
@@ -414,38 +403,32 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
         return None
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def async_reminder_on(self):
+    async def async_reminder_on(self):
         """Enable the eye fatigue notification."""
         return
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def async_reminder_off(self):
+    async def async_reminder_off(self):
         """Disable the eye fatigue notification."""
         return
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def async_night_light_mode_on(self):
+    async def async_night_light_mode_on(self):
         """Turn the smart night light mode on."""
         return
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def async_night_light_mode_off(self):
+    async def async_night_light_mode_off(self):
         """Turn the smart night light mode off."""
         return
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def async_eyecare_mode_on(self):
+    async def async_eyecare_mode_on(self):
         """Turn the eyecare mode on."""
         return
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def async_eyecare_mode_off(self):
+    async def async_eyecare_mode_off(self):
         """Turn the eyecare mode off."""
         return
 
@@ -473,8 +456,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
         """Return the supported features."""
         return SUPPORT_FLAGS_BULB
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
@@ -493,7 +475,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
                 brightness, percent_brightness,
                 color_temp, percent_color_temp)
 
-            result = yield from self._try_command(
+            result = await self._try_command(
                 "Setting brightness and color temperature failed: "
                 "%s bri, %s cct",
                 self._light.set_brightness_and_color_temperature,
@@ -509,7 +491,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
                 "%s mireds, %s%% cct",
                 color_temp, percent_color_temp)
 
-            result = yield from self._try_command(
+            result = await self._try_command(
                 "Setting color temperature failed: %s cct",
                 self._light.set_color_temperature, percent_color_temp)
 
@@ -524,7 +506,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
                 "Setting brightness: %s %s%%",
                 brightness, percent_brightness)
 
-            result = yield from self._try_command(
+            result = await self._try_command(
                 "Setting brightness failed: %s",
                 self._light.set_brightness, percent_brightness)
 
@@ -532,15 +514,14 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
                 self._brightness = brightness
 
         else:
-            yield from self._try_command(
+            await self._try_command(
                 "Turning the light on failed.", self._light.on)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
         try:
-            state = yield from self.hass.async_add_job(self._light.status)
+            state = await self.hass.async_add_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.is_on
@@ -600,12 +581,11 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         """Return the supported features."""
         return SUPPORT_FLAGS_CEILING
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
         try:
-            state = yield from self.hass.async_add_job(self._light.status)
+            state = await self.hass.async_add_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.is_on
@@ -651,12 +631,11 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
         """Return the supported features."""
         return SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
         try:
-            state = yield from self.hass.async_add_job(self._light.status)
+            state = await self.hass.async_add_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.is_on
@@ -679,73 +658,66 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
             self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
-    @asyncio.coroutine
-    def async_set_delayed_turn_off(self, time_period: timedelta):
+    async def async_set_delayed_turn_off(self, time_period: timedelta):
         """Set delayed turn off."""
         if self.supported_features & SUPPORT_SET_DELAYED_TURN_OFF == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Setting the turn off delay failed.",
             self._light.delay_off, round(time_period.total_seconds() / 60))
 
-    @asyncio.coroutine
-    def async_reminder_on(self):
+    async def async_reminder_on(self):
         """Enable the eye fatigue notification."""
         if self.supported_features & SUPPORT_REMINDER == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning on the reminder failed.",
             self._light.reminder_on)
 
-    @asyncio.coroutine
-    def async_reminder_off(self):
+    async def async_reminder_off(self):
         """Disable the eye fatigue notification."""
         if self.supported_features & SUPPORT_REMINDER == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning off the reminder failed.",
             self._light.reminder_off)
 
-    @asyncio.coroutine
-    def async_night_light_mode_on(self):
+    async def async_night_light_mode_on(self):
         """Turn the smart night light mode on."""
         if self.supported_features & SUPPORT_NIGHT_LIGHT_MODE == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning on the smart night light mode failed.",
             self._light.smart_night_light_on)
 
-    @asyncio.coroutine
-    def async_night_light_mode_off(self):
+    async def async_night_light_mode_off(self):
         """Turn the smart night light mode off."""
         if self.supported_features & SUPPORT_NIGHT_LIGHT_MODE == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning off the smart night light mode failed.",
             self._light.smart_night_light_off)
 
-    @asyncio.coroutine
-    def async_eyecare_mode_on(self):
+    async def async_eyecare_mode_on(self):
         """Turn the eyecare mode on."""
         if self.supported_features & SUPPORT_EYECARE_MODE == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning on the eyecare mode failed.",
             self._light.eyecare_on)
 
-    @asyncio.coroutine
-    def async_eyecare_mode_off(self):
+    async def async_eyecare_mode_off(self):
         """Turn the eyecare mode off."""
         if self.supported_features & SUPPORT_EYECARE_MODE == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning off the eyecare mode failed.",
             self._light.eyecare_off)
 
@@ -785,8 +757,7 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         """Return the supported features."""
         return SUPPORT_FLAGS_SREAD1_AMBIENT_LIGHT
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
@@ -796,28 +767,26 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
                 "Setting brightness of the ambient light: %s %s%%",
                 brightness, percent_brightness)
 
-            result = yield from self._try_command(
+            result = await self._try_command(
                 "Setting brightness of the ambient failed: %s",
                 self._light.set_ambient_brightness, percent_brightness)
 
             if result:
                 self._brightness = brightness
         else:
-            yield from self._try_command(
+            await self._try_command(
                 "Turning the ambient light on failed.", self._light.ambient_on)
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        yield from self._try_command(
+        await self._try_command(
             "Turning the ambient light off failed.", self._light.ambient_off)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
         try:
-            state = yield from self.hass.async_add_job(self._light.status)
+            state = await self.hass.async_add_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.eyecare
