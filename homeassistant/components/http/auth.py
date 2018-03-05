@@ -21,6 +21,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.yaml import dump
 
 from .const import CLIENT_ID, CLIENT_SECRET, KEY_AUTHENTICATED, KEY_REAL_IP
+from .view import HomeAssistantView
 
 YAML_SECRETS = 'auth_secrets.yaml'
 
@@ -204,6 +205,10 @@ def delta_time(time1: datetime, time2: datetime = None):
     return abs(total_seconds)
 
 
+class AuthHmacView(HomeAssistantView):
+    pass
+
+
 class HmacClient:
     """Represent a client id."""
 
@@ -272,6 +277,11 @@ class AuthHmac(object):
         self.yaml_path = hass.config.path(YAML_SECRETS)
         self.hass = hass
         # self.load_config()
+
+    def load_view(self):
+        if self.view:
+            return
+        self.view = AuthHmacView()
 
     async def new_api(self, name: str):
         """Create new API key and save to YAML configuration file."""
