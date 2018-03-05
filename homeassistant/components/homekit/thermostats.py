@@ -73,16 +73,17 @@ class Thermostat(HomeAccessory):
             _LOGGER.debug("%s: Set heat-cool to %d", self._entity_id, value)
             self.heat_cool_flag_target_state = True
             hass_value = HC_HOMEKIT_TO_HASS[value]
-
             self._hass.services.call('climate', 'set_operation_mode',
                                      {ATTR_ENTITY_ID: self._entity_id,
                                       ATTR_OPERATION_MODE: hass_value})
 
     def set_temperature_debounced(self, value):
+        """Set target temperature to value if call came from HomeKit."""
         _LOGGER.debug("%s: Call to set temperature to %.2f",
                       self._entity_id, value)
 
         def perform_call():
+            """Perform the set_target_temperature function call."""
             self.set_target_temperature(value)
         # Cancel timer if one was running
         if self._call_timer is not None:
@@ -108,7 +109,6 @@ class Thermostat(HomeAccessory):
         """Update security state after state changed."""
         if new_state is None:
             return
-
         current_temp = new_state.attributes[ATTR_CURRENT_TEMPERATURE]
         if current_temp is not None:
             self.char_current_temp.set_value(current_temp)
@@ -118,10 +118,13 @@ class Thermostat(HomeAccessory):
                                             should_callback=False)
         operation_mode = new_state.attributes[ATTR_OPERATION_MODE]
         if operation_mode is not None and \
-                operation_mode in HC_HASS_TO_HOMEKIT and \
-                not self.heat_cool_flag_target_state:
+                operation_mode in HC_HASS_TO_HOMEKIT:
             self.char_current_heat_cool.set_value(
-                HC_HASS_TO_HOMEKIT[operation_mode], should_callback=False)
+                HC_HASS_TO_HOMEKIT[operation_mode])
+            if not self.heat_cool_flag_target_state:
+                self.char_target_heat_cool.set_value(
+                    HC_HASS_TO_HOMEKIT[operation_mode],
+                    should_callback=False)
         display_units = new_state.attributes['unit_of_measurement']
         if display_units is not None and display_units in UNIT_HASS_TO_HOMEKIT:
             self.char_display_units.set_value(
