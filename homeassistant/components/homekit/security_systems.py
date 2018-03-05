@@ -1,16 +1,17 @@
 """Class to hold all alarm control panel accessories."""
 import logging
 
-from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
-                                 STATE_ALARM_ARMED_HOME,
-                                 STATE_ALARM_ARMED_NIGHT,
-                                 STATE_ALARM_DISARMED)
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
+    ATTR_ENTITY_ID, ATTR_CODE)
 from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service
-from .const import (SERV_SECURITY_SYSTEM, CHAR_CURRENT_SECURITY_STATE,
-                    CHAR_TARGET_SECURITY_STATE)
+from .const import (
+    SERV_SECURITY_SYSTEM, CHAR_CURRENT_SECURITY_STATE,
+    CHAR_TARGET_SECURITY_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,14 +36,15 @@ class SecuritySystem(HomeAccessory):
         self._entity_id = entity_id
         self._alarm_code = alarm_code
 
-        self.current_security_state = None
-        self.homekit_target_security_state = None
+        self.flag_target_state = False
 
         self.service_alarm = add_preload_service(self, SERV_SECURITY_SYSTEM)
         self.char_current_state = self.service_alarm. \
             get_characteristic(CHAR_CURRENT_SECURITY_STATE)
+        self.char_current_state.value = 3
         self.char_target_state = self.service_alarm. \
             get_characteristic(CHAR_TARGET_SECURITY_STATE)
+        self.char_target_state.value = 3
 
         self.char_target_state.setter_callback = self.set_security_state
 
@@ -56,17 +58,16 @@ class SecuritySystem(HomeAccessory):
 
     def set_security_state(self, value):
         """Move security state to value if call came from HomeKit."""
-        if value != self.current_security_state and value in HOMEKIT_TO_HASS:
-            _LOGGER.debug("%s: Set security state to %d",
-                          self._entity_id, value)
-            self.homekit_target_security_state = value
-            hass_value = HOMEKIT_TO_HASS[value]
-            service = STATE_TO_SERVICE[hass_value]
+        _LOGGER.debug("%s: Set security state to %d",
+                      self._entity_id, value)
+        self.flag_target_state = True
+        hass_value = HOMEKIT_TO_HASS[value]
+        service = STATE_TO_SERVICE[hass_value]
 
-            params = {'entity_id': self._entity_id}
-            if self._alarm_code is not None:
-                params['code'] = self._alarm_code
-            self._hass.services.call('alarm_control_panel', service, params)
+        params = {ATTR_ENTITY_ID: self._entity_id}
+        if self._alarm_code is not None:
+            params[ATTR_CODE] = self._alarm_code
+        self._hass.services.call('alarm_control_panel', service, params)
 
     def update_security_state(self, entity_id=None,
                               old_state=None, new_state=None):
@@ -75,18 +76,17 @@ class SecuritySystem(HomeAccessory):
             return
 
         hass_state = new_state.state
-        _LOGGER.debug("%s: Want to update current state to %s",
-                      self._entity_id, hass_state)
-        if hass_state in HASS_TO_HOMEKIT:
-            self.current_security_state = HASS_TO_HOMEKIT[hass_state]
-            self.char_current_state.set_value(self.current_security_state)
-            _LOGGER.debug("%s: Updated current state to %s (%d)",
-                          self._entity_id, hass_state,
-                          self.current_security_state)
+        if hass_state not in HASS_TO_HOMEKIT:
+            return
+        current_security_state = HASS_TO_HOMEKIT[hass_state]
+        self.char_current_state.set_value(current_security_state)
+        _LOGGER.debug("%s: Updated current state to %s (%d)",
+                      self._entity_id, hass_state,
+                      current_security_state)
 
-            if self.homekit_target_security_state is None or \
-                    self.homekit_target_security_state \
-                    == self.current_security_state:
-                self.char_target_state.set_value(self.current_security_state,
-                                                 should_callback=False)
-                self.homekit_target_security_state = None
+        if not self.flag_target_state:
+            self.char_target_state.set_value(current_security_state,
+                                             should_callback=False)
+        elif self.char_target_state.get_value() \
+                == self.char_current_state.get_value():
+            self.flag_target_state = False

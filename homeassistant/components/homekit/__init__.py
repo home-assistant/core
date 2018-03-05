@@ -67,8 +67,8 @@ def import_types():
     """Import all types from files in the HomeKit directory."""
     _LOGGER.debug("Import type files.")
     # pylint: disable=unused-variable
-    from . import covers, sensors  # noqa F401
-    from . import security_systems, thermostats, switches  # noqa F401
+    from . import (  # noqa F401
+        covers, security_systems, sensors, switches, thermostats)
 
 
 def get_accessory(hass, state):
