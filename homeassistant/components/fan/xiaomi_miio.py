@@ -248,7 +248,8 @@ SERVICE_TO_METHOD = {
 
 
 # pylint: disable=unused-argument
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the miio fan device from config."""
     from miio import Device, DeviceException
     if DATA_KEY not in hass.data:
@@ -387,7 +388,8 @@ class XiaomiGenericDevice(FanEntity):
             _LOGGER.error(mask_error, exc)
             return False
 
-    async def async_turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
+    async def async_turn_on(self: ToggleEntity, speed: str = None,
+                            **kwargs) -> None:
         """Turn the device on."""
         if speed:
             # If operation mode was set the device must not be turned on.
