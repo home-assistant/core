@@ -65,27 +65,26 @@ class Thermostat(HomeAccessory):
         self.char_target_temp.setter_callback = self.set_target_temperature
 
         # If the device supports it: add high and low temperature
-        supported_features = self._hass.states.get(self._entity_id). \
-            attributes[ATTR_SUPPORTED_FEATURES]
-        if supported_features is not None and \
-                supported_features & SUPPORT_TARGET_TEMPERATURE_HIGH:
-            self.char_cooling_thresh_temp = self.service_thermostat. \
-                get_characteristic(CHAR_COOLING_THRESHOLD_TEMPERATURE)
-            self.char_cooling_thresh_temp.value = 0.0
-            self.char_cooling_thresh_temp.setter_callback = \
-                self.set_cooling_threshold_temperature
-        else:
-            self.char_cooling_thresh_temp = None
+        self.char_cooling_thresh_temp = None
+        self.char_heating_thresh_temp = None
+        state = self._hass.states.get(self._entity_id)
+        if state is not None:
+            supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
+            if supported_features is not None and \
+                    supported_features & SUPPORT_TARGET_TEMPERATURE_HIGH:
+                self.char_cooling_thresh_temp = self.service_thermostat. \
+                    get_characteristic(CHAR_COOLING_THRESHOLD_TEMPERATURE)
+                self.char_cooling_thresh_temp.value = 0.0
+                self.char_cooling_thresh_temp.setter_callback = \
+                    self.set_cooling_threshold_temperature
 
-        if supported_features is not None and \
-                supported_features & SUPPORT_TARGET_TEMPERATURE_LOW:
-            self.char_heating_thresh_temp = self.service_thermostat. \
-                get_characteristic(CHAR_HEATING_THRESHOLD_TEMPERATURE)
-            self.char_heating_thresh_temp.value = 0.0
-            self.char_heating_thresh_temp.setter_callback = \
-                self.set_heating_threshold_temperature
-        else:
-            self.char_heating_thresh_temp = None
+            if supported_features is not None and \
+                    supported_features & SUPPORT_TARGET_TEMPERATURE_LOW:
+                self.char_heating_thresh_temp = self.service_thermostat. \
+                    get_characteristic(CHAR_HEATING_THRESHOLD_TEMPERATURE)
+                self.char_heating_thresh_temp.value = 0.0
+                self.char_heating_thresh_temp.setter_callback = \
+                    self.set_heating_threshold_temperature
 
         self.char_display_units = self.service_thermostat. \
             get_characteristic(CHAR_TEMP_DISPLAY_UNITS)
