@@ -14,9 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
-REQUIREMENTS = [
-    'https://github.com/balloob/coinbase-python/archive/'
-    '3a35efe13ef728a1cc18204b4f25be1fcb1c6006.zip#coinbase==2.0.8a1']
+REQUIREMENTS = ['coinbase==2.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
