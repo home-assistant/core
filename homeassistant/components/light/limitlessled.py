@@ -223,6 +223,16 @@ class LimitlessLEDGroup(Light):
         return self._brightness
 
     @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return 154
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return 370
+
+    @property
     def color_temp(self):
         """Return the temperature property."""
         return self._temperature
