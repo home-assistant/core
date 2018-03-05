@@ -281,6 +281,7 @@ class HomeAssistantHTTP(object):
         """Start the WSGI server."""
         # We misunderstood the startup signal. You're not allowed to change
         # anything during startup. Temp workaround.
+        # pylint: disable=protected-access
         self.app._on_startup.freeze()
         yield from self.app.startup()
 
@@ -302,7 +303,6 @@ class HomeAssistantHTTP(object):
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
         # To work around this we now prevent the router from getting frozen
-        # pylint: disable=protected-access
         self.app._router.freeze = lambda: None
 
         self._handler = self.app.make_handler(loop=self.hass.loop)
