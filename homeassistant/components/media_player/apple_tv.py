@@ -255,7 +255,7 @@ class AppleTvDevice(MediaPlayerDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         if self._playing:
-            return self.atv.remote_control.next()
+            return self.atv.remote_control.next()  # noqa: B305
 
     def async_media_previous_track(self):
         """Send previous track command.

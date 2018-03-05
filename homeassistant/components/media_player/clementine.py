@@ -217,7 +217,7 @@ class ClementineDevice(MediaPlayerDevice):
 
     def media_next_track(self):
         """Send next track command."""
-        self._client.next()
+        self._client.next()  # noqa: B305
 
     def media_previous_track(self):
         """Send the previous track command."""

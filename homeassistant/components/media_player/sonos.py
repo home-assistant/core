@@ -839,7 +839,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_coordinator
     def media_next_track(self):
         """Send next track command."""
-        self.soco.next()
+        self.soco.next()  # noqa: B305
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator

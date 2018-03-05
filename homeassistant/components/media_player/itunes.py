@@ -336,7 +336,7 @@ class ItunesDevice(MediaPlayerDevice):
 
     def media_next_track(self):
         """Send media_next command to media player."""
-        response = self.client.next()
+        response = self.client.next()  # noqa: B305
         self.update_state(response)
 
     def media_previous_track(self):

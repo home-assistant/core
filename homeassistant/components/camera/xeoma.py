@@ -86,7 +86,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                          camera[CONF_VIEWER_USERNAME],
                          camera[CONF_VIEWER_PASSWORD]) for camera in cameras])
     except XeomaError as err:
-        _LOGGER.error("Error: %s", err.message)
+        _LOGGER.error("Error: %s", err.message)  # noqa: B306
         return
 
 
@@ -112,7 +112,8 @@ class XeomaCamera(Camera):
                 self._image, self._username, self._password)
             self._last_image = image
         except XeomaError as err:
-            _LOGGER.error("Error fetching image: %s", err.message)
+            _LOGGER.error(
+                "Error fetching image: %s", err.message)  # noqa: B306
 
         return self._last_image
 
