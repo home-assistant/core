@@ -39,8 +39,7 @@ SUCCESS = ['ok']
 
 
 # pylint: disable=unused-argument
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the sensor from config."""
     from miio import AirQualityMonitor, DeviceException
     if DATA_KEY not in hass.data:
@@ -129,12 +128,11 @@ class XiaomiAirQualityMonitor(ToggleEntity):
         """Return true if sensor is on."""
         return self._is_on
 
-    @asyncio.coroutine
-    def _try_command(self, mask_error, func, *args, **kwargs):
+    async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a device command handling error messages."""
         from miio import DeviceException
         try:
-            result = yield from self.hass.async_add_job(
+            result = await self.hass.async_add_job(
                 partial(func, *args, **kwargs))
 
             _LOGGER.debug("Response received from miio device: %s", result)
@@ -144,25 +142,22 @@ class XiaomiAirQualityMonitor(ToggleEntity):
             _LOGGER.error(mask_error, exc)
             return False
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the miio device on."""
-        yield from self._try_command(
+        await self._try_command(
             "Turning the miio device on failed.", self._device.on)
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the miio device off."""
-        yield from self._try_command(
+        await self._try_command(
             "Turning the miio device off failed.", self._device.off)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch state from the miio device."""
         from miio import DeviceException
 
         try:
-            state = yield from self.hass.async_add_job(self._device.status)
+            state = await self.hass.async_add_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._state = state.aqi
