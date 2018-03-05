@@ -39,6 +39,7 @@ class CachingStaticResource(StaticResource):
             raise HTTPNotFound
 
 
+# pylint: disable=too-many-ancestors
 class CachingFileResponse(FileResponse):
     """FileSender class that caches output if not in dev mode."""
 
