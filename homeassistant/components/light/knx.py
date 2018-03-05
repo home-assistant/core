@@ -109,8 +109,8 @@ class KNXLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self.device.brightness \
-            if self.device.supports_dimming else \
+        return self.device.current_brightness \
+            if self.device.supports_brightness else \
             None
 
     @property
@@ -122,7 +122,7 @@ class KNXLight(Light):
     def rgb_color(self):
         """Return the RBG color value."""
         if self.device.supports_color:
-            return self.device.current_color()
+            return self.device.current_color
         return None
 
     @property
@@ -154,7 +154,7 @@ class KNXLight(Light):
     def supported_features(self):
         """Flag supported features."""
         flags = 0
-        if self.device.supports_dimming:
+        if self.device.supports_brightness:
             flags |= SUPPORT_BRIGHTNESS
         if self.device.supports_color:
             flags |= SUPPORT_RGB_COLOR
@@ -162,10 +162,12 @@ class KNXLight(Light):
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs and self.device.supports_dimming:
-            await self.device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
+        if ATTR_BRIGHTNESS in kwargs:
+            if self.device.supports_brightness:
+                await self.device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
         elif ATTR_RGB_COLOR in kwargs:
-            await self.device.set_color(kwargs[ATTR_RGB_COLOR])
+            if self.device.supports_color:
+                await self.device.set_color(kwargs[ATTR_RGB_COLOR])
         else:
             await self.device.set_on()
 
