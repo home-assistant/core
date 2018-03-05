@@ -66,7 +66,6 @@ SUPPORT_FLAGS_POWER_STRIP_V1 = (SUPPORT_SET_POWER_MODE |
 SUPPORT_FLAGS_POWER_STRIP_V2 = (SUPPORT_SET_WIFI_LED |
                                 SUPPORT_SET_POWER_PRICE)
 
-
 SERVICE_SET_WIFI_LED_ON = 'xiaomi_miio_set_wifi_led_on'
 SERVICE_SET_WIFI_LED_OFF = 'xiaomi_miio_set_wifi_led_off'
 SERVICE_SET_POWER_MODE = 'xiaomi_miio_set_power_mode'
@@ -94,6 +93,7 @@ SERVICE_TO_METHOD = {
         'method': 'async_set_power_price',
         'schema': SERVICE_SCHEMA_POWER_PRICE},
 }
+
 
 # pylint: disable=unused-argument
 @asyncio.coroutine
@@ -365,13 +365,16 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
                 ATTR_LOAD_POWER: state.load_power,
             })
 
-            if self.supported_features & SUPPORT_SET_POWER_MODE == 1 and state.mode:
+            if self.supported_features & SUPPORT_SET_POWER_MODE == 1 \
+                    and state.mode:
                 self._state_attrs[ATTR_POWER_MODE] = state.mode.value
 
-            if self.supported_features & SUPPORT_SET_WIFI_LED == 1 and state.wifi_led:
+            if self.supported_features & SUPPORT_SET_WIFI_LED == 1 and \
+                    state.wifi_led:
                 self._state_attrs[ATTR_WIFI_LED] = state.wifi_led
 
-            if self.supported_features & SUPPORT_SET_POWER_PRICE == 1 and state.power_price:
+            if self.supported_features & SUPPORT_SET_POWER_PRICE == 1 and \
+                    state.power_price:
                 self._state_attrs[ATTR_POWER_PRICE] = state.power_price
 
         except DeviceException as ex:
