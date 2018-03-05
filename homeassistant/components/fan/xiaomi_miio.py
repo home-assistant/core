@@ -501,7 +501,6 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
             self._state_attrs.update({attribute: None for attribute in
                                       AVAILABLE_ATTRIBUTES_AIRPURIFIER})
 
-
     @property
     def supported_features(self):
         """Flag supported features."""
