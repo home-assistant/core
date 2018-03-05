@@ -261,6 +261,6 @@ class PaloAltoApi(object):
 
 class EndPointType(Enum):
     """Enum that indicates that type of endpoint that is."""
-    
+
     Operational = "operational"
     Configuration = "configuration"
