@@ -106,24 +106,22 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON = {
     ATTR_AUTO_DETECT: 'auto_detect',
 }
 
-AVAILABLE_ATTRIBUTES_AIRPURIFIER = \
-    dict(AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON)
-AVAILABLE_ATTRIBUTES_AIRPURIFIER.update({
+AVAILABLE_ATTRIBUTES_AIRPURIFIER = {
+    **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
     ATTR_BUZZER: 'buzzer',
     ATTR_LED_BRIGHTNESS: 'led_brightness',
     ATTR_SLEEP_MODE: 'sleep_mode',
-})
+}
 
-AVAILABLE_ATTRIBUTES_AIRPURIFIERPRO = \
-    dict(AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON)
-AVAILABLE_ATTRIBUTES_AIRPURIFIERPRO.update({
+AVAILABLE_ATTRIBUTES_AIRPURIFIERPRO = {
+    **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
     ATTR_FILTER_RFID_PRODUCT_ID: 'filter_rfid_product_id',
     ATTR_FILTER_RFID_TAG: 'filter_rfid_tag',
     ATTR_FILTER_TYPE: 'filter_type',
     ATTR_ILLUMINANCE: 'illuminance',
     ATTR_MOTOR2_SPEED: 'motor2_speed',
     ATTR_VOLUME: 'volume',
-})
+}
 
 AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER = {
     ATTR_TEMPERATURE: 'temperature',
@@ -334,12 +332,13 @@ class XiaomiGenericDevice(FanEntity):
         self._state_attrs = {
             ATTR_MODEL: self._model,
         }
+        self._supported_features = SUPPORT_FLAGS_GENERIC
         self._skip_update = False
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_FLAGS_GENERIC
+        return self._supported_features
 
     @property
     def should_poll(self):
@@ -493,20 +492,20 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
         """Initialize the plug switch."""
         XiaomiGenericDevice.__init__(self, name, device, model)
 
-        if self.supported_features == SUPPORT_FLAGS_AIRPURIFIER_PRO:
+        if self._model == MODEL_AIRPURIFIER_PRO:
+            self._supported_features = SUPPORT_FLAGS_AIRPURIFIER_PRO
             self._state_attrs.update({attribute: None for attribute in
                                       AVAILABLE_ATTRIBUTES_AIRPURIFIERPRO})
         else:
+            self._supported_features = SUPPORT_FLAGS_AIRPURIFIER
             self._state_attrs.update({attribute: None for attribute in
                                       AVAILABLE_ATTRIBUTES_AIRPURIFIER})
+
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._model == MODEL_AIRPURIFIER_PRO:
-            return SUPPORT_FLAGS_AIRPURIFIER_PRO
-
-        return SUPPORT_FLAGS_AIRPURIFIER
+        return self._supported_features
 
     @asyncio.coroutine
     def async_update(self):
@@ -525,7 +524,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
 
             self._state = state.is_on
 
-            if self.supported_features == SUPPORT_FLAGS_AIRPURIFIER_PRO:
+            if self._model == MODEL_AIRPURIFIER_PRO:
                 self._state_attrs.update(
                     {key: self._extract_value_from_attribute(state, value) for
                      key, value in
@@ -543,7 +542,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
     def speed_list(self: ToggleEntity) -> list:
         """Get the list of available speeds."""
         from miio.airpurifier import OperationMode
-        if self.supported_features == SUPPORT_FLAGS_AIRPURIFIER_PRO:
+        if self._model == MODEL_AIRPURIFIER_PRO:
             return [mode.name for mode in OperationMode if mode.name != 'Idle']
 
         return [mode.name for mode in OperationMode]
@@ -692,13 +691,14 @@ class XiaomiAirHumidifier(XiaomiGenericDevice, FanEntity):
         """Initialize the plug switch."""
         XiaomiGenericDevice.__init__(self, name, device, model)
 
+        self._supported_features = SUPPORT_FLAGS_AIRHUMIDIFIER
         self._state_attrs.update({attribute: None for attribute in
                                   AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER})
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_FLAGS_AIRHUMIDIFIER
+        return self._supported_features
 
     @asyncio.coroutine
     def async_update(self):
