@@ -251,7 +251,7 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
 
     def __init__(self, name, plug, model, channel_usb):
         """Initialize the plug switch."""
-        name = name + ' USB' if channel_usb else name
+        name = '{} USB'.format(name) if channel_usb else name
 
         XiaomiPlugGenericSwitch.__init__(self, name, plug, model)
         self._channel_usb = channel_usb
