@@ -4,8 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.core import callback
 from homeassistant.components.homekit.switches import Switch
-from homeassistant.const import (
-    STATE_UNKNOWN, ATTR_SERVICE, EVENT_CALL_SERVICE)
+from homeassistant.const import ATTR_SERVICE, EVENT_CALL_SERVICE
 
 from tests.common import get_test_home_assistant
 from tests.mock.homekit import get_patch_paths, mock_preload_service

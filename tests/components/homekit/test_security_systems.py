@@ -1,15 +1,11 @@
 """Test different accessory types: Security Systems."""
 import unittest
 from unittest.mock import patch
-import time
 
 from homeassistant.core import callback
-from homeassistant.components.climate import (
-    ATTR_CURRENT_TEMPERATURE, ATTR_TEMPERATURE,
-    ATTR_OPERATION_MODE, STATE_HEAT)
 from homeassistant.components.homekit.security_systems import SecuritySystem
 from homeassistant.const import (
-    ATTR_SERVICE, EVENT_CALL_SERVICE, ATTR_SERVICE_DATA,
+    ATTR_SERVICE, EVENT_CALL_SERVICE,
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED)
 

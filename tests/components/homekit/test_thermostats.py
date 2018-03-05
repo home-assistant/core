@@ -90,5 +90,6 @@ class TestHomekitThermostats(unittest.TestCase):
         self.assertEqual(
             self.events[1].data[ATTR_SERVICE], 'set_operation_mode')
         self.assertEqual(
-            self.events[1].data[ATTR_SERVICE_DATA][ATTR_OPERATION_MODE], STATE_HEAT)
+            self.events[1].data[ATTR_SERVICE_DATA][ATTR_OPERATION_MODE],
+            STATE_HEAT)
         self.assertEqual(acc.char_target_heat_cool.value, 1)
