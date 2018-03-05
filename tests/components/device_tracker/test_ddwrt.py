@@ -7,6 +7,8 @@ import re
 import requests
 import requests_mock
 
+import pytest
+
 from homeassistant import config
 from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
@@ -25,6 +27,7 @@ TEST_HOST = '127.0.0.1'
 _LOGGER = logging.getLogger(__name__)
 
 
+@pytest.mark.skip
 class TestDdwrt(unittest.TestCase):
     """Tests for the Ddwrt device tracker platform."""
 
