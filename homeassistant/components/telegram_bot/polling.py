@@ -13,11 +13,11 @@ from aiohttp.client_exceptions import ClientError
 from aiohttp.hdrs import CONNECTION, KEEP_ALIVE
 
 from homeassistant.components.telegram_bot import (
+    _initialize_bot,
     CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity,
-    PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA,
-    CONF_PROXY_URL, CONF_PROXY_PARAMS)
+    PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA)
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_API_KEY)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -36,18 +36,7 @@ class WrongHttpStatus(Exception):
 @asyncio.coroutine
 def async_setup_platform(hass, config):
     """Set up the Telegram polling platform."""
-    from telegram import Bot
-    from telegram.utils.request import Request
-
-    api_key = config.get(CONF_API_KEY)
-    proxy_url = config.get(CONF_PROXY_URL)
-    proxy_params = config.get(CONF_PROXY_PARAMS)
-
-    request = None
-    if proxy_url is not None:
-        request = Request(proxy_url=proxy_url,
-                          urllib3_proxy_kwargs=proxy_params)
-    bot = Bot(token=api_key, request=request)
+    bot = _initialize_bot(config)
     pol = TelegramPoll(bot, hass, config[CONF_ALLOWED_CHAT_IDS])
 
     @callback
