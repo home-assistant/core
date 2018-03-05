@@ -109,8 +109,7 @@ class Thermostat(HomeAccessory):
                                       ATTR_OPERATION_MODE: hass_value})
 
     def set_cooling_threshold_temperature(self, value):
-        """Set cooling threshold temperature temperature to value
-        if call came from HomeKit."""
+        """Set cooling threshold temp to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set cooling threshold temperature to %.2f",
                       self._entity_id, value)
         self.cooling_thresh_temp_flag_target_state = True
@@ -120,8 +119,7 @@ class Thermostat(HomeAccessory):
              ATTR_TARGET_TEMP_HIGH: value})
 
     def set_heating_threshold_temperature(self, value):
-        """Set heating threshold temperature temperature to value
-        if call came from HomeKit."""
+        """Set heating threshold temp to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set heating threshold temperature to %.2f",
                       self._entity_id, value)
         self.heating_thresh_temp_flag_target_state = True
