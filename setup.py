@@ -50,10 +50,8 @@ REQUIRES = [
     'jinja2>=2.10',
     'voluptuous==0.11.1',
     'typing>=3,<4',
-    'aiohttp==2.3.10',   # If updated, check if yarl also needs an update!
-    'yarl==1.1.0',
+    'aiohttp==3.0.6',
     'async_timeout==2.0.0',
-    'chardet==3.0.4',
     'astral==1.5',
     'certifi>=2017.4.17',
     'attrs==17.4.0',
