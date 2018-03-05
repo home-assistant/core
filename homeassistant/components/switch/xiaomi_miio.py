@@ -236,7 +236,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
         """Return true if switch is on."""
         return self._state
 
-    def _try_command(self, mask_error, func, *args, **kwargs):
+    async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a plug command handling error messages."""
         from miio import DeviceException
         try:
