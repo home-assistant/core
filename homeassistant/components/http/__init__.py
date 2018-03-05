@@ -279,6 +279,10 @@ class HomeAssistantHTTP(object):
     @asyncio.coroutine
     def start(self):
         """Start the WSGI server."""
+        # We misunderstood the startup signal. You're not allowed to change
+        # anything during startup. Temp workaround.
+        # pylint: disable=protected-access
+        self.app._on_startup.freeze()
         yield from self.app.startup()
 
         if self.ssl_certificate:
@@ -298,10 +302,8 @@ class HomeAssistantHTTP(object):
         # Aiohttp freezes apps after start so that no changes can be made.
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
-        # To work around this we now fake that we are frozen.
-        # A more appropriate fix would be to create a new app and
-        # re-register all redirects, views, static paths.
-        self.app._frozen = True  # pylint: disable=protected-access
+        # To work around this we now prevent the router from getting frozen
+        self.app._router.freeze = lambda: None
 
         self._handler = self.app.make_handler(loop=self.hass.loop)
 
@@ -311,10 +313,6 @@ class HomeAssistantHTTP(object):
         except OSError as error:
             _LOGGER.error("Failed to create HTTP server at port %d: %s",
                           self.server_port, error)
-
-        # pylint: disable=protected-access
-        self.app._middlewares = tuple(self.app._prepare_middleware())
-        self.app._frozen = False
 
     @asyncio.coroutine
     def stop(self):
