@@ -330,7 +330,7 @@ class Icloud(DeviceScanner):
             return
 
         zones = (self.hass.states.get(entity_id) for entity_id
-                 in sorted(self.hass.states.async_entity_ids('zone')))
+                 in sorted(self.hass.states.entity_ids('zone')))
 
         distances = []
         for zone_state in zones:
