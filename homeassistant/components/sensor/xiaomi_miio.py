@@ -4,7 +4,6 @@ Support for Xiaomi Mi Air Quality Monitor (PM2.5).
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/sensor.xiaomi_miio/
 """
-import asyncio
 from functools import partial
 import logging
 
@@ -39,7 +38,8 @@ SUCCESS = ['ok']
 
 
 # pylint: disable=unused-argument
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the sensor from config."""
     from miio import AirQualityMonitor, DeviceException
     if DATA_KEY not in hass.data:
