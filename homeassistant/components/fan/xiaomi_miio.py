@@ -248,8 +248,7 @@ SERVICE_TO_METHOD = {
 
 
 # pylint: disable=unused-argument
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the miio fan device from config."""
     from miio import Device, DeviceException
     if DATA_KEY not in hass.data:
@@ -292,8 +291,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     hass.data[DATA_KEY][host] = device
     async_add_devices([device], update_before_add=True)
 
-    @asyncio.coroutine
-    def async_service_handler(service):
+    async def async_service_handler(service):
         """Map services to methods on XiaomiAirPurifier."""
         method = SERVICE_TO_METHOD.get(service.service)
         params = {key: value for key, value in service.data.items()
@@ -307,11 +305,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         update_tasks = []
         for device in devices:
-            yield from getattr(device, method['method'])(**params)
+            await getattr(device, method['method'])(**params)
             update_tasks.append(device.async_update_ha_state(True))
 
         if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks, loop=hass.loop)
 
     for air_purifier_service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[air_purifier_service].get(
@@ -375,12 +373,11 @@ class XiaomiGenericDevice(FanEntity):
 
         return value
 
-    @asyncio.coroutine
-    def _try_command(self, mask_error, func, *args, **kwargs):
+    async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a miio device command handling error messages."""
         from miio import DeviceException
         try:
-            result = yield from self.hass.async_add_job(
+            result = await self.hass.async_add_job(
                 partial(func, *args, **kwargs))
 
             _LOGGER.debug("Response received from miio device: %s", result)
@@ -390,97 +387,86 @@ class XiaomiGenericDevice(FanEntity):
             _LOGGER.error(mask_error, exc)
             return False
 
-    @asyncio.coroutine
-    def async_turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
+    async def async_turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
         """Turn the device on."""
         if speed:
             # If operation mode was set the device must not be turned on.
-            result = yield from self.async_set_speed(speed)
+            result = await self.async_set_speed(speed)
         else:
-            result = yield from self._try_command(
+            result = await self._try_command(
                 "Turning the miio device on failed.", self._device.on)
 
         if result:
             self._state = True
             self._skip_update = True
 
-    @asyncio.coroutine
-    def async_turn_off(self: ToggleEntity, **kwargs) -> None:
+    async def async_turn_off(self: ToggleEntity, **kwargs) -> None:
         """Turn the device off."""
-        result = yield from self._try_command(
+        result = await self._try_command(
             "Turning the miio device off failed.", self._device.off)
 
         if result:
             self._state = False
             self._skip_update = True
 
-    @asyncio.coroutine
-    def async_set_buzzer_on(self):
+    async def async_set_buzzer_on(self):
         """Turn the buzzer on."""
         if self.supported_features & SUPPORT_SET_BUZZER == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning the buzzer of the miio device on failed.",
             self._device.set_buzzer, True)
 
-    @asyncio.coroutine
-    def async_set_buzzer_off(self):
+    async def async_set_buzzer_off(self):
         """Turn the buzzer off."""
         if self.supported_features & SUPPORT_SET_BUZZER == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning the buzzer of the miio device off failed.",
             self._device.set_buzzer, False)
 
-    @asyncio.coroutine
-    def async_set_child_lock_on(self):
+    async def async_set_child_lock_on(self):
         """Turn the child lock on."""
         if self.supported_features & SUPPORT_SET_CHILD_LOCK == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning the child lock of the miio device on failed.",
             self._device.set_child_lock, True)
 
-    @asyncio.coroutine
-    def async_set_child_lock_off(self):
+    async def async_set_child_lock_off(self):
         """Turn the child lock off."""
         if self.supported_features & SUPPORT_SET_CHILD_LOCK == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning the child lock of the miio device off failed.",
             self._device.set_child_lock, False)
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def async_set_led_on(self):
+    async def async_set_led_on(self):
         """Turn the led on."""
         return
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def async_set_led_off(self):
+    async def async_set_led_off(self):
         """Turn the led off."""
         return
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def async_set_favorite_level(self, level: int):
+    async def async_set_favorite_level(self, level: int):
         """Set the favorite level."""
         return
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def async_set_led_brightness(self, brightness: int):
+    async def async_set_led_brightness(self, brightness: int):
         """Set the led brightness."""
         return
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def async_set_target_humidity(self, humidity: int):
+    async def async_set_target_humidity(self, humidity: int):
         """Set the target humidity."""
         return
 
@@ -506,8 +492,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
         """Flag supported features."""
         return self._supported_features
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
 
@@ -517,7 +502,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
             return
 
         try:
-            state = yield from self.hass.async_add_job(
+            state = await self.hass.async_add_job(
                 self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
@@ -556,8 +541,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
 
         return None
 
-    @asyncio.coroutine
-    def async_set_speed(self: ToggleEntity, speed: str) -> None:
+    async def async_set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan."""
         if self.supported_features & SUPPORT_SET_SPEED == 0:
             return
@@ -566,119 +550,108 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
 
         _LOGGER.debug("Setting the operation mode to: %s", speed)
 
-        yield from self._try_command(
+        await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode, OperationMode[speed.title()])
 
-    @asyncio.coroutine
-    def async_set_led_on(self):
+    async def async_set_led_on(self):
         """Turn the led on."""
         if self.supported_features & SUPPORT_SET_LED == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning the led of the miio device off failed.",
             self._device.set_led, True)
 
-    @asyncio.coroutine
-    def async_set_led_off(self):
+    async def async_set_led_off(self):
         """Turn the led off."""
         if self.supported_features & SUPPORT_SET_LED == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning the led of the miio device off failed.",
             self._device.set_led, False)
 
-    @asyncio.coroutine
-    def async_set_led_brightness(self, brightness: int = 2):
+    async def async_set_led_brightness(self, brightness: int = 2):
         """Set the led brightness."""
         if self.supported_features & SUPPORT_SET_LED_BRIGHTNESS == 0:
             return
 
         from miio.airpurifier import LedBrightness
 
-        yield from self._try_command(
+        await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness, LedBrightness(brightness))
 
-    @asyncio.coroutine
-    def async_set_favorite_level(self, level: int = 1):
+    async def async_set_favorite_level(self, level: int = 1):
         """Set the favorite level."""
         if self.supported_features & SUPPORT_SET_FAVORITE_LEVEL == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Setting the favorite level of the miio device failed.",
             self._device.set_favorite_level, level)
 
-    @asyncio.coroutine
-    def async_set_auto_detect_on(self):
+    async def async_set_auto_detect_on(self):
         """Turn the auto detect on."""
         if self.supported_features & SUPPORT_SET_AUTO_DETECT == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning the auto detect of the miio device on failed.",
             self._device.set_auto_detect, True)
 
-    @asyncio.coroutine
-    def async_set_auto_detect_off(self):
+    async def async_set_auto_detect_off(self):
         """Turn the auto detect off."""
         if self.supported_features & SUPPORT_SET_AUTO_DETECT == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning the auto detect of the miio device off failed.",
             self._device.set_auto_detect, False)
 
-    @asyncio.coroutine
-    def async_set_learn_mode_on(self):
+    async def async_set_learn_mode_on(self):
         """Turn the learn mode on."""
         if self.supported_features & SUPPORT_SET_LEARN_MODE == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning the learn mode of the miio device on failed.",
             self._device.set_learn_mode, True)
 
-    @asyncio.coroutine
-    def async_set_learn_mode_off(self):
+    async def async_set_learn_mode_off(self):
         """Turn the learn mode off."""
         if self.supported_features & SUPPORT_SET_LEARN_MODE == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Turning the learn mode of the miio device off failed.",
             self._device.set_learn_mode, False)
 
-    @asyncio.coroutine
-    def async_set_volume(self, volume: int = 50):
+    async def async_set_volume(self, volume: int = 50):
         """Set the sound volume."""
         if self.supported_features & SUPPORT_SET_VOLUME == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Setting the sound volume of the miio device failed.",
             self._device.set_volume, volume)
 
-    @asyncio.coroutine
-    def async_set_extra_features(self, features: int = 1):
+    async def async_set_extra_features(self, features: int = 1):
         """Set the extra features."""
         if self.supported_features & SUPPORT_SET_EXTRA_FEATURES == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Setting the extra features of the miio device failed.",
             self._device.set_extra_features, features)
 
-    @asyncio.coroutine
-    def async_reset_filter(self):
+    async def async_reset_filter(self):
         """Reset the filter lifetime and usage."""
         if self.supported_features & SUPPORT_RESET_FILTER == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Resetting the filter lifetime of the miio device failed.",
             self._device.reset_filter)
 
@@ -699,8 +672,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice, FanEntity):
         """Flag supported features."""
         return self._supported_features
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
 
@@ -710,7 +682,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice, FanEntity):
             return
 
         try:
-            state = yield from self.hass.async_add_job(
+            state = await self.hass.async_add_job(
                 self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
@@ -740,8 +712,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice, FanEntity):
 
         return None
 
-    @asyncio.coroutine
-    def async_set_speed(self: ToggleEntity, speed: str) -> None:
+    async def async_set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan."""
         if self.supported_features & SUPPORT_SET_SPEED == 0:
             return
@@ -750,28 +721,26 @@ class XiaomiAirHumidifier(XiaomiGenericDevice, FanEntity):
 
         _LOGGER.debug("Setting the operation mode to: %s", speed)
 
-        yield from self._try_command(
+        await self._try_command(
             "Setting operation mode of the miio device failed.",
             self._device.set_mode, OperationMode[speed.title()])
 
-    @asyncio.coroutine
-    def async_set_led_brightness(self, brightness: int = 2):
+    async def async_set_led_brightness(self, brightness: int = 2):
         """Set the led brightness."""
         if self.supported_features & SUPPORT_SET_LED_BRIGHTNESS == 0:
             return
 
         from miio.airhumidifier import LedBrightness
 
-        yield from self._try_command(
+        await self._try_command(
             "Setting the led brightness of the miio device failed.",
             self._device.set_led_brightness, LedBrightness(brightness))
 
-    @asyncio.coroutine
-    def async_set_target_humidity(self, humidity: int = 40):
+    async def async_set_target_humidity(self, humidity: int = 40):
         """Set the target humidity."""
         if self.supported_features & SUPPORT_SET_TARGET_HUMIDITY == 0:
             return
 
-        yield from self._try_command(
+        await self._try_command(
             "Setting the target humidity of the miio device failed.",
             self._device.set_target_humidity, humidity)
