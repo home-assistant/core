@@ -152,7 +152,7 @@ class PaloAltoApi(object):
         return 'https://' if use_ssl else 'http://'
 
     def get_resource(self, use_ssl, host, api_key, endpoint):
-        """Prepare the URL """
+        """Prepare the URL."""
         uri_scheme = self.get_uri_scheme(use_ssl)
         if endpoint == EndPointType.Operational:
             return "{}{}{}&key={}".format(uri_scheme, self._host,
@@ -177,7 +177,6 @@ class PaloAltoApi(object):
         return content
 
     def update(self):
-
         """Get Operational and Configuration urls."""
         ops_url = self.get_resource(self._use_ssl, self._host,
                                     self._api_key, EndPointType.Operational)
@@ -262,5 +261,6 @@ class PaloAltoApi(object):
 
 class EndPointType(Enum):
     """Enum that indicates that type of endpoint that is."""
+    
     Operational = "operational"
     Configuration = "configuration"
