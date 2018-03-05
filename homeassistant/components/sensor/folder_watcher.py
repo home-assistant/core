@@ -14,6 +14,10 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PATH = 'folder'
+COMPONENT_NAME = "watchdog_file_changed"
+EVENT_TYPE = "event_type"
+SRC_PATH = "src_path"
+PATTERNS = ["*.txt", "*.py", "*.md", "*.jpg", "*.png"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PATH): cv.isdir,
@@ -26,38 +30,34 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not hass.config.is_allowed_path(path):
         _LOGGER.error("folder %s is not valid or allowed", path)
     else:
-        watcher = Watcher(path)
+        watcher = Watcher(path, hass)
         add_devices([watcher], True)
 
 
 class Watcher(Entity):
-    """Class for watching a filesystem."""
-
-    def __init__(self, path):
+    """Class for starting Watchdog."""
+    def __init__(self, path, hass):
         self._observer = Observer()
         self._observer.schedule(
-            MyHandler(self.fire_event), path, recursive=True)
+            MyHandler(hass),
+            path,
+            recursive=True)
         self._observer.start()
-
-    def fire_event(self, data):
-        self.hass.bus.fire(
-            data["event_type"], {"path": data["src_path"]})
 
 
 class MyHandler(PatternMatchingEventHandler):
-    patterns = ["*.txt", "*.py", "*.md", "*.jpg", "*.png"]
+    patterns = PATTERNS
 
-    def __init__(self, fire_event):
+    def __init__(self, hass):
         super().__init__()
-        self.fire_event = fire_event
+        self.hass = hass
 
     def process(self, event):
         """Process the Watchdog event."""
-        data = {
-            "event_type": event.event_type,
-            "src_path": event.src_path,
-        }
-        self.fire_event(data)
+        self.hass.bus.fire(
+            COMPONENT_NAME, {
+                EVENT_TYPE: event.event_type,
+                SRC_PATH: event.src_path})
 
     def on_modified(self, event):
         self.process(event)
