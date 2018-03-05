@@ -3,30 +3,31 @@ Support for Alexa skill service end point.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
-
 """
 import asyncio
 import enum
 import logging
 
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.core import callback
-from homeassistant.helpers import intent
 from homeassistant.components import http
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import intent
 from homeassistant.util.decorator import Registry
 
 from .const import DOMAIN, SYN_RESOLUTION_MATCH
 
-INTENTS_API_ENDPOINT = '/api/alexa'
-HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
+
+HANDLERS = Registry()
+
+INTENTS_API_ENDPOINT = '/api/alexa'
 
 
 class SpeechType(enum.Enum):
     """The Alexa speech types."""
 
-    plaintext = "PlainText"
-    ssml = "SSML"
+    plaintext = 'PlainText'
+    ssml = 'SSML'
 
 
 SPEECH_MAPPINGS = {
@@ -38,8 +39,8 @@ SPEECH_MAPPINGS = {
 class CardType(enum.Enum):
     """The Alexa card types."""
 
-    simple = "Simple"
-    link_account = "LinkAccount"
+    simple = 'Simple'
+    link_account = 'LinkAccount'
 
 
 @callback
@@ -64,7 +65,7 @@ class AlexaIntentsView(http.HomeAssistantView):
         hass = request.app['hass']
         message = yield from request.json()
 
-        _LOGGER.debug('Received Alexa request: %s', message)
+        _LOGGER.debug("Received Alexa request: %s", message)
 
         try:
             response = yield from async_handle_message(hass, message)
@@ -81,7 +82,7 @@ class AlexaIntentsView(http.HomeAssistantView):
                 "This intent is not yet configured within Home Assistant."))
 
         except intent.InvalidSlotInfo as err:
-            _LOGGER.error('Received invalid slot data from Alexa: %s', err)
+            _LOGGER.error("Received invalid slot data from Alexa: %s", err)
             return self.json(intent_error_response(
                 hass, message,
                 "Invalid slot information received for this intent."))
@@ -109,6 +110,7 @@ def async_handle_message(hass, message):
      - intent.UnknownIntent
      - intent.InvalidSlotInfo
      - intent.IntentError
+
     """
     req = message.get('request')
     req_type = req['type']
@@ -138,6 +140,7 @@ def async_handle_intent(hass, message):
      - intent.UnknownIntent
      - intent.InvalidSlotInfo
      - intent.IntentError
+
     """
     req = message.get('request')
     alexa_intent_info = req.get('intent')

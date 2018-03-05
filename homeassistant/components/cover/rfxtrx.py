@@ -29,12 +29,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the RFXtrx cover."""
     import RFXtrx as rfxtrxmod
 
     covers = rfxtrx.get_devices_from_config(config, RfxtrxCover)
-    add_devices_callback(covers)
+    add_devices(covers)
 
     def cover_update(event):
         """Handle cover updates from the RFXtrx gateway."""
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         new_device = rfxtrx.get_new_device(event, config, RfxtrxCover)
         if new_device:
-            add_devices_callback([new_device])
+            add_devices([new_device])
 
         rfxtrx.apply_received_command(event)
 
@@ -59,7 +59,7 @@ class RfxtrxCover(rfxtrx.RfxtrxDevice, CoverDevice):
 
     @property
     def should_poll(self):
-        """No polling available in RFXtrx cover."""
+        """Return the polling state. No polling available in RFXtrx cover."""
         return False
 
     @property

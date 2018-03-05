@@ -4,14 +4,14 @@ Support for KNX/IP climate devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.knx/
 """
-import asyncio
+
 import voluptuous as vol
 
-from homeassistant.components.knx import DATA_KNX, ATTR_DISCOVER_DEVICES
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA, ClimateDevice, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_OPERATION_MODE)
-from homeassistant.const import CONF_NAME, TEMP_CELSIUS, ATTR_TEMPERATURE
+    PLATFORM_SCHEMA, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    ClimateDevice)
+from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
+from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -47,9 +47,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                  default=DEFAULT_SETPOINT_SHIFT_STEP): vol.All(
                      float, vol.Range(min=0, max=2)),
     vol.Optional(CONF_SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX):
-        vol.All(int, vol.Range(min=-32, max=0)),
-    vol.Optional(CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN):
         vol.All(int, vol.Range(min=0, max=32)),
+    vol.Optional(CONF_SETPOINT_SHIFT_MIN, default=DEFAULT_SETPOINT_SHIFT_MIN):
+        vol.All(int, vol.Range(min=-32, max=0)),
     vol.Optional(CONF_OPERATION_MODE_ADDRESS): cv.string,
     vol.Optional(CONF_OPERATION_MODE_STATE_ADDRESS): cv.string,
     vol.Optional(CONF_CONTROLLER_STATUS_ADDRESS): cv.string,
@@ -60,25 +60,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up climate(s) for KNX platform."""
-    if DATA_KNX not in hass.data \
-            or not hass.data[DATA_KNX].initialized:
-        return False
-
     if discovery_info is not None:
         async_add_devices_discovery(hass, discovery_info, async_add_devices)
     else:
         async_add_devices_config(hass, config, async_add_devices)
 
-    return True
-
 
 @callback
 def async_add_devices_discovery(hass, discovery_info, async_add_devices):
-    """Set up climates for KNX platform configured within plattform."""
+    """Set up climates for KNX platform configured within platform."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
@@ -88,28 +81,22 @@ def async_add_devices_discovery(hass, discovery_info, async_add_devices):
 
 @callback
 def async_add_devices_config(hass, config, async_add_devices):
-    """Set up climate for KNX platform configured within plattform."""
+    """Set up climate for KNX platform configured within platform."""
     import xknx
 
     climate = xknx.devices.Climate(
         hass.data[DATA_KNX].xknx,
         name=config.get(CONF_NAME),
-        group_address_temperature=config.get(
-            CONF_TEMPERATURE_ADDRESS),
+        group_address_temperature=config.get(CONF_TEMPERATURE_ADDRESS),
         group_address_target_temperature=config.get(
             CONF_TARGET_TEMPERATURE_ADDRESS),
-        group_address_setpoint_shift=config.get(
-            CONF_SETPOINT_SHIFT_ADDRESS),
+        group_address_setpoint_shift=config.get(CONF_SETPOINT_SHIFT_ADDRESS),
         group_address_setpoint_shift_state=config.get(
             CONF_SETPOINT_SHIFT_STATE_ADDRESS),
-        setpoint_shift_step=config.get(
-            CONF_SETPOINT_SHIFT_STEP),
-        setpoint_shift_max=config.get(
-            CONF_SETPOINT_SHIFT_MAX),
-        setpoint_shift_min=config.get(
-            CONF_SETPOINT_SHIFT_MIN),
-        group_address_operation_mode=config.get(
-            CONF_OPERATION_MODE_ADDRESS),
+        setpoint_shift_step=config.get(CONF_SETPOINT_SHIFT_STEP),
+        setpoint_shift_max=config.get(CONF_SETPOINT_SHIFT_MAX),
+        setpoint_shift_min=config.get(CONF_SETPOINT_SHIFT_MIN),
+        group_address_operation_mode=config.get(CONF_OPERATION_MODE_ADDRESS),
         group_address_operation_mode_state=config.get(
             CONF_OPERATION_MODE_STATE_ADDRESS),
         group_address_controller_status=config.get(
@@ -127,10 +114,10 @@ def async_add_devices_config(hass, config, async_add_devices):
 
 
 class KNXClimate(ClimateDevice):
-    """Representation of a KNX climate."""
+    """Representation of a KNX climate device."""
 
     def __init__(self, hass, device):
-        """Initialization of KNXClimate."""
+        """Initialize of a KNX climate device."""
         self.device = device
         self.hass = hass
         self.async_register_callbacks()
@@ -147,11 +134,10 @@ class KNXClimate(ClimateDevice):
 
     def async_register_callbacks(self):
         """Register callbacks to update hass after device was changed."""
-        @asyncio.coroutine
-        def after_update_callback(device):
-            """Callback after device was updated."""
+        async def after_update_callback(device):
+            """Call after device was updated."""
             # pylint: disable=unused-argument
-            yield from self.async_update_ha_state()
+            await self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
 
     @property
@@ -199,14 +185,13 @@ class KNXClimate(ClimateDevice):
         """Return the maximum temperature."""
         return self.device.target_temperature_max
 
-    @asyncio.coroutine
-    def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        yield from self.device.set_target_temperature(temperature)
-        yield from self.async_update_ha_state()
+        await self.device.set_target_temperature(temperature)
+        await self.async_update_ha_state()
 
     @property
     def current_operation(self):
@@ -222,10 +207,9 @@ class KNXClimate(ClimateDevice):
                 operation_mode in
                 self.device.get_supported_operation_modes()]
 
-    @asyncio.coroutine
-    def async_set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         if self.device.supports_operation_mode:
             from xknx.knx import HVACOperationMode
             knx_operation_mode = HVACOperationMode(operation_mode)
-            yield from self.device.set_operation_mode(knx_operation_mode)
+            await self.device.set_operation_mode(knx_operation_mode)

@@ -127,7 +127,7 @@ class TestAutomationSun(unittest.TestCase):
         self.assertEqual('sun - sunset - 0:30:00', self.calls[0].data['some'])
 
     def test_sunrise_trigger_with_offset(self):
-        """Test the runrise trigger with offset."""
+        """Test the sunrise trigger with offset."""
         now = datetime(2015, 9, 13, 23, tzinfo=dt_util.UTC)
         trigger_time = datetime(2015, 9, 16, 13, 30, tzinfo=dt_util.UTC)
 

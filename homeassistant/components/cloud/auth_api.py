@@ -1,8 +1,4 @@
 """Package to communicate with the authentication API."""
-import logging
-
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CloudError(Exception):
@@ -22,7 +18,7 @@ class UserNotConfirmed(CloudError):
 
 
 class ExpiredCode(CloudError):
-    """Raised when an expired code is encoutered."""
+    """Raised when an expired code is encountered."""
 
 
 class InvalidCode(CloudError):
@@ -32,13 +28,15 @@ class InvalidCode(CloudError):
 class PasswordChangeRequired(CloudError):
     """Raised when a password change is required."""
 
+    # https://github.com/PyCQA/pylint/issues/1085
+    # pylint: disable=useless-super-delegation
     def __init__(self, message='Password change required.'):
         """Initialize a password change required error."""
         super().__init__(message)
 
 
 class UnknownError(CloudError):
-    """Raised when an unknown error occurrs."""
+    """Raised when an unknown error occurs."""
 
 
 AWS_EXCEPTIONS = {
@@ -98,7 +96,7 @@ def resend_email_confirm(cloud, email):
 
 
 def forgot_password(cloud, email):
-    """Initiate forgotten password flow."""
+    """Initialize forgotten password flow."""
     from botocore.exceptions import ClientError
 
     cognito = _cognito(cloud, username=email)

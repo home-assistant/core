@@ -49,13 +49,7 @@ ATTR_VALUE = 'value'
 
 def exactly_two_period_keys(conf):
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
-    provided = 0
-
-    for param in CONF_PERIOD_KEYS:
-        if param in conf and conf[param] is not None:
-            provided += 1
-
-    if provided != 2:
+    if sum(param in conf for param in CONF_PERIOD_KEYS) != 2:
         raise vol.Invalid('You must provide exactly 2 of the following:'
                           ' start, end, duration')
     return conf
@@ -64,9 +58,9 @@ def exactly_two_period_keys(conf):
 PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_STATE): cv.string,
-    vol.Optional(CONF_START, default=None): cv.template,
-    vol.Optional(CONF_END, default=None): cv.template,
-    vol.Optional(CONF_DURATION, default=None): cv.time_period,
+    vol.Optional(CONF_START): cv.template,
+    vol.Optional(CONF_END): cv.template,
+    vol.Optional(CONF_DURATION): cv.time_period,
     vol.Optional(CONF_TYPE, default=CONF_TYPE_TIME): vol.In(CONF_TYPE_KEYS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 }), exactly_two_period_keys)
@@ -112,8 +106,8 @@ class HistoryStatsSensor(Entity):
         self._unit_of_measurement = UNITS[sensor_type]
 
         self._period = (datetime.datetime.now(), datetime.datetime.now())
-        self.value = 0
-        self.count = 0
+        self.value = None
+        self.count = None
 
         def force_refresh(*args):
             """Force the component to refresh."""
@@ -133,6 +127,9 @@ class HistoryStatsSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        if self.value is None or self.count is None:
+            return None
+
         if self._type == CONF_TYPE_TIME:
             return round(self.value, 2)
 
@@ -155,6 +152,9 @@ class HistoryStatsSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
+        if self.value is None:
+            return {}
+
         hsh = HistoryStatsHelper
         return {
             ATTR_VALUE: hsh.pretty_duration(self.value),

@@ -43,7 +43,7 @@ DEFAULT_TIMEOUT = 10
 DEFAULT_CONFIDENCE = 80
 
 SOURCE_SCHEMA = vol.Schema({
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Required(CONF_ENTITY_ID): cv.entity_domain('camera'),
     vol.Optional(CONF_NAME): cv.string,
 })
 
@@ -60,7 +60,7 @@ SERVICE_SCAN_SCHEMA = vol.Schema({
 
 @bind_hass
 def scan(hass, entity_id=None):
-    """Force process a image."""
+    """Force process an image."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_SCAN, data)
 

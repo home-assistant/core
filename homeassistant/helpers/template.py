@@ -2,22 +2,24 @@
 from datetime import datetime
 import json
 import logging
+import math
 import random
 import re
-import math
 
 import jinja2
 from jinja2 import contextfilter
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from homeassistant.const import (
-    STATE_UNKNOWN, ATTR_LATITUDE, ATTR_LONGITUDE, MATCH_ALL,
-    ATTR_UNIT_OF_MEASUREMENT)
+    ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT, MATCH_ALL,
+    STATE_UNKNOWN)
 from homeassistant.core import State
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
-from homeassistant.loader import get_component, bind_hass
-from homeassistant.util import convert, dt as dt_util, location as loc_util
+from homeassistant.loader import bind_hass, get_component
+from homeassistant.util import convert
+from homeassistant.util import dt as dt_util
+from homeassistant.util import location as loc_util
 from homeassistant.util.async import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +44,17 @@ def attach(hass, obj):
             attach(hass, child)
     elif isinstance(obj, Template):
         obj.hass = hass
+
+
+def render_complex(value, variables=None):
+    """Recursive template creator helper function."""
+    if isinstance(value, list):
+        return [render_complex(item, variables)
+                for item in value]
+    elif isinstance(value, dict):
+        return {key: render_complex(item, variables)
+                for key, item in value.items()}
+    return value.async_render(variables)
 
 
 def extract_entities(template, variables=None):
@@ -258,8 +271,7 @@ class TemplateState(State):
         """Return an attribute of the state."""
         if name in TemplateState.__dict__:
             return object.__getattribute__(self, name)
-        else:
-            return getattr(object.__getattribute__(self, '_state'), name)
+        return getattr(object.__getattribute__(self, '_state'), name)
 
     def __repr__(self):
         """Representation of Template State."""
@@ -268,7 +280,7 @@ class TemplateState(State):
 
 
 def _wrap_state(state):
-    """Helper function to wrap a state."""
+    """Wrap a state."""
     return None if state is None else TemplateState(state)
 
 
@@ -425,7 +437,7 @@ def multiply(value, amount):
 
 
 def logarithm(value, base=math.e):
-    """Filter to get logarithm of the value with a spesific base."""
+    """Filter to get logarithm of the value with a specific base."""
     try:
         return math.log(float(value), float(base))
     except (ValueError, TypeError):

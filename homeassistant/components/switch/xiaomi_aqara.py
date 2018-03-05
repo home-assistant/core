@@ -28,22 +28,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if model == 'plug':
                 devices.append(XiaomiGenericSwitch(device, "Plug", 'status',
                                                    True, gateway))
-            elif model == 'ctrl_neutral1':
+            elif model in ['ctrl_neutral1', 'ctrl_neutral1.aq1']:
                 devices.append(XiaomiGenericSwitch(device, 'Wall Switch',
                                                    'channel_0',
                                                    False, gateway))
-            elif model == 'ctrl_ln1':
+            elif model in ['ctrl_ln1', 'ctrl_ln1.aq1']:
                 devices.append(XiaomiGenericSwitch(device, 'Wall Switch LN',
                                                    'channel_0',
                                                    False, gateway))
-            elif model == 'ctrl_neutral2':
+            elif model in ['ctrl_neutral2', 'ctrl_neutral2.aq1']:
                 devices.append(XiaomiGenericSwitch(device, 'Wall Switch Left',
                                                    'channel_0',
                                                    False, gateway))
                 devices.append(XiaomiGenericSwitch(device, 'Wall Switch Right',
                                                    'channel_1',
                                                    False, gateway))
-            elif model == 'ctrl_ln2':
+            elif model in ['ctrl_ln2', 'ctrl_ln2.aq1']:
                 devices.append(XiaomiGenericSwitch(device,
                                                    'Wall Switch LN Left',
                                                    'channel_0',
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                    'Wall Switch LN Right',
                                                    'channel_1',
                                                    False, gateway))
-            elif model == '86plug':
+            elif model in ['86plug', 'ctrl_86plug.aq1']:
                 devices.append(XiaomiGenericSwitch(device, 'Wall Plug',
                                                    'status', True, gateway))
     add_devices(devices)
@@ -101,13 +101,13 @@ class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):
             self._state = True
             self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         if self._write_to_hub(self._sid, **{self._data_key: 'off'}):
             self._state = False
             self.schedule_update_ha_state()
 
-    def parse_data(self, data):
+    def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if IN_USE in data:
             self._in_use = int(data[IN_USE])

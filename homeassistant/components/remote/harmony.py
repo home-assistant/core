@@ -4,22 +4,23 @@ Support for Harmony Hub devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/remote.harmony/
 """
-import logging
 import asyncio
+import logging
 import time
 
 import voluptuous as vol
 
 import homeassistant.components.remote as remote
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.remote import (
-    PLATFORM_SCHEMA, DOMAIN, ATTR_DEVICE, ATTR_ACTIVITY, ATTR_NUM_REPEATS,
-    ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+    ATTR_ACTIVITY, ATTR_DELAY_SECS, ATTR_DEVICE, ATTR_NUM_REPEATS,
+    DEFAULT_DELAY_SECS, DOMAIN, PLATFORM_SCHEMA)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['pyharmony==1.0.18']
+REQUIREMENTS = ['pyharmony==1.0.20']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,12 +31,12 @@ CONF_DEVICE_CACHE = 'harmony_device_cache'
 SERVICE_SYNC = 'harmony_sync'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(ATTR_ACTIVITY): cv.string,
     vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(ATTR_ACTIVITY, default=None): cv.string,
     vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS):
         vol.Coerce(float),
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 HARMONY_SYNC_SCHEMA = vol.Schema({
@@ -70,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             port)
 
         # Ignore hub name when checking if this hub is known - ip and port only
-        if host and host[1:] in (h.host for h in DEVICES):
+        if host[1:] in ((h.host, h.port) for h in DEVICES):
             _LOGGER.debug("Discovered host already known: %s", host)
             return
     elif CONF_HOST in config:
@@ -97,8 +98,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DEVICES.append(device)
         add_devices([device])
         register_services(hass)
-    except ValueError:
-        _LOGGER.warning("Failed to initialize remote: %s", name)
+    except (ValueError, AttributeError):
+        raise PlatformNotReady
 
 
 def register_services(hass):
@@ -138,7 +139,7 @@ class HarmonyRemote(remote.RemoteDevice):
         _LOGGER.debug("HarmonyRemote device init started for: %s", name)
         self._name = name
         self.host = host
-        self._port = port
+        self.port = port
         self._state = None
         self._current_activity = None
         self._default_activity = activity
@@ -182,7 +183,7 @@ class HarmonyRemote(remote.RemoteDevice):
         return self._current_activity not in [None, 'PowerOff']
 
     def new_activity(self, activity_id):
-        """Callback for updating the current activity."""
+        """Call for updating the current activity."""
         import pyharmony
         activity_name = pyharmony.activity_name(self._config, activity_id)
         _LOGGER.debug("%s activity reported as: %s", self._name, activity_name)
@@ -206,6 +207,7 @@ class HarmonyRemote(remote.RemoteDevice):
         """Start the PowerOff activity."""
         self._client.power_off()
 
+    # pylint: disable=arguments-differ
     def send_command(self, commands, **kwargs):
         """Send a list of commands to one device."""
         device = kwargs.get(ATTR_DEVICE)

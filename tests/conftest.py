@@ -8,11 +8,11 @@ from unittest.mock import patch, MagicMock
 import pytest
 import requests_mock as _requests_mock
 
-from homeassistant import util, setup
+from homeassistant import util
 from homeassistant.util import location
-from homeassistant.components import mqtt
 
-from tests.common import async_test_home_assistant, mock_coro, INSTANCES
+from tests.common import async_test_home_assistant, INSTANCES, \
+    async_mock_mqtt_component
 from tests.test_util.aiohttp import mock_aiohttp_client
 from tests.mock.zwave import MockNetwork, MockOption
 
@@ -85,17 +85,9 @@ def aioclient_mock():
 @pytest.fixture
 def mqtt_mock(loop, hass):
     """Fixture to mock MQTT."""
-    with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
-        mock_mqtt().async_connect.return_value = mock_coro(True)
-        assert loop.run_until_complete(setup.async_setup_component(
-            hass, mqtt.DOMAIN, {
-                mqtt.DOMAIN: {
-                    mqtt.CONF_BROKER: 'mock-broker',
-                }
-            }))
-        client = mock_mqtt()
-        client.reset_mock()
-        return client
+    client = loop.run_until_complete(async_mock_mqtt_component(hass))
+    client.reset_mock()
+    return client
 
 
 @pytest.fixture

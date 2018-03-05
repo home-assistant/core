@@ -25,7 +25,7 @@ def create_engine_test(*args, **kwargs):
 
 @asyncio.coroutine
 def test_schema_update_calls(hass):
-    """Test that schema migrations occurr in correct order."""
+    """Test that schema migrations occur in correct order."""
     with patch('sqlalchemy.create_engine', new=create_engine_test), \
         patch('homeassistant.components.recorder.migration._apply_update') as \
             update:

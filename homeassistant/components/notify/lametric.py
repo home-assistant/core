@@ -93,6 +93,11 @@ class LaMetricNotificationService(BaseNotificationService):
             devices = lmn.get_devices()
         for dev in devices:
             if targets is None or dev["name"] in targets:
-                lmn.set_device(dev)
-                lmn.send_notification(model, lifetime=self._lifetime)
-                _LOGGER.debug("Sent notification to LaMetric %s", dev["name"])
+                try:
+                    lmn.set_device(dev)
+                    lmn.send_notification(model, lifetime=self._lifetime)
+                    _LOGGER.debug("Sent notification to LaMetric %s",
+                                  dev["name"])
+                except OSError:
+                    _LOGGER.warning("Cannot connect to LaMetric %s",
+                                    dev["name"])

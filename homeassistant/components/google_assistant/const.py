@@ -13,12 +13,14 @@ CONF_CLIENT_ID = 'client_id'
 CONF_ALIASES = 'aliases'
 CONF_AGENT_USER_ID = 'agent_user_id'
 CONF_API_KEY = 'api_key'
+CONF_ROOM_HINT = 'room'
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
     'switch', 'light', 'group', 'media_player', 'fan', 'cover', 'climate'
 ]
-CLIMATE_SUPPORTED_MODES = {'heat', 'cool', 'off', 'on', 'heatcool'}
+CLIMATE_MODE_HEATCOOL = 'heatcool'
+CLIMATE_SUPPORTED_MODES = {'heat', 'cool', 'off', 'on', CLIMATE_MODE_HEATCOOL}
 
 PREFIX_TRAITS = 'action.devices.traits.'
 TRAIT_ONOFF = PREFIX_TRAITS + 'OnOff'

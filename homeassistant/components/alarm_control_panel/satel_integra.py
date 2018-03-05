@@ -8,9 +8,8 @@ import asyncio
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.satel_integra import (CONF_ARM_HOME_MODE,
-                                                    DATA_SATEL,
-                                                    SIGNAL_PANEL_MESSAGE)
+from homeassistant.components.satel_integra import (
+    CONF_ARM_HOME_MODE, DATA_SATEL, SIGNAL_PANEL_MESSAGE)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -21,12 +20,12 @@ DEPENDENCIES = ['satel_integra']
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up for AlarmDecoder alarm panels."""
+    """Set up for Satel Integra alarm panels."""
     if not discovery_info:
         return
 
-    device = SatelIntegraAlarmPanel("Alarm Panel",
-                                    discovery_info.get(CONF_ARM_HOME_MODE))
+    device = SatelIntegraAlarmPanel(
+        "Alarm Panel", discovery_info.get(CONF_ARM_HOME_MODE))
     async_add_devices([device])
 
 
@@ -47,7 +46,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
 
     @callback
     def _message_callback(self, message):
-
+        """Handle received messages."""
         if message != self._state:
             self._state = message
             self.async_schedule_update_ha_state()
@@ -90,5 +89,5 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
     def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         if code:
-            yield from self.hass.data[DATA_SATEL].arm(code,
-                                                      self._arm_home_mode)
+            yield from self.hass.data[DATA_SATEL].arm(
+                code, self._arm_home_mode)

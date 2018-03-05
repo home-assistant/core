@@ -1,4 +1,9 @@
-"""Component to integrate the Home Assistant cloud."""
+"""
+Component to integrate the Home Assistant cloud.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/cloud/
+"""
 import asyncio
 from datetime import datetime
 import json
@@ -11,8 +16,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE, CONF_NAME, CONF_TYPE)
-from homeassistant.helpers import entityfilter
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import entityfilter, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 from homeassistant.components.alexa import smart_home as alexa_sh
@@ -26,18 +30,18 @@ REQUIREMENTS = ['warrant==0.6.1']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ALEXA = 'alexa'
-CONF_GOOGLE_ACTIONS = 'google_actions'
-CONF_FILTER = 'filter'
+CONF_ALIASES = 'aliases'
 CONF_COGNITO_CLIENT_ID = 'cognito_client_id'
+CONF_ENTITY_CONFIG = 'entity_config'
+CONF_FILTER = 'filter'
+CONF_GOOGLE_ACTIONS = 'google_actions'
 CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
-CONF_ALIASES = 'aliases'
 
-MODE_DEV = 'development'
 DEFAULT_MODE = 'production'
 DEPENDENCIES = ['http']
 
-CONF_ENTITY_CONFIG = 'entity_config'
+MODE_DEV = 'development'
 
 ALEXA_ENTITY_SCHEMA = vol.Schema({
     vol.Optional(alexa_sh.CONF_DESCRIPTION): cv.string,
@@ -52,10 +56,7 @@ GOOGLE_ENTITY_SCHEMA = vol.Schema({
 })
 
 ASSISTANT_SCHEMA = vol.Schema({
-    vol.Optional(
-        CONF_FILTER,
-        default=lambda: entityfilter.generate_filter([], [], [], [])
-    ): entityfilter.FILTER_SCHEMA,
+    vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
 })
 
 ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend({
@@ -100,12 +101,7 @@ def async_setup(hass, config):
     )
 
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
-
-    success = yield from cloud.initialize()
-
-    if not success:
-        return False
-
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, cloud.async_start)
     yield from http_api.async_setup(hass)
     return True
 
@@ -149,7 +145,7 @@ class Cloud:
 
     @property
     def subscription_expired(self):
-        """Return a boolen if the subscription has expired."""
+        """Return a boolean if the subscription has expired."""
         return dt_util.utcnow() > self.expiration_date
 
     @property
@@ -187,19 +183,6 @@ class Cloud:
 
         return self._gactions_config
 
-    @asyncio.coroutine
-    def initialize(self):
-        """Initialize and load cloud info."""
-        jwt_success = yield from self._fetch_jwt_keyset()
-
-        if not jwt_success:
-            return False
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
-                                        self._start_cloud)
-
-        return True
-
     def path(self, *parts):
         """Get config path inside cloud dir.
 
@@ -229,26 +212,41 @@ class Cloud:
                 'refresh_token': self.refresh_token,
             }, indent=4))
 
-    def _start_cloud(self, event):
+    @asyncio.coroutine
+    def async_start(self, _):
         """Start the cloud component."""
-        # Ensure config dir exists
-        path = self.hass.config.path(CONFIG_DIR)
-        if not os.path.isdir(path):
-            os.mkdir(path)
+        success = yield from self._fetch_jwt_keyset()
 
-        user_info = self.user_info_path
-        if not os.path.isfile(user_info):
+        # Fetching keyset can fail if internet is not up yet.
+        if not success:
+            self.hass.helpers.event.async_call_later(5, self.async_start)
             return
 
-        with open(user_info, 'rt') as file:
-            info = json.loads(file.read())
+        def load_config():
+            """Load config."""
+            # Ensure config dir exists
+            path = self.hass.config.path(CONFIG_DIR)
+            if not os.path.isdir(path):
+                os.mkdir(path)
+
+            user_info = self.user_info_path
+            if not os.path.isfile(user_info):
+                return None
+
+            with open(user_info, 'rt') as file:
+                return json.loads(file.read())
+
+        info = yield from self.hass.async_add_job(load_config)
+
+        if info is None:
+            return
 
         # Validate tokens
         try:
             for token in 'id_token', 'access_token':
                 self._decode_claims(info[token])
         except ValueError as err:  # Raised when token is invalid
-            _LOGGER.warning('Found invalid token %s: %s', token, err)
+            _LOGGER.warning("Found invalid token %s: %s", token, err)
             return
 
         self.id_token = info['id_token']
@@ -282,15 +280,15 @@ class Cloud:
             header = jwt.get_unverified_header(token)
         except jose_exceptions.JWTError as err:
             raise ValueError(str(err)) from None
-        kid = header.get("kid")
+        kid = header.get('kid')
 
         if kid is None:
-            raise ValueError('No kid in header')
+            raise ValueError("No kid in header")
 
         # Locate the key for this kid
         key = None
-        for key_dict in self.jwt_keyset["keys"]:
-            if key_dict["kid"] == kid:
+        for key_dict in self.jwt_keyset['keys']:
+            if key_dict['kid'] == kid:
                 key = key_dict
                 break
         if not key:

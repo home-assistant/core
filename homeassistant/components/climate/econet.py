@@ -10,19 +10,15 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    STATE_ECO, STATE_GAS, STATE_ELECTRIC,
-    STATE_HEAT_PUMP, STATE_HIGH_DEMAND,
-    STATE_OFF, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_OPERATION_MODE,
-    ClimateDevice)
-from homeassistant.const import (ATTR_ENTITY_ID,
-                                 CONF_PASSWORD, CONF_USERNAME, TEMP_FAHRENHEIT,
-                                 ATTR_TEMPERATURE)
+    DOMAIN, PLATFORM_SCHEMA, STATE_ECO, STATE_ELECTRIC, STATE_GAS,
+    STATE_HEAT_PUMP, STATE_HIGH_DEMAND, STATE_OFF, STATE_PERFORMANCE,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME,
+    TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyeconet==0.0.4']
+REQUIREMENTS = ['pyeconet==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +55,7 @@ HA_STATE_TO_ECONET = {
     STATE_GAS: 'gas',
     STATE_HIGH_DEMAND: 'High Demand',
     STATE_OFF: 'Off',
+    STATE_PERFORMANCE: 'Performance'
 }
 
 ECONET_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_ECONET.items()}
@@ -87,7 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.data[ECONET_DATA]['water_heaters'].extend(hass_water_heaters)
 
     def service_handle(service):
-        """Handler for services."""
+        """Handle the service calls."""
         entity_ids = service.data.get('entity_id')
         all_heaters = hass.data[ECONET_DATA]['water_heaters']
         _heaters = [
@@ -105,12 +102,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
             _water_heater.schedule_update_ha_state(True)
 
-    hass.services.register(DOMAIN, SERVICE_ADD_VACATION,
-                           service_handle,
+    hass.services.register(DOMAIN, SERVICE_ADD_VACATION, service_handle,
                            schema=ADD_VACATION_SCHEMA)
 
-    hass.services.register(DOMAIN, SERVICE_DELETE_VACATION,
-                           service_handle,
+    hass.services.register(DOMAIN, SERVICE_DELETE_VACATION, service_handle,
                            schema=DELETE_VACATION_SCHEMA)
 
 
@@ -138,7 +133,7 @@ class EcoNetWaterHeater(ClimateDevice):
 
     @property
     def device_state_attributes(self):
-        """Return the optional state attributes."""
+        """Return the optional device state attributes."""
         data = {}
         vacations = self.water_heater.get_vacations()
         if vacations:
@@ -157,8 +152,7 @@ class EcoNetWaterHeater(ClimateDevice):
         """
         Return current operation as one of the following.
 
-        ["eco", "heat_pump",
-        "high_demand", "electric_only"]
+        ["eco", "heat_pump", "high_demand", "electric_only"]
         """
         current_op = ECONET_STATE_TO_HA.get(self.water_heater.mode)
         return current_op
@@ -189,7 +183,7 @@ class EcoNetWaterHeater(ClimateDevice):
         if target_temp is not None:
             self.water_heater.set_target_set_point(target_temp)
         else:
-            _LOGGER.error("A target temperature must be provided.")
+            _LOGGER.error("A target temperature must be provided")
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
@@ -197,7 +191,7 @@ class EcoNetWaterHeater(ClimateDevice):
         if op_mode_to_set is not None:
             self.water_heater.set_mode(op_mode_to_set)
         else:
-            _LOGGER.error("An operation mode must be provided.")
+            _LOGGER.error("An operation mode must be provided")
 
     def add_vacation(self, start, end):
         """Add a vacation to this water heater."""

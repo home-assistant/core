@@ -1,8 +1,8 @@
 """
 Connect to a MySensors gateway via pymysensors API.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mysensors/
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/mysensors/
 """
 import asyncio
 from collections import defaultdict
@@ -76,12 +76,12 @@ def is_socket_address(value):
 
 
 def has_parent_dir(value):
-    """Validate that value is in an existing directory which is writetable."""
+    """Validate that value is in an existing directory which is writeable."""
     parent = os.path.dirname(os.path.realpath(value))
     is_dir_writable = os.path.isdir(parent) and os.access(parent, os.W_OK)
     if not is_dir_writable:
         raise vol.Invalid(
-            '{} directory does not exist or is not writetable'.format(parent))
+            '{} directory does not exist or is not writeable'.format(parent))
     return value
 
 
@@ -115,21 +115,20 @@ def is_serial_port(value):
         if value in ports:
             return value
         else:
-            raise vol.Invalid(
-                '{} is not a serial port'.format(value))
+            raise vol.Invalid('{} is not a serial port'.format(value))
     else:
         return cv.isdevice(value)
 
 
 def deprecated(key):
-    """Mark key as deprecated in config."""
+    """Mark key as deprecated in configuration."""
     def validator(config):
         """Check if key is in config, log warning and remove key."""
         if key not in config:
             return config
         _LOGGER.warning(
             '%s option for %s is deprecated. Please remove %s from your '
-            'configuration file.', key, DOMAIN, key)
+            'configuration file', key, DOMAIN, key)
         config.pop(key)
         return config
     return validator
@@ -150,16 +149,11 @@ CONFIG_SCHEMA = vol.Schema({
                     vol.Any(MQTT_COMPONENT, is_socket_address, is_serial_port),
                 vol.Optional(CONF_PERSISTENCE_FILE):
                     vol.All(cv.string, is_persistence_file, has_parent_dir),
-                vol.Optional(
-                    CONF_BAUD_RATE,
-                    default=DEFAULT_BAUD_RATE): cv.positive_int,
-                vol.Optional(
-                    CONF_TCP_PORT,
-                    default=DEFAULT_TCP_PORT): cv.port,
-                vol.Optional(
-                    CONF_TOPIC_IN_PREFIX, default=''): valid_subscribe_topic,
-                vol.Optional(
-                    CONF_TOPIC_OUT_PREFIX, default=''): valid_publish_topic,
+                vol.Optional(CONF_BAUD_RATE, default=DEFAULT_BAUD_RATE):
+                    cv.positive_int,
+                vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
+                vol.Optional(CONF_TOPIC_IN_PREFIX): valid_subscribe_topic,
+                vol.Optional(CONF_TOPIC_OUT_PREFIX): valid_publish_topic,
                 vol.Optional(CONF_NODES, default={}): NODE_SCHEMA,
             }]
         ),
@@ -171,7 +165,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# mysensors const schemas
+# MySensors const schemas
 BINARY_SENSOR_SCHEMA = {PLATFORM: 'binary_sensor', TYPE: 'V_TRIPPED'}
 CLIMATE_SCHEMA = {PLATFORM: 'climate', TYPE: 'V_HVAC_FLOW_STATE'}
 LIGHT_DIMMER_SCHEMA = {
@@ -362,8 +356,8 @@ def setup(hass, config):
             hass.config.path('mysensors{}.pickle'.format(index + 1)))
         baud_rate = gway.get(CONF_BAUD_RATE)
         tcp_port = gway.get(CONF_TCP_PORT)
-        in_prefix = gway.get(CONF_TOPIC_IN_PREFIX)
-        out_prefix = gway.get(CONF_TOPIC_OUT_PREFIX)
+        in_prefix = gway.get(CONF_TOPIC_IN_PREFIX, '')
+        out_prefix = gway.get(CONF_TOPIC_OUT_PREFIX, '')
         ready_gateway = setup_gateway(
             device, persistence_file, baud_rate, tcp_port, in_prefix,
             out_prefix)
@@ -439,7 +433,7 @@ def validate_child(gateway, node_id, child):
 
 
 def discover_mysensors_platform(hass, platform, new_devices):
-    """Discover a mysensors platform."""
+    """Discover a MySensors platform."""
     discovery.load_platform(
         hass, platform, DOMAIN, {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN})
 
@@ -458,7 +452,7 @@ def discover_persistent_devices(hass, gateway):
 
 
 def get_mysensors_devices(hass, domain):
-    """Return mysensors devices for a platform."""
+    """Return MySensors devices for a platform."""
     if MYSENSORS_PLATFORM_DEVICES.format(domain) not in hass.data:
         hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)] = {}
     return hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)]
@@ -467,15 +461,14 @@ def get_mysensors_devices(hass, domain):
 def gw_callback_factory(hass):
     """Return a new callback for the gateway."""
     def mysensors_callback(msg):
-        """Default callback for a mysensors gateway."""
+        """Handle messages from a MySensors gateway."""
         start = timer()
         _LOGGER.debug(
             "Node update: node %s child %s", msg.node_id, msg.child_id)
 
         child = msg.gateway.sensors[msg.node_id].children.get(msg.child_id)
         if child is None:
-            _LOGGER.debug(
-                "Not a child update for node %s", msg.node_id)
+            _LOGGER.debug("Not a child update for node %s", msg.node_id)
             return
 
         signals = []
@@ -518,7 +511,7 @@ def get_mysensors_name(gateway, node_id, child_id):
 
 
 def get_mysensors_gateway(hass, gateway_id):
-    """Return gateway."""
+    """Return MySensors gateway."""
     if MYSENSORS_GATEWAYS not in hass.data:
         hass.data[MYSENSORS_GATEWAYS] = {}
     gateways = hass.data.get(MYSENSORS_GATEWAYS)
@@ -528,8 +521,8 @@ def get_mysensors_gateway(hass, gateway_id):
 def setup_mysensors_platform(
         hass, domain, discovery_info, device_class, device_args=None,
         add_devices=None):
-    """Set up a mysensors platform."""
-    # Only act if called via mysensors by discovery event.
+    """Set up a MySensors platform."""
+    # Only act if called via MySensors by discovery event.
     # Otherwise gateway is not setup.
     if not discovery_info:
         return
@@ -627,7 +620,7 @@ class MySensorsEntity(MySensorsDevice, Entity):
 
     @property
     def should_poll(self):
-        """Mysensor gateway pushes its state to HA."""
+        """Return the polling state. The gateway pushes its states."""
         return False
 
     @property
