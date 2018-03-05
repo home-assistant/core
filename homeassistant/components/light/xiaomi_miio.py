@@ -257,7 +257,7 @@ class XiaomiPhilipsAbstractLight(Light):
         """Return the supported features."""
         return 0
 
-    def _try_command(self, mask_error, func, *args, **kwargs):
+    async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a light command handling error messages."""
         from miio import DeviceException
         try:
