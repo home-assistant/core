@@ -11,8 +11,8 @@ import requests_mock as _requests_mock
 from homeassistant import util
 from homeassistant.util import location
 
-from tests.common import async_test_home_assistant, INSTANCES, \
-    async_mock_mqtt_component
+from tests.common import (
+    async_test_home_assistant, INSTANCES, async_mock_mqtt_component, mock_coro)
 from tests.test_util.aiohttp import mock_aiohttp_client
 from tests.mock.zwave import MockNetwork, MockOption
 
@@ -106,3 +106,24 @@ def mock_openzwave():
         'openzwave.group': base_mock.group,
     }):
         yield base_mock
+
+
+@pytest.fixture
+def mock_device_tracker_conf():
+    """Prevent device tracker from reading/writing data."""
+    devices = []
+
+    async def mock_update_config(path, id, entity):
+        devices.append(entity)
+
+    with patch(
+        'homeassistant.components.device_tracker'
+        '.DeviceTracker.async_update_config',
+            side_effect=mock_update_config
+    ), patch(
+        'homeassistant.components.device_tracker.async_load_config',
+            side_effect=lambda *args: mock_coro(devices)
+    ), patch('homeassistant.components.device_tracker'
+             '.Device.set_vendor_for_mac'):
+
+        yield devices
