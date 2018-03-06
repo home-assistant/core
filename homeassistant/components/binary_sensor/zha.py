@@ -90,7 +90,8 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
             self.async_schedule_update_ha_state()
         elif command_id == 1:
             _LOGGER.debug("Enroll requested")
-            self.hass.add_job(self._ias_zone_cluster.enroll_response(0, 0))
+            res = self._ias_zone_cluster.enroll_response(0, 0)
+            self.hass.async_add_job(res)
 
     async def async_update(self):
         """Retrieve latest state."""
