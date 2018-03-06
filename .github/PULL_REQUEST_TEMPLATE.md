@@ -12,7 +12,7 @@
 
 ## Checklist:
   - [ ] The code change is tested and works locally.
-  - [ ] Local tests pass with `script/lint` & `tox`. **Your PR cannot be merged unless tests pass**
+  - [ ] Local tests pass with `tox`. **Your PR cannot be merged unless tests pass**
 
 If user exposed functionality or configuration variables are added/changed:
   - [ ] Documentation added/updated in [home-assistant.github.io](https://github.com/home-assistant/home-assistant.github.io)

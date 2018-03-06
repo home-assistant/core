@@ -8,17 +8,19 @@ import os
 import asyncio
 import sys
 import re
+import shlex
 from collections import namedtuple
 
 RE_ASCII = re.compile(r"\033\[[^m]*m")
-ERROR = namedtuple('ERROR', "file line col msg")
+Error = namedtuple('ERROR',
+                   "file line col msg")  # pylint: disable=invalid-name
 
 
 def validate_requirements_ok():
     """Validate requirements, returns True of ok."""
     # pylint: disable=E0402
-    from .gen_requirements_all import main
-    return main(True) == 0
+    from gen_requirements_all import main as req_main
+    return req_main(True) == 0
 
 
 async def read_stream(stream, display):
@@ -33,23 +35,21 @@ async def read_stream(stream, display):
     return b''.join(output)
 
 
-async def async_exec(*args, mute_err=False, capture=True):
+async def async_exec(*args, display=False):
     """Execute, return code & log."""
     try:
         kwargs = {'loop': LOOP, 'stdout': asyncio.subprocess.PIPE,
                   'stderr': asyncio.subprocess.STDOUT}
-        if mute_err:
-            kwargs['stderr'] = asyncio.subprocess.DEVNULL
-        if not capture:
+        if display:
             kwargs['stderr'] = asyncio.subprocess.PIPE
         # pylint: disable=E1120
         proc = await asyncio.create_subprocess_exec(*args, **kwargs)
     except FileNotFoundError as err:
         print('ERROR: You need to install {}. Could not execute: {}'.format(
-            args[0], ' '.join(args)))
+            args[0], ' '.join(shlex.quote(arg) for arg in args)))
         raise err
 
-    if capture:
+    if not display:
         # Readin stdout into log
         stdout, _ = await proc.communicate()
     else:
@@ -58,68 +58,47 @@ async def async_exec(*args, mute_err=False, capture=True):
             read_stream(proc.stdout, sys.stdout.write),
             read_stream(proc.stderr, sys.stderr.write))
     exit_code = await proc.wait()
-    # Convert to ASCII
     stdout = stdout.decode('utf-8')
-    # log = RE_ASCII.sub('', log.decode())
     return exit_code, stdout
 
 
 async def git():
     """Exec git."""
-    try:
-        with open('lazytox.log') as file:
-            oldfiles = file.readlines()
-    except FileNotFoundError:
-        oldfiles = []
-
-    try:
-        _, log = await async_exec(
-            'git', 'diff', 'upstream/dev...', '--name-only')
-    except FileNotFoundError:
-        print("Using a cached version of changed files.")
-        return '\n'.join(oldfiles)
-
-    if oldfiles != log:
-        with open('lazytox.log', 'w') as file:
-            file.write(log)
-    return log
+    if len(sys.argv) > 2 and sys.argv[1] == '--':
+        return sys.argv[2:]
+    _, log = await async_exec('git', 'diff', 'upstream/dev...', '--name-only')
+    return log.splitlines()
 
 
 async def pylint(files):
     """Exec pylint."""
-    try:
-        # Drops STDERR, it contains info on loading config file
-        _, log = await async_exec('pylint', '-f', 'parseable', *files,
-                                  mute_err=True)
-    except FileNotFoundError:
-        return []
-
+    _, log = await async_exec('pylint', '-f', 'parseable', '--persistent=n',
+                              *files)
     res = []
     for line in log.splitlines():
         line = line.split(':')
-        if len(line) != 4:
+        if len(line) < 3:
             continue
-        res.append(ERROR(line[0].replace('\\', '/'), line[1], "", line[2]))
+        res.append(Error(line[0].replace('\\', '/'),
+                         line[1], "", line[2].strip()))
     return res
 
 
 async def flake8(files):
     """Exec flake8."""
-    try:
-        _, log = await async_exec('flake8', *files)
-    except FileNotFoundError:
-        return []
+    _, log = await async_exec('flake8', *files)
     res = []
     for line in log.splitlines():
         line = line.split(':')
-        if len(line) != 4:
+        if len(line) < 4:
             continue
-        res.append(ERROR(line[0], line[1], line[2], line[3].strip()))
+        res.append(Error(line[0].replace('\\', '/'),
+                         line[1], line[2], line[3].strip()))
     return res
 
 
 async def main():
-    """Main loop."""
+    """The main loop."""
     # Ensure we are in the homeassistant root
     os.chdir(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
@@ -129,62 +108,70 @@ async def main():
               "changes with git add & git commit")
         return
 
-    files = files.splitlines()
     pyfile = re.compile(r".+\.py$")
     pyfiles = [file for file in files if pyfile.match(file)]
 
-    print("CHANGED FILES:", ' '.join(files))
-    print("============================")
+    print("=============================")
+    print("CHANGED FILES:\n", '\n '.join(pyfiles))
+    print("=============================")
 
     fres, pres = await asyncio.gather(flake8(pyfiles), pylint(pyfiles))
     res = fres + pres
-
     res.sort(key=lambda item: item.file)
+    if res:
+        print("Pylint & Flake8 errors:")
+    else:
+        print("Pylint and Flake8 passed")
 
-    gen_req = False
     lint_ok = True
-    test_files = set()
-
     for err in res:
         print("{} {}:{} {}".format(err.file, err.line, err.col, err.msg))
-
-        # Will run generate_requirements if components and lint passes
-        if err.file.startswith('homeassistant/components/'):
-            gen_req = True
-
         # Ignore tests/ for the lint_ok test, but otherwise we have an issue
         if not err.file.startswith('tests/'):
             lint_ok = False
-
-        # Try find test files...
-        if err.file.startswith('tests/'):
-            test_files.add(err.file)
-        else:
-            tfile = err.file.replace('homeassistant', 'tests') \
-                .replace('__init__', 'test_init')
-            if tfile.startswith('tests') and os.path.isfile(tfile):
-                test_files.add(tfile)
 
     if not lint_ok:
         print('Please fix your lint issues before continuing')
         return
 
+    test_files = set()
+    gen_req = False
+    for fname in pyfiles:
+        if fname.startswith('homeassistant/components/'):
+            gen_req = True  # requirements script for components
+        # Find test files...
+        if fname.startswith('tests/'):
+            test_files.add(fname)
+        else:
+            parts = fname.split('/')
+            parts[0] = 'tests'
+            if parts[-1] == '__init__.py':
+                parts[-1] = 'test_init.py'
+            elif parts[-1] == '__main__.py':
+                parts[-1] = 'test_main.py'
+            else:
+                parts[-1] = 'test_' + parts[-1]
+            fname = '/'.join(parts)
+            if os.path.isfile(fname):
+                test_files.add(fname)
+
     if gen_req:
-        print("============================")
+        print("=============================")
         if validate_requirements_ok():
             print("script/gen_requirements.py passed")
         else:
             print("Please run script/gen_requirements.py before submitting")
             return
 
-    print("============================")
-    print('pytest -vv --', ' '.join(test_files))
-    print("============================")
+    print("=============================")
     if not test_files:
-        print("No files identified, running pytest on everything.")
+        print("No files identified, ideally you should run tox.")
+        return
+
+    print('pytest -vv --', ' '.join(shlex.quote(fle) for fle in test_files))
     code, _ = await async_exec(
-        'pytest', '-vv', '--', *test_files, capture=False)
-    print("============================")
+        'pytest', '-vv', '--', *test_files, display=True)
+    print("\n=============================")
 
     if code == 0:
         print("Yay! This will most likely pass tox")
@@ -198,7 +185,7 @@ if __name__ == '__main__':
 
     try:
         LOOP.run_until_complete(main())
-    except KeyboardInterrupt:
-        exit
+    except (FileNotFoundError, KeyboardInterrupt):
+        pass
     finally:
         LOOP.close()
