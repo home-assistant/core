@@ -5,15 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sht31/
 """
 
+import logging
+import math
+import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import celsius_to_fahrenheit
-import logging
-import math
-import voluptuous as vol
 
 REQUIREMENTS = ['Adafruit-GPIO==1.0.3',
                 'Adafruit-SHT31==1.0.2']
