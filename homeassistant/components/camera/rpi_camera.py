@@ -108,6 +108,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([RaspberryCamera(setup_config)])
 
+
 class RaspberryCamera(Camera):
     """Representation of a Raspberry Pi camera."""
 
