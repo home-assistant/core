@@ -97,6 +97,27 @@ async def flake8(files):
     return res
 
 
+async def lint(files):
+    """Perform lint."""
+    fres, pres = await asyncio.gather(flake8(files), pylint(files))
+
+    res = fres + pres
+    res.sort(key=lambda item: item.file)
+    if res:
+        print("Pylint & Flake8 errors:")
+    else:
+        print("Pylint and Flake8 passed")
+
+    lint_ok = True
+    for err in res:
+        print("{} {}:{} {}".format(err.file, err.line, err.col, err.msg))
+        # Ignore tests/ for the lint_ok test, but otherwise we have an issue
+        if not err.file.startswith('tests/'):
+            lint_ok = False
+
+    return lint_ok
+
+
 async def main():
     """The main loop."""
     # Ensure we are in the homeassistant root
@@ -115,22 +136,10 @@ async def main():
     print("CHANGED FILES:\n", '\n '.join(pyfiles))
     print("=============================")
 
-    fres, pres = await asyncio.gather(flake8(pyfiles), pylint(pyfiles))
-    res = fres + pres
-    res.sort(key=lambda item: item.file)
-    if res:
-        print("Pylint & Flake8 errors:")
-    else:
-        print("Pylint and Flake8 passed")
-
-    lint_ok = True
-    for err in res:
-        print("{} {}:{} {}".format(err.file, err.line, err.col, err.msg))
-        # Ignore tests/ for the lint_ok test, but otherwise we have an issue
-        if not err.file.startswith('tests/'):
-            lint_ok = False
-
-    if not lint_ok:
+    skip_lint = len(sys.argv) > 1 and sys.argv[1] == '--skiplint'
+    if skip_lint:
+        print("WARNING: LINT DISABLED")
+    elif not await lint(pyfiles):
         print('Please fix your lint issues before continuing')
         return
 
@@ -170,13 +179,16 @@ async def main():
 
     print('pytest -vv --', ' '.join(shlex.quote(fle) for fle in test_files))
     code, _ = await async_exec(
-        'pytest', '-vv', '--', *test_files, display=True)
+        'pytest', '-vv', '--force-sugar', '--', *test_files, display=True)
     print("\n=============================")
 
     if code == 0:
         print("Yay! This will most likely pass tox")
     else:
         print("Test not passing")
+
+    if skip_lint:
+        print("WARNING: LINT DISABLED")
 
 
 if __name__ == '__main__':
