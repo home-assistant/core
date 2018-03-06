@@ -153,7 +153,6 @@ class Channels(object):
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Channels platform."""
 
-
     device = ChannelsApp(
                 config.get('name', 'Channels'),
                 config.get(CONF_HOST),
