@@ -1,7 +1,6 @@
 """Test different accessory types: Thermostats."""
 import unittest
 from unittest.mock import patch
-import time
 
 from homeassistant.core import callback
 from homeassistant.components.climate import (
