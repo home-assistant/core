@@ -24,9 +24,17 @@ CONF_QUERIES = 'queries'
 CONF_QUERY = 'query'
 CONF_COLUMN_NAME = 'column'
 
+
+def validate_sql_select(value):
+    """Validate that value is a SQL SELECT query."""
+    if not value.lstrip().lower().startswith('select'):
+        raise vol.Invalid('Only SELECT queries allowed')
+    return value
+
+
 _QUERY_SCHEME = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_QUERY): cv.string,
+    vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
     vol.Required(CONF_COLUMN_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -129,14 +137,16 @@ class SQLSensor(Entity):
         finally:
             sess.close()
 
-        for res in result:
-            _LOGGER.debug(res.items())
-            data = res[self._column_name]
-            self._attributes = {k: str(v) for k, v in res.items()}
-
-        if data is None:
-            _LOGGER.error("%s returned no results", self._query)
+        if not result.returns_rows or result.rowcount == 0:
+            _LOGGER.warning("%s returned no results", self._query)
+            self._state = None
+            self._attributes = {}
             return
+
+        for res in result:
+            _LOGGER.debug("result = %s", res.items())
+            data = res[self._column_name]
+            self._attributes = {k: v for k, v in res.items()}
 
         if self._template is not None:
             self._state = self._template.async_render_with_possible_json_value(
