@@ -8,7 +8,10 @@
 
 
 **Python release (`python3 --version`):**
-<!-- If you run Hass.io: "Hass.io" -->
+<!--
+- Minumum supported version is Python 3.5.3
+- If you run Hass.io: "Hass.io"
+-->
 
 **Component/platform:**
 
