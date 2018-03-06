@@ -1,12 +1,14 @@
-Make sure you are running the latest version of Home Assistant before reporting an issue.
-
-You should only file an issue if you found a bug. Feature and enhancement requests should go in [the Feature Requests section](https://community.home-assistant.io/c/feature-requests) of our community forum:
-
+<!-- READ THIS FIRST:
+- Make sure you are running the latest version of Home Assistant before reporting an issue
+- Do not report issues for components if you are using custom components
+- Frontend (UI) related issues have to be reported here: https://github.com/home-assistant/home-assistant-polymer/issues
+- This is fpr bugs only. Feature and enhancement requests should go in our community forum: https://community.home-assistant.io/c/feature-requests
+-->
 **Home Assistant release (`hass --version`):**
 
 
 **Python release (`python3 --version`):**
-
+<!-- If you run Hass.io: "Hass.io" -->
 
 **Component/platform:**
 
