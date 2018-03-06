@@ -8,7 +8,7 @@ https://home-assistant.io/components/sensor.sht31/
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS)
+    TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import celsius_to_fahrenheit
 import logging
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
 
     i2c_address = int(config.get(CONF_I2C_ADDRESS), 16)
-    sensor = SHT31(address = i2c_address)
+    sensor = SHT31(address=i2c_address)
 
     if sensor.read_status() is None:
         _LOGGER.error("% sensor not detected at address %s",
@@ -109,4 +109,3 @@ class SHTSensor(Entity):
                 self._state = round(humidity)
             else:
                 _LOGGER.warning("Bad sample from sensor %s", self.name)
-
