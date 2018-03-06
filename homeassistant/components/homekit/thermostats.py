@@ -46,15 +46,14 @@ class Thermostat(HomeAccessory):
         self.coolingthresh_flag_target_state = False
         self.heatingthresh_flag_target_state = False
 
-        extra_args = None
-        # Add additional characteristics if auto mode is supported
-        if support_auto:
-            extra_args = [CHAR_COOLING_THRESHOLD_TEMPERATURE,
-                          CHAR_HEATING_THRESHOLD_TEMPERATURE]
+        # extra_chars = None
+        # # Add additional characteristics if auto mode is supported
+        # if support_auto:
+        #     extra_chars = [CHAR_COOLING_THRESHOLD_TEMPERATURE,
+        #                    CHAR_HEATING_THRESHOLD_TEMPERATURE]
 
         # Preload the thermostat service
-        self.service_thermostat = add_preload_service(self, SERV_THERMOSTAT,
-                                                      extra_args)
+        self.service_thermostat = add_preload_service(self, SERV_THERMOSTAT)
 
         # Current and target mode characteristics
         self.char_current_heat_cool = self.service_thermostat. \
