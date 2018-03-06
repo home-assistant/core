@@ -95,10 +95,11 @@ class UnifiScanner(DeviceScanner):
             _LOGGER.error("Failed to scan clients: %s", ex)
             clients = []
 
-        # Filter clients to provided SSID list
+        # Filter clients to provided SSID list (ignore wired clients)
         if self._ssid_filter:
             clients = [client for client in clients
-                       if client['essid'] in self._ssid_filter]
+                       if 'essid' in client and client['essid'] in
+                       self._ssid_filter]
 
         self._clients = {
             client['mac']: client
