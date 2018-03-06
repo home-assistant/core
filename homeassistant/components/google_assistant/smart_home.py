@@ -17,7 +17,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT,
     STATE_OFF, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     TEMP_FAHRENHEIT, TEMP_CELSIUS,
-    CONF_NAME, CONF_TYPE
+    CONF_NAME, CONF_TYPE, STATE_UNAVAILABLE
 )
 from homeassistant.components import (
     switch, light, cover, media_player, group, fan, scene, script, climate,
@@ -470,7 +470,7 @@ def async_devices_query(hass, config, payload):
             continue
 
         state = hass.states.get(devid)
-        if not state:
+        if not state or state.state == STATE_UNAVAILABLE:
             # If we can't find a state, the device is offline
             devices[devid] = {'online': False}
         else:

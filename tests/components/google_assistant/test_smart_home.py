@@ -1,10 +1,8 @@
 """The tests for the Google Actions component."""
-# pylint: disable=protected-access
-import asyncio
-
 from homeassistant import const
 from homeassistant.components import climate
 from homeassistant.components import google_assistant as ga
+from homeassistant.components.google_assistant import smart_home as sh
 from homeassistant.util.unit_system import (IMPERIAL_SYSTEM, METRIC_SYSTEM)
 
 DETERMINE_SERVICE_TESTS = [{  # Test light brightness
@@ -179,7 +177,6 @@ DETERMINE_SERVICE_TESTS = [{  # Test light brightness
 }]
 
 
-@asyncio.coroutine
 def test_determine_service():
     """Test all branches of determine service."""
     for test in DETERMINE_SERVICE_TESTS:
@@ -189,3 +186,25 @@ def test_determine_service():
             test['params'],
             test.get('units', METRIC_SYSTEM))
         assert result == test['expected']
+
+
+async def test_query_unavailable_device(hass):
+    """Test querying unavailable devices."""
+    hass.states.async_set('light.hello', const.STATE_UNAVAILABLE)
+    hass.states.async_set('switch.world', const.STATE_UNAVAILABLE)
+
+    result = await sh.async_devices_query(hass, None, {
+        'devices': [
+            {
+                'id': 'light.hello'
+            },
+            {
+                'id': 'switch.hello'
+            },
+        ]
+    })
+
+    assert result['devices'] == {
+        'light.hello': {'online': False},
+        'switch.hello': {'online': False}
+    }
