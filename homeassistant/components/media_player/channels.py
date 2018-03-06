@@ -141,17 +141,18 @@ class Channels(object):
     def play_channel(self, channel_number):
         """Set a channel to play and returns the current state."""
         return self._request('POST', '/api/play/channel/' +
-            str(channel_number))
+                             str(channel_number))
 
     def play_recording(self, recording_id):
         """Set a recording to play and returns the current state."""
         return self._request('POST', '/api/play/recording/' +
-            str(recording_id))
+                             str(recording_id))
 
 # pylint: disable=unused-argument, abstract-method
 # pylint: disable=too-many-instance-attributes
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Channels platform."""
+
 
     device = ChannelsApp(
                 config.get('name', 'Channels'),
@@ -246,7 +247,6 @@ class ChannelsApp(MediaPlayerDevice):
             self.channel_number = None
             self.channel_name = None
             self.channel_image_url = None
-
 
         if np_hash:
             self.now_playing_title = np_hash.get('title', None)
@@ -376,7 +376,7 @@ class ChannelsApp(MediaPlayerDevice):
             response = self.client.play_channel(media_id)
             self.update_state(response)
         elif media_type in [MEDIA_TYPE_VIDEO, MEDIA_TYPE_EPISODE,
-            MEDIA_TYPE_TVSHOW]:
+                            MEDIA_TYPE_TVSHOW]:
             response = self.client.play_recording(media_id)
             self.update_state(response)
 
