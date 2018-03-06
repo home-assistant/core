@@ -144,6 +144,7 @@ class SQLSensor(Entity):
                 self._attributes = {k: v for k, v in res.items()}
         except sqlalchemy.exc.SQLAlchemyError as err:
             _LOGGER.error("Error executing query %s: %s", self._query, err)
+            return
         finally:
             sess.close()
 
