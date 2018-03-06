@@ -174,7 +174,7 @@ class Thermostat(HomeAccessory):
                 else:
                     self.coolingthresh_flag_target_state = False
 
-        # Update heating theshold temperature if characteristic exists
+        # Update heating threshold temperature if characteristic exists
         if self.char_heating_thresh_temp is not None:
             heating_thresh_temp = new_state.attributes[ATTR_TARGET_TEMP_LOW]
             if heating_thresh_temp is not None:
