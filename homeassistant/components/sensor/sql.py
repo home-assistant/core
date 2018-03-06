@@ -146,7 +146,7 @@ class SQLSensor(Entity):
         for res in result:
             _LOGGER.debug("result = %s", res.items())
             data = res[self._column_name]
-            self._attributes = {k: str(v) for k, v in res.items()}
+            self._attributes = {k: v for k, v in res.items()}
 
         if self._template is not None:
             self._state = self._template.async_render_with_possible_json_value(

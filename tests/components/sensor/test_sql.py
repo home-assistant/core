@@ -1,6 +1,9 @@
 """The test for the sql sensor platform."""
 import unittest
+import pytest
+import voluptuous as vol
 
+from homeassistant.components.sensor.sql import validate_sql_select
 from homeassistant.setup import setup_component
 from homeassistant.const import STATE_UNKNOWN
 
@@ -37,8 +40,11 @@ class TestSQLSensor(unittest.TestCase):
         state = self.hass.states.get('sensor.count_tables')
         self.assertEqual(state.state, '0')
 
-    def test_no_results_query(self):
-        """Test the SQL sensor for no results."""
+    def test_invalid_query(self):
+        """Test the SQL sensor for invalid queries."""
+        with pytest.raises(vol.Invalid):
+            validate_sql_select("DROP TABLE *")
+
         config = {
             'sensor': {
                 'platform': 'sql',
