@@ -165,7 +165,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([device])
     hass.data[DATA_CHANNELS].append(device)
 
-
     def service_handler(service):
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
@@ -195,6 +194,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.services.register(
         DOMAIN, SERVICE_SEEK_BY, service_handler,
         schema=CHANNELS_SEEK_BY_SCHEMA)
+
 
 class ChannelsApp(MediaPlayerDevice):
     """Representation of a Channels instance."""
