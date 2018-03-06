@@ -11,10 +11,10 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_EPISODE, MEDIA_TYPE_VIDEO,
-    SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_VOLUME_MUTE,
-    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY_MEDIA,
-    SUPPORT_SELECT_SOURCE, DOMAIN, MediaPlayerDevice)
+    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_EPISODE,
+    MEDIA_TYPE_VIDEO, SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_PLAY_MEDIA, SUPPORT_SELECT_SOURCE, DOMAIN, MediaPlayerDevice)
 
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, STATE_IDLE, STATE_PAUSED, STATE_PLAYING,
@@ -140,22 +140,24 @@ class Channels(object):
 
     def play_channel(self, channel_number):
         """Set a channel to play and returns the current state."""
-        return self._request('POST', '/api/play/channel/' + str(channel_number))
+        return self._request('POST', '/api/play/channel/' +
+            str(channel_number))
 
     def play_recording(self, recording_id):
         """Set a recording to play and returns the current state."""
-        return self._request('POST', '/api/play/recording/' + str(recording_id))
+        return self._request('POST', '/api/play/recording/' +
+            str(recording_id))
 
 # pylint: disable=unused-argument, abstract-method
 # pylint: disable=too-many-instance-attributes
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Channels platform."""
 
-    device =    ChannelsApp(
-                    config.get('name', 'Channels'),
-                    config.get(CONF_HOST),
-                    config.get(CONF_PORT, 57000)
-                )
+    device = ChannelsApp(
+                config.get('name', 'Channels'),
+                config.get(CONF_HOST),
+                config.get(CONF_PORT, 57000)
+             )
 
     if DATA_CHANNELS not in hass.data:
         hass.data[DATA_CHANNELS] = []
@@ -233,25 +235,27 @@ class ChannelsApp(MediaPlayerDevice):
         self.muted = state_hash.get('muted', False)
 
         channel_hash = state_hash.get('channel', None)
-        now_playing_hash = state_hash.get('now_playing', None)
+        np_hash = state_hash.get('now_playing', None)
 
         if channel_hash:
             self.channel_number = channel_hash.get('channel_number', None)
             self.channel_name = channel_hash.get('channel_name', None)
-            self.channel_image_url = channel_hash.get('channel_image_url', None)
+            self.channel_image_url = channel_hash.get('channel_image_url',
+                                                      None)
         else:
             self.channel_number = None
             self.channel_name = None
             self.channel_image_url = None
 
 
-        if now_playing_hash:
-            self.now_playing_title = now_playing_hash.get('title', None)
-            self.now_playing_episode_title = now_playing_hash.get('episode_title', None)
-            self.now_playing_season_number = now_playing_hash.get('season_number', None)
-            self.now_playing_episode_number = now_playing_hash.get('episode_number', None)
-            self.now_playing_summary = now_playing_hash.get('summary', None)
-            self.now_playing_image_url = now_playing_hash.get('image_url', None)
+        if np_hash:
+            self.now_playing_title = np_hash.get('title', None)
+            self.now_playing_episode_title = np_hash.get('episode_title', None)
+            self.now_playing_season_number = np_hash.get('season_number', None)
+            self.now_playing_episode_number = np_hash.get('episode_number',
+                                                          None)
+            self.now_playing_summary = np_hash.get('summary', None)
+            self.now_playing_image_url = np_hash.get('image_url', None)
         else:
             self.now_playing_title = None
             self.now_playing_episode_title = None
@@ -259,7 +263,6 @@ class ChannelsApp(MediaPlayerDevice):
             self.now_playing_episode_number = None
             self.now_playing_summary = None
             self.now_playing_image_url = None
-
 
     @property
     def name(self):
@@ -372,7 +375,8 @@ class ChannelsApp(MediaPlayerDevice):
         if media_type == MEDIA_TYPE_CHANNEL:
             response = self.client.play_channel(media_id)
             self.update_state(response)
-        elif media_type in [MEDIA_TYPE_VIDEO, MEDIA_TYPE_EPISODE, MEDIA_TYPE_TVSHOW]:
+        elif media_type in [MEDIA_TYPE_VIDEO, MEDIA_TYPE_EPISODE,
+            MEDIA_TYPE_TVSHOW]:
             response = self.client.play_recording(media_id)
             self.update_state(response)
 
