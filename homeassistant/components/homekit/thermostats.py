@@ -68,10 +68,10 @@ class Thermostat(HomeAccessory):
         # Current and target temperature characteristics
         self.char_current_temp = self.service_thermostat. \
             get_characteristic(CHAR_CURRENT_TEMPERATURE)
-        self.char_current_temp.value = 0.0
+        self.char_current_temp.value = 21.0
         self.char_target_temp = self.service_thermostat. \
             get_characteristic(CHAR_TARGET_TEMPERATURE)
-        self.char_target_temp.value = 0.0
+        self.char_target_temp.value = 21.0
         self.char_target_temp.setter_callback = self.set_target_temperature
 
         # Display units characteristic
@@ -83,13 +83,13 @@ class Thermostat(HomeAccessory):
         if support_auto:
             self.char_cooling_thresh_temp = self.service_thermostat. \
                 get_characteristic(CHAR_COOLING_THRESHOLD_TEMPERATURE)
-            self.char_cooling_thresh_temp.value = 0.0
+            self.char_cooling_thresh_temp.value = 23.0
             self.char_cooling_thresh_temp.setter_callback = \
                 self.set_cooling_threshold
 
             self.char_heating_thresh_temp = self.service_thermostat. \
                 get_characteristic(CHAR_HEATING_THRESHOLD_TEMPERATURE)
-            self.char_heating_thresh_temp.value = 0.0
+            self.char_heating_thresh_temp.value = 19.0
             self.char_heating_thresh_temp.setter_callback = \
                 self.set_heating_threshold
         else:
