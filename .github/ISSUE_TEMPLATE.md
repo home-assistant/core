@@ -2,7 +2,7 @@
 - Make sure you are running the latest version of Home Assistant before reporting an issue
 - Do not report issues for components if you are using custom components
 - Frontend (UI) related issues have to be reported here: https://github.com/home-assistant/home-assistant-polymer/issues
-- This is fpr bugs only. Feature and enhancement requests should go in our community forum: https://community.home-assistant.io/c/feature-requests
+- This is for bugs only. Feature and enhancement requests should go in our community forum: https://community.home-assistant.io/c/feature-requests
 -->
 **Home Assistant release (`hass --version`):**
 
