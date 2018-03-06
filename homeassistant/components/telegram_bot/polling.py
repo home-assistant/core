@@ -13,7 +13,7 @@ from aiohttp.client_exceptions import ClientError
 from aiohttp.hdrs import CONNECTION, KEEP_ALIVE
 
 from homeassistant.components.telegram_bot import (
-    _initialize_bot,
+    initialize_bot,
     CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity,
     PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA)
 from homeassistant.const import (
@@ -36,7 +36,7 @@ class WrongHttpStatus(Exception):
 @asyncio.coroutine
 def async_setup_platform(hass, config):
     """Set up the Telegram polling platform."""
-    bot = _initialize_bot(config)
+    bot = initialize_bot(config)
     pol = TelegramPoll(bot, hass, config[CONF_ALLOWED_CHAT_IDS])
 
     @callback

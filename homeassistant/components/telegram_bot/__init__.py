@@ -237,7 +237,7 @@ def async_setup(hass, config):
         _LOGGER.exception("Error setting up platform %s", p_type)
         return False
 
-    bot = _initialize_bot(p_config)
+    bot = initialize_bot(p_config)
     notify_service = TelegramNotificationService(
         hass,
         bot,
@@ -301,7 +301,7 @@ def async_setup(hass, config):
     return True
 
 
-def _initialize_bot(p_config):
+def initialize_bot(p_config):
     """Initialize telegram bot with proxy support."""
     from telegram import Bot
     from telegram.utils.request import Request

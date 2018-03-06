@@ -15,7 +15,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.components.telegram_bot import (
     CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA,
-    _initialize_bot)
+    initialize_bot)
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST,
     HTTP_UNAUTHORIZED, CONF_URL)
@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config):
     """Set up the Telegram webhooks platform."""
     import telegram
-    bot = _initialize_bot(config)
+    bot = initialize_bot(config)
 
     current_status = yield from hass.async_add_job(bot.getWebhookInfo)
     base_url = config.get(CONF_URL, hass.config.api.base_url)
