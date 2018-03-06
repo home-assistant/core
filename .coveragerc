@@ -376,10 +376,10 @@ omit =
     homeassistant/components/device_tracker/keenetic_ndms2.py
     homeassistant/components/device_tracker/linksys_ap.py
     homeassistant/components/device_tracker/linksys_smart.py
-    homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/mikrotik.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
+    homeassistant/components/device_tracker/openwrt.py
     homeassistant/components/device_tracker/ping.py
     homeassistant/components/device_tracker/sky_hub.py
     homeassistant/components/device_tracker/snmp.py
@@ -390,7 +390,6 @@ omit =
     homeassistant/components/device_tracker/tomato.py
     homeassistant/components/device_tracker/tplink.py
     homeassistant/components/device_tracker/trackr.py
-    homeassistant/components/device_tracker/ubus.py
     homeassistant/components/downloader.py
     homeassistant/components/emoncms_history.py
     homeassistant/components/emulated_hue/upnp.py
