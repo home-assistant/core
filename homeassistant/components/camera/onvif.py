@@ -33,6 +33,9 @@ DEFAULT_PORT = 5000
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '888888'
 DEFAULT_ARGUMENTS = '-q:v 2'
+DEFAULT_PROFILE = 0
+
+CONF_PROFILE = "profile"
 
 ATTR_PAN = "pan"
 ATTR_TILT = "tilt"
@@ -57,6 +60,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_EXTRA_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
+    vol.Optional(CONF_PROFILE, default=DEFAULT_PROFILE):
+        vol.All(vol.Coerce(int), vol.Range(min=0)),
 })
 
 SERVICE_PTZ_SCHEMA = vol.Schema({
@@ -67,8 +72,7 @@ SERVICE_PTZ_SCHEMA = vol.Schema({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a ONVIF camera."""
     if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
         return
@@ -91,7 +95,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.services.async_register(DOMAIN, SERVICE_PTZ, handle_ptz,
                                  schema=SERVICE_PTZ_SCHEMA)
-    async_add_devices([ONVIFHassCamera(hass, config)])
+    add_devices([ONVIFHassCamera(hass, config)])
 
 
 class ONVIFHassCamera(Camera):
@@ -114,10 +118,17 @@ class ONVIFHassCamera(Camera):
                 config.get(CONF_USERNAME), config.get(CONF_PASSWORD)
             )
             media_service = camera.create_media_service()
-            stream_uri = media_service.GetStreamUri(
-                {'StreamSetup': {'Stream': 'RTP-Unicast', 'Transport': 'RTSP'}}
-                )
-            self._input = stream_uri.Uri.replace(
+            self._profiles = media_service.GetProfiles()
+            self._profile_index = config.get(CONF_PROFILE)
+            if self._profile_index >= len(self._profiles):
+                _LOGGER.warning("ONVIF Camera '%s' doesn't provide profile %d."
+                                " Using the last profile.",
+                                self._name, self._profile_index)
+                self._profile_index = -1
+            req = media_service.create_type('GetStreamUri')
+            # pylint: disable=protected-access
+            req.ProfileToken = self._profiles[self._profile_index]._token
+            self._input = media_service.GetStreamUri(req).Uri.replace(
                 'rtsp://', 'rtsp://{}:{}@'.format(
                     config.get(CONF_USERNAME),
                     config.get(CONF_PASSWORD)), 1)
