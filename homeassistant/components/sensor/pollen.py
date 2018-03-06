@@ -106,7 +106,7 @@ RATING_MAPPING = [{
 }]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ZIP_CODE): cv.string,
+    vol.Required(CONF_ZIP_CODE): str,
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(CONDITIONS)]),
 })
