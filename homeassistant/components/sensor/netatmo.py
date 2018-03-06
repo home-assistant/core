@@ -18,8 +18,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MODULE = 'modules'
-
 CONF_MODULES = 'modules'
 CONF_STATION = 'station'
 
@@ -54,7 +52,7 @@ SENSOR_TYPES = {
 }
 
 MODULE_SCHEMA = vol.Schema({
-    vol.Required(cv.string, default=[]):
+    vol.Required(cv.string):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
