@@ -10,7 +10,7 @@ import os
 
 from homeassistant.components import zone
 from homeassistant.core import callback, State
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.helpers import discovery
 from homeassistant.loader import get_component
 from homeassistant.util.async import run_coroutine_threadsafe
@@ -151,26 +151,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         with assert_setup_component(1, device_tracker.DOMAIN):
             assert setup_component(self.hass, device_tracker.DOMAIN,
                                    TEST_PLATFORM)
-
-    # pylint: disable=invalid-name
-    def test_adding_unknown_device_to_config(self):
-        """Test the adding of unknown devices to configuration file."""
-        scanner = get_component('device_tracker.test').SCANNER
-        scanner.reset()
-        scanner.come_home('DEV1')
-
-        with assert_setup_component(1, device_tracker.DOMAIN):
-            assert setup_component(self.hass, device_tracker.DOMAIN, {
-                device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}})
-
-        # wait for async calls (macvendor) to finish
-        self.hass.block_till_done()
-
-        config = device_tracker.load_config(self.yaml_devices, self.hass,
-                                            timedelta(seconds=0))
-        assert len(config) == 1
-        assert config[0].dev_id == 'dev1'
-        assert config[0].track
 
     def test_gravatar(self):
         """Test the Gravatar generation."""
@@ -742,3 +722,20 @@ def test_bad_platform(hass):
     }
     with assert_setup_component(0, device_tracker.DOMAIN):
         assert (yield from device_tracker.async_setup(hass, config))
+
+
+async def test_adding_unknown_device_to_config(mock_device_tracker_conf, hass):
+    """Test the adding of unknown devices to configuration file."""
+    scanner = get_component('device_tracker.test').SCANNER
+    scanner.reset()
+    scanner.come_home('DEV1')
+
+    await async_setup_component(hass, device_tracker.DOMAIN, {
+            device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}})
+
+    await hass.async_block_till_done()
+
+    assert len(mock_device_tracker_conf) == 1
+    device = mock_device_tracker_conf[0]
+    assert device.dev_id == 'dev1'
+    assert device.track
