@@ -16,12 +16,10 @@ from homeassistant.util.decorator import Registry
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT,
     STATE_OFF, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    TEMP_FAHRENHEIT, TEMP_CELSIUS,
-    CONF_NAME, CONF_TYPE
+    TEMP_CELSIUS, CONF_NAME
 )
 from homeassistant.components import (
     switch, light, cover, media_player, group, fan, scene, script, climate,
-    sensor
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
@@ -36,10 +34,88 @@ from .const import (
     CONF_ALIASES, CONF_ROOM_HINT, CLIMATE_SUPPORTED_MODES,
     CLIMATE_MODE_HEATCOOL
 )
+from . import trait
 
 HANDLERS = Registry()
 QUERY_HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
+
+
+class _GoogleEntity:
+    """Adaptation of Entity expressed in Google's terms."""
+
+    def __init__(self, config, state):
+        self.config = config
+        self.state = state
+
+    def traits(self):
+        """Return traits for entity."""
+        state = self.state
+        domain = state.domain
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        return [Trait(state) for Trait in trait.TRAITS
+                if Trait.supported(domain, features, unit)]
+
+    def sync_serialize(self):
+        """Serialize entity for a SYNC response.
+
+        https://developers.google.com/actions/smarthome/create-app#actiondevicessync
+        """
+        traits = self.traits()
+        state = self.state
+
+        # Found no supported traits for this entity
+        if not traits:
+            return None
+
+        entity_config = self.config.entity_config.get(state.entity_id, {})
+
+        # class_data = MAPPING_COMPONENT.get(google_domain or entity.domain)
+
+        # if class_data is None:
+        #     return None
+
+        device = {
+            'id': state.entity_id,
+            'name': {
+                'name': entity_config.get(CONF_NAME) or state.name
+            },
+            'attributes': {},
+            'traits': [trait.name for trait in traits],
+            'willReportState': False,
+            'type': DOMAIN_TO_GOOGLE_TYPES[state.domain],
+        }
+
+        # use aliases
+        aliases = entity_config.get(CONF_ALIASES)
+        if aliases:
+            device['name']['nicknames'] = aliases
+
+        # add room hint if annotated
+        room = entity_config.get(CONF_ROOM_HINT)
+        if room:
+            device['roomHint'] = room
+
+        for trt in traits:
+            device['attributes'].update(trt.sync_attributes())
+
+        return device
+
+
+DOMAIN_TO_GOOGLE_TYPES = {
+    group.DOMAIN: TYPE_SWITCH,
+    scene.DOMAIN: TYPE_SCENE,
+    script.DOMAIN: TYPE_SCENE,
+    switch.DOMAIN: TYPE_SWITCH,
+    fan.DOMAIN: TYPE_SWITCH,
+    light.DOMAIN: TYPE_LIGHT,
+    cover.DOMAIN: TYPE_SWITCH,
+    media_player.DOMAIN: TYPE_SWITCH,
+    climate.DOMAIN: TYPE_THERMOSTAT,
+}
+
 
 # Mapping is [actions schema, primary trait, optional features]
 # optional is SUPPORT_* = (trait, command)
@@ -97,146 +173,11 @@ class Config:
         self.entity_config = entity_config or {}
 
 
-def entity_to_device(entity: Entity, config: Config, units: UnitSystem):
-    """Convert a hass entity into a google actions device."""
-    entity_config = config.entity_config.get(entity.entity_id, {})
-    google_domain = entity_config.get(CONF_TYPE)
-    class_data = MAPPING_COMPONENT.get(
-        google_domain or entity.domain)
-
-    if class_data is None:
-        return None
-
-    device = {
-        'id': entity.entity_id,
-        'name': {},
-        'attributes': {},
-        'traits': [],
-        'willReportState': False,
-    }
-    device['type'] = class_data[0]
-    device['traits'].append(class_data[1])
-
-    # handle custom names
-    device['name']['name'] = entity_config.get(CONF_NAME) or entity.name
-
-    # use aliases
-    aliases = entity_config.get(CONF_ALIASES)
-    if aliases:
-        device['name']['nicknames'] = aliases
-
-    # add room hint if annotated
-    room = entity_config.get(CONF_ROOM_HINT)
-    if room:
-        device['roomHint'] = room
-
-    # add trait if entity supports feature
-    if class_data[2]:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        for feature, trait in class_data[2].items():
-            if feature & supported > 0:
-                device['traits'].append(trait)
-
-                # Actions require this attributes for a device
-                # supporting temperature
-                # For IKEA trådfri, these attributes only seem to
-                # be set only if the device is on?
-                if trait == TRAIT_COLOR_TEMP:
-                    if entity.attributes.get(
-                            light.ATTR_MAX_MIREDS) is not None:
-                        device['attributes']['temperatureMinK'] =  \
-                            int(round(color.color_temperature_mired_to_kelvin(
-                                entity.attributes.get(light.ATTR_MAX_MIREDS))))
-                    if entity.attributes.get(
-                            light.ATTR_MIN_MIREDS) is not None:
-                        device['attributes']['temperatureMaxK'] =  \
-                            int(round(color.color_temperature_mired_to_kelvin(
-                                entity.attributes.get(light.ATTR_MIN_MIREDS))))
-
-    if entity.domain == climate.DOMAIN:
-        modes = []
-        for mode in entity.attributes.get(climate.ATTR_OPERATION_LIST, []):
-            if mode in CLIMATE_SUPPORTED_MODES:
-                modes.append(mode)
-            elif mode == climate.STATE_AUTO:
-                modes.append(CLIMATE_MODE_HEATCOOL)
-
-        device['attributes'] = {
-            'availableThermostatModes': ','.join(modes),
-            'thermostatTemperatureUnit':
-            'F' if units.temperature_unit == TEMP_FAHRENHEIT else 'C',
-        }
-        _LOGGER.debug('Thermostat attributes %s', device['attributes'])
-
-    if entity.domain == sensor.DOMAIN:
-        if google_domain == climate.DOMAIN:
-            unit_of_measurement = entity.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT,
-                units.temperature_unit
-            )
-
-            device['attributes'] = {
-                'thermostatTemperatureUnit':
-                'F' if unit_of_measurement == TEMP_FAHRENHEIT else 'C',
-            }
-            _LOGGER.debug('Sensor attributes %s', device['attributes'])
-
-    return device
-
-
 def celsius(deg: Optional[float], units: UnitSystem) -> Optional[float]:
     """Convert a float to Celsius and rounds to one decimal place."""
     if deg is None:
         return None
     return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
-
-
-@QUERY_HANDLERS.register(sensor.DOMAIN)
-def query_response_sensor(
-        entity: Entity, config: Config, units: UnitSystem) -> dict:
-    """Convert a sensor entity to a QUERY response."""
-    entity_config = config.entity_config.get(entity.entity_id, {})
-    google_domain = entity_config.get(CONF_TYPE)
-
-    if google_domain != climate.DOMAIN:
-        raise SmartHomeError(
-            ERROR_NOT_SUPPORTED,
-            "Sensor type {} is not supported".format(google_domain)
-        )
-
-    # check if we have a string value to convert it to number
-    value = entity.state
-    if isinstance(entity.state, str):
-        try:
-            value = float(value)
-        except ValueError:
-            value = None
-
-    if value is None:
-        raise SmartHomeError(
-            ERROR_NOT_SUPPORTED,
-            "Invalid value {} for the climate sensor"
-            .format(entity.state)
-        )
-
-    # detect if we report temperature or humidity
-    unit_of_measurement = entity.attributes.get(
-        ATTR_UNIT_OF_MEASUREMENT,
-        units.temperature_unit
-    )
-    if unit_of_measurement in [TEMP_FAHRENHEIT, TEMP_CELSIUS]:
-        value = celsius(value, units)
-        attr = 'thermostatTemperatureAmbient'
-    elif unit_of_measurement == '%':
-        attr = 'thermostatHumidityAmbient'
-    else:
-        raise SmartHomeError(
-            ERROR_NOT_SUPPORTED,
-            "Unit {} is not supported by the climate sensor"
-            .format(unit_of_measurement)
-        )
-
-    return {attr: value}
 
 
 @QUERY_HANDLERS.register(climate.DOMAIN)
@@ -440,16 +381,18 @@ def async_handle_message(hass, config, message):
 def async_devices_sync(hass, config: Config, payload):
     """Handle action.devices.SYNC request."""
     devices = []
-    for entity in hass.states.async_all():
-        if not config.should_expose(entity):
+    for state in hass.states.async_all():
+        if not config.should_expose(state):
             continue
 
-        device = entity_to_device(entity, config, hass.config.units)
-        if device is None:
-            _LOGGER.warning("No mapping for %s domain", entity.domain)
+        entity = _GoogleEntity(config, state)
+        serialized = entity.sync_serialize()
+
+        if serialized is None:
+            _LOGGER.warning("No mapping for %s domain", entity.state)
             continue
 
-        devices.append(device)
+        devices.append(serialized)
 
     return {
         'agentUserId': config.agent_user_id,
