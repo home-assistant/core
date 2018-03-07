@@ -1,3 +1,4 @@
+"""Tests for the Google Assistant traits."""
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -5,7 +6,6 @@ from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.components import (
     climate,
     cover,
-    group,
     fan,
     media_player,
     light,
