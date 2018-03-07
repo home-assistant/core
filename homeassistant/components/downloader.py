@@ -134,14 +134,16 @@ def setup(hass, config):
 
                     _LOGGER.debug("Downloading of %s done", url)
                     hass.components.persistent_notification.create(
-                        'Info: {} download finished successfully'.format(filename),
+                        "Info: {} download finished successfully"
+                        "".format(filename),
                         title='Download Request',
                         notification_id='download_request')
 
             except requests.exceptions.ConnectionError:
                 _LOGGER.exception("ConnectionError occurred for %s", url)
                 hass.components.persistent_notification.create(
-                        'Error: {} download failed'.format(filename),
+                        "Error: {} download failed"
+                        "".format(filename),
                         title='Download Request',
                         notification_id='download_request')
 
