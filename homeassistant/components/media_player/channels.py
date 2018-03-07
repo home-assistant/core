@@ -24,6 +24,9 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DATA_CHANNELS = 'channels'
+DEFAULT_NAME = 'Channels'
+DEFAULT_PORT = 57000
+
 FEATURE_SUPPORT = SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | \
     SUPPORT_VOLUME_MUTE | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_PLAY_MEDIA | SUPPORT_SELECT_SOURCE
@@ -53,9 +56,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Channels platform."""
 
     device = ChannelsPlayer(
-                config.get('name', 'Channels'),
+                config.get('name', DEFAULT_NAME),
                 config.get(CONF_HOST),
-                config.get(CONF_PORT, 57000)
+                config.get(CONF_PORT, DEFAULT_PORT)
              )
 
     if DATA_CHANNELS not in hass.data:
