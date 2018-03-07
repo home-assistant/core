@@ -194,8 +194,7 @@ class OnOffTrait(_Trait):
         """Return OnOff query attributes."""
         if self.state.domain == cover.DOMAIN:
             return {'on': self.state.state != cover.STATE_CLOSED}
-        else:
-            return {'on': self.state.state != STATE_OFF}
+        return {'on': self.state.state != STATE_OFF}
 
     async def execute(self, hass, command, params):
         """Execute an OnOff command."""

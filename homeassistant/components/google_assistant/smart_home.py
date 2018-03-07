@@ -14,8 +14,7 @@ from homeassistant.util.unit_system import UnitSystem  # NOQA
 from homeassistant.util.decorator import Registry
 
 from homeassistant.const import (
-    CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT)
+    CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES)
 from homeassistant.components import (
     switch, light, cover, media_player, group, fan, scene, script, climate,
 )
