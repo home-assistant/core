@@ -20,8 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PAGE_ACCESS_TOKEN = 'page_access_token'
 BASE_URL = 'https://graph.facebook.com/v2.6/me/messages'
-CR_BRD_MSG_URL = 'https://graph.facebook.com/v2.11/me/message_creatives'
-SND_BRD_MSG_URL = 'https://graph.facebook.com/v2.11/me/broadcast_messages'
+CREATE_BROADCAST_URL = 'https://graph.facebook.com/v2.11/me/message_creatives'
+SEND_BROADCAST_URL = 'https://graph.facebook.com/v2.11/me/broadcast_messages'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PAGE_ACCESS_TOKEN): cv.string,
@@ -59,12 +59,12 @@ class FacebookNotificationService(BaseNotificationService):
             return
 
         # broadcast message
-        if targets[0] == 'BROADCAST':
+        if (targets[0] == 'BROADCAST') and (len(targets) == 1):
 
             broadcast_create_body = {"messages": [body_message]}
             _LOGGER.debug("Broadcast body %s : ", broadcast_create_body)
 
-            resp = requests.post(CR_BRD_MSG_URL,
+            resp = requests.post(CREATE_BROADCAST_URL,
                                  data=json.dumps(broadcast_create_body),
                                  params=payload,
                                  headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
@@ -77,7 +77,7 @@ class FacebookNotificationService(BaseNotificationService):
                 "notification_type": "REGULAR",
             }
 
-            resp = requests.post(SND_BRD_MSG_URL,
+            resp = requests.post(SEND_BROADCAST_URL,
                                  data=json.dumps(broadcast_body),
                                  params=payload,
                                  headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
