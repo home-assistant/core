@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
 
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, STATE_IDLE, STATE_PAUSED, STATE_PLAYING,
-    STATE_UNKNOWN, ATTR_ENTITY_ID)
+    ATTR_ENTITY_ID)
 
 import homeassistant.helpers.config_validation as cv
 
@@ -186,7 +186,7 @@ class ChannelsPlayer(MediaPlayerDevice):
         if self.status == 'playing':
             return STATE_PLAYING
 
-        return STATE_UNKNOWN
+        return None
 
     def update(self):
         """Retrieve latest state."""
@@ -227,10 +227,10 @@ class ChannelsPlayer(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self.state == STATE_UNKNOWN:
-            return "Offline"
-        else:
+        if self.state
             return self.now_playing_title
+        else:
+            return None
 
     @property
     def supported_features(self):
