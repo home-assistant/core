@@ -274,6 +274,7 @@ class ChannelsPlayer(MediaPlayerDevice):
             if channel["name"] == source:
                 response = self.client.play_channel(channel["number"])
                 self.update_state(response)
+                break
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the player."""
