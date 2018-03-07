@@ -43,7 +43,7 @@ SERVICE_SEEK_BY = 'channels_seek_by'
 ATTR_SECONDS = 'seconds'
 
 CHANNELS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
 })
 
 CHANNELS_SEEK_BY_SCHEMA = CHANNELS_SCHEMA.extend({
@@ -69,22 +69,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def service_handler(service):
         """Handler for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        entity_id = service.data.get(ATTR_ENTITY_ID)
 
-        if entity_ids:
-            devices = [device for device in hass.data[DATA_CHANNELS]
-                       if device.entity_id in entity_ids]
-        else:
-            devices = hass.data[DATA_CHANNELS]
+        device = next([device for device in hass.data[DATA_CHANNELS] if
+                       device.entity_id == entity_id].__iter__(), None)
 
-        for device in devices:
-            if service.service == SERVICE_SEEK_FORWARD:
-                device.seek_forward()
-            elif service.service == SERVICE_SEEK_BACKWARD:
-                device.seek_backward()
-            elif service.service == SERVICE_SEEK_BY:
-                seconds = service.data.get('seconds')
-                device.seek_by(seconds)
+        if device is None:
+            _LOGGER.warning("Unable to find Channels with entity_id: %s",
+                            str(entity_id))
+            return
+            
+        if service.service == SERVICE_SEEK_FORWARD:
+            device.seek_forward()
+        elif service.service == SERVICE_SEEK_BACKWARD:
+            device.seek_backward()
+        elif service.service == SERVICE_SEEK_BY:
+            seconds = service.data.get('seconds')
+            device.seek_by(seconds)
 
     hass.services.register(
         DOMAIN, SERVICE_SEEK_FORWARD, service_handler,
