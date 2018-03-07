@@ -1,39 +1,42 @@
 """
 Component for monitoring activity on a folder.
 """
-import asyncio
+import os
 import logging
 import voluptuous as vol
 from watchdog.observers import Observer
-from watchdog.events import PatternMatchingEventHandler
+from watchdog.events import FileSystemEventHandler
 
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-#DEPENDENCIES = ['watchdog']
+REQUIREMENTS = ['watchdog']
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PATH = 'folder'
-DOMAIN = "watchdog_file_watcher"
+CONF_FOLDERS = 'folders'
+DOMAIN = "folder_watcher"
+DEFAULT_IS_RECURSIVE = True
 EVENT_TYPE = "event_type"
-SRC_PATH = "src_path"
-PATTERNS = ["*.txt", "*.py", "*.md", "*.jpg", "*.png"]
+IS_DIRECTORY = "is_directory"
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_PATH): cv.isdir})
+        vol.Required(CONF_FOLDERS):
+            vol.All(cv.ensure_list, [cv.isdir]),
+        })
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+def setup(hass, config):
     """Set up the folder watcher."""
-    conf = config.get(DOMAIN)
-    path = conf.get(CONF_PATH)
-    if not hass.config.is_allowed_path(path):
-        _LOGGER.error("folder %s is not valid or allowed", path)
-    else:
-        Watcher(path, hass)
+    conf = config[DOMAIN]
+    paths = conf[CONF_FOLDERS]
+    for path in paths:
+        if not hass.config.is_allowed_path(path):
+            _LOGGER.error("folder %s is not valid or allowed", path)
+            return False
+        else:
+            Watcher(path, hass)
     return True
 
 
@@ -44,12 +47,22 @@ class Watcher(Entity):
         self._observer.schedule(
             MyHandler(hass),
             path,
-            recursive=True)
+            recursive=DEFAULT_IS_RECURSIVE)
         self._observer.start()
 
 
-class MyHandler(PatternMatchingEventHandler):
-    patterns = PATTERNS
+def on_any_event(hass, event):
+    if not event.is_directory:
+        event_folder = os.path.split(event.src_path)[0]
+        event_file = os.path.split(event.src_path)[1]
+        hass.bus.fire(
+                DOMAIN, {
+                    EVENT_TYPE: event.event_type,
+                    'file': event_file,
+                    'folder': event_folder})
+
+
+class MyHandler(FileSystemEventHandler):
 
     def __init__(self, hass):
         super().__init__()
@@ -57,10 +70,7 @@ class MyHandler(PatternMatchingEventHandler):
 
     def process(self, event):
         """Process the Watchdog event."""
-        self.hass.bus.fire(
-            DOMAIN, {
-                EVENT_TYPE: event.event_type,
-                SRC_PATH: event.src_path})
+        on_any_event(self.hass, event)
 
     def on_modified(self, event):
         self.process(event)
