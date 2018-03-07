@@ -206,7 +206,7 @@ class Thermostat(HomeAccessory):
             else:
                 self.heat_cool_flag_target_state = False
 
-        # Set current operation mode based on termperatures and target mode
+        # Set current operation mode based on temperatures and target mode
         if operation_mode == STATE_HEAT:
             if current_temp < target_temp:
                 current_operation_mode = STATE_HEAT
