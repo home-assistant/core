@@ -169,15 +169,15 @@ def find_hsbk(**kwargs):
     if ATTR_RGB_COLOR in kwargs:
         hue, saturation, brightness = \
             color_util.color_RGB_to_hsv(*kwargs[ATTR_RGB_COLOR])
-        hue = hue / 360 * 65535
-        saturation = saturation / 100 * 65535
-        brightness = brightness / 100 * 65535
+        hue = int(hue / 360 * 65535)
+        saturation = int(saturation / 100 * 65535)
+        brightness = int(brightness / 100 * 65535)
         kelvin = 3500
 
     if ATTR_XY_COLOR in kwargs:
         hue, saturation = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
-        hue = hue / 360 * 65535
-        saturation = saturation / 100 * 65535
+        hue = int(hue / 360 * 65535)
+        saturation = int(saturation / 100 * 65535)
         kelvin = 3500
 
     if ATTR_COLOR_TEMP in kwargs:
