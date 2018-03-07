@@ -13,6 +13,8 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, CONF_PORT,
     TEMP_CELSIUS, TEMP_FAHRENHEIT,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.components.climate import (
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 
@@ -67,7 +69,8 @@ def import_types():
     """Import all types from files in the HomeKit directory."""
     _LOGGER.debug("Import type files.")
     # pylint: disable=unused-variable
-    from . import covers, sensors  # noqa F401
+    from . import (  # noqa F401
+        covers, security_systems, sensors, switches, thermostats)
 
 
 def get_accessory(hass, state):
@@ -86,6 +89,27 @@ def get_accessory(hass, state):
             _LOGGER.debug("Add \"%s\" as \"%s\"",
                           state.entity_id, 'Window')
             return TYPES['Window'](hass, state.entity_id, state.name)
+
+    elif state.domain == 'alarm_control_panel':
+        _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id,
+                      'SecuritySystem')
+        return TYPES['SecuritySystem'](hass, state.entity_id, state.name)
+
+    elif state.domain == 'climate':
+        support_auto = False
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+        # Check if climate device supports auto mode
+        if (features & SUPPORT_TARGET_TEMPERATURE_HIGH) \
+                and (features & SUPPORT_TARGET_TEMPERATURE_LOW):
+            support_auto = True
+        _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'Thermostat')
+        return TYPES['Thermostat'](hass, state.entity_id,
+                                   state.name, support_auto)
+
+    elif state.domain == 'switch' or state.domain == 'remote' \
+            or state.domain == 'input_boolean':
+        _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'Switch')
+        return TYPES['Switch'](hass, state.entity_id, state.name)
 
     return None
 
