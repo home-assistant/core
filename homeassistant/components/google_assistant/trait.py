@@ -1,4 +1,5 @@
 """Implement the Smart Home traits."""
+from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.components import (
     climate,
     cover,
@@ -47,6 +48,7 @@ TRAITS = []
 def register_trait(trait):
     """Decorator to register a trait."""
     TRAITS.append(trait)
+    return trait
 
 
 def _google_temp_unit(state):
@@ -96,7 +98,7 @@ class BrightnessTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features, unit):
+    def supported(domain, features):
         """Test if state is supported."""
         if domain == light.DOMAIN:
             return features & light.SUPPORT_BRIGHTNESS
@@ -124,7 +126,7 @@ class BrightnessTrait(_Trait):
         elif domain == cover.DOMAIN:
             position = self.state.attributes.get(cover.ATTR_CURRENT_POSITION)
             if position is not None:
-                response['brightness'] = int(100 * (brightness / 255))
+                response['brightness'] = position
 
         elif domain == media_player.DOMAIN:
             level = self.state.attributes.get(
@@ -142,16 +144,19 @@ class BrightnessTrait(_Trait):
         if domain == light.DOMAIN:
             await hass.services.async_call(
                 light.DOMAIN, light.SERVICE_TURN_ON, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_BRIGHTNESS_PCT: params['brightness']
                 }, blocking=True)
         elif domain == cover.DOMAIN:
             await hass.services.async_call(
                 cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
                     cover.ATTR_POSITION: params['brightness']
                 }, blocking=True)
         elif domain == media_player.DOMAIN:
             await hass.services.async_call(
                 media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
                     media_player.ATTR_MEDIA_VOLUME_LEVEL:
                     params['brightness'] / 100
                 }, blocking=True)
@@ -170,7 +175,7 @@ class OnOffTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features, unit):
+    def supported(domain, features):
         """Test if state is supported."""
         return domain in (
             group.DOMAIN,
@@ -187,16 +192,10 @@ class OnOffTrait(_Trait):
 
     def query_attributes(self):
         """Return OnOff query attributes."""
-        state = self.state
-        domain = state.domain
-        response = {}
-
-        if domain == cover.DOMAIN:
-            response['on'] = state.state != cover.STATE_CLOSED
+        if self.state.domain == cover.DOMAIN:
+            return {'on': self.state.state != cover.STATE_CLOSED}
         else:
-            response['on'] = state.state != STATE_OFF
-
-        return response
+            return {'on': self.state.state != STATE_OFF}
 
     async def execute(self, hass, command, params):
         """Execute an OnOff command."""
@@ -210,8 +209,8 @@ class OnOffTrait(_Trait):
                 service = cover.SERVICE_CLOSE_COVER
 
         elif domain == group.DOMAIN:
-            service_domain = 'homeassisatnt'
-            service = SERVICE_TURN_ON
+            service_domain = HA_DOMAIN
+            service = SERVICE_TURN_ON if params['on'] else SERVICE_TURN_OFF
 
         else:
             service_domain = domain
@@ -235,7 +234,7 @@ class ColorSpectrumTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features, unit):
+    def supported(domain, features):
         """Test if state is supported."""
         if domain != light.DOMAIN:
             return False
@@ -292,7 +291,7 @@ class ColorTemperatureTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features, unit):
+    def supported(domain, features):
         """Test if state is supported."""
         if domain != light.DOMAIN:
             return
@@ -348,7 +347,7 @@ class SceneTrait(_Trait):
     ]
 
     @staticmethod
-    def supported(domain, features, unit):
+    def supported(domain, features):
         """Test if state is supported."""
         return domain in (scene.DOMAIN, script.DOMAIN)
 
@@ -382,19 +381,23 @@ class TemperatureSettingTrait(_Trait):
         COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE,
         COMMAND_THERMOSTAT_SET_MODE,
     ]
+    # We do not support "on" as we are unable to know how to restore
+    # the last mode.
     hass_to_google = {
         climate.STATE_HEAT: 'heat',
         climate.STATE_COOL: 'cool',
         climate.STATE_OFF: 'off',
-        climate.STATE_ON: 'on',
         climate.STATE_AUTO: 'heatcool',
     }
     google_to_hass = {value: key for key, value in hass_to_google.items()}
 
     @staticmethod
-    def supported(domain, features, unit):
+    def supported(domain, features):
         """Test if state is supported."""
-        return domain == climate.DOMAIN
+        if domain != climate.DOMAIN:
+            return
+
+        return features & climate.SUPPORT_OPERATION_MODE
 
     def sync_attributes(self):
         """Return temperature point and modes attributes for a sync request."""

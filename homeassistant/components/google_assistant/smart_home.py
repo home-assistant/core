@@ -69,10 +69,9 @@ class _GoogleEntity:
         state = self.state
         domain = state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         return [Trait(state) for Trait in trait.TRAITS
-                if Trait.supported(domain, features, unit)]
+                if Trait.supported(domain, features)]
 
     def sync_serialize(self):
         """Serialize entity for a SYNC response.
@@ -115,7 +114,10 @@ class _GoogleEntity:
         return device
 
     def query_serialize(self):
-        """Serialize entity for a QUERY response."""
+        """Serialize entity for a QUERY response.
+
+        https://developers.google.com/actions/smarthome/create-app#actiondevicesquery
+        """
         state = self.state
 
         if state.state == STATE_UNAVAILABLE:
@@ -129,7 +131,10 @@ class _GoogleEntity:
         return attrs
 
     async def execute(self, hass, command, params):
-        """Execute a command."""
+        """Execute a command.
+
+        https://developers.google.com/actions/smarthome/create-app#actiondevicesexecute
+        """
         executed = False
         for trt in self.traits():
             if trt.can_execute(command, params):
@@ -198,7 +203,10 @@ async def async_handle_message(hass, config, message):
 
 @HANDLERS.register('action.devices.SYNC')
 async def async_devices_sync(hass, config: Config, payload):
-    """Handle action.devices.SYNC request."""
+    """Handle action.devices.SYNC request.
+
+    https://developers.google.com/actions/smarthome/create-app#actiondevicessync
+    """
     devices = []
     for state in hass.states.async_all():
         if not config.should_expose(state):
@@ -221,7 +229,10 @@ async def async_devices_sync(hass, config: Config, payload):
 
 @HANDLERS.register('action.devices.QUERY')
 async def async_devices_query(hass, config, payload):
-    """Handle action.devices.QUERY request."""
+    """Handle action.devices.QUERY request.
+
+    https://developers.google.com/actions/smarthome/create-app#actiondevicesquery
+    """
     devices = {}
     for device in payload.get('devices', []):
         devid = device['id']
@@ -239,7 +250,10 @@ async def async_devices_query(hass, config, payload):
 
 @HANDLERS.register('action.devices.EXECUTE')
 async def handle_devices_execute(hass, config, payload):
-    """Handle action.devices.EXECUTE request."""
+    """Handle action.devices.EXECUTE request.
+
+    https://developers.google.com/actions/smarthome/create-app#actiondevicesexecute
+    """
     entities = {}
     results = {}
 
