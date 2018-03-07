@@ -57,6 +57,7 @@ class FeedManager(object):
         self._last_entry_timestamp = None
         self._has_published_parsed = False
         self._event_type = EVENT_FEEDREADER
+        self._feed_id = url
         hass.bus.listen_once(
             EVENT_HOMEASSISTANT_START, lambda _: self._update())
         self._init_regular_updates(hass)
@@ -93,7 +94,7 @@ class FeedManager(object):
                 self._publish_new_entries()
                 if self._has_published_parsed:
                     self._storage.put_timestamp(
-                        self._url, self._last_entry_timestamp)
+                        self._feed_id, self._last_entry_timestamp)
             else:
                 self._log_no_entries()
         _LOGGER.info("Fetch from feed %s completed", self._url)
@@ -123,7 +124,7 @@ class FeedManager(object):
     def _publish_new_entries(self):
         """Publish new entries to the event bus."""
         new_entries = False
-        self._last_entry_timestamp = self._storage.get_timestamp(self._url)
+        self._last_entry_timestamp = self._storage.get_timestamp(self._feed_id)
         if self._last_entry_timestamp:
             self._firstrun = False
         else:
@@ -166,18 +167,18 @@ class StoredData(object):
                 _LOGGER.error("Error loading data from pickled file %s",
                               self._data_file)
 
-    def get_timestamp(self, url):
-        """Return stored timestamp for given url."""
+    def get_timestamp(self, feed_id):
+        """Return stored timestamp for given feed id (usually the url)."""
         self._fetch_data()
-        return self._data.get(url)
+        return self._data.get(feed_id)
 
-    def put_timestamp(self, url, timestamp):
-        """Update timestamp for given URL."""
+    def put_timestamp(self, feed_id, timestamp):
+        """Update timestamp for given feed id (usually the url)."""
         self._fetch_data()
         with self._lock, open(self._data_file, 'wb') as myfile:
-            self._data.update({url: timestamp})
+            self._data.update({feed_id: timestamp})
             _LOGGER.debug("Overwriting feed %s timestamp in storage file %s",
-                          url, self._data_file)
+                          feed_id, self._data_file)
             try:
                 pickle.dump(self._data, myfile)
             except:  # noqa: E722  # pylint: disable=bare-except
