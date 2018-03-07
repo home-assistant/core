@@ -1,5 +1,6 @@
 """Support for Google Assistant Smart Home API."""
 import asyncio
+import collections
 import logging
 
 # Typing imports
@@ -15,8 +16,8 @@ from homeassistant.util.decorator import Registry
 
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT,
-    STATE_OFF, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    TEMP_CELSIUS, CONF_NAME
+    SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    TEMP_CELSIUS, CONF_NAME, STATE_UNAVAILABLE
 )
 from homeassistant.components import (
     switch, light, cover, media_player, group, fan, scene, script, climate,
@@ -31,14 +32,23 @@ from .const import (
     TRAIT_ONOFF, TRAIT_BRIGHTNESS, TRAIT_COLOR_TEMP,
     TRAIT_RGB_COLOR, TRAIT_SCENE, TRAIT_TEMPERATURE_SETTING,
     TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_THERMOSTAT,
-    CONF_ALIASES, CONF_ROOM_HINT, CLIMATE_SUPPORTED_MODES,
+    CONF_ALIASES, CONF_ROOM_HINT,
     CLIMATE_MODE_HEATCOOL
 )
 from . import trait
 
 HANDLERS = Registry()
-QUERY_HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
+
+
+def deep_update(target, source):
+    """Update a nested dictionary with another nested dictionary."""
+    for key, value in source.items():
+        if isinstance(value, collections.Mapping):
+            target[key] = deep_update(target.get(key, {}), value)
+        else:
+            target[key] = value
+    return target
 
 
 class _GoogleEntity:
@@ -72,11 +82,6 @@ class _GoogleEntity:
 
         entity_config = self.config.entity_config.get(state.entity_id, {})
 
-        # class_data = MAPPING_COMPONENT.get(google_domain or entity.domain)
-
-        # if class_data is None:
-        #     return None
-
         device = {
             'id': state.entity_id,
             'name': {
@@ -102,6 +107,20 @@ class _GoogleEntity:
             device['attributes'].update(trt.sync_attributes())
 
         return device
+
+    def query_serialize(self):
+        """Serialize entity for a QUERY response."""
+        state = self.state
+
+        if state.state == STATE_UNAVAILABLE:
+            return {'online': False}
+
+        attrs = {'online': True}
+
+        for trt in self.traits():
+            deep_update(attrs, trt.query_attributes())
+
+        return attrs
 
 
 DOMAIN_TO_GOOGLE_TYPES = {
@@ -178,95 +197,6 @@ def celsius(deg: Optional[float], units: UnitSystem) -> Optional[float]:
     if deg is None:
         return None
     return round(METRIC_SYSTEM.temperature(deg, units.temperature_unit), 1)
-
-
-@QUERY_HANDLERS.register(climate.DOMAIN)
-def query_response_climate(
-        entity: Entity, config: Config, units: UnitSystem) -> dict:
-    """Convert a climate entity to a QUERY response."""
-    mode = entity.attributes.get(climate.ATTR_OPERATION_MODE)
-    if mode is None:
-        mode = entity.state
-    mode = mode.lower()
-    if mode not in CLIMATE_SUPPORTED_MODES:
-        mode = 'heat'
-    attrs = entity.attributes
-    response = {
-        'thermostatMode': mode,
-        'thermostatTemperatureSetpoint':
-        celsius(attrs.get(climate.ATTR_TEMPERATURE), units),
-        'thermostatTemperatureAmbient':
-        celsius(attrs.get(climate.ATTR_CURRENT_TEMPERATURE), units),
-        'thermostatTemperatureSetpointHigh':
-        celsius(attrs.get(climate.ATTR_TARGET_TEMP_HIGH), units),
-        'thermostatTemperatureSetpointLow':
-        celsius(attrs.get(climate.ATTR_TARGET_TEMP_LOW), units),
-        'thermostatHumidityAmbient':
-        attrs.get(climate.ATTR_CURRENT_HUMIDITY),
-    }
-    return {k: v for k, v in response.items() if v is not None}
-
-
-@QUERY_HANDLERS.register(media_player.DOMAIN)
-def query_response_media_player(
-        entity: Entity, config: Config, units: UnitSystem) -> dict:
-    """Convert a media_player entity to a QUERY response."""
-    level = entity.attributes.get(
-        media_player.ATTR_MEDIA_VOLUME_LEVEL,
-        1.0 if entity.state != STATE_OFF else 0.0)
-    # Convert 0.0-1.0 to 0-255
-    brightness = int(level * 100)
-
-    return {'brightness': brightness}
-
-
-@QUERY_HANDLERS.register(light.DOMAIN)
-def query_response_light(
-        entity: Entity, config: Config, units: UnitSystem) -> dict:
-    """Convert a light entity to a QUERY response."""
-    response = {}  # type: Dict[str, Any]
-
-    brightness = entity.attributes.get(light.ATTR_BRIGHTNESS)
-    if brightness is not None:
-        response['brightness'] = int(100 * (brightness / 255))
-
-    supported_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-    if supported_features & \
-       (light.SUPPORT_COLOR_TEMP | light.SUPPORT_RGB_COLOR):
-        response['color'] = {}
-
-        if entity.attributes.get(light.ATTR_COLOR_TEMP) is not None:
-            response['color']['temperature'] = \
-                int(round(color.color_temperature_mired_to_kelvin(
-                    entity.attributes.get(light.ATTR_COLOR_TEMP))))
-
-        if entity.attributes.get(light.ATTR_COLOR_NAME) is not None:
-            response['color']['name'] = \
-                entity.attributes.get(light.ATTR_COLOR_NAME)
-
-        if entity.attributes.get(light.ATTR_RGB_COLOR) is not None:
-            color_rgb = entity.attributes.get(light.ATTR_RGB_COLOR)
-            if color_rgb is not None:
-                response['color']['spectrumRGB'] = \
-                    int(color.color_rgb_to_hex(
-                        color_rgb[0], color_rgb[1], color_rgb[2]), 16)
-
-    return response
-
-
-def query_device(entity: Entity, config: Config, units: UnitSystem) -> dict:
-    """Take an entity and return a properly formatted device object."""
-    state = entity.state != STATE_OFF
-    defaults = {
-        'on': state,
-        'online': True
-    }
-
-    handler = QUERY_HANDLERS.get(entity.domain)
-    if callable(handler):
-        defaults.update(handler(entity, config, units))
-
-    return defaults
 
 
 # erroneous bug on old pythons and pylint
@@ -406,21 +336,15 @@ def async_devices_query(hass, config, payload):
     """Handle action.devices.QUERY request."""
     devices = {}
     for device in payload.get('devices', []):
-        devid = device.get('id')
-        # In theory this should never happen
-        if not devid:
-            _LOGGER.error('Device missing ID: %s', device)
-            continue
-
+        devid = device['id']
         state = hass.states.get(devid)
+
         if not state:
             # If we can't find a state, the device is offline
             devices[devid] = {'online': False}
-        else:
-            try:
-                devices[devid] = query_device(state, config, hass.config.units)
-            except SmartHomeError as error:
-                devices[devid] = {'errorCode': error.code}
+            continue
+
+        devices[devid] = _GoogleEntity(config, state).query_serialize()
 
     return {'devices': devices}
 

@@ -419,7 +419,7 @@ class TemperatureSettingTrait(_Trait):
         current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
         if current_temp is not None:
             response['thermostatTemperatureAmbient'] = \
-                temp_util.convert(current_temp, unit, TEMP_CELSIUS)
+                round(temp_util.convert(current_temp, unit, TEMP_CELSIUS), 1)
 
         current_humidity = attrs.get(climate.ATTR_CURRENT_HUMIDITY)
         if current_humidity is not None:
@@ -429,16 +429,16 @@ class TemperatureSettingTrait(_Trait):
                 climate.ATTR_TARGET_TEMP_HIGH in attrs and
                 climate.ATTR_TARGET_TEMP_LOW in attrs):
             response['thermostatTemperatureSetpointHigh'] = \
-                temp_util.convert(attrs[climate.ATTR_TARGET_TEMP_HIGH], unit,
-                                  TEMP_CELSIUS)
+                round(temp_util.convert(attrs[climate.ATTR_TARGET_TEMP_HIGH],
+                                        unit, TEMP_CELSIUS), 1)
             response['thermostatTemperatureSetpointLow'] = \
-                temp_util.convert(attrs[climate.ATTR_TARGET_TEMP_LOW], unit,
-                                  TEMP_CELSIUS)
+                round(temp_util.convert(attrs[climate.ATTR_TARGET_TEMP_LOW],
+                                        unit, TEMP_CELSIUS), 1)
         else:
             target_temp = attrs.get(climate.ATTR_TEMPERATURE)
             if target_temp is not None:
-                response['thermostatTemperatureSetpoint'] = \
-                    temp_util.convert(target_temp, unit, TEMP_CELSIUS)
+                response['thermostatTemperatureSetpoint'] = round(
+                    temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1)
 
         return response
 
