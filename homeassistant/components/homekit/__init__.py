@@ -30,6 +30,7 @@ BRIDGE_NAME = 'Home Assistant'
 CONF_PIN_CODE = 'pincode'
 
 HOMEKIT_FILE = '.homekit.state'
+HOMEKIT_HIDDEN = 'homekit_hidden'
 
 
 def valid_pin(value):
@@ -75,6 +76,12 @@ def import_types():
 
 def get_accessory(hass, state):
     """Take state and return an accessory object if supported."""
+
+    # Do not add accessories that should be hidden in HomeKit
+    hidden = state.attributes.get(HOMEKIT_HIDDEN)
+    if hidden:
+        return None
+
     if state.domain == 'sensor':
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if unit == TEMP_CELSIUS or unit == TEMP_FAHRENHEIT:
