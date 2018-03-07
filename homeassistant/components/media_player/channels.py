@@ -227,7 +227,7 @@ class ChannelsPlayer(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self.state
+        if self.state:
             return self.now_playing_title
         else:
             return None
