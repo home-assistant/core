@@ -76,25 +76,25 @@ class IFTTTAlarmPanel(alarm.AlarmControlPanel):
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        if not self._check_code(code)
+        if not self._check_code(code):
             return
         self.set_alarm_state(STATE_ALARM_DISARMED, code)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        if not self._check_code(code)
+        if not self._check_code(code):
             return
         self.set_alarm_state(STATE_ALARM_ARMED_AWAY, code)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        if not self._check_code(code)
+        if not self._check_code(code):
             return
         self.set_alarm_state(STATE_ALARM_ARMED_HOME, code)
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        if not self._check_code(code)
+        if not self._check_code(code):
             return
         self.set_alarm_state(STATE_ALARM_ARMED_NIGHT, code)
 
