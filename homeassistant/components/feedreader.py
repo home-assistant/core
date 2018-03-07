@@ -88,10 +88,7 @@ class FeedManager(object):
             elif self._feed.entries:
                 _LOGGER.debug("%s entri(es) available in feed %s",
                               len(self._feed.entries), self._url)
-                if len(self._feed.entries) > MAX_ENTRIES:
-                    _LOGGER.debug("Processing only the first %s entries "
-                                  "in feed %s", MAX_ENTRIES, self._url)
-                    self._feed.entries = self._feed.entries[0:MAX_ENTRIES]
+                self._filter_entries()
                 self._publish_new_entries()
                 if self._has_published_parsed:
                     self._storage.put_timestamp(
@@ -99,6 +96,13 @@ class FeedManager(object):
             else:
                 self._log_no_entries()
         _LOGGER.info("Fetch from feed %s completed", self._url)
+
+    def _filter_entries(self):
+        """Filter the entries provided and return the ones to keep."""
+        if len(self._feed.entries) > MAX_ENTRIES:
+            _LOGGER.debug("Processing only the first %s entries "
+                          "in feed %s", MAX_ENTRIES, self._url)
+            self._feed.entries = self._feed.entries[0:MAX_ENTRIES]
 
     def _update_and_fire_entry(self, entry):
         """Update last_entry_timestamp and fire entry."""
