@@ -56,6 +56,7 @@ class FeedManager(object):
         self._storage = storage
         self._last_entry_timestamp = None
         self._has_published_parsed = False
+        self._event_type = EVENT_FEEDREADER
         hass.bus.listen_once(
             EVENT_HOMEASSISTANT_START, lambda _: self._update())
         self._init_regular_updates(hass)
@@ -117,7 +118,7 @@ class FeedManager(object):
             _LOGGER.debug("No published_parsed info available for entry %s",
                           entry.title)
         entry.update({'feed_url': self._url})
-        self._hass.bus.fire(EVENT_FEEDREADER, entry)
+        self._hass.bus.fire(self._event_type, entry)
 
     def _publish_new_entries(self):
         """Publish new entries to the event bus."""
