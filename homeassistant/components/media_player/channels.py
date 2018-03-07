@@ -142,27 +142,25 @@ class ChannelsPlayer(MediaPlayerDevice):
         self.status = state_hash.get('status', "stopped")
         self.muted = state_hash.get('muted', False)
 
-        channel_hash = state_hash.get('channel', None)
-        np_hash = state_hash.get('now_playing', None)
+        channel_hash = state_hash.get('channel')
+        np_hash = state_hash.get('now_playing')
 
         if channel_hash:
-            self.channel_number = channel_hash.get('channel_number', None)
-            self.channel_name = channel_hash.get('channel_name', None)
-            self.channel_image_url = channel_hash.get('channel_image_url',
-                                                      None)
+            self.channel_number = channel_hash.get('channel_number')
+            self.channel_name = channel_hash.get('channel_name')
+            self.channel_image_url = channel_hash.get('channel_image_url')
         else:
             self.channel_number = None
             self.channel_name = None
             self.channel_image_url = None
 
         if np_hash:
-            self.now_playing_title = np_hash.get('title', None)
-            self.now_playing_episode_title = np_hash.get('episode_title', None)
-            self.now_playing_season_number = np_hash.get('season_number', None)
-            self.now_playing_episode_number = np_hash.get('episode_number',
-                                                          None)
-            self.now_playing_summary = np_hash.get('summary', None)
-            self.now_playing_image_url = np_hash.get('image_url', None)
+            self.now_playing_title = np_hash.get('title')
+            self.now_playing_episode_title = np_hash.get('episode_title')
+            self.now_playing_season_number = np_hash.get('season_number')
+            self.now_playing_episode_number = np_hash.get('episode_number')
+            self.now_playing_summary = np_hash.get('summary')
+            self.now_playing_image_url = np_hash.get('image_url')
         else:
             self.now_playing_title = None
             self.now_playing_episode_title = None
