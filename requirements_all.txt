@@ -675,6 +675,9 @@ pybbox==0.0.5-alpha
 # homeassistant.components.device_tracker.bluetooth_tracker
 # pybluez==0.22
 
+# homeassistant.components.media_player.channels
+pychannels==1.0.0
+
 # homeassistant.components.media_player.cast
 pychromecast==2.0.0
 
