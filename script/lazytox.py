@@ -11,9 +11,29 @@ import re
 import shlex
 from collections import namedtuple
 
+try:
+    from colorlog.escape_codes import parse_colors
+except ImportError:
+    def parse_colors(_):
+        """Empty parse_colors function."""
+        return ''
+
+
 RE_ASCII = re.compile(r"\033\[[^m]*m")
 Error = namedtuple('ERROR',
                    "file line col msg")  # pylint: disable=invalid-name
+PASS = 'green'
+FAIL = 'bold_red'
+
+
+def printc(the_color, *args):
+    """Color print helper."""
+    msg = ' '.join(args)
+    try:
+        print(parse_colors(the_color) + msg + parse_colors('reset'))
+    except KeyError:
+        print(msg)
+        raise ValueError("Invalid color {}".format(the_color))
 
 
 def validate_requirements_ok():
@@ -37,6 +57,13 @@ async def read_stream(stream, display):
 
 async def async_exec(*args, display=False):
     """Execute, return code & log."""
+    argsp = []
+    for arg in args:
+        if os.path.isfile(arg):
+            argsp.append("\\\n  {}".format(shlex.quote(arg)))
+        else:
+            argsp.append(shlex.quote(arg))
+    printc('cyan', ' '.join(argsp))
     try:
         kwargs = {'loop': LOOP, 'stdout': asyncio.subprocess.PIPE,
                   'stderr': asyncio.subprocess.STDOUT}
@@ -45,8 +72,8 @@ async def async_exec(*args, display=False):
         # pylint: disable=E1120
         proc = await asyncio.create_subprocess_exec(*args, **kwargs)
     except FileNotFoundError as err:
-        print('ERROR: You need to install {}. Could not execute: {}'.format(
-            args[0], ' '.join(shlex.quote(arg) for arg in args)))
+        printc(FAIL, "Could not execute {}. Did you install test requirements?"
+               .format(args[0]))
         raise err
 
     if not display:
@@ -86,7 +113,7 @@ async def pylint(files):
 
 async def flake8(files):
     """Exec flake8."""
-    _, log = await async_exec('flake8', *files)
+    _, log = await async_exec('flake8', '--doctests', *files)
     res = []
     for line in log.splitlines():
         line = line.split(':')
@@ -106,13 +133,17 @@ async def lint(files):
     if res:
         print("Pylint & Flake8 errors:")
     else:
-        print("Pylint and Flake8 passed")
+        printc(PASS, "Pylint and Flake8 passed")
 
     lint_ok = True
     for err in res:
-        print("{} {}:{} {}".format(err.file, err.line, err.col, err.msg))
-        # Ignore tests/ for the lint_ok test, but otherwise we have an issue
-        if not err.file.startswith('tests/'):
+        err_msg = "{} {}:{} {}".format(err.file, err.line, err.col, err.msg)
+
+        # tests/* does not have to pass lint
+        if err.file.startswith('tests/'):
+            print(err_msg)
+        else:
+            printc(FAIL, err_msg)
             lint_ok = False
 
     return lint_ok
@@ -133,14 +164,14 @@ async def main():
     pyfiles = [file for file in files if pyfile.match(file)]
 
     print("=============================")
-    print("CHANGED FILES:\n", '\n '.join(pyfiles))
+    printc('bold', "CHANGED FILES:\n", '\n '.join(pyfiles))
     print("=============================")
 
     skip_lint = len(sys.argv) > 1 and sys.argv[1] == '--skiplint'
     if skip_lint:
-        print("WARNING: LINT DISABLED")
+        printc(FAIL, "LINT DISABLED")
     elif not await lint(pyfiles):
-        print('Please fix your lint issues before continuing')
+        printc(FAIL, "Please fix your lint issues before continuing")
         return
 
     test_files = set()
@@ -150,7 +181,8 @@ async def main():
             gen_req = True  # requirements script for components
         # Find test files...
         if fname.startswith('tests/'):
-            test_files.add(fname)
+            if '/test_' in fname:  # All test helpers should be excluded
+                test_files.add(fname)
         else:
             parts = fname.split('/')
             parts[0] = 'tests'
@@ -167,28 +199,27 @@ async def main():
     if gen_req:
         print("=============================")
         if validate_requirements_ok():
-            print("script/gen_requirements.py passed")
+            printc(PASS, "script/gen_requirements.py passed")
         else:
-            print("Please run script/gen_requirements.py before submitting")
+            printc(FAIL, "Please run script/gen_requirements.py")
             return
 
     print("=============================")
     if not test_files:
-        print("No files identified, ideally you should run tox.")
+        print("No test files identified, ideally you should run tox")
         return
 
-    print('pytest -vv --', ' '.join(shlex.quote(fle) for fle in test_files))
     code, _ = await async_exec(
         'pytest', '-vv', '--force-sugar', '--', *test_files, display=True)
-    print("\n=============================")
+    print("=============================")
 
     if code == 0:
-        print("Yay! This will most likely pass tox")
+        printc(PASS, "Yay! This will most likely pass tox")
     else:
-        print("Test not passing")
+        printc(FAIL, "Tests not passing")
 
     if skip_lint:
-        print("WARNING: LINT DISABLED")
+        printc(FAIL, "LINT DISABLED")
 
 
 if __name__ == '__main__':
