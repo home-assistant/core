@@ -47,6 +47,7 @@ CHANNELS_SEEK_BY_SCHEMA = CHANNELS_SCHEMA.extend({
 
 REQUIREMENTS = ['pychannels==1.0.0']
 
+
 # pylint: disable=unused-argument, abstract-method
 # pylint: disable=too-many-instance-attributes
 def setup_platform(hass, config, add_devices, discovery_info=None):
