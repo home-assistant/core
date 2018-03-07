@@ -48,6 +48,9 @@ RtmAPI==0.7.0
 # homeassistant.components.media_player.sonos
 SoCo==0.14
 
+# homeassistant.components.media_player.channels
+pychannels==1.0.0
+
 # homeassistant.components.sensor.travisci
 TravisPy==0.3.5
 
