@@ -327,19 +327,6 @@ def test_execute_request(hass_fixture, assistant_client):
                         "command": "action.devices.commands.ColorAbsolute",
                         "params": {
                             "color": {
-                                "spectrumRGB": 16711680,
-                                "temperature": 2100
-                            }
-                        }
-                    }]
-                }, {
-                    "devices": [{
-                        "id": "light.kitchen_lights",
-                    }],
-                    "execution": [{
-                        "command": "action.devices.commands.ColorAbsolute",
-                        "params": {
-                            "color": {
                                 "spectrumRGB": 16711680
                             }
                         }
@@ -375,13 +362,14 @@ def test_execute_request(hass_fixture, assistant_client):
     body = yield from result.json()
     assert body.get('requestId') == reqid
     commands = body['payload']['commands']
-    assert len(commands) == 8
+    assert len(commands) == 6
+
+    assert not any(result['status'] == 'ERROR' for result in commands)
 
     ceiling = hass_fixture.states.get('light.ceiling_lights')
     assert ceiling.state == 'off'
 
     kitchen = hass_fixture.states.get('light.kitchen_lights')
-    assert kitchen.attributes.get(light.ATTR_COLOR_TEMP) == 476
     assert kitchen.attributes.get(light.ATTR_RGB_COLOR) == (255, 0, 0)
 
     bed = hass_fixture.states.get('light.bed_light')

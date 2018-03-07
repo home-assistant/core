@@ -143,18 +143,18 @@ class BrightnessTrait(_Trait):
             await hass.services.async_call(
                 light.DOMAIN, light.SERVICE_TURN_ON, {
                     light.ATTR_BRIGHTNESS_PCT: params['brightness']
-                })
+                }, blocking=True)
         elif domain == cover.DOMAIN:
             await hass.services.async_call(
                 cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
                     cover.ATTR_POSITION: params['brightness']
-                })
+                }, blocking=True)
         elif domain == media_player.DOMAIN:
             await hass.services.async_call(
                 media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
                     media_player.ATTR_MEDIA_VOLUME_LEVEL:
                     params['brightness'] / 100
-                })
+                }, blocking=True)
 
 
 @register_trait
@@ -219,7 +219,7 @@ class OnOffTrait(_Trait):
 
         await hass.services.async_call(service_domain, service, {
             ATTR_ENTITY_ID: self.state.entity_id
-        })
+        }, blocking=True)
 
 
 @register_trait
@@ -264,17 +264,19 @@ class ColorSpectrumTrait(_Trait):
 
     def can_execute(self, command, params):
         """Test if command can be executed."""
-        return command in self.commands and 'color' in params
+        return (command in self.commands and
+                'spectrumRGB' in params.get('color', {}))
 
     async def execute(self, hass, command, params):
         """Execute a color spectrum command."""
-        hex_value = "{0:x}".format(params['color']['spectrumRGB']).zfill(6)
+        # Convert integer to hex format and left pad with 0's till length 6
+        hex_value = "{0:06x}".format(params['color']['spectrumRGB'])
         color = color_util.rgb_hex_to_rgb_list(hex_value)
 
         await hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id,
             light.ATTR_RGB_COLOR: color
-        })
+        }, blocking=True)
 
 
 @register_trait
@@ -322,14 +324,15 @@ class ColorTemperatureTrait(_Trait):
 
     def can_execute(self, command, params):
         """Test if command can be executed."""
-        return command in self.commands and 'temperature' in params
+        return (command in self.commands and
+                'temperature' in params.get('color', {}))
 
     async def execute(self, hass, command, params):
         """Execute a color temperature command."""
         await hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id,
             light.ATTR_KELVIN: params['color']['temperature'],
-        })
+        }, blocking=True)
 
 
 @register_trait
@@ -360,9 +363,10 @@ class SceneTrait(_Trait):
 
     async def execute(self, hass, command, params):
         """Execute a scene command."""
+        # Don't block for scripts as they can be slow.
         await hass.services.async_call(self.state.domain, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id
-        })
+        }, blocking=self.state.domain != script.DOMAIN)
 
 
 @register_trait
@@ -454,7 +458,7 @@ class TemperatureSettingTrait(_Trait):
                     climate.ATTR_TEMPERATURE: temp_util.convert(
                         params['thermostatTemperatureSetpoint'], TEMP_CELSIUS,
                         unit)
-                })
+                }, blocking=True)
 
         elif command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
             await hass.services.async_call(
@@ -466,7 +470,7 @@ class TemperatureSettingTrait(_Trait):
                     climate.ATTR_TARGET_TEMP_LOW: temp_util.convert(
                         params['thermostatTemperatureSetpointLow'],
                         TEMP_CELSIUS, unit),
-                })
+                }, blocking=True)
 
         elif command == COMMAND_THERMOSTAT_SET_MODE:
             await hass.services.async_call(
@@ -474,4 +478,4 @@ class TemperatureSettingTrait(_Trait):
                     ATTR_ENTITY_ID: self.state.entity_id,
                     climate.ATTR_OPERATION_MODE:
                         self.google_to_hass[params['thermostatMode']],
-                })
+                }, blocking=True)
