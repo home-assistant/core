@@ -111,7 +111,7 @@ class IFTTTAlarmPanel(alarm.AlarmControlPanel):
             pyfttt.send_event(self._webhook_key, event)
             # IFTTT should be configured to also call the API to change state
 
-            _LOGGER.debug("Called IFTTT webhook to set state {}", state)
+            _LOGGER.debug("Called IFTTT webhook to set state %s", state)
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error communicating with IFTTT")
 
