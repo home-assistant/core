@@ -58,12 +58,16 @@ class FeedManager(object):
         self._has_published_parsed = False
         hass.bus.listen_once(
             EVENT_HOMEASSISTANT_START, lambda _: self._update())
-        track_utc_time_change(
-            hass, lambda now: self._update(), minute=0, second=0)
+        self._init_regular_updates(hass)
 
     def _log_no_entries(self):
         """Send no entries log at debug level."""
         _LOGGER.debug("No new entries to be published in feed %s", self._url)
+
+    def _init_regular_updates(self, hass):
+        """Schedule regular updates at the top of the clock."""
+        track_utc_time_change(
+            hass, lambda now: self._update(), minute=0, second=0)
 
     def _update(self):
         """Update the feed and publish new entries to the event bus."""
