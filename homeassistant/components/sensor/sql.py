@@ -131,22 +131,22 @@ class SQLSensor(Entity):
         try:
             sess = self.sessionmaker()
             result = sess.execute(self._query)
+
+            if not result.returns_rows or result.rowcount == 0:
+                _LOGGER.warning("%s returned no results", self._query)
+                self._state = None
+                self._attributes = {}
+                return
+
+            for res in result:
+                _LOGGER.debug("result = %s", res.items())
+                data = res[self._column_name]
+                self._attributes = {k: v for k, v in res.items()}
         except sqlalchemy.exc.SQLAlchemyError as err:
             _LOGGER.error("Error executing query %s: %s", self._query, err)
             return
         finally:
             sess.close()
-
-        if not result.returns_rows or result.rowcount == 0:
-            _LOGGER.warning("%s returned no results", self._query)
-            self._state = None
-            self._attributes = {}
-            return
-
-        for res in result:
-            _LOGGER.debug("result = %s", res.items())
-            data = res[self._column_name]
-            self._attributes = {k: v for k, v in res.items()}
 
         if self._template is not None:
             self._state = self._template.async_render_with_possible_json_value(
