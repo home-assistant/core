@@ -475,10 +475,10 @@ def setup(hass, config):
             if value.index != param:
                 continue
             if value.type in [const.TYPE_LIST, const.TYPE_BOOL]:
-                value.data = selection
+                value.data = str(selection)
                 _LOGGER.info("Setting config list parameter %s on Node %s "
                              "with selection %s", param, node_id,
-                             selection)
+                             str(selection))
                 return
             value.data = int(selection)
             _LOGGER.info("Setting config parameter %s on Node %s "
