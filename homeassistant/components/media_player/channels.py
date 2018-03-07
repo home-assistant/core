@@ -53,7 +53,7 @@ REQUIREMENTS = ['pychannels==1.0.0']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Channels platform."""
 
-    device = ChannelsApp(
+    device = ChannelsPlayer(
                 config.get('name', 'Channels'),
                 config.get(CONF_HOST),
                 config.get(CONF_PORT, 57000)
@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         schema=CHANNELS_SEEK_BY_SCHEMA)
 
 
-class ChannelsApp(MediaPlayerDevice):
+class ChannelsPlayer(MediaPlayerDevice):
     """Representation of a Channels instance."""
 
     # pylint: disable=too-many-public-methods
