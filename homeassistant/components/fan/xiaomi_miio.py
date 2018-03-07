@@ -738,12 +738,6 @@ class XiaomiAirHumidifier(XiaomiGenericDevice, FanEntity):
             self._state = None
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
-    @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        from miio.airhumidifier import OperationMode
-        return [mode.name for mode in OperationMode]
-
     def speed_list(self) -> list:
         """Get the list of available speeds."""
         from miio.airpurifier import OperationMode
