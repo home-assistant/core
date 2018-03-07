@@ -31,7 +31,7 @@ KEY_OPEN_CLOSE = 'open_close'
 KEY_STOP = 'stop'
 KEY_POSITION = 'position'
 
-DEFAULT_NAME = 'Group Cover'
+DEFAULT_NAME = 'Cover Group'
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -122,7 +122,7 @@ class GroupCover(CoverDevice):
 
     @property
     def should_poll(self):
-        """Disable polling for the MultiCover."""
+        """Disable polling for cover group."""
         return False
 
     @property
@@ -261,7 +261,10 @@ class GroupCover(CoverDevice):
         return supported_features
 
     async def async_update(self):
-        """Update state and attributes."""
+        """Update state and attributes.
+
+        Update_cover_position must be executed after update_attr_is_closed.
+        """
         self._is_closed = self.update_attr_is_closed()
         self._cover_position = self.update_attr_cover_position()
         self._tilt_position = self.update_attr_tilt_position()

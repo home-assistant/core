@@ -9,7 +9,7 @@ from homeassistant.components import cover
 from tests.common import (
     assert_setup_component, get_test_home_assistant, fire_time_changed)
 
-GROUP_COVER = 'cover.group_cover'
+GROUP_COVER = 'cover.cover_group'
 DEMO_COVER = 'cover.kitchen_window'
 DEMO_COVER_POS = 'cover.hall_window'
 DEMO_COVER_TILT = 'cover.living_room_window'
