@@ -60,10 +60,10 @@ REQUIREMENTS = ['pychannels==1.0.0']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Channels platform."""
     device = ChannelsPlayer(
-                config.get('name', DEFAULT_NAME),
-                config.get(CONF_HOST),
-                config.get(CONF_PORT, DEFAULT_PORT)
-             )
+        config.get('name', DEFAULT_NAME),
+        config.get(CONF_HOST),
+        config.get(CONF_PORT, DEFAULT_PORT)
+        )
 
     if DATA_CHANNELS not in hass.data:
         hass.data[DATA_CHANNELS] = []
@@ -228,8 +228,8 @@ class ChannelsPlayer(MediaPlayerDevice):
         """Title of current playing media."""
         if self.state:
             return self.now_playing_title
-        else:
-            return None
+
+        return None
 
     @property
     def supported_features(self):
