@@ -44,14 +44,14 @@ async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the Group Cover platform."""
     async_add_devices(
-        [GroupCover(config[CONF_NAME], config[CONF_ENTITIES])])
+        [CoverGroup(config[CONF_NAME], config[CONF_ENTITIES])])
 
 
-class GroupCover(CoverDevice):
-    """Representation of a GroupCover."""
+class CoverGroup(CoverDevice):
+    """Representation of a CoverGroup."""
 
     def __init__(self, name, entities):
-        """Initialize a GroupCover entity."""
+        """Initialize a CoverGroup entity."""
         self._name = name
         self._tilt = False
 
