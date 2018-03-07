@@ -7,9 +7,10 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE, ATTR_TEMPERATURE,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH,
     ATTR_OPERATION_MODE, STATE_HEAT, STATE_AUTO)
-from homeassistant.components.homekit.thermostats import Thermostat
+from homeassistant.components.homekit.thermostats import Thermostat, STATE_OFF
 from homeassistant.const import (
-    ATTR_SERVICE, EVENT_CALL_SERVICE, ATTR_SERVICE_DATA)
+    ATTR_SERVICE, EVENT_CALL_SERVICE, ATTR_SERVICE_DATA,
+    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 
 from tests.common import get_test_home_assistant
 from tests.mock.homekit import get_patch_paths, mock_preload_service
@@ -53,11 +54,11 @@ class TestHomekitThermostats(unittest.TestCase):
         self.assertEqual(acc.char_cooling_thresh_temp, None)
         self.assertEqual(acc.char_heating_thresh_temp, None)
 
-        self.hass.states.set(climate, 'heat',
+        self.hass.states.set(climate, STATE_HEAT,
                              {ATTR_OPERATION_MODE: STATE_HEAT,
                               ATTR_TEMPERATURE: 22.0,
                               ATTR_CURRENT_TEMPERATURE: 18.0,
-                              'unit_of_measurement': '°C'})
+                              ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.block_till_done()
         self.assertEqual(acc.char_target_temp.value, 22.0)
         self.assertEqual(acc.char_current_heat_cool.value, 1)
@@ -65,11 +66,11 @@ class TestHomekitThermostats(unittest.TestCase):
         self.assertEqual(acc.char_current_temp.value, 18.0)
         self.assertEqual(acc.char_display_units.value, 0)
 
-        self.hass.states.set(climate, 'heat',
+        self.hass.states.set(climate, STATE_HEAT,
                              {ATTR_OPERATION_MODE: STATE_HEAT,
                               ATTR_TEMPERATURE: 22.0,
                               ATTR_CURRENT_TEMPERATURE: 23.0,
-                              'unit_of_measurement': '°C'})
+                              ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.block_till_done()
         self.assertEqual(acc.char_target_temp.value, 22.0)
         self.assertEqual(acc.char_current_heat_cool.value, 0)
@@ -77,11 +78,11 @@ class TestHomekitThermostats(unittest.TestCase):
         self.assertEqual(acc.char_current_temp.value, 23.0)
         self.assertEqual(acc.char_display_units.value, 0)
 
-        self.hass.states.set(climate, 'off',
-                             {ATTR_OPERATION_MODE: 'off',
+        self.hass.states.set(climate, STATE_OFF,
+                             {ATTR_OPERATION_MODE: STATE_OFF,
                               ATTR_TEMPERATURE: 22.0,
                               ATTR_CURRENT_TEMPERATURE: 18.0,
-                              'unit_of_measurement': '°C'})
+                              ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.block_till_done()
         self.assertEqual(acc.char_target_temp.value, 22.0)
         self.assertEqual(acc.char_current_heat_cool.value, 0)
@@ -111,21 +112,18 @@ class TestHomekitThermostats(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         climate = 'climate.testclimate'
 
-        with patch(PATH_ACC, side_effect=mock_preload_service):
-            with patch(PATH_FILE, side_effect=mock_preload_service):
-                acc = Thermostat(self.hass, climate, 'Climate', True)
-                acc.run()
+        acc = Thermostat(self.hass, climate, 'Climate', True)
+        acc.run()
 
         self.assertEqual(acc.char_cooling_thresh_temp.value, 23.0)
         self.assertEqual(acc.char_heating_thresh_temp.value, 19.0)
 
-        self.hass.states.set(climate, 'auto',
+        self.hass.states.set(climate, STATE_AUTO,
                              {ATTR_OPERATION_MODE: STATE_AUTO,
                               ATTR_TARGET_TEMP_HIGH: 22.0,
                               ATTR_TARGET_TEMP_LOW: 20.0,
                               ATTR_CURRENT_TEMPERATURE: 18.0,
-                              ATTR_TEMPERATURE: None,
-                              'unit_of_measurement': '°C'})
+                              ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.block_till_done()
         self.assertEqual(acc.char_heating_thresh_temp.value, 20.0)
         self.assertEqual(acc.char_cooling_thresh_temp.value, 22.0)
@@ -134,13 +132,12 @@ class TestHomekitThermostats(unittest.TestCase):
         self.assertEqual(acc.char_current_temp.value, 18.0)
         self.assertEqual(acc.char_display_units.value, 0)
 
-        self.hass.states.set(climate, 'auto',
+        self.hass.states.set(climate, STATE_AUTO,
                              {ATTR_OPERATION_MODE: STATE_AUTO,
                               ATTR_TARGET_TEMP_HIGH: 23.0,
                               ATTR_TARGET_TEMP_LOW: 19.0,
                               ATTR_CURRENT_TEMPERATURE: 24.0,
-                              ATTR_TEMPERATURE: None,
-                              'unit_of_measurement': '°C'})
+                              ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.block_till_done()
         self.assertEqual(acc.char_heating_thresh_temp.value, 19.0)
         self.assertEqual(acc.char_cooling_thresh_temp.value, 23.0)
@@ -149,13 +146,12 @@ class TestHomekitThermostats(unittest.TestCase):
         self.assertEqual(acc.char_current_temp.value, 24.0)
         self.assertEqual(acc.char_display_units.value, 0)
 
-        self.hass.states.set(climate, 'auto',
+        self.hass.states.set(climate, STATE_AUTO,
                              {ATTR_OPERATION_MODE: STATE_AUTO,
                               ATTR_TARGET_TEMP_HIGH: 23.0,
                               ATTR_TARGET_TEMP_LOW: 19.0,
                               ATTR_CURRENT_TEMPERATURE: 21.0,
-                              ATTR_TEMPERATURE: None,
-                              'unit_of_measurement': '°C'})
+                              ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.block_till_done()
         self.assertEqual(acc.char_heating_thresh_temp.value, 19.0)
         self.assertEqual(acc.char_cooling_thresh_temp.value, 23.0)

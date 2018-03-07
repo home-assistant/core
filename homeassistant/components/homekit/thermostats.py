@@ -46,14 +46,15 @@ class Thermostat(HomeAccessory):
         self.coolingthresh_flag_target_state = False
         self.heatingthresh_flag_target_state = False
 
-        # extra_chars = None
-        # # Add additional characteristics if auto mode is supported
-        # if support_auto:
-        #     extra_chars = [CHAR_COOLING_THRESHOLD_TEMPERATURE,
-        #                    CHAR_HEATING_THRESHOLD_TEMPERATURE]
+        extra_chars = None
+        # Add additional characteristics if auto mode is supported
+        if support_auto:
+            extra_chars = [CHAR_COOLING_THRESHOLD_TEMPERATURE,
+                           CHAR_HEATING_THRESHOLD_TEMPERATURE]
 
         # Preload the thermostat service
-        self.service_thermostat = add_preload_service(self, SERV_THERMOSTAT)
+        self.service_thermostat = add_preload_service(self, SERV_THERMOSTAT,
+                                                      extra_chars)
 
         # Current and target mode characteristics
         self.char_current_heat_cool = self.service_thermostat. \
@@ -155,12 +156,12 @@ class Thermostat(HomeAccessory):
             return
 
         # Update current temperature
-        current_temp = new_state.attributes[ATTR_CURRENT_TEMPERATURE]
+        current_temp = new_state.attributes.get(ATTR_CURRENT_TEMPERATURE)
         if current_temp is not None:
             self.char_current_temp.set_value(current_temp)
 
         # Update target temperature
-        target_temp = new_state.attributes[ATTR_TEMPERATURE]
+        target_temp = new_state.attributes.get(ATTR_TEMPERATURE)
         if target_temp is not None:
             if not self.temperature_flag_target_state:
                 self.char_target_temp.set_value(target_temp,
@@ -170,33 +171,33 @@ class Thermostat(HomeAccessory):
 
         # Update cooling threshold temperature if characteristic exists
         if self.char_cooling_thresh_temp is not None:
-            cooling_thresh_temp = new_state.attributes[ATTR_TARGET_TEMP_HIGH]
-            if cooling_thresh_temp is not None:
+            cooling_thresh = new_state.attributes.get(ATTR_TARGET_TEMP_HIGH)
+            if cooling_thresh is not None:
                 if not self.coolingthresh_flag_target_state:
                     self.char_cooling_thresh_temp.set_value(
-                        cooling_thresh_temp, should_callback=False)
+                        cooling_thresh, should_callback=False)
                 else:
                     self.coolingthresh_flag_target_state = False
 
         # Update heating threshold temperature if characteristic exists
         if self.char_heating_thresh_temp is not None:
-            heating_thresh_temp = new_state.attributes[ATTR_TARGET_TEMP_LOW]
-            if heating_thresh_temp is not None:
+            heating_thresh = new_state.attributes.get(ATTR_TARGET_TEMP_LOW)
+            if heating_thresh is not None:
                 if not self.heatingthresh_flag_target_state:
                     self.char_heating_thresh_temp.set_value(
-                        heating_thresh_temp, should_callback=False)
+                        heating_thresh, should_callback=False)
                 else:
                     self.heatingthresh_flag_target_state = False
 
         # Update display units
-        display_units = new_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        display_units = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if display_units is not None \
                 and display_units in UNIT_HASS_TO_HOMEKIT:
             self.char_display_units.set_value(
                 UNIT_HASS_TO_HOMEKIT[display_units])
 
         # Update target operation mode
-        operation_mode = new_state.attributes[ATTR_OPERATION_MODE]
+        operation_mode = new_state.attributes.get(ATTR_OPERATION_MODE)
         if operation_mode is not None \
                 and operation_mode in HC_HASS_TO_HOMEKIT:
             if not self.heat_cool_flag_target_state:
