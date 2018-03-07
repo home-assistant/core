@@ -23,11 +23,11 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_CHANNELS = 'channels'
 FEATURE_SUPPORT = SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | \
     SUPPORT_VOLUME_MUTE | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_PLAY_MEDIA | SUPPORT_SELECT_SOURCE
 
-DATA_CHANNELS = 'channels'
 TIMEOUT = 1
 
 SERVICE_SEEK_FORWARD = 'channels_seek_forward'
