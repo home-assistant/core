@@ -221,8 +221,8 @@ class ChannelsPlayer(MediaPlayerDevice):
             return self.now_playing_image_url
         elif self.channel_image_url:
             return self.channel_image_url
-        else:
-            return 'https://getchannels.com/assets/img/icon-1024.png'
+
+        return 'https://getchannels.com/assets/img/icon-1024.png'
 
     @property
     def media_title(self):
