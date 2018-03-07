@@ -99,6 +99,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ChannelsPlayer(MediaPlayerDevice):
     """Representation of a Channels instance."""
 
+    from pychannels import Channels
+
     # pylint: disable=too-many-public-methods
     def __init__(self, name, host, port):
         """Initialize the Channels app."""
