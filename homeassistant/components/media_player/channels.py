@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if DATA_CHANNELS not in hass.data:
         hass.data[DATA_CHANNELS] = []
 
-    add_devices([device])
+    add_devices([device], True)
     hass.data[DATA_CHANNELS].append(device)
 
     def service_handler(service):
@@ -133,8 +133,6 @@ class ChannelsPlayer(MediaPlayerDevice):
         self.now_playing_image_url = None
 
         self.favorite_channels = []
-
-        self.update()
 
     def update_favorite_channels(self):
         self.favorite_channels = self.client.favorite_channels()
