@@ -1,6 +1,5 @@
 """
-Support for interfacing with an instance of Channels.
-https://getchannels.com
+Support for interfacing with an instance of Channels (https://getchannels.com).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.channels/
@@ -60,7 +59,6 @@ REQUIREMENTS = ['pychannels==1.0.0']
 # pylint: disable=too-many-instance-attributes
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Channels platform."""
-
     device = ChannelsPlayer(
                 config.get('name', DEFAULT_NAME),
                 config.get(CONF_HOST),
@@ -135,6 +133,7 @@ class ChannelsPlayer(MediaPlayerDevice):
         self.favorite_channels = []
 
     def update_favorite_channels(self):
+        """Update the favorite channels from the client."""
         self.favorite_channels = self.client.favorite_channels()
 
     def update_state(self, state_hash):
@@ -270,6 +269,7 @@ class ChannelsPlayer(MediaPlayerDevice):
         self.update_state(response)
 
     def select_source(self, source):
+        """Select a channel to tune to."""
         for channel in self.favorite_channels:
             if channel["name"] == source:
                 response = self.client.play_channel(channel["number"])
