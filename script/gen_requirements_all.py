@@ -95,7 +95,10 @@ IGNORE_PACKAGES = (
     'homeassistant.components.recorder.models',
     'homeassistant.components.homekit.accessories',
     'homeassistant.components.homekit.covers',
-    'homeassistant.components.homekit.sensors'
+    'homeassistant.components.homekit.security_systems',
+    'homeassistant.components.homekit.sensors',
+    'homeassistant.components.homekit.switches',
+    'homeassistant.components.homekit.thermostats'
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
