@@ -495,7 +495,7 @@ class LIFXLight(Light):
 
     async def set_state(self, **kwargs):
         """Set a color on the light and turn it on/off."""
-        with (await self.lock):
+        async with self.lock:
             bulb = self.device
 
             await self.effects_conductor.stop([bulb])
