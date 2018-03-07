@@ -15,7 +15,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE, CONF_NAME, CONF_TYPE)
+    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE, CONF_NAME)
 from homeassistant.helpers import entityfilter, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
@@ -51,7 +51,6 @@ ALEXA_ENTITY_SCHEMA = vol.Schema({
 
 GOOGLE_ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_TYPE): vol.In(ga_sh.MAPPING_COMPONENT),
     vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string])
 })
 
