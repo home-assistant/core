@@ -72,6 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.data[DATA_CHANNELS].append(device)
 
     def service_handler(service):
+        """Handler for services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
         if entity_ids:
