@@ -1,6 +1,7 @@
 """Test Google Smart Home."""
 from homeassistant.setup import async_setup_component
-from homeassistant.components.google_assistant import trait, smart_home as sh
+from homeassistant.components.google_assistant import (
+    const, trait, smart_home as sh)
 from homeassistant.components.light.demo import DemoLight
 
 
@@ -22,7 +23,24 @@ async def test_sync_message(hass):
     light.entity_id = 'light.demo_light'
     await light.async_update_ha_state()
 
-    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
+    # This should not show up in the sync request
+    hass.states.async_set('sensor.no_match', 'something')
+
+    # Excluded via config
+    hass.states.async_set('light.not_expose', 'on')
+
+    config = sh.Config(
+        should_expose=lambda state: state.entity_id != 'light.not_expose',
+        agent_user_id='test-agent',
+        entity_config={
+            'light.demo_light': {
+                const.CONF_ROOM_HINT: 'Living Room',
+                const.CONF_ALIASES: ['Hello', 'World']
+            }
+        }
+    )
+
+    result = await sh.async_handle_message(hass, config, {
         "requestId": REQ_ID,
         "inputs": [{
             "intent": "action.devices.SYNC"
@@ -37,6 +55,10 @@ async def test_sync_message(hass):
                 'id': 'light.demo_light',
                 'name': {
                     'name': 'Demo Light',
+                    'nicknames': [
+                        'Hello',
+                        'World',
+                    ]
                 },
                 'traits': [
                     trait.TRAIT_BRIGHTNESS,
@@ -50,7 +72,8 @@ async def test_sync_message(hass):
                     'colorModel': 'rgb',
                     'temperatureMinK': 6493,
                     'temperatureMaxK': 2000,
-                }
+                },
+                'roomHint': 'Living Room'
             }]
         }
     }
@@ -124,6 +147,9 @@ async def test_execute(hass):
     await async_setup_component(hass, 'light', {
         'light': {'platform': 'demo'}
     })
+    await hass.services.async_call(
+        'light', 'turn_off', {'entity_id': 'light.ceiling_lights'},
+        blocking=True)
 
     result = await sh.async_handle_message(hass, BASIC_CONFIG, {
         "requestId": REQ_ID,
@@ -133,12 +159,18 @@ async def test_execute(hass):
                 "commands": [{
                     "devices": [
                         {"id": "light.non_existing"},
-                        {"id": "light.bed_light"},
+                        {"id": "light.ceiling_lights"},
                     ],
                     "execution": [{
                         "command": "action.devices.commands.OnOff",
                         "params": {
                             "on": True
+                        }
+                    }, {
+                        "command":
+                            "action.devices.commands.BrightnessAbsolute",
+                        "params": {
+                            "brightness": 20
                         }
                     }]
                 }]
@@ -154,14 +186,14 @@ async def test_execute(hass):
                 "status": "ERROR",
                 "errorCode": "deviceOffline"
             }, {
-                "ids": ['light.bed_light'],
+                "ids": ['light.ceiling_lights'],
                 "status": "SUCCESS",
                 "states": {
                     "on": True,
                     "online": True,
-                    'brightness': 70,
+                    'brightness': 20,
                     'color': {
-                        'spectrumRGB': 16110848,
+                        'spectrumRGB': 15589409,
                         'temperature': 2631,
                     },
                 }
