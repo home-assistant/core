@@ -293,7 +293,7 @@ class ColorTemperatureTrait(_Trait):
     def supported(domain, features):
         """Test if state is supported."""
         if domain != light.DOMAIN:
-            return
+            return False
 
         return features & light.SUPPORT_COLOR_TEMP
 
@@ -394,7 +394,7 @@ class TemperatureSettingTrait(_Trait):
     def supported(domain, features):
         """Test if state is supported."""
         if domain != climate.DOMAIN:
-            return
+            return False
 
         return features & climate.SUPPORT_OPERATION_MODE
 

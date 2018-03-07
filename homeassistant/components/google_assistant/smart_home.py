@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant  # NOQA
 from homeassistant.util.unit_system import UnitSystem  # NOQA
 from homeassistant.util.decorator import Registry
 
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES)
 from homeassistant.components import (
@@ -54,7 +55,8 @@ def deep_update(target, source):
 class _GoogleEntity:
     """Adaptation of Entity expressed in Google's terms."""
 
-    def __init__(self, config, state):
+    def __init__(self, hass, config, state):
+        self.hass = hass
         self.config = config
         self.state = state
 
@@ -63,6 +65,7 @@ class _GoogleEntity:
         """Return entity ID."""
         return self.state.entity_id
 
+    @callback
     def traits(self):
         """Return traits for entity."""
         state = self.state
@@ -72,6 +75,7 @@ class _GoogleEntity:
         return [Trait(state) for Trait in trait.TRAITS
                 if Trait.supported(domain, features)]
 
+    @callback
     def sync_serialize(self):
         """Serialize entity for a SYNC response.
 
@@ -112,6 +116,7 @@ class _GoogleEntity:
 
         return device
 
+    @callback
     def query_serialize(self):
         """Serialize entity for a QUERY response.
 
@@ -129,7 +134,7 @@ class _GoogleEntity:
 
         return attrs
 
-    async def execute(self, hass, command, params):
+    async def execute(self, command, params):
         """Execute a command.
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicesexecute
@@ -137,7 +142,7 @@ class _GoogleEntity:
         executed = False
         for trt in self.traits():
             if trt.can_execute(command, params):
-                await trt.execute(hass, command, params)
+                await trt.execute(self.hass, command, params)
                 executed = True
                 break
 
@@ -146,6 +151,11 @@ class _GoogleEntity:
                 ERR_NOT_SUPPORTED,
                 'Unable to execute {} for {}'.format(command,
                                                      self.state.entity_id))
+
+    @callback
+    def async_update(self):
+        """Update the entity with latest info from Home Assistant."""
+        self.state = self.hass.states.get(self.entity_id)
 
 
 # Error codes used for SmartHomeError class
@@ -183,20 +193,21 @@ async def async_handle_message(hass, config, message):
     request_id = message.get('requestId')  # type: str
     inputs = message.get('inputs')  # type: list
 
-    if len(inputs) > 1:
-        _LOGGER.warning('Got unexpected more than 1 input. %s', message)
+    if len(inputs) != 1:
+        return {
+            'requestId': request_id,
+            'payload': {'errorCode': 'protocolError'}
+        }
 
-    # Only use first input
-    intent = inputs[0].get('intent')
-    payload = inputs[0].get('payload')
+    handler = HANDLERS.get(inputs[0].get('intent'))
 
-    handler = HANDLERS.get(intent)
+    if handler is None:
+        return {
+            'requestId': request_id,
+            'payload': {'errorCode': 'protocolError'}
+        }
 
-    if handler:
-        result = await handler(hass, config, payload)
-    else:
-        result = {'errorCode': 'protocolError'}
-
+    result = await handler(hass, config, inputs[0].get('payload'))
     return {'requestId': request_id, 'payload': result}
 
 
@@ -211,7 +222,7 @@ async def async_devices_sync(hass, config: Config, payload):
         if not config.should_expose(state):
             continue
 
-        entity = _GoogleEntity(config, state)
+        entity = _GoogleEntity(hass, config, state)
         serialized = entity.sync_serialize()
 
         if serialized is None:
@@ -242,7 +253,7 @@ async def async_devices_query(hass, config, payload):
             devices[devid] = {'online': False}
             continue
 
-        devices[devid] = _GoogleEntity(config, state).query_serialize()
+        devices[devid] = _GoogleEntity(hass, config, state).query_serialize()
 
     return {'devices': devices}
 
@@ -276,10 +287,10 @@ async def handle_devices_execute(hass, config, payload):
                     }
                     continue
 
-                entities[entity_id] = _GoogleEntity(config, state)
+                entities[entity_id] = _GoogleEntity(hass, config, state)
 
             try:
-                await entities[entity_id].execute(hass, execution['command'],
+                await entities[entity_id].execute(execution['command'],
                                                   execution.get('params', {}))
             except SmartHomeError as err:
                 results[entity_id] = {
@@ -293,6 +304,8 @@ async def handle_devices_execute(hass, config, payload):
     for entity in entities.values():
         if entity.entity_id in results:
             continue
+
+        entity.async_update()
 
         final_results.append({
             'ids': [entity.entity_id],
