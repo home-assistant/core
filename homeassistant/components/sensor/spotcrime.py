@@ -12,9 +12,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY,
-    CONF_INCLUDE, CONF_EXCLUDE, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_RADIUS)
+from homeassistant.const import (CONF_API_KEY, CONF_INCLUDE, CONF_EXCLUDE,
+                                 CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
+                                 ATTR_ATTRIBUTION, ATTR_LATITUDE,
+                                 ATTR_LONGITUDE, CONF_RADIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 import homeassistant.helpers.config_validation as cv
