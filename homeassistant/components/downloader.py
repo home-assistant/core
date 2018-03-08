@@ -142,10 +142,10 @@ def setup(hass, config):
             except requests.exceptions.ConnectionError:
                 _LOGGER.exception("ConnectionError occurred for %s", url)
                 hass.components.persistent_notification.create(
-                        "Error: {} download failed"
-                        "".format(filename),
-                        title='Download Request',
-                        notification_id='download_request')
+                    "Error: {} download failed"
+                    "".format(filename),
+                    title='Download Request',
+                    notification_id='download_request')
 
                 # Remove file if we started downloading but failed
                 if final_path and os.path.isfile(final_path):
