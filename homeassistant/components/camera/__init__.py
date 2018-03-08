@@ -394,11 +394,21 @@ class CameraImageView(CameraView):
     @asyncio.coroutine
     def handle(self, request, camera):
         """Serve camera image."""
+        from urllib.parse import urlparse, parse_qs
+        query = parse_qs(urlparse(str(request.url)).query)
+        hass = request.app['hass']
+
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-            with async_timeout.timeout(10, loop=request.app['hass'].loop):
+            with async_timeout.timeout(10, loop=hass.loop):
                 image = yield from camera.async_camera_image()
 
             if image:
+                if (query and int(query.get('maxwidth', [0])[0]) > 0
+                        and hass.data.get('resize_image')):
+                    width = int(query['maxwidth'][0])
+                    image = hass.data['resize_image'].resize_image(
+                        image, width)
+
                 return web.Response(body=image,
                                     content_type=camera.content_type)
 
