@@ -114,6 +114,7 @@ class SonosData:
 
     def __init__(self):
         """Initialize the data."""
+        self.uids = set()
         self.devices = []
         self.topology_lock = threading.Lock()
 
@@ -148,15 +149,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         player = soco.SoCo(discovery_info.get('host'))
 
         # If device already exists by config
-        if player.uid in [x.unique_id for x in hass.data[DATA_SONOS].devices]:
+        if player.uid in hass.data[DATA_SONOS].uids:
             return
 
         if player.is_visible:
-            device = SonosDevice(player)
-            hass.data[DATA_SONOS].devices.append(device)
-            add_devices([device])
-            if len(hass.data[DATA_SONOS].devices) > 1:
-                return
+            hass.data[DATA_SONOS].uids.add(player.uid)
+            add_devices([SonosDevice(player)])
     else:
         players = None
         hosts = config.get(CONF_HOSTS, None)
@@ -180,19 +178,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.warning("No Sonos speakers found")
             return
 
-        hass.data[DATA_SONOS].devices = [SonosDevice(p) for p in players]
-        add_devices(hass.data[DATA_SONOS].devices)
+        hass.data[DATA_SONOS].uids.update([p.uid for p in players])
+        add_devices([SonosDevice(p) for p in players])
         _LOGGER.debug("Added %s Sonos speakers", len(players))
 
     def service_handle(service):
         """Handle for services."""
         entity_ids = service.data.get('entity_id')
 
+        devices = hass.data[DATA_SONOS].devices
         if entity_ids:
-            devices = [device for device in hass.data[DATA_SONOS].devices
-                       if device.entity_id in entity_ids]
-        else:
-            devices = hass.data[DATA_SONOS].devices
+            devices = [d for d in devices if d.entity_id in entity_ids]
 
         if service.service == SERVICE_JOIN:
             master = [device for device in hass.data[DATA_SONOS].devices
@@ -365,6 +361,7 @@ class SonosDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Subscribe sonos events."""
+        self.hass.data[DATA_SONOS].devices.append(self)
         self.hass.async_add_job(self._subscribe_to_player_events)
 
     @property
@@ -434,6 +431,10 @@ class SonosDevice(MediaPlayerDevice):
     def _subscribe_to_player_events(self):
         """Add event subscriptions."""
         player = self.soco
+
+        # New player available, build the current group topology
+        for device in self.hass.data[DATA_SONOS].devices:
+            device.process_zonegrouptopology_event(None)
 
         queue = _ProcessSonosEventQueue(self.process_avtransport_event)
         player.avTransport.subscribe(auto_renew=True, event_queue=queue)
@@ -520,11 +521,11 @@ class SonosDevice(MediaPlayerDevice):
 
     def process_zonegrouptopology_event(self, event):
         """Process a zone group topology event coming from a player."""
-        if not hasattr(event, 'zone_player_uui_ds_in_group'):
+        if event and not hasattr(event, 'zone_player_uui_ds_in_group'):
             return
 
         with self.hass.data[DATA_SONOS].topology_lock:
-            group = event.zone_player_uui_ds_in_group
+            group = event and event.zone_player_uui_ds_in_group
             if group:
                 # New group information is pushed
                 coordinator_uid, *slave_uids = group.split(',')
