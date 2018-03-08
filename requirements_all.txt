@@ -654,7 +654,7 @@ pyads==2.2.6
 pyairvisual==1.0.0
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
-pyalarmdotcom==0.3.0
+pyalarmdotcom==0.3.1
 
 # homeassistant.components.arlo
 pyarlo==0.1.2
