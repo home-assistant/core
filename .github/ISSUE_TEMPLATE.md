@@ -1,35 +1,31 @@
+Issues are only for bug reports. Feature and enhancement requests go in the Feature Requests section of our community forum: https://community.home-assistant.io/c/feature-requests
+
 Make sure you are running the latest version of Home Assistant before reporting an issue.
 
-You should only file an issue if you found a bug. Feature and enhancement requests should go in [the Feature Requests section](https://community.home-assistant.io/c/feature-requests) of our community forum:
+**First Home Assistant release with the issue:**
 
-**Home Assistant release (`hass --version`):**
+**Last working Home Assistant release (if known):**
 
-
-**Python release (`python3 --version`):**
-
+**Operating environment (Hass.io/Docker/Windows/etc.):**
 
 **Component/platform:**
 
-
 **Description of problem:**
 
-
-**Expected:**
-
-
-**Problem-relevant `configuration.yaml` entries and steps to reproduce:**
-```yaml
-
-```
-
+**Steps to reproduce:**
 1. 
 2. 
 3. 
 
-**Traceback (if applicable):**
-```bash
+**Related `configuration.yaml` entries (fill out even if it seems unimportant):**
+```yaml
 
 ```
 
-**Additional info:**
+**Traceback (if applicable):**
+```
+
+```
+
+**Additional information:**
 
