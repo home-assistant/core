@@ -72,8 +72,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         """Handler for services."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
-        device = next([device for device in hass.data[DATA_CHANNELS] if
-                       device.entity_id == entity_id].__iter__(), None)
+        device = next((device for device in hass.data[DATA_CHANNELS] if
+                       device.entity_id == entity_id), None)
 
         if device is None:
             _LOGGER.warning("Unable to find Channels with entity_id: %s",
