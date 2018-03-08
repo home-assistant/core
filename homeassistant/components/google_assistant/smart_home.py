@@ -446,7 +446,7 @@ def async_devices_sync(hass, config: Config, payload):
 
         device = entity_to_device(entity, config, hass.config.units)
         if device is None:
-            _LOGGER.warning("No mapping for %s domain", entity.domain)
+            _LOGGER.debug("No mapping for %s domain", entity.domain)
             continue
 
         devices.append(device)

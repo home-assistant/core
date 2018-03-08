@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup(hass):
     """Initialize the HTTP API."""
+    hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
     hass.http.register_view(CloudLogoutView)
     hass.http.register_view(CloudAccountView)
@@ -55,6 +56,32 @@ def _handle_cloud_errors(handler):
                                      message_code=err.__class__.__name__)
 
     return error_handler
+
+
+class GoogleActionsSyncView(HomeAssistantView):
+    """Trigger a Google Actions Smart Home Sync."""
+
+    url = '/api/cloud/google_actions/sync'
+    name = 'api:cloud:google_actions/sync'
+
+    @_handle_cloud_errors
+    @asyncio.coroutine
+    def post(self, request):
+        """Trigger a Google Actions sync."""
+        hass = request.app['hass']
+        cloud = hass.data[DOMAIN]
+        websession = hass.helpers.aiohttp_client.async_get_clientsession()
+
+        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+            yield from hass.async_add_job(auth_api.check_token, cloud)
+
+        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+            req = yield from websession.post(
+                cloud.google_actions_sync_url, headers={
+                    'authorization': cloud.id_token
+                })
+
+        return self.json({}, status_code=req.status)
 
 
 class CloudLoginView(HomeAssistantView):
