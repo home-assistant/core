@@ -52,7 +52,6 @@ class IFTTTAlarmPanel(alarm.AlarmControlPanel):
 
     def __init__(self, name, webhook_key, code):
         """Initialize the alarm control panel."""
-
         self._name = name
         self._webhook_key = webhook_key
         self._code = code
