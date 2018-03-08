@@ -13,10 +13,10 @@ from aiohttp.web_exceptions import HTTPUnauthorized
 
 import homeassistant.remote as rem
 from homeassistant.core import is_callback
+from homeassistant.const import CONTENT_TYPE_JSON
 
 from .const import KEY_AUTHENTICATED, KEY_REAL_IP
 
-from homeassistant.const import CONTENT_TYPE_JSON
 
 _LOGGER = logging.getLogger(__name__)
 

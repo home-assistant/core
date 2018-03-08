@@ -31,7 +31,7 @@ class CachingStaticResource(StaticResource):
             raise HTTPNotFound() from error
 
         if filepath.is_dir():
-            return (await super()._handle(request))
+            return await super()._handle(request)
         elif filepath.is_file():
             return CachingFileResponse(filepath, chunk_size=self._chunk_size)
         else:
@@ -65,7 +65,7 @@ async def staticresource_middleware(request, handler):
     """Middleware to strip out fingerprint from fingerprinted assets."""
     path = request.path
     if not path.startswith('/static/') and not path.startswith('/frontend'):
-        return (await handler(request))
+        return await handler(request)
 
     fingerprinted = _FINGERPRINT.match(request.match_info['filename'])
 
@@ -73,4 +73,4 @@ async def staticresource_middleware(request, handler):
         request.match_info['filename'] = \
             '{}.{}'.format(*fingerprinted.groups())
 
-    return (await handler(request))
+    return await handler(request)

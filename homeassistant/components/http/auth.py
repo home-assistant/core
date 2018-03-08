@@ -25,7 +25,7 @@ def setup_auth(app, trusted_networks, api_password):
         # If no password set, just always set authenticated=True
         if api_password is None:
             request[KEY_AUTHENTICATED] = True
-            return (await handler(request))
+            return await handler(request)
 
         # Check authentication
         authenticated = False
@@ -49,7 +49,7 @@ def setup_auth(app, trusted_networks, api_password):
             authenticated = True
 
         request[KEY_AUTHENTICATED] = authenticated
-        return (await handler(request))
+        return await handler(request)
 
     async def auth_startup(app):
         """Initialize auth middleware when app starts up."""

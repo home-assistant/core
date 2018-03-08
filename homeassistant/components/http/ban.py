@@ -54,7 +54,7 @@ async def ban_middleware(request, handler):
     """IP Ban middleware."""
     if KEY_BANNED_IPS not in request.app:
         _LOGGER.error('IP Ban middleware loaded but banned IPs not loaded')
-        return (await handler(request))
+        return await handler(request)
 
     # Verify if IP is not banned
     ip_address_ = request[KEY_REAL_IP]
@@ -65,7 +65,7 @@ async def ban_middleware(request, handler):
         raise HTTPForbidden()
 
     try:
-        return (await handler(request))
+        return await handler(request)
     except HTTPUnauthorized:
         await process_wrong_login(request)
         raise

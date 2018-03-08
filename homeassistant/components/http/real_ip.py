@@ -24,7 +24,7 @@ def setup_real_ip(app, use_x_forwarded_for):
             request[KEY_REAL_IP] = \
                 ip_address(request.transport.get_extra_info('peername')[0])
 
-        return (await handler(request))
+        return await handler(request)
 
     async def app_startup(app):
         """Initialize bans when app starts up."""
