@@ -119,9 +119,9 @@ class EfergySensor(Entity):
         """Get the Efergy monitor data from the web service."""
         try:
             if self.type == 'instant_readings':
-                url_string = _RESOURCE + 'getInstant?token=' + self.app_token
+                url_string = _RESOURCE + 'getCurrentValuesSummary?token=' + self.app_token
                 response = get(url_string, timeout=10)
-                self._state = response.json()['reading']
+                self._state = next(iter(response.json()[0]['data'][0].values()))
             elif self.type == 'amount':
                 url_string = _RESOURCE + 'getEnergy?token=' + self.app_token \
                     + '&offset=' + self.utc_offset + '&period=' \
