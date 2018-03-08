@@ -226,7 +226,7 @@ async def async_devices_sync(hass, config: Config, payload):
         serialized = entity.sync_serialize()
 
         if serialized is None:
-            _LOGGER.warning("No mapping for %s domain", entity.state)
+            _LOGGER.debug("No mapping for %s domain", entity.state)
             continue
 
         devices.append(serialized)
