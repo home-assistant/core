@@ -302,7 +302,6 @@ class HueLight(Light):
                 xyb = color_util.color_RGB_to_xy(
                     *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
                 command['xy'] = xyb[0], xyb[1]
-                command['bri'] = xyb[2]
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
