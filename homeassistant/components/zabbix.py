@@ -52,8 +52,8 @@ def setup(hass, config):
     try:
         zapi.login(username, password)
         _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
-    except ZabbixAPIException:
-        _LOGGER.error("Unable to login to the Zabbix API")
+    except ZabbixAPIException as e:
+        _LOGGER.error("Unable to login to the Zabbix API: %s", e)
         return False
 
     hass.data[DOMAIN] = zapi
