@@ -20,7 +20,7 @@ from homeassistant.helpers import entityfilter, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 from homeassistant.components.alexa import smart_home as alexa_sh
-from homeassistant.components.google_assistant import smart_home as ga_sh
+from homeassistant.components.google_assistant import helpers as ga_h
 
 from . import http_api, iot
 from .const import CONFIG_DIR, DOMAIN, SERVERS
@@ -174,7 +174,7 @@ class Cloud:
                 """If an entity should be exposed."""
                 return conf['filter'](entity.entity_id)
 
-            self._gactions_config = ga_sh.Config(
+            self._gactions_config = ga_h.Config(
                 should_expose=should_expose,
                 agent_user_id=self.claims['cognito:username'],
                 entity_config=conf.get(CONF_ENTITY_CONFIG),
