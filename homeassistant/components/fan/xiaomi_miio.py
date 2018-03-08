@@ -24,6 +24,7 @@ DATA_KEY = 'fan.xiaomi_miio'
 
 CONF_MODEL = 'model'
 MODEL_AIRPURIFIER_PRO = 'zhimi.airpurifier.v6'
+MODEL_AIRPURIFIER_V3 = 'zhimi.airpurifier.v3'
 MODEL_AIRHUMIDIFIER_V1 = 'zhimi.humidifier.v1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -125,7 +126,7 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER = {
     ATTR_SLEEP_MODE: 'sleep_mode',
 }
 
-AVAILABLE_ATTRIBUTES_AIRPURIFIERPRO = {
+AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
     **AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON,
     ATTR_FILTER_RFID_PRODUCT_ID: 'filter_rfid_product_id',
     ATTR_FILTER_RFID_TAG: 'filter_rfid_tag',
@@ -133,6 +134,32 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIERPRO = {
     ATTR_ILLUMINANCE: 'illuminance',
     ATTR_MOTOR2_SPEED: 'motor2_speed',
     ATTR_VOLUME: 'volume',
+}
+
+AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
+    ATTR_AIR_QUALITY_INDEX: 'aqi',
+    ATTR_MODE: 'mode',
+    ATTR_LED: 'led',
+    ATTR_BUZZER: 'buzzer',
+    ATTR_CHILD_LOCK: 'child_lock',
+    ATTR_ILLUMINANCE: 'illuminance',
+    ATTR_FILTER_HOURS_USED: 'filter_hours_used',
+    ATTR_FILTER_LIFE: 'filter_life_remaining',
+    ATTR_MOTOR_SPEED: 'motor_speed',
+    # perhaps supported but unconfirmed
+    ATTR_AVERAGE_AIR_QUALITY_INDEX: 'average_aqi',
+    ATTR_VOLUME: 'volume',
+    ATTR_MOTOR2_SPEED: 'motor2_speed',
+    ATTR_FILTER_RFID_PRODUCT_ID: 'filter_rfid_product_id',
+    ATTR_FILTER_RFID_TAG: 'filter_rfid_tag',
+    ATTR_FILTER_TYPE: 'filter_type',
+    ATTR_PURIFY_VOLUME: 'purify_volume',
+    ATTR_LEARN_MODE: 'learn_mode',
+    ATTR_SLEEP_TIME: 'sleep_time',
+    ATTR_SLEEP_LEARN_COUNT: 'sleep_mode_learn_count',
+    ATTR_EXTRA_FEATURES: 'extra_features',
+    ATTR_AUTO_DETECT: 'auto_detect',
+    ATTR_BUTTON_PRESSED: 'button_pressed',
 }
 
 AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER = {
@@ -155,6 +182,11 @@ AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA = {
     ATTR_DEPTH: 'depth',
     ATTR_DRY: 'dry',
 }
+
+OPERATION_MODES_AIRPURIFIER = ['Auto', 'Silent', 'Favorite', 'Idle']
+OPERATION_MODES_AIRPURIFIER_PRO = ['Auto', 'Silent', 'Favorite']
+OPERATION_MODES_AIRPURIFIER_V3 = ['Auto', 'Silent', 'Favorite', 'Idle',
+                                  'Medium', 'High', 'Strong']
 
 SUCCESS = ['ok']
 
@@ -189,6 +221,8 @@ SUPPORT_FLAGS_AIRPURIFIER_PRO = (SUPPORT_SET_SPEED |
                                  SUPPORT_SET_FAVORITE_LEVEL |
                                  SUPPORT_SET_AUTO_DETECT |
                                  SUPPORT_SET_VOLUME)
+
+SUPPORT_FLAGS_AIRPURIFIER_V3 = (SUPPORT_FLAGS_GENERIC | SUPPORT_SET_LED)
 
 SUPPORT_FLAGS_AIRHUMIDIFIER = (SUPPORT_FLAGS_GENERIC |
                                SUPPORT_SET_LED_BRIGHTNESS |
@@ -523,7 +557,11 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
         if self._model == MODEL_AIRPURIFIER_PRO:
             self._supported_features = SUPPORT_FLAGS_AIRPURIFIER_PRO
             self._state_attrs.update({attribute: None for attribute in
-                                      AVAILABLE_ATTRIBUTES_AIRPURIFIERPRO})
+                                      AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO})
+        elif self._model == MODEL_AIRPURIFIER_V3:
+            self._supported_features = SUPPORT_FLAGS_AIRPURIFIER_V3
+            self._state_attrs.update({attribute: None for attribute in
+                                      AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3})
         else:
             self._supported_features = SUPPORT_FLAGS_AIRPURIFIER
             self._state_attrs.update({attribute: None for attribute in
@@ -554,7 +592,12 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
                 self._state_attrs.update(
                     {key: self._extract_value_from_attribute(state, value) for
                      key, value in
-                     AVAILABLE_ATTRIBUTES_AIRPURIFIERPRO.items()})
+                     AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO.items()})
+            elif self._model == MODEL_AIRPURIFIER_V3:
+                self._state_attrs.update(
+                    {key: self._extract_value_from_attribute(state, value) for
+                     key, value in
+                     AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3.items()})
             else:
                 self._state_attrs.update(
                     {key: self._extract_value_from_attribute(state, value) for
@@ -567,11 +610,12 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        from miio.airpurifier import OperationMode
         if self._model == MODEL_AIRPURIFIER_PRO:
-            return [mode.name for mode in OperationMode if mode.name != 'Idle']
+            return OPERATION_MODES_AIRPURIFIER_PRO
+        elif self._model == MODEL_AIRPURIFIER_V3:
+            return OPERATION_MODES_AIRPURIFIER_V3
 
-        return [mode.name for mode in OperationMode]
+        return OPERATION_MODES_AIRPURIFIER
 
     @property
     def speed(self):
