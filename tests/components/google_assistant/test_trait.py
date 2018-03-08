@@ -1,4 +1,6 @@
 """Tests for the Google Assistant traits."""
+import pytest
+
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -13,7 +15,7 @@ from homeassistant.components import (
     script,
     switch,
 )
-from homeassistant.components.google_assistant import trait
+from homeassistant.components.google_assistant import trait, helpers
 
 from tests.common import async_mock_service
 
@@ -466,6 +468,8 @@ async def test_temperature_setting_climate_range(hass):
             ],
             climate.ATTR_TARGET_TEMP_HIGH: 75,
             climate.ATTR_TARGET_TEMP_LOW: 65,
+            climate.ATTR_MIN_TEMP: 50,
+            climate.ATTR_MAX_TEMP: 80,
             ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT,
         }))
     assert trt.sync_attributes() == {
@@ -486,13 +490,13 @@ async def test_temperature_setting_climate_range(hass):
     calls = async_mock_service(
         hass, climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE)
     await trt.execute(hass, trait.COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE, {
-        'thermostatTemperatureSetpointHigh': 30,
+        'thermostatTemperatureSetpointHigh': 25,
         'thermostatTemperatureSetpointLow': 20,
     })
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'climate.bla',
-        climate.ATTR_TARGET_TEMP_HIGH: 86,
+        climate.ATTR_TARGET_TEMP_HIGH: 77,
         climate.ATTR_TARGET_TEMP_LOW: 68,
     }
 
@@ -506,6 +510,12 @@ async def test_temperature_setting_climate_range(hass):
         ATTR_ENTITY_ID: 'climate.bla',
         climate.ATTR_OPERATION_MODE: climate.STATE_AUTO,
     }
+
+    with pytest.raises(helpers.SmartHomeError):
+        await trt.execute(
+            hass, trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, {
+                'thermostatTemperatureSetpoint': -100,
+            })
 
 
 async def test_temperature_setting_climate_setpoint(hass):
@@ -521,6 +531,8 @@ async def test_temperature_setting_climate_setpoint(hass):
                 climate.STATE_OFF,
                 climate.STATE_COOL,
             ],
+            climate.ATTR_MIN_TEMP: 10,
+            climate.ATTR_MAX_TEMP: 30,
             climate.ATTR_TEMPERATURE: 18,
             climate.ATTR_CURRENT_TEMPERATURE: 20,
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
@@ -540,6 +552,13 @@ async def test_temperature_setting_climate_setpoint(hass):
 
     calls = async_mock_service(
         hass, climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE)
+
+    with pytest.raises(helpers.SmartHomeError):
+        await trt.execute(
+            hass, trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, {
+                'thermostatTemperatureSetpoint': -100,
+            })
+
     await trt.execute(hass, trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, {
         'thermostatTemperatureSetpoint': 19,
     })

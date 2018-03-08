@@ -31,3 +31,12 @@ TYPE_THERMOSTAT = PREFIX_TYPES + 'THERMOSTAT'
 SERVICE_REQUEST_SYNC = 'request_sync'
 HOMEGRAPH_URL = 'https://homegraph.googleapis.com/'
 REQUEST_SYNC_BASE_URL = HOMEGRAPH_URL + 'v1/devices:requestSync'
+
+# Error codes used for SmartHomeError class
+# https://developers.google.com/actions/smarthome/create-app#error_responses
+ERR_DEVICE_OFFLINE = "deviceOffline"
+ERR_DEVICE_NOT_FOUND = "deviceNotFound"
+ERR_VALUE_OUT_OF_RANGE = "valueOutOfRange"
+ERR_NOT_SUPPORTED = "notSupported"
+ERR_PROTOCOL_ERROR = 'protocolError'
+ERR_UNKNOWN_ERROR = 'unknownError'

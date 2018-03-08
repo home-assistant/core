@@ -22,6 +22,9 @@ from homeassistant.const import (
 )
 from homeassistant.util import color as color_util, temperature as temp_util
 
+from .const import ERR_VALUE_OUT_OF_RANGE
+from .helpers import SmartHomeError
+
 PREFIX_TRAITS = 'action.devices.traits.'
 TRAIT_ONOFF = PREFIX_TRAITS + 'OnOff'
 TRAIT_BRIGHTNESS = PREFIX_TRAITS + 'Brightness'
@@ -452,26 +455,50 @@ class TemperatureSettingTrait(_Trait):
         """Execute a temperature point or mode command."""
         # All sent in temperatures are always in Celsius
         unit = self.state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        min_temp = self.state.attributes[climate.ATTR_MIN_TEMP]
+        max_temp = self.state.attributes[climate.ATTR_MAX_TEMP]
 
         if command == COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT:
+            temp = temp_util.convert(params['thermostatTemperatureSetpoint'],
+                                     TEMP_CELSIUS, unit)
+
+            if temp < min_temp or temp > max_temp:
+                raise SmartHomeError(
+                    ERR_VALUE_OUT_OF_RANGE,
+                    "Temperature should be between {} and {}".format(min_temp,
+                                                                     max_temp))
+
             await hass.services.async_call(
                 climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    climate.ATTR_TEMPERATURE: temp_util.convert(
-                        params['thermostatTemperatureSetpoint'], TEMP_CELSIUS,
-                        unit)
+                    climate.ATTR_TEMPERATURE: temp
                 }, blocking=True)
 
         elif command == COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE:
+            temp_high = temp_util.convert(
+                params['thermostatTemperatureSetpointHigh'], TEMP_CELSIUS,
+                unit)
+
+            if temp_high < min_temp or temp_high > max_temp:
+                raise SmartHomeError(
+                    ERR_VALUE_OUT_OF_RANGE,
+                    "Upper bound for temperature range should be between "
+                    "{} and {}".format(min_temp, max_temp))
+
+            temp_low = temp_util.convert(
+                params['thermostatTemperatureSetpointLow'], TEMP_CELSIUS, unit)
+
+            if temp_low < min_temp or temp_low > max_temp:
+                raise SmartHomeError(
+                    ERR_VALUE_OUT_OF_RANGE,
+                    "Lower bound for temperature range should be between "
+                    "{} and {}".format(min_temp, max_temp))
+
             await hass.services.async_call(
                 climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    climate.ATTR_TARGET_TEMP_HIGH: temp_util.convert(
-                        params['thermostatTemperatureSetpointHigh'],
-                        TEMP_CELSIUS, unit),
-                    climate.ATTR_TARGET_TEMP_LOW: temp_util.convert(
-                        params['thermostatTemperatureSetpointLow'],
-                        TEMP_CELSIUS, unit),
+                    climate.ATTR_TARGET_TEMP_HIGH: temp_high,
+                    climate.ATTR_TARGET_TEMP_LOW: temp_low,
                 }, blocking=True)
 
         elif command == COMMAND_THERMOSTAT_SET_MODE:

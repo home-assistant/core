@@ -24,7 +24,10 @@ from . import trait
 from .const import (
     TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_THERMOSTAT,
     CONF_ALIASES, CONF_ROOM_HINT,
+    ERR_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
+    ERR_UNKNOWN_ERROR
 )
+from .helpers import SmartHomeError
 
 HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
@@ -158,45 +161,26 @@ class _GoogleEntity:
         self.state = self.hass.states.get(self.entity_id)
 
 
-# Error codes used for SmartHomeError class
-ERR_DEVICE_OFFLINE = "deviceOffline"
-ERR_DEVICE_NOT_FOUND = "deviceNotFound"
-ERR_VALUE_OUT_OF_RANGE = "valueOutOfRange"
-ERR_NOT_SUPPORTED = "notSupported"
-
-
-class SmartHomeError(Exception):
-    """Google Assistant Smart Home errors."""
-
-    def __init__(self, code, msg):
-        """Log error code."""
-        super().__init__(msg)
-        _LOGGER.error(
-            "An error has occurred in Google SmartHome: %s."
-            "Error code: %s", msg, code
-        )
-        self.code = code
-
-
-class Config:
-    """Hold the configuration for Google Assistant."""
-
-    def __init__(self, should_expose, agent_user_id, entity_config=None):
-        """Initialize the configuration."""
-        self.should_expose = should_expose
-        self.agent_user_id = agent_user_id
-        self.entity_config = entity_config or {}
-
-
 async def async_handle_message(hass, config, message):
     """Handle incoming API messages."""
+    response = await _process(hass, config, message)
+
+    if 'errorCode' in response['payload']:
+        _LOGGER.error('Error handling message %s: %s',
+                      message, response['payload'])
+
+    return response
+
+
+async def _process(hass, config, message):
+    """Process a message."""
     request_id = message.get('requestId')  # type: str
     inputs = message.get('inputs')  # type: list
 
     if len(inputs) != 1:
         return {
             'requestId': request_id,
-            'payload': {'errorCode': 'protocolError'}
+            'payload': {'errorCode': ERR_PROTOCOL_ERROR}
         }
 
     handler = HANDLERS.get(inputs[0].get('intent'))
@@ -204,15 +188,27 @@ async def async_handle_message(hass, config, message):
     if handler is None:
         return {
             'requestId': request_id,
-            'payload': {'errorCode': 'protocolError'}
+            'payload': {'errorCode': ERR_PROTOCOL_ERROR}
         }
 
-    result = await handler(hass, config, inputs[0].get('payload'))
-    return {'requestId': request_id, 'payload': result}
+    try:
+        result = await handler(hass, config, inputs[0].get('payload'))
+        return {'requestId': request_id, 'payload': result}
+    except SmartHomeError as err:
+        return {
+            'requestId': request_id,
+            'payload': {'errorCode': err.code}
+        }
+    except Exception as err:  # pylint: disable=bare-except
+        _LOGGER.exception('Unexpected error')
+        return {
+            'requestId': request_id,
+            'payload': {'errorCode': ERR_UNKNOWN_ERROR}
+        }
 
 
 @HANDLERS.register('action.devices.SYNC')
-async def async_devices_sync(hass, config: Config, payload):
+async def async_devices_sync(hass, config, payload):
     """Handle action.devices.SYNC request.
 
     https://developers.google.com/actions/smarthome/create-app#actiondevicessync
@@ -294,7 +290,7 @@ async def handle_devices_execute(hass, config, payload):
                                                   execution.get('params', {}))
             except SmartHomeError as err:
                 results[entity_id] = {
-                    'ids': entity_id,
+                    'ids': [entity_id],
                     'status': 'ERROR',
                     'errorCode': err.code
                 }

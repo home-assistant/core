@@ -25,7 +25,8 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_EXPOSE,
     )
-from .smart_home import async_handle_message, Config
+from .smart_home import async_handle_message
+from .helpers import Config
 
 _LOGGER = logging.getLogger(__name__)
 

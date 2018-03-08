@@ -1,11 +1,14 @@
 """Test Google Smart Home."""
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 from homeassistant.setup import async_setup_component
+from homeassistant.components import climate
 from homeassistant.components.google_assistant import (
-    const, trait, smart_home as sh)
+    const, trait, helpers, smart_home as sh)
 from homeassistant.components.light.demo import DemoLight
 
 
-BASIC_CONFIG = sh.Config(
+BASIC_CONFIG = helpers.Config(
     should_expose=lambda state: True,
     agent_user_id='test-agent',
 )
@@ -29,7 +32,7 @@ async def test_sync_message(hass):
     # Excluded via config
     hass.states.async_set('light.not_expose', 'on')
 
-    config = sh.Config(
+    config = helpers.Config(
         should_expose=lambda state: state.entity_id != 'light.not_expose',
         agent_user_id='test-agent',
         entity_config={
@@ -197,6 +200,47 @@ async def test_execute(hass):
                         'temperature': 2631,
                     },
                 }
+            }]
+        }
+    }
+
+
+async def test_raising_error_trait(hass):
+    """Test raising an error while executing a trait command."""
+    hass.states.async_set('climate.bla', climate.STATE_HEAT, {
+        climate.ATTR_MIN_TEMP: 15,
+        climate.ATTR_MAX_TEMP: 30,
+        ATTR_SUPPORTED_FEATURES: climate.SUPPORT_OPERATION_MODE,
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+    })
+    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
+        "requestId": REQ_ID,
+        "inputs": [{
+            "intent": "action.devices.EXECUTE",
+            "payload": {
+                "commands": [{
+                    "devices": [
+                        {"id": "climate.bla"},
+                    ],
+                    "execution": [{
+                        "command": "action.devices.commands."
+                                   "ThermostatTemperatureSetpoint",
+                        "params": {
+                            "thermostatTemperatureSetpoint": 10
+                        }
+                    }]
+                }]
+            }
+        }]
+    })
+
+    assert result == {
+        "requestId": REQ_ID,
+        "payload": {
+            "commands": [{
+                "ids": ['climate.bla'],
+                "status": "ERROR",
+                "errorCode": "valueOutOfRange"
             }]
         }
     }
