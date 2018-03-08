@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         if device is None:
             _LOGGER.warning("Unable to find Channels with entity_id: %s",
-                            str(entity_id))
+                            entity_id)
             return
 
         if service.service == SERVICE_SEEK_FORWARD:
