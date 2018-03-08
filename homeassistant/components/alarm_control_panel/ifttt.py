@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_CODE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['requests>=2.18.4', 'pyfttt>=0.3']
+REQUIREMENTS = ['requests==2.18.4', 'pyfttt==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
