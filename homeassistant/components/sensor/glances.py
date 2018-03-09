@@ -42,7 +42,7 @@ SENSOR_TYPES = {
     'process_thread': ['Thread', 'Count', 'mdi:memory'],
     'process_sleeping': ['Sleeping', 'Count', 'mdi:memory'],
     'cpu_temp': ['CPU Temp', TEMP_CELSIUS, 'mdi:thermometer'],
-    'docker_active': ['Docker containers active', 'Count', 'mdi:docker'],
+    'docker_active': ['Containers active', '', 'mdi:docker'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
