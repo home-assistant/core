@@ -1,5 +1,5 @@
 """Provide cors support for the HTTP component."""
-import asyncio
+
 
 from aiohttp.hdrs import ACCEPT, ORIGIN, CONTENT_TYPE
 
@@ -27,8 +27,7 @@ def setup_cors(app, origins):
         ) for host in origins
     })
 
-    @asyncio.coroutine
-    def cors_startup(app):
+    async def cors_startup(app):
         """Initialize cors when app starts up."""
         cors_added = set()
 

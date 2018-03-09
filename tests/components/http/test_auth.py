@@ -1,6 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
 # pylint: disable=protected-access
-import asyncio
 from ipaddress import ip_network
 from unittest.mock import patch
 
@@ -30,8 +29,7 @@ TRUSTED_ADDRESSES = ['100.64.0.1', '192.0.2.100', 'FD01:DB8::1',
 UNTRUSTED_ADDRESSES = ['198.51.100.1', '2001:DB8:FA1::1', '127.0.0.1', '::1']
 
 
-@asyncio.coroutine
-def mock_handler(request):
+async def mock_handler(request):
     """Return if request was authenticated."""
     if not request[KEY_AUTHENTICATED]:
         raise HTTPUnauthorized
@@ -47,84 +45,79 @@ def app():
     return app
 
 
-@asyncio.coroutine
-def test_auth_middleware_loaded_by_default(hass):
+async def test_auth_middleware_loaded_by_default(hass):
     """Test accessing to server from banned IP when feature is off."""
     with patch('homeassistant.components.http.setup_auth') as mock_setup:
-        yield from async_setup_component(hass, 'http', {
+        await async_setup_component(hass, 'http', {
             'http': {}
         })
 
     assert len(mock_setup.mock_calls) == 1
 
 
-@asyncio.coroutine
-def test_access_without_password(app, test_client):
+async def test_access_without_password(app, test_client):
     """Test access without password."""
     setup_auth(app, [], None)
-    client = yield from test_client(app)
+    client = await test_client(app)
 
-    resp = yield from client.get('/')
+    resp = await client.get('/')
     assert resp.status == 200
 
 
-@asyncio.coroutine
-def test_access_with_password_in_header(app, test_client):
+async def test_access_with_password_in_header(app, test_client):
     """Test access with password in URL."""
     setup_auth(app, [], API_PASSWORD)
-    client = yield from test_client(app)
+    client = await test_client(app)
 
-    req = yield from client.get(
+    req = await client.get(
         '/', headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
     assert req.status == 200
 
-    req = yield from client.get(
+    req = await client.get(
         '/', headers={HTTP_HEADER_HA_AUTH: 'wrong-pass'})
     assert req.status == 401
 
 
-@asyncio.coroutine
-def test_access_with_password_in_query(app, test_client):
+async def test_access_with_password_in_query(app, test_client):
     """Test access without password."""
     setup_auth(app, [], API_PASSWORD)
-    client = yield from test_client(app)
+    client = await test_client(app)
 
-    resp = yield from client.get('/', params={
+    resp = await client.get('/', params={
         'api_password': API_PASSWORD
     })
     assert resp.status == 200
 
-    resp = yield from client.get('/')
+    resp = await client.get('/')
     assert resp.status == 401
 
-    resp = yield from client.get('/', params={
+    resp = await client.get('/', params={
         'api_password': 'wrong-password'
     })
     assert resp.status == 401
 
 
-@asyncio.coroutine
-def test_basic_auth_works(app, test_client):
+async def test_basic_auth_works(app, test_client):
     """Test access with basic authentication."""
     setup_auth(app, [], API_PASSWORD)
-    client = yield from test_client(app)
+    client = await test_client(app)
 
-    req = yield from client.get(
+    req = await client.get(
         '/',
         auth=BasicAuth('homeassistant', API_PASSWORD))
     assert req.status == 200
 
-    req = yield from client.get(
+    req = await client.get(
         '/',
         auth=BasicAuth('wrong_username', API_PASSWORD))
     assert req.status == 401
 
-    req = yield from client.get(
+    req = await client.get(
         '/',
         auth=BasicAuth('homeassistant', 'wrong password'))
     assert req.status == 401
 
-    req = yield from client.get(
+    req = await client.get(
         '/',
         headers={
             'authorization': 'NotBasic abcdefg'
@@ -132,8 +125,7 @@ def test_basic_auth_works(app, test_client):
     assert req.status == 401
 
 
-@asyncio.coroutine
-def test_access_with_trusted_ip(test_client):
+async def test_access_with_trusted_ip(test_client):
     """Test access with an untrusted ip address."""
     app = web.Application()
     app.router.add_get('/', mock_handler)
@@ -141,16 +133,16 @@ def test_access_with_trusted_ip(test_client):
     setup_auth(app, TRUSTED_NETWORKS, 'some-pass')
 
     set_mock_ip = mock_real_ip(app)
-    client = yield from test_client(app)
+    client = await test_client(app)
 
     for remote_addr in UNTRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
-        resp = yield from client.get('/')
+        resp = await client.get('/')
         assert resp.status == 401, \
             "{} shouldn't be trusted".format(remote_addr)
 
     for remote_addr in TRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
-        resp = yield from client.get('/')
+        resp = await client.get('/')
         assert resp.status == 200, \
             "{} should be trusted".format(remote_addr)
