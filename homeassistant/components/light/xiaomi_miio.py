@@ -380,7 +380,8 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
     async def async_set_delayed_turn_off(self, time_period: timedelta):
         """Set delayed turn off."""
-        if self._additional_supported_features & SUPPORT_SET_DELAYED_TURN_OFF == 0:
+        if self._additional_supported_features & \
+                SUPPORT_SET_DELAYED_TURN_OFF == 0:
             return
 
         await self._try_command(
@@ -677,7 +678,8 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
     async def async_set_delayed_turn_off(self, time_period: timedelta):
         """Set delayed turn off."""
-        if self._additional_supported_features & SUPPORT_SET_DELAYED_TURN_OFF == 0:
+        if self._additional_supported_features & \
+                SUPPORT_SET_DELAYED_TURN_OFF == 0:
             return
 
         await self._try_command(
