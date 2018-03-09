@@ -17,6 +17,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
     SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.color import color_temperature_mired_to_kelvin
 from homeassistant.helpers.restore_state import async_get_last_state
 
 REQUIREMENTS = ['limitlessled==1.1.0']
@@ -223,6 +224,16 @@ class LimitlessLEDGroup(Light):
         return self._brightness
 
     @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return 154
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return 370
+
+    @property
     def color_temp(self):
         """Return the temperature property."""
         return self._temperature
@@ -310,8 +321,11 @@ class LimitlessLEDGroup(Light):
 
     def limitlessled_temperature(self):
         """Convert Home Assistant color temperature units to percentage."""
-        width = self.max_mireds - self.min_mireds
-        temperature = 1 - (self._temperature - self.min_mireds) / width
+        max_kelvin = color_temperature_mired_to_kelvin(self.min_mireds)
+        min_kelvin = color_temperature_mired_to_kelvin(self.max_mireds)
+        width = max_kelvin - min_kelvin
+        kelvin = color_temperature_mired_to_kelvin(self._temperature)
+        temperature = (kelvin - min_kelvin) / width
         return max(0, min(1, temperature))
 
     def limitlessled_brightness(self):
