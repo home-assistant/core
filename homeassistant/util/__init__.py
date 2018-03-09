@@ -280,9 +280,11 @@ class Throttle(object):
         # Make sure we return a coroutine if the method is async.
         if asyncio.iscoroutinefunction(method):
             async def throttled_value():
+                """Stand-in function for when real func is being throttled."""
                 return None
         else:
             def throttled_value():
+                """Stand-in function for when real func is being throttled."""
                 return None
 
         @wraps(method)
