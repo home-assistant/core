@@ -66,14 +66,14 @@ SUPPORT_NIGHT_LIGHT_MODE = 8
 SUPPORT_EYECARE_MODE = 16
 
 ADDITIONAL_SUPPORT_FLAGS_GENERIC = (
-            SUPPORT_SET_SCENE |
-            SUPPORT_SET_DELAYED_TURN_OFF)
+    SUPPORT_SET_SCENE |
+    SUPPORT_SET_DELAYED_TURN_OFF)
 
 ADDITIONAL_SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT = (
-            ADDITIONAL_SUPPORT_FLAGS_GENERIC |
-            SUPPORT_REMINDER |
-            SUPPORT_NIGHT_LIGHT_MODE |
-            SUPPORT_EYECARE_MODE)
+    ADDITIONAL_SUPPORT_FLAGS_GENERIC |
+    SUPPORT_REMINDER |
+    SUPPORT_NIGHT_LIGHT_MODE |
+    SUPPORT_EYECARE_MODE)
 
 SERVICE_SET_SCENE = 'xiaomi_miio_set_scene'
 SERVICE_SET_DELAYED_TURN_OFF = 'xiaomi_miio_set_delayed_turn_off'
@@ -462,7 +462,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
     @property
     def supported_features(self):
         """Return the supported features."""
-        return (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 
     @property
     def _additional_supported_features(self):
