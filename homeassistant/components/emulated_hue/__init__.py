@@ -4,7 +4,6 @@ Support for local control of entities by emulating the Phillips Hue bridge.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/emulated_hue/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
