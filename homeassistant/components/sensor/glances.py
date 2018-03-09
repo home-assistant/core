@@ -159,7 +159,7 @@ class GlancesSensor(Entity):
             elif self.type == 'docker_count':
                 count = 0
                 for container in value['docker']['containers']:
-                    if container['Status'] = 'running':
+                    if container['Status'] == 'running':
                         count += 1
                 self._state = count
 
