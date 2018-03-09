@@ -59,25 +59,21 @@ ATTR_AUTOMATIC_COLOR_TEMPERATURE = 'automatic_color_temperature'
 ATTR_REMINDER = 'reminder'
 ATTR_EYECARE_MODE = 'eyecare_mode'
 
-SUPPORT_SET_SCENE = 4
-SUPPORT_SET_DELAYED_TURN_OFF = 8
-SUPPORT_REMINDER = 16
-SUPPORT_NIGHT_LIGHT_MODE = 32
-SUPPORT_EYECARE_MODE = 64
+SUPPORT_SET_SCENE = 1
+SUPPORT_SET_DELAYED_TURN_OFF = 2
+SUPPORT_REMINDER = 4
+SUPPORT_NIGHT_LIGHT_MODE = 8
+SUPPORT_EYECARE_MODE = 16
 
-SUPPORT_FLAGS_GENERIC = (SUPPORT_BRIGHTNESS | SUPPORT_SET_SCENE |
-                         SUPPORT_SET_DELAYED_TURN_OFF)
+ADDITIONAL_SUPPORT_FLAGS_GENERIC = (
+            SUPPORT_SET_SCENE |
+            SUPPORT_SET_DELAYED_TURN_OFF)
 
-SUPPORT_FLAGS_BULB = (SUPPORT_FLAGS_GENERIC | SUPPORT_COLOR_TEMP)
-
-SUPPORT_FLAGS_CEILING = (SUPPORT_FLAGS_GENERIC | SUPPORT_COLOR_TEMP)
-
-SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT = (SUPPORT_FLAGS_GENERIC |
-                                      SUPPORT_REMINDER |
-                                      SUPPORT_NIGHT_LIGHT_MODE |
-                                      SUPPORT_EYECARE_MODE)
-
-SUPPORT_FLAGS_SREAD1_AMBIENT_LIGHT = (SUPPORT_BRIGHTNESS)
+ADDITIONAL_SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT = (
+            ADDITIONAL_SUPPORT_FLAGS_GENERIC |
+            SUPPORT_REMINDER |
+            SUPPORT_NIGHT_LIGHT_MODE |
+            SUPPORT_EYECARE_MODE)
 
 SERVICE_SET_SCENE = 'xiaomi_miio_set_scene'
 SERVICE_SET_DELAYED_TURN_OFF = 'xiaomi_miio_set_delayed_turn_off'
@@ -258,6 +254,11 @@ class XiaomiPhilipsAbstractLight(Light):
         """Return the supported features."""
         return 0
 
+    @property
+    def _additional_supported_features(self):
+        """Return the supported features of the device."""
+        return 0
+
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a light command handling error messages."""
         from miio import DeviceException
@@ -312,7 +313,12 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
     @property
     def supported_features(self):
         """Return the supported features."""
-        return SUPPORT_FLAGS_GENERIC
+        return SUPPORT_BRIGHTNESS
+
+    @property
+    def _additional_supported_features(self):
+        """Return the supported features of the device."""
+        return ADDITIONAL_SUPPORT_FLAGS_GENERIC
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -365,7 +371,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
     async def async_set_scene(self, scene: int = 1):
         """Set the fixed scene."""
-        if self.supported_features & SUPPORT_SET_SCENE == 0:
+        if self._additional_supported_features & SUPPORT_SET_SCENE == 0:
             return
 
         await self._try_command(
@@ -374,7 +380,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
     async def async_set_delayed_turn_off(self, time_period: timedelta):
         """Set delayed turn off."""
-        if self.supported_features & SUPPORT_SET_DELAYED_TURN_OFF == 0:
+        if self._additional_supported_features & SUPPORT_SET_DELAYED_TURN_OFF == 0:
             return
 
         await self._try_command(
@@ -455,7 +461,12 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
     @property
     def supported_features(self):
         """Return the supported features."""
-        return SUPPORT_FLAGS_BULB
+        return (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
+
+    @property
+    def _additional_supported_features(self):
+        """Return the supported features of the device."""
+        return ADDITIONAL_SUPPORT_FLAGS_GENERIC
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -578,9 +589,9 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         return 370
 
     @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_FLAGS_CEILING
+    def _additional_supported_features(self):
+        """Return the supported features of the device."""
+        return ADDITIONAL_SUPPORT_FLAGS_GENERIC
 
     async def async_update(self):
         """Fetch state from the device."""
@@ -630,7 +641,12 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
     @property
     def supported_features(self):
         """Return the supported features."""
-        return SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT
+        return SUPPORT_BRIGHTNESS
+
+    @property
+    def _additional_supported_features(self):
+        """Return the supported features of the device."""
+        return ADDITIONAL_SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT
 
     async def async_update(self):
         """Fetch state from the device."""
@@ -661,7 +677,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
     async def async_set_delayed_turn_off(self, time_period: timedelta):
         """Set delayed turn off."""
-        if self.supported_features & SUPPORT_SET_DELAYED_TURN_OFF == 0:
+        if self._additional_supported_features & SUPPORT_SET_DELAYED_TURN_OFF == 0:
             return
 
         await self._try_command(
@@ -670,7 +686,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
     async def async_reminder_on(self):
         """Enable the eye fatigue notification."""
-        if self.supported_features & SUPPORT_REMINDER == 0:
+        if self._additional_supported_features & SUPPORT_REMINDER == 0:
             return
 
         await self._try_command(
@@ -679,7 +695,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
     async def async_reminder_off(self):
         """Disable the eye fatigue notification."""
-        if self.supported_features & SUPPORT_REMINDER == 0:
+        if self._additional_supported_features & SUPPORT_REMINDER == 0:
             return
 
         await self._try_command(
@@ -688,7 +704,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
     async def async_night_light_mode_on(self):
         """Turn the smart night light mode on."""
-        if self.supported_features & SUPPORT_NIGHT_LIGHT_MODE == 0:
+        if self._additional_supported_features & SUPPORT_NIGHT_LIGHT_MODE == 0:
             return
 
         await self._try_command(
@@ -697,7 +713,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
     async def async_night_light_mode_off(self):
         """Turn the smart night light mode off."""
-        if self.supported_features & SUPPORT_NIGHT_LIGHT_MODE == 0:
+        if self._additional_supported_features & SUPPORT_NIGHT_LIGHT_MODE == 0:
             return
 
         await self._try_command(
@@ -706,7 +722,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
     async def async_eyecare_mode_on(self):
         """Turn the eyecare mode on."""
-        if self.supported_features & SUPPORT_EYECARE_MODE == 0:
+        if self._additional_supported_features & SUPPORT_EYECARE_MODE == 0:
             return
 
         await self._try_command(
@@ -715,7 +731,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
     async def async_eyecare_mode_off(self):
         """Turn the eyecare mode off."""
-        if self.supported_features & SUPPORT_EYECARE_MODE == 0:
+        if self._additional_supported_features & SUPPORT_EYECARE_MODE == 0:
             return
 
         await self._try_command(
@@ -756,7 +772,7 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
     @property
     def supported_features(self):
         """Return the supported features."""
-        return SUPPORT_FLAGS_SREAD1_AMBIENT_LIGHT
+        return SUPPORT_BRIGHTNESS
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
