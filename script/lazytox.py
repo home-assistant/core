@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Lazy 'tox' to quickly check if branch is up to PR standards.
 
@@ -12,16 +12,14 @@ import shlex
 from collections import namedtuple
 
 try:
-    from colorlog.escape_codes import parse_colors
+    from colorlog.escape_codes import escape_codes
 except ImportError:
-    def parse_colors(_):
-        """Empty parse_colors function."""
-        return ''
+    escape_codes = None
 
 
 RE_ASCII = re.compile(r"\033\[[^m]*m")
-Error = namedtuple('ERROR',
-                   "file line col msg")  # pylint: disable=invalid-name
+Error = namedtuple('Error', ['file', 'line', 'col', 'msg'])
+
 PASS = 'green'
 FAIL = 'bold_red'
 
@@ -29,8 +27,11 @@ FAIL = 'bold_red'
 def printc(the_color, *args):
     """Color print helper."""
     msg = ' '.join(args)
+    if not escape_codes:
+        print(msg)
+        return
     try:
-        print(parse_colors(the_color) + msg + parse_colors('reset'))
+        print(escape_codes[the_color] + msg + escape_codes['reset'])
     except KeyError:
         print(msg)
         raise ValueError("Invalid color {}".format(the_color))
@@ -63,7 +64,7 @@ async def async_exec(*args, display=False):
             argsp.append("\\\n  {}".format(shlex.quote(arg)))
         else:
             argsp.append(shlex.quote(arg))
-    printc('cyan', ' '.join(argsp))
+    printc('cyan', *argsp)
     try:
         kwargs = {'loop': LOOP, 'stdout': asyncio.subprocess.PIPE,
                   'stderr': asyncio.subprocess.STDOUT}
