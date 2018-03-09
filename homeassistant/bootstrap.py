@@ -113,7 +113,10 @@ def async_from_config_dict(config: Dict[str, Any],
         yield from hass.async_add_job(loader.prepare, hass)
 
     # Make a copy because we are mutating it.
-    config = OrderedDict(config)
+    new_config = OrderedDict()
+    for key, value in config.items():
+        new_config[key] = value or {}
+    config = new_config
 
     # Merge packages
     conf_util.merge_packages_config(
