@@ -29,7 +29,7 @@ from homeassistant.components.config.customize import (
     CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
 
 from tests.common import (
-    get_test_config_dir, get_test_home_assistant, mock_coro)
+    get_test_config_dir, get_test_home_assistant, mock_coro, patch_yaml_files)
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -514,35 +514,32 @@ class TestConfig(unittest.TestCase):
         assert len(self.hass.config.whitelist_external_dirs) == 1
         assert "/test/config/www" in self.hass.config.whitelist_external_dirs
 
-    @mock.patch('asyncio.create_subprocess_exec')
-    def test_check_ha_config_file_correct(self, mock_create):
+    @mock.patch('os.path.isfile', return_value=True)
+    def test_check_ha_config_file_correct(self, mock_file):
         """Check that restart propagates to stop."""
-        process_mock = mock.MagicMock()
-        attrs = {
-            'communicate.return_value': mock_coro((b'output', None)),
-            'wait.return_value': mock_coro(0)}
-        process_mock.configure_mock(**attrs)
-        mock_create.return_value = mock_coro(process_mock)
+        conf = (
+            'homeassistant:\n'
+            '  name: Home\n'
+            '  latitude: -26.107361\n'
+            '  longitude: 28.054500\n'
+            '  elevation: 1600\n'
+            '  unit_system: metric\n'
+            '  time_zone: GMT\n'
+            '\n\n'
+        )
+        with patch_yaml_files({YAML_PATH: conf}):
+            assert run_coroutine_threadsafe(
+                config_util.async_check_ha_config_file(self.hass),
+                self.hass.loop
+            ).result() is None
 
-        assert run_coroutine_threadsafe(
-            config_util.async_check_ha_config_file(self.hass), self.hass.loop
-        ).result() is None
-
-    @mock.patch('asyncio.create_subprocess_exec')
-    def test_check_ha_config_file_wrong(self, mock_create):
+    @mock.patch('os.path.isfile', return_value=False)
+    def test_check_ha_config_file_wrong(self, mock_file):
         """Check that restart with a bad config doesn't propagate to stop."""
-        process_mock = mock.MagicMock()
-        attrs = {
-            'communicate.return_value':
-                mock_coro(('\033[34mhello'.encode('utf-8'), None)),
-            'wait.return_value': mock_coro(1)}
-        process_mock.configure_mock(**attrs)
-        mock_create.return_value = mock_coro(process_mock)
-
         assert run_coroutine_threadsafe(
             config_util.async_check_ha_config_file(self.hass),
             self.hass.loop
-        ).result() == 'hello'
+        ).result() == 'File configuration.yaml not found.'
 
 
 # pylint: disable=redefined-outer-name
