@@ -1,6 +1,5 @@
 """Component to configure Home Assistant via an API."""
 import asyncio
-import os
 
 import voluptuous as vol
 
