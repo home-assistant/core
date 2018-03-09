@@ -12,33 +12,38 @@ import homeassistant.helpers.config_validation as cv
 REQUIREMENTS = ['watchdog==0.8.3']
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FOLDERS = 'folders'
+CONF_FOLDER = 'folder'
 CONF_FILTERS = 'filters'
+CONF_WATCHERS = 'watchers'
 DEFAULT_FILTER = '*'
 DOMAIN = "folder_watcher"
 EVENT_TYPE = "event_type"
 FILE = 'file'
 FOLDER = 'folder'
 
+WATCHER_CONFIG_SCHEMA = vol.Schema([{
+        vol.Required(CONF_FOLDER): cv.isdir,
+        vol.Optional(CONF_FILTERS, default=[DEFAULT_FILTER]): vol.All(
+            cv.ensure_list, [cv.string]),
+}])
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_FOLDERS):
-            vol.All(cv.ensure_list, [cv.isdir]),
-        vol.Optional(CONF_FILTERS, default=[DEFAULT_FILTER]):
-            vol.All(cv.ensure_list, [cv.string]),
-        }),
+        vol.Optional(CONF_WATCHERS): WATCHER_CONFIG_SCHEMA,
+    }),
 }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Set up the folder watcher."""
     conf = config[DOMAIN]
-    paths = conf[CONF_FOLDERS]
-    patterns = conf[CONF_FILTERS]
+    watchers = conf[CONF_WATCHERS]
 
     def run_setup(event):
         """"Wait for HA start then setup."""
-        for path in paths:
+        for watcher in watchers:
+            path = watcher[CONF_FOLDER]
+            patterns = watcher[CONF_FILTERS]
             if not hass.config.is_allowed_path(path):
                 _LOGGER.error("folder %s is not valid or allowed", path)
                 return False
