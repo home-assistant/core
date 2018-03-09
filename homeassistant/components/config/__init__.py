@@ -1,6 +1,5 @@
 """Component to configure Home Assistant via an API."""
 import asyncio
-import os
 
 import voluptuous as vol
 
@@ -9,7 +8,9 @@ from homeassistant.const import EVENT_COMPONENT_LOADED, CONF_ID
 from homeassistant.setup import (
     async_prepare_setup_platform, ATTR_COMPONENT)
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.util.yaml import load_yaml, dump
+from homeassistant.util.yaml import dump
+from homeassistant.config import load_yaml_config_file
+from homeassistant.exceptions import HomeAssistantError
 
 DOMAIN = 'config'
 DEPENDENCIES = ['http']
@@ -144,9 +145,10 @@ class BaseEditConfigView(HomeAssistantView):
     @asyncio.coroutine
     def read_config(self, hass):
         """Read the config."""
-        current = yield from hass.async_add_job(
-            _read, hass.config.path(self.path))
-        if not current:
+        try:
+            current = yield from hass.async_add_job(
+                load_yaml_config_file, hass.config.path(self.path))
+        except HomeAssistantError:
             current = self._empty_config()
         return current
 
@@ -188,14 +190,6 @@ class EditIdBasedConfigView(BaseEditConfigView):
             data.append(value)
 
         value.update(new_value)
-
-
-def _read(path):
-    """Read YAML helper."""
-    if not os.path.isfile(path):
-        return None
-
-    return load_yaml(path)
 
 
 def _write(path, data):
