@@ -1,5 +1,4 @@
 """Tests for the HTTP component."""
-import asyncio
 from ipaddress import ip_address
 
 from aiohttp import web
@@ -18,18 +17,16 @@ def mock_real_ip(app):
         nonlocal ip_to_mock
         ip_to_mock = value
 
-    @asyncio.coroutine
     @web.middleware
-    def mock_real_ip(request, handler):
+    async def mock_real_ip(request, handler):
         """Mock Real IP middleware."""
         nonlocal ip_to_mock
 
         request[KEY_REAL_IP] = ip_address(ip_to_mock)
 
-        return (yield from handler(request))
+        return (await handler(request))
 
-    @asyncio.coroutine
-    def real_ip_startup(app):
+    async def real_ip_startup(app):
         """Startup of real ip."""
         app.middlewares.insert(0, mock_real_ip)
 

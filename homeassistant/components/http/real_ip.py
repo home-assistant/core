@@ -1,5 +1,5 @@
 """Middleware to fetch real IP."""
-import asyncio
+
 from ipaddress import ip_address
 
 from aiohttp.web import middleware
@@ -14,8 +14,7 @@ from .const import KEY_REAL_IP
 def setup_real_ip(app, use_x_forwarded_for):
     """Create IP Ban middleware for the app."""
     @middleware
-    @asyncio.coroutine
-    def real_ip_middleware(request, handler):
+    async def real_ip_middleware(request, handler):
         """Real IP middleware."""
         if (use_x_forwarded_for and
                 X_FORWARDED_FOR in request.headers):
@@ -25,10 +24,9 @@ def setup_real_ip(app, use_x_forwarded_for):
             request[KEY_REAL_IP] = \
                 ip_address(request.transport.get_extra_info('peername')[0])
 
-        return (yield from handler(request))
+        return await handler(request)
 
-    @asyncio.coroutine
-    def app_startup(app):
+    async def app_startup(app):
         """Initialize bans when app starts up."""
         app.middlewares.append(real_ip_middleware)
 
