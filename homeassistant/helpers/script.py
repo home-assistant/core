@@ -1,5 +1,5 @@
 """Helpers to execute scripts."""
-import asyncio
+
 import logging
 from itertools import islice
 from typing import Optional, Sequence
@@ -68,8 +68,7 @@ class Script():
         run_coroutine_threadsafe(
             self.async_run(variables), self.hass.loop).result()
 
-    @asyncio.coroutine
-    def async_run(self, variables: Optional[Sequence] = None) -> None:
+    async def async_run(self, variables: Optional[Sequence] = None) -> None:
         """Run script.
 
         This method is a coroutine.
@@ -151,7 +150,7 @@ class Script():
                 self._async_fire_event(action, variables)
 
             else:
-                yield from self._async_call_service(action, variables)
+                await self._async_call_service(action, variables)
 
         self._cur = -1
         self.last_action = None
@@ -172,15 +171,14 @@ class Script():
         if self._change_listener:
             self.hass.async_add_job(self._change_listener)
 
-    @asyncio.coroutine
-    def _async_call_service(self, action, variables):
+    async def _async_call_service(self, action, variables):
         """Call the service specified in the action.
 
         This method is a coroutine.
         """
         self.last_action = action.get(CONF_ALIAS, 'call service')
         self._log("Executing step %s" % self.last_action)
-        yield from service.async_call_from_config(
+        await service.async_call_from_config(
             self.hass, action, True, variables, validate_config=False)
 
     def _async_fire_event(self, action, variables):

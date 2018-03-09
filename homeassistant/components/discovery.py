@@ -71,6 +71,7 @@ SERVICE_HANDLERS = {
     'sabnzbd': ('sensor', 'sabnzbd'),
     'bose_soundtouch': ('media_player', 'soundtouch'),
     'bluesound': ('media_player', 'bluesound'),
+    'songpal': ('media_player', 'songpal'),
 }
 
 CONF_IGNORE = 'ignore'
