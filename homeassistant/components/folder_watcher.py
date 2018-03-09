@@ -42,19 +42,6 @@ def setup(hass, config):
     return True
 
 
-def on_any_event(hass, event):
-    """On Watcher event, fire HA event."""
-    if not event.is_directory:
-        file_name = os.path.split(event.src_path)[1]
-        folder_name = os.path.split(event.src_path)[0]
-        hass.bus.fire(
-            DOMAIN, {
-                EVENT_TYPE: event.event_type,
-                FILE: file_name,
-                FOLDER: folder_name
-                })
-
-
 def create_event_handler(patterns, hass):
     from watchdog.events import PatternMatchingEventHandler
 
@@ -66,8 +53,16 @@ def create_event_handler(patterns, hass):
             self.hass = hass
 
         def process(self, event):
-            """Process the Watchdog event."""
-            on_any_event(self.hass, event)
+            """On Watcher event, fire HA event."""
+            if not event.is_directory:
+                file_name = os.path.split(event.src_path)[1]
+                folder_name = os.path.split(event.src_path)[0]
+                self.hass.bus.fire(
+                    DOMAIN, {
+                        EVENT_TYPE: event.event_type,
+                        FILE: file_name,
+                        FOLDER: folder_name
+                        })
 
         def on_modified(self, event):
             self.process(event)
