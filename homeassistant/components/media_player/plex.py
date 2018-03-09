@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.plex/
 """
 import json
 import logging
+import datetime
 
 from datetime import timedelta
 
@@ -38,6 +39,8 @@ CONF_INCLUDE_NON_CLIENTS = 'include_non_clients'
 CONF_USE_EPISODE_ART = 'use_episode_art'
 CONF_USE_CUSTOM_ENTITY_IDS = 'use_custom_entity_ids'
 CONF_SHOW_ALL_CONTROLS = 'show_all_controls'
+CONF_PURGE_UNAVAILABLE_CLIENTS = 'purge_unavailable_clients'
+CONF_CLIENT_PURGE_INTERVAL = 'client_purge_interval'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCLUDE_NON_CLIENTS, default=False):
@@ -46,6 +49,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.boolean,
     vol.Optional(CONF_USE_CUSTOM_ENTITY_IDS, default=False):
     cv.boolean,
+    vol.Optional(CONF_PURGE_UNAVAILABLE_CLIENTS, default=True):
+    cv.boolean,
+    vol.Optional(CONF_CLIENT_PURGE_INTERVAL, default=0):
+    cv.positive_int,
 })
 
 PLEX_DATA = "plex"
@@ -154,10 +161,13 @@ def setup_plexserver(
             return
 
         new_plex_clients = []
+        available_ids = []
         for device in devices:
             # For now, let's allow all deviceClass types
             if device.deviceClass in ['badClient']:
                 continue
+
+            available_ids.append(device.machineIdentifier)
 
             if device.machineIdentifier not in plex_clients:
                 new_client = PlexClient(config, device, None,
@@ -188,6 +198,18 @@ def setup_plexserver(
 
         if new_plex_clients:
             add_devices_callback(new_plex_clients)
+
+        # Figure out if device is unavailable and if it should be removed
+        for cid in hass.data[PLEX_DATA].keys():
+            cclient = plex_clients[cid]
+            config_purge_int = config.get(CONF_CLIENT_PURGE_INTERVAL)
+            cclient.set_availability(cid in available_ids)
+            if config.get(CONF_PURGE_UNAVAILABLE_CLIENTS)\
+                    and cclient.unavailable_time is not None \
+                    and cclient.marked_for_purge is not True \
+                    and cclient.unavailable_time.seconds > config_purge_int:
+                cclient.mark_for_purge()
+                hass.helpers.event.async_call_later(60, cclient.async_remove())
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_sessions():
@@ -259,6 +281,9 @@ class PlexClient(MediaPlayerDevice):
         """Initialize the Plex device."""
         self._app_name = ''
         self._device = None
+        self._is_device_available = False
+        self._marked_unavailable = None
+        self._marked_for_purge = False
         self._device_protocol_capabilities = None
         self._is_player_active = False
         self._is_player_available = False
@@ -407,6 +432,22 @@ class PlexClient(MediaPlayerDevice):
 
         self._media_image_url = thumb_url
 
+    def set_availability(self, available):
+        """Sets the device as available/unavailable and
+            notes the time it was set unavailable"""
+        if not available:
+            self._clear_media_details()
+            if self._marked_unavailable is None:
+                self._marked_unavailable = datetime.datetime.now()
+        else:
+            self._marked_unavailable = None
+
+        self._is_device_available = available
+
+    def mark_for_purge(self):
+        """Mark this device for purging from entity db"""
+        self._marked_for_purge = True
+
     def _set_player_state(self):
         if self._player_state == 'playing':
             self._is_player_active = True
@@ -467,6 +508,23 @@ class PlexClient(MediaPlayerDevice):
     def unique_id(self):
         """Return the id of this plex client."""
         return self.machine_identifier
+
+    @property
+    def available(self):
+        """Returns the availability of the client"""
+        return self._is_device_available
+
+    @property
+    def unavailable_time(self):
+        """Returns the timedelta of how long client has been unavailable"""
+        if self._marked_unavailable:
+            return datetime.datetime.now() - self._marked_unavailable
+        return None
+
+    @property
+    def marked_for_purge(self):
+        """Returns if device has been marked to be purged from entity db"""
+        return self._marked_for_purge
 
     @property
     def name(self):
