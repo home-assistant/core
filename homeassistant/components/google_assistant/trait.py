@@ -330,9 +330,20 @@ class ColorTemperatureTrait(_Trait):
 
     async def execute(self, hass, command, params):
         """Execute a color temperature command."""
+        temp = color_util.color_temperature_kelvin_to_mired(
+            params['color']['temperature'])
+        min_temp = self.state.attributes[light.ATTR_MIN_MIREDS]
+        max_temp = self.state.attributes[light.ATTR_MAX_MIREDS]
+
+        if temp < min_temp or temp > max_temp:
+            raise SmartHomeError(
+                ERR_VALUE_OUT_OF_RANGE,
+                "Temperature should be between {} and {}".format(min_temp,
+                                                                 max_temp))
+
         await hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id,
-            light.ATTR_KELVIN: params['color']['temperature'],
+            light.ATTR_COLOR_TEMP: temp,
         }, blocking=True)
 
 

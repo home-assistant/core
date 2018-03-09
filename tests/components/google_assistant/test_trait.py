@@ -15,7 +15,8 @@ from homeassistant.components import (
     script,
     switch,
 )
-from homeassistant.components.google_assistant import trait, helpers
+from homeassistant.components.google_assistant import trait, helpers, const
+from homeassistant.util import color
 
 from tests.common import async_mock_service
 
@@ -399,6 +400,15 @@ async def test_color_temperature_light(hass):
     })
 
     calls = async_mock_service(hass, light.DOMAIN, SERVICE_TURN_ON)
+
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(hass, trait.COMMAND_COLOR_ABSOLUTE, {
+            'color': {
+                'temperature': 5555
+            }
+        })
+    assert err.value.code == const.ERR_VALUE_OUT_OF_RANGE
+
     await trt.execute(hass, trait.COMMAND_COLOR_ABSOLUTE, {
         'color': {
             'temperature': 2857
@@ -407,7 +417,7 @@ async def test_color_temperature_light(hass):
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'light.bla',
-        light.ATTR_KELVIN: 2857
+        light.ATTR_COLOR_TEMP: color.color_temperature_kelvin_to_mired(2857)
     }
 
 
@@ -511,11 +521,12 @@ async def test_temperature_setting_climate_range(hass):
         climate.ATTR_OPERATION_MODE: climate.STATE_AUTO,
     }
 
-    with pytest.raises(helpers.SmartHomeError):
+    with pytest.raises(helpers.SmartHomeError) as err:
         await trt.execute(
             hass, trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, {
                 'thermostatTemperatureSetpoint': -100,
             })
+    assert err.value.code == const.ERR_VALUE_OUT_OF_RANGE
 
 
 async def test_temperature_setting_climate_setpoint(hass):
