@@ -76,7 +76,7 @@ If the user input passes validation, you can again return one of the three
 return values. If you want to navigate the user to the next step, return the
 return value of that step:
 
-    return (await self.async_step_account())
+    return await self.async_step_account()
 
 ### Abort
 
@@ -110,7 +110,7 @@ should follow the same return values as a normal step.
 If the result of the step is to show a form, the user will be able to continue
 the flow from the config panel.
 """
-import asyncio
+
 import logging
 import os
 import uuid
@@ -126,7 +126,8 @@ _LOGGER = logging.getLogger(__name__)
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
-    'config_entry_example'
+    'config_entry_example',
+    'hue',
 ]
 
 SOURCE_USER = 'user'
@@ -176,14 +177,13 @@ class ConfigEntry:
         # State of the entry (LOADED, NOT_LOADED)
         self.state = state
 
-    @asyncio.coroutine
-    def async_setup(self, hass, *, component=None):
+    async def async_setup(self, hass, *, component=None):
         """Set up an entry."""
         if component is None:
             component = getattr(hass.components, self.domain)
 
         try:
-            result = yield from component.async_setup_entry(hass, self)
+            result = await component.async_setup_entry(hass, self)
 
             if not isinstance(result, bool):
                 _LOGGER.error('%s.async_config_entry did not return boolean',
@@ -199,8 +199,7 @@ class ConfigEntry:
         else:
             self.state = ENTRY_STATE_SETUP_ERROR
 
-    @asyncio.coroutine
-    def async_unload(self, hass):
+    async def async_unload(self, hass):
         """Unload an entry.
 
         Returns if unload is possible and was successful.
@@ -213,7 +212,7 @@ class ConfigEntry:
             return False
 
         try:
-            result = yield from component.async_unload_entry(hass, self)
+            result = await component.async_unload_entry(hass, self)
 
             if not isinstance(result, bool):
                 _LOGGER.error('%s.async_unload_entry did not return boolean',
@@ -293,8 +292,7 @@ class ConfigEntries:
             return list(self._entries)
         return [entry for entry in self._entries if entry.domain == domain]
 
-    @asyncio.coroutine
-    def async_remove(self, entry_id):
+    async def async_remove(self, entry_id):
         """Remove an entry."""
         found = None
         for index, entry in enumerate(self._entries):
@@ -308,25 +306,23 @@ class ConfigEntries:
         entry = self._entries.pop(found)
         self._async_schedule_save()
 
-        unloaded = yield from entry.async_unload(self.hass)
+        unloaded = await entry.async_unload(self.hass)
 
         return {
             'require_restart': not unloaded
         }
 
-    @asyncio.coroutine
-    def async_load(self):
+    async def async_load(self):
         """Load the config."""
         path = self.hass.config.path(PATH_CONFIG)
         if not os.path.isfile(path):
             self._entries = []
             return
 
-        entries = yield from self.hass.async_add_job(load_json, path)
+        entries = await self.hass.async_add_job(load_json, path)
         self._entries = [ConfigEntry(**entry) for entry in entries]
 
-    @asyncio.coroutine
-    def _async_add_entry(self, entry):
+    async def _async_add_entry(self, entry):
         """Add an entry."""
         self._entries.append(entry)
         self._async_schedule_save()
@@ -334,10 +330,10 @@ class ConfigEntries:
         # Setup entry
         if entry.domain in self.hass.config.components:
             # Component already set up, just need to call setup_entry
-            yield from entry.async_setup(self.hass)
+            await entry.async_setup(self.hass)
         else:
             # Setting up component will also load the entries
-            yield from async_setup_component(
+            await async_setup_component(
                 self.hass, entry.domain, self._hass_config)
 
     @callback
@@ -350,13 +346,12 @@ class ConfigEntries:
             SAVE_DELAY, self.hass.async_add_job, self._async_save
         )
 
-    @asyncio.coroutine
-    def _async_save(self):
+    async def _async_save(self):
         """Save the entity registry to a file."""
         self._sched_save = None
         data = [entry.as_dict() for entry in self._entries]
 
-        yield from self.hass.async_add_job(
+        await self.hass.async_add_job(
             save_json, self.hass.config.path(PATH_CONFIG), data)
 
 
@@ -379,8 +374,7 @@ class FlowManager:
             'source': flow.source,
         } for flow in self._progress.values()]
 
-    @asyncio.coroutine
-    def async_init(self, domain, *, source=SOURCE_USER, data=None):
+    async def async_init(self, domain, *, source=SOURCE_USER, data=None):
         """Start a configuration flow."""
         handler = HANDLERS.get(domain)
 
@@ -393,7 +387,7 @@ class FlowManager:
                 raise self.hass.helpers.UnknownHandler
 
             # Make sure requirements and dependencies of component are resolved
-            yield from async_process_deps_reqs(
+            await async_process_deps_reqs(
                 self.hass, self._hass_config, domain, component)
 
         flow_id = uuid.uuid4().hex
@@ -408,10 +402,9 @@ class FlowManager:
         else:
             step = source
 
-        return (yield from self._async_handle_step(flow, step, data))
+        return await self._async_handle_step(flow, step, data)
 
-    @asyncio.coroutine
-    def async_configure(self, flow_id, user_input=None):
+    async def async_configure(self, flow_id, user_input=None):
         """Start or continue a configuration flow."""
         flow = self._progress.get(flow_id)
 
@@ -423,8 +416,8 @@ class FlowManager:
         if data_schema is not None and user_input is not None:
             user_input = data_schema(user_input)
 
-        return (yield from self._async_handle_step(
-            flow, step_id, user_input))
+        return await self._async_handle_step(
+            flow, step_id, user_input)
 
     @callback
     def async_abort(self, flow_id):
@@ -432,8 +425,7 @@ class FlowManager:
         if self._progress.pop(flow_id, None) is None:
             raise UnknownFlow
 
-    @asyncio.coroutine
-    def _async_handle_step(self, flow, step_id, user_input):
+    async def _async_handle_step(self, flow, step_id, user_input):
         """Handle a step of a flow."""
         method = "async_step_{}".format(step_id)
 
@@ -442,7 +434,7 @@ class FlowManager:
             raise UnknownStep("Handler {} doesn't support step {}".format(
                 flow.__class__.__name__, step_id))
 
-        result = yield from getattr(flow, method)(user_input)
+        result = await getattr(flow, method)(user_input)
 
         if result['type'] not in (RESULT_TYPE_FORM, RESULT_TYPE_CREATE_ENTRY,
                                   RESULT_TYPE_ABORT):
@@ -466,7 +458,7 @@ class FlowManager:
             data=result.pop('data'),
             source=flow.source
         )
-        yield from self._async_add_entry(entry)
+        await self._async_add_entry(entry)
         return result
 
 

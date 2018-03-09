@@ -348,9 +348,15 @@ class TestComponentsGroup(unittest.TestCase):
             'empty_group': {'name': 'Empty Group', 'entities': None},
         }})
 
+        group.Group.create_group(
+            self.hass, 'all tests',
+            ['test.one', 'test.two'],
+            user_defined=False)
+
         assert sorted(self.hass.states.entity_ids()) == \
-            ['group.empty_group', 'group.second_group', 'group.test_group']
-        assert self.hass.bus.listeners['state_changed'] == 2
+            ['group.all_tests', 'group.empty_group', 'group.second_group',
+             'group.test_group']
+        assert self.hass.bus.listeners['state_changed'] == 3
 
         with patch('homeassistant.config.load_yaml_config_file', return_value={
             'group': {
@@ -362,8 +368,9 @@ class TestComponentsGroup(unittest.TestCase):
             group.reload(self.hass)
             self.hass.block_till_done()
 
-        assert self.hass.states.entity_ids() == ['group.hello']
-        assert self.hass.bus.listeners['state_changed'] == 1
+        assert sorted(self.hass.states.entity_ids()) == \
+            ['group.all_tests', 'group.hello']
+        assert self.hass.bus.listeners['state_changed'] == 2
 
     def test_changing_group_visibility(self):
         """Test that a group can be hidden and shown."""

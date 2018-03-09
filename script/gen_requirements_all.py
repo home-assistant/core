@@ -5,6 +5,7 @@ import os
 import pkgutil
 import re
 import sys
+import fnmatch
 
 COMMENT_REQUIREMENTS = (
     'RPi.GPIO',
@@ -31,13 +32,13 @@ COMMENT_REQUIREMENTS = (
     'envirophat',
     'i2csense',
     'credstash',
-    'pytradfri',
     'bme680',
 )
 
 TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
+    'aiohue',
     'apns2',
     'caldav',
     'coinmarketcap',
@@ -93,9 +94,7 @@ TEST_REQUIREMENTS = (
 
 IGNORE_PACKAGES = (
     'homeassistant.components.recorder.models',
-    'homeassistant.components.homekit.accessories',
-    'homeassistant.components.homekit.covers',
-    'homeassistant.components.homekit.sensors'
+    'homeassistant.components.homekit.*'
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
@@ -161,7 +160,10 @@ def gather_modules():
         try:
             module = importlib.import_module(package)
         except ImportError:
-            if package not in IGNORE_PACKAGES:
+            for pattern in IGNORE_PACKAGES:
+                if fnmatch.fnmatch(package, pattern):
+                    break
+            else:
                 errors.append(package)
             continue
 

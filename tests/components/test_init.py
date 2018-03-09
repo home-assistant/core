@@ -212,7 +212,7 @@ def test_turn_on_intent(hass):
     )
     yield from hass.async_block_till_done()
 
-    assert response.speech['plain']['speech'] == 'Turned on test light'
+    assert response.speech['plain']['speech'] == 'Turned test light on'
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == 'light'
@@ -234,7 +234,7 @@ def test_turn_off_intent(hass):
     )
     yield from hass.async_block_till_done()
 
-    assert response.speech['plain']['speech'] == 'Turned off test light'
+    assert response.speech['plain']['speech'] == 'Turned test light off'
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == 'light'
@@ -283,7 +283,7 @@ def test_turn_on_multiple_intent(hass):
     )
     yield from hass.async_block_till_done()
 
-    assert response.speech['plain']['speech'] == 'Turned on test lights'
+    assert response.speech['plain']['speech'] == 'Turned test lights 2 on'
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == 'light'

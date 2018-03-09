@@ -43,7 +43,7 @@ def async_setup(hass, config):
     hass.http.register_view(ClearCompletedItemsView)
 
     hass.components.conversation.async_register(INTENT_ADD_ITEM, [
-        'Add {item} to my shopping list',
+        'Add [the] [a] [an] {item} to my shopping list',
     ])
     hass.components.conversation.async_register(INTENT_LAST_ITEMS, [
         'What is on my shopping list'
@@ -173,10 +173,9 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
     url = '/api/shopping_list/item/{item_id}'
     name = "api:shopping_list:item:id"
 
-    @callback
-    def post(self, request, item_id):
+    async def post(self, request, item_id):
         """Update a shopping list item."""
-        data = yield from request.json()
+        data = await request.json()
 
         try:
             item = request.app['hass'].data[DOMAIN].async_update(item_id, data)

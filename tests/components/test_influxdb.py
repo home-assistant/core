@@ -14,6 +14,9 @@ from tests.common import get_test_home_assistant
 
 
 @mock.patch('influxdb.InfluxDBClient')
+@mock.patch(
+    'homeassistant.components.influxdb.InfluxThread.batch_timeout',
+    mock.Mock(return_value=0))
 class TestInfluxDB(unittest.TestCase):
     """Test the InfluxDB component."""
 
@@ -209,6 +212,37 @@ class TestInfluxDB(unittest.TestCase):
                 mock.call(body)
             )
             mock_client.return_value.write_points.reset_mock()
+
+    def test_event_listener_inf(self, mock_client):
+        """Test the event listener for missing units."""
+        self._setup()
+
+        attrs = {'bignumstring':  "9" * 999}
+        state = mock.MagicMock(
+            state=8, domain='fake', entity_id='fake.entity-id',
+            object_id='entity', attributes=attrs)
+        event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+        body = [{
+            'measurement': 'fake.entity-id',
+            'tags': {
+                'domain': 'fake',
+                'entity_id': 'entity',
+            },
+            'time': 12345,
+            'fields': {
+                'value': 8,
+            },
+        }]
+        self.handler_method(event)
+        self.hass.data[influxdb.DOMAIN].block_till_done()
+        self.assertEqual(
+            mock_client.return_value.write_points.call_count, 1
+        )
+        self.assertEqual(
+            mock_client.return_value.write_points.call_args,
+            mock.call(body)
+        )
+        mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_states(self, mock_client):
         """Test the event listener against ignored states."""

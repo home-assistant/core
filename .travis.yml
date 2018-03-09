@@ -6,12 +6,10 @@ addons:
 matrix:
   fast_finish: true
   include:
-    - python: "3.4.2"
+    - python: "3.5.3"
       env: TOXENV=lint
-    - python: "3.4.2"
+    - python: "3.5.3"
       env: TOXENV=pylint
-    - python: "3.4.2"
-      env: TOXENV=py34
     # - python: "3.5"
     #   env: TOXENV=typing
     - python: "3.5.3"
@@ -30,4 +28,15 @@ cache:
 install: pip install -U tox coveralls
 language: python
 script: travis_wait 30 tox --develop
+services:
+  - docker
+before_deploy:
+  - docker pull lokalise/lokalise-cli@sha256:79b3108211ed1fcc9f7b09a011bfc53c240fc2f3b7fa7f0c8390f593271b4cd7
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: script/travis_deploy
+  on:
+    branch: dev
+    condition: $TOXENV = lint
 after_success: coveralls

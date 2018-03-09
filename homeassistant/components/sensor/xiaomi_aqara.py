@@ -7,6 +7,14 @@ from homeassistant.const import TEMP_CELSIUS
 
 _LOGGER = logging.getLogger(__name__)
 
+SENSOR_TYPES = {
+    'temperature': [TEMP_CELSIUS, 'mdi:thermometer'],
+    'humidity': ['%', 'mdi:water-percent'],
+    'illumination': ['lm', 'mdi:weather-sunset'],
+    'lux': ['lx', 'mdi:weather-sunset'],
+    'pressure': ['hPa', 'mdi:gauge']
+}
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
@@ -43,18 +51,20 @@ class XiaomiSensor(XiaomiDevice):
         XiaomiDevice.__init__(self, device, name, xiaomi_hub)
 
     @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        try:
+            return SENSOR_TYPES.get(self._data_key)[1]
+        except TypeError:
+            return None
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        if self._data_key == 'temperature':
-            return TEMP_CELSIUS
-        elif self._data_key == 'humidity':
-            return '%'
-        elif self._data_key == 'illumination':
-            return 'lm'
-        elif self._data_key == 'lux':
-            return 'lx'
-        elif self._data_key == 'pressure':
-            return 'hPa'
+        try:
+            return SENSOR_TYPES.get(self._data_key)[0]
+        except TypeError:
+            return None
 
     @property
     def state(self):

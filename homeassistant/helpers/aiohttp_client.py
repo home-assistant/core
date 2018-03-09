@@ -35,14 +35,7 @@ def async_get_clientsession(hass, verify_ssl=True):
         key = DATA_CLIENTSESSION_NOTVERIFY
 
     if key not in hass.data:
-        connector = _async_get_connector(hass, verify_ssl)
-        clientsession = aiohttp.ClientSession(
-            loop=hass.loop,
-            connector=connector,
-            headers={USER_AGENT: SERVER_SOFTWARE}
-        )
-        _async_register_clientsession_shutdown(hass, clientsession)
-        hass.data[key] = clientsession
+        hass.data[key] = async_create_clientsession(hass, verify_ssl)
 
     return hass.data[key]
 
@@ -106,29 +99,28 @@ def async_aiohttp_proxy_web(hass, request, web_coro, buffer_size=102400,
         req.close()
 
 
-@asyncio.coroutine
 @bind_hass
-def async_aiohttp_proxy_stream(hass, request, stream, content_type,
-                               buffer_size=102400, timeout=10):
+async def async_aiohttp_proxy_stream(hass, request, stream, content_type,
+                                     buffer_size=102400, timeout=10):
     """Stream a stream to aiohttp web response."""
     response = web.StreamResponse()
     response.content_type = content_type
-    yield from response.prepare(request)
+    await response.prepare(request)
 
     try:
         while True:
             with async_timeout.timeout(timeout, loop=hass.loop):
-                data = yield from stream.read(buffer_size)
+                data = await stream.read(buffer_size)
 
             if not data:
-                yield from response.write_eof()
+                await response.write_eof()
                 break
 
-            response.write(data)
+            await response.write(data)
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
         # Something went wrong fetching data, close connection gracefully
-        yield from response.write_eof()
+        await response.write_eof()
 
     except asyncio.CancelledError:
         # The user closed the connection

@@ -26,7 +26,7 @@ REQUIREMENTS = ['python-miio==0.3.7']
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_LEARN = 'xiaomi_miio_learn_command'
-PLATFORM = 'xiaomi_miio'
+DATA_KEY = 'remote.xiaomi_miio'
 
 CONF_SLOT = 'slot'
 CONF_COMMANDS = 'commands'
@@ -70,7 +70,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # Create handler
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
-    device = ChuangmiIr(host, token)
+
+    # The Chuang Mi IR Remote Controller wants to be re-discovered every
+    # 5 minutes. As long as polling is disabled the device should be
+    # re-discovered (lazy_discover=False) in front of every command.
+    device = ChuangmiIr(host, token, lazy_discover=False)
 
     # Check that we can communicate with device.
     try:
@@ -79,8 +83,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("Token not accepted by device : %s", ex)
         return
 
-    if PLATFORM not in hass.data:
-        hass.data[PLATFORM] = {}
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {}
 
     friendly_name = config.get(CONF_NAME, "xiaomi_miio_" +
                                host.replace('.', '_'))
@@ -93,7 +97,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         friendly_name, device, slot, timeout,
         hidden, config.get(CONF_COMMANDS))
 
-    hass.data[PLATFORM][host] = xiaomi_miio_remote
+    hass.data[DATA_KEY][host] = xiaomi_miio_remote
 
     async_add_devices([xiaomi_miio_remote])
 
@@ -106,7 +110,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         entity_id = service.data.get(ATTR_ENTITY_ID)
         entity = None
-        for remote in hass.data[PLATFORM].values():
+        for remote in hass.data[DATA_KEY].values():
             if remote.entity_id == entity_id:
                 entity = remote
 

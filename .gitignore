@@ -103,3 +103,6 @@ desktop.ini
 
 # mypy
 /.mypy_cache/*
+
+# Secrets
+.lokalise_token

@@ -237,7 +237,7 @@ def test_http_api(hass, test_client):
     calls = async_mock_service(hass, 'homeassistant', 'turn_on')
 
     resp = yield from client.post('/api/conversation/process', json={
-        'text': 'Turn kitchen on'
+        'text': 'Turn the kitchen on'
     })
     assert resp.status == 200
 
@@ -267,3 +267,56 @@ def test_http_api_wrong_data(hass, test_client):
     resp = yield from client.post('/api/conversation/process', json={
     })
     assert resp.status == 400
+
+
+def test_create_matcher():
+    """Test the create matcher method."""
+    # Basic sentence
+    pattern = conversation._create_matcher('Hello world')
+    assert pattern.match('Hello world') is not None
+
+    # Match a part
+    pattern = conversation._create_matcher('Hello {name}')
+    match = pattern.match('hello world')
+    assert match is not None
+    assert match.groupdict()['name'] == 'world'
+    no_match = pattern.match('Hello world, how are you?')
+    assert no_match is None
+
+    # Optional and matching part
+    pattern = conversation._create_matcher('Turn on [the] {name}')
+    match = pattern.match('turn on the kitchen lights')
+    assert match is not None
+    assert match.groupdict()['name'] == 'kitchen lights'
+    match = pattern.match('turn on kitchen lights')
+    assert match is not None
+    assert match.groupdict()['name'] == 'kitchen lights'
+    match = pattern.match('turn off kitchen lights')
+    assert match is None
+
+    # Two different optional parts, 1 matching part
+    pattern = conversation._create_matcher('Turn on [the] [a] {name}')
+    match = pattern.match('turn on the kitchen lights')
+    assert match is not None
+    assert match.groupdict()['name'] == 'kitchen lights'
+    match = pattern.match('turn on kitchen lights')
+    assert match is not None
+    assert match.groupdict()['name'] == 'kitchen lights'
+    match = pattern.match('turn on a kitchen light')
+    assert match is not None
+    assert match.groupdict()['name'] == 'kitchen light'
+
+    # Strip plural
+    pattern = conversation._create_matcher('Turn {name}[s] on')
+    match = pattern.match('turn kitchen lights on')
+    assert match is not None
+    assert match.groupdict()['name'] == 'kitchen light'
+
+    # Optional 2 words
+    pattern = conversation._create_matcher('Turn [the great] {name} on')
+    match = pattern.match('turn the great kitchen lights on')
+    assert match is not None
+    assert match.groupdict()['name'] == 'kitchen lights'
+    match = pattern.match('turn kitchen lights on')
+    assert match is not None
+    assert match.groupdict()['name'] == 'kitchen lights'

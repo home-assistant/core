@@ -1,6 +1,7 @@
 """Module to handle messages from Home Assistant cloud."""
 import asyncio
 import logging
+import pprint
 
 from aiohttp import hdrs, client_exceptions, WSMsgType
 
@@ -154,7 +155,9 @@ class CloudIoT:
                     disconnect_warn = 'Received invalid JSON.'
                     break
 
-                _LOGGER.debug("Received message: %s", msg)
+                if _LOGGER.isEnabledFor(logging.DEBUG):
+                    _LOGGER.debug("Received message:\n%s\n",
+                                  pprint.pformat(msg))
 
                 response = {
                     'msgid': msg['msgid'],
@@ -176,7 +179,9 @@ class CloudIoT:
                     _LOGGER.exception("Error handling message")
                     response['error'] = 'exception'
 
-                _LOGGER.debug("Publishing message: %s", response)
+                if _LOGGER.isEnabledFor(logging.DEBUG):
+                    _LOGGER.debug("Publishing message:\n%s\n",
+                                  pprint.pformat(response))
                 yield from client.send_json(response)
 
         except client_exceptions.WSServerHandshakeError as err:

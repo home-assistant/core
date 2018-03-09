@@ -10,12 +10,11 @@ from homeassistant.util.async import (
 import homeassistant.util.dt as dt_util
 
 from .event import async_track_time_interval, async_track_point_in_time
-from .entity_registry import EntityRegistry
+from .entity_registry import async_get_registry
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
 PLATFORM_NOT_READY_RETRIES = 10
-DATA_REGISTRY = 'entity_registry'
 
 
 class EntityPlatform(object):
@@ -52,9 +51,8 @@ class EntityPlatform(object):
             self.parallel_updates = asyncio.Semaphore(
                 parallel_updates, loop=hass.loop)
 
-    @asyncio.coroutine
-    def async_setup(self, platform, platform_config, discovery_info=None,
-                    tries=0):
+    async def async_setup(self, platform, platform_config, discovery_info=None,
+                          tries=0):
         """Setup the platform."""
         logger = self.logger
         hass = self.hass
@@ -79,7 +77,7 @@ class EntityPlatform(object):
                     None, platform.setup_platform, hass, platform_config,
                     self._schedule_add_entities, discovery_info
                 )
-            yield from asyncio.wait_for(
+            await asyncio.wait_for(
                 asyncio.shield(task, loop=hass.loop),
                 SLOW_SETUP_MAX_WAIT, loop=hass.loop)
 
@@ -89,7 +87,7 @@ class EntityPlatform(object):
                 self._tasks.clear()
 
                 if pending:
-                    yield from asyncio.wait(
+                    await asyncio.wait(
                         pending, loop=self.hass.loop)
 
             hass.config.components.add(full_name)
@@ -143,8 +141,7 @@ class EntityPlatform(object):
             self.async_add_entities(list(new_entities), update_before_add),
             self.hass.loop).result()
 
-    @asyncio.coroutine
-    def async_add_entities(self, new_entities, update_before_add=False):
+    async def async_add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform async.
 
         This method must be run in the event loop.
@@ -156,19 +153,14 @@ class EntityPlatform(object):
         hass = self.hass
         component_entities = set(hass.states.async_entity_ids(self.domain))
 
-        registry = hass.data.get(DATA_REGISTRY)
-
-        if registry is None:
-            registry = hass.data[DATA_REGISTRY] = EntityRegistry(hass)
-
-        yield from registry.async_ensure_loaded()
+        registry = await async_get_registry(hass)
 
         tasks = [
             self._async_add_entity(entity, update_before_add,
                                    component_entities, registry)
             for entity in new_entities]
 
-        yield from asyncio.wait(tasks, loop=self.hass.loop)
+        await asyncio.wait(tasks, loop=self.hass.loop)
         self.async_entities_added_callback()
 
         if self._async_unsub_polling is not None or \
@@ -180,9 +172,8 @@ class EntityPlatform(object):
             self.hass, self._update_entity_states, self.scan_interval
         )
 
-    @asyncio.coroutine
-    def _async_add_entity(self, entity, update_before_add, component_entities,
-                          registry):
+    async def _async_add_entity(self, entity, update_before_add,
+                                component_entities, registry):
         """Helper method to add an entity to the platform."""
         if entity is None:
             raise ValueError('Entity cannot be None')
@@ -194,7 +185,7 @@ class EntityPlatform(object):
         # Update properties before we generate the entity_id
         if update_before_add:
             try:
-                yield from entity.async_device_update(warning=False)
+                await entity.async_device_update(warning=False)
             except Exception:  # pylint: disable=broad-except
                 self.logger.exception(
                     "%s: Error on device update!", self.platform_name)
@@ -226,6 +217,7 @@ class EntityPlatform(object):
 
             entity.entity_id = entry.entity_id
             entity.registry_name = entry.name
+            entry.add_update_listener(entity)
 
         # We won't generate an entity ID if the platform has already set one
         # We will however make sure that platform cannot pick a registered ID
@@ -263,12 +255,11 @@ class EntityPlatform(object):
         component_entities.add(entity.entity_id)
 
         if hasattr(entity, 'async_added_to_hass'):
-            yield from entity.async_added_to_hass()
+            await entity.async_added_to_hass()
 
-        yield from entity.async_update_ha_state()
+        await entity.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_reset(self):
+    async def async_reset(self):
         """Remove all entities and reset data.
 
         This method must be run in the event loop.
@@ -279,16 +270,15 @@ class EntityPlatform(object):
         tasks = [self._async_remove_entity(entity_id)
                  for entity_id in self.entities]
 
-        yield from asyncio.wait(tasks, loop=self.hass.loop)
+        await asyncio.wait(tasks, loop=self.hass.loop)
 
         if self._async_unsub_polling is not None:
             self._async_unsub_polling()
             self._async_unsub_polling = None
 
-    @asyncio.coroutine
-    def async_remove_entity(self, entity_id):
+    async def async_remove_entity(self, entity_id):
         """Remove entity id from platform."""
-        yield from self._async_remove_entity(entity_id)
+        await self._async_remove_entity(entity_id)
 
         # Clean up polling job if no longer needed
         if (self._async_unsub_polling is not None and
@@ -297,18 +287,16 @@ class EntityPlatform(object):
             self._async_unsub_polling()
             self._async_unsub_polling = None
 
-    @asyncio.coroutine
-    def _async_remove_entity(self, entity_id):
+    async def _async_remove_entity(self, entity_id):
         """Remove entity id from platform."""
         entity = self.entities.pop(entity_id)
 
         if hasattr(entity, 'async_will_remove_from_hass'):
-            yield from entity.async_will_remove_from_hass()
+            await entity.async_will_remove_from_hass()
 
         self.hass.states.async_remove(entity_id)
 
-    @asyncio.coroutine
-    def _update_entity_states(self, now):
+    async def _update_entity_states(self, now):
         """Update the states of all the polling entities.
 
         To protect from flooding the executor, we will update async entities
@@ -323,7 +311,7 @@ class EntityPlatform(object):
                 self.scan_interval)
             return
 
-        with (yield from self._process_updates):
+        with (await self._process_updates):
             tasks = []
             for entity in self.entities.values():
                 if not entity.should_poll:
@@ -331,4 +319,4 @@ class EntityPlatform(object):
                 tasks.append(entity.async_update_ha_state(True))
 
             if tasks:
-                yield from asyncio.wait(tasks, loop=self.hass.loop)
+                await asyncio.wait(tasks, loop=self.hass.loop)

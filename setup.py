@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 """Home Assistant setup script."""
-import sys
-
 from setuptools import setup, find_packages
 
 import homeassistant.const as hass_const
@@ -27,7 +25,6 @@ PROJECT_CLASSIFIERS = [
     'Intended Audience :: Developers',
     'License :: OSI Approved :: Apache Software License',
     'Operating System :: OS Independent',
-    'Programming Language :: Python :: 3.4',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
     'Topic :: Home Automation'
@@ -53,10 +50,8 @@ REQUIRES = [
     'jinja2>=2.10',
     'voluptuous==0.11.1',
     'typing>=3,<4',
-    'aiohttp==2.3.10',   # If updated, check if yarl also needs an update!
-    'yarl==1.1.0',
+    'aiohttp==3.0.6',
     'async_timeout==2.0.0',
-    'chardet==3.0.4',
     'astral==1.5',
     'certifi>=2017.4.17',
     'attrs==17.4.0',
@@ -64,9 +59,7 @@ REQUIRES = [
 
 MIN_PY_VERSION = '.'.join(map(
     str,
-    hass_const.REQUIRED_PYTHON_VER_WIN
-    if sys.platform.startswith('win')
-    else hass_const.REQUIRED_PYTHON_VER))
+    hass_const.REQUIRED_PYTHON_VER))
 
 setup(
     name=PROJECT_PACKAGE_NAME,
