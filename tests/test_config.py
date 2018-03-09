@@ -158,11 +158,11 @@ class TestConfig(unittest.TestCase):
     def test_load_yaml_config_preserves_key_order(self):
         """Test removal of library."""
         with open(YAML_PATH, 'w') as f:
-            f.write('hello: 0\n')
+            f.write('hello: 2\n')
             f.write('world: 1\n')
 
         self.assertEqual(
-            [('hello', 0), ('world', 1)],
+            [('hello', 2), ('world', 1)],
             list(config_util.load_yaml_config_file(YAML_PATH).items()))
 
     @mock.patch('homeassistant.util.location.detect_location_info',
