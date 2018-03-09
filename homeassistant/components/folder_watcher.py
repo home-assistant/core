@@ -4,7 +4,6 @@ Component for monitoring activity on a folder.
 import os
 import logging
 import voluptuous as vol
-from watchdog.events import PatternMatchingEventHandler
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -56,40 +55,45 @@ def on_any_event(hass, event):
                 })
 
 
+def create_event_handler(patterns, hass):
+    from watchdog.events import PatternMatchingEventHandler
+
+    class EventHandler(PatternMatchingEventHandler):
+        """Class for handling Watcher events."""
+
+        def __init__(self, patterns, hass):
+            super().__init__(patterns)
+            self.hass = hass
+
+        def process(self, event):
+            """Process the Watchdog event."""
+            on_any_event(self.hass, event)
+
+        def on_modified(self, event):
+            self.process(event)
+
+        def on_moved(self, event):
+            self.process(event)
+
+        def on_created(self, event):
+            self.process(event)
+
+        def on_deleted(self, event):
+            self.process(event)
+
+    return EventHandler(patterns, hass)
+
+
 class Watcher(Entity):
     """Class for starting Watchdog."""
     def __init__(self, path, patterns, hass):
         from watchdog.observers import Observer
         self._observer = Observer()
         self._observer.schedule(
-            WatcherHandler(patterns, hass),
+            create_event_handler(patterns, hass),
             path,
             recursive=True)
         self._observer.start()
 
     def stop_watching(self):
         self._observer.stop()
-
-
-class WatcherHandler(PatternMatchingEventHandler):
-    """Class for handling Watcher events."""
-
-    def __init__(self, patterns, hass):
-        super().__init__(patterns)
-        self.hass = hass
-
-    def process(self, event):
-        """Process the Watchdog event."""
-        on_any_event(self.hass, event)
-
-    def on_modified(self, event):
-        self.process(event)
-
-    def on_moved(self, event):
-        self.process(event)
-
-    def on_created(self, event):
-        self.process(event)
-
-    def on_deleted(self, event):
-        self.process(event)
