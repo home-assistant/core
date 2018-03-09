@@ -79,7 +79,7 @@ class LightGroup(light.Light):
 
         self._async_unsub_state_changed = async_track_state_change(
             self.hass, self._entity_ids, async_state_changed_listener)
-        self.async_schedule_update_ha_state(True)
+        await self.async_update()
 
     async def async_will_remove_from_hass(self):
         """Callback when removed from HASS."""
