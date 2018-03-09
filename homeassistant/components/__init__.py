@@ -156,9 +156,10 @@ def async_setup(hass, config):
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service)
     hass.helpers.intent.async_register(intent.ServiceIntentHandler(
-        intent.INTENT_TURN_ON, ha.DOMAIN, SERVICE_TURN_ON, "Turned on {}"))
+        intent.INTENT_TURN_ON, ha.DOMAIN, SERVICE_TURN_ON, "Turned {} on"))
     hass.helpers.intent.async_register(intent.ServiceIntentHandler(
-        intent.INTENT_TURN_OFF, ha.DOMAIN, SERVICE_TURN_OFF, "Turned off {}"))
+        intent.INTENT_TURN_OFF, ha.DOMAIN, SERVICE_TURN_OFF,
+        "Turned {} off"))
     hass.helpers.intent.async_register(intent.ServiceIntentHandler(
         intent.INTENT_TOGGLE, ha.DOMAIN, SERVICE_TOGGLE, "Toggled {}"))
 

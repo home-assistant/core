@@ -5,9 +5,9 @@ from homeassistant.components.cover import ATTR_CURRENT_POSITION
 from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import HomeAccessory, add_preload_service
 from .const import (
-    SERVICES_WINDOW_COVERING, CHAR_CURRENT_POSITION,
+    SERV_WINDOW_COVERING, CHAR_CURRENT_POSITION,
     CHAR_TARGET_POSITION, CHAR_POSITION_STATE)
 
 
@@ -23,10 +23,7 @@ class Window(HomeAccessory):
 
     def __init__(self, hass, entity_id, display_name):
         """Initialize a Window accessory object."""
-        super().__init__(display_name)
-        self.set_category(self.ALL_CATEGORIES.WINDOW)
-        self.set_accessory_info(entity_id)
-        self.add_preload_service(SERVICES_WINDOW_COVERING)
+        super().__init__(display_name, entity_id, 'WINDOW')
 
         self._hass = hass
         self._entity_id = entity_id
@@ -34,13 +31,16 @@ class Window(HomeAccessory):
         self.current_position = None
         self.homekit_target = None
 
-        self.service_cover = self.get_service(SERVICES_WINDOW_COVERING)
-        self.char_current_position = self.service_cover. \
+        self.serv_cover = add_preload_service(self, SERV_WINDOW_COVERING)
+        self.char_current_position = self.serv_cover. \
             get_characteristic(CHAR_CURRENT_POSITION)
-        self.char_target_position = self.service_cover. \
+        self.char_target_position = self.serv_cover. \
             get_characteristic(CHAR_TARGET_POSITION)
-        self.char_position_state = self.service_cover. \
+        self.char_position_state = self.serv_cover. \
             get_characteristic(CHAR_POSITION_STATE)
+        self.char_current_position.value = 0
+        self.char_target_position.value = 0
+        self.char_position_state.value = 0
 
         self.char_target_position.setter_callback = self.move_cover
 
@@ -53,7 +53,7 @@ class Window(HomeAccessory):
             self._hass, self._entity_id, self.update_cover_position)
 
     def move_cover(self, value):
-        """Move cover to value if call came from homekit."""
+        """Move cover to value if call came from HomeKit."""
         if value != self.current_position:
             _LOGGER.debug("%s: Set position to %d", self._entity_id, value)
             self.homekit_target = value

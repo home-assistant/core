@@ -23,7 +23,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['PyXiaomiGateway==0.8.1']
+REQUIREMENTS = ['PyXiaomiGateway==0.8.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -242,7 +242,7 @@ class XiaomiDevice(Entity):
 
     @property
     def unique_id(self) -> str:
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._unique_id
 
     @property

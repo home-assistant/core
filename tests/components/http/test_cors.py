@@ -1,5 +1,4 @@
 """Test cors for the HTTP component."""
-import asyncio
 from unittest.mock import patch
 
 from aiohttp import web
@@ -20,22 +19,20 @@ from homeassistant.components.http.cors import setup_cors
 TRUSTED_ORIGIN = 'https://home-assistant.io'
 
 
-@asyncio.coroutine
-def test_cors_middleware_not_loaded_by_default(hass):
+async def test_cors_middleware_not_loaded_by_default(hass):
     """Test accessing to server from banned IP when feature is off."""
     with patch('homeassistant.components.http.setup_cors') as mock_setup:
-        yield from async_setup_component(hass, 'http', {
+        await async_setup_component(hass, 'http', {
             'http': {}
         })
 
     assert len(mock_setup.mock_calls) == 0
 
 
-@asyncio.coroutine
-def test_cors_middleware_loaded_from_config(hass):
+async def test_cors_middleware_loaded_from_config(hass):
     """Test accessing to server from banned IP when feature is off."""
     with patch('homeassistant.components.http.setup_cors') as mock_setup:
-        yield from async_setup_component(hass, 'http', {
+        await async_setup_component(hass, 'http', {
             'http': {
                 'cors_allowed_origins': ['http://home-assistant.io']
             }
@@ -44,8 +41,7 @@ def test_cors_middleware_loaded_from_config(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-@asyncio.coroutine
-def mock_handler(request):
+async def mock_handler(request):
     """Return if request was authenticated."""
     return web.Response(status=200)
 
@@ -59,10 +55,9 @@ def client(loop, test_client):
     return loop.run_until_complete(test_client(app))
 
 
-@asyncio.coroutine
-def test_cors_requests(client):
+async def test_cors_requests(client):
     """Test cross origin requests."""
-    req = yield from client.get('/', headers={
+    req = await client.get('/', headers={
         ORIGIN: TRUSTED_ORIGIN
     })
     assert req.status == 200
@@ -70,7 +65,7 @@ def test_cors_requests(client):
         TRUSTED_ORIGIN
 
     # With password in URL
-    req = yield from client.get('/', params={
+    req = await client.get('/', params={
         'api_password': 'some-pass'
     }, headers={
         ORIGIN: TRUSTED_ORIGIN
@@ -80,7 +75,7 @@ def test_cors_requests(client):
         TRUSTED_ORIGIN
 
     # With password in headers
-    req = yield from client.get('/', headers={
+    req = await client.get('/', headers={
         HTTP_HEADER_HA_AUTH: 'some-pass',
         ORIGIN: TRUSTED_ORIGIN
     })
@@ -89,10 +84,9 @@ def test_cors_requests(client):
         TRUSTED_ORIGIN
 
 
-@asyncio.coroutine
-def test_cors_preflight_allowed(client):
+async def test_cors_preflight_allowed(client):
     """Test cross origin resource sharing preflight (OPTIONS) request."""
-    req = yield from client.options('/', headers={
+    req = await client.options('/', headers={
         ORIGIN: TRUSTED_ORIGIN,
         ACCESS_CONTROL_REQUEST_METHOD: 'GET',
         ACCESS_CONTROL_REQUEST_HEADERS: 'x-ha-access'

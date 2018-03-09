@@ -22,7 +22,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-REQUIREMENTS = ['ihcsdk==2.1.1']
+REQUIREMENTS = ['ihcsdk==2.2.0']
 
 DOMAIN = 'ihc'
 IHC_DATA = 'ihc'

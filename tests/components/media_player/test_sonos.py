@@ -122,11 +122,13 @@ class SoCoMock():
         return
 
 
-def fake_add_device(devices, update_befor_add=False):
-    """Fake add device / update."""
-    if update_befor_add:
-        for speaker in devices:
-            speaker.update()
+def add_devices_factory(hass):
+    """Add devices factory."""
+    def add_devices(devices, update_befor_add=False):
+        """Fake add device."""
+        hass.data[sonos.DATA_SONOS].devices = devices
+
+    return add_devices
 
 
 class TestSonosMediaPlayer(unittest.TestCase):
@@ -156,7 +158,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch('socket.create_connection', side_effect=socket.error())
     def test_ensure_setup_discovery(self, *args):
         """Test a single device using the autodiscovery provided by HASS."""
-        sonos.setup_platform(self.hass, {}, fake_add_device, {
+        sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass), {
             'host': '192.0.2.1'
         })
 
@@ -260,7 +262,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch('socket.create_connection', side_effect=socket.error())
     def test_ensure_setup_sonos_discovery(self, *args):
         """Test a single device using the autodiscovery provided by Sonos."""
-        sonos.setup_platform(self.hass, {}, fake_add_device)
+        sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass))
         devices = self.hass.data[sonos.DATA_SONOS].devices
         self.assertEqual(len(devices), 1)
         self.assertEqual(devices[0].name, 'Kitchen')
@@ -270,7 +272,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch.object(SoCoMock, 'set_sleep_timer')
     def test_sonos_set_sleep_timer(self, set_sleep_timerMock, *args):
         """Ensuring soco methods called for sonos_set_sleep_timer service."""
-        sonos.setup_platform(self.hass, {}, fake_add_device, {
+        sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass), {
             'host': '192.0.2.1'
         })
         device = self.hass.data[sonos.DATA_SONOS].devices[-1]
@@ -284,7 +286,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch.object(SoCoMock, 'set_sleep_timer')
     def test_sonos_clear_sleep_timer(self, set_sleep_timerMock, *args):
         """Ensuring soco methods called for sonos_clear_sleep_timer service."""
-        sonos.setup_platform(self.hass, {}, mock.MagicMock(), {
+        sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass), {
             'host': '192.0.2.1'
         })
         device = self.hass.data[sonos.DATA_SONOS].devices[-1]
@@ -298,7 +300,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch('socket.create_connection', side_effect=socket.error())
     def test_update_alarm(self, soco_mock, alarm_mock, *args):
         """Ensuring soco methods called for sonos_set_sleep_timer service."""
-        sonos.setup_platform(self.hass, {}, fake_add_device, {
+        sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass), {
             'host': '192.0.2.1'
         })
         device = self.hass.data[sonos.DATA_SONOS].devices[-1]
@@ -328,7 +330,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch.object(soco.snapshot.Snapshot, 'snapshot')
     def test_sonos_snapshot(self, snapshotMock, *args):
         """Ensuring soco methods called for sonos_snapshot service."""
-        sonos.setup_platform(self.hass, {}, fake_add_device, {
+        sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass), {
             'host': '192.0.2.1'
         })
         device = self.hass.data[sonos.DATA_SONOS].devices[-1]
@@ -346,7 +348,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
         """Ensuring soco methods called for sonos_restor service."""
         from soco.snapshot import Snapshot
 
-        sonos.setup_platform(self.hass, {}, fake_add_device, {
+        sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass), {
             'host': '192.0.2.1'
         })
         device = self.hass.data[sonos.DATA_SONOS].devices[-1]
