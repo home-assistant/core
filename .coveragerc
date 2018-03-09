@@ -412,7 +412,6 @@ omit =
     homeassistant/components/light/decora_wifi.py
     homeassistant/components/light/flux_led.py
     homeassistant/components/light/greenwave.py
-    homeassistant/components/light/group.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
     homeassistant/components/light/iglo.py

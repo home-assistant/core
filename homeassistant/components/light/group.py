@@ -1,5 +1,5 @@
 """
-This component allows several lights to be grouped into one light.
+This platform allows several lights to be grouped into one light.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.group/
@@ -29,11 +29,11 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Group Light'
+DEFAULT_NAME = 'Light Group'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_ENTITIES): cv.entities_domain('light')
+    vol.Required(CONF_ENTITIES): cv.entities_domain(light.DOMAIN)
 })
 
 SUPPORT_GROUP_LIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
@@ -44,15 +44,15 @@ SUPPORT_GROUP_LIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_devices, discovery_info=None) -> None:
     """Initialize light.group platform."""
-    async_add_devices([GroupLight(config.get(CONF_NAME),
-                                  config[CONF_ENTITIES])], True)
+    async_add_devices([LightGroup(config.get(CONF_NAME),
+                                  config[CONF_ENTITIES])])
 
 
-class GroupLight(light.Light):
-    """Representation of a group light."""
+class LightGroup(light.Light):
+    """Representation of a light group."""
 
     def __init__(self, name: str, entity_ids: List[str]) -> None:
-        """Initialize a group light."""
+        """Initialize a light group."""
         self._name = name  # type: str
         self._entity_ids = entity_ids  # type: List[str]
         self._is_on = False  # type: bool
@@ -79,10 +79,11 @@ class GroupLight(light.Light):
 
         self._async_unsub_state_changed = async_track_state_change(
             self.hass, self._entity_ids, async_state_changed_listener)
+        await self.async_update()
 
     async def async_will_remove_from_hass(self):
         """Callback when removed from HASS."""
-        if self._async_unsub_state_changed:
+        if self._async_unsub_state_changed is not None:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None
 
@@ -93,17 +94,17 @@ class GroupLight(light.Light):
 
     @property
     def is_on(self) -> bool:
-        """Return the on/off state of the light."""
+        """Return the on/off state of the light group."""
         return self._is_on
 
     @property
     def available(self) -> bool:
-        """Return whether the light is available."""
+        """Return whether the light group is available."""
         return self._available
 
     @property
     def brightness(self) -> Optional[int]:
-        """Return the brightness of this light between 0..255."""
+        """Return the brightness of this light group between 0..255."""
         return self._brightness
 
     @property
@@ -123,17 +124,17 @@ class GroupLight(light.Light):
 
     @property
     def min_mireds(self) -> Optional[int]:
-        """Return the coldest color_temp that this light supports."""
+        """Return the coldest color_temp that this light group supports."""
         return self._min_mireds
 
     @property
     def max_mireds(self) -> Optional[int]:
-        """Return the warmest color_temp that this light supports."""
+        """Return the warmest color_temp that this light group supports."""
         return self._max_mireds
 
     @property
     def white_value(self) -> Optional[int]:
-        """Return the white value of this light between 0..255."""
+        """Return the white value of this light group between 0..255."""
         return self._white_value
 
     @property
@@ -153,11 +154,11 @@ class GroupLight(light.Light):
 
     @property
     def should_poll(self) -> bool:
-        """No polling needed for a group light."""
+        """No polling needed for a light group."""
         return False
 
     async def async_turn_on(self, **kwargs):
-        """Forward the turn_on command to all lights in the group."""
+        """Forward the turn_on command to all lights in the light group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
 
         if ATTR_BRIGHTNESS in kwargs:
@@ -188,7 +189,7 @@ class GroupLight(light.Light):
             light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True)
 
     async def async_turn_off(self, **kwargs):
-        """Forward the turn_off command to all lights in the group."""
+        """Forward the turn_off command to all lights in the light group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
 
         if ATTR_TRANSITION in kwargs:
@@ -198,7 +199,7 @@ class GroupLight(light.Light):
             light.DOMAIN, light.SERVICE_TURN_OFF, data, blocking=True)
 
     async def async_update(self):
-        """Query all members and determine the group state."""
+        """Query all members and determine the light group state."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states = list(filter(None, all_states))
         on_states = [state for state in states if state.state == STATE_ON]
