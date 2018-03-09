@@ -21,7 +21,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyemby==1.4']
+REQUIREMENTS = ['pyemby==1.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_PORT, default=None): cv.port,
+    vol.Optional(CONF_PORT): cv.port,
     vol.Optional(CONF_AUTO_HIDE, default=DEFAULT_AUTO_HIDE): cv.boolean,
 })
 
@@ -182,7 +182,7 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return the id of this emby client."""
-        return '{}.{}'.format(self.__class__, self.device_id)
+        return self.device_id
 
     @property
     def supports_remote_control(self):
@@ -273,7 +273,7 @@ class EmbyDevice(MediaPlayerDevice):
 
     @property
     def media_season(self):
-        """Season of curent playing media (TV Show only)."""
+        """Season of current playing media (TV Show only)."""
         return self.device.media_season
 
     @property

@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_HOST, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, STATE_HOME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-roku==3.1.3']
+REQUIREMENTS = ['python-roku==3.1.5']
 
 KNOWN_HOSTS = []
 DEFAULT_PORT = 8060

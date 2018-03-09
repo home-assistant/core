@@ -70,16 +70,17 @@ class TestLockMQTT(unittest.TestCase):
         lock.lock(self.hass, 'lock.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('command-topic', 'LOCK', 2, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'command-topic', 'LOCK', 2, False)
+        self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_LOCKED, state.state)
 
         lock.unlock(self.hass, 'lock.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('command-topic', 'UNLOCK', 2, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'command-topic', 'UNLOCK', 2, False)
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_UNLOCKED, state.state)
 
@@ -111,6 +112,35 @@ class TestLockMQTT(unittest.TestCase):
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_UNLOCKED, state.state)
+
+    def test_default_availability_payload(self):
+        """Test availability by default payload with defined topic."""
+        self.assertTrue(setup_component(self.hass, lock.DOMAIN, {
+            lock.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'payload_lock': 'LOCK',
+                'payload_unlock': 'UNLOCK',
+                'availability_topic': 'availability-topic'
+            }
+        }))
+
+        state = self.hass.states.get('lock.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'online')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('lock.test')
+        self.assertNotEqual(STATE_UNAVAILABLE, state.state)
+
+        fire_mqtt_message(self.hass, 'availability-topic', 'offline')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('lock.test')
+        self.assertEqual(STATE_UNAVAILABLE, state.state)
 
     def test_custom_availability_payload(self):
         """Test availability by custom payload with defined topic."""

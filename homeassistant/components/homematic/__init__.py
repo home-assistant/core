@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.37']
+REQUIREMENTS = ['pyhomematic==0.1.39']
 DOMAIN = 'homematic'
 _LOGGER = logging.getLogger(__name__)
 
@@ -180,7 +180,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
         }},
         vol.Optional(CONF_LOCAL_IP, default=DEFAULT_LOCAL_IP): cv.string,
-        vol.Optional(CONF_LOCAL_PORT, default=DEFAULT_LOCAL_PORT): cv.port,
+        vol.Optional(CONF_LOCAL_PORT): cv.port,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -218,7 +218,7 @@ SCHEMA_SERVICE_SET_INSTALL_MODE = vol.Schema({
 
 @bind_hass
 def virtualkey(hass, address, channel, param, interface=None):
-    """Send virtual keypress to homematic controlller."""
+    """Send virtual keypress to homematic controller."""
     data = {
         ATTR_ADDRESS: address,
         ATTR_CHANNEL: channel,
@@ -256,7 +256,7 @@ def set_device_value(hass, address, channel, param, value, interface=None):
 
 @bind_hass
 def set_install_mode(hass, interface, mode=None, time=None, address=None):
-    """Call setInstallMode XML-RPC method of supplied inteface."""
+    """Call setInstallMode XML-RPC method of supplied interface."""
     data = {
         key: value for key, value in (
             (ATTR_INTERFACE, interface),
@@ -310,7 +310,7 @@ def setup(hass, config):
     bound_system_callback = partial(_system_callback_handler, hass, config)
     hass.data[DATA_HOMEMATIC] = homematic = HMConnection(
         local=config[DOMAIN].get(CONF_LOCAL_IP),
-        localport=config[DOMAIN].get(CONF_LOCAL_PORT),
+        localport=config[DOMAIN].get(CONF_LOCAL_PORT, DEFAULT_LOCAL_PORT),
         remotes=remotes,
         systemcallback=bound_system_callback,
         interface_id='homeassistant'
@@ -466,7 +466,7 @@ def _system_callback_handler(hass, config, src, *args):
                     hass, discovery_type, addresses, interface)
 
                 # When devices of this type are found
-                # they are setup in HASS and an discovery event is fired
+                # they are setup in HASS and a discovery event is fired
                 if found_devices:
                     discovery.load_platform(hass, component_name, DOMAIN, {
                         ATTR_DISCOVER_DEVICES: found_devices
@@ -665,7 +665,7 @@ class HMHub(Entity):
             self.schedule_update_ha_state()
 
     def _update_variables(self, now):
-        """Retrive all variable data and update hmvariable states."""
+        """Retrieve all variable data and update hmvariable states."""
         variables = self._homematic.getAllSystemVariables(self._name)
         if variables is None:
             return

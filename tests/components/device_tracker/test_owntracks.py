@@ -316,6 +316,11 @@ class BaseMQTT(unittest.TestCase):
         state = self.hass.states.get(DEVICE_TRACKER_STATE)
         self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
 
+    def assert_location_source_type(self, source_type):
+        """Test the assertion of source_type."""
+        state = self.hass.states.get(DEVICE_TRACKER_STATE)
+        self.assertEqual(state.attributes.get('source_type'), source_type)
+
 
 class TestDeviceTrackerOwnTracks(BaseMQTT):
     """Test the OwnTrack sensor."""
@@ -428,7 +433,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
     def test_event_gps_entry_exit(self):
         """Test the entry event."""
-        # Entering the owntrack circular region named "inner"
+        # Entering the owntracks circular region named "inner"
         self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
 
         # Enter uses the zone's gps co-ords
@@ -442,7 +447,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         #  note that LOCATION_MESSAGE is actually pretty far
         #  from INNER_ZONE and has good accuracy. I haven't
         #  received a transition message though so I'm still
-        #  asssociated with the inner zone regardless of GPS.
+        #  associated with the inner zone regardless of GPS.
         self.assert_location_latitude(INNER_ZONE['latitude'])
         self.assert_location_accuracy(INNER_ZONE['radius'])
         self.assert_location_state('inner')
@@ -619,7 +624,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
     def test_event_entry_zone_loading_dash(self):
         """Test the event for zone landing."""
         # Make sure the leading - is ignored
-        # Ownracks uses this to switch on hold
+        # Owntracks uses this to switch on hold
         message = build_message(
             {'desc': "-inner"},
             REGION_GPS_ENTER_MESSAGE)
@@ -666,6 +671,32 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         # Location update processed
         self.assert_location_state('outer')
 
+    def test_event_source_type_entry_exit(self):
+        """Test the entry and exit events of source type."""
+        # Entering the owntracks circular region named "inner"
+        self.send_message(EVENT_TOPIC, REGION_GPS_ENTER_MESSAGE)
+
+        # source_type should be gps when entering using gps.
+        self.assert_location_source_type('gps')
+
+        # owntracks shouldn't send beacon events with acc = 0
+        self.send_message(EVENT_TOPIC, build_message(
+            {'acc': 1}, REGION_BEACON_ENTER_MESSAGE))
+
+        # We should be able to enter a beacon zone even inside a gps zone
+        self.assert_location_source_type('bluetooth_le')
+
+        self.send_message(EVENT_TOPIC, REGION_GPS_LEAVE_MESSAGE)
+
+        # source_type should be gps when leaving using gps.
+        self.assert_location_source_type('gps')
+
+        # owntracks shouldn't send beacon events with acc = 0
+        self.send_message(EVENT_TOPIC, build_message(
+            {'acc': 1}, REGION_BEACON_LEAVE_MESSAGE))
+
+        self.assert_location_source_type('bluetooth_le')
+
     # Region Beacon based event entry / exit testing
 
     def test_event_region_entry_exit(self):
@@ -684,7 +715,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         #  note that LOCATION_MESSAGE is actually pretty far
         #  from INNER_ZONE and has good accuracy. I haven't
         #  received a transition message though so I'm still
-        #  asssociated with the inner zone regardless of GPS.
+        #  associated with the inner zone regardless of GPS.
         self.assert_location_latitude(INNER_ZONE['latitude'])
         self.assert_location_accuracy(INNER_ZONE['radius'])
         self.assert_location_state('inner')
@@ -834,7 +865,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
     def test_event_beacon_entry_zone_loading_dash(self):
         """Test the event for beacon zone landing."""
         # Make sure the leading - is ignored
-        # Ownracks uses this to switch on hold
+        # Owntracks uses this to switch on hold
 
         message = build_message(
             {'desc': "-inner"},

@@ -5,21 +5,20 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.mysensors/
 """
 from homeassistant.components import mysensors
-from homeassistant.components.binary_sensor import (DEVICE_CLASSES, DOMAIN,
-                                                    BinarySensorDevice)
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES, DOMAIN, BinarySensorDevice)
 from homeassistant.const import STATE_ON
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for binary sensors."""
+    """Set up the MySensors platform for binary sensors."""
     mysensors.setup_mysensors_platform(
         hass, DOMAIN, discovery_info, MySensorsBinarySensor,
         add_devices=add_devices)
 
 
-class MySensorsBinarySensor(
-        mysensors.MySensorsEntity, BinarySensorDevice):
-    """Represent the value of a MySensors Binary Sensor child node."""
+class MySensorsBinarySensor(mysensors.MySensorsEntity, BinarySensorDevice):
+    """Representation of a MySensors Binary Sensor child node."""
 
     @property
     def is_on(self):

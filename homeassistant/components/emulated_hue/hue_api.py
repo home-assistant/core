@@ -24,9 +24,6 @@ from homeassistant.components.http import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_EMULATED_HUE = 'emulated_hue'
-ATTR_EMULATED_HUE_NAME = 'emulated_hue_name'
-
 HUE_API_STATE_ON = 'on'
 HUE_API_STATE_BRI = 'bri'
 
@@ -77,7 +74,7 @@ class HueAllLightsStateView(HomeAssistantView):
 
                 number = self.config.entity_id_to_number(entity.entity_id)
                 json_response[number] = entity_to_json(
-                    entity, state, brightness)
+                    self.config, entity, state, brightness)
 
         return self.json(json_response)
 
@@ -110,7 +107,7 @@ class HueOneLightStateView(HomeAssistantView):
 
         state, brightness = get_entity_state(self.config, entity)
 
-        json_response = entity_to_json(entity, state, brightness)
+        json_response = entity_to_json(self.config, entity, state, brightness)
 
         return self.json(json_response)
 
@@ -344,10 +341,8 @@ def get_entity_state(config, entity):
     return (final_state, final_brightness)
 
 
-def entity_to_json(entity, is_on=None, brightness=None):
+def entity_to_json(config, entity, is_on=None, brightness=None):
     """Convert an entity to its Hue bridge JSON representation."""
-    name = entity.attributes.get(ATTR_EMULATED_HUE_NAME, entity.name)
-
     return {
         'state':
         {
@@ -356,7 +351,7 @@ def entity_to_json(entity, is_on=None, brightness=None):
             'reachable': True
         },
         'type': 'Dimmable light',
-        'name': name,
+        'name': config.get_entity_name(entity),
         'modelid': 'HASS123',
         'uniqueid': entity.entity_id,
         'swversion': '123'

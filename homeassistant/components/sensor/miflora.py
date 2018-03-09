@@ -15,7 +15,8 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC
 )
 
-REQUIREMENTS = ['miflora==0.2.0']
+
+REQUIREMENTS = ['miflora==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MEDIAN, default=DEFAULT_MEDIAN): cv.positive_int,
@@ -60,12 +61,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MiFlora sensor."""
     from miflora import miflora_poller
-    from miflora.backends.gatttool import GatttoolBackend
+    try:
+        import bluepy.btle  # noqa: F401 # pylint: disable=unused-variable
+        from miflora.backends.bluepy import BluepyBackend
+        backend = BluepyBackend
+    except ImportError:
+        from miflora.backends.gatttool import GatttoolBackend
+        backend = GatttoolBackend
+    _LOGGER.debug('Miflora is using %s backend.', backend.__name__)
 
     cache = config.get(CONF_CACHE)
     poller = miflora_poller.MiFloraPoller(
         config.get(CONF_MAC), cache_timeout=cache,
-        adapter=config.get(CONF_ADAPTER), backend=GatttoolBackend)
+        adapter=config.get(CONF_ADAPTER), backend=backend)
     force_update = config.get(CONF_FORCE_UPDATE)
     median = config.get(CONF_MEDIAN)
     poller.ble_timeout = config.get(CONF_TIMEOUT)
@@ -130,12 +138,15 @@ class MiFloraSensor(Entity):
 
         This uses a rolling median over 3 values to filter out outliers.
         """
+        from miflora.backends import BluetoothBackendException
         try:
             _LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)
         except IOError as ioerr:
             _LOGGER.info("Polling error %s", ioerr)
-            data = None
+            return
+        except BluetoothBackendException as bterror:
+            _LOGGER.info("Polling error %s", bterror)
             return
 
         if data is not None:

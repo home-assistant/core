@@ -96,6 +96,7 @@ BASE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
     vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+    vol.Optional(CONF_TIMEOUT): vol.Coerce(float),
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend({
@@ -236,13 +237,12 @@ def async_setup(hass, config):
         _LOGGER.exception("Error setting up platform %s", p_type)
         return False
 
+    bot = initialize_bot(p_config)
     notify_service = TelegramNotificationService(
         hass,
-        p_config.get(CONF_API_KEY),
+        bot,
         p_config.get(CONF_ALLOWED_CHAT_IDS),
-        p_config.get(ATTR_PARSER),
-        p_config.get(CONF_PROXY_URL),
-        p_config.get(CONF_PROXY_PARAMS)
+        p_config.get(ATTR_PARSER)
     )
 
     @asyncio.coroutine
@@ -301,15 +301,28 @@ def async_setup(hass, config):
     return True
 
 
+def initialize_bot(p_config):
+    """Initialize telegram bot with proxy support."""
+    from telegram import Bot
+    from telegram.utils.request import Request
+
+    api_key = p_config.get(CONF_API_KEY)
+    proxy_url = p_config.get(CONF_PROXY_URL)
+    proxy_params = p_config.get(CONF_PROXY_PARAMS)
+
+    request = None
+    if proxy_url is not None:
+        request = Request(proxy_url=proxy_url,
+                          urllib3_proxy_kwargs=proxy_params)
+    return Bot(token=api_key, request=request)
+
+
 class TelegramNotificationService:
     """Implement the notification services for the Telegram Bot domain."""
 
-    def __init__(self, hass, api_key, allowed_chat_ids, parser,
-                 proxy_url=None, proxy_params=None):
+    def __init__(self, hass, bot, allowed_chat_ids, parser):
         """Initialize the service."""
-        from telegram import Bot
         from telegram.parsemode import ParseMode
-        from telegram.utils.request import Request
 
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
@@ -317,11 +330,7 @@ class TelegramNotificationService:
         self._parsers = {PARSER_HTML: ParseMode.HTML,
                          PARSER_MD: ParseMode.MARKDOWN}
         self._parse_mode = self._parsers.get(parser)
-        request = None
-        if proxy_url is not None:
-            request = Request(proxy_url=proxy_url,
-                              urllib3_proxy_kwargs=proxy_params)
-        self.bot = Bot(token=api_key, request=request)
+        self.bot = bot
         self.hass = hass
 
     def _get_msg_ids(self, msg_data, chat_id):
@@ -330,7 +339,7 @@ class TelegramNotificationService:
         This can be one of (message_id, inline_message_id) from a msg dict,
         returning a tuple.
         **You can use 'last' as message_id** to edit
-        the last sended message in the chat_id.
+        the message last sent in the chat_id.
         """
         message_id = inline_message_id = None
         if ATTR_MESSAGEID in msg_data:
@@ -354,7 +363,7 @@ class TelegramNotificationService:
             chat_ids = [t for t in target if t in self.allowed_chat_ids]
             if chat_ids:
                 return chat_ids
-            _LOGGER.warning("Unallowed targets: %s, using default: %s",
+            _LOGGER.warning("Disallowed targets: %s, using default: %s",
                             target, self._default_user)
         return [self._default_user]
 

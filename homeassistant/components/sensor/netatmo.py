@@ -18,8 +18,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MODULE = 'modules'
-
 CONF_MODULES = 'modules'
 CONF_STATION = 'station'
 
@@ -54,7 +52,7 @@ SENSOR_TYPES = {
 }
 
 MODULE_SCHEMA = vol.Schema({
-    vol.Required(cv.string, default=[]):
+    vol.Required(cv.string):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
@@ -113,18 +111,11 @@ class NetAtmoSensor(Entity):
         module_id = self.netatmo_data.\
             station_data.moduleByName(module=module_name)['_id']
         self.module_id = module_id[1]
-        self._unique_id = "Netatmo Sensor {0} - {1} ({2})".format(
-            self._name, module_id, self.type)
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this sensor."""
-        return self._unique_id
 
     @property
     def icon(self):

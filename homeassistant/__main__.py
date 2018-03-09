@@ -15,7 +15,6 @@ from homeassistant.const import (
     __version__,
     EVENT_HOMEASSISTANT_START,
     REQUIRED_PYTHON_VER,
-    REQUIRED_PYTHON_VER_WIN,
     RESTART_EXIT_CODE,
 )
 
@@ -33,12 +32,7 @@ def attempt_use_uvloop():
 
 def validate_python() -> None:
     """Validate that the right Python version is running."""
-    if sys.platform == "win32" and \
-       sys.version_info[:3] < REQUIRED_PYTHON_VER_WIN:
-        print("Home Assistant requires at least Python {}.{}.{}".format(
-            *REQUIRED_PYTHON_VER_WIN))
-        sys.exit(1)
-    elif sys.version_info[:3] < REQUIRED_PYTHON_VER:
+    if sys.version_info[:3] < REQUIRED_PYTHON_VER:
         print("Home Assistant requires at least Python {}.{}.{}".format(
             *REQUIRED_PYTHON_VER))
         sys.exit(1)
@@ -182,7 +176,8 @@ def check_pid(pid_file: str) -> None:
     """Check that Home Assistant is not already running."""
     # Check pid file
     try:
-        pid = int(open(pid_file, 'r').readline())
+        with open(pid_file, 'r') as file:
+            pid = int(file.readline())
     except IOError:
         # PID File does not exist
         return
@@ -204,7 +199,8 @@ def write_pid(pid_file: str) -> None:
     """Create a PID File."""
     pid = os.getpid()
     try:
-        open(pid_file, 'w').write(str(pid))
+        with open(pid_file, 'w') as file:
+            file.write(str(pid))
     except IOError:
         print('Fatal Error: Unable to write pid file {}'.format(pid_file))
         sys.exit(1)
