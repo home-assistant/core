@@ -154,13 +154,13 @@ def setup_plexserver(
             return
 
         new_plex_clients = []
-        available_ids = []
+        available_client_ids = []
         for device in devices:
             # For now, let's allow all deviceClass types
             if device.deviceClass in ['badClient']:
                 continue
 
-            available_ids.append(device.machineIdentifier)
+            available_client_ids.append(device.machineIdentifier)
 
             if device.machineIdentifier not in plex_clients:
                 new_client = PlexClient(config, device, None,
@@ -188,12 +188,12 @@ def setup_plexserver(
             # force devices to idle that do not have a valid session
             if client.session is None:
                 client.force_idle()
+                
+            client.set_availability(client.machine_identifier
+                                    in available_client_ids)
 
         if new_plex_clients:
             add_devices_callback(new_plex_clients)
-
-        for cid in hass.data[PLEX_DATA].keys():
-            plex_clients[cid].set_availability(cid in available_ids)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_sessions():
@@ -265,7 +265,7 @@ class PlexClient(MediaPlayerDevice):
         """Initialize the Plex device."""
         self._app_name = ''
         self._device = None
-        self._is_device_available = False
+        self._available = False
         self._device_protocol_capabilities = None
         self._is_player_active = False
         self._is_player_available = False
@@ -418,7 +418,7 @@ class PlexClient(MediaPlayerDevice):
         """Set the device as available/unavailable noting time."""
         if not available:
             self._clear_media_details()
-        self._is_device_available = available
+        self._available = available
 
     def _set_player_state(self):
         if self._player_state == 'playing':
@@ -484,7 +484,7 @@ class PlexClient(MediaPlayerDevice):
     @property
     def available(self):
         """Return the availability of the client."""
-        return self._is_device_available
+        return self._available
 
     @property
     def name(self):
