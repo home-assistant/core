@@ -8,7 +8,7 @@ import socket
 import logging
 
 from homeassistant.components.climate import (
-    ClimateDevice, STATE_AUTO, SUPPORT_TARGET_TEMPERATURE, 
+    ClimateDevice, STATE_AUTO, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_OPERATION_MODE, SUPPORT_CURRENT_VALVEPOSITION)
 from homeassistant.components.maxcube import MAXCUBE_HANDLE
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
