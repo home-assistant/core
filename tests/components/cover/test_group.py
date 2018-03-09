@@ -76,7 +76,8 @@ class TestMultiCover(unittest.TestCase):
                          .attributes.get('current_position'), 80)
 
         self.hass.states.remove(DEMO_COVER_TILT)
-        self.hass.states.set(DEMO_COVER, 'closed')
+        self.hass.states.set(DEMO_COVER, 'closed',
+                             {'supported_features': 11, 'assumed_state': True})
         self.hass.block_till_done()
 
         self.assertEqual(self.hass.states.get(GROUP_COVER).state, 'closed')
@@ -84,7 +85,7 @@ class TestMultiCover(unittest.TestCase):
         self.hass.states.remove(DEMO_COVER)
         self.hass.block_till_done()
 
-        self.assertEqual(self.hass.states.get(GROUP_COVER).state, 'open')
+        self.assertEqual(self.hass.states.get(GROUP_COVER).state, 'closed')
 
     def test_current_tilt_position(self):
         """Test different current cover tilt positions."""
