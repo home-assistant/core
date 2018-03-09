@@ -5,6 +5,8 @@ import os
 import logging
 import voluptuous as vol
 from homeassistant.helpers.entity import Entity
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['watchdog==0.8.3']
@@ -33,12 +35,16 @@ def setup(hass, config):
     conf = config[DOMAIN]
     paths = conf[CONF_FOLDERS]
     patterns = conf[CONF_FILTERS]
-    for path in paths:
-        if not hass.config.is_allowed_path(path):
-            _LOGGER.error("folder %s is not valid or allowed", path)
-            return False
-        else:
-            Watcher(path, patterns, hass)
+
+    def run_setup(event):
+        for path in paths:
+            if not hass.config.is_allowed_path(path):
+                _LOGGER.error("folder %s is not valid or allowed", path)
+                return False
+            else:
+                Watcher(path, patterns, hass)
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
     return True
 
 
