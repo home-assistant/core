@@ -8,6 +8,8 @@ import asyncio
 import logging
 from datetime import timedelta
 
+import math
+
 from homeassistant.const import CONF_ELEVATION
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -28,6 +30,7 @@ STATE_BELOW_HORIZON = 'below_horizon'
 
 STATE_ATTR_AZIMUTH = 'azimuth'
 STATE_ATTR_ELEVATION = 'elevation'
+STATE_ATTR_IRRADIANCE = 'max_irradiance'
 STATE_ATTR_NEXT_DAWN = 'next_dawn'
 STATE_ATTR_NEXT_DUSK = 'next_dusk'
 STATE_ATTR_NEXT_MIDNIGHT = 'next_midnight'
@@ -63,6 +66,7 @@ class Sun(Entity):
         self.next_dawn = self.next_dusk = None
         self.next_midnight = self.next_noon = None
         self.solar_elevation = self.solar_azimuth = None
+        self.solar_irradiance = None
 
         async_track_utc_time_change(hass, self.timer_update, second=30)
 
@@ -90,6 +94,7 @@ class Sun(Entity):
             STATE_ATTR_NEXT_RISING: self.next_rising.isoformat(),
             STATE_ATTR_NEXT_SETTING: self.next_setting.isoformat(),
             STATE_ATTR_ELEVATION: round(self.solar_elevation, 2),
+            STATE_ATTR_IRRADIANCE: round(self.solar_irradiance, 2),
             STATE_ATTR_AZIMUTH: round(self.solar_azimuth, 2)
         }
 
@@ -120,6 +125,11 @@ class Sun(Entity):
         """Calculate the position of the sun."""
         self.solar_azimuth = self.location.solar_azimuth(utc_point_in_time)
         self.solar_elevation = self.location.solar_elevation(utc_point_in_time)
+
+        # Calculate also the theoretical max irradiance: # "global radiation on
+        # a horizontal surface at ground level is about 1120 W/m2" (Wikipedia)
+        self.solar_irradiance = \
+            max(0, 1120 * math.sin(math.radians(self.solar_elevation)))
 
     @callback
     def point_in_time_listener(self, now):
