@@ -588,7 +588,7 @@ pizzapi==0.0.3
 
 # homeassistant.components.media_player.plex
 # homeassistant.components.sensor.plex
-plexapi==3.0.5
+plexapi==3.0.6
 
 # homeassistant.components.sensor.mhz19
 # homeassistant.components.sensor.serial_pm
