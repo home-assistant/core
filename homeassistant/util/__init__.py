@@ -1,4 +1,5 @@
 """Helper methods for various modules."""
+import asyncio
 from collections.abc import MutableSet
 from itertools import chain
 import threading
@@ -276,6 +277,14 @@ class Throttle(object):
         is_func = (not hasattr(method, '__self__') and
                    '.' not in method.__qualname__.split('.<locals>.')[-1])
 
+        # Make sure we return a coroutine if the method is async.
+        if asyncio.iscoroutinefunction(method):
+            async def throttled_value():
+                return None
+        else:
+            def throttled_value():
+                return None
+
         @wraps(method)
         def wrapper(*args, **kwargs):
             """Wrap that allows wrapped to be called only once per min_time.
@@ -298,7 +307,7 @@ class Throttle(object):
             throttle = host._throttle[id(self)]
 
             if not throttle[0].acquire(False):
-                return None
+                return throttled_value()
 
             # Check if method is never called or no_throttle is given
             force = kwargs.pop('no_throttle', False) or not throttle[1]
@@ -309,7 +318,7 @@ class Throttle(object):
                     throttle[1] = utcnow()
                     return result
 
-                return None
+                return throttled_value()
             finally:
                 throttle[0].release()
 
