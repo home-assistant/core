@@ -23,10 +23,8 @@ def async_setup(hass):
     hass.http.register_view(CloudLogoutView)
     hass.http.register_view(CloudAccountView)
     hass.http.register_view(CloudRegisterView)
-    hass.http.register_view(CloudConfirmRegisterView)
     hass.http.register_view(CloudResendConfirmView)
     hass.http.register_view(CloudForgotPasswordView)
-    hass.http.register_view(CloudConfirmForgotPasswordView)
 
 
 _CLOUD_ERRORS = {
@@ -34,8 +32,6 @@ _CLOUD_ERRORS = {
     auth_api.UserNotConfirmed: (400, 'Email not confirmed.'),
     auth_api.Unauthenticated: (401, 'Authentication failed.'),
     auth_api.PasswordChangeRequired: (400, 'Password change required.'),
-    auth_api.ExpiredCode: (400, 'Confirmation code has expired.'),
-    auth_api.InvalidCode: (400, 'Invalid confirmation code.'),
     asyncio.TimeoutError: (502, 'Unable to reach the Home Assistant cloud.')
 }
 
@@ -149,31 +145,6 @@ class CloudRegisterView(HomeAssistantView):
         return self.json_message('ok')
 
 
-class CloudConfirmRegisterView(HomeAssistantView):
-    """Confirm registration on the Home Assistant cloud."""
-
-    url = '/api/cloud/confirm_register'
-    name = 'api:cloud:confirm_register'
-
-    @_handle_cloud_errors
-    @RequestDataValidator(vol.Schema({
-        vol.Required('confirmation_code'): str,
-        vol.Required('email'): str,
-    }))
-    @asyncio.coroutine
-    def post(self, request, data):
-        """Handle registration confirmation request."""
-        hass = request.app['hass']
-        cloud = hass.data[DOMAIN]
-
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from hass.async_add_job(
-                auth_api.confirm_register, cloud, data['confirmation_code'],
-                data['email'])
-
-        return self.json_message('ok')
-
-
 class CloudResendConfirmView(HomeAssistantView):
     """Resend email confirmation code."""
 
@@ -216,33 +187,6 @@ class CloudForgotPasswordView(HomeAssistantView):
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
             yield from hass.async_add_job(
                 auth_api.forgot_password, cloud, data['email'])
-
-        return self.json_message('ok')
-
-
-class CloudConfirmForgotPasswordView(HomeAssistantView):
-    """View to finish Forgot Password flow.."""
-
-    url = '/api/cloud/confirm_forgot_password'
-    name = 'api:cloud:confirm_forgot_password'
-
-    @_handle_cloud_errors
-    @RequestDataValidator(vol.Schema({
-        vol.Required('confirmation_code'): str,
-        vol.Required('email'): str,
-        vol.Required('new_password'): vol.All(str, vol.Length(min=6))
-    }))
-    @asyncio.coroutine
-    def post(self, request, data):
-        """Handle forgot password confirm request."""
-        hass = request.app['hass']
-        cloud = hass.data[DOMAIN]
-
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            yield from hass.async_add_job(
-                auth_api.confirm_forgot_password, cloud,
-                data['confirmation_code'], data['email'],
-                data['new_password'])
 
         return self.json_message('ok')
 

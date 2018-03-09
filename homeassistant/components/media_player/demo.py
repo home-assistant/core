@@ -37,11 +37,13 @@ YOUTUBE_PLAYER_SUPPORT = \
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_CLEAR_PLAYLIST | \
-    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET
+    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | \
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
 NETFLIX_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | SUPPORT_SHUFFLE_SET
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | \
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
 
 
 class AbstractDemoPlayer(MediaPlayerDevice):
@@ -284,15 +286,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        support = MUSIC_PLAYER_SUPPORT
-
-        if self._cur_track > 0:
-            support |= SUPPORT_PREVIOUS_TRACK
-
-        if self._cur_track < len(self.tracks) - 1:
-            support |= SUPPORT_NEXT_TRACK
-
-        return support
+        return MUSIC_PLAYER_SUPPORT
 
     def media_previous_track(self):
         """Send previous track command."""
@@ -379,15 +373,7 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        support = NETFLIX_PLAYER_SUPPORT
-
-        if self._cur_episode > 1:
-            support |= SUPPORT_PREVIOUS_TRACK
-
-        if self._cur_episode < self._episode_count:
-            support |= SUPPORT_NEXT_TRACK
-
-        return support
+        return NETFLIX_PLAYER_SUPPORT
 
     def media_previous_track(self):
         """Send previous track command."""
