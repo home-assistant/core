@@ -13,9 +13,9 @@ REQUIREMENTS = ['watchdog==0.8.3']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FOLDER = 'folder'
-CONF_FILTERS = 'filters'
+CONF_PATTERNS = 'patterns'
 CONF_WATCHERS = 'watchers'
-DEFAULT_FILTER = '*'
+DEFAULT_PATTERN = '*'
 DOMAIN = "folder_watcher"
 EVENT_TYPE = "event_type"
 FILE = 'file'
@@ -23,7 +23,7 @@ FOLDER = 'folder'
 
 WATCHER_CONFIG_SCHEMA = vol.Schema([{
         vol.Required(CONF_FOLDER): cv.isdir,
-        vol.Optional(CONF_FILTERS, default=[DEFAULT_FILTER]): vol.All(
+        vol.Optional(CONF_PATTERNS, default=[DEFAULT_PATTERN]): vol.All(
             cv.ensure_list, [cv.string]),
 }])
 
@@ -43,7 +43,7 @@ def setup(hass, config):
         """"Wait for HA start then setup."""
         for watcher in watchers:
             path = watcher[CONF_FOLDER]
-            patterns = watcher[CONF_FILTERS]
+            patterns = watcher[CONF_PATTERNS]
             if not hass.config.is_allowed_path(path):
                 _LOGGER.error("folder %s is not valid or allowed", path)
                 return False
