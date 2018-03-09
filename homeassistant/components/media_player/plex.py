@@ -24,7 +24,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['plexapi==3.0.5']
+REQUIREMENTS = ['plexapi==3.0.6']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -154,10 +154,13 @@ def setup_plexserver(
             return
 
         new_plex_clients = []
+        available_client_ids = []
         for device in devices:
             # For now, let's allow all deviceClass types
             if device.deviceClass in ['badClient']:
                 continue
+
+            available_client_ids.append(device.machineIdentifier)
 
             if device.machineIdentifier not in plex_clients:
                 new_client = PlexClient(config, device, None,
@@ -185,6 +188,9 @@ def setup_plexserver(
             # force devices to idle that do not have a valid session
             if client.session is None:
                 client.force_idle()
+
+            client.set_availability(client.machine_identifier
+                                    in available_client_ids)
 
         if new_plex_clients:
             add_devices_callback(new_plex_clients)
@@ -259,6 +265,7 @@ class PlexClient(MediaPlayerDevice):
         """Initialize the Plex device."""
         self._app_name = ''
         self._device = None
+        self._available = False
         self._device_protocol_capabilities = None
         self._is_player_active = False
         self._is_player_available = False
@@ -407,6 +414,12 @@ class PlexClient(MediaPlayerDevice):
 
         self._media_image_url = thumb_url
 
+    def set_availability(self, available):
+        """Set the device as available/unavailable noting time."""
+        if not available:
+            self._clear_media_details()
+        self._available = available
+
     def _set_player_state(self):
         if self._player_state == 'playing':
             self._is_player_active = True
@@ -467,6 +480,11 @@ class PlexClient(MediaPlayerDevice):
     def unique_id(self):
         """Return the id of this plex client."""
         return self.machine_identifier
+
+    @property
+    def available(self):
+        """Return the availability of the client."""
+        return self._available
 
     @property
     def name(self):

@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
-from homeassistant.core import valid_entity_id
+from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify as util_slugify
@@ -36,6 +36,7 @@ latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
                    msg='invalid latitude')
 longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
                     msg='invalid longitude')
+gps = vol.ExactSequence([latitude, longitude])
 sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
 port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 
@@ -145,6 +146,29 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
         value = [ent_id.strip() for ent_id in value.split(',')]
 
     return [entity_id(ent_id) for ent_id in value]
+
+
+def entity_domain(domain: str):
+    """Validate that entity belong to domain."""
+    def validate(value: Any) -> str:
+        """Test if entity domain is domain."""
+        ent_domain = entities_domain(domain)
+        return ent_domain(value)[0]
+    return validate
+
+
+def entities_domain(domain: str):
+    """Validate that entities belong to domain."""
+    def validate(values: Union[str, Sequence]) -> Sequence[str]:
+        """Test if entity domain is domain."""
+        values = entity_ids(values)
+        for ent_id in values:
+            if split_entity_id(ent_id)[0] != domain:
+                raise vol.Invalid(
+                    "Entity ID '{}' does not belong to domain '{}'"
+                    .format(ent_id, domain))
+        return values
+    return validate
 
 
 def enum(enumClass):

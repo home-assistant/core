@@ -110,7 +110,7 @@ class WeatherEntity(Entity):
             ATTR_WEATHER_TEMPERATURE: show_temp(
                 self.hass, self.temperature, self.temperature_unit,
                 self.precision),
-            ATTR_WEATHER_HUMIDITY: self.humidity,
+            ATTR_WEATHER_HUMIDITY: round(self.humidity)
         }
 
         ozone = self.ozone

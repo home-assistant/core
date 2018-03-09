@@ -94,24 +94,6 @@ def test_register_fails(mock_cognito):
         auth_api.register(cloud, 'email@home-assistant.io', 'password')
 
 
-def test_confirm_register(mock_cognito):
-    """Test confirming a registration of an account."""
-    cloud = MagicMock()
-    auth_api.confirm_register(cloud, '123456', 'email@home-assistant.io')
-    assert len(mock_cognito.confirm_sign_up.mock_calls) == 1
-    result_code, result_user = mock_cognito.confirm_sign_up.mock_calls[0][1]
-    assert result_user == 'email@home-assistant.io'
-    assert result_code == '123456'
-
-
-def test_confirm_register_fails(mock_cognito):
-    """Test an error during confirmation of an account."""
-    cloud = MagicMock()
-    mock_cognito.confirm_sign_up.side_effect = aws_error('SomeError')
-    with pytest.raises(auth_api.CloudError):
-        auth_api.confirm_register(cloud, '123456', 'email@home-assistant.io')
-
-
 def test_resend_email_confirm(mock_cognito):
     """Test starting forgot password flow."""
     cloud = MagicMock()
@@ -141,27 +123,6 @@ def test_forgot_password_fails(mock_cognito):
     mock_cognito.initiate_forgot_password.side_effect = aws_error('SomeError')
     with pytest.raises(auth_api.CloudError):
         auth_api.forgot_password(cloud, 'email@home-assistant.io')
-
-
-def test_confirm_forgot_password(mock_cognito):
-    """Test confirming forgot password."""
-    cloud = MagicMock()
-    auth_api.confirm_forgot_password(
-        cloud, '123456', 'email@home-assistant.io', 'new password')
-    assert len(mock_cognito.confirm_forgot_password.mock_calls) == 1
-    result_code, result_password = \
-        mock_cognito.confirm_forgot_password.mock_calls[0][1]
-    assert result_code == '123456'
-    assert result_password == 'new password'
-
-
-def test_confirm_forgot_password_fails(mock_cognito):
-    """Test failure when confirming forgot password."""
-    cloud = MagicMock()
-    mock_cognito.confirm_forgot_password.side_effect = aws_error('SomeError')
-    with pytest.raises(auth_api.CloudError):
-        auth_api.confirm_forgot_password(
-            cloud, '123456', 'email@home-assistant.io', 'new password')
 
 
 def test_check_token_writes_new_token_on_refresh(mock_cognito):

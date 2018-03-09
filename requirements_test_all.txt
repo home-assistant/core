@@ -19,10 +19,10 @@ asynctest>=0.11.1
 
 
 # homeassistant.components.homekit
-HAP-python==1.1.5
+HAP-python==1.1.7
 
 # homeassistant.components.notify.html5
-PyJWT==1.5.3
+PyJWT==1.6.0
 
 # homeassistant.components.media_player.sonos
 SoCo==0.14
@@ -33,6 +33,9 @@ aioautomatic==0.6.5
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.6.0
+
+# homeassistant.components.hue
+aiohue==0.3.0
 
 # homeassistant.components.notify.apns
 apns2==0.3.0
@@ -75,7 +78,7 @@ hbmqtt==0.9.1
 holidays==0.9.3
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180227.0
+home-assistant-frontend==20180309.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -121,7 +124,7 @@ prometheus_client==0.1.0
 pushbullet.py==0.11.0
 
 # homeassistant.components.canary
-py-canary==0.4.0
+py-canary==0.4.1
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -147,7 +150,7 @@ pythonwhois==2.4.3
 pyunifi==2.13
 
 # homeassistant.components.notify.html5
-pywebpush==1.5.0
+pywebpush==1.6.0
 
 # homeassistant.components.python_script
 restrictedpython==4.0b2

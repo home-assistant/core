@@ -43,6 +43,7 @@ homeassistant/components/hassio.py @home-assistant/hassio
 
 # Individual components
 homeassistant/components/alarm_control_panel/egardia.py @jeroenterheerdt
+homeassistant/components/binary_sensor/hikvision.py @mezz64
 homeassistant/components/bmw_connected_drive.py @ChristianKuehnel
 homeassistant/components/camera/yi.py @bachya
 homeassistant/components/climate/ephember.py @ttroy50
@@ -54,6 +55,7 @@ homeassistant/components/device_tracker/tile.py @bachya
 homeassistant/components/history_graph.py @andrey-git
 homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/light/yeelight.py @rytilahti
+homeassistant/components/media_player/emby.py @mezz64
 homeassistant/components/media_player/kodi.py @armills
 homeassistant/components/media_player/mediaroom.py @dgomes
 homeassistant/components/media_player/monoprice.py @etsinko
@@ -77,6 +79,8 @@ homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 homeassistant/components/*/axis.py @kane610
 homeassistant/components/*/bmw_connected_drive.py @ChristianKuehnel
 homeassistant/components/*/broadlink.py @danielhiversen
+homeassistant/components/eight_sleep.py @mezz64
+homeassistant/components/*/eight_sleep.py @mezz64
 homeassistant/components/hive.py @Rendili @KJonline
 homeassistant/components/*/hive.py @Rendili @KJonline
 homeassistant/components/homekit/* @cdce8p
