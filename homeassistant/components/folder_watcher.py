@@ -5,8 +5,7 @@ import os
 import logging
 import voluptuous as vol
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['watchdog==0.8.3']
@@ -95,6 +94,3 @@ class Watcher(Entity):
             path,
             recursive=True)
         self._observer.start()
-
-    def stop_watching(self):
-        self._observer.stop()
