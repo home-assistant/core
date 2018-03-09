@@ -165,10 +165,6 @@ boto3==1.4.7
 # homeassistant.scripts.credstash
 botocore==1.7.34
 
-# homeassistant.components.sensor.broadlink
-# homeassistant.components.switch.broadlink
-broadlink==0.5
-
 # homeassistant.components.device_tracker.bluetooth_tracker
 bt_proximity==0.1.2
 
