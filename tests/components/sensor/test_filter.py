@@ -7,7 +7,10 @@ from homeassistant.components.sensor.filter import (
     LowPassFilter, OutlierFilter, ThrottleFilter, TimeSMAFilter)
 import homeassistant.util.dt as dt_util
 from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant, assert_setup_component
+import homeassistant.core as ha
+import homeassistant.util.dt as dt_util
+from tests.common import (get_test_home_assistant, assert_setup_component,
+                          init_recorder_component)
 
 
 class TestFilterSensor(unittest.TestCase):
@@ -21,6 +24,11 @@ class TestFilterSensor(unittest.TestCase):
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
+
+    def init_recorder(self):
+        """Initialize the recorder."""
+        init_recorder_component(self.hass)
+        self.hass.start()
 
     def test_setup_fail(self):
         """Test if filter doesn't exist."""
@@ -36,31 +44,49 @@ class TestFilterSensor(unittest.TestCase):
 
     def test_chain(self):
         """Test if filter chaining works."""
+        self.init_recorder()
         config = {
+            'history': {
+            },
             'sensor': {
                 'platform': 'filter',
                 'name': 'test',
                 'entity_id': 'sensor.test_monitored',
+                'history_period': '00:05',
                 'filters': [{
                     'filter': 'outlier',
+                    'window_size': 10,
                     'radius': 4.0
                     }, {
                         'filter': 'lowpass',
-                        'window_size': 4,
                         'time_constant': 10,
                         'precision': 2
                     }]
             }
         }
-        with assert_setup_component(1):
-            assert setup_component(self.hass, 'sensor', config)
+        t_0 = dt_util.utcnow() - timedelta(minutes=1)
+        t_1 = dt_util.utcnow() - timedelta(minutes=2)
+        t_2 = dt_util.utcnow() - timedelta(minutes=3)
 
-        for value in self.values:
-            self.hass.states.set(config['sensor']['entity_id'], value)
-            self.hass.block_till_done()
+        fake_states = {
+            'sensor.test_monitored': [
+                ha.State('sensor.test_monitored', 18.0, last_changed=t_0),
+                ha.State('sensor.test_monitored', 19.0, last_changed=t_1),
+                ha.State('sensor.test_monitored', 18.2, last_changed=t_2),
+            ]
+        }
 
-        state = self.hass.states.get('sensor.test')
-        self.assertEqual('20.25', state.state)
+        with patch('homeassistant.components.history.'
+                   'state_changes_during_period', return_value=fake_states):
+            with assert_setup_component(1, 'sensor'):
+                assert setup_component(self.hass, 'sensor', config)
+
+            for value in self.values:
+                self.hass.states.set(config['sensor']['entity_id'], value)
+                self.hass.block_till_done()
+
+            state = self.hass.states.get('sensor.test')
+            self.assertEqual('19.25', state.state)
 
     def test_outlier(self):
         """Test if outlier filter works."""
