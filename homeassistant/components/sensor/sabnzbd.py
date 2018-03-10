@@ -75,15 +75,14 @@ def setup_sabnzbd(base_url, apikey, name, config,
                        for variable in monitored])
 
 
-@asyncio.coroutine
 @Throttle(MIN_TIME_BETWEEN_UPDATES)
-def async_update_queue(sab_api):
+async def async_update_queue(sab_api):
     """
     Throttled function to update SABnzbd queue.
 
     This ensures that the queue info only gets updated once for all sensors
     """
-    yield from sab_api.refresh_queue()
+    await sab_api.refresh_queue()
 
 
 def request_configuration(host, name, hass, config, async_add_devices,
