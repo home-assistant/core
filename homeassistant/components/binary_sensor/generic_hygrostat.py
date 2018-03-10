@@ -154,7 +154,7 @@ class GenericHygrostat(Entity):
         """Return the lowest humidity sample."""
         try:
             return min(self.humidity_samples)
-        except ValueError as ex:
+        except ValueError:
             return None
 
     def set_dehumidification_target(self):
