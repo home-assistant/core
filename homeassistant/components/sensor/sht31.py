@@ -29,15 +29,11 @@ DEFAULT_I2C_ADDRESS = 0x44
 
 SENSOR_TEMPERATURE = 'temperature'
 SENSOR_HUMIDITY = 'humidity'
-SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: 'Temperature',
-    SENSOR_HUMIDITY: 'Humidity'
-}
-
+SENSOR_TYPES = (SENSOR_TEMPERATURE, SENSOR_HUMIDITY)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES.keys())):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
@@ -56,22 +52,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         raise HomeAssistantError("SHT31 sensor not detected at address %s " %
                                  hex(i2c_address))
 
+    sensor_classes = {
+        SENSOR_TEMPERATURE: SHTSensorTemperature,
+        SENSOR_HUMIDITY: SHTSensorHumidity
+    }
+
     devs = []
-    for sensor_type, type_description in SENSOR_TYPES.items():
-        name = "{} {}".format(config.get(CONF_NAME), type_description)
-        devs.append(SHTSensor(sensor, name, sensor_type))
+    for sensor_type, sensor_class in sensor_classes.items():
+        name = "{} {}".format(config.get(CONF_NAME), sensor_type.capitalize())
+        devs.append(sensor_class(sensor, name))
 
     add_devices(devs)
 
 
 class SHTSensor(Entity):
-    """Representation of a SHTSensor, can be either temperature or humidity"""
+    """An abstract SHTSensor, can be either temperature or humidity"""
 
-    def __init__(self, sensor, name, sensor_type):
+    def __init__(self, sensor, name):
         """Initialize the sensor."""
         self._sensor = sensor
         self._name = name
-        self._type = sensor_type
         self._state = None
 
     @property
@@ -84,29 +84,41 @@ class SHTSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
+
+class SHTSensorTemperature(SHTSensor):
+    """Representation of a temperature sensor"""
+
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        if self._type == SENSOR_TEMPERATURE:
-            return self.hass.config.units.temperature_unit
-        elif self._type == SENSOR_HUMIDITY:
-            return '%'
+
+        return self.hass.config.units.temperature_unit
 
     def update(self):
-        """Fetch new state data for the sensor.
+        """Fetch temperature from the sensor"""
 
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        if self._type == SENSOR_TEMPERATURE:
-            temp_celsius = self._sensor.read_temperature()
-            if not math.isnan(temp_celsius):
-                self._state = display_temp(self.hass, temp_celsius,
-                                           TEMP_CELSIUS, PRECISION_TENTHS)
-            else:
-                _LOGGER.warning("Bad sample from sensor %s", self.name)
-        elif self._type == SENSOR_HUMIDITY:
-            humidity = self._sensor.read_humidity()
-            if not math.isnan(humidity):
-                self._state = round(humidity)
-            else:
-                _LOGGER.warning("Bad sample from sensor %s", self.name)
+        temp_celsius = self._sensor.read_temperature()
+        if not math.isnan(temp_celsius):
+            self._state = display_temp(self.hass, temp_celsius,
+                                       TEMP_CELSIUS, PRECISION_TENTHS)
+        else:
+            _LOGGER.warning("Bad sample from sensor %s", self.name)
+
+
+class SHTSensorHumidity(SHTSensor):
+    """Representation of a humidity sensor"""
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+
+        return '%'
+
+    def update(self):
+        """Fetch humidity from the sensor"""
+
+        humidity = self._sensor.read_humidity()
+        if not math.isnan(humidity):
+            self._state = round(humidity)
+        else:
+            _LOGGER.warning("Bad sample from sensor %s", self.name)
