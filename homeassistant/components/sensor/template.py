@@ -14,7 +14,8 @@ from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE, ATTR_ENTITY_ID,
-    CONF_SENSORS, EVENT_HOMEASSISTANT_START, CONF_FRIENDLY_NAME_TEMPLATE)
+    CONF_SENSORS, EVENT_HOMEASSISTANT_START, CONF_FRIENDLY_NAME_TEMPLATE,
+    MATCH_ALL)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
@@ -48,22 +49,30 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(
             CONF_ENTITY_PICTURE_TEMPLATE)
-        entity_ids = (device_config.get(ATTR_ENTITY_ID) or
-                      state_template.extract_entities())
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         friendly_name_template = device_config.get(CONF_FRIENDLY_NAME_TEMPLATE)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        state_template.hass = hass
+        entity_ids = []
+        manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
 
-        if icon_template is not None:
-            icon_template.hass = hass
+        for template in (state_template, icon_template,
+                         entity_picture_template, friendly_name_template):
+            if template is None:
+                continue
+            template.hass = hass
 
-        if entity_picture_template is not None:
-            entity_picture_template.hass = hass
+            if entity_ids == MATCH_ALL or manual_entity_ids is not None:
+                continue
 
-        if friendly_name_template is not None:
-            friendly_name_template.hass = hass
+            template_entity_ids = template.extract_entities()
+            if template_entity_ids == MATCH_ALL:
+                entity_ids = MATCH_ALL
+            else:
+                entity_ids += template_entity_ids
+
+        if manual_entity_ids is not None:
+            entity_ids = manual_entity_ids
 
         sensors.append(
             SensorTemplate(
