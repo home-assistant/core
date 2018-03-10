@@ -35,11 +35,8 @@ HM_STATE_HA_CAST = {
 HM_UNIT_HA_CAST = {
     'HUMIDITY': '%',
     'TEMPERATURE': '°C',
-<<<<<<< HEAD
     'ACTUAL_TEMPERATURE': '°C'
-=======
 	'ACTUAL_TEMPERATURE': '°C'
->>>>>>> 78545daa6a134c6c62247f44e281b0422eddc774
     'BRIGHTNESS': '#',
     'POWER': 'W',
     'CURRENT': 'mA',
@@ -62,11 +59,8 @@ HM_ICON_HA_CAST = {
     'WIND_SPEED': 'mdi:weather-windy',
     'HUMIDITY': 'mdi:water-percent',
     'TEMPERATURE': 'mdi:thermometer',
-<<<<<<< HEAD
     'ACTUAL_TEMPERATURE': 'mdi:thermometer',
-=======
 	'ACTUAL_TEMPERATURE': 'mdi:thermometer',
->>>>>>> 78545daa6a134c6c62247f44e281b0422eddc774
     'LUX': 'mdi:weather-sunny',
     'BRIGHTNESS': 'mdi:invert-colors',
     'POWER': 'mdi:flash-red-eye',
