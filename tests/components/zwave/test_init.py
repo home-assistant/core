@@ -309,7 +309,7 @@ def test_value_discovery_existing_entity(hass, mock_openzwave):
         'current_temperature'] is None
 
     def mock_update(self):
-        self.hass.async_add_job(self.async_update_ha_state)
+        self.hass.add_job(self.async_update_ha_state)
 
     with patch.object(zwave.node_entity.ZWaveBaseEntity,
                       'maybe_schedule_update', new=mock_update):
@@ -356,7 +356,7 @@ def test_power_schemes(hass, mock_openzwave):
         'switch.mock_node_mock_value').attributes
 
     def mock_update(self):
-        self.hass.async_add_job(self.async_update_ha_state)
+        self.hass.add_job(self.async_update_ha_state)
 
     with patch.object(zwave.node_entity.ZWaveBaseEntity,
                       'maybe_schedule_update', new=mock_update):
