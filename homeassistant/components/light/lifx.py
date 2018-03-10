@@ -221,7 +221,7 @@ class LIFXManager(object):
             tasks = []
             for light in self.service_to_entities(service):
                 if service.service == SERVICE_LIFX_SET_STATE:
-                    task = light.async_set_state(**service.data)
+                    task = light.set_state(**service.data)
                 tasks.append(self.hass.async_add_job(task))
             if tasks:
                 await asyncio.wait(tasks, loop=self.hass.loop)
