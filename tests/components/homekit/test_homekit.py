@@ -59,7 +59,7 @@ class TestHomeKit(unittest.TestCase):
             self.hass, 'homekit', CONFIG_MIN))
 
         self.assertEqual(mock_homekit.mock_calls,
-                         [call(self.hass, 51827),
+                         [call(self.hass, 51826),
                           call().setup_bridge(b'123-45-678')])
         mock_homekit.reset_mock()
 
