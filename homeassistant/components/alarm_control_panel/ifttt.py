@@ -9,30 +9,24 @@ import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, SERVICE_ALARM_ARM_AWAY,
-    STATE_ALARM_ARMED_HOME, SERVICE_ALARM_ARM_HOME,
-    STATE_ALARM_ARMED_NIGHT, SERVICE_ALARM_ARM_NIGHT,
-    STATE_ALARM_DISARMED, SERVICE_ALARM_DISARM,
-    CONF_NAME, CONF_CODE)
+from homeassistant.components.ifttt import (
+    ATTR_EVENT, DOMAIN as IFTTT_DOMAIN, SERVICE_TRIGGER)
+from homeassistant.const import STATE_ALARM_DISARMED, CONF_NAME, CONF_CODE
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['requests==2.18.4', 'pyfttt==0.3']
+DEPENDENCIES = ['ifttt']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_WEBHOOK_KEY = "webhook_key"
 DEFAULT_NAME = "Home"
 
-STATE_TO_SERVICE = {
-    STATE_ALARM_ARMED_AWAY: SERVICE_ALARM_ARM_AWAY,
-    STATE_ALARM_ARMED_HOME: SERVICE_ALARM_ARM_HOME,
-    STATE_ALARM_ARMED_NIGHT: SERVICE_ALARM_ARM_NIGHT,
-    STATE_ALARM_DISARMED: SERVICE_ALARM_DISARM}
+EVENT_ALARM_ARM_AWAY = "alarm_arm_away"
+EVENT_ALARM_ARM_HOME = "alarm_arm_home"
+EVENT_ALARM_ARM_NIGHT = "alarm_arm_night"
+EVENT_ALARM_DISARM = "alarm_disarm"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_WEBHOOK_KEY): cv.string,
     vol.Optional(CONF_CODE, default=None): cv.string,
 })
 
@@ -40,20 +34,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a control panel managed through IFTTT."""
     name = config.get(CONF_NAME)
-    webhook_key = config.get(CONF_WEBHOOK_KEY)
     code = config.get(CONF_CODE)
 
-    alarmpanel = IFTTTAlarmPanel(name, webhook_key, code)
-    add_devices([alarmpanel], True)
+    alarmpanel = IFTTTAlarmPanel(hass, name, code)
+    add_devices([alarmpanel])
 
 
 class IFTTTAlarmPanel(alarm.AlarmControlPanel):
     """Representation of an alarm control panel controlled throught IFTTT."""
 
-    def __init__(self, name, webhook_key, code):
+    def __init__(self, hass, name, code):
         """Initialize the alarm control panel."""
+        self._hass = hass
         self._name = name
-        self._webhook_key = webhook_key
         self._code = code
         # Set default state to disarmed
         self._state = STATE_ALARM_DISARMED
@@ -69,6 +62,11 @@ class IFTTTAlarmPanel(alarm.AlarmControlPanel):
         return self._state
 
     @property
+    def assumed_state(self):
+        """Notify that this platform return an assumed state."""
+        return True
+
+    @property
     def code_format(self):
         """Return one or more characters."""
         return None if self._code is None else '.+'
@@ -77,42 +75,32 @@ class IFTTTAlarmPanel(alarm.AlarmControlPanel):
         """Send disarm command."""
         if not self._check_code(code):
             return
-        self.set_alarm_state(STATE_ALARM_DISARMED, code)
+        self.set_alarm_state(EVENT_ALARM_DISARM, code)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         if not self._check_code(code):
             return
-        self.set_alarm_state(STATE_ALARM_ARMED_AWAY, code)
+        self.set_alarm_state(EVENT_ALARM_ARM_AWAY, code)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         if not self._check_code(code):
             return
-        self.set_alarm_state(STATE_ALARM_ARMED_HOME, code)
+        self.set_alarm_state(EVENT_ALARM_ARM_HOME, code)
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
         if not self._check_code(code):
             return
-        self.set_alarm_state(STATE_ALARM_ARMED_NIGHT, code)
+        self.set_alarm_state(EVENT_ALARM_ARM_NIGHT, code)
 
-    def set_alarm_state(self, state, code):
-        """Call the IFTTT webhook to change the alarm state."""
-        import pyfttt
-        import requests
+    def set_alarm_state(self, event, code):
+        """Call the IFTTT trigger service to change the alarm state."""
+        data = {ATTR_EVENT: event}
 
-        try:
-            # Translate the state to a service/event name
-            event = STATE_TO_SERVICE[state]
-
-            # Send the webhook request
-            pyfttt.send_event(self._webhook_key, event)
-            # IFTTT should be configured to also call the API to change state
-
-            _LOGGER.debug("Called IFTTT webhook to set state %s", state)
-        except requests.exceptions.RequestException:
-            _LOGGER.exception("Error communicating with IFTTT")
+        self._hass.services.call(IFTTT_DOMAIN, SERVICE_TRIGGER, data)
+        _LOGGER.debug("Called IFTTT component to trigger event %s", event)
 
     def _check_code(self, code):
         return self._code is None or self._code == code

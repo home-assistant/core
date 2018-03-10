@@ -737,7 +737,6 @@ pyfido==2.1.0
 pyflexit==0.3
 
 # homeassistant.components.ifttt
-# homeassistant.components.alarm_control_panel.ifttt
 pyfttt==0.3
 
 # homeassistant.components.remote.harmony
@@ -1059,9 +1058,6 @@ raincloudy==0.0.4
 
 # homeassistant.components.switch.rainmachine
 regenmaschine==0.4.1
-
-# homeassistant.components.alarm_control_panel.ifttt
-requests==2.18.4
 
 # homeassistant.components.python_script
 restrictedpython==4.0b2
