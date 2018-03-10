@@ -29,7 +29,8 @@ DEFAULT_I2C_ADDRESS = '0x44'
 SENSOR_TEMPERATURE = 'temperature'
 SENSOR_HUMIDITY = 'humidity'
 SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ['Temperature', lambda hass: hass.config.units.temperature_unit],
+    SENSOR_TEMPERATURE: ['Temperature',
+                         lambda hass: hass.config.units.temperature_unit],
     SENSOR_HUMIDITY: ['Humidity', '%']
 }
 
@@ -52,7 +53,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         sensor.read_status()
     except OSError as err:
-        raise HomeAssistantError("SHT31 sensor not detected at address %d (i2c_address: %s)" %
+        raise HomeAssistantError("SHT31 sensor not detected at address %d "
+                                 "(i2c_address: %s)" %
                                  (i2c_address, config.get(CONF_I2C_ADDRESS)))
 
     devs = []
