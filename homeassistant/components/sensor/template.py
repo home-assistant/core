@@ -166,10 +166,10 @@ class SensorTemplate(Entity):
                 # Common during HA startup - so just a warning
                 _LOGGER.warning('Could not render template %s,'
                                 ' the state is unknown.', self._name)
-                return
-            self._state = None
-            _LOGGER.error('Could not render template %s: %s', self._name, ex)
-
+            else:
+                self._state = None
+                _LOGGER.error('Could not render template %s: %s', self._name,
+                              ex)
         for property_name, template in (
                 ('_icon', self._icon_template),
                 ('_entity_picture', self._entity_picture_template),
@@ -187,7 +187,7 @@ class SensorTemplate(Entity):
                     _LOGGER.warning('Could not render %s template %s,'
                                     ' the state is unknown.',
                                     friendly_property_name, self._name)
-                    return
+                    continue
 
                 try:
                     setattr(self, property_name,
