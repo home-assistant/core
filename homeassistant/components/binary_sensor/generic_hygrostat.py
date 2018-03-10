@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                  default=DEFAULT_HUMIDITY_TARGET_OFFSET):
                  vol.Coerce(float),
     vol.Optional(CONF_MAX_ON_TIME, default=DEFAULT_MAX_ON_TIME):
-                 vol.Coerce(float)
+        vol.Coerce(float)
 })
 
 
