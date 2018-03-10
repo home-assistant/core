@@ -319,7 +319,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
         return
 
 
-class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
+class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
     """Representation of a Xiaomi Power Strip."""
 
     def __init__(self, name, plug, model):
@@ -393,7 +393,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
             self._plug.set_power_mode, PowerMode(mode))
 
 
-class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch, SwitchDevice):
+class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch):
     """Representation of a Chuang Mi Plug V1."""
 
     def __init__(self, name, plug, model, channel_usb):
