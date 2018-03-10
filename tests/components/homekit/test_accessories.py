@@ -11,7 +11,7 @@ from homeassistant.components.homekit.accessories import (
 from homeassistant.components.homekit.const import (
     ACCESSORY_MODEL, ACCESSORY_NAME, BRIDGE_MODEL, BRIDGE_NAME,
     SERV_ACCESSORY_INFO, SERV_BRIDGING_STATE,
-    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_SERIAL_NUMBER)
+    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
 
 
 class TestAccessories(unittest.TestCase):
@@ -47,9 +47,10 @@ class TestAccessories(unittest.TestCase):
         """Test setting the basic accessory information."""
         # Test HomeAccessory
         acc = HomeAccessory()
-        set_accessory_info(acc, 'model', 'manufacturer', '0000')
+        set_accessory_info(acc, 'name', 'model', 'manufacturer', '0000')
 
         serv = acc.get_service(SERV_ACCESSORY_INFO)
+        self.assertEqual(serv.get_characteristic(CHAR_NAME).value, 'name')
         self.assertEqual(serv.get_characteristic(CHAR_MODEL).value, 'model')
         self.assertEqual(
             serv.get_characteristic(CHAR_MANUFACTURER).value, 'manufacturer')
@@ -58,7 +59,7 @@ class TestAccessories(unittest.TestCase):
 
         # Test HomeBridge
         acc = HomeBridge(None)
-        set_accessory_info(acc, 'model', 'manufacturer', '0000')
+        set_accessory_info(acc, 'name', 'model', 'manufacturer', '0000')
 
         serv = acc.get_service(SERV_ACCESSORY_INFO)
         self.assertEqual(serv.get_characteristic(CHAR_MODEL).value, 'model')

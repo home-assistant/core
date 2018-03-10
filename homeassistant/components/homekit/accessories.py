@@ -7,7 +7,7 @@ from pyhap.accessory_driver import AccessoryDriver
 from .const import (
     ACCESSORY_MODEL, ACCESSORY_NAME, BRIDGE_MODEL, BRIDGE_NAME,
     MANUFACTURER, SERV_ACCESSORY_INFO, SERV_BRIDGING_STATE,
-    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_SERIAL_NUMBER)
+    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
 from .util import (
     show_setup_message, dismiss_setup_message)
 
@@ -27,10 +27,11 @@ def add_preload_service(acc, service, chars=None):
     return service
 
 
-def set_accessory_info(acc, model, manufacturer=MANUFACTURER,
+def set_accessory_info(acc, name, model, manufacturer=MANUFACTURER,
                        serial_number='0000'):
     """Set the default accessory information."""
     service = acc.get_service(SERV_ACCESSORY_INFO)
+    service.get_characteristic(CHAR_NAME).set_value(name)
     service.get_characteristic(CHAR_MODEL).set_value(model)
     service.get_characteristic(CHAR_MANUFACTURER).set_value(manufacturer)
     service.get_characteristic(CHAR_SERIAL_NUMBER).set_value(serial_number)
@@ -48,11 +49,11 @@ def override_properties(char, properties=None, valid_values=None):
 class HomeAccessory(Accessory):
     """Adapter class for Accessory."""
 
-    def __init__(self, display_name=ACCESSORY_NAME,
-                 model=ACCESSORY_MODEL, category='OTHER', **kwargs):
+    def __init__(self, name=ACCESSORY_NAME, model=ACCESSORY_MODEL,
+                 category='OTHER', **kwargs):
         """Initialize a Accessory object."""
-        super().__init__(display_name, **kwargs)
-        set_accessory_info(self, display_name, model)
+        super().__init__(name, **kwargs)
+        set_accessory_info(self, name, model)
         self.category = getattr(Category, category, Category.OTHER)
 
     def _set_services(self):
@@ -62,11 +63,11 @@ class HomeAccessory(Accessory):
 class HomeBridge(Bridge):
     """Adapter class for Bridge."""
 
-    def __init__(self, hass, display_name=BRIDGE_NAME,
+    def __init__(self, hass, name=BRIDGE_NAME,
                  model=BRIDGE_MODEL, **kwargs):
         """Initialize a Bridge object."""
-        super().__init__(display_name, **kwargs)
-        set_accessory_info(self, model)
+        super().__init__(name, **kwargs)
+        set_accessory_info(self, name, model)
         self._hass = hass
 
     def _set_services(self):
