@@ -29,7 +29,7 @@ ATTR_STATE_BATTERY_LOW = 'battery_low'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICES, default=[]):
+        vol.Required(CONF_DEVICES):
             vol.All(cv.ensure_list, [
                 vol.Schema({
                     vol.Required(CONF_HOST): cv.string,
