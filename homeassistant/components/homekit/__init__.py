@@ -42,7 +42,7 @@ def valid_pin(value):
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
-        vol.Optional(CONF_PORT, default=51826): vol.Coerce(int),
+        vol.Optional(CONF_PORT, default=51827): vol.Coerce(int),
         vol.Optional(CONF_PIN_CODE, default='123-45-678'): valid_pin,
     })
 }, extra=vol.ALLOW_EXTRA)
