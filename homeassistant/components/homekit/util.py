@@ -9,7 +9,7 @@ from homeassistant.const import (
     ATTR_CODE)
 import homeassistant.helpers.config_validation as cv
 from .const import (
-    CONF_AID, CONF_AUTO_START, CONF_EVENTS, HOMEKIT_NOTIFY_ID, QR_CODE_NAME)
+    CONF_AID, HOMEKIT_NOTIFY_ID, QR_CODE_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,14 +54,6 @@ def validate_entities(values):
                 'of type integer or type dictionary.'.format(entity))
         entities[entity] = params
     return entities
-
-
-def validate_events_auto_start(config):
-    """Validate that if events are given auto_start must be true."""
-    if config[CONF_EVENTS] and not config[CONF_AUTO_START]:
-        raise vol.Invalid('"auto_start" must be "True" for for "events" to'
-                          ' have an effect.')
-    return config
 
 
 def show_setup_message(bridge, hass):

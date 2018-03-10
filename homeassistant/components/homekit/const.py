@@ -8,12 +8,9 @@ QR_CODE_NAME = 'homekit_qr.png'
 # #### CONFIG ####
 CONF_AID = 'aid'
 CONF_AUTO_START = 'auto_start'
-CONF_EVENTS = 'events'
-CONF_PIN_CODE = 'pincode'
 
 # #### CONFIG DEFAULTS ####
 DEFAULT_AUTO_START = True
-DEFAULT_EVENTS = []
 DEFAULT_PORT = 51826
 
 # #### HOMEKIT COMPONENT SERVICES ####

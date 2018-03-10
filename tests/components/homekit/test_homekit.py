@@ -4,10 +4,10 @@ from unittest.mock import call, patch, ANY, Mock
 
 from homeassistant import setup
 from homeassistant.core import State
-from homeassistant.components.homekit import HomeKit, CONFIG_SCHEMA
+from homeassistant.components.homekit import HomeKit
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
-    DOMAIN, HOMEKIT_FILE, CONF_AUTO_START, CONF_PIN_CODE,
+    DOMAIN, HOMEKIT_FILE, CONF_AUTO_START,
     DEFAULT_PORT, SERVICE_HOMEKIT_START)
 from homeassistant.const import (
     CONF_ENTITIES, CONF_PORT,
@@ -17,13 +17,6 @@ from tests.common import get_test_home_assistant
 
 IP_ADDRESS = '127.0.0.1'
 PATH_HOMEKIT = 'homeassistant.components.homekit'
-
-
-def test_pin_deprecated(caplog):
-    """Test pin deprecated method."""
-    CONFIG_SCHEMA({DOMAIN: {
-        CONF_PIN_CODE: '123-45-678', CONF_ENTITIES: {'demo.test': 2}}})
-    assert len(caplog.records) == 1
 
 
 class TestHomeKit(unittest.TestCase):
@@ -45,8 +38,7 @@ class TestHomeKit(unittest.TestCase):
             self.hass, DOMAIN, config))
 
         self.assertEqual(mock_homekit.mock_calls, [
-            call(self.hass, 11111, {'demo.test': {'aid': 2}},
-                 [EVENT_HOMEASSISTANT_START]),
+            call(self.hass, 11111, {'demo.test': {'aid': 2}}),
             call().setup()])
 
         # Test auto start enabled
@@ -54,8 +46,7 @@ class TestHomeKit(unittest.TestCase):
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
 
-        self.assertEqual(mock_homekit.mock_calls, [
-            call().start_event_call(ANY)])
+        self.assertEqual(mock_homekit.mock_calls, [call().start(ANY)])
 
     @patch(PATH_HOMEKIT + '.HomeKit')
     def test_setup_auto_start_disabled(self, mock_homekit):
@@ -70,16 +61,16 @@ class TestHomeKit(unittest.TestCase):
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
 
+        print(mock_homekit.mock_calls)
         self.assertEqual(mock_homekit.mock_calls, [
-            call(self.hass, DEFAULT_PORT, {'demo.test': {'aid': 2}},
-                 [EVENT_HOMEASSISTANT_START]),
+            call(self.hass, DEFAULT_PORT, {'demo.test': {'aid': 2}}),
             call().setup()])
 
         # Test start call with driver stopped.
         homekit.reset_mock()
         homekit.configure_mock(**{'started': False})
 
-        self.hass.components.homekit.start()
+        self.hass.services.call('homekit', 'start')
         self.assertEqual(homekit.mock_calls, [call.start()])
 
         # Test start call with driver started.
@@ -91,8 +82,7 @@ class TestHomeKit(unittest.TestCase):
 
     def test_homekit_setup(self):
         """Test setup of bridge and driver."""
-        homekit = HomeKit(self.hass, DEFAULT_PORT, {'demo.test': {'aid': 2}},
-                          [EVENT_HOMEASSISTANT_START])
+        homekit = HomeKit(self.hass, DEFAULT_PORT, {'demo.test': {'aid': 2}})
 
         with patch(PATH_HOMEKIT + '.accessories.HomeDriver') as mock_driver, \
                 patch('homeassistant.util.get_local_ip') as mock_ip:
@@ -108,19 +98,10 @@ class TestHomeKit(unittest.TestCase):
         self.assertEqual(
             self.hass.bus.listeners.get(EVENT_HOMEASSISTANT_STOP), 1)
 
-    @patch(PATH_HOMEKIT + '.HomeKit.start')
-    def test_homekit_start_event_call(self, mock_start):
-        """Test if method calls start after all events have been logged."""
-        homekit = HomeKit(None, None, None, ['event_1', 'event_2'])
-        homekit.start_event_call('event_1')
-        self.assertEqual(mock_start.mock_calls, [])
-        homekit.start_event_call('event_2')
-        self.assertEqual(mock_start.mock_calls, [call()])
-
     def test_homekit_add_accessory(self):
         """Add accessory if config exists and get_acc returns an accessory."""
         homekit = HomeKit(self.hass, None, {
-            'demo.test': {'aid': 2}, 'demo.test_2': {'aid': 3}}, [])
+            'demo.test': {'aid': 2}, 'demo.test_2': {'aid': 3}})
         homekit.bridge = HomeBridge(self.hass)
 
         with patch(PATH_HOMEKIT + '.accessories.HomeBridge.add_accessory') \
@@ -138,7 +119,7 @@ class TestHomeKit(unittest.TestCase):
     @patch(PATH_HOMEKIT + '.HomeKit.add_bridge_accessory')
     def test_homekit_start(self, mock_add_bridge_acc, mock_show_setup_msg):
         """Test HomeKit start method."""
-        homekit = HomeKit(self.hass, None, {'demo.test': {'aid': 2}}, [])
+        homekit = HomeKit(self.hass, None, {'demo.test': {'aid': 2}})
         homekit.bridge = HomeBridge(self.hass)
         homekit.driver = Mock()
 
@@ -160,7 +141,7 @@ class TestHomeKit(unittest.TestCase):
 
     def test_homekit_stop(self):
         """Test HomeKit stop method."""
-        homekit = HomeKit(None, None, None, [])
+        homekit = HomeKit(None, None, None)
         homekit.driver = Mock()
 
         # Test if started = False

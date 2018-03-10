@@ -13,16 +13,14 @@ from homeassistant.const import (
     ATTR_CODE, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_PORT, CONF_ENTITIES, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 from .const import (
-    DOMAIN, HOMEKIT_FILE, CONF_AID, CONF_AUTO_START, CONF_EVENTS,
-    CONF_PIN_CODE, DEFAULT_PORT, DEFAULT_AUTO_START, DEFAULT_EVENTS,
-    SERVICE_HOMEKIT_START)
+    DOMAIN, HOMEKIT_FILE, CONF_AID, CONF_AUTO_START,
+    DEFAULT_PORT, DEFAULT_AUTO_START, SERVICE_HOMEKIT_START)
 from .util import (
-    validate_entities, validate_events_auto_start, show_setup_message)
+    validate_entities, show_setup_message)
 
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
@@ -30,29 +28,13 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['HAP-python==1.1.7', 'pypng==0.0.18']
 
 
-def pin_deprecated(value):
-    """Validate pin code value."""
-    _LOGGER.warning(
-        "Setting a custom pin code is no longer supported. Please remove "
-        "the 'pincode' option from your configuration. A valid pin code "
-        "will be generated automatically for you.")
-
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
-        vol.Optional(CONF_PIN_CODE): pin_deprecated,
         vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
-        vol.Optional(CONF_EVENTS, default=DEFAULT_EVENTS): cv.ensure_list,
         vol.Required(CONF_ENTITIES): validate_entities,
-    }, validate_events_auto_start)
+    })
 }, extra=vol.ALLOW_EXTRA)
-
-
-@bind_hass
-def start(hass):
-    """Start HomeKit instance."""
-    hass.services.call(DOMAIN, SERVICE_HOMEKIT_START)
 
 
 async def async_setup(hass, config):
@@ -62,11 +44,14 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
     port = conf[CONF_PORT]
     auto_start = conf[CONF_AUTO_START]
-    event_list = conf[CONF_EVENTS] + [EVENT_HOMEASSISTANT_START]
     entities = conf[CONF_ENTITIES]
 
-    homekit = HomeKit(hass, port, entities, event_list)
+    homekit = HomeKit(hass, port, entities)
     homekit.setup()
+
+    if auto_start:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, homekit.start)
+        return True
 
     def handle_homekit_service_start(service):
         """Handle start HomeKit service call."""
@@ -77,12 +62,6 @@ async def async_setup(hass, config):
 
     hass.services.async_register(DOMAIN, SERVICE_HOMEKIT_START,
                                  handle_homekit_service_start)
-
-    if not auto_start:
-        return True
-
-    for event in event_list:
-        hass.bus.async_listen_once(event, homekit.start_event_call)
 
     return True
 
@@ -138,13 +117,11 @@ def get_accessory(hass, state, config):
 class HomeKit():
     """Class to handle all actions between HomeKit and Home Assistant."""
 
-    def __init__(self, hass, port, config, start_events):
+    def __init__(self, hass, port, config):
         """Initialize a HomeKit object."""
         self._hass = hass
         self._port = port
         self._config = config
-        self._event_calls = len(start_events)
-        self._calls_received = 0
         self.started = False
 
         self.bridge = None
@@ -170,13 +147,7 @@ class HomeKit():
         if acc is not None:
             self.bridge.add_accessory(acc)
 
-    def start_event_call(self, event):
-        """Log event listener callbacks, call start if all events happened."""
-        self._calls_received += 1
-        if self._event_calls == self._calls_received:
-            self.start()
-
-    def start(self):
+    def start(self, *args):
         """Start the accessory driver."""
         if self.started:
             return
