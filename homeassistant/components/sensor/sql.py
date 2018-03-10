@@ -4,6 +4,7 @@ Sensor from an SQL Query.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sql/
 """
+import decimal
 import logging
 
 import voluptuous as vol
@@ -131,17 +132,20 @@ class SQLSensor(Entity):
         try:
             sess = self.sessionmaker()
             result = sess.execute(self._query)
+            self._attributes = {}
 
             if not result.returns_rows or result.rowcount == 0:
                 _LOGGER.warning("%s returned no results", self._query)
                 self._state = None
-                self._attributes = {}
                 return
 
             for res in result:
                 _LOGGER.debug("result = %s", res.items())
                 data = res[self._column_name]
-                self._attributes = {k: v for k, v in res.items()}
+                for key, value in res.items():
+                    if isinstance(value, decimal.Decimal):
+                        value = float(decimal)
+                    self._attributes[key] = value
         except sqlalchemy.exc.SQLAlchemyError as err:
             _LOGGER.error("Error executing query %s: %s", self._query, err)
             return
