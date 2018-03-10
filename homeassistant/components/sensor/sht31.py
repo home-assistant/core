@@ -34,7 +34,8 @@ SENSOR_HUMIDITY = 'humidity'
 SENSOR_TYPES = (SENSOR_TEMPERATURE, SENSOR_HUMIDITY)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): cv.string,
+    vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS):
+        vol.All(vol.Coerce(int), vol.Range(min=0x44, max=0x45)),
     vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -45,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     from Adafruit_SHT31 import SHT31
 
-    i2c_address = int(config.get(CONF_I2C_ADDRESS))
+    i2c_address = config.get(CONF_I2C_ADDRESS)
     sensor = SHT31(address=i2c_address)
 
     try:
