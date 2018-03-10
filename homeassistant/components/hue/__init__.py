@@ -223,7 +223,7 @@ class HueBridge(object):
                           self.host)
             return
         except aiohue.AiohueException:
-            _LOGGER.exception('Uknown Hue linking error occurred')
+            _LOGGER.exception('Unknown Hue linking error occurred')
             self.async_request_configuration()
             return
         except Exception:  # pylint: disable=broad-except
