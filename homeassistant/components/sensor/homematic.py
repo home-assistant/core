@@ -35,7 +35,7 @@ HM_STATE_HA_CAST = {
 HM_UNIT_HA_CAST = {
     'HUMIDITY': '%',
     'TEMPERATURE': '°C',
-    'ACTUAL_TEMPERATURE': '°C'
+    'ACTUAL_TEMPERATURE': '°C',
     'BRIGHTNESS': '#',
     'POWER': 'W',
     'CURRENT': 'mA',
