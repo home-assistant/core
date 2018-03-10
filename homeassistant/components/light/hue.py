@@ -82,7 +82,8 @@ async def async_update_lights(hass, bridge, cur_lights, cur_groups,
             new_lights.append(cur_lights[light_id])
 
     if not allow_groups:
-        async_add_devices(new_lights)
+        if new_lights:
+            async_add_devices(new_lights)
         return
 
     await bridge.groups.update()

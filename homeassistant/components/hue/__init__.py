@@ -146,7 +146,7 @@ def setup_bridge(host, hass, filename=None,
 
     bridge = HueBridge(host, hass, filename, username, allow_unreachable,
                        allow_hue_groups)
-    hass.async_add_job(bridge.async_setup())
+    hass.add_job(bridge.async_setup())
 
 
 def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
