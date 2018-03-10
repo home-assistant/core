@@ -5,6 +5,7 @@ from homeassistant.components import (
     cover,
     group,
     fan,
+    input_boolean,
     media_player,
     light,
     scene,
@@ -182,6 +183,7 @@ class OnOffTrait(_Trait):
         """Test if state is supported."""
         return domain in (
             group.DOMAIN,
+            input_boolean.DOMAIN,
             switch.DOMAIN,
             fan.DOMAIN,
             light.DOMAIN,

@@ -730,3 +730,18 @@ async def test_old_style_track_new_is_skipped(mock_device_tracker_conf, hass):
     await hass.async_block_till_done()
     assert len(mock_device_tracker_conf) == 1
     assert mock_device_tracker_conf[0].track is False
+
+
+def test_see_schema_allowing_ios_calls():
+    """Test SEE service schema allows extra keys.
+
+    Temp work around because the iOS app sends incorrect data.
+    """
+    device_tracker.SERVICE_SEE_PAYLOAD_SCHEMA({
+        'dev_id': 'Test',
+        "battery": 35,
+        "battery_status": 'Unplugged',
+        "gps": [10.0, 10.0],
+        "gps_accuracy": 300,
+        "hostname": 'beer',
+    })
