@@ -47,14 +47,13 @@ DEFAULT_MAX_ON_TIME = 7200
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HUMIDITY_SENSOR): cv.entity_id,
-    vol.Optional(
-        CONF_HUMIDITY_DELTA_TRIGGER, default=DEFAULT_HUMIDITY_DELTA_TRIGGER):
-        vol.Coerce(float),
-    vol.Optional(
-        CONF_HUMIDITY_TARGET_OFFSET, default=DEFAULT_HUMIDITY_TARGET_OFFSET):
-        vol.Coerce(float),
-    vol.Optional(
-        CONF_MAX_ON_TIME, default=DEFAULT_MAX_ON_TIME):
+    vol.Optional(CONF_HUMIDITY_DELTA_TRIGGER,
+                 default=DEFAULT_HUMIDITY_DELTA_TRIGGER):
+                     vol.Coerce(float),
+    vol.Optional(CONF_HUMIDITY_TARGET_OFFSET,
+                 default=DEFAULT_HUMIDITY_TARGET_OFFSET):
+                     vol.Coerce(float),
+    vol.Optional(CONF_MAX_ON_TIME, default=DEFAULT_MAX_ON_TIME):
         vol.Coerce(float)
 })
 
