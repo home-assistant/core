@@ -159,7 +159,7 @@ class GroupAlarm(alarm.AlarmControlPanel):
         """Update the current state and state attributes of the device."""
         def _common_state(states):
             # This can happen if the sub-panels have not loaded yet.
-            if len(states) == 0:
+            if not states:
                 return None
 
             # One triggered sub-panel is enough to trigger the whole panel.
