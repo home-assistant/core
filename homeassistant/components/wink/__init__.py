@@ -554,7 +554,7 @@ class WinkAuthCallbackView(HomeAssistantView):
         from aiohttp import web
 
         hass = request.app['hass']
-        data = request.GET
+        data = request.query
 
         response_message = """Wink has been successfully authorized!
          You can close this window now! For the best results you should reboot
