@@ -131,7 +131,7 @@ def bridge_discovered(hass, service, discovery_info):
     serial = discovery_info.get('serial')
 
     filename = 'phue-{}.conf'.format(serial)
-    hass.async_add_job(setup_bridge(host, hass, filename))
+    setup_bridge(host, hass, filename)
 
 
 def setup_bridge(host, hass, filename=None,
@@ -174,6 +174,14 @@ def _find_username_from_config(hass, filename):
 
     with open(path) as inp:
         return list(json.load(inp).values())[0]['username']
+
+
+def _save_config(hass, filename, host, username):
+    """Store config."""
+    with open(hass.config.path(filename), 'w') as outp:
+        json.dump({
+            host: {'username': bridge.username}
+        }, outp)
 
 
 class HueBridge(object):
@@ -237,11 +245,10 @@ class HueBridge(object):
             configurator = self.hass.components.configurator
             configurator.async_request_done(request_id)
 
-            # Write config file.
-            with open(self.hass.config.path(self.filename), 'w') as outp:
-                json.dump({
-                    self.host: {'username': bridge.username}
-                }, outp)
+            # Save config file
+            await self.hass.async_add_job(
+                _save_config, self.hass, self.filename, self.host,
+                bridge.username)
 
         self.aiobridge = bridge
 
