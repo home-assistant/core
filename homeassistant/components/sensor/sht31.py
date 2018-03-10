@@ -12,6 +12,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
@@ -50,10 +51,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     i2c_address = int(config.get(CONF_I2C_ADDRESS), 16)
     sensor = SHT31(address=i2c_address)
 
-    if sensor.read_status() is None:
-        _LOGGER.error("% sensor not detected at address %s",
-                      DEFAULT_NAME, config.get(CONF_I2C_ADDRESS))
-        return False
+    try:
+        sensor.read_status()
+    except OSError as err:
+        raise HomeAssistantError("SHT31 sensor not detected at address %d (i2c_address: %s)" %
+                                 (i2c_address, config.get(CONF_I2C_ADDRESS)))
 
     devs = []
     for sensor_type, props in SENSOR_TYPES.items():
