@@ -7,12 +7,14 @@ https://home-assistant.io/components/sensor.sht31/
 
 import logging
 import math
+
 import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import display_temp
 from homeassistant.const import PRECISION_TENTHS
