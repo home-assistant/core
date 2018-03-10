@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SHTSensor(Entity):
-    """Representation of a Sensor."""
+    """Representation of a SHTSensor, can be either temperature or humidity"""
 
     def __init__(self, sensor, name, sensor_type, unit):
         """Initialize the sensor."""
