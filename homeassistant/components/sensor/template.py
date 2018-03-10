@@ -53,7 +53,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         friendly_name_template = device_config.get(CONF_FRIENDLY_NAME_TEMPLATE)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        entity_ids = []
+        entity_ids = set()
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
 
         for template in (state_template, icon_template,
@@ -69,10 +69,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if template_entity_ids == MATCH_ALL:
                 entity_ids = MATCH_ALL
             else:
-                entity_ids += template_entity_ids
+                entity_ids |= set(template_entity_ids)
 
         if manual_entity_ids is not None:
             entity_ids = manual_entity_ids
+        elif entity_ids != MATCH_ALL:
+            entity_ids = list(entity_ids)
 
         sensors.append(
             SensorTemplate(
