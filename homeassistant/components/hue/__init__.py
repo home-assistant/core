@@ -15,13 +15,14 @@ import async_timeout
 import requests
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.discovery import SERVICE_HUE
 from homeassistant.const import CONF_FILENAME, CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery, aiohttp_client
 from homeassistant import config_entries
 
-REQUIREMENTS = ['phue==1.0', 'aiohue==0.3.0']
+REQUIREMENTS = ['aiohue==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,26 +37,22 @@ DEFAULT_ALLOW_UNREACHABLE = False
 
 PHUE_CONFIG_FILE = 'phue.conf'
 
-CONF_ALLOW_IN_EMULATED_HUE = "allow_in_emulated_hue"
-DEFAULT_ALLOW_IN_EMULATED_HUE = True
-
 CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
 DEFAULT_ALLOW_HUE_GROUPS = True
 
-BRIDGE_CONFIG_SCHEMA = vol.Schema([{
+BRIDGE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_FILENAME, default=PHUE_CONFIG_FILE): cv.string,
     vol.Optional(CONF_ALLOW_UNREACHABLE,
                  default=DEFAULT_ALLOW_UNREACHABLE): cv.boolean,
-    vol.Optional(CONF_ALLOW_IN_EMULATED_HUE,
-                 default=DEFAULT_ALLOW_IN_EMULATED_HUE): cv.boolean,
     vol.Optional(CONF_ALLOW_HUE_GROUPS,
                  default=DEFAULT_ALLOW_HUE_GROUPS): cv.boolean,
-}])
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_BRIDGES): BRIDGE_CONFIG_SCHEMA,
+        vol.Optional(CONF_BRIDGES):
+            vol.All(cv.ensure_list, [BRIDGE_CONFIG_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -105,9 +102,10 @@ def setup(hass, config):
 
     for bridge in bridges:
         filename = bridge.get(CONF_FILENAME)
-        allow_unreachable = bridge.get(CONF_ALLOW_UNREACHABLE)
-        allow_in_emulated_hue = bridge.get(CONF_ALLOW_IN_EMULATED_HUE)
-        allow_hue_groups = bridge.get(CONF_ALLOW_HUE_GROUPS)
+        allow_unreachable = bridge.get(CONF_ALLOW_UNREACHABLE,
+                                       DEFAULT_ALLOW_UNREACHABLE)
+        allow_hue_groups = bridge.get(CONF_ALLOW_HUE_GROUPS,
+                                      DEFAULT_ALLOW_HUE_GROUPS)
 
         host = bridge.get(CONF_HOST)
 
@@ -119,7 +117,7 @@ def setup(hass, config):
             return False
 
         setup_bridge(host, hass, filename, allow_unreachable,
-                     allow_in_emulated_hue, allow_hue_groups)
+                     allow_hue_groups)
 
     return True
 
@@ -133,11 +131,12 @@ def bridge_discovered(hass, service, discovery_info):
     serial = discovery_info.get('serial')
 
     filename = 'phue-{}.conf'.format(serial)
-    setup_bridge(host, hass, filename)
+    hass.async_add_job(setup_bridge(host, hass, filename))
 
 
-def setup_bridge(host, hass, filename=None, allow_unreachable=False,
-                 allow_in_emulated_hue=True, allow_hue_groups=True,
+def setup_bridge(host, hass, filename=None,
+                 allow_unreachable=DEFAULT_ALLOW_UNREACHABLE,
+                 allow_hue_groups=DEFAULT_ALLOW_HUE_GROUPS,
                  username=None):
     """Set up a given Hue bridge."""
     # Only register a device once
@@ -145,8 +144,8 @@ def setup_bridge(host, hass, filename=None, allow_unreachable=False,
         return
 
     bridge = HueBridge(host, hass, filename, username, allow_unreachable,
-                       allow_in_emulated_hue, allow_hue_groups)
-    bridge.setup()
+                       allow_hue_groups)
+    hass.async_add_job(bridge.async_setup())
 
 
 def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
@@ -166,51 +165,65 @@ def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
         return None
 
 
+def _find_username_from_config(hass, filename):
+    """Load username from config."""
+    path = hass.config.path(filename)
+
+    if not os.path.isfile(path):
+        return None
+
+    with open(path) as inp:
+        return list(json.load(inp).values())[0]['username']
+
+
 class HueBridge(object):
     """Manages a single Hue bridge."""
 
     def __init__(self, host, hass, filename, username, allow_unreachable=False,
-                 allow_in_emulated_hue=True, allow_hue_groups=True):
+                 allow_groups=True):
         """Initialize the system."""
         self.host = host
         self.bridge_id = socket.gethostbyname(host)
         self.hass = hass
         self.filename = filename
-        self.username = username
+        self.username = username or _find_username_from_config(hass, filename)
         self.allow_unreachable = allow_unreachable
-        self.allow_in_emulated_hue = allow_in_emulated_hue
-        self.allow_hue_groups = allow_hue_groups
+        self.allow_groups = allow_groups
 
-        self.available = True
-        self.bridge = None
-        self.lights = {}
-        self.lightgroups = {}
-
-        self.configured = False
         self.config_request_id = None
+
+        self.aiobridge = None
 
         hass.data[DOMAIN][self.bridge_id] = self
 
-    def setup(self):
+    async def async_setup(self):
         """Set up a phue bridge based on host parameter."""
-        import phue
+        import aiohue
+
+        bridge = aiohue.Bridge(
+            self.host,
+            username=self.username,
+            websession=aiohttp_client.async_get_clientsession(self.hass)
+        )
 
         try:
-            kwargs = {}
-            if self.username is not None:
-                kwargs['username'] = self.username
-            if self.filename is not None:
-                kwargs['config_file_path'] = \
-                    self.hass.config.path(self.filename)
-            self.bridge = phue.Bridge(self.host, **kwargs)
-        except OSError:  # Wrong host was given
+            with async_timeout.timeout(5):
+                # Initialize bridge and validate our username
+                if not self.username:
+                    await bridge.create_user('home-assistant')
+                await bridge.initialize()
+        except (aiohue.LinkButtonNotPressed, aiohue.Unauthorized):
+            _LOGGER.warning("Connected to Hue at %s but not registered.",
+                            self.host)
+            self.async_request_configuration()
+            return
+        except (asyncio.TimeoutError, aiohue.RequestError):
             _LOGGER.error("Error connecting to the Hue bridge at %s",
                           self.host)
             return
-        except phue.PhueRegistrationException:
-            _LOGGER.warning("Connected to Hue at %s but not registered.",
-                            self.host)
-            self.request_configuration()
+        except aiohue.AiohueException:
+            _LOGGER.exception('Uknown Hue linking error occurred')
+            self.async_request_configuration()
             return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error connecting with Hue bridge at %s",
@@ -222,56 +235,75 @@ class HueBridge(object):
             request_id = self.config_request_id
             self.config_request_id = None
             configurator = self.hass.components.configurator
-            configurator.request_done(request_id)
+            configurator.async_request_done(request_id)
 
-        self.configured = True
+            # Write config file.
+            with open(self.hass.config.path(self.filename), 'w') as outp:
+                json.dump({
+                    self.host: {'username': bridge.username}
+                }, outp)
 
-        discovery.load_platform(
+        self.aiobridge = bridge
+
+        self.hass.async_add_job(discovery.async_load_platform(
             self.hass, 'light', DOMAIN,
-            {'bridge_id': self.bridge_id})
+            {'bridge_id': self.bridge_id}))
 
         # create a service for calling run_scene directly on the bridge,
         # used to simplify automation rules.
-        def hue_activate_scene(call):
+        async def hue_activate_scene(call, updated=False):
             """Service to call directly into bridge to set scenes."""
             group_name = call.data[ATTR_GROUP_NAME]
             scene_name = call.data[ATTR_SCENE_NAME]
-            self.bridge.run_scene(group_name, scene_name)
 
-        self.hass.services.register(
+            group = next(
+                (group for group in self.aiobridge.groups.values()
+                 if group.name == group_name), None)
+
+            scene_id = next(
+                (scene.id for scene in self.aiobridge.scenes.values()
+                 if scene.name == scene_name), None)
+
+            # If we can't find it, fetch latest info.
+            if not updated and (group is None or scene_id is None):
+                await self.aiobridge.groups.update()
+                await self.aiobridge.scenes.update()
+                await hue_activate_scene(call, updated=True)
+                return
+
+            if group is None:
+                _LOGGER.warning('Unable to find group %s', group_name)
+                return
+
+            if scene_id is None:
+                _LOGGER.warning('Unable to find scene %s', scene_name)
+                return
+
+            await group.set_action(scene=scene_id)
+
+        self.hass.services.async_register(
             DOMAIN, SERVICE_HUE_SCENE, hue_activate_scene,
             schema=SCENE_SCHEMA)
 
-    def request_configuration(self):
+    @callback
+    def async_request_configuration(self):
         """Request configuration steps from the user."""
         configurator = self.hass.components.configurator
 
         # We got an error if this method is called while we are configuring
         if self.config_request_id:
-            configurator.notify_errors(
+            configurator.async_notify_errors(
                 self.config_request_id,
                 "Failed to register, please try again.")
             return
 
-        self.config_request_id = configurator.request_config(
+        self.config_request_id = configurator.async_request_config(
             "Philips Hue",
-            lambda data: self.setup(),
+            lambda data: self.hass.async_add_job(self.async_setup()),
             description=CONFIG_INSTRUCTIONS,
             entity_picture="/static/images/logo_philips_hue.png",
             submit_caption="I have pressed the button"
         )
-
-    def get_api(self):
-        """Return the full api dictionary from phue."""
-        return self.bridge.get_api()
-
-    def set_light(self, light_id, command):
-        """Adjust properties of one or more lights. See phue for details."""
-        return self.bridge.set_light(light_id, command)
-
-    def set_group(self, light_id, command):
-        """Change light settings for a group. See phue for detail."""
-        return self.bridge.set_group(light_id, command)
 
 
 @config_entries.HANDLERS.register(DOMAIN)

@@ -35,7 +35,7 @@ aioautomatic==0.6.5
 aiohttp_cors==0.6.0
 
 # homeassistant.components.hue
-aiohue==0.3.0
+aiohue==1.0.0
 
 # homeassistant.components.notify.apns
 apns2==0.3.0
