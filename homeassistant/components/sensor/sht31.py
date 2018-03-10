@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_I2C_ADDRESS = 'i2c_address'
 
 DEFAULT_NAME = 'SHT31'
-DEFAULT_I2C_ADDRESS = '0x44'
+DEFAULT_I2C_ADDRESS = 0x44
 
 SENSOR_TEMPERATURE = 'temperature'
 SENSOR_HUMIDITY = 'humidity'
@@ -47,15 +47,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     from Adafruit_SHT31 import SHT31
 
-    i2c_address = int(config.get(CONF_I2C_ADDRESS), 16)
+    i2c_address = int(config.get(CONF_I2C_ADDRESS))
     sensor = SHT31(address=i2c_address)
 
     try:
         sensor.read_status()
     except OSError as err:
-        raise HomeAssistantError("SHT31 sensor not detected at address %d "
-                                 "(i2c_address: %s)" %
-                                 (i2c_address, config.get(CONF_I2C_ADDRESS)))
+        raise HomeAssistantError("SHT31 sensor not detected at address %s " %
+                                 hex(i2c_address))
 
     devs = []
     for sensor_type, props in SENSOR_TYPES.items():
