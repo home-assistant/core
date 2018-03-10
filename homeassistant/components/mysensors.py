@@ -22,11 +22,11 @@ from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+    async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 
-REQUIREMENTS = ['pymysensors==0.11.1']
+REQUIREMENTS = ['pymysensors==0.13.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -280,67 +280,76 @@ MYSENSORS_CONST_SCHEMA = {
 }
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the MySensors component."""
     import mysensors.mysensors as mysensors
 
     version = config[DOMAIN].get(CONF_VERSION)
     persistence = config[DOMAIN].get(CONF_PERSISTENCE)
 
-    def setup_gateway(device, persistence_file, baud_rate, tcp_port, in_prefix,
-                      out_prefix):
+    async def setup_gateway(
+            device, persistence_file, baud_rate, tcp_port, in_prefix,
+            out_prefix):
         """Return gateway after setup of the gateway."""
         if device == MQTT_COMPONENT:
-            if not setup_component(hass, MQTT_COMPONENT, config):
-                return
+            if not await async_setup_component(hass, MQTT_COMPONENT, config):
+                return None
             mqtt = hass.components.mqtt
             retain = config[DOMAIN].get(CONF_RETAIN)
 
             def pub_callback(topic, payload, qos, retain):
                 """Call MQTT publish function."""
-                mqtt.publish(topic, payload, qos, retain)
+                mqtt.async_publish(topic, payload, qos, retain)
 
             def sub_callback(topic, sub_cb, qos):
                 """Call MQTT subscribe function."""
-                mqtt.subscribe(topic, sub_cb, qos)
-            gateway = mysensors.MQTTGateway(
-                pub_callback, sub_callback,
+                @callback
+                def internal_callback(*args):
+                    """Call callback."""
+                    sub_cb(*args)
+
+                hass.async_add_job(
+                    mqtt.async_subscribe(topic, internal_callback, qos))
+
+            gateway = mysensors.AsyncMQTTGateway(
+                pub_callback, sub_callback, in_prefix=in_prefix,
+                out_prefix=out_prefix, retain=retain, loop=hass.loop,
                 event_callback=None, persistence=persistence,
                 persistence_file=persistence_file,
-                protocol_version=version, in_prefix=in_prefix,
-                out_prefix=out_prefix, retain=retain)
+                protocol_version=version)
         else:
             try:
-                is_serial_port(device)
-                gateway = mysensors.SerialGateway(
-                    device, event_callback=None, persistence=persistence,
+                await hass.async_add_job(is_serial_port, device)
+                gateway = mysensors.AsyncSerialGateway(
+                    device, baud=baud_rate, loop=hass.loop,
+                    event_callback=None, persistence=persistence,
                     persistence_file=persistence_file,
-                    protocol_version=version, baud=baud_rate)
+                    protocol_version=version)
             except vol.Invalid:
-                try:
-                    socket.getaddrinfo(device, None)
-                    # valid ip address
-                    gateway = mysensors.TCPGateway(
-                        device, event_callback=None, persistence=persistence,
-                        persistence_file=persistence_file,
-                        protocol_version=version, port=tcp_port)
-                except OSError:
-                    # invalid ip address
-                    return
+                gateway = mysensors.AsyncTCPGateway(
+                    device, port=tcp_port, loop=hass.loop, event_callback=None,
+                    persistence=persistence, persistence_file=persistence_file,
+                    protocol_version=version)
         gateway.metric = hass.config.units.is_metric
         gateway.optimistic = config[DOMAIN].get(CONF_OPTIMISTIC)
         gateway.device = device
         gateway.event_callback = gw_callback_factory(hass)
+        if persistence:
+            await gateway.start_persistence()
+            discover_persistent_devices(hass, gateway)
 
+        @callback
         def gw_start(event):
-            """Trigger to start of the gateway and any persistence."""
-            if persistence:
-                discover_persistent_devices(hass, gateway)
-            gateway.start()
-            hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                                 lambda event: gateway.stop())
+            """Trigger to start the gateway."""
+            hass.async_add_job(gateway.start())
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gw_stop)
 
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, gw_start)
+        @callback
+        def gw_stop(event):
+            """Trigger to stop the gateway."""
+            hass.async_add_job(gateway.stop())
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, gw_start)
 
         return gateway
 
@@ -357,7 +366,7 @@ def setup(hass, config):
         tcp_port = gway.get(CONF_TCP_PORT)
         in_prefix = gway.get(CONF_TOPIC_IN_PREFIX, '')
         out_prefix = gway.get(CONF_TOPIC_OUT_PREFIX, '')
-        ready_gateway = setup_gateway(
+        ready_gateway = await setup_gateway(
             device, persistence_file, baud_rate, tcp_port, in_prefix,
             out_prefix)
         if ready_gateway is not None:
@@ -431,12 +440,15 @@ def validate_child(gateway, node_id, child):
     return validated
 
 
+@callback
 def discover_mysensors_platform(hass, platform, new_devices):
     """Discover a MySensors platform."""
-    discovery.load_platform(
-        hass, platform, DOMAIN, {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN})
+    hass.async_add_job(discovery.async_load_platform(
+        hass, platform, DOMAIN,
+        {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN}))
 
 
+@callback
 def discover_persistent_devices(hass, gateway):
     """Discover platforms for devices loaded via persistence file."""
     new_devices = defaultdict(list)
@@ -459,6 +471,7 @@ def get_mysensors_devices(hass, domain):
 
 def gw_callback_factory(hass):
     """Return a new callback for the gateway."""
+    @callback
     def mysensors_callback(msg):
         """Handle messages from a MySensors gateway."""
         start = timer()
@@ -489,7 +502,7 @@ def gw_callback_factory(hass):
             # Only one signal per device is needed.
             # A device can have multiple platforms, ie multiple schemas.
             # FOR LATER: Add timer to not signal if another update comes in.
-            dispatcher_send(hass, signal)
+            async_dispatcher_send(hass, signal)
         end = timer()
         if end - start > 0.1:
             _LOGGER.debug(
