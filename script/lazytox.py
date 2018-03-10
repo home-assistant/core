@@ -94,8 +94,7 @@ async def git():
     """Exec git."""
     if len(sys.argv) > 2 and sys.argv[1] == '--':
         return sys.argv[2:]
-    _, log = await async_exec('git', 'diff', 'upstream/dev...',
-                              '--diff-filter=d', '--name-only')
+    _, log = await async_exec('git', 'diff', 'upstream/dev...', '--name-only')
     return log.splitlines()
 
 
@@ -128,6 +127,7 @@ async def flake8(files):
 
 async def lint(files):
     """Perform lint."""
+    files = [file for file in files if os.path.isfile(file)]
     fres, pres = await asyncio.gather(flake8(files), pylint(files))
 
     res = fres + pres
@@ -183,7 +183,8 @@ async def main():
             gen_req = True  # requirements script for components
         # Find test files...
         if fname.startswith('tests/'):
-            if '/test_' in fname:  # All test helpers should be excluded
+            if '/test_' in fname and os.path.isfile(fname):
+                # All test helpers should be excluded
                 test_files.add(fname)
         else:
             parts = fname.split('/')
