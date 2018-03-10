@@ -218,6 +218,7 @@ class XiaomiPhilipsAbstractLight(Light):
         self._state_attrs = {
             ATTR_MODEL: self._model,
         }
+        self._additional_supported_features = 0
 
     @property
     def should_poll(self):
@@ -252,11 +253,6 @@ class XiaomiPhilipsAbstractLight(Light):
     @property
     def supported_features(self):
         """Return the supported features."""
-        return 0
-
-    @property
-    def _additional_supported_features(self):
-        """Return the supported features of the device."""
         return 0
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
@@ -309,16 +305,12 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
             ATTR_SCENE: None,
             ATTR_DELAYED_TURN_OFF: None,
         })
+        self._additional_supported_features = ADDITIONAL_SUPPORT_FLAGS_GENERIC
 
     @property
     def supported_features(self):
         """Return the supported features."""
         return SUPPORT_BRIGHTNESS
-
-    @property
-    def _additional_supported_features(self):
-        """Return the supported features of the device."""
-        return ADDITIONAL_SUPPORT_FLAGS_GENERIC
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -464,11 +456,6 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
         """Return the supported features."""
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 
-    @property
-    def _additional_supported_features(self):
-        """Return the supported features of the device."""
-        return ADDITIONAL_SUPPORT_FLAGS_GENERIC
-
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_COLOR_TEMP in kwargs:
@@ -589,11 +576,6 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
         """Return the warmest color_temp that this light supports."""
         return 370
 
-    @property
-    def _additional_supported_features(self):
-        """Return the supported features of the device."""
-        return ADDITIONAL_SUPPORT_FLAGS_GENERIC
-
     async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
@@ -638,16 +620,13 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
             ATTR_NIGHT_LIGHT_MODE: None,
             ATTR_EYECARE_MODE: None,
         })
+        self._additional_supported_features = \
+            ADDITIONAL_SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT
 
     @property
     def supported_features(self):
         """Return the supported features."""
         return SUPPORT_BRIGHTNESS
-
-    @property
-    def _additional_supported_features(self):
-        """Return the supported features of the device."""
-        return ADDITIONAL_SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT
 
     async def async_update(self):
         """Fetch state from the device."""
