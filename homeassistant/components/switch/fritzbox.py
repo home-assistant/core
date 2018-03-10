@@ -90,8 +90,6 @@ class FritzboxSwitch(SwitchDevice):
                 (self._device.energy or 0.0) / 100000)
             attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = \
                 ATTR_TOTAL_CONSUMPTION_UNIT_VALUE
-
-
         if self._device.has_temperature_sensor:
             attrs[ATTR_TEMPERATURE] = \
                 str(self.hass.config.units.temperature(
