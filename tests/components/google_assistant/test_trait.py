@@ -9,8 +9,9 @@ from homeassistant.components import (
     climate,
     cover,
     fan,
-    media_player,
+    input_boolean,
     light,
+    media_player,
     scene,
     script,
     switch,
@@ -135,6 +136,43 @@ async def test_onoff_group(hass):
     assert len(off_calls) == 1
     assert off_calls[0].data == {
         ATTR_ENTITY_ID: 'group.bla',
+    }
+
+
+async def test_onoff_input_boolean(hass):
+    """Test OnOff trait support for input_boolean domain."""
+    assert trait.OnOffTrait.supported(media_player.DOMAIN, 0)
+
+    trt_on = trait.OnOffTrait(State('input_boolean.bla', STATE_ON))
+
+    assert trt_on.sync_attributes() == {}
+
+    assert trt_on.query_attributes() == {
+        'on': True
+    }
+
+    trt_off = trait.OnOffTrait(State('input_boolean.bla', STATE_OFF))
+    assert trt_off.query_attributes() == {
+        'on': False
+    }
+
+    on_calls = async_mock_service(hass, input_boolean.DOMAIN, SERVICE_TURN_ON)
+    await trt_on.execute(hass, trait.COMMAND_ONOFF, {
+        'on': True
+    })
+    assert len(on_calls) == 1
+    assert on_calls[0].data == {
+        ATTR_ENTITY_ID: 'input_boolean.bla',
+    }
+
+    off_calls = async_mock_service(hass, input_boolean.DOMAIN,
+                                   SERVICE_TURN_OFF)
+    await trt_on.execute(hass, trait.COMMAND_ONOFF, {
+        'on': False
+    })
+    assert len(off_calls) == 1
+    assert off_calls[0].data == {
+        ATTR_ENTITY_ID: 'input_boolean.bla',
     }
 
 

@@ -133,13 +133,9 @@ class LuftdatenSensor(Entity):
         except KeyError:
             return
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from luftdaten.info and update the state."""
-        try:
-            yield from self.luftdaten.async_update()
-        except TypeError:
-            pass
+        await self.luftdaten.async_update()
 
 
 class LuftdatenData(object):
@@ -150,12 +146,11 @@ class LuftdatenData(object):
         self.data = data
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from luftdaten.info."""
         from luftdaten.exceptions import LuftdatenError
 
         try:
-            yield from self.data.async_get_data()
+            await self.data.async_get_data()
         except LuftdatenError:
             _LOGGER.error("Unable to retrieve data from luftdaten.info")
