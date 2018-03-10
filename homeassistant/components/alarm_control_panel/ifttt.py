@@ -27,7 +27,7 @@ EVENT_ALARM_DISARM = "alarm_disarm"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_CODE, default=None): cv.string,
+    vol.Optional(CONF_CODE): cv.string,
 })
 
 
