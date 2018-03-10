@@ -562,6 +562,9 @@ def merge_packages_config(config, packages, _log_pkg_error=_log_pkg_error):
                     continue
 
                 if merge_type == 'dict':
+                    if comp_conf is None:
+                        comp_conf = OrderedDict()
+
                     if not isinstance(comp_conf, dict):
                         _log_pkg_error(
                             pack_name, comp_name, config,
