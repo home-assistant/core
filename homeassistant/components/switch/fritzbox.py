@@ -94,8 +94,8 @@ class FritzboxSwitch(SwitchDevice):
 
         if self._device.has_temperature_sensor:
             attrs[ATTR_TEMPERATURE] = \
-                str(self.hass.config.units.temperature(self._device.temperature,
-                                                       TEMP_CELSIUS))
+                str(self.hass.config.units.temperature(
+                    self._device.temperature, TEMP_CELSIUS))
             attrs[ATTR_TEMPERATURE_UNIT] = \
                 self.hass.config.units.temperature_unit
         return attrs
