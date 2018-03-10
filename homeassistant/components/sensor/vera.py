@@ -25,8 +25,8 @@ SCAN_INTERVAL = timedelta(seconds=5)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera controller devices."""
     add_devices(
-        VeraSensor(device, VERA_CONTROLLER)
-        for device in VERA_DEVICES['sensor'])
+        VeraSensor(device, hass.data[VERA_CONTROLLER])
+        for device in hass.data[VERA_DEVICES]['sensor'])
 
 
 class VeraSensor(VeraDevice, Entity):

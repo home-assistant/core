@@ -13,7 +13,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-ripple-api==0.0.2']
+REQUIREMENTS = ['python-ripple-api==0.0.3']
 
 CONF_ADDRESS = 'address'
 CONF_ATTRIBUTION = "Data provided by ripple.com"
@@ -71,4 +71,6 @@ class RippleSensor(Entity):
     def update(self):
         """Get the latest state of the sensor."""
         from pyripple import get_balance
-        self._state = get_balance(self.address)
+        balance = get_balance(self.address)
+        if balance is not None:
+            self._state = balance

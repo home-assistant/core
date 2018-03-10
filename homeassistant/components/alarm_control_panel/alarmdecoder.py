@@ -7,69 +7,86 @@ https://home-assistant.io/components/alarm_control_panel.alarmdecoder/
 import asyncio
 import logging
 
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import voluptuous as vol
+
 import homeassistant.components.alarm_control_panel as alarm
-
-from homeassistant.components.alarmdecoder import (DATA_AD,
-                                                   SIGNAL_PANEL_MESSAGE)
-
+from homeassistant.components.alarmdecoder import DATA_AD, SIGNAL_PANEL_MESSAGE
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN, STATE_ALARM_TRIGGERED)
+    ATTR_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['alarmdecoder']
 
+SERVICE_ALARM_TOGGLE_CHIME = 'alarmdecoder_alarm_toggle_chime'
+ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({
+    vol.Required(ATTR_CODE): cv.string,
+})
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up for AlarmDecoder alarm panels."""
-    _LOGGER.debug("AlarmDecoderAlarmPanel: setup")
+    device = AlarmDecoderAlarmPanel()
+    add_devices([device])
 
-    device = AlarmDecoderAlarmPanel("Alarm Panel", hass)
+    def alarm_toggle_chime_handler(service):
+        """Register toggle chime handler."""
+        code = service.data.get(ATTR_CODE)
+        device.alarm_toggle_chime(code)
 
-    async_add_devices([device])
-
-    return True
+    hass.services.register(
+        alarm.DOMAIN, SERVICE_ALARM_TOGGLE_CHIME, alarm_toggle_chime_handler,
+        schema=ALARM_TOGGLE_CHIME_SCHEMA)
 
 
 class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
     """Representation of an AlarmDecoder-based alarm panel."""
 
-    def __init__(self, name, hass):
+    def __init__(self):
         """Initialize the alarm panel."""
         self._display = ""
-        self._name = name
-        self._state = STATE_UNKNOWN
-
-        _LOGGER.debug("Setting up panel")
+        self._name = "Alarm Panel"
+        self._state = None
+        self._ac_power = None
+        self._backlight_on = None
+        self._battery_low = None
+        self._check_zone = None
+        self._chime = None
+        self._entry_delay_off = None
+        self._programming_mode = None
+        self._ready = None
+        self._zone_bypassed = None
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_PANEL_MESSAGE, self._message_callback)
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            SIGNAL_PANEL_MESSAGE, self._message_callback)
 
-    @callback
     def _message_callback(self, message):
+        """Handle received messages."""
         if message.alarm_sounding or message.fire_alarm:
-            if self._state != STATE_ALARM_TRIGGERED:
-                self._state = STATE_ALARM_TRIGGERED
-                self.async_schedule_update_ha_state()
+            self._state = STATE_ALARM_TRIGGERED
         elif message.armed_away:
-            if self._state != STATE_ALARM_ARMED_AWAY:
-                self._state = STATE_ALARM_ARMED_AWAY
-                self.async_schedule_update_ha_state()
+            self._state = STATE_ALARM_ARMED_AWAY
         elif message.armed_home:
-            if self._state != STATE_ALARM_ARMED_HOME:
-                self._state = STATE_ALARM_ARMED_HOME
-                self.async_schedule_update_ha_state()
+            self._state = STATE_ALARM_ARMED_HOME
         else:
-            if self._state != STATE_ALARM_DISARMED:
-                self._state = STATE_ALARM_DISARMED
-                self.async_schedule_update_ha_state()
+            self._state = STATE_ALARM_DISARMED
+
+        self._ac_power = message.ac_power
+        self._backlight_on = message.backlight_on
+        self._battery_low = message.battery_low
+        self._check_zone = message.check_zone
+        self._chime = message.chime_on
+        self._entry_delay_off = message.entry_delay_off
+        self._programming_mode = message.programming_mode
+        self._ready = message.ready
+        self._zone_bypassed = message.zone_bypassed
+
+        self.schedule_update_ha_state()
 
     @property
     def name(self):
@@ -91,26 +108,37 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         """Return the state of the device."""
         return self._state
 
-    @asyncio.coroutine
-    def async_alarm_disarm(self, code=None):
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'ac_power': self._ac_power,
+            'backlight_on': self._backlight_on,
+            'battery_low': self._battery_low,
+            'check_zone': self._check_zone,
+            'chime': self._chime,
+            'entry_delay_off': self._entry_delay_off,
+            'programming_mode': self._programming_mode,
+            'ready': self._ready,
+            'zone_bypassed': self._zone_bypassed,
+        }
+
+    def alarm_disarm(self, code=None):
         """Send disarm command."""
-        _LOGGER.debug("alarm_disarm: %s", code)
         if code:
-            _LOGGER.debug("alarm_disarm: sending %s1", str(code))
             self.hass.data[DATA_AD].send("{!s}1".format(code))
 
-    @asyncio.coroutine
-    def async_alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        _LOGGER.debug("alarm_arm_away: %s", code)
         if code:
-            _LOGGER.debug("alarm_arm_away: sending %s2", str(code))
             self.hass.data[DATA_AD].send("{!s}2".format(code))
 
-    @asyncio.coroutine
-    def async_alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        _LOGGER.debug("alarm_arm_home: %s", code)
         if code:
-            _LOGGER.debug("alarm_arm_home: sending %s3", str(code))
             self.hass.data[DATA_AD].send("{!s}3".format(code))
+
+    def alarm_toggle_chime(self, code=None):
+        """Send toggle chime command."""
+        if code:
+            self.hass.data[DATA_AD].send("{!s}9".format(code))

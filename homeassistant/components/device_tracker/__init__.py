@@ -7,7 +7,6 @@ https://home-assistant.io/components/device_tracker/
 import asyncio
 from datetime import timedelta
 import logging
-import os
 from typing import Any, List, Sequence, Callable
 
 import aiohttp
@@ -78,9 +77,14 @@ ATTR_MAC = 'mac'
 ATTR_NAME = 'name'
 ATTR_SOURCE_TYPE = 'source_type'
 ATTR_VENDOR = 'vendor'
+ATTR_CONSIDER_HOME = 'consider_home'
 
 SOURCE_TYPE_GPS = 'gps'
 SOURCE_TYPE_ROUTER = 'router'
+SOURCE_TYPE_BLUETOOTH = 'bluetooth'
+SOURCE_TYPE_BLUETOOTH_LE = 'bluetooth_le'
+SOURCE_TYPES = (SOURCE_TYPE_GPS, SOURCE_TYPE_ROUTER,
+                SOURCE_TYPE_BLUETOOTH, SOURCE_TYPE_BLUETOOTH_LE)
 
 NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(None, vol.Schema({
     vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
@@ -88,27 +92,40 @@ NEW_DEVICE_DEFAULTS_SCHEMA = vol.Any(None, vol.Schema({
 }))
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
-    vol.Optional(CONF_TRACK_NEW, default=DEFAULT_TRACK_NEW): cv.boolean,
+    vol.Optional(CONF_TRACK_NEW): cv.boolean,
     vol.Optional(CONF_CONSIDER_HOME,
                  default=DEFAULT_CONSIDER_HOME): vol.All(
                      cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_NEW_DEVICE_DEFAULTS,
                  default={}): NEW_DEVICE_DEFAULTS_SCHEMA
 })
+SERVICE_SEE_PAYLOAD_SCHEMA = vol.Schema(vol.All(
+    cv.has_at_least_one_key(ATTR_MAC, ATTR_DEV_ID), {
+        ATTR_MAC: cv.string,
+        ATTR_DEV_ID: cv.string,
+        ATTR_HOST_NAME: cv.string,
+        ATTR_LOCATION_NAME: cv.string,
+        ATTR_GPS: cv.gps,
+        ATTR_GPS_ACCURACY: cv.positive_int,
+        ATTR_BATTERY: cv.positive_int,
+        ATTR_ATTRIBUTES: dict,
+        ATTR_SOURCE_TYPE: vol.In(SOURCE_TYPES),
+        ATTR_CONSIDER_HOME: cv.time_period,
+    }))
 
 
 @bind_hass
-def is_on(hass: HomeAssistantType, entity_id: str=None):
+def is_on(hass: HomeAssistantType, entity_id: str = None):
     """Return the state if any or a specified device is home."""
     entity = entity_id or ENTITY_ID_ALL_DEVICES
 
     return hass.states.is_state(entity, STATE_HOME)
 
 
-def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
-        host_name: str=None, location_name: str=None,
-        gps: GPSType=None, gps_accuracy=None,
-        battery=None, attributes: dict=None):
+def see(hass: HomeAssistantType, mac: str = None, dev_id: str = None,
+        host_name: str = None, location_name: str = None,
+        gps: GPSType = None, gps_accuracy=None,
+        battery: int = None, attributes: dict = None):
     """Call service to notify you see device."""
     data = {key: value for key, value in
             ((ATTR_MAC, mac),
@@ -131,8 +148,11 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     conf = config.get(DOMAIN, [])
     conf = conf[0] if conf else {}
     consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
-    track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
+
     defaults = conf.get(CONF_NEW_DEVICE_DEFAULTS, {})
+    track_new = conf.get(CONF_TRACK_NEW)
+    if track_new is None:
+        track_new = defaults.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = yield from async_load_config(yaml_path, hass, consider_home)
     tracker = DeviceTracker(
@@ -199,17 +219,10 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     @asyncio.coroutine
     def async_see_service(call):
         """Service to see a device."""
-        args = {key: value for key, value in call.data.items() if key in
-                (ATTR_MAC, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_LOCATION_NAME,
-                 ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_ATTRIBUTES)}
-        yield from tracker.async_see(**args)
+        yield from tracker.async_see(**call.data)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml')
-    )
     hass.services.async_register(
-        DOMAIN, SERVICE_SEE, async_see_service, descriptions.get(SERVICE_SEE))
+        DOMAIN, SERVICE_SEE, async_see_service, SERVICE_SEE_PAYLOAD_SCHEMA)
 
     # restore
     yield from tracker.async_setup_tracked_device()
@@ -227,7 +240,8 @@ class DeviceTracker(object):
         self.devices = {dev.dev_id: dev for dev in devices}
         self.mac_to_dev = {dev.mac: dev for dev in devices if dev.mac}
         self.consider_home = consider_home
-        self.track_new = defaults.get(CONF_TRACK_NEW, track_new)
+        self.track_new = track_new if track_new is not None \
+            else defaults.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
         self.defaults = defaults
         self.group = None
         self._is_updating = asyncio.Lock(loop=hass.loop)
@@ -239,24 +253,27 @@ class DeviceTracker(object):
                 _LOGGER.warning('Duplicate device MAC addresses detected %s',
                                 dev.mac)
 
-    def see(self, mac: str=None, dev_id: str=None, host_name: str=None,
-            location_name: str=None, gps: GPSType=None, gps_accuracy=None,
-            battery: str=None, attributes: dict=None,
-            source_type: str=SOURCE_TYPE_GPS, picture: str=None,
-            icon: str=None):
+    def see(self, mac: str = None, dev_id: str = None, host_name: str = None,
+            location_name: str = None, gps: GPSType = None,
+            gps_accuracy: int = None, battery: int = None,
+            attributes: dict = None, source_type: str = SOURCE_TYPE_GPS,
+            picture: str = None, icon: str = None,
+            consider_home: timedelta = None):
         """Notify the device tracker that you see a device."""
         self.hass.add_job(
             self.async_see(mac, dev_id, host_name, location_name, gps,
                            gps_accuracy, battery, attributes, source_type,
-                           picture, icon)
+                           picture, icon, consider_home)
         )
 
     @asyncio.coroutine
-    def async_see(self, mac: str=None, dev_id: str=None, host_name: str=None,
-                  location_name: str=None, gps: GPSType=None,
-                  gps_accuracy=None, battery: str=None, attributes: dict=None,
-                  source_type: str=SOURCE_TYPE_GPS, picture: str=None,
-                  icon: str=None):
+    def async_see(
+            self, mac: str = None, dev_id: str = None, host_name: str = None,
+            location_name: str = None, gps: GPSType = None,
+            gps_accuracy: int = None, battery: int = None,
+            attributes: dict = None, source_type: str = SOURCE_TYPE_GPS,
+            picture: str = None, icon: str = None,
+            consider_home: timedelta = None):
         """Notify the device tracker that you see a device.
 
         This method is a coroutine.
@@ -275,7 +292,7 @@ class DeviceTracker(object):
         if device:
             yield from device.async_seen(
                 host_name, location_name, gps, gps_accuracy, battery,
-                attributes, source_type)
+                attributes, source_type, consider_home)
             if device.track:
                 yield from device.async_update_ha_state()
             return
@@ -283,7 +300,7 @@ class DeviceTracker(object):
         # If no device can be found, create it
         dev_id = util.ensure_unique_string(dev_id, self.devices.keys())
         device = Device(
-            self.hass, self.consider_home, self.track_new,
+            self.hass, consider_home or self.consider_home, self.track_new,
             dev_id, mac, (host_name or dev_id).replace('_', ' '),
             picture=picture, icon=icon,
             hide_if_away=self.defaults.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE))
@@ -384,9 +401,10 @@ class Device(Entity):
     host_name = None  # type: str
     location_name = None  # type: str
     gps = None  # type: GPSType
-    gps_accuracy = 0
+    gps_accuracy = 0  # type: int
     last_seen = None  # type: dt_util.dt.datetime
-    battery = None  # type: str
+    consider_home = None  # type: dt_util.dt.timedelta
+    battery = None  # type: int
     attributes = None  # type: dict
     vendor = None  # type: str
     icon = None  # type: str
@@ -396,9 +414,9 @@ class Device(Entity):
     _state = STATE_NOT_HOME
 
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
-                 track: bool, dev_id: str, mac: str, name: str=None,
-                 picture: str=None, gravatar: str=None, icon: str=None,
-                 hide_if_away: bool=False, vendor: str=None) -> None:
+                 track: bool, dev_id: str, mac: str, name: str = None,
+                 picture: str = None, gravatar: str = None, icon: str = None,
+                 hide_if_away: bool = False, vendor: str = None) -> None:
         """Initialize a device."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
@@ -475,14 +493,17 @@ class Device(Entity):
         return self.away_hide and self.state != STATE_HOME
 
     @asyncio.coroutine
-    def async_seen(self, host_name: str=None, location_name: str=None,
-                   gps: GPSType=None, gps_accuracy=0, battery: str=None,
-                   attributes: dict=None, source_type: str=SOURCE_TYPE_GPS):
+    def async_seen(self, host_name: str = None, location_name: str = None,
+                   gps: GPSType = None, gps_accuracy=0, battery: int = None,
+                   attributes: dict = None,
+                   source_type: str = SOURCE_TYPE_GPS,
+                   consider_home: timedelta = None):
         """Mark the device as seen."""
         self.source_type = source_type
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
+        self.consider_home = consider_home or self.consider_home
 
         if battery:
             self.battery = battery
@@ -504,7 +525,7 @@ class Device(Entity):
         # pylint: disable=not-an-iterable
         yield from self.async_update()
 
-    def stale(self, now: dt_util.dt.datetime=None):
+    def stale(self, now: dt_util.dt.datetime = None):
         """Return if device state is stale.
 
         Async friendly.
@@ -621,16 +642,16 @@ class DeviceScanner(object):
         """
         return self.hass.async_add_job(self.scan_devices)
 
-    def get_device_name(self, mac: str) -> str:
-        """Get device name from mac."""
+    def get_device_name(self, device: str) -> str:
+        """Get the name of a device."""
         raise NotImplementedError()
 
-    def async_get_device_name(self, mac: str) -> Any:
-        """Get device name from mac.
+    def async_get_device_name(self, device: str) -> Any:
+        """Get the name of a device.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.get_device_name, mac)
+        return self.hass.async_add_job(self.get_device_name, device)
 
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
@@ -648,8 +669,7 @@ def async_load_config(path: str, hass: HomeAssistantType,
     """
     dev_schema = vol.Schema({
         vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_ICON, default=False):
-            vol.Any(None, cv.icon),
+        vol.Optional(CONF_ICON, default=None): vol.Any(None, cv.icon),
         vol.Optional('track', default=False): cv.boolean,
         vol.Optional(CONF_MAC, default=None):
             vol.Any(None, vol.All(cv.string, vol.Upper)),

@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['yahooweather==0.9']
+REQUIREMENTS = ['yahooweather==0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_WOEID, default=None): cv.string,
+    vol.Optional(CONF_WOEID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_FORECAST, default=0):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),

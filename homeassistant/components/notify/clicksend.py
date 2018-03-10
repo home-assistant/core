@@ -14,7 +14,8 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
-    CONF_API_KEY, CONF_USERNAME, CONF_RECIPIENT, CONTENT_TYPE_JSON)
+    CONF_API_KEY, CONF_RECIPIENT, CONF_SENDER, CONF_USERNAME,
+    CONTENT_TYPE_JSON)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,15 +24,27 @@ BASE_API_URL = 'https://rest.clicksend.com/v3'
 
 HEADERS = {CONTENT_TYPE: CONTENT_TYPE_JSON}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_RECIPIENT): cv.string,
-})
+
+def validate_sender(config):
+    """Set the optional sender name if sender name is not provided."""
+    if CONF_SENDER in config:
+        return config
+    config[CONF_SENDER] = config[CONF_RECIPIENT]
+    return config
+
+
+PLATFORM_SCHEMA = vol.Schema(
+    vol.All(PLATFORM_SCHEMA.extend({
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_RECIPIENT): cv.string,
+        vol.Optional(CONF_SENDER): cv.string,
+    }), validate_sender))
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the ClickSend notification service."""
+    print("#### ", config)
     if _authenticate(config) is False:
         _LOGGER.exception("You are not authorized to access ClickSend")
         return None
@@ -47,16 +60,26 @@ class ClicksendNotificationService(BaseNotificationService):
         self.username = config.get(CONF_USERNAME)
         self.api_key = config.get(CONF_API_KEY)
         self.recipient = config.get(CONF_RECIPIENT)
+        self.sender = config.get(CONF_SENDER, CONF_RECIPIENT)
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        data = ({'messages': [{'source': 'hass.notify', 'from': self.recipient,
-                               'to': self.recipient, 'body': message}]})
+        data = ({
+            'messages': [
+                {
+                    'source': 'hass.notify',
+                    'from': self.sender,
+                    'to': self.recipient,
+                    'body': message,
+                }
+            ]
+        })
 
         api_url = "{}/sms/send".format(BASE_API_URL)
 
-        resp = requests.post(api_url, data=json.dumps(data), headers=HEADERS,
-                             auth=(self.username, self.api_key), timeout=5)
+        resp = requests.post(
+            api_url, data=json.dumps(data), headers=HEADERS,
+            auth=(self.username, self.api_key), timeout=5)
 
         obj = json.loads(resp.text)
         response_msg = obj['response_msg']
@@ -70,9 +93,9 @@ class ClicksendNotificationService(BaseNotificationService):
 def _authenticate(config):
     """Authenticate with ClickSend."""
     api_url = '{}/account'.format(BASE_API_URL)
-    resp = requests.get(api_url, headers=HEADERS,
-                        auth=(config.get(CONF_USERNAME),
-                              config.get(CONF_API_KEY)), timeout=5)
+    resp = requests.get(
+        api_url, headers=HEADERS, auth=(config.get(CONF_USERNAME),
+                                        config.get(CONF_API_KEY)), timeout=5)
 
     if resp.status_code != 200:
         return False

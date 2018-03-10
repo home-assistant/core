@@ -16,6 +16,7 @@ def pymochad_mock():
     """Mock pymochad."""
     with mock.patch.dict('sys.modules', {
         'pymochad': mock.MagicMock(),
+        'pymochad.exceptions': mock.MagicMock(),
     }):
         yield
 

@@ -17,10 +17,11 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, SUPPORT_PLAY_MEDIA,
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_PLAY, MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_PLAY, MediaPlayerDevice,
+    MEDIA_PLAYER_SCHEMA, DOMAIN, SUPPORT_SHUFFLE_SET, SUPPORT_CLEAR_PLAYLIST)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_IDLE, STATE_OFF,
-    STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONF_PORT)
+    STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONF_PORT, ATTR_COMMAND)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.dt import utcnow
@@ -33,7 +34,7 @@ TIMEOUT = 10
 SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
-    SUPPORT_PLAY
+    SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | SUPPORT_CLEAR_PLAYLIST
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -42,11 +43,38 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME): cv.string,
 })
 
+SERVICE_CALL_METHOD = 'squeezebox_call_method'
+
+DATA_SQUEEZEBOX = 'squeezebox'
+
+KNOWN_SERVERS = 'squeezebox_known_servers'
+
+ATTR_PARAMETERS = 'parameters'
+
+SQUEEZEBOX_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_COMMAND): cv.string,
+    vol.Optional(ATTR_PARAMETERS):
+        vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
+})
+
+SERVICE_TO_METHOD = {
+    SERVICE_CALL_METHOD: {
+        'method': 'async_call_method',
+        'schema': SQUEEZEBOX_CALL_METHOD_SCHEMA},
+}
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the squeezebox platform."""
     import socket
+
+    known_servers = hass.data.get(KNOWN_SERVERS)
+    if known_servers is None:
+        hass.data[KNOWN_SERVERS] = known_servers = set()
+
+    if DATA_SQUEEZEBOX not in hass.data:
+        hass.data[DATA_SQUEEZEBOX] = []
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -70,11 +98,47 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             "Could not communicate with %s:%d: %s", host, port, error)
         return False
 
+    if ipaddr in known_servers:
+        return
+
+    known_servers.add(ipaddr)
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
     lms = LogitechMediaServer(hass, host, port, username, password)
 
     players = yield from lms.create_players()
+
+    hass.data[DATA_SQUEEZEBOX].extend(players)
     async_add_devices(players)
+
+    @asyncio.coroutine
+    def async_service_handler(service):
+        """Map services to methods on MediaPlayerDevice."""
+        method = SERVICE_TO_METHOD.get(service.service)
+        if not method:
+            return
+
+        params = {key: value for key, value in service.data.items()
+                  if key != 'entity_id'}
+        entity_ids = service.data.get('entity_id')
+        if entity_ids:
+            target_players = [player for player in hass.data[DATA_SQUEEZEBOX]
+                              if player.entity_id in entity_ids]
+        else:
+            target_players = hass.data[DATA_SQUEEZEBOX]
+
+        update_tasks = []
+        for player in target_players:
+            yield from getattr(player, method['method'])(**params)
+            update_tasks.append(player.async_update_ha_state(True))
+
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    for service in SERVICE_TO_METHOD:
+        schema = SERVICE_TO_METHOD[service]['schema']
+        hass.services.async_register(
+            DOMAIN, service, async_service_handler,
+            schema=schema)
 
     return True
 
@@ -166,7 +230,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._id
 
     @property
@@ -306,6 +370,12 @@ class SqueezeBoxDevice(MediaPlayerDevice):
             return self._status['album']
 
     @property
+    def shuffle(self):
+        """Boolean if shuffle is enabled."""
+        if 'playlist_shuffle' in self._status:
+            return self._status['playlist_shuffle'] == 1
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_SQUEEZEBOX
@@ -413,5 +483,26 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         return self.async_query('playlist', 'play', media_id)
 
     def _add_uri_to_playlist(self, media_id):
-        """Add a items to the existing playlist."""
+        """Add an item to the existing playlist."""
         return self.async_query('playlist', 'add', media_id)
+
+    def async_set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode."""
+        return self.async_query('playlist', 'shuffle', int(shuffle))
+
+    def async_clear_playlist(self):
+        """Send the media player the command for clear playlist."""
+        return self.async_query('playlist', 'clear')
+
+    def async_call_method(self, command, parameters=None):
+        """
+        Call Squeezebox JSON/RPC method.
+
+        Escaped optional parameters are added to the command to form the list
+        of positional parameters (p0, p1...,  pN) passed to JSON/RPC server.
+        """
+        all_params = [command]
+        if parameters:
+            for parameter in parameters:
+                all_params.append(urllib.parse.quote(parameter, safe=':=/?'))
+        return self.async_query(*all_params)

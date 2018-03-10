@@ -68,22 +68,20 @@ def activate(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the scenes."""
     logger = logging.getLogger(__name__)
     component = EntityComponent(logger, DOMAIN, hass)
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_handle_scene_service(service):
+    async def async_handle_scene_service(service):
         """Handle calls to the switch services."""
         target_scenes = component.async_extract_from_service(service)
 
         tasks = [scene.async_activate() for scene in target_scenes]
         if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_handle_scene_service,

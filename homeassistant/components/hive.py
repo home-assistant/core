@@ -12,7 +12,7 @@ from homeassistant.const import (CONF_PASSWORD, CONF_SCAN_INTERVAL,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['pyhiveapi==0.2.5']
+REQUIREMENTS = ['pyhiveapi==0.2.11']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'hive'

@@ -224,10 +224,10 @@ class TestDemoClimate(unittest.TestCase):
 
     def test_set_hold_mode_none(self):
         """Test setting the hold mode off/false."""
-        climate.set_hold_mode(self.hass, None, ENTITY_ECOBEE)
+        climate.set_hold_mode(self.hass, 'off', ENTITY_ECOBEE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_ECOBEE)
-        self.assertEqual(None, state.attributes.get('hold_mode'))
+        self.assertEqual('off', state.attributes.get('hold_mode'))
 
     def test_set_aux_heat_bad_attr(self):
         """Test setting the auxiliary heater without required attribute."""
@@ -250,3 +250,20 @@ class TestDemoClimate(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('off', state.attributes.get('aux_heat'))
+
+    def test_set_on_off(self):
+        """Test on/off service."""
+        state = self.hass.states.get(ENTITY_ECOBEE)
+        self.assertEqual('auto', state.state)
+
+        self.hass.services.call(climate.DOMAIN, climate.SERVICE_TURN_OFF,
+                                {climate.ATTR_ENTITY_ID: ENTITY_ECOBEE})
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_ECOBEE)
+        self.assertEqual('off', state.state)
+
+        self.hass.services.call(climate.DOMAIN, climate.SERVICE_TURN_ON,
+                                {climate.ATTR_ENTITY_ID: ENTITY_ECOBEE})
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_ECOBEE)
+        self.assertEqual('auto', state.state)

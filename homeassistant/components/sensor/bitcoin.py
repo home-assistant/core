@@ -38,7 +38,7 @@ OPTION_TYPES = {
     'number_of_transactions': ['No. of Transactions', None],
     'hash_rate': ['Hash rate', 'PH/s'],
     'timestamp': ['Timestamp', None],
-    'mined_blocks': ['Minded Blocks', None],
+    'mined_blocks': ['Mined Blocks', None],
     'blocks_size': ['Block size', None],
     'total_fees_btc': ['Total fees', 'BTC'],
     'total_btc_sent': ['Total sent', 'BTC'],

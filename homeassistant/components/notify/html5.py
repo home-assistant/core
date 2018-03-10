@@ -4,7 +4,6 @@ HTML5 Push Messaging notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.html5/
 """
-import asyncio
 import datetime
 import json
 import logging
@@ -27,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
 
-REQUIREMENTS = ['pywebpush==1.3.0', 'PyJWT==1.5.3']
+REQUIREMENTS = ['pywebpush==1.6.0', 'PyJWT==1.6.0']
 
 DEPENDENCIES = ['frontend']
 
@@ -136,7 +135,7 @@ def _load_config(filename):
 class JSONBytesDecoder(json.JSONEncoder):
     """JSONEncoder to decode bytes objects to unicode."""
 
-    # pylint: disable=method-hidden
+    # pylint: disable=method-hidden, arguments-differ
     def default(self, obj):
         """Decode object if it's a bytes object, else defer to base class."""
         if isinstance(obj, bytes):
@@ -155,11 +154,10 @@ class HTML5PushRegistrationView(HomeAssistantView):
         self.registrations = registrations
         self.json_path = json_path
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Accept the POST request for push registrations from a browser."""
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
@@ -169,21 +167,40 @@ class HTML5PushRegistrationView(HomeAssistantView):
             return self.json_message(
                 humanize_error(data, ex), HTTP_BAD_REQUEST)
 
-        name = ensure_unique_string('unnamed device', self.registrations)
+        name = self.find_registration_name(data)
+        previous_registration = self.registrations.get(name)
 
         self.registrations[name] = data
 
-        if not save_json(self.json_path, self.registrations):
+        try:
+            hass = request.app['hass']
+
+            await hass.async_add_job(save_json, self.json_path,
+                                     self.registrations)
+            return self.json_message(
+                'Push notification subscriber registered.')
+        except HomeAssistantError:
+            if previous_registration is not None:
+                self.registrations[name] = previous_registration
+            else:
+                self.registrations.pop(name)
+
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
 
-        return self.json_message('Push notification subscriber registered.')
+    def find_registration_name(self, data):
+        """Find a registration name matching data or generate a unique one."""
+        endpoint = data.get(ATTR_SUBSCRIPTION).get(ATTR_ENDPOINT)
+        for key, registration in self.registrations.items():
+            subscription = registration.get(ATTR_SUBSCRIPTION)
+            if subscription.get(ATTR_ENDPOINT) == endpoint:
+                return key
+        return ensure_unique_string('unnamed device', self.registrations)
 
-    @asyncio.coroutine
-    def delete(self, request):
+    async def delete(self, request):
         """Delete a registration."""
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
@@ -202,7 +219,12 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         reg = self.registrations.pop(found)
 
-        if not save_json(self.json_path, self.registrations):
+        try:
+            hass = request.app['hass']
+
+            await hass.async_add_job(save_json, self.json_path,
+                                     self.registrations)
+        except HomeAssistantError:
             self.registrations[found] = reg
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
@@ -230,12 +252,12 @@ class HTML5PushCallbackView(HomeAssistantView):
         # 2a. If decode is successful, return the payload.
         # 2b. If decode is unsuccessful, return a 401.
 
-        target_check = jwt.decode(token, options={'verify_signature': False})
+        target_check = jwt.decode(token, verify=False)
         if target_check[ATTR_TARGET] in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
             try:
-                return jwt.decode(token, key)
+                return jwt.decode(token, key, algorithms=["ES256", "HS256"])
             except jwt.exceptions.DecodeError:
                 pass
 
@@ -271,15 +293,14 @@ class HTML5PushCallbackView(HomeAssistantView):
                                      status_code=HTTP_UNAUTHORIZED)
         return payload
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Accept the POST request for push registrations event callback."""
         auth_check = self.check_authorization_header(request)
         if not isinstance(auth_check, dict):
             return auth_check
 
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
@@ -383,8 +404,14 @@ class HTML5NotificationService(BaseNotificationService):
             jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
             payload[ATTR_DATA][ATTR_JWT] = jwt_token
 
+            # Only pass the gcm key if we're actually using GCM
+            # If we don't, notifications break on FireFox
+            gcm_key = self._gcm_key \
+                if 'googleapis.com' in info[ATTR_SUBSCRIPTION][ATTR_ENDPOINT] \
+                else None
             response = WebPusher(info[ATTR_SUBSCRIPTION]).send(
-                json.dumps(payload), gcm_key=self._gcm_key, ttl='86400')
+                json.dumps(payload), gcm_key=gcm_key, ttl='86400'
+            )
 
             # pylint: disable=no-member
             if response.status_code == 410:

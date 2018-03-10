@@ -85,7 +85,7 @@ class MerakiView(HomeAssistantView):
                 return self.json_message('Invalid device type',
                                          HTTP_UNPROCESSABLE_ENTITY)
             _LOGGER.debug("Processing %s", data['type'])
-        if len(data["data"]["observations"]) == 0:
+        if not data["data"]["observations"]:
             _LOGGER.debug("No observations found")
             return
         self._handle(request.app['hass'], data)
@@ -94,8 +94,25 @@ class MerakiView(HomeAssistantView):
     def _handle(self, hass, data):
         for i in data["data"]["observations"]:
             data["data"]["secret"] = "hidden"
+
+            lat = i["location"]["lat"]
+            lng = i["location"]["lng"]
+            try:
+                accuracy = int(float(i["location"]["unc"]))
+            except ValueError:
+                accuracy = 0
+
             mac = i["clientMac"]
             _LOGGER.debug("clientMac: %s", mac)
+
+            if lat == "NaN" or lng == "NaN":
+                _LOGGER.debug(
+                    "No coordinates received, skipping location for: %s", mac)
+                gps_location = None
+                accuracy = None
+            else:
+                gps_location = (lat, lng)
+
             attrs = {}
             if i.get('os', False):
                 attrs['os'] = i['os']
@@ -110,7 +127,9 @@ class MerakiView(HomeAssistantView):
             if i.get('ssid', False):
                 attrs['ssid'] = i['ssid']
             hass.async_add_job(self.async_see(
+                gps=gps_location,
                 mac=mac,
                 source_type=SOURCE_TYPE_ROUTER,
+                gps_accuracy=accuracy,
                 attributes=attrs
             ))

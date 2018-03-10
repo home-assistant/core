@@ -60,11 +60,9 @@ class MqttCamera(Camera):
         """Return the name of this camera."""
         return self._name
 
+    @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe MQTT events.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Subscribe MQTT events."""
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT messages."""

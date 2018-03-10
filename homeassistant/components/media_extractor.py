@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/media_extractor/
 """
 import logging
-import os
 
 import voluptuous as vol
 
@@ -13,10 +12,9 @@ from homeassistant.components.media_player import (
     ATTR_ENTITY_ID, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MEDIA_PLAYER_DOMAIN, MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
     SERVICE_PLAY_MEDIA)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['youtube_dl==2017.11.26']
+REQUIREMENTS = ['youtube_dl==2018.02.11']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,18 +36,11 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the media extractor service."""
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__),
-                     'media_player', 'services.yaml'))
-
     def play_media(call):
         """Get stream URL and send it to the play_media service."""
         MediaExtractor(hass, config[DOMAIN], call.data).extract_and_send()
 
-    hass.services.register(DOMAIN,
-                           SERVICE_PLAY_MEDIA,
-                           play_media,
-                           description=descriptions[SERVICE_PLAY_MEDIA],
+    hass.services.register(DOMAIN, SERVICE_PLAY_MEDIA, play_media,
                            schema=MEDIA_PLAYER_PLAY_MEDIA_SCHEMA)
 
     return True
@@ -94,7 +85,7 @@ class MediaExtractor(object):
         else:
             entities = self.get_entities()
 
-            if len(entities) == 0:
+            if not entities:
                 self.call_media_player_service(stream_selector, None)
 
             for entity_id in entities:
@@ -117,7 +108,7 @@ class MediaExtractor(object):
             _LOGGER.warning(
                 "Playlists are not supported, looking for the first video")
             entries = list(all_media['entries'])
-            if len(entries) > 0:
+            if entries:
                 selected_media = entries[0]
             else:
                 _LOGGER.error("Playlist is empty")

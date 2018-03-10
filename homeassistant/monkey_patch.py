@@ -37,7 +37,7 @@ def patch_weakref_tasks():
     asyncio.tasks.Task._all_tasks = IgnoreCalls()
     try:
         del asyncio.tasks.Task.__del__
-    except:
+    except:  # noqa: E722
         pass
 
 

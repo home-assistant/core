@@ -25,7 +25,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['distro==1.1.0']
+REQUIREMENTS = ['distro==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,9 +97,15 @@ def async_setup(hass, config):
 
         newest, releasenotes = result
 
+        # Skip on dev
         if newest is None or 'dev' in current_version:
             return
 
+        # Load data from supervisor on hass.io
+        if hass.components.hassio.is_hassio():
+            newest = hass.components.hassio.get_homeassistant_version()
+
+        # Validate version
         if StrictVersion(newest) > StrictVersion(current_version):
             _LOGGER.info("The latest available version is %s", newest)
             hass.states.async_set(
@@ -131,6 +137,7 @@ def get_system_info(hass, include_components):
         'timezone': dt_util.DEFAULT_TIME_ZONE.zone,
         'version': current_version,
         'virtualenv': os.environ.get('VIRTUAL_ENV') is not None,
+        'hassio': hass.components.hassio.is_hassio(),
     }
 
     if include_components:

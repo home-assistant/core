@@ -12,7 +12,9 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.mqtt import (
-    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
+    CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
+    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
+    MqttAvailability)
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE)
 import homeassistant.components.mqtt as mqtt
@@ -36,7 +38,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_UNLOCK, default=DEFAULT_PAYLOAD_UNLOCK):
         cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-})
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 @asyncio.coroutine
@@ -56,15 +58,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_UNLOCK),
         config.get(CONF_OPTIMISTIC),
         value_template,
+        config.get(CONF_AVAILABILITY_TOPIC),
+        config.get(CONF_PAYLOAD_AVAILABLE),
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE)
     )])
 
 
-class MqttLock(LockDevice):
+class MqttLock(MqttAvailability, LockDevice):
     """Representation of a lock that can be toggled using MQTT."""
 
     def __init__(self, name, state_topic, command_topic, qos, retain,
-                 payload_lock, payload_unlock, optimistic, value_template):
+                 payload_lock, payload_unlock, optimistic, value_template,
+                 availability_topic, payload_available, payload_not_available):
         """Initialize the lock."""
+        super().__init__(availability_topic, qos, payload_available,
+                         payload_not_available)
         self._state = False
         self._name = name
         self._state_topic = state_topic
@@ -78,10 +86,9 @@ class MqttLock(LockDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe to MQTT events.
+        """Subscribe to MQTT events."""
+        yield from super().async_added_to_hass()
 
-        This method is a coroutine.
-        """
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT messages."""

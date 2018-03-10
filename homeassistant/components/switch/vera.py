@@ -19,8 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera switches."""
     add_devices(
-        VeraSwitch(device, VERA_CONTROLLER) for
-        device in VERA_DEVICES['switch'])
+        VeraSwitch(device, hass.data[VERA_CONTROLLER]) for
+        device in hass.data[VERA_DEVICES]['switch'])
 
 
 class VeraSwitch(VeraDevice, SwitchDevice):

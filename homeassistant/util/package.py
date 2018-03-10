@@ -7,7 +7,6 @@ import sys
 import threading
 from urllib.parse import urlparse
 
-from pip.locations import running_under_virtualenv
 from typing import Optional
 
 import pkg_resources
@@ -17,9 +16,16 @@ _LOGGER = logging.getLogger(__name__)
 INSTALL_LOCK = threading.Lock()
 
 
-def install_package(package: str, upgrade: bool=True,
-                    target: Optional[str]=None,
-                    constraints: Optional[str]=None) -> bool:
+def is_virtual_env():
+    """Return if we run in a virtual environtment."""
+    # Check supports venv && virtualenv
+    return (getattr(sys, 'base_prefix', sys.prefix) != sys.prefix or
+            hasattr(sys, 'real_prefix'))
+
+
+def install_package(package: str, upgrade: bool = True,
+                    target: Optional[str] = None,
+                    constraints: Optional[str] = None) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 
     Return boolean if install successful.
@@ -37,7 +43,7 @@ def install_package(package: str, upgrade: bool=True,
         if constraints is not None:
             args += ['--constraint', constraints]
         if target:
-            assert not running_under_virtualenv()
+            assert not is_virtual_env()
             # This only works if not running in venv
             args += ['--user']
             env['PYTHONUSERBASE'] = os.path.abspath(target)
@@ -88,17 +94,17 @@ def get_user_site(deps_dir: str) -> str:
     return lib_dir
 
 
-@asyncio.coroutine
-def async_get_user_site(deps_dir: str, loop: asyncio.AbstractEventLoop) -> str:
+async def async_get_user_site(deps_dir: str,
+                              loop: asyncio.AbstractEventLoop) -> str:
     """Return user local library path.
 
     This function is a coroutine.
     """
     args, env = _get_user_site(deps_dir)
-    process = yield from asyncio.create_subprocess_exec(
+    process = await asyncio.create_subprocess_exec(
         *args, loop=loop, stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
         env=env)
-    stdout, _ = yield from process.communicate()
+    stdout, _ = await process.communicate()
     lib_dir = stdout.decode().strip()
     return lib_dir

@@ -164,6 +164,55 @@ def test_entity_ids():
     ]
 
 
+def test_entity_domain():
+    """Test entity domain validation."""
+    schema = vol.Schema(cv.entity_domain('sensor'))
+
+    options = (
+        'invalid_entity',
+        'cover.demo',
+    )
+
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            print(value)
+            schema(value)
+
+    assert schema('sensor.LIGHT') == 'sensor.light'
+
+
+def test_entities_domain():
+    """Test entities domain validation."""
+    schema = vol.Schema(cv.entities_domain('sensor'))
+
+    options = (
+        None,
+        '',
+        'invalid_entity',
+        ['sensor.light', 'cover.demo'],
+        ['sensor.light', 'sensor_invalid'],
+    )
+
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    options = (
+        'sensor.light',
+        ['SENSOR.light'],
+        ['sensor.light', 'sensor.demo']
+    )
+    for value in options:
+        schema(value)
+
+    assert schema('sensor.LIGHT, sensor.demo ') == [
+        'sensor.light', 'sensor.demo'
+    ]
+    assert schema(['sensor.light', 'SENSOR.demo']) == [
+        'sensor.light', 'sensor.demo'
+    ]
+
+
 def test_ensure_list_csv():
     """Test ensure_list_csv."""
     schema = vol.Schema(cv.ensure_list_csv)
@@ -441,6 +490,28 @@ def test_datetime():
     schema('2016-11-23T18:59:08')
 
 
+def test_deprecated(caplog):
+    """Test deprecation log."""
+    schema = vol.Schema({
+        'venus': cv.boolean,
+        'mars': cv.boolean
+    })
+    deprecated_schema = vol.All(
+        cv.deprecated('mars'),
+        schema
+    )
+
+    deprecated_schema({'venus': True})
+    # pylint: disable=len-as-condition
+    assert len(caplog.records) == 0
+
+    deprecated_schema({'mars': True})
+    assert len(caplog.records) == 1
+    assert caplog.records[0].name == __name__
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please remove it from your configuration.") in caplog.text
+
+
 def test_key_dependency():
     """Test key_dependency validator."""
     schema = vol.Schema(cv.key_dependency('beer', 'soda'))
@@ -503,18 +574,14 @@ def test_enum():
 
 def test_socket_timeout():  # pylint: disable=invalid-name
     """Test socket timeout validator."""
-    TEST_CONF_TIMEOUT = 'timeout'  # pylint: disable=invalid-name
-
-    schema = vol.Schema(
-        {vol.Required(TEST_CONF_TIMEOUT, default=None): cv.socket_timeout})
+    schema = vol.Schema(cv.socket_timeout)
 
     with pytest.raises(vol.Invalid):
-        schema({TEST_CONF_TIMEOUT: 0.0})
+        schema(0.0)
 
     with pytest.raises(vol.Invalid):
-        schema({TEST_CONF_TIMEOUT: -1})
+        schema(-1)
 
-    assert _GLOBAL_DEFAULT_TIMEOUT == schema({TEST_CONF_TIMEOUT:
-                                              None})[TEST_CONF_TIMEOUT]
+    assert _GLOBAL_DEFAULT_TIMEOUT == schema(None)
 
-    assert schema({TEST_CONF_TIMEOUT: 1})[TEST_CONF_TIMEOUT] == 1.0
+    assert schema(1) == 1.0

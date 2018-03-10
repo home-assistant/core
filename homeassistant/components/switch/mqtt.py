@@ -11,8 +11,9 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.mqtt import (
-    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_AVAILABILITY_TOPIC, CONF_QOS,
-    CONF_RETAIN)
+    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_AVAILABILITY_TOPIC,
+    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
+    MqttAvailability)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
@@ -24,26 +25,17 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['mqtt']
 
-CONF_PAYLOAD_AVAILABLE = 'payload_available'
-CONF_PAYLOAD_NOT_AVAILABLE = 'payload_not_available'
-
 DEFAULT_NAME = 'MQTT Switch'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_OPTIMISTIC = False
-DEFAULT_PAYLOAD_AVAILABLE = 'ON'
-DEFAULT_PAYLOAD_NOT_AVAILABLE = 'OFF'
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    vol.Optional(CONF_PAYLOAD_AVAILABLE,
-                 default=DEFAULT_PAYLOAD_AVAILABLE): cv.string,
-    vol.Optional(CONF_PAYLOAD_NOT_AVAILABLE,
-                 default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.string,
-})
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 @asyncio.coroutine
@@ -72,34 +64,31 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     )])
 
 
-class MqttSwitch(SwitchDevice):
+class MqttSwitch(MqttAvailability, SwitchDevice):
     """Representation of a switch that can be toggled using MQTT."""
 
     def __init__(self, name, state_topic, command_topic, availability_topic,
                  qos, retain, payload_on, payload_off, optimistic,
                  payload_available, payload_not_available, value_template):
         """Initialize the MQTT switch."""
+        super().__init__(availability_topic, qos, payload_available,
+                         payload_not_available)
         self._state = False
         self._name = name
         self._state_topic = state_topic
         self._command_topic = command_topic
-        self._availability_topic = availability_topic
-        self._available = True if availability_topic is None else False
         self._qos = qos
         self._retain = retain
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._optimistic = optimistic
         self._template = value_template
-        self._payload_available = payload_available
-        self._payload_not_available = payload_not_available
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe to MQTT events.
+        """Subscribe to MQTT events."""
+        yield from super().async_added_to_hass()
 
-        This method is a coroutine.
-        """
         @callback
         def state_message_received(topic, payload, qos):
             """Handle new MQTT state messages."""
@@ -113,16 +102,6 @@ class MqttSwitch(SwitchDevice):
 
             self.async_schedule_update_ha_state()
 
-        @callback
-        def availability_message_received(topic, payload, qos):
-            """Handle new MQTT availability messages."""
-            if payload == self._payload_available:
-                self._available = True
-            elif payload == self._payload_not_available:
-                self._available = False
-
-            self.async_schedule_update_ha_state()
-
         if self._state_topic is None:
             # Force into optimistic mode.
             self._optimistic = True
@@ -130,11 +109,6 @@ class MqttSwitch(SwitchDevice):
             yield from mqtt.async_subscribe(
                 self.hass, self._state_topic, state_message_received,
                 self._qos)
-
-        if self._availability_topic is not None:
-            yield from mqtt.async_subscribe(
-                self.hass, self._availability_topic,
-                availability_message_received, self._qos)
 
     @property
     def should_poll(self):
@@ -145,11 +119,6 @@ class MqttSwitch(SwitchDevice):
     def name(self):
         """Return the name of the switch."""
         return self._name
-
-    @property
-    def available(self) -> bool:
-        """Return if switch is available."""
-        return self._available
 
     @property
     def is_on(self):

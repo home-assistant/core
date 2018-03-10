@@ -158,11 +158,11 @@ class TestConfig(unittest.TestCase):
     def test_load_yaml_config_preserves_key_order(self):
         """Test removal of library."""
         with open(YAML_PATH, 'w') as f:
-            f.write('hello: 0\n')
+            f.write('hello: 2\n')
             f.write('world: 1\n')
 
         self.assertEqual(
-            [('hello', 0), ('world', 1)],
+            [('hello', 2), ('world', 1)],
             list(config_util.load_yaml_config_file(YAML_PATH).items()))
 
     @mock.patch('homeassistant.util.location.detect_location_info',
@@ -254,18 +254,6 @@ class TestConfig(unittest.TestCase):
         self.hass.block_till_done()
 
         return self.hass.states.get('test.test')
-
-    def test_entity_customization_false(self):
-        """Test entity customization through configuration."""
-        config = {CONF_LATITUDE: 50,
-                  CONF_LONGITUDE: 50,
-                  CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: {
-                      'test.test': {'hidden': False}}}
-
-        state = self._compute_state(config)
-
-        assert 'hidden' not in state.attributes
 
     def test_entity_customization(self):
         """Test entity customization through configuration."""
@@ -531,7 +519,7 @@ class TestConfig(unittest.TestCase):
         """Check that restart propagates to stop."""
         process_mock = mock.MagicMock()
         attrs = {
-            'communicate.return_value': mock_coro(('output', 'error')),
+            'communicate.return_value': mock_coro((b'output', None)),
             'wait.return_value': mock_coro(0)}
         process_mock.configure_mock(**attrs)
         mock_create.return_value = mock_coro(process_mock)
@@ -546,7 +534,7 @@ class TestConfig(unittest.TestCase):
         process_mock = mock.MagicMock()
         attrs = {
             'communicate.return_value':
-                mock_coro(('\033[34mhello'.encode('utf-8'), 'error')),
+                mock_coro(('\033[34mhello'.encode('utf-8'), None)),
             'wait.return_value': mock_coro(1)}
         process_mock.configure_mock(**attrs)
         mock_create.return_value = mock_coro(process_mock)

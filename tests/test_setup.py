@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import EVENT_HOMEASSISTANT_START, CONSTRAINT_FILE
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.config as config_util
 from homeassistant import setup, loader
 import homeassistant.util.dt as dt_util
@@ -40,9 +40,6 @@ class TestSetup:
     def teardown_method(self, method):
         """Clean up."""
         self.hass.stop()
-
-        # if os.path.isfile(VERSION_PATH):
-        #     os.remove(VERSION_PATH)
 
     def test_validate_component_config(self):
         """Test validating component configuration."""
@@ -202,43 +199,6 @@ class TestSetup:
 
         assert not setup.setup_component(self.hass, 'comp')
         assert 'comp' not in self.hass.config.components
-
-    @mock.patch('homeassistant.setup.os.path.dirname')
-    @mock.patch('homeassistant.util.package.running_under_virtualenv',
-                return_value=True)
-    @mock.patch('homeassistant.util.package.install_package',
-                return_value=True)
-    def test_requirement_installed_in_venv(
-            self, mock_install, mock_venv, mock_dirname):
-        """Test requirement installed in virtual environment."""
-        mock_venv.return_value = True
-        mock_dirname.return_value = 'ha_package_path'
-        self.hass.config.skip_pip = False
-        loader.set_component(
-            'comp', MockModule('comp', requirements=['package==0.0.1']))
-        assert setup.setup_component(self.hass, 'comp')
-        assert 'comp' in self.hass.config.components
-        assert mock_install.call_args == mock.call(
-            'package==0.0.1',
-            constraints=os.path.join('ha_package_path', CONSTRAINT_FILE))
-
-    @mock.patch('homeassistant.setup.os.path.dirname')
-    @mock.patch('homeassistant.util.package.running_under_virtualenv',
-                return_value=False)
-    @mock.patch('homeassistant.util.package.install_package',
-                return_value=True)
-    def test_requirement_installed_in_deps(
-            self, mock_install, mock_venv, mock_dirname):
-        """Test requirement installed in deps directory."""
-        mock_dirname.return_value = 'ha_package_path'
-        self.hass.config.skip_pip = False
-        loader.set_component(
-            'comp', MockModule('comp', requirements=['package==0.0.1']))
-        assert setup.setup_component(self.hass, 'comp')
-        assert 'comp' in self.hass.config.components
-        assert mock_install.call_args == mock.call(
-            'package==0.0.1', target=self.hass.config.path('deps'),
-            constraints=os.path.join('ha_package_path', CONSTRAINT_FILE))
 
     def test_component_not_setup_twice_if_loaded_during_other_setup(self):
         """Test component setup while waiting for lock is not setup twice."""
@@ -456,7 +416,7 @@ def test_component_warn_slow_setup(hass):
             hass, 'test_component1', {})
         assert result
         assert mock_call.called
-        assert len(mock_call.mock_calls) == 2
+        assert len(mock_call.mock_calls) == 3
 
         timeout, logger_method = mock_call.mock_calls[0][1][:2]
 
@@ -464,3 +424,17 @@ def test_component_warn_slow_setup(hass):
         assert logger_method == setup._LOGGER.warning
 
         assert mock_call().cancel.called
+
+
+@asyncio.coroutine
+def test_platform_no_warn_slow(hass):
+    """Do not warn for long entity setup time."""
+    loader.set_component(
+        'test_component1',
+        MockModule('test_component1', platform_schema=PLATFORM_SCHEMA))
+    with mock.patch.object(hass.loop, 'call_later', mock.MagicMock()) \
+            as mock_call:
+        result = yield from setup.async_setup_component(
+            hass, 'test_component1', {})
+        assert result
+        assert not mock_call.called

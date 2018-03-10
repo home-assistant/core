@@ -11,6 +11,7 @@
 ```
 
 ## Checklist:
+  - [ ] The code change is tested and works locally.
 
 If user exposed functionality or configuration variables are added/changed:
   - [ ] Documentation added/updated in [home-assistant.github.io](https://github.com/home-assistant/home-assistant.github.io)

@@ -4,21 +4,24 @@ Support for WUnderground weather service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.wunderground/
 """
+import asyncio
 from datetime import timedelta
 import logging
-
 import re
-import requests
+
+import aiohttp
+import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
     TEMP_FAHRENHEIT, TEMP_CELSIUS, LENGTH_INCHES, LENGTH_KILOMETERS,
-    LENGTH_MILES, LENGTH_FEET, STATE_UNKNOWN, ATTR_ATTRIBUTION,
-    ATTR_FRIENDLY_NAME)
+    LENGTH_MILES, LENGTH_FEET, ATTR_ATTRIBUTION)
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -55,7 +58,7 @@ class WUSensorConfig(object):
                 https://www.wunderground.com/weather/api/d/docs?d=data/index
             value (function(WUndergroundData)): callback that
                 extracts desired value from WUndergroundData object
-            unit_of_measurement (string): unit of meassurement
+            unit_of_measurement (string): unit of measurement
             entity_picture (string): value or callback returning
                 URL of entity picture
             icon (string): icon name or URL
@@ -84,7 +87,7 @@ class WUCurrentConditionsSensorConfig(WUSensorConfig):
                             dictionary.
             icon (string): icon name or URL, if None sensor
                            will use current weather symbol
-            unit_of_measurement (string): unit of meassurement
+            unit_of_measurement (string): unit of measurement
         """
         super().__init__(
             friendly_name,
@@ -230,7 +233,7 @@ class WUAlmanacSensorConfig(WUSensorConfig):
             value_type (string):  "record" or "normal"
             wu_unit (string): unit name in WU API
             icon (string): icon name or URL
-            unit_of_measurement (string): unit of meassurement
+            unit_of_measurement (string): unit of measurement
         """
         super().__init__(
             friendly_name=friendly_name,
@@ -627,7 +630,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                         async_add_devices, discovery_info=None):
     """Set up the WUnderground sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -637,21 +642,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_LANG), latitude, longitude)
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        sensors.append(WUndergroundSensor(rest, variable))
+        sensors.append(WUndergroundSensor(hass, rest, variable))
 
-    rest.update()
+    yield from rest.async_update()
     if not rest.data:
         raise PlatformNotReady
 
-    add_devices(sensors)
-
-    return True
+    async_add_devices(sensors, True)
 
 
 class WUndergroundSensor(Entity):
     """Implementing the WUnderground sensor."""
 
-    def __init__(self, rest, condition):
+    def __init__(self, hass: HomeAssistantType, rest, condition):
         """Initialize the sensor."""
         self.rest = rest
         self._condition = condition
@@ -663,6 +666,8 @@ class WUndergroundSensor(Entity):
         self._entity_picture = None
         self._unit_of_measurement = self._cfg_expand("unit_of_measurement")
         self.rest.request_feature(SENSOR_TYPES[condition].feature)
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, "pws_" + condition, hass=hass)
 
     def _cfg_expand(self, what, default=None):
         """Parse and return sensor data."""
@@ -684,9 +689,6 @@ class WUndergroundSensor(Entity):
         """Parse and update device state attributes."""
         attrs = self._cfg_expand("device_state_attributes", {})
 
-        self._attributes[ATTR_FRIENDLY_NAME] = self._cfg_expand(
-            "friendly_name")
-
         for (attr, callback) in attrs.items():
             if callable(callback):
                 try:
@@ -701,7 +703,7 @@ class WUndergroundSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "PWS_" + self._condition
+        return self._cfg_expand("friendly_name")
 
     @property
     def state(self):
@@ -728,15 +730,16 @@ class WUndergroundSensor(Entity):
         """Return the units of measurement."""
         return self._unit_of_measurement
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Update current conditions."""
-        self.rest.update()
+        yield from self.rest.async_update()
 
         if not self.rest.data:
             # no data, return
             return
 
-        self._state = self._cfg_expand("value", STATE_UNKNOWN)
+        self._state = self._cfg_expand("value")
         self._update_attrs()
         self._icon = self._cfg_expand("icon", super().icon)
         url = self._cfg_expand("entity_picture")
@@ -758,6 +761,7 @@ class WUndergroundData(object):
         self._longitude = longitude
         self._features = set()
         self.data = None
+        self._session = async_get_clientsession(self._hass)
 
     def request_feature(self, feature):
         """Register feature to be fetched from WU API."""
@@ -765,7 +769,7 @@ class WUndergroundData(object):
 
     def _build_url(self, baseurl=_RESOURCE):
         url = baseurl.format(
-            self._api_key, "/".join(self._features), self._lang)
+            self._api_key, '/'.join(sorted(self._features)), self._lang)
         if self._pws_id:
             url = url + 'pws:{}'.format(self._pws_id)
         else:
@@ -773,20 +777,18 @@ class WUndergroundData(object):
 
         return url + '.json'
 
+    @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def async_update(self):
         """Get the latest data from WUnderground."""
         try:
-            result = requests.get(self._build_url(), timeout=10).json()
+            with async_timeout.timeout(10, loop=self._hass.loop):
+                response = yield from self._session.get(self._build_url())
+            result = yield from response.json()
             if "error" in result['response']:
-                raise ValueError(result['response']["error"]
-                                 ["description"])
-            else:
-                self.data = result
-                return True
+                raise ValueError(result['response']["error"]["description"])
+            self.data = result
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
-            self.data = None
-        except requests.RequestException as err:
+        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Error fetching WUnderground data: %s", repr(err))
-            self.data = None

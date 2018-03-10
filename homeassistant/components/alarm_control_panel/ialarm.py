@@ -8,12 +8,12 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, CONF_HOST, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, CONF_NAME)
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyialarm==0.2']
 
@@ -33,9 +33,9 @@ def no_application_protocol(value):
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): vol.All(cv.string, no_application_protocol),
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_HOST): vol.All(cv.string, no_application_protocol),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class IAlarmPanel(alarm.AlarmControlPanel):
-    """Represent an iAlarm status."""
+    """Representation of an iAlarm status."""
 
     def __init__(self, name, username, password, url):
         """Initialize the iAlarm status."""

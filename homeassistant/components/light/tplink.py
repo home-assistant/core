@@ -8,10 +8,13 @@ import logging
 import colorsys
 import time
 
+import voluptuous as vol
+
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_RGB_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR)
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, PLATFORM_SCHEMA)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.color import (
@@ -23,9 +26,16 @@ REQUIREMENTS = ['pyHS100==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_CONSUMPTION = 'current_consumption'
-ATTR_DAILY_CONSUMPTION = 'daily_consumption'
-ATTR_MONTHLY_CONSUMPTION = 'monthly_consumption'
+ATTR_CURRENT_POWER_W = 'current_power_w'
+ATTR_DAILY_ENERGY_KWH = 'daily_energy_kwh'
+ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
+
+DEFAULT_NAME = 'TP-Link Light'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -65,13 +75,12 @@ def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(self, smartbulb: 'SmartBulb', name):
+    def __init__(self, smartbulb: 'SmartBulb', name) -> None:
         """Initialize the bulb."""
         self.smartbulb = smartbulb
-        self._name = None
-        if name is not None:
-            self._name = name
+        self._name = name
         self._state = None
+        self._available = True
         self._color_temp = None
         self._brightness = None
         self._rgb = None
@@ -82,6 +91,11 @@ class TPLinkSmartBulb(Light):
     def name(self):
         """Return the name of the Smart Bulb, if any."""
         return self._name
+
+    @property
+    def available(self) -> bool:
+        """Return if bulb is available."""
+        return self._available
 
     @property
     def device_state_attributes(self):
@@ -104,7 +118,7 @@ class TPLinkSmartBulb(Light):
             rgb = kwargs.get(ATTR_RGB_COLOR)
             self.smartbulb.hsv = rgb_to_hsv(rgb)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the light off."""
         self.smartbulb.state = self.smartbulb.BULB_STATE_OFF
 
@@ -132,39 +146,50 @@ class TPLinkSmartBulb(Light):
         """Update the TP-Link Bulb's state."""
         from pyHS100 import SmartDeviceException
         try:
+            self._available = True
+
             if self._supported_features == 0:
                 self.get_features()
+
             self._state = (
                 self.smartbulb.state == self.smartbulb.BULB_STATE_ON)
-            if self._name is None:
+
+            # Pull the name from the device if a name was not specified
+            if self._name == DEFAULT_NAME:
                 self._name = self.smartbulb.alias
+
             if self._supported_features & SUPPORT_BRIGHTNESS:
                 self._brightness = brightness_from_percentage(
                     self.smartbulb.brightness)
+
             if self._supported_features & SUPPORT_COLOR_TEMP:
                 if (self.smartbulb.color_temp is not None and
                         self.smartbulb.color_temp != 0):
                     self._color_temp = kelvin_to_mired(
                         self.smartbulb.color_temp)
+
             if self._supported_features & SUPPORT_RGB_COLOR:
                 self._rgb = hsv_to_rgb(self.smartbulb.hsv)
+
             if self.smartbulb.has_emeter:
-                self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
-                    = "%.1f W" % self.smartbulb.current_consumption()
+                self._emeter_params[ATTR_CURRENT_POWER_W] = '{:.1f}'.format(
+                    self.smartbulb.current_consumption())
                 daily_statistics = self.smartbulb.get_emeter_daily()
                 monthly_statistics = self.smartbulb.get_emeter_monthly()
                 try:
-                    self._emeter_params[ATTR_DAILY_CONSUMPTION] \
-                        = "%.2f kW" % daily_statistics[int(
-                            time.strftime("%d"))]
-                    self._emeter_params[ATTR_MONTHLY_CONSUMPTION] \
-                        = "%.2f kW" % monthly_statistics[int(
-                            time.strftime("%m"))]
+                    self._emeter_params[ATTR_DAILY_ENERGY_KWH] \
+                        = "{:.3f}".format(
+                            daily_statistics[int(time.strftime("%d"))])
+                    self._emeter_params[ATTR_MONTHLY_ENERGY_KWH] \
+                        = "{:.3f}".format(
+                            monthly_statistics[int(time.strftime("%m"))])
                 except KeyError:
                     # device returned no daily/monthly history
                     pass
+
         except (SmartDeviceException, OSError) as ex:
-            _LOGGER.warning('Could not read state for %s: %s', self._name, ex)
+            _LOGGER.warning("Could not read state for %s: %s", self._name, ex)
+            self._available = False
 
     @property
     def supported_features(self):

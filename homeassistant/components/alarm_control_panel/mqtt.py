@@ -17,7 +17,9 @@ from homeassistant.const import (
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN,
     CONF_NAME, CONF_CODE)
 from homeassistant.components.mqtt import (
-    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS)
+    CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
+    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
+    MqttAvailability)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,7 +42,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_ARM_AWAY, default=DEFAULT_ARM_AWAY): cv.string,
     vol.Optional(CONF_PAYLOAD_ARM_HOME, default=DEFAULT_ARM_HOME): cv.string,
     vol.Optional(CONF_PAYLOAD_DISARM, default=DEFAULT_DISARM): cv.string,
-})
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 @asyncio.coroutine
@@ -54,15 +56,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_DISARM),
         config.get(CONF_PAYLOAD_ARM_HOME),
         config.get(CONF_PAYLOAD_ARM_AWAY),
-        config.get(CONF_CODE))])
+        config.get(CONF_CODE),
+        config.get(CONF_AVAILABILITY_TOPIC),
+        config.get(CONF_PAYLOAD_AVAILABLE),
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE))])
 
 
-class MqttAlarm(alarm.AlarmControlPanel):
+class MqttAlarm(MqttAvailability, alarm.AlarmControlPanel):
     """Representation of a MQTT alarm status."""
 
     def __init__(self, name, state_topic, command_topic, qos, payload_disarm,
-                 payload_arm_home, payload_arm_away, code):
+                 payload_arm_home, payload_arm_away, code, availability_topic,
+                 payload_available, payload_not_available):
         """Init the MQTT Alarm Control Panel."""
+        super().__init__(availability_topic, qos, payload_available,
+                         payload_not_available)
         self._state = STATE_UNKNOWN
         self._name = name
         self._state_topic = state_topic
@@ -73,11 +81,11 @@ class MqttAlarm(alarm.AlarmControlPanel):
         self._payload_arm_away = payload_arm_away
         self._code = code
 
+    @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
+        """Subscribe mqtt events."""
+        yield from super().async_added_to_hass()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
         @callback
         def message_received(topic, payload, qos):
             """Run when new MQTT message has been received."""
@@ -89,7 +97,7 @@ class MqttAlarm(alarm.AlarmControlPanel):
             self._state = payload
             self.async_schedule_update_ha_state()
 
-        return mqtt.async_subscribe(
+        yield from mqtt.async_subscribe(
             self.hass, self._state_topic, message_received, self._qos)
 
     @property

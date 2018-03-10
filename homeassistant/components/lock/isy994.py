@@ -8,7 +8,8 @@ import logging
 from typing import Callable  # noqa
 
 from homeassistant.components.lock import LockDevice, DOMAIN
-import homeassistant.components.isy994 as isy
+from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
+                                             ISYDevice)
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN
 from homeassistant.helpers.typing import ConfigType
 
@@ -19,43 +20,27 @@ VALUE_TO_STATE = {
     100: STATE_LOCKED
 }
 
-UOM = ['11']
-STATES = [STATE_LOCKED, STATE_UNLOCKED]
-
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 lock platform."""
-    if isy.ISY is None or not isy.ISY.connected:
-        _LOGGER.error("A connection has not been made to the ISY controller")
-        return False
-
     devices = []
-
-    for node in isy.filter_nodes(isy.NODES, units=UOM,
-                                 states=STATES):
+    for node in hass.data[ISY994_NODES][DOMAIN]:
         devices.append(ISYLockDevice(node))
 
-    for program in isy.PROGRAMS.get(DOMAIN, []):
-        try:
-            status = program[isy.KEY_STATUS]
-            actions = program[isy.KEY_ACTIONS]
-            assert actions.dtype == 'program', 'Not a program'
-        except (KeyError, AssertionError):
-            pass
-        else:
-            devices.append(ISYLockProgram(program.name, status, actions))
+    for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
+        devices.append(ISYLockProgram(name, status, actions))
 
     add_devices(devices)
 
 
-class ISYLockDevice(isy.ISYDevice, LockDevice):
+class ISYLockDevice(ISYDevice, LockDevice):
     """Representation of an ISY994 lock device."""
 
     def __init__(self, node) -> None:
         """Initialize the ISY994 lock device."""
-        isy.ISYDevice.__init__(self, node)
+        super().__init__(node)
         self._conn = node.parent.parent.conn
 
     @property
@@ -66,6 +51,8 @@ class ISYLockDevice(isy.ISYDevice, LockDevice):
     @property
     def state(self) -> str:
         """Get the state of the lock."""
+        if self.is_unknown():
+            return None
         return VALUE_TO_STATE.get(self.value, STATE_UNKNOWN)
 
     def lock(self, **kwargs) -> None:
@@ -98,7 +85,7 @@ class ISYLockProgram(ISYLockDevice):
 
     def __init__(self, name: str, node, actions) -> None:
         """Initialize the lock."""
-        ISYLockDevice.__init__(self, node)
+        super().__init__(node)
         self._name = name
         self._actions = actions
 

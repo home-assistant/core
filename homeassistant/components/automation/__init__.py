@@ -7,14 +7,12 @@ https://home-assistant.io/components/automation/
 import asyncio
 from functools import partial
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import CoreState
 from homeassistant.loader import bind_hass
-from homeassistant import config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID)
@@ -166,11 +164,6 @@ def async_setup(hass, config):
 
     yield from _async_process_config(hass, config, component)
 
-    descriptions = yield from hass.async_add_job(
-        conf_util.load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
-
     @asyncio.coroutine
     def trigger_service_handler(service_call):
         """Handle automation triggers."""
@@ -216,20 +209,20 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_TRIGGER, trigger_service_handler,
-        descriptions.get(SERVICE_TRIGGER), schema=TRIGGER_SERVICE_SCHEMA)
+        schema=TRIGGER_SERVICE_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler,
-        descriptions.get(SERVICE_RELOAD), schema=RELOAD_SERVICE_SCHEMA)
+        schema=RELOAD_SERVICE_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, toggle_service_handler,
-        descriptions.get(SERVICE_TOGGLE), schema=SERVICE_SCHEMA)
+        schema=SERVICE_SCHEMA)
 
     for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
         hass.services.async_register(
             DOMAIN, service, turn_onoff_service_handler,
-            descriptions.get(service), schema=SERVICE_SCHEMA)
+            schema=SERVICE_SCHEMA)
 
     return True
 
@@ -345,10 +338,9 @@ class AutomationEntity(ToggleEntity):
             yield from self.async_update_ha_state()
 
     @asyncio.coroutine
-    def async_remove(self):
-        """Remove automation from HASS."""
+    def async_will_remove_from_hass(self):
+        """Remove listeners when removing automation from HASS."""
         yield from self.async_turn_off()
-        yield from super().async_remove()
 
     @asyncio.coroutine
     def async_enable(self):

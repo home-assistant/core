@@ -56,6 +56,47 @@ class TestScriptHelper(unittest.TestCase):
         assert calls[0].data.get('hello') == 'world'
         assert not script_obj.can_cancel
 
+    def test_firing_event_template(self):
+        """Test the firing of events."""
+        event = 'test_event'
+        calls = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            calls.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA({
+            'event': event,
+            'event_data_template': {
+                'dict': {
+                   1: '{{ is_world }}',
+                   2: '{{ is_world }}{{ is_world }}',
+                   3: '{{ is_world }}{{ is_world }}{{ is_world }}',
+                },
+                'list': [
+                    '{{ is_world }}', '{{ is_world }}{{ is_world }}'
+                ]
+            }
+        }))
+
+        script_obj.run({'is_world': 'yes'})
+
+        self.hass.block_till_done()
+
+        assert len(calls) == 1
+        assert calls[0].data == {
+            'dict': {
+                1: 'yes',
+                2: 'yesyes',
+                3: 'yesyesyes',
+            },
+            'list': ['yes', 'yesyes']
+        }
+        assert not script_obj.can_cancel
+
     def test_calling_service(self):
         """Test the calling of a service."""
         calls = []
@@ -99,14 +140,14 @@ class TestScriptHelper(unittest.TestCase):
                 {% endif %}""",
             'data_template': {
                 'hello': """
-                    {% if True %}
+                    {% if is_world == 'yes' %}
                         world
                     {% else %}
-                        Not world
+                        not world
                     {% endif %}
                 """
             }
-        })
+        }, {'is_world': 'yes'})
 
         self.hass.block_till_done()
 
@@ -147,7 +188,7 @@ class TestScriptHelper(unittest.TestCase):
 
     def test_delay_template(self):
         """Test the delay as a template."""
-        event = 'test_evnt'
+        event = 'test_event'
         events = []
 
         @callback
