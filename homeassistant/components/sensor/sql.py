@@ -144,7 +144,7 @@ class SQLSensor(Entity):
                 data = res[self._column_name]
                 for key, value in res.items():
                     if isinstance(value, decimal.Decimal):
-                        value = float(decimal)
+                        value = float(value)
                     self._attributes[key] = value
         except sqlalchemy.exc.SQLAlchemyError as err:
             _LOGGER.error("Error executing query %s: %s", self._query, err)
