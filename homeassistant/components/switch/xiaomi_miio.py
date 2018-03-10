@@ -365,16 +365,16 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
                 ATTR_LOAD_POWER: state.load_power,
             })
 
-            if self._additional_supported_features & SUPPORT_SET_POWER_MODE == 1 \
-                    and state.mode:
+            if self._additional_supported_features & \
+                    SUPPORT_SET_POWER_MODE == 1 and state.mode:
                 self._state_attrs[ATTR_POWER_MODE] = state.mode.value
 
-            if self._additional_supported_features & SUPPORT_SET_WIFI_LED == 1 and \
-                    state.wifi_led:
+            if self._additional_supported_features & \
+                    SUPPORT_SET_WIFI_LED == 1 and state.wifi_led:
                 self._state_attrs[ATTR_WIFI_LED] = state.wifi_led
 
-            if self._additional_supported_features & SUPPORT_SET_POWER_PRICE == 1 and \
-                    state.power_price:
+            if self._additional_supported_features & \
+                    SUPPORT_SET_POWER_PRICE == 1 and state.power_price:
                 self._state_attrs[ATTR_POWER_PRICE] = state.power_price
 
         except DeviceException as ex:
