@@ -23,9 +23,9 @@ _LOGGER = logging.getLogger(__name__)
 ACTIVE_NAME = "Energy"
 PRODUCTION_NAME = "Production"
 CONSUMPTION_NAME = "Usage"
+DEVICES_NAME = "Devices"
 
 ACTIVE_TYPE = 'active'
-
 
 class SensorConfig(object):
     """Data structure holding sensor config."""
@@ -50,11 +50,13 @@ SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
 VALID_SENSORS = ['%s_%s' % (typ, var)
                  for typ in SENSOR_TYPES
                  for var in SENSOR_VARIANTS]
+VALID_SENSORS.append(DEVICES_NAME.lower())
 
-ICON = 'mdi:flash'
+CONSUMPTION_ICON = 'mdi:flash'
+PRODUCTION_ICON = 'mdi:white-balance-sunny'
 
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
-MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_REALTIME_UPDATES = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
@@ -72,34 +74,53 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     data = Senseable(username, password)
+    realtime_data_wrapper = ThrottledRealtimeData(data)
 
     @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
     def update_trends():
         """Update the daily power usage."""
         data.update_trend_data()
 
-    @Throttle(MIN_TIME_BETWEEN_ACTIVE_UPDATES)
     def update_active():
         """Update the active power usage."""
-        data.get_realtime()
+        realtime_data_wrapper.realtime_data
 
     devices = []
     for sensor in config.get(CONF_MONITORED_CONDITIONS):
-        config_name, prod = sensor.rsplit('_', 1)
-        name = SENSOR_TYPES[config_name].name
-        sensor_type = SENSOR_TYPES[config_name].sensor_type
-        is_production = prod == PRODUCTION_NAME.lower()
-        if sensor_type == ACTIVE_TYPE:
-            update_call = update_active
+        if sensor != DEVICES_NAME.lower():
+            config_name, prod = sensor.rsplit('_', 1)
+            name = SENSOR_TYPES[config_name].name
+            sensor_type = SENSOR_TYPES[config_name].sensor_type
+            is_production = prod == PRODUCTION_NAME.lower()
+            if sensor_type == ACTIVE_TYPE:
+                update_call = update_active
+            else:
+                update_call = update_trends
+            devices.append(SenseProductionConsumption(data, name, sensor_type,
+                                is_production, update_call))
         else:
-            update_call = update_trends
-        devices.append(Sense(data, name, sensor_type,
-                             is_production, update_call))
+            sense_devices = data.get_discovered_device_data()
+            devices.extend(map(lambda d: SenseDevice(realtime_data_wrapper, d['name'], d.get('location', ''), d['icon']), sense_devices))
 
     add_devices(devices)
 
+class ThrottledRealtimeData():
+    def __init__(self, data):
+        self._data = data
+        self._realtime_data = None
 
-class Sense(Entity):
+    @property
+    def realtime_data(self):
+        """Return the last fetched payload of realtime data"""
+        self.update_realtime()
+        return self._realtime_data
+
+    @Throttle(MIN_TIME_BETWEEN_REALTIME_UPDATES)
+    def update_realtime(self):
+        """Fetch and store an updated realtime payload"""
+        self._realtime_data = self._data.get_realtime()
+
+class SenseProductionConsumption(Entity):
     """Implementation of a Sense energy sensor."""
 
     def __init__(self, data, name, sensor_type, is_production, update_call):
@@ -135,7 +156,9 @@ class Sense(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return ICON
+        if self._is_production:
+            return PRODUCTION_ICON
+        return CONSUMPTION_ICON
 
     def update(self):
         """Get the latest data, update state."""
@@ -150,3 +173,76 @@ class Sense(Entity):
             state = self._data.get_trend(self._sensor_type,
                                          self._is_production)
             self._state = round(state, 1)
+
+
+class SenseDevice(Entity):
+    """Implementation of a Sense detected device."""
+
+    def __init__(self, realtime_data_wrapper, name, location, icon):
+        """Initialize the sensor."""
+        self._realtime_data_wrapper = realtime_data_wrapper
+        self._device_name = name
+        if location != '':
+            self._device_name = '{} ({})'.format(name, location)
+        self._name = '{} Energy Usage'.format(self._device_name)
+        self._icon = icon
+        self._state = None
+
+    @property
+    def name(self):
+        """Return the name of the sensor"""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the sensor"""
+        return self._state
+
+    @property
+    def force_update(self):
+        """Return if an unchanged sensor value should still count as an update"""
+        return True
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity"""
+        return 'W'
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        # A handful of devices from Sense coincidentally provide matching mdi icons
+        if (self._icon == 'fridge' or \
+            self._icon == 'lightbulb' or \
+            self._icon == 'stove' or \
+            self._icon == 'fan'):
+            return 'mdi:{}'.format(self._icon)
+        elif self._icon == 'microwave':
+            return 'mdi:waves'
+        elif self._icon == 'alwayson':
+            return 'mdi:sync'
+        elif self._icon == 'home': # the other/unknown
+            return 'mdi:help'
+        elif self._icon == 'tv':
+            return 'mdi:television'
+        elif self._icon == 'cup':
+            return 'mdi:coffee'
+        elif self._icon == 'toaster_oven':
+            return 'mdi:stove'
+        elif self._icon == 'washer':
+            return 'mdi:washing-machine'
+        else:
+            return CONSUMPTION_ICON
+
+    def update(self):
+        """Get the latest data, update state."""
+        payload = self._realtime_data_wrapper.realtime_data
+        device_on = False
+        if 'devices' in payload:
+            for device in payload['devices']:
+                if (device['name'] == self._device_name):
+                    self._state = round(device['w'])
+                    device_on = self._state > 0
+
+        if (device_on == False):
+            self._state = 0
