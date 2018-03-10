@@ -56,14 +56,14 @@ SUPPORT_SET_POWER_MODE = 1
 SUPPORT_SET_WIFI_LED = 2
 SUPPORT_SET_POWER_PRICE = 4
 
-SUPPORT_FLAGS_GENERIC = 0
+ADDITIONAL_SUPPORT_FLAGS_GENERIC = 0
 
-SUPPORT_FLAGS_POWER_STRIP_V1 = (SUPPORT_SET_POWER_MODE |
-                                SUPPORT_SET_WIFI_LED |
-                                SUPPORT_SET_POWER_PRICE)
+ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V1 = (SUPPORT_SET_POWER_MODE |
+                                           SUPPORT_SET_WIFI_LED |
+                                           SUPPORT_SET_POWER_PRICE)
 
-SUPPORT_FLAGS_POWER_STRIP_V2 = (SUPPORT_SET_WIFI_LED |
-                                SUPPORT_SET_POWER_PRICE)
+ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V2 = (SUPPORT_SET_WIFI_LED |
+                                           SUPPORT_SET_POWER_PRICE)
 
 SERVICE_SET_WIFI_LED_ON = 'xiaomi_miio_set_wifi_led_on'
 SERVICE_SET_WIFI_LED_OFF = 'xiaomi_miio_set_wifi_led_off'
@@ -199,13 +199,13 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             ATTR_TEMPERATURE: None,
             ATTR_MODEL: self._model,
         }
-        self._supported_features = SUPPORT_FLAGS_GENERIC
+        self._additional_supported_features = ADDITIONAL_SUPPORT_FLAGS_GENERIC
         self._skip_update = False
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_features
+    def _additional_supported_features(self):
+        """Return the supported features of the device."""
+        return self._additional_supported_features
 
     @property
     def should_poll(self):
@@ -320,9 +320,11 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
         XiaomiPlugGenericSwitch.__init__(self, name, plug, model)
 
         if self._model == MODEL_POWER_STRIP_V2:
-            self._supported_features = SUPPORT_FLAGS_POWER_STRIP_V2
+            self._additional_supported_features = \
+                ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V2
         else:
-            self._supported_features = SUPPORT_FLAGS_POWER_STRIP_V1
+            self._additional_supported_features = \
+                ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V1
 
         self._state_attrs.update({
             ATTR_LOAD_POWER: None,
@@ -338,9 +340,9 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch, SwitchDevice):
             self._state_attrs[ATTR_POWER_PRICE] = None
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_features
+    def _additional_supported_features(self):
+        """Return the supported features of the device."""
+        return self._additional_supported_features
 
     async def async_update(self):
         """Fetch state from the device."""
