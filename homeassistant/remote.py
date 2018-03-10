@@ -12,6 +12,7 @@ import enum
 import json
 import logging
 import urllib.parse
+from decimal import Decimal
 
 from typing import Optional
 
@@ -122,6 +123,8 @@ class JSONEncoder(json.JSONEncoder):
             return list(o)
         elif hasattr(o, 'as_dict'):
             return o.as_dict()
+        elif isinstance(o, Decimal):
+            return float(o)
 
         try:
             return json.JSONEncoder.default(self, o)
