@@ -148,25 +148,28 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
     return [entity_id(ent_id) for ent_id in value]
 
 
-def entity_domain(domain: str):
-    """Validate that entity belong to domain."""
+def entity_domain(domains: Union[str, Sequence]):
+    """Validate that entity belong to domains."""
     def validate(value: Any) -> str:
-        """Test if entity domain is domain."""
-        ent_domain = entities_domain(domain)
+        """Test if entity domain is in domains."""
+        ent_domain = entities_domain(domains)
         return ent_domain(value)[0]
     return validate
 
 
-def entities_domain(domain: str):
-    """Validate that entities belong to domain."""
+def entities_domain(domains: Union[str, Sequence]):
+    """Validate that entities belong to domains."""
+    if isinstance(domains, str):
+        domains = [domains]
+
     def validate(values: Union[str, Sequence]) -> Sequence[str]:
-        """Test if entity domain is domain."""
+        """Test if entity domain is in domains."""
         values = entity_ids(values)
         for ent_id in values:
-            if split_entity_id(ent_id)[0] != domain:
+            if split_entity_id(ent_id)[0] not in domains:
                 raise vol.Invalid(
-                    "Entity ID '{}' does not belong to domain '{}'"
-                    .format(ent_id, domain))
+                    "Entity ID '{}' does not belong to domains '{}'"
+                    .format(ent_id, domains))
         return values
     return validate
 
