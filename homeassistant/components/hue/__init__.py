@@ -21,6 +21,7 @@ from homeassistant.const import CONF_FILENAME, CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery, aiohttp_client
 from homeassistant import config_entries
+from homeassistant.util.json import save_json
 
 REQUIREMENTS = ['aiohue==1.0.0']
 
@@ -176,14 +177,6 @@ def _find_username_from_config(hass, filename):
         return list(json.load(inp).values())[0]['username']
 
 
-def _save_config(hass, filename, host, username):
-    """Store config."""
-    with open(hass.config.path(filename), 'w') as outp:
-        json.dump({
-            host: {'username': bridge.username}
-        }, outp)
-
-
 class HueBridge(object):
     """Manages a single Hue bridge."""
 
@@ -247,8 +240,8 @@ class HueBridge(object):
 
             # Save config file
             await self.hass.async_add_job(
-                _save_config, self.hass, self.filename, self.host,
-                bridge.username)
+                save_json, self.hass.config.path(self.filename),
+                {self.host: {'username': bridge.username}})
 
         self.aiobridge = bridge
 
