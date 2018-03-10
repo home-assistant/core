@@ -547,7 +547,7 @@ class XiaomiGenericDevice(FanEntity):
         return
 
 
-class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
+class XiaomiAirPurifier(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Purifier."""
 
     def __init__(self, name, device, model):
@@ -737,7 +737,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
             self._device.reset_filter)
 
 
-class XiaomiAirHumidifier(XiaomiGenericDevice, FanEntity):
+class XiaomiAirHumidifier(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Humidifier."""
 
     def __init__(self, name, device, model):
