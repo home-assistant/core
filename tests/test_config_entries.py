@@ -226,14 +226,14 @@ def test_configure_reuses_handler_instance(manager):
         def async_step_init(self, user_input=None):
             self.handle_count += 1
             return self.async_show_form(
-                title=str(self.handle_count),
+                errors={'base': str(self.handle_count)},
                 step_id='init')
 
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
         form = yield from manager.flow.async_init('test')
-        assert form['title'] == '1'
+        assert form['errors']['base'] == '1'
         form = yield from manager.flow.async_configure(form['flow_id'])
-        assert form['title'] == '2'
+        assert form['errors']['base'] == '2'
         assert len(manager.flow.async_progress()) == 1
         assert len(manager.async_entries()) == 0
 
@@ -250,7 +250,6 @@ def test_configure_two_steps(manager):
                 self.init_data = user_input
                 return self.async_step_second()
             return self.async_show_form(
-                title='title',
                 step_id='init',
                 data_schema=vol.Schema([str])
             )
@@ -263,7 +262,6 @@ def test_configure_two_steps(manager):
                     data=self.init_data + user_input
                 )
             return self.async_show_form(
-                title='title',
                 step_id='second',
                 data_schema=vol.Schema([str])
             )
@@ -299,9 +297,7 @@ def test_show_form(manager):
         @asyncio.coroutine
         def async_step_init(self, user_input=None):
             return self.async_show_form(
-                title='Hello form',
                 step_id='init',
-                description='test-description',
                 data_schema=schema,
                 errors={
                     'username': 'Should be unique.'
@@ -311,8 +307,6 @@ def test_show_form(manager):
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
         form = yield from manager.flow.async_init('test')
         assert form['type'] == 'form'
-        assert form['title'] == 'Hello form'
-        assert form['description'] == 'test-description'
         assert form['data_schema'] is schema
         assert form['errors'] == {
             'username': 'Should be unique.'

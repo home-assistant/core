@@ -14,6 +14,8 @@ mkdir -p build/translations-download
 
 script/translations_upload_merge.py
 
+# Use the generated translations upload file as the mock output from the
+# Lokalise download
 mv build/translations-upload.json build/translations-download/en.json
 
 script/translations_download_split.py
