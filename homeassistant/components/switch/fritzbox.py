@@ -82,25 +82,22 @@ class FritzboxSwitch(SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attrs = {}
+        attrs[ATTR_STATE_DEVICE_LOCKED] = self._device.device_lock
+        attrs[ATTR_STATE_LOCKED] = self._device.lock
 
         if self._device.has_powermeter:
             attrs[ATTR_TOTAL_CONSUMPTION] = "{:.3f}".format(
                 (self._device.energy or 0.0) / 100000)
-            attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = "{}".format(
-                ATTR_TOTAL_CONSUMPTION_UNIT_VALUE)
+            attrs[ATTR_TOTAL_CONSUMPTION_UNIT] = \
+                ATTR_TOTAL_CONSUMPTION_UNIT_VALUE
 
-        if self._device.has_switch:
-            attrs[ATTR_STATE_DEVICE_LOCKED] = self._device.device_lock
-            attrs[ATTR_STATE_LOCKED] = self._device.lock
 
         if self._device.has_temperature_sensor:
-            attrs[ATTR_TEMPERATURE] = "{}".format(
-                self.hass.config.units.temperature(self._device.temperature,
-                                                   TEMP_CELSIUS))
-            attrs[ATTR_TEMPERATURE_UNIT] = "{}".format(
-                self.hass.config.units.temperature_unit)
-            attrs[ATTR_STATE_DEVICE_LOCKED] = self._device.device_lock
-            attrs[ATTR_STATE_LOCKED] = self._device.lock
+            attrs[ATTR_TEMPERATURE] = \
+                str(self.hass.config.units.temperature(self._device.temperature,
+                                                       TEMP_CELSIUS))
+            attrs[ATTR_TEMPERATURE_UNIT] = \
+                self.hass.config.units.temperature_unit
         return attrs
 
     @property
