@@ -1023,6 +1023,9 @@ pyunifi==2.13
 # homeassistant.components.vera
 pyvera==0.2.41
 
+# homeassistant.components.switch.vesync
+pyvesync==0.1.1
+
 # homeassistant.components.media_player.vizio
 pyvizio==0.0.2
 
@@ -1229,9 +1232,6 @@ uvcclient==0.10.1
 
 # homeassistant.components.climate.venstar
 venstarcolortouch==0.6
-
-# homeassistant.components.switch.vesync
-pyvesync==0.1.1
 
 # homeassistant.components.config.config_entries
 voluptuous-serialize==1
