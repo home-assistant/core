@@ -326,6 +326,11 @@ def check_ha_config_file(config_dir):
         config, core_config.get(CONF_PACKAGES, {}), _pack_error)
     del core_config[CONF_PACKAGES]
 
+    # Ensure we have no None values after merge
+    for key, value in config.items():
+        if not value:
+            config[key] = {}
+
     # Filter out repeating config sections
     components = set(key.split(' ')[0] for key in config.keys())
 
