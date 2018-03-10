@@ -863,7 +863,7 @@ pyqwikswitch==0.4
 pyrainbird==0.1.3
 
 # homeassistant.components.sensor.sabnzbd
-pysabnzbd==0.0.3
+pysabnzbd==1.0.1
 
 # homeassistant.components.climate.sensibo
 pysensibo==1.0.2
