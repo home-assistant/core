@@ -81,43 +81,37 @@ class CoverGroup(CoverDevice):
         else:
             features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-            # pylint: disable=expression-not-assigned
-            self._covers[KEY_OPEN_CLOSE].add(entity_id) \
-                if features & (SUPPORT_OPEN | SUPPORT_CLOSE) \
-                else self._covers[KEY_OPEN_CLOSE].discard(entity_id)
+            if features & (SUPPORT_OPEN | SUPPORT_CLOSE):
+                self._covers[KEY_OPEN_CLOSE].add(entity_id)
+            else:
+                self._covers[KEY_OPEN_CLOSE].discard(entity_id)
 
-            # pylint: disable=expression-not-assigned
-            self._covers[KEY_STOP].add(entity_id) \
-                if features & (SUPPORT_STOP) \
-                else self._covers[KEY_STOP].discard(entity_id)
+            if features & (SUPPORT_STOP):
+                self._covers[KEY_STOP].add(entity_id)
+            else:
+                self._covers[KEY_STOP].discard(entity_id)
 
-            # pylint: disable=expression-not-assigned
-            self._covers[KEY_POSITION].add(entity_id) \
-                if features & (SUPPORT_SET_POSITION) \
-                else self._covers[KEY_POSITION].discard(entity_id)
+            if features & (SUPPORT_SET_POSITION):
+                self._covers[KEY_POSITION].add(entity_id)
+            else:
+                self._covers[KEY_POSITION].discard(entity_id)
 
-            # pylint: disable=expression-not-assigned
-            self._tilts[KEY_OPEN_CLOSE].add(entity_id) \
-                if features & (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT) \
-                else self._tilts[KEY_OPEN_CLOSE].discard(entity_id)
+            if features & (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT):
+                self._tilts[KEY_OPEN_CLOSE].add(entity_id)
+            else:
+                self._tilts[KEY_OPEN_CLOSE].discard(entity_id)
 
-            # pylint: disable=expression-not-assigned
-            self._tilts[KEY_STOP].add(entity_id) \
-                if features & (SUPPORT_STOP_TILT) \
-                else self._tilts[KEY_STOP].discard(entity_id)
+            if features & (SUPPORT_STOP_TILT):
+                self._tilts[KEY_STOP].add(entity_id)
+            else:
+                self._tilts[KEY_STOP].discard(entity_id)
 
-            # pylint: disable=expression-not-assigned
-            self._tilts[KEY_POSITION].add(entity_id) \
-                if features & (SUPPORT_SET_TILT_POSITION) \
-                else self._tilts[KEY_POSITION].discard(entity_id)
+            if features & (SUPPORT_SET_TILT_POSITION):
+                self._tilts[KEY_POSITION].add(entity_id)
+            else:
+                self._tilts[KEY_POSITION].discard(entity_id)
 
-        tilt = False
-        for values in self._tilts.values():
-            if not values:
-                break
-        else:
-            tilt = True
-        self._tilt = tilt
+        self._tilt = any(values for values in self._tilts.values())
 
         if update_state:
             self.async_schedule_update_ha_state(True)
@@ -128,7 +122,7 @@ class CoverGroup(CoverDevice):
             new_state = self.hass.states.get(entity_id)
             self.update_supported_features(entity_id, None, new_state,
                                            update_state=False)
-        self.async_schedule_update_ha_state(True)
+        await self.async_update()
         async_track_state_change(self.hass, self._entities,
                                  self.update_supported_features)
 
