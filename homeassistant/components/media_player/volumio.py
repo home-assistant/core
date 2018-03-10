@@ -253,8 +253,7 @@ class Volumio(MediaPlayerDevice):
         return self.send_volumio_msg('commands',
                                      params={'cmd': 'clearQueue'})
 
-    @asyncio.coroutine
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
-    def _async_update_playlists(self, **kwargs):
+    async def _async_update_playlists(self, **kwargs):
         """Update available Volumio playlists."""
-        self._playlists = yield from self.send_volumio_msg('listplaylists')
+        self._playlists = await self.send_volumio_msg('listplaylists')
