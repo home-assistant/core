@@ -11,10 +11,11 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    TEMP_FAHRENHEIT, CONF_NAME, CONF_MONITORED_CONDITIONS)
+    TEMP_CELSIUS, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
-from homeassistant.util.temperature import celsius_to_fahrenheit
+from homeassistant.helpers.temperature import display_temp
+from homeassistant.const import PRECISION_TENTHS
 
 REQUIREMENTS = ['Adafruit-GPIO==1.0.3',
                 'Adafruit-SHT31==1.0.2']
@@ -29,9 +30,8 @@ DEFAULT_I2C_ADDRESS = 0x44
 SENSOR_TEMPERATURE = 'temperature'
 SENSOR_HUMIDITY = 'humidity'
 SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ['Temperature',
-                         lambda hass: hass.config.units.temperature_unit],
-    SENSOR_HUMIDITY: ['Humidity', '%']
+    SENSOR_TEMPERATURE: 'Temperature',
+    SENSOR_HUMIDITY: 'Humidity'
 }
 
 
@@ -57,12 +57,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                  hex(i2c_address))
 
     devs = []
-    for sensor_type, props in SENSOR_TYPES.items():
-        type_description, unit = props
-        if callable(unit):
-            unit = unit(hass)
+    for sensor_type, type_description in SENSOR_TYPES.items():
         name = "{} {}".format(config.get(CONF_NAME), type_description)
-        devs.append(SHTSensor(sensor, name, sensor_type, unit))
+        devs.append(SHTSensor(sensor, name, sensor_type))
 
     add_devices(devs)
 
@@ -70,12 +67,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SHTSensor(Entity):
     """Representation of a SHTSensor, can be either temperature or humidity"""
 
-    def __init__(self, sensor, name, sensor_type, unit):
+    def __init__(self, sensor, name, sensor_type):
         """Initialize the sensor."""
         self._sensor = sensor
         self._name = name
         self._type = sensor_type
-        self._unit = unit
         self._state = None
 
     @property
@@ -91,7 +87,10 @@ class SHTSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self._unit
+        if self._type == SENSOR_TEMPERATURE:
+            return self.hass.config.units.temperature_unit
+        elif self._type == SENSOR_HUMIDITY:
+            return '%'
 
     def update(self):
         """Fetch new state data for the sensor.
@@ -99,11 +98,10 @@ class SHTSensor(Entity):
         This is the only method that should fetch new data for Home Assistant.
         """
         if self._type == SENSOR_TEMPERATURE:
-            temperature = self._sensor.read_temperature()
-            if not math.isnan(temperature):
-                self._state = round(temperature, 1)
-                if self._unit == TEMP_FAHRENHEIT:
-                    self._state = round(celsius_to_fahrenheit(temperature), 1)
+            temp_celsius = self._sensor.read_temperature()
+            if not math.isnan(temp_celsius):
+                self._state = display_temp(self.hass, temp_celsius,
+                                           TEMP_CELSIUS, PRECISION_TENTHS)
             else:
                 _LOGGER.warning("Bad sample from sensor %s", self.name)
         elif self._type == SENSOR_HUMIDITY:
