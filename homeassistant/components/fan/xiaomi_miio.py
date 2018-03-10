@@ -395,13 +395,13 @@ class XiaomiGenericDevice(FanEntity):
         self._state_attrs = {
             ATTR_MODEL: self._model,
         }
-        self._supported_features = SUPPORT_FLAGS_GENERIC
+        self._additional_supported_features = SUPPORT_FLAGS_GENERIC
         self._skip_update = False
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return self._supported_features
+        return SUPPORT_SET_SPEED
 
     @property
     def should_poll(self):
@@ -555,22 +555,17 @@ class XiaomiAirPurifier(XiaomiGenericDevice, FanEntity):
         XiaomiGenericDevice.__init__(self, name, device, model)
 
         if self._model == MODEL_AIRPURIFIER_PRO:
-            self._supported_features = SUPPORT_FLAGS_AIRPURIFIER_PRO
+            self._additional_supported_features = SUPPORT_FLAGS_AIRPURIFIER_PRO
             self._state_attrs.update({attribute: None for attribute in
                                       AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO})
         elif self._model == MODEL_AIRPURIFIER_V3:
-            self._supported_features = SUPPORT_FLAGS_AIRPURIFIER_V3
+            self._additional_supported_features = SUPPORT_FLAGS_AIRPURIFIER_V3
             self._state_attrs.update({attribute: None for attribute in
                                       AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3})
         else:
-            self._supported_features = SUPPORT_FLAGS_AIRPURIFIER
+            self._additional_supported_features = SUPPORT_FLAGS_AIRPURIFIER
             self._state_attrs.update({attribute: None for attribute in
                                       AVAILABLE_ATTRIBUTES_AIRPURIFIER})
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_features
 
     async def async_update(self):
         """Fetch state from the device."""
@@ -749,14 +744,9 @@ class XiaomiAirHumidifier(XiaomiGenericDevice, FanEntity):
         """Initialize the plug switch."""
         XiaomiGenericDevice.__init__(self, name, device, model)
 
-        self._supported_features = SUPPORT_FLAGS_AIRHUMIDIFIER
+        self._additional_supported_features = SUPPORT_FLAGS_AIRHUMIDIFIER
         self._state_attrs.update({attribute: None for attribute in
                                   AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER})
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_features
 
     async def async_update(self):
         """Fetch state from the device."""
