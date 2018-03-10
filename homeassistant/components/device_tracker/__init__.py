@@ -111,6 +111,9 @@ SERVICE_SEE_PAYLOAD_SCHEMA = vol.Schema(vol.All(
         ATTR_ATTRIBUTES: dict,
         ATTR_SOURCE_TYPE: vol.In(SOURCE_TYPES),
         ATTR_CONSIDER_HOME: cv.time_period,
+        # Temp workaround for iOS app introduced in 0.65
+        vol.Optional('battery_status'): str,
+        vol.Optional('hostname'): str,
     }))
 
 
@@ -219,7 +222,11 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     @asyncio.coroutine
     def async_see_service(call):
         """Service to see a device."""
-        yield from tracker.async_see(**call.data)
+        # Temp workaround for iOS, introduced in 0.65
+        data = dict(call.data)
+        data.pop('hostname', None)
+        data.pop('battery_status', None)
+        yield from tracker.async_see(**data)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SEE, async_see_service, SERVICE_SEE_PAYLOAD_SCHEMA)
