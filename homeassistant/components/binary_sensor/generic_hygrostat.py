@@ -49,12 +49,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HUMIDITY_SENSOR): cv.entity_id,
     vol.Optional(CONF_HUMIDITY_DELTA_TRIGGER,
                  default=DEFAULT_HUMIDITY_DELTA_TRIGGER):
-        vol.Coerce(float),
+                 vol.Coerce(float),
     vol.Optional(CONF_HUMIDITY_TARGET_OFFSET,
                  default=DEFAULT_HUMIDITY_TARGET_OFFSET):
-        vol.Coerce(float),
+                 vol.Coerce(float),
     vol.Optional(CONF_MAX_ON_TIME, default=DEFAULT_MAX_ON_TIME):
-        vol.Coerce(float)
+                 vol.Coerce(float)
 })
 
 
@@ -108,18 +108,18 @@ class GenericHygrostat(Entity):
 
         if self.calc_humidity_delta() >= self.humidity_delta_trigger:
             _LOGGER.debug("Humidity rise detected at '%s' with delta '%s'",
-                            self.name, self.calc_humidity_delta())
+                          self.name, self.calc_humidity_delta())
             self.set_on()
 
         if self.humidity_target \
                 and self.sensor_humidity <= self.humidity_target:
             _LOGGER.debug("Dehumidifying target reached for '%s'",
-                            self.name)
+                          self.name)
             self.set_off()
 
         if self.max_on_timer and self.max_on_timer < time.time():
             _LOGGER.debug("Max on timer reached for '%s'",
-                            self.name)
+                          self.name)
             self.set_off()
 
     def update_humidity(self):
@@ -140,7 +140,7 @@ class GenericHygrostat(Entity):
         except ValueError:
             raise ValueError(
                 "Unable to update humidity from sensor '{}' with value '{}'"
-                    .format(self.humidity_sensor_id, sensor.state))
+                .format(self.humidity_sensor_id, sensor.state))
 
     def add_humidity_sample(self, value):
         """Add given humidity sample to sample shift register."""
