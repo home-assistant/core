@@ -132,22 +132,21 @@ class TekSavvyData(object):
         self.data = {"limit": self.bandwidth_cap} if self.bandwidth_cap > 0 \
             else {"limit": float('inf')}
 
-    @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def async_update(self):
+    async def async_update(self):
         """Get the TekSavvy bandwidth data from the web service."""
         headers = {"TekSavvy-APIKey": self.api_key}
         _LOGGER.debug("Updating TekSavvy data")
         url = "https://api.teksavvy.com/"\
               "web/Usage/UsageSummaryRecords?$filter=IsCurrent%20eq%20true"
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=self.loop):
-            req = yield from self.websession.get(url, headers=headers)
+            req = await self.websession.get(url, headers=headers)
         if req.status != 200:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
 
         try:
-            data = yield from req.json()
+            data = await req.json()
             for (api, ha_name) in API_HA_MAP:
                 self.data[ha_name] = float(data["value"][0][api])
             on_peak_download = self.data["onpeak_download"]
