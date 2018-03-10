@@ -29,7 +29,7 @@ DEFAULT_I2C_ADDRESS = '0x44'
 SENSOR_TEMPERATURE = 'temperature'
 SENSOR_HUMIDITY = 'humidity'
 SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ['Temperature', None],
+    SENSOR_TEMPERATURE: ['Temperature', lambda hass: hass.config.units.temperature_unit],
     SENSOR_HUMIDITY: ['Humidity', '%']
 }
 
@@ -46,8 +46,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     from Adafruit_SHT31 import SHT31
 
-    SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
-
     i2c_address = int(config.get(CONF_I2C_ADDRESS), 16)
     sensor = SHT31(address=i2c_address)
 
@@ -60,6 +58,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devs = []
     for sensor_type, props in SENSOR_TYPES.items():
         type_description, unit = props
+        if callable(unit):
+            unit = unit(hass)
         name = "{} {}".format(config.get(CONF_NAME), type_description)
         devs.append(SHTSensor(sensor, name, sensor_type, unit))
 
