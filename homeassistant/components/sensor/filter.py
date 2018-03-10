@@ -8,6 +8,7 @@ import logging
 import statistics
 from collections import deque, Counter
 from numbers import Number
+from functools import partial
 
 import voluptuous as vol
 
@@ -20,6 +21,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.decorator import Registry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
+import homeassistant.components.history as history
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +33,7 @@ FILTERS = Registry()
 
 CONF_FILTERS = 'filters'
 CONF_FILTER_NAME = 'filter'
+CONF_HISTORY_PERIOD = 'history_period'
 CONF_FILTER_WINDOW_SIZE = 'window_size'
 CONF_FILTER_PRECISION = 'precision'
 CONF_FILTER_RADIUS = 'radius'
@@ -69,6 +73,8 @@ FILTER_THROTTLE_SCHEMA = FILTER_SCHEMA.extend({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_HISTORY_PERIOD): vol.All(cv.time_period,
+                                               cv.positive_timedelta),
     vol.Required(CONF_FILTERS): vol.All(cv.ensure_list,
                                         [vol.Any(FILTER_OUTLIER_SCHEMA,
                                                  FILTER_LOWPASS_SCHEMA,
@@ -81,18 +87,19 @@ async def async_setup_platform(hass, config, async_add_devices,
     """Set up the template sensors."""
     name = config.get(CONF_NAME)
     entity_id = config.get(CONF_ENTITY_ID)
+    history_period = config.get(CONF_HISTORY_PERIOD)
 
     filters = [FILTERS[_filter.pop(CONF_FILTER_NAME)](
         entity=entity_id, **_filter)
                for _filter in config[CONF_FILTERS]]
 
-    async_add_devices([SensorFilter(name, entity_id, filters)])
+    async_add_devices([SensorFilter(name, entity_id, history_period, filters)])
 
 
 class SensorFilter(Entity):
     """Representation of a Filter Sensor."""
 
-    def __init__(self, name, entity_id, filters):
+    def __init__(self, name, entity_id, history_period, filters):
         """Initialize the sensor."""
         self._name = name
         self._entity = entity_id
@@ -100,11 +107,13 @@ class SensorFilter(Entity):
         self._state = None
         self._filters = filters
         self._icon = None
+        self._history_period = history_period
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
-        def filter_sensor_state_listener(entity, old_state, new_state):
+        def filter_sensor_state_listener(entity, old_state, new_state,
+                                         update_ha=True):
             """Handle device state changes."""
             if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
                 return
@@ -137,7 +146,21 @@ class SensorFilter(Entity):
                 self._unit_of_measurement = new_state.attributes.get(
                     ATTR_UNIT_OF_MEASUREMENT)
 
-            self.async_schedule_update_ha_state()
+            if update_ha:
+                self.async_schedule_update_ha_state()
+
+        if self._history_period and 'recorder' in self.hass.config.components:
+            start = dt_util.utcnow() - self._history_period
+
+            history_list = await self.hass.async_add_job(partial(
+                history.state_changes_during_period, self.hass,
+                start, entity_id=self._entity))
+
+            prev_state = None
+            for state in history_list[self._entity]:
+                filter_sensor_state_listener(
+                    self._entity, prev_state, state, False)
+                prev_state = state.state
 
         async_track_state_change(
             self.hass, self._entity, filter_sensor_state_listener)
