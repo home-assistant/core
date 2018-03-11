@@ -472,18 +472,15 @@ def setup(hass, config):
         for value in (
                 node.get_values(class_id=const.COMMAND_CLASS_CONFIGURATION)
                 .values()):
-            _LOGGER.info("value type: %s", value.type)
             if value.index != param:
                 continue
             if value.type in [const.TYPE_LIST, const.TYPE_BOOL]:
-                _LOGGER.info("List or Bool value type")
                 value.data = str(selection)
                 _LOGGER.info("Setting config parameter %s on Node %s "
                              "with list/bool selection %s", param, node_id,
                              str(selection))
                 return
             if value.type == const.TYPE_BUTTON:
-                _LOGGER.info("Button value type")
                 network.manager.pressButton(value.value_id)
                 network.manager.releaseButton(value.value_id)
                 _LOGGER.info("Setting config parameter %s on Node %s "
@@ -491,7 +488,6 @@ def setup(hass, config):
                              selection)
 
                 return
-            _LOGGER.info("Int, Short or Long value type")
             value.data = int(selection)
             _LOGGER.info("Setting config parameter %s on Node %s "
                          "with selection %s", param, node_id,
