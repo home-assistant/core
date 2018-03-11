@@ -39,22 +39,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices,
+                         discovery_info=None):
     """Set up a Synology IP Camera."""
+    url = config.get(CONF_URL)
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
     verify_ssl = config.get(CONF_VERIFY_SSL)
     timeout = config.get(CONF_TIMEOUT)
 
     try:
         from synology.surveillance_station import SurveillanceStation
         surveillance = SurveillanceStation(
-            config.get(CONF_URL),
-            config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD),
+            url,
+            username,
+            password,
             verify_ssl=verify_ssl,
             timeout=timeout
         )
     except (requests.exceptions.RequestException, ValueError):
-        _LOGGER.exception("Error when initializing SurveillanceStation")
+        _LOGGER.exception("Error initializing SurveillanceStation")
         return False
 
     cameras = surveillance.get_all_cameras()
@@ -63,7 +67,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     devices = []
     for camera in cameras:
         if not config.get(CONF_WHITELIST):
-            device = SynologyCamera(surveillance, camera.camera_id, verify_ssl)
+            device = SynologyCamera(surveillance, camera.camera_id, url,
+                                    username, password, timeout, verify_ssl)
             devices.append(device)
 
     async_add_devices(devices)
@@ -72,14 +77,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class SynologyCamera(Camera):
     """An implementation of a Synology NAS based IP camera."""
 
-    def __init__(self, surveillance, camera_id, verify_ssl):
+    def __init__(self, surveillance, camera_id, url, username,
+                 password, timeout, verify_ssl):
         """Initialize a Synology Surveillance Station camera."""
         super().__init__()
         self._surveillance = surveillance
         self._camera_id = camera_id
+
+        self._url = url
+        self._username = username
+        self._password = password
+        self._timeout = timeout
         self._verify_ssl = verify_ssl
+
         self._camera = self._surveillance.get_camera(camera_id)
-        self._motion_setting = self._surveillance.get_motion_setting(camera_id)
+        self._motion_setting = self._surveillance.get_motion_setting(
+            camera_id)
         self.is_streaming = self._camera.is_enabled
 
     def camera_image(self):
@@ -110,9 +123,28 @@ class SynologyCamera(Camera):
         """Update the recording state periodically."""
         return True
 
+    def _internal_update(self):
+        try:
+            self._surveillance.update()
+        except:
+            _LOGGER.exception("Problem connecting to SurveillanceStation")
+            try:
+                from synology.surveillance_station import SurveillanceStation
+                surveillance = SurveillanceStation(
+                    self._url,
+                    self._username,
+                    self._password,
+                    verify_ssl=self._verify_ssl,
+                    timeout=self._timeout
+                )
+                surveillance.update()
+                self._surveillance = surveillance
+            except (requests.exceptions.RequestException, ValueError):
+                _LOGGER.exception("Error initializing SurveillanceStation")
+
     def update(self):
         """Update the status of the camera."""
-        self._surveillance.update()
+        self._internal_update()
         self._camera = self._surveillance.get_camera(self._camera.camera_id)
         self._motion_setting = self._surveillance.get_motion_setting(
             self._camera.camera_id)
