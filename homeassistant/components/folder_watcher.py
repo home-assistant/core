@@ -7,7 +7,6 @@ https://home-assistant.io/components/folder_watcher/
 import os
 import logging
 import voluptuous as vol
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
@@ -31,7 +30,7 @@ WATCHER_CONFIG_SCHEMA = vol.Schema([{
 }])
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: WATCHER_CONFIG_SCHEMA,
+    DOMAIN: vol.All(cv.ensure_list, WATCHER_CONFIG_SCHEMA)
     }, extra=vol.ALLOW_EXTRA)
 
 
@@ -91,25 +90,22 @@ def create_event_handler(patterns, hass):
     return EventHandler(patterns, hass)
 
 
-class Watcher(Entity):
+class Watcher():
     """Class for starting Watchdog."""
 
     def __init__(self, path, patterns, hass):
         """Initialise the Watchdog oberver."""
         from watchdog.observers import Observer
-        self._path = path
-        self._patterns = patterns
-        self.hass = hass
         self._observer = Observer()
+        self._observer.schedule(
+            create_event_handler(patterns, hass),
+            path,
+            recursive=True)
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, self.startup)
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
 
     def startup(self, event):
         """Start the watcher."""
-        self._observer.schedule(
-            create_event_handler(self._patterns, self.hass),
-            self._path,
-            recursive=True)
         self._observer.start()
 
     def shutdown(self, event):
