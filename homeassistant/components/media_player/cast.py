@@ -7,7 +7,6 @@ https://home-assistant.io/components/media_player.cast/
 # pylint: disable=import-error
 import logging
 import threading
-import functools
 
 import voluptuous as vol
 
@@ -35,7 +34,6 @@ CONF_IGNORE_CEC = 'ignore_cec'
 CAST_SPLASH = 'https://home-assistant.io/images/cast/splash.png'
 
 DEFAULT_PORT = 8009
-SOCKET_CLIENT_RETRIES = 10
 
 SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
@@ -78,7 +76,7 @@ def _setup_internal_discovery(hass: HomeAssistantType) -> None:
         try:
             # pylint: disable=protected-access
             chromecast = pychromecast._get_chromecast_from_host(
-                mdns, blocking=True, tries=SOCKET_CLIENT_RETRIES)
+                mdns, blocking=True)
         except pychromecast.ChromecastConnectionError:
             _LOGGER.debug("Can't set up cast with mDNS info %s. "
                           "Assuming it's not a Chromecast", mdns)
@@ -183,9 +181,8 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     else:
         # Manually add a "normal" Chromecast, we can do that without discovery.
         try:
-            func = functools.partial(pychromecast.Chromecast, *want_host,
-                                     tries=SOCKET_CLIENT_RETRIES)
-            chromecast = await hass.async_add_job(func)
+            chromecast = await hass.async_add_job(
+                pychromecast.Chromecast, *want_host)
         except pychromecast.ChromecastConnectionError as err:
             _LOGGER.warning("Can't set up chromecast on %s: %s",
                             want_host[0], err)
