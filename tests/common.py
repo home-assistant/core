@@ -109,7 +109,6 @@ def get_test_home_assistant():
 @asyncio.coroutine
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
-    loop.set_debug(True)
     hass = ha.HomeAssistant(loop)
     hass.config_entries = config_entries.ConfigEntries(hass, {})
     hass.config_entries._entries = []
