@@ -22,9 +22,9 @@ FILE = 'file'
 FOLDER = 'folder'
 
 WATCHER_CONFIG_SCHEMA = vol.Schema([{
-        vol.Required(CONF_FOLDER): cv.isdir,
-        vol.Optional(CONF_PATTERNS, default=[DEFAULT_PATTERN]): vol.All(
-            cv.ensure_list, [cv.string]),
+    vol.Required(CONF_FOLDER): cv.isdir,
+    vol.Optional(CONF_PATTERNS, default=[DEFAULT_PATTERN]): vol.All(
+        cv.ensure_list, [cv.string]),
 }])
 
 CONFIG_SCHEMA = vol.Schema({
