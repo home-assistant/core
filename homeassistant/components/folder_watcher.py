@@ -50,8 +50,7 @@ def setup(hass, config):
             if not hass.config.is_allowed_path(path):
                 _LOGGER.error("folder %s is not valid or allowed", path)
                 continue
-            else:
-                Watcher(path, patterns, hass)
+            Watcher(path, patterns, hass)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
     return True
