@@ -6,7 +6,6 @@ https://home-assistant.io/components/binary_sensor.generic_hygrostat/
 """
 import asyncio
 import collections
-import time
 from datetime import timedelta, datetime
 import logging
 
