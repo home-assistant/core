@@ -288,8 +288,7 @@ def _secret_yaml(loader: SafeLineLoader,
             # Catch if package installed and no config
             credstash = None
 
-    _LOGGER.error("Secret %s not defined", node.value)
-    raise HomeAssistantError(node.value)
+    raise HomeAssistantError("Secret {} not defined".format(node.value))
 
 
 yaml.SafeLoader.add_constructor('!include', _include_yaml)
