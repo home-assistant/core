@@ -31,20 +31,17 @@ WATCHER_CONFIG_SCHEMA = vol.Schema([{
 }])
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_WATCHERS): WATCHER_CONFIG_SCHEMA,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+    DOMAIN: WATCHER_CONFIG_SCHEMA,
+    }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Set up the folder watcher."""
     conf = config[DOMAIN]
-    watchers = conf[CONF_WATCHERS]
 
     def run_setup(event):
         """"Wait for HA start then setup."""
-        for watcher in watchers:
+        for watcher in conf:
             path = watcher[CONF_FOLDER]
             patterns = watcher[CONF_PATTERNS]
             if not hass.config.is_allowed_path(path):
