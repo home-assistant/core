@@ -1,5 +1,8 @@
 """
 Component for monitoring activity on a folder.
+
+For more details about this platform, refer to the documentation at
+https://home-assistant.io/components/folder_watcher/
 """
 import os
 import logging
@@ -98,6 +101,7 @@ def create_event_handler(patterns, hass):
 
 class Watcher(Entity):
     """Class for starting Watchdog."""
+
     def __init__(self, path, patterns, hass):
         """Initialise the Watchdog oberver."""
         from watchdog.observers import Observer
