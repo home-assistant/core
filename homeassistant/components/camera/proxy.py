@@ -11,7 +11,7 @@ import async_timeout
 
 import voluptuous as vol
 
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.helpers import config_validation as cv
 
 import homeassistant.util.dt as dt_util

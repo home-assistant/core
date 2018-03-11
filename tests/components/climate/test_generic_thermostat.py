@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant import loader
 from homeassistant.util.unit_system import METRIC_SYSTEM
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.components import climate, input_boolean, switch
 import homeassistant.components as comps
 from tests.common import (assert_setup_component, get_test_home_assistant,

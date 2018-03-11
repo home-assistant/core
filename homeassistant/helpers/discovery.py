@@ -13,7 +13,7 @@ from homeassistant.const import (
     ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import DEPENDENCY_BLACKLIST
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 EVENT_LOAD_PLATFORM = 'load_platform.{}'
 ATTR_PLATFORM = 'platform'
