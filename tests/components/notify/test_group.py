@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from homeassistant.setup import setup_component
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import group, demo
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
