@@ -3,7 +3,7 @@
     "title": "Philips Hue Bridge",
     "step": {
       "init": {
-        "title": "Pick Hue Bridge",
+        "title": "Pick Hue bridge",
         "data": {
           "host": "Host"
         }
