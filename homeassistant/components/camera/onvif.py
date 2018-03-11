@@ -118,17 +118,17 @@ class ONVIFHassCamera(Camera):
         self._input = None
         self._media_service = \
             onvif.ONVIFService('http://{}:{}/onvif/device_service'.format(
-                               self._host, self._port),
-                               self._username, self._password,
-                               '{}/wsdl/media.wsdl'.format(os.path.dirname(
-                                                           onvif.__file__)))
+                self._host, self._port),
+                self._username, self._password,
+                '{}/wsdl/media.wsdl'.format(os.path.dirname(
+                    onvif.__file__)))
 
         self._ptz_service = \
             onvif.ONVIFService('http://{}:{}/onvif/device_service'.format(
-                               self._host, self._port),
-                               self._username, self._password,
-                               '{}/wsdl/ptz.wsdl'.format(os.path.dirname(
-                                                         onvif.__file__)))
+                self._host, self._port),
+                self._username, self._password,
+                '{}/wsdl/ptz.wsdl'.format(os.path.dirname(
+                    onvif.__file__)))
 
     def obtain_input_uri(self):
         """Set the input uri for the camera."""
@@ -167,6 +167,7 @@ class ONVIFHassCamera(Camera):
 
     def perform_ptz(self, pan, tilt, zoom):
         """Perform a PTZ action on the camera."""
+        from onvif import exceptions
         if self._ptz_service:
             pan_val = 1 if pan == DIR_RIGHT else -1 if pan == DIR_LEFT else 0
             tilt_val = 1 if tilt == DIR_UP else -1 if tilt == DIR_DOWN else 0
@@ -174,7 +175,15 @@ class ONVIFHassCamera(Camera):
             req = {"Velocity": {
                 "PanTilt": {"_x": pan_val, "_y": tilt_val},
                 "Zoom": {"_x": zoom_val}}}
-            self._ptz_service.ContinuousMove(req)
+            try:
+                self._ptz_service.ContinuousMove(req)
+            except exceptions.ONVIFError as err:
+                if "Bad Request" in err.reason:
+                    self._ptz_service = None
+                    _LOGGER.debug("Camera '%s' doesn't support PTZ.",
+                                  self._name)
+        else:
+            _LOGGER.debug("Camera '%s' doesn't support PTZ.", self._name)
 
     async def async_added_to_hass(self):
         """Callback when entity is added to hass."""
