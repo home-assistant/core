@@ -229,7 +229,7 @@ class GenericThermostat(ClimateDevice):
         """List of available operation modes."""
         return self._operation_list
 
-    def set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         if operation_mode == STATE_HEAT:
             self._current_operation = STATE_HEAT
