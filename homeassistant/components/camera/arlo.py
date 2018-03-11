@@ -49,8 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Arlo IP Camera."""
     arlo = hass.data.get(DATA_ARLO)
     if not arlo:
@@ -60,7 +59,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for camera in arlo.cameras:
         cameras.append(ArloCam(hass, camera, config))
 
-    async_add_devices(cameras, True)
+    add_devices(cameras, True)
 
 
 class ArloCam(Camera):
