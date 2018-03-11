@@ -421,7 +421,7 @@ jsonpath==0.75
 jsonrpc-async==0.6
 
 # homeassistant.components.media_player.kodi
-jsonrpc-websocket==0.5
+jsonrpc-websocket==0.6
 
 # homeassistant.scripts.keyring
 keyring==11.0.0
