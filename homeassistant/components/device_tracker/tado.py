@@ -68,18 +68,15 @@ class TadoDeviceScanner(DeviceScanner):
         self.websession = async_create_clientsession(
             hass, cookie_jar=aiohttp.CookieJar(unsafe=True, loop=hass.loop))
 
-        self.success_init = self._update_info()
+        self.success_init = asyncio.run_coroutine_threadsafe(
+            self._async_update_info(), hass.loop
+        ).result()
+
         _LOGGER.info("Scanner initialized")
 
-    @asyncio.coroutine
-    def async_scan_devices(self):
+    async def async_scan_devices(self):
         """Scan for devices and return a list containing found device ids."""
-        info = self._update_info()
-
-        # Don't yield if we got None
-        if info is not None:
-            yield from info
-
+        await self._async_update_info()
         return [device.mac for device in self.last_results]
 
     @asyncio.coroutine
@@ -93,7 +90,7 @@ class TadoDeviceScanner(DeviceScanner):
         return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
-    def _update_info(self):
+    async def _async_update_info(self):
         """
         Query Tado for device marked as at home.
 
@@ -111,14 +108,14 @@ class TadoDeviceScanner(DeviceScanner):
                     home_id=self.home_id, username=self.username,
                     password=self.password)
 
-                response = yield from self.websession.get(url)
+                response = await self.websession.get(url)
 
                 if response.status != 200:
                     _LOGGER.warning(
                         "Error %d on %s.", response.status, self.tadoapiurl)
-                    return
+                    return False
 
-                tado_json = yield from response.json()
+                tado_json = await response.json()
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Cannot load Tado data")
@@ -139,7 +136,7 @@ class TadoDeviceScanner(DeviceScanner):
 
         self.last_results = last_results
 
-        _LOGGER.info(
+        _LOGGER.debug(
             "Tado presence query successful, %d device(s) at home",
             len(self.last_results)
         )
