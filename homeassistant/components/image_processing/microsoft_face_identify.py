@@ -17,7 +17,7 @@ from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, ImageProcessingEntity, CONF_CONFIDENCE, CONF_SOURCE,
     CONF_ENTITY_ID, CONF_NAME, ATTR_ENTITY_ID, ATTR_CONFIDENCE)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 DEPENDENCIES = ['microsoft_face']
 
