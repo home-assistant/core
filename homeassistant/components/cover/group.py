@@ -26,9 +26,6 @@ from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
-TILT_FEATURES = SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | \
-                SUPPORT_STOP_TILT | SUPPORT_SET_TILT_POSITION
-
 KEY_OPEN_CLOSE = 'open_close'
 KEY_STOP = 'stop'
 KEY_POSITION = 'position'
@@ -55,8 +52,6 @@ class CoverGroup(CoverDevice):
     def __init__(self, name, entities):
         """Initialize a CoverGroup entity."""
         self._name = name
-        self._tilt = False
-
         self._is_closed = False
         self._cover_position = 100
         self._tilt_position = None
@@ -85,12 +80,10 @@ class CoverGroup(CoverDevice):
                 self._covers[KEY_OPEN_CLOSE].add(entity_id)
             else:
                 self._covers[KEY_OPEN_CLOSE].discard(entity_id)
-
             if features & (SUPPORT_STOP):
                 self._covers[KEY_STOP].add(entity_id)
             else:
                 self._covers[KEY_STOP].discard(entity_id)
-
             if features & (SUPPORT_SET_POSITION):
                 self._covers[KEY_POSITION].add(entity_id)
             else:
@@ -100,18 +93,14 @@ class CoverGroup(CoverDevice):
                 self._tilts[KEY_OPEN_CLOSE].add(entity_id)
             else:
                 self._tilts[KEY_OPEN_CLOSE].discard(entity_id)
-
             if features & (SUPPORT_STOP_TILT):
                 self._tilts[KEY_STOP].add(entity_id)
             else:
                 self._tilts[KEY_STOP].discard(entity_id)
-
             if features & (SUPPORT_SET_TILT_POSITION):
                 self._tilts[KEY_POSITION].add(entity_id)
             else:
                 self._tilts[KEY_POSITION].discard(entity_id)
-
-        self._tilt = any(values for values in self._tilts.values())
 
         if update_state:
             self.async_schedule_update_ha_state(True)
@@ -216,29 +205,32 @@ class CoverGroup(CoverDevice):
         self._assumed_state = False
 
         self._is_closed = True
-        if self._covers[KEY_OPEN_CLOSE]:
-            for entity_id in self._covers[KEY_OPEN_CLOSE]:
-                state = self.hass.states.get(entity_id)
-                if not state or state.state != STATE_CLOSED:
-                    self._is_closed = False
-                    break
-
-        position = -1
-        self._cover_position = 0 if self.is_closed else 100
-        for entity_id in self._covers[KEY_POSITION]:
+        for entity_id in self._entities:
             state = self.hass.states.get(entity_id)
-            pos = state.attributes.get(ATTR_CURRENT_POSITION)
-            if position == -1:
-                position = pos
-            elif position != pos:
-                self._assumed_state = True
+            if not state:
+                continue
+            if state.state != STATE_CLOSED:
+                self._is_closed = False
                 break
-        else:
-            if position != -1:
-                self._cover_position = position
+
+        self._cover_position = None
+        if self._covers[KEY_POSITION]:
+            position = -1
+            self._cover_position = 0 if self.is_closed else 100
+            for entity_id in self._covers[KEY_POSITION]:
+                state = self.hass.states.get(entity_id)
+                pos = state.attributes.get(ATTR_CURRENT_POSITION)
+                if position == -1:
+                    position = pos
+                elif position != pos:
+                    self._assumed_state = True
+                    break
+            else:
+                if position != -1:
+                    self._cover_position = position
 
         self._tilt_position = None
-        if self._tilts:
+        if self._tilts[KEY_POSITION]:
             position = -1
             self._tilt_position = 100
             for entity_id in self._tilts[KEY_POSITION]:
@@ -260,7 +252,12 @@ class CoverGroup(CoverDevice):
             if self._covers[KEY_STOP] else 0
         supported_features |= SUPPORT_SET_POSITION \
             if self._covers[KEY_POSITION] else 0
-        supported_features |= TILT_FEATURES if self._tilt else 0
+        supported_features |= SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT \
+            if self._tilts[KEY_OPEN_CLOSE] else 0
+        supported_features |= SUPPORT_STOP_TILT \
+            if self._tilts[KEY_STOP] else 0
+        supported_features |= SUPPORT_SET_TILT_POSITION \
+            if self._tilts[KEY_POSITION] else 0
         self._supported_features = supported_features
 
         if not self._assumed_state:
