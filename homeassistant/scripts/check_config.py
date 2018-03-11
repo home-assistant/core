@@ -140,6 +140,9 @@ def run(script_args: List) -> int:
 
         print(color(C_HEAD, 'Used Secrets:'))
         for skey, sval in res['secrets'].items():
+            if sval is None:
+                print(' -', skey + ':', color('red', "not found"))
+                continue
             print(' -', skey + ':', sval, color('cyan', '[from:', flatsecret
                                                 .get(skey, 'keyring') + ']'))
 
@@ -308,7 +311,8 @@ def check_ha_config_file(config_dir):
             return result.add_error("File configuration.yaml not found.")
         config = load_yaml_config_file(config_path)
     except HomeAssistantError as err:
-        return result.add_error(err)
+        return result.add_error(
+            "Error loading {}: {}".format(config_path, err))
     finally:
         yaml.clear_secret_cache()
 
