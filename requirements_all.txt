@@ -398,7 +398,7 @@ https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 # i2csense==0.0.4
 
 # homeassistant.components.light.iglo
-iglo==1.2.6
+iglo==1.2.7
 
 # homeassistant.components.ihc
 ihcsdk==2.2.0
@@ -421,7 +421,7 @@ jsonpath==0.75
 jsonrpc-async==0.6
 
 # homeassistant.components.media_player.kodi
-jsonrpc-websocket==0.5
+jsonrpc-websocket==0.6
 
 # homeassistant.scripts.keyring
 keyring==11.0.0
@@ -632,7 +632,7 @@ py-cpuinfo==3.3.0
 py-melissa-climate==1.0.6
 
 # homeassistant.components.camera.synology
-py-synology==0.1.5
+py-synology==0.2.0
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
@@ -1021,7 +1021,7 @@ pyunifi==2.13
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.41
+pyvera==0.2.42
 
 # homeassistant.components.media_player.vizio
 pyvizio==0.0.2
@@ -1274,7 +1274,7 @@ xbee-helper==0.0.7
 xboxapi==0.1.1
 
 # homeassistant.components.knx
-xknx==0.8.4
+xknx==0.8.5
 
 # homeassistant.components.media_player.bluesound
 # homeassistant.components.sensor.startca
