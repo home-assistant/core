@@ -94,7 +94,9 @@ async def git():
     """Exec git."""
     if len(sys.argv) > 2 and sys.argv[1] == '--':
         return sys.argv[2:]
-    _, log = await async_exec('git', 'diff', 'upstream/dev...', '--name-only')
+    _, log = await async_exec('git', 'merge-base', 'upstream/dev', 'HEAD')
+    merge_base = log.splitlines()[0]
+    _, log = await async_exec('git', 'diff', merge_base, '--name-only')
     return log.splitlines()
 
 
