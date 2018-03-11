@@ -68,7 +68,7 @@ HM_DEVICE_TYPES = {
         'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
         'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch',
         'FillingLevel', 'ValveDrive', 'EcoLogic', 'IPThermostatWall',
-        'IPSmoke', 'RFSiren', 'PresenceIP'],
+        'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
