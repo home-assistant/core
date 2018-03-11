@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 
 export files="$(git diff $(git merge-base upstream/dev HEAD) --diff-filter=d --name-only | grep -e '\.py$')"
 echo '================================================='
-echo 'FILES CHANGED (git diff $(git merge-base upstream/dev HEAD) --diff-filter=d --name-only)'
+echo '=                FILES CHANGED                  ='
 echo '================================================='
 if [ -z "$files" ] ; then
   echo "No python file changed. Rather use: tox -e lint"
