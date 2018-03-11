@@ -552,7 +552,7 @@ async def test_flow_link_timeout(hass):
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
     assert result['errors'] == {
-        'base': 'Failed to register, please try again.'
+        'base': 'register_failed'
     }
 
 
@@ -568,7 +568,7 @@ async def test_flow_link_button_not_pressed(hass):
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
     assert result['errors'] == {
-        'base': 'Failed to register, please try again.'
+        'base': 'register_failed'
     }
 
 
@@ -584,5 +584,5 @@ async def test_flow_link_unknown_host(hass):
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
     assert result['errors'] == {
-        'base': 'Failed to register, please try again.'
+        'base': 'register_failed'
     }

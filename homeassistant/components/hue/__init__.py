@@ -304,12 +304,12 @@ class HueFlowHandler(config_entries.ConfigFlowHandler):
                 bridges = await discover_nupnp(websession=self._websession)
         except asyncio.TimeoutError:
             return self.async_abort(
-                reason='Unable to discover Hue bridges.'
+                reason='discover_timeout'
             )
 
         if not bridges:
             return self.async_abort(
-                reason='No Philips Hue bridges discovered.'
+                reason='no_bridges'
             )
 
         # Find already configured hosts
@@ -322,7 +322,7 @@ class HueFlowHandler(config_entries.ConfigFlowHandler):
 
         if not hosts:
             return self.async_abort(
-                reason='All Philips Hue bridges are already configured.'
+                reason='all_configured'
             )
 
         elif len(hosts) == 1:
@@ -331,7 +331,6 @@ class HueFlowHandler(config_entries.ConfigFlowHandler):
 
         return self.async_show_form(
             step_id='init',
-            title='Pick Hue Bridge',
             data_schema=vol.Schema({
                 vol.Required('host'): vol.In(hosts)
             })
@@ -352,10 +351,10 @@ class HueFlowHandler(config_entries.ConfigFlowHandler):
                     await bridge.initialize()
             except (asyncio.TimeoutError, aiohue.RequestError,
                     aiohue.LinkButtonNotPressed):
-                errors['base'] = 'Failed to register, please try again.'
+                errors['base'] = 'register_failed'
             except aiohue.AiohueException:
-                errors['base'] = 'Unknown linking error occurred.'
-                _LOGGER.exception('Uknown Hue linking error occurred')
+                errors['base'] = 'linking'
+                _LOGGER.exception('Unknown Hue linking error occurred')
             else:
                 return self.async_create_entry(
                     title=bridge.config.name,
@@ -368,8 +367,6 @@ class HueFlowHandler(config_entries.ConfigFlowHandler):
 
         return self.async_show_form(
             step_id='link',
-            title='Link Hub',
-            description=CONFIG_INSTRUCTIONS,
             errors=errors,
         )
 

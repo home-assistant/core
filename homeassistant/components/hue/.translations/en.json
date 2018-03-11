@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "All Philips Hue bridges are already configured",
+            "discover_timeout": "Unable to discover Hue bridges",
+            "no_bridges": "No Philips Hue bridges discovered"
+        },
+        "error": {
+            "linking": "Unknown linking error occurred.",
+            "register_failed": "Failed to register, please try again"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Pick Hue bridge"
+            },
+            "link": {
+                "description": "Press the button on the bridge to register Philips Hue with Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
+                "title": "Link Hub"
+            }
+        },
+        "title": "Philips Hue Bridge"
+    }
+}
