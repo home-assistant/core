@@ -62,13 +62,11 @@ class ExampleConfigFlow(config_entries.ConfigFlowHandler):
                 return (yield from self.async_step_name())
 
             errors = {
-                'object_id': 'Invalid object id.'
+                'object_id': 'invalid_object_id'
             }
 
         return self.async_show_form(
-            title='Pick object id',
             step_id='init',
-            description="Please enter an object_id for the test entity.",
             data_schema=vol.Schema({
                 'object_id': str
             }),
@@ -92,9 +90,7 @@ class ExampleConfigFlow(config_entries.ConfigFlowHandler):
                 )
 
         return self.async_show_form(
-            title='Name of the entity',
             step_id='name',
-            description="Please enter a name for the test entity.",
             data_schema=vol.Schema({
                 'name': str
             }),
