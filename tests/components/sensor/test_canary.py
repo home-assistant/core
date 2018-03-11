@@ -1,4 +1,5 @@
 """The tests for the Canary sensor platform."""
+# pylint: skip-file
 import copy
 import unittest
 from unittest.mock import Mock

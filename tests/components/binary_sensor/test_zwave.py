@@ -1,4 +1,5 @@
 """Test Z-Wave binary sensors."""
+# pylint: skip-file
 import asyncio
 import datetime
 

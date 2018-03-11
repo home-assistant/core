@@ -1,4 +1,5 @@
 """The tests for the tplink device tracker platform."""
+# pylint: skip-file
 
 import os
 import unittest

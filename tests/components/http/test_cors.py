@@ -1,4 +1,5 @@
 """Test cors for the HTTP component."""
+# pylint: skip-file
 from unittest.mock import patch
 
 from aiohttp import web

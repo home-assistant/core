@@ -1,4 +1,5 @@
 """Test Z-Wave workarounds."""
+# pylint: skip-file
 from homeassistant.components.zwave import const, workaround
 from tests.mock.zwave import MockNode, MockValue
 

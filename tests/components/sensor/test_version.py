@@ -1,4 +1,5 @@
 """The test for the version sensor platform."""
+# pylint: skip-file
 import asyncio
 import unittest
 from unittest.mock import patch

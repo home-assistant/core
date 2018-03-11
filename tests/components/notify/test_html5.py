@@ -1,4 +1,5 @@
 """Test HTML5 notify platform."""
+# pylint: skip-file
 import json
 from unittest.mock import patch, MagicMock, mock_open
 from aiohttp.hdrs import AUTHORIZATION

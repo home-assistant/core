@@ -1,4 +1,5 @@
 """The tests for the uk_transport platform."""
+# pylint: skip-file
 import re
 
 import requests_mock

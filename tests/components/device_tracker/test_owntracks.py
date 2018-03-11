@@ -1,4 +1,5 @@
 """The tests for the Owntracks device tracker."""
+# pylint: skip-file
 import asyncio
 import json
 import unittest

@@ -1,4 +1,5 @@
 """The tests for local file sensor platform."""
+# pylint: skip-file
 import unittest
 from unittest.mock import Mock, patch
 

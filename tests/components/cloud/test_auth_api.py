@@ -1,4 +1,5 @@
 """Tests for the tools to communicate with the cloud."""
+# pylint: skip-file
 from unittest.mock import MagicMock, patch
 
 from botocore.exceptions import ClientError

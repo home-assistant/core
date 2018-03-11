@@ -1,4 +1,5 @@
 """The tests for the  MQTT binary sensor platform."""
+# pylint: skip-file
 import unittest
 
 import homeassistant.core as ha

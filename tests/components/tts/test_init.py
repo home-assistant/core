@@ -1,4 +1,5 @@
 """The tests for the TTS component."""
+# pylint: skip-file
 import ctypes
 import os
 import shutil

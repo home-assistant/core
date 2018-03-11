@@ -1,4 +1,5 @@
 """Aiohttp test utils."""
+# pylint: skip-file
 import asyncio
 from contextlib import contextmanager
 import json as _json

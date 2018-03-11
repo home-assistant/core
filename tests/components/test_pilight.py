@@ -1,4 +1,5 @@
 """The tests for the pilight component."""
+# pylint: skip-file
 import logging
 import unittest
 from unittest.mock import patch

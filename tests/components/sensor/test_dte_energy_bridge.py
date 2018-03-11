@@ -1,4 +1,5 @@
 """The tests for the DTE Energy Bridge."""
+# pylint: skip-file
 
 import unittest
 

@@ -1,4 +1,5 @@
 """The tests for the microsoft face detect platform."""
+# pylint: skip-file
 from unittest.mock import patch, PropertyMock
 
 from homeassistant.core import callback

@@ -1,4 +1,5 @@
 """The tests for the JSON MQTT device tracker platform."""
+# pylint: skip-file
 import asyncio
 import json
 import unittest

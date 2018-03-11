@@ -1,4 +1,5 @@
 """Philips Hue lights platform tests."""
+# pylint: skip-file
 
 import logging
 import unittest

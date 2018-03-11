@@ -1,4 +1,5 @@
 """Test the Vultr switch platform."""
+# pylint: skip-file
 import json
 import unittest
 from unittest.mock import patch

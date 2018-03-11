@@ -1,4 +1,5 @@
 """The tests for the timer component."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import asyncio
 import unittest

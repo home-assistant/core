@@ -1,4 +1,5 @@
 """The tests the for Locative device tracker platform."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """The tests for the Demo Media player platform."""
+# pylint: skip-file
 import datetime
 import socket
 import unittest

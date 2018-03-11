@@ -26,6 +26,7 @@ If your light doesn't support white value feature, omit `white_value_template`.
 
 If your light doesn't support RGB feature, omit `(red|green|blue)_template`.
 """
+# pylint: skip-file
 import unittest
 
 from homeassistant.setup import setup_component

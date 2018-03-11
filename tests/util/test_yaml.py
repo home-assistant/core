@@ -1,4 +1,5 @@
 """Test Home Assistant yaml loader."""
+# pylint: skip-file
 import io
 import os
 import unittest

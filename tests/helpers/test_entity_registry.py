@@ -1,4 +1,5 @@
 """Tests for the Entity Registry."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import patch, mock_open
 

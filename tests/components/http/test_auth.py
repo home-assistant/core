@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+# pylint: skip-file
 # pylint: disable=protected-access
 from ipaddress import ip_network
 from unittest.mock import patch

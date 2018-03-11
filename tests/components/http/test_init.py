@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+# pylint: skip-file
 from homeassistant.setup import async_setup_component
 
 import homeassistant.components.http as http

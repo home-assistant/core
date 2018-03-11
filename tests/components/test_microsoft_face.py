@@ -1,4 +1,5 @@
 """The tests for the microsoft face platform."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import patch
 

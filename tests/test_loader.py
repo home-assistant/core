@@ -1,4 +1,5 @@
 """Test to verify that we can load components."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import asyncio
 import unittest

@@ -1,4 +1,5 @@
 """Test the Soundtouch component."""
+# pylint: skip-file
 import logging
 import unittest
 from unittest import mock

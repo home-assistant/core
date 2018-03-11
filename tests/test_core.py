@@ -1,4 +1,5 @@
 """Test to verify that Home Assistant core works."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import asyncio
 import logging

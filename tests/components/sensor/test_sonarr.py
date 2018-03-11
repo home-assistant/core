@@ -1,4 +1,5 @@
 """The tests for the Sonarr platform."""
+# pylint: skip-file
 import unittest
 import time
 from datetime import datetime

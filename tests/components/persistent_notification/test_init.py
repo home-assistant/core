@@ -1,4 +1,5 @@
 """The tests for the persistent notification component."""
+# pylint: skip-file
 from homeassistant.setup import setup_component
 import homeassistant.components.persistent_notification as pn
 

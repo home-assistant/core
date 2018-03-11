@@ -1,4 +1,5 @@
 """The tests for the demo climate component."""
+# pylint: skip-file
 import unittest
 
 from homeassistant.util.unit_system import (

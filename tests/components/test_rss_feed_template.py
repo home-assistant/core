@@ -1,4 +1,5 @@
 """The tests for the rss_feed_api component."""
+# pylint: skip-file
 import asyncio
 from xml.etree import ElementTree
 

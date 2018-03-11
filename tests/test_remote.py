@@ -1,4 +1,5 @@
 """Test Home Assistant remote methods and classes."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import unittest
 

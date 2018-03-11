@@ -1,4 +1,5 @@
 """Test the helper method for writing tests."""
+# pylint: skip-file
 import asyncio
 from datetime import timedelta
 import functools as ft

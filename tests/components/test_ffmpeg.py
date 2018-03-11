@@ -1,4 +1,5 @@
 """The tests for Home Assistant ffmpeg."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import patch, MagicMock
 

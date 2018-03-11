@@ -1,4 +1,5 @@
 """The tests for the Splunk component."""
+# pylint: skip-file
 import json
 import unittest
 from unittest import mock

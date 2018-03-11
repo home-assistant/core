@@ -1,4 +1,5 @@
 """Test the Google Domains component."""
+# pylint: skip-file
 import asyncio
 from datetime import timedelta
 

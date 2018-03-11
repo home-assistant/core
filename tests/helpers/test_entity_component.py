@@ -1,4 +1,5 @@
 """The tests for the Entity component helper."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import asyncio
 from collections import OrderedDict

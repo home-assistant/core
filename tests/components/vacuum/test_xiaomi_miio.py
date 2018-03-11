@@ -1,4 +1,5 @@
 """The tests for the Xiaomi vacuum platform."""
+# pylint: skip-file
 import asyncio
 from datetime import timedelta, time
 from unittest import mock

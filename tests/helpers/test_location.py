@@ -1,4 +1,5 @@
 """Tests Home Assistant location helpers."""
+# pylint: skip-file
 import unittest
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE

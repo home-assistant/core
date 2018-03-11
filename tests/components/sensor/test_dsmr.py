@@ -4,6 +4,7 @@ Tests setup of the DSMR component and ensure incoming telegrams cause
 Entity to be updated with new values.
 
 """
+# pylint: skip-file
 
 import asyncio
 from decimal import Decimal

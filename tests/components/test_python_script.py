@@ -1,4 +1,5 @@
 """Test the python_script component."""
+# pylint: skip-file
 import asyncio
 import logging
 from unittest.mock import patch, mock_open

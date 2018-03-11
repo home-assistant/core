@@ -1,4 +1,5 @@
 """The tests for the Input select component."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import asyncio
 import unittest

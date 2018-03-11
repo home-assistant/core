@@ -1,4 +1,5 @@
 """Test component/platform setup."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import asyncio
 import os

@@ -19,5 +19,5 @@ flake8 --doctests $files
 echo "================"
 echo "LINT with pylint"
 echo "================"
-pylint $(echo "$files" | grep -v '^tests.*')
+pylint $files
 echo

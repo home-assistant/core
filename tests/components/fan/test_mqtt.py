@@ -1,4 +1,5 @@
 """Test MQTT fans."""
+# pylint: skip-file
 import unittest
 
 from homeassistant.setup import setup_component

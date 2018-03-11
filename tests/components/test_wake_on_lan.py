@@ -1,4 +1,5 @@
 """Tests for Wake On LAN component."""
+# pylint: skip-file
 import asyncio
 from unittest import mock
 

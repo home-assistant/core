@@ -1,4 +1,5 @@
 """The tests for the Unifi WAP device tracker platform."""
+# pylint: skip-file
 from unittest import mock
 from pyunifi.controller import APIError
 import homeassistant.util.dt as dt_util

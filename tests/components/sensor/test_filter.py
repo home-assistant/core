@@ -1,4 +1,5 @@
 """The test for the data filter sensor platform."""
+# pylint: skip-file
 import unittest
 
 from homeassistant.components.sensor.filter import (

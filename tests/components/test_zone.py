@@ -1,4 +1,5 @@
 """Test zone component."""
+# pylint: skip-file
 import unittest
 
 from homeassistant import setup

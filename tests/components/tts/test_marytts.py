@@ -1,4 +1,5 @@
 """The tests for the MaryTTS speech platform."""
+# pylint: skip-file
 import asyncio
 import os
 import shutil

@@ -1,4 +1,5 @@
 """Tests for our aiohttp mocker."""
+# pylint: skip-file
 from .aiohttp import AiohttpClientMocker
 
 import pytest

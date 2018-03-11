@@ -1,4 +1,5 @@
 """Test entity_registry API."""
+# pylint: skip-file
 import pytest
 
 from homeassistant.setup import async_setup_component

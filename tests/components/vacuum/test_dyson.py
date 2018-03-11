@@ -1,4 +1,5 @@
 """Test the Dyson 360 eye robot vacuum component."""
+# pylint: skip-file
 import unittest
 from unittest import mock
 

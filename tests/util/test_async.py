@@ -1,4 +1,5 @@
 """Tests for async util methods from Python source."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import MagicMock, patch
 from unittest import TestCase

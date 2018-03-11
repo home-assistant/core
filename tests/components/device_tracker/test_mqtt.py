@@ -1,4 +1,5 @@
 """The tests for the MQTT device tracker platform."""
+# pylint: skip-file
 import asyncio
 import unittest
 from unittest.mock import patch

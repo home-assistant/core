@@ -1,4 +1,5 @@
 """The tests for the IMAP email content sensor platform."""
+# pylint: skip-file
 from collections import deque
 import email
 from email.mime.multipart import MIMEMultipart

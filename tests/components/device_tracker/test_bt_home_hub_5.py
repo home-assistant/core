@@ -1,4 +1,5 @@
 """The tests for the BT Home Hub 5 device tracker platform."""
+# pylint: skip-file
 import unittest
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Test data validator decorator."""
+# pylint: skip-file
 from unittest.mock import Mock
 
 from aiohttp import web

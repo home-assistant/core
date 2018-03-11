@@ -1,4 +1,5 @@
 """Test the NamecheapDNS component."""
+# pylint: skip-file
 import asyncio
 from datetime import timedelta
 

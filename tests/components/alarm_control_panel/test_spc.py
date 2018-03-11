@@ -1,4 +1,5 @@
 """Tests for Vanderbilt SPC alarm control panel platform."""
+# pylint: skip-file
 import asyncio
 
 import pytest

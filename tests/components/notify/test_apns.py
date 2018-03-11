@@ -1,4 +1,5 @@
 """The tests for the APNS component."""
+# pylint: skip-file
 import io
 import unittest
 from unittest.mock import Mock, patch, mock_open

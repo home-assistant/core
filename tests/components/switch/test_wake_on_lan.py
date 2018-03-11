@@ -1,4 +1,5 @@
 """The tests for the wake on lan switch platform."""
+# pylint: skip-file
 import unittest
 from unittest.mock import patch
 

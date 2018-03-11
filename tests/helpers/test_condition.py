@@ -1,4 +1,5 @@
 """Test the condition helper."""
+# pylint: skip-file
 from unittest.mock import patch
 
 from homeassistant.helpers import condition

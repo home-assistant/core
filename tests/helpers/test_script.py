@@ -1,4 +1,5 @@
 """The tests for the Script component."""
+# pylint: skip-file
 # pylint: disable=protected-access
 from datetime import timedelta
 from unittest import mock

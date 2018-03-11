@@ -1,4 +1,5 @@
 """The tests for the Demo vacuum platform."""
+# pylint: skip-file
 import unittest
 
 from homeassistant.components import vacuum

@@ -1,4 +1,5 @@
 """The tests for the Vultr sensor platform."""
+# pylint: skip-file
 import json
 import unittest
 from unittest.mock import patch

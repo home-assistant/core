@@ -1,4 +1,5 @@
 """The tests for the Canary component."""
+# pylint: skip-file
 import unittest
 from unittest.mock import patch, MagicMock, PropertyMock
 

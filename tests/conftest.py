@@ -1,4 +1,5 @@
 """Setup some common test helper things."""
+# pylint: skip-file
 import asyncio
 import functools
 import logging

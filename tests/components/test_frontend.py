@@ -1,4 +1,5 @@
 """The tests for Home Assistant frontend."""
+# pylint: skip-file
 import asyncio
 import re
 from unittest.mock import patch

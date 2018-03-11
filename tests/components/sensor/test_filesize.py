@@ -1,4 +1,5 @@
 """The tests for the filesize sensor."""
+# pylint: skip-file
 import unittest
 import os
 
