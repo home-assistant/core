@@ -8,6 +8,7 @@ import json
 import logging
 
 from datetime import timedelta
+from datetime import datetime as dt
 
 import requests
 import voluptuous as vol
@@ -266,6 +267,7 @@ class PlexClient(MediaPlayerDevice):
         self._app_name = ''
         self._device = None
         self._available = False
+        self._marked_unavailable = None
         self._device_protocol_capabilities = None
         self._is_player_active = False
         self._is_player_available = False
@@ -418,6 +420,10 @@ class PlexClient(MediaPlayerDevice):
         """Set the device as available/unavailable noting time."""
         if not available:
             self._clear_media_details()
+            self._marked_unavailable = dt.now()
+        else:
+            self._marked_unavailable = None
+
         self._available = available
 
     def _set_player_state(self):
@@ -505,6 +511,11 @@ class PlexClient(MediaPlayerDevice):
     def device(self):
         """Return the device, if any."""
         return self._device
+
+    @property
+    def marked_unavailable(self):
+        """Return time device was marked unavailable"""
+        return self._marked_unavailable
 
     @property
     def session(self):
