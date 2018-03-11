@@ -58,7 +58,7 @@ def create_event_handler(patterns, hass):
             super().__init__(patterns)
             self.hass = hass
 
-        def process(self, event):
+        def on_any_event(self, event):
             """On Watcher event, fire HA event."""
             if not event.is_directory:
                 folder_path, file_name = os.path.split(event.src_path)
@@ -71,19 +71,19 @@ def create_event_handler(patterns, hass):
 
         def on_modified(self, event):
             """File modified."""
-            self.process(event)
+            self.on_any_event(event)
 
         def on_moved(self, event):
             """File moved."""
-            self.process(event)
+            self.on_any_event(event)
 
         def on_created(self, event):
             """File created."""
-            self.process(event)
+            self.on_any_event(event)
 
         def on_deleted(self, event):
             """File deleted."""
-            self.process(event)
+            self.on_any_event(event)
 
     return EventHandler(patterns, hass)
 
