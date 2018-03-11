@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.generic_hygrostat/
 import asyncio
 import collections
 import time
-from datetime import timedelta
+from datetime import timedelta, datetime
 import logging
 
 import voluptuous as vol
@@ -27,13 +27,8 @@ SAMPLE_INTERVAL = timedelta(minutes=5)
 
 DEFAULT_NAME = 'Generic Hygrostat'
 
-ATTR_SENSOR_ID = 'sensor'
-ATTR_DELTA_TRIGGER = 'delta_trigger'
-ATTR_TARGET_OFFSET = 'target_offset'
-ATTR_MAX_ON_TIME = 'max_on_time'
-ATTR_SENSOR_HUMIDITY = 'sensor_humidity'
-ATTR_TARGET = 'target'
 ATTR_SAMPLES = 'samples'
+ATTR_TARGET = 'target'
 ATTR_MAX_ON_TIMER = 'max_on_timer'
 
 CONF_SENSOR = 'sensor'
@@ -43,7 +38,7 @@ CONF_MAX_ON_TIME = 'max_on_time'
 
 DEFAULT_DELTA_TRIGGER = 3
 DEFAULT_TARGET_OFFSET = 3
-DEFAULT_MAX_ON_TIME = 7200
+DEFAULT_MAX_ON_TIME = timedelta(seconds=7200)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SENSOR): cv.entity_id,
@@ -52,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TARGET_OFFSET, default=DEFAULT_TARGET_OFFSET):
         vol.Coerce(float),
     vol.Optional(CONF_MAX_ON_TIME, default=DEFAULT_MAX_ON_TIME):
-        vol.Coerce(float)
+        cv.time_period
 })
 
 
@@ -112,7 +107,7 @@ class GenericHygrostat(Entity):
                           self.name)
             self.set_off()
 
-        if self.max_on_timer and self.max_on_timer < time.time():
+        if self.max_on_timer and self.max_on_timer < datetime.now():
             _LOGGER.debug("Max on timer reached for '%s'",
                           self.name)
             self.set_off()
@@ -154,7 +149,8 @@ class GenericHygrostat(Entity):
 
     def set_dehumidification_target(self):
         """Setting dehumidification target to min humidity sample + offset."""
-        self.target = min(self.samples) + self.target_offset
+        if self.target is None:
+            self.target = min(self.samples) + self.target_offset
 
     def reset_dehumidification_target(self):
         """Unsetting dehumidification target."""
@@ -168,7 +164,8 @@ class GenericHygrostat(Entity):
 
     def set_max_on_timer(self):
         """Setting max on timer."""
-        self.max_on_timer = time.time() + self.max_on_time
+        if self.max_on_timer is None:
+            self.max_on_timer = datetime.now() + self.max_on_time
 
     def reset_max_on_timer(self):
         """Unsetting max on timer."""
@@ -205,13 +202,7 @@ class GenericHygrostat(Entity):
     def state_attributes(self):
         """Return the attributes of the entity."""
         return {
-            ATTR_SENSOR_ID: self.sensor_id,
-            ATTR_DELTA_TRIGGER: self.delta_trigger,
-            ATTR_TARGET_OFFSET: self.target_offset,
-            ATTR_MAX_ON_TIME: self.max_on_time,
-
-            ATTR_SENSOR_HUMIDITY: self.sensor_humidity,
-            ATTR_TARGET: self.target,
             ATTR_SAMPLES: list(self.samples),
+            ATTR_TARGET: self.target,
             ATTR_MAX_ON_TIMER: self.max_on_timer
         }
