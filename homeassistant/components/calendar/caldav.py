@@ -194,7 +194,7 @@ class WebDavCalendarData(object):
     @staticmethod
     def is_over(vevent):
         """Return if the event is over."""
-        return dt.now() > WebDavCalendarData.to_datetime(
+        return dt.now() >= WebDavCalendarData.to_datetime(
             WebDavCalendarData.get_end_date(vevent)
         )
 
