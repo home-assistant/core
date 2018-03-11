@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         sensor.read_status()
-    except OSError as err:
+    except OSError:
         raise HomeAssistantError("SHT31 sensor not detected at address %s " %
                                  hex(i2c_address))
     sensor_client = SHTClient(sensor)
@@ -90,7 +90,7 @@ class SHTClient(object):
             self.data[SENSOR_TEMPERATURE] = temperature
             self.data[SENSOR_HUMIDITY] = humidity
         else:
-            _LOGGER.warning("Bad sample from sensor %s", self.name)
+            _LOGGER.warning("Bad sample from sensor SHT31")
 
     def get_latest_temperature(self):
         """Get latest temperature."""
