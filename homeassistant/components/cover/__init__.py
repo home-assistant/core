@@ -17,6 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import group
+from homeassistant.helpers import intent
 from homeassistant.const import (
     SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER, SERVICE_OPEN_COVER_TILT, SERVICE_CLOSE_COVER_TILT,
@@ -150,14 +151,16 @@ def stop_cover_tilt(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_STOP_COVER_TILT, data)
 
 
-async def async_setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Track states and offer events for covers."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_COVERS)
 
-    await component.async_setup(config)
+    yield from component.async_setup(config)
 
-    async def async_handle_cover_service(service):
+    @asyncio.coroutine
+    def async_handle_cover_service(service):
         """Handle calls to the cover services."""
         covers = component.async_extract_from_service(service)
         method = SERVICE_TO_METHOD.get(service.service)
@@ -167,13 +170,13 @@ async def async_setup(hass, config):
         # call method
         update_tasks = []
         for cover in covers:
-            await getattr(cover, method['method'])(**params)
+            yield from getattr(cover, method['method'])(**params)
             if not cover.should_poll:
                 continue
             update_tasks.append(cover.async_update_ha_state(True))
 
         if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     for service_name in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service_name].get(
@@ -181,6 +184,12 @@ async def async_setup(hass, config):
         hass.services.async_register(
             DOMAIN, service_name, async_handle_cover_service,
             schema=schema)
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        intent.INTENT_OPEN_COVER, DOMAIN, SERVICE_OPEN_COVER,
+        "Opened {}"))
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        intent.INTENT_CLOSE_COVER, DOMAIN, SERVICE_CLOSE_COVER,
+        "Closed {}"))
 
     return True
 
