@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
-REQUIREMENTS = ['xknx==0.8.4']
+REQUIREMENTS = ['xknx==0.8.5']
 
 DOMAIN = "knx"
 DATA_KNX = "data_knx"
@@ -241,7 +241,7 @@ class KNXModule(object):
     async def telegram_received_cb(self, telegram):
         """Call invoked after a KNX telegram was received."""
         self.hass.bus.fire('knx_event', {
-            'address': telegram.group_address.str(),
+            'address': str(telegram.group_address),
             'data': telegram.payload.value
         })
         # False signals XKNX to proceed with processing telegrams.
