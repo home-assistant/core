@@ -151,6 +151,8 @@ def get_component(comp_name) -> Optional[ModuleType]:
             # the import custom_components.switch would succeed.
             if module.__spec__.origin == 'namespace':
                 continue
+            if "NamespaceLoader" in str(module.__spec__.loader):
+                continue
 
             _LOGGER.info("Loaded %s from %s", comp_name, path)
 
