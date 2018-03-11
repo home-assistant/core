@@ -6,6 +6,7 @@ https://home-assistant.io/components/camera.onvif/
 """
 import asyncio
 import logging
+import os
 
 import voluptuous as vol
 
@@ -72,8 +73,8 @@ SERVICE_PTZ_SCHEMA = vol.Schema({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up a ONVIF camera."""
     if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
         return
@@ -105,6 +106,7 @@ class ONVIFHassCamera(Camera):
     def __init__(self, hass, config):
         """Initialize a ONVIF camera."""
         super().__init__()
+        import onvif
 
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)
@@ -114,107 +116,108 @@ class ONVIFHassCamera(Camera):
         self._ffmpeg_arguments = config.get(CONF_EXTRA_ARGUMENTS)
         self._profile_index = config.get(CONF_PROFILE)
         self._input = None
-        self._profiles = None
-        self._ptz = None
+        self._media_service = \
+            onvif.ONVIFService('http://{}:{}/onvif/device_service'.format(
+                               self._host, self._port),
+                               self._username, self._password,
+                               '{}/wsdl/media.wsdl'.format(os.path.dirname(
+                                                           onvif.__file__)))
+
+        self._ptz_service = \
+            onvif.ONVIFService('http://{}:{}/onvif/device_service'.format(
+                               self._host, self._port),
+                               self._username, self._password,
+                               '{}/wsdl/ptz.wsdl'.format(os.path.dirname(
+                                                         onvif.__file__)))
 
     def obtain_input_uri(self):
-        from onvif import ONVIFCamera, exceptions
-
+        """Set the input uri for the camera."""
+        from onvif import exceptions
         _LOGGER.debug("Connecting with ONVIF Camera: %s on port %s",
                       self._host, self._port)
 
         try:
-            camera = ONVIFCamera(
-                self._host, self._port, self._username, self._password)
-            media_service = camera.create_media_service()
-        except Exception as err:
-            _LOGGER.error("Unable to communicate with ONVIF Camera '%s': %s",
+            profiles = self._media_service.GetProfiles()
+
+            if self._profile_index >= len(profiles):
+                _LOGGER.warning("ONVIF Camera '%s' doesn't provide profile %d."
+                                " Using the last profile.",
+                                self._name, self._profile_index)
+                self._profile_index = -1
+
+            req = self._media_service.create_type('GetStreamUri')
+
+            # pylint: disable=protected-access
+            req.ProfileToken = profiles[self._profile_index]._token
+            uri_no_auth = self._media_service.GetStreamUri(req).Uri
+            uri_for_log = uri_no_auth.replace(
+                'rtsp://', 'rtsp://<user>:<password>@', 1)
+            self._input = uri_no_auth.replace(
+                'rtsp://', 'rtsp://{}:{}@'.format(self._username,
+                                                  self._password), 1)
+            _LOGGER.debug(
+                "ONVIF Camera Using the following URL for %s: %s",
+                self._name, uri_for_log)
+            # we won't need the media service anymore
+            self._media_service = None
+        except exceptions.ONVIFError as err:
+            _LOGGER.debug("Couldn't setup camera '%s'. Error: %s",
                           self._name, err)
             return
 
-        try:
-            self._ptz = camera.create_ptz_service()
-        except exceptions.ONVIFError as err:
-            self._ptz = None
-            _LOGGER.warning("Unable to setup PTZ for ONVIF Camera '%s': %s",
-                            self._name, err)
-
-        self._profiles = media_service.GetProfiles()
-        if self._profile_index >= len(self._profiles):
-            _LOGGER.warning("ONVIF Camera '%s' doesn't provide profile %d."
-                            " Using the last profile.",
-                            self._name, self._profile_index)
-            self._profile_index = -1
-
-        req = media_service.create_type('GetStreamUri')
-        # pylint: disable=protected-access
-        req.ProfileToken = self._profiles[self._profile_index]._token
-        uri_no_auth = media_service.GetStreamUri(req).Uri
-        uri_for_log = uri_no_auth.replace(
-            'rtsp://', 'rtsp://<user>:<password>@', 1)
-        self._input = uri_no_auth.replace(
-            'rtsp://', 'rtsp://{}:{}@'.format(self._username,
-                                              self._password), 1)
-        _LOGGER.debug(
-            "ONVIF Camera Using the following URL for %s: %s",
-            self._name, uri_for_log)
-
     def perform_ptz(self, pan, tilt, zoom):
         """Perform a PTZ action on the camera."""
-        if self._ptz:
+        if self._ptz_service:
             pan_val = 1 if pan == DIR_RIGHT else -1 if pan == DIR_LEFT else 0
             tilt_val = 1 if tilt == DIR_UP else -1 if tilt == DIR_DOWN else 0
             zoom_val = 1 if zoom == ZOOM_IN else -1 if zoom == ZOOM_OUT else 0
             req = {"Velocity": {
                 "PanTilt": {"_x": pan_val, "_y": tilt_val},
                 "Zoom": {"_x": zoom_val}}}
-            self._ptz.ContinuousMove(req)
+            self._ptz_service.ContinuousMove(req)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Callback when entity is added to hass."""
         if ONVIF_DATA not in self.hass.data:
             self.hass.data[ONVIF_DATA] = {}
             self.hass.data[ONVIF_DATA][ENTITIES] = []
         self.hass.data[ONVIF_DATA][ENTITIES].append(self)
 
-    @asyncio.coroutine
-    def async_camera_image(self):
+    async def async_camera_image(self):
         """Return a still image response from the camera."""
         from haffmpeg import ImageFrame, IMAGE_JPEG
 
         if not self._input:
-            self.obtain_input_uri()
+            await self.hass.async_add_job(self.obtain_input_uri)
             if not self._input:
                 return None
 
         ffmpeg = ImageFrame(
             self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
 
-        image = yield from asyncio.shield(ffmpeg.get_image(
+        image = await asyncio.shield(ffmpeg.get_image(
             self._input, output_format=IMAGE_JPEG,
             extra_cmd=self._ffmpeg_arguments), loop=self.hass.loop)
         return image
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg import CameraMjpeg
 
         if not self._input:
-            self.obtain_input_uri()
+            await self.hass.async_add_job(self.obtain_input_uri)
             if not self._input:
                 return None
 
         stream = CameraMjpeg(self.hass.data[DATA_FFMPEG].binary,
                              loop=self.hass.loop)
-        yield from stream.open_camera(
+        await stream.open_camera(
             self._input, extra_cmd=self._ffmpeg_arguments)
 
-        yield from async_aiohttp_proxy_stream(
+        await async_aiohttp_proxy_stream(
             self.hass, request, stream,
             'multipart/x-mixed-replace;boundary=ffserver')
-        yield from stream.close()
+        await stream.close()
 
     @property
     def name(self):
