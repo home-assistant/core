@@ -272,7 +272,7 @@ def setup_and_run_hass(config_dir: str,
 
     if args.open_ui:
         # Imported here to avoid importing asyncio before monkey patch
-        from homeassistant.util.async import run_callback_threadsafe
+        from homeassistant.util.async_ import run_callback_threadsafe
 
         def open_browser(event):
             """Open the webinterface in a browser."""

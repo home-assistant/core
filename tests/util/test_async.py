@@ -5,7 +5,7 @@ from unittest import TestCase
 
 import pytest
 
-from homeassistant.util import async as hasync
+from homeassistant.util import async_ as hasync
 
 
 @patch('asyncio.coroutines.iscoroutine')
