@@ -23,15 +23,13 @@ EVENT_TYPE = "event_type"
 FILE = 'file'
 FOLDER = 'folder'
 
-WATCHER_CONFIG_SCHEMA = vol.Schema([{
-    vol.Required(CONF_FOLDER): cv.isdir,
-    vol.Optional(CONF_PATTERNS, default=[DEFAULT_PATTERN]): vol.All(
-        cv.ensure_list, [cv.string]),
-}])
-
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, WATCHER_CONFIG_SCHEMA)
-    }, extra=vol.ALLOW_EXTRA)
+    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
+        vol.Required(CONF_FOLDER): cv.isdir,
+        vol.Optional(CONF_PATTERNS, default=[DEFAULT_PATTERN]):
+            vol.All(cv.ensure_list, [cv.string]),
+    })])
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
