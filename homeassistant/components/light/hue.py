@@ -261,10 +261,13 @@ class HueLight(Light):
         """Return true if device is on."""
         if self.is_group:
             return self.info['state']['any_on']
-        elif self.allow_unreachable:
-            return self.info['state']['on']
-        return self.info['state']['reachable'] and \
-            self.info['state']['on']
+        return self.info['state']['on']
+
+    @property
+    def available(self):
+        """Return if light is available."""
+        return (self.is_group or self.allow_unreachable or
+                self.info['state']['reachable'])
 
     @property
     def supported_features(self):
