@@ -14,7 +14,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "title": "Pick Hue Bridge"
+                "title": "Pick Hue bridge"
             },
             "link": {
                 "description": "Press the button on the bridge to register Philips Hue with Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)",
