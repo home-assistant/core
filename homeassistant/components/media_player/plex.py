@@ -420,7 +420,8 @@ class PlexClient(MediaPlayerDevice):
         """Set the device as available/unavailable noting time."""
         if not available:
             self._clear_media_details()
-            self._marked_unavailable = dt.now()
+            if self._marked_unavailable is None:
+                self._marked_unavailable = dt.now()
         else:
             self._marked_unavailable = None
 
