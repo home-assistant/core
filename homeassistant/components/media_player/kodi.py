@@ -31,7 +31,7 @@ from homeassistant.helpers import script, config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.util.yaml import dump
 
-REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
+REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
