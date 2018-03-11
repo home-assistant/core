@@ -93,14 +93,16 @@ class SHTClient(object):
             _LOGGER.warning("Bad sample from sensor %s", self.name)
 
     def get_latest_temperature(self):
+        """Get latest temperature."""
         return self.data.get(SENSOR_TEMPERATURE)
 
     def get_latest_humidity(self):
+        """Get latest humidity."""
         return self.data.get(SENSOR_HUMIDITY)
 
 
 class SHTSensor(Entity):
-    """An abstract SHTSensor, can be either temperature or humidity"""
+    """An abstract SHTSensor, can be either temperature or humidity."""
 
     def __init__(self, sensor, name):
         """Initialize the sensor."""
@@ -119,22 +121,20 @@ class SHTSensor(Entity):
         return self._state
 
     def update(self):
-        """Fetch temperature and humidity from the sensor"""
+        """Fetch temperature and humidity from the sensor."""
         self._sensor.update()
 
 
 class SHTSensorTemperature(SHTSensor):
-    """Representation of a temperature sensor"""
+    """Representation of a temperature sensor."""
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-
         return self.hass.config.units.temperature_unit
 
     def update(self):
-        """Fetch temperature from the sensor"""
-
+        """Fetch temperature from the sensor."""
         super().update()
         temp_celsius = self._sensor.get_latest_temperature()
         if temp_celsius is not None:
@@ -143,17 +143,15 @@ class SHTSensorTemperature(SHTSensor):
 
 
 class SHTSensorHumidity(SHTSensor):
-    """Representation of a humidity sensor"""
+    """Representation of a humidity sensor."""
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-
         return '%'
 
     def update(self):
-        """Fetch humidity from the sensor"""
-
+        """Fetch humidity from the sensor."""
         super().update()
         humidity = self._sensor.get_latest_humidity()
         if humidity is not None:
