@@ -486,7 +486,6 @@ def setup(hass, config):
                 _LOGGER.info("Setting config parameter %s on Node %s "
                              "with button selection %s", param, node_id,
                              selection)
-
                 return
             value.data = int(selection)
             _LOGGER.info("Setting config parameter %s on Node %s "
