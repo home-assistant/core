@@ -123,7 +123,7 @@ def test_internal_discovery_callback_only_generates_once(hass):
                return_value=chromecast) as gen_chromecast:
         discover_cast('the-service', chromecast)
         mdns = (chromecast.host, chromecast.port, chromecast.uuid, None, None)
-        gen_chromecast.assert_called_once_with(mdns, blocking=True, tries=10)
+        gen_chromecast.assert_called_once_with(mdns, blocking=True)
 
         discover_cast('the-service', chromecast)
         gen_chromecast.reset_mock()
