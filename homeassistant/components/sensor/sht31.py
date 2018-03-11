@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sht31/
 """
 
+from datetime import timedelta
 import logging
 import math
 
@@ -18,6 +19,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import display_temp
 from homeassistant.const import PRECISION_TENTHS
+from homeassistant.util import Throttle
+
 
 REQUIREMENTS = ['Adafruit-GPIO==1.0.3',
                 'Adafruit-SHT31==1.0.2']
@@ -32,6 +35,8 @@ DEFAULT_I2C_ADDRESS = 0x44
 SENSOR_TEMPERATURE = 'temperature'
 SENSOR_HUMIDITY = 'humidity'
 SENSOR_TYPES = (SENSOR_TEMPERATURE, SENSOR_HUMIDITY)
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS):
@@ -54,6 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except OSError as err:
         raise HomeAssistantError("SHT31 sensor not detected at address %s " %
                                  hex(i2c_address))
+    sensor_client = SHTClient(sensor)
 
     sensor_classes = {
         SENSOR_TEMPERATURE: SHTSensorTemperature,
@@ -63,9 +69,34 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devs = []
     for sensor_type, sensor_class in sensor_classes.items():
         name = "{} {}".format(config.get(CONF_NAME), sensor_type.capitalize())
-        devs.append(sensor_class(sensor, name))
+        devs.append(sensor_class(sensor_client, name))
 
     add_devices(devs)
+
+
+class SHTClient(object):
+    """Get the latest data from the SHT sensor."""
+
+    def __init__(self, adafruit_sht):
+        """Initialize the sensor."""
+        self.adafruit_sht = adafruit_sht
+        self.data = dict()
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Get the latest data the SHT sensor."""
+        temperature, humidity = self.adafruit_sht.read_temperature_humidity()
+        if not (math.isnan(temperature) or math.isnan(humidity)):
+            self.data[SENSOR_TEMPERATURE] = temperature
+            self.data[SENSOR_HUMIDITY] = humidity
+        else:
+            _LOGGER.warning("Bad sample from sensor %s", self.name)
+
+    def get_latest_temperature(self):
+        return self.data.get(SENSOR_TEMPERATURE)
+
+    def get_latest_humidity(self):
+        return self.data.get(SENSOR_HUMIDITY)
 
 
 class SHTSensor(Entity):
@@ -87,6 +118,10 @@ class SHTSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
+    def update(self):
+        """Fetch temperature and humidity from the sensor"""
+        self._sensor.update()
+
 
 class SHTSensorTemperature(SHTSensor):
     """Representation of a temperature sensor"""
@@ -100,12 +135,11 @@ class SHTSensorTemperature(SHTSensor):
     def update(self):
         """Fetch temperature from the sensor"""
 
-        temp_celsius = self._sensor.read_temperature()
-        if not math.isnan(temp_celsius):
+        super().update()
+        temp_celsius = self._sensor.get_latest_temperature()
+        if temp_celsius is not None:
             self._state = display_temp(self.hass, temp_celsius,
                                        TEMP_CELSIUS, PRECISION_TENTHS)
-        else:
-            _LOGGER.warning("Bad sample from sensor %s", self.name)
 
 
 class SHTSensorHumidity(SHTSensor):
@@ -120,8 +154,7 @@ class SHTSensorHumidity(SHTSensor):
     def update(self):
         """Fetch humidity from the sensor"""
 
-        humidity = self._sensor.read_humidity()
-        if not math.isnan(humidity):
+        super().update()
+        humidity = self._sensor.get_latest_humidity()
+        if humidity is not None:
             self._state = round(humidity)
-        else:
-            _LOGGER.warning("Bad sample from sensor %s", self.name)
