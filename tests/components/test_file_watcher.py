@@ -22,7 +22,7 @@ def create_file(path):
 
 
 class TestFolderWatcher(unittest.TestCase):
-    """Test the filesize sensor."""
+    """Test the file_watcher component."""
 
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
