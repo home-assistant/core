@@ -1,4 +1,5 @@
 """The tests for the mailbox component."""
+# pylint: skip-file
 import asyncio
 from hashlib import sha1
 

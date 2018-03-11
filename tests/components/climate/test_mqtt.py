@@ -1,4 +1,5 @@
 """The tests for the mqtt climate component."""
+# pylint: skip-file
 import unittest
 import copy
 

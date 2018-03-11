@@ -1,4 +1,5 @@
 """The tests for the image_processing component."""
+# pylint: skip-file
 from unittest.mock import patch, PropertyMock
 
 from homeassistant.core import callback

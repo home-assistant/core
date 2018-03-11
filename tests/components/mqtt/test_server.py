@@ -1,4 +1,5 @@
 """The tests for the MQTT component embedded server."""
+# pylint: skip-file
 from unittest.mock import Mock, MagicMock, patch
 
 from homeassistant.setup import setup_component

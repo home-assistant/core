@@ -1,4 +1,5 @@
 """Test the cloud component."""
+# pylint: skip-file
 import asyncio
 import json
 from unittest.mock import patch, MagicMock, mock_open

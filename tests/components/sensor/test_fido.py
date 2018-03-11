@@ -1,4 +1,5 @@
 """The test for the fido sensor platform."""
+# pylint: skip-file
 import asyncio
 import logging
 import sys

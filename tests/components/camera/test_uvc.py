@@ -1,4 +1,5 @@
 """The tests for UVC camera module."""
+# pylint: skip-file
 import socket
 import unittest
 from unittest import mock

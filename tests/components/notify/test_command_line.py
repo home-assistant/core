@@ -1,4 +1,5 @@
 """The tests for the command line notification platform."""
+# pylint: skip-file
 import os
 import tempfile
 import unittest

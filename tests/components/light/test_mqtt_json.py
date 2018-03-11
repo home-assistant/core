@@ -87,6 +87,7 @@ light:
   brightness: true
   brightness_scale: 99
 """
+# pylint: skip-file
 
 import json
 import unittest

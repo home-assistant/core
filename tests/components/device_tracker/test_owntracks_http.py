@@ -1,4 +1,5 @@
 """Test the owntracks_http platform."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import patch
 

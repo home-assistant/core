@@ -1,4 +1,5 @@
 """The tests for the Universal Media player platform."""
+# pylint: skip-file
 from copy import copy
 import unittest
 

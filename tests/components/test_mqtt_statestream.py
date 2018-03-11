@@ -1,4 +1,5 @@
 """The tests for the MQTT statestream component."""
+# pylint: skip-file
 from unittest.mock import ANY, call, patch
 
 from homeassistant.setup import setup_component

@@ -1,4 +1,5 @@
 """The tests for the Logentries component."""
+# pylint: skip-file
 
 import unittest
 from unittest import mock

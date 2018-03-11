@@ -1,4 +1,5 @@
 """Test homeassistant distance utility functions."""
+# pylint: skip-file
 
 import unittest
 import homeassistant.util.distance as distance_util

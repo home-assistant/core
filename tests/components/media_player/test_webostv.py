@@ -1,4 +1,5 @@
 """The tests for the LG webOS media player platform."""
+# pylint: skip-file
 import unittest
 from unittest import mock
 

@@ -1,4 +1,5 @@
 """Test Home Assistant date util methods."""
+# pylint: skip-file
 import unittest
 from datetime import datetime, timedelta
 

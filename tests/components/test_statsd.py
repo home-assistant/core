@@ -1,4 +1,5 @@
 """The tests for the StatsD feeder."""
+# pylint: skip-file
 import unittest
 from unittest import mock
 

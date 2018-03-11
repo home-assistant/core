@@ -1,4 +1,5 @@
 """The tests for the MQTT sensor platform."""
+# pylint: skip-file
 import unittest
 
 from datetime import timedelta, datetime

@@ -1,4 +1,5 @@
 """The tests for the climate component."""
+# pylint: skip-file
 import asyncio
 
 from homeassistant.components.climate import SET_TEMPERATURE_SCHEMA

@@ -1,4 +1,5 @@
 """The tests for local file camera component."""
+# pylint: skip-file
 import asyncio
 from unittest import mock
 

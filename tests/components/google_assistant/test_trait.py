@@ -1,4 +1,5 @@
 """Tests for the Google Assistant traits."""
+# pylint: skip-file
 import pytest
 
 from homeassistant.const import (

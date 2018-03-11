@@ -1,4 +1,5 @@
 """Tests the HASS workday binary sensor."""
+# pylint: skip-file
 from datetime import date
 from unittest.mock import patch
 

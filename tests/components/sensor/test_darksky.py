@@ -1,4 +1,5 @@
 """The tests for the Dark Sky platform."""
+# pylint: skip-file
 import re
 import unittest
 from unittest.mock import MagicMock, patch

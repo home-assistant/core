@@ -1,4 +1,5 @@
 """The test for the moon sensor platform."""
+# pylint: skip-file
 import unittest
 from datetime import datetime
 from unittest.mock import patch

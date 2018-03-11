@@ -1,4 +1,5 @@
 """The tests for the TCP binary sensor platform."""
+# pylint: skip-file
 import unittest
 from unittest.mock import patch, Mock
 

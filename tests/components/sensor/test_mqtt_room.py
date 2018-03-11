@@ -1,4 +1,5 @@
 """The tests for the MQTT room presence sensor."""
+# pylint: skip-file
 import json
 import datetime
 import unittest

@@ -1,4 +1,5 @@
 """The tests for the litejet component."""
+# pylint: skip-file
 import logging
 import unittest
 

@@ -1,4 +1,5 @@
 """The tests for the manual_mqtt Alarm Control Panel component."""
+# pylint: skip-file
 from datetime import timedelta
 import unittest
 from unittest.mock import patch

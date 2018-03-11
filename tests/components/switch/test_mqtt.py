@@ -1,4 +1,5 @@
 """The tests for the MQTT switch platform."""
+# pylint: skip-file
 import unittest
 
 from homeassistant.setup import setup_component

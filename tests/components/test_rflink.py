@@ -1,4 +1,5 @@
 """Common functions for Rflink component tests and generic platform tests."""
+# pylint: skip-file
 
 import asyncio
 from unittest.mock import Mock

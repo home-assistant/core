@@ -1,4 +1,5 @@
 """The tests for the Conversation component."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import asyncio
 

@@ -1,4 +1,5 @@
 """Tests for the HTTP component."""
+# pylint: skip-file
 from ipaddress import ip_address
 
 from aiohttp import web

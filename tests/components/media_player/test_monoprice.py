@@ -1,4 +1,5 @@
 """The tests for Monoprice Media player platform."""
+# pylint: skip-file
 import unittest
 from unittest import mock
 import voluptuous as vol

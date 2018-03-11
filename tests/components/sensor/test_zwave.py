@@ -1,4 +1,5 @@
 """Test Z-Wave sensor."""
+# pylint: skip-file
 from homeassistant.components.sensor import zwave
 from homeassistant.components.zwave import const
 import homeassistant.const

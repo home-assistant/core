@@ -1,4 +1,5 @@
 """The test for the geo rss events sensor platform."""
+# pylint: skip-file
 import unittest
 from unittest import mock
 import feedparser

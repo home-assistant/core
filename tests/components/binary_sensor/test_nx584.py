@@ -1,4 +1,5 @@
 """The tests for the nx584 sensor platform."""
+# pylint: skip-file
 import requests
 import unittest
 from unittest import mock

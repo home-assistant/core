@@ -1,4 +1,5 @@
 """The tests for the notify.group platform."""
+# pylint: skip-file
 import unittest
 from unittest.mock import MagicMock, patch
 

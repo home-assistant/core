@@ -1,4 +1,5 @@
 """The tests for the REST switch platform."""
+# pylint: skip-file
 import asyncio
 
 import aiohttp

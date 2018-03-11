@@ -1,4 +1,5 @@
 """Test the aiohttp client helper."""
+# pylint: skip-file
 import asyncio
 import unittest
 

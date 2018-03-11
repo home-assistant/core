@@ -1,4 +1,5 @@
 """Test the Snips component."""
+# pylint: skip-file
 import asyncio
 import json
 import logging

@@ -1,4 +1,5 @@
 """Test service helpers."""
+# pylint: skip-file
 import asyncio
 from copy import deepcopy
 import unittest

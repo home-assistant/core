@@ -1,4 +1,5 @@
 """The test for state automation."""
+# pylint: skip-file
 from datetime import timedelta
 
 import unittest

@@ -1,4 +1,5 @@
 """Test the cloud.iot module."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import patch, MagicMock, PropertyMock
 

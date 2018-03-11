@@ -1,4 +1,5 @@
 """The tests for the mochad light platform."""
+# pylint: skip-file
 import unittest
 import unittest.mock as mock
 

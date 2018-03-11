@@ -1,4 +1,5 @@
 """The tests for the Demo component."""
+# pylint: skip-file
 import asyncio
 import json
 import os

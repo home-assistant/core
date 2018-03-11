@@ -1,4 +1,5 @@
 """The tests for the TCP sensor platform."""
+# pylint: skip-file
 import socket
 import unittest
 from copy import copy

@@ -1,4 +1,5 @@
 """The tests for the google calendar component."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import logging
 import unittest

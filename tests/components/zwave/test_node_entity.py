@@ -1,4 +1,5 @@
 """Test Z-Wave node entity."""
+# pylint: skip-file
 import asyncio
 import unittest
 from unittest.mock import patch, MagicMock

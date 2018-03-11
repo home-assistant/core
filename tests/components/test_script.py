@@ -1,4 +1,5 @@
 """The tests for the Script component."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import unittest
 from unittest.mock import patch

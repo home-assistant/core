@@ -1,4 +1,5 @@
 """The test for the statistics sensor platform."""
+# pylint: skip-file
 import unittest
 import statistics
 

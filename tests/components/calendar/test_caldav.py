@@ -1,4 +1,5 @@
 """The tests for the webdav calendar component."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import datetime
 import logging

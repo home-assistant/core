@@ -1,4 +1,5 @@
 """Tests for Vanderbilt SPC binary sensor platform."""
+# pylint: skip-file
 import asyncio
 
 import pytest

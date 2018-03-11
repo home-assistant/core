@@ -1,4 +1,5 @@
 """The tests for the simulated sensor."""
+# pylint: skip-file
 import unittest
 
 from homeassistant.components.sensor.simulated import (

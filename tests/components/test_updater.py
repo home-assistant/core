@@ -1,4 +1,5 @@
 """The tests for the Updater component."""
+# pylint: skip-file
 import asyncio
 from datetime import timedelta
 from unittest.mock import patch, Mock

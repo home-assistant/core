@@ -1,4 +1,5 @@
 """The tests for the VoiceRSS speech platform."""
+# pylint: skip-file
 import asyncio
 import os
 import shutil

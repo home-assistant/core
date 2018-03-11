@@ -1,4 +1,5 @@
 """The tests for the panel_custom component."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import Mock, patch
 

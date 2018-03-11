@@ -1,4 +1,5 @@
 """Test config entries API."""
+# pylint: skip-file
 
 import asyncio
 from collections import OrderedDict

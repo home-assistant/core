@@ -1,4 +1,5 @@
 """The tests for the Demo Media player platform."""
+# pylint: skip-file
 import unittest
 from unittest.mock import patch
 import asyncio

@@ -1,4 +1,5 @@
 """Test event helpers."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import asyncio
 import unittest

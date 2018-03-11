@@ -1,4 +1,5 @@
 """Test the NO-IP component."""
+# pylint: skip-file
 import asyncio
 from datetime import timedelta
 

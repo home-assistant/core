@@ -1,4 +1,5 @@
 """Test Z-Wave climate devices."""
+# pylint: skip-file
 import pytest
 
 from homeassistant.components.climate import zwave

@@ -1,4 +1,5 @@
 """The tests for Home Assistant ffmpeg binary sensor."""
+# pylint: skip-file
 from unittest.mock import patch
 
 from homeassistant.setup import setup_component

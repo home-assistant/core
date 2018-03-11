@@ -1,4 +1,5 @@
 """The tests for the UPC ConnextBox device tracker platform."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import patch
 import logging

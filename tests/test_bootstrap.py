@@ -1,4 +1,5 @@
 """Test the bootstrapping."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import asyncio
 import os

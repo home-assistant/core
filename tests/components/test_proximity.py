@@ -1,4 +1,5 @@
 """The tests for the Proximity component."""
+# pylint: skip-file
 import unittest
 
 from homeassistant.components import proximity

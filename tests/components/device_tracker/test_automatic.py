@@ -1,4 +1,5 @@
 """Test the automatic device tracker platform."""
+# pylint: skip-file
 import asyncio
 from datetime import datetime
 import logging

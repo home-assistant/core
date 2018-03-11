@@ -1,4 +1,5 @@
 """The test for the random number sensor platform."""
+# pylint: skip-file
 import unittest
 
 from homeassistant.setup import setup_component

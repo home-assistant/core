@@ -1,4 +1,5 @@
 """The tests for the Light component."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import unittest
 import os

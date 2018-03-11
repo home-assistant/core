@@ -1,4 +1,5 @@
 """The tests for the Rfxtrx light platform."""
+# pylint: skip-file
 import unittest
 
 import pytest

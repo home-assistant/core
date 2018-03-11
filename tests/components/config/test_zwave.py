@@ -1,4 +1,5 @@
 """Test Z-Wave config panel."""
+# pylint: skip-file
 import asyncio
 import json
 from unittest.mock import MagicMock, patch

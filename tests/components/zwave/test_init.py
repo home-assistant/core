@@ -1,4 +1,5 @@
 """Tests for the Z-Wave init."""
+# pylint: skip-file
 import asyncio
 from collections import OrderedDict
 from datetime import datetime

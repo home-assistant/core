@@ -1,4 +1,5 @@
 """The tests for the Template automation."""
+# pylint: skip-file
 import unittest
 
 from homeassistant.core import callback

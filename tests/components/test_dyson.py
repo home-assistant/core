@@ -1,4 +1,5 @@
 """Test the parent Dyson component."""
+# pylint: skip-file
 import unittest
 from unittest import mock
 

@@ -1,4 +1,5 @@
 """Test the Emulated Hue component."""
+# pylint: skip-file
 import json
 
 from unittest.mock import patch, Mock, mock_open

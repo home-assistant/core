@@ -1,4 +1,5 @@
 """The tests for the MQTT eventstream component."""
+# pylint: skip-file
 import json
 from unittest.mock import ANY, patch
 

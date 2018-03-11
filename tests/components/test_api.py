@@ -1,4 +1,5 @@
 """The tests for the Home Assistant API component."""
+# pylint: skip-file
 # pylint: disable=protected-access
 import asyncio
 import json

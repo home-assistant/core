@@ -1,4 +1,5 @@
 """Test dispatcher helpers."""
+# pylint: skip-file
 import asyncio
 
 from homeassistant.core import callback

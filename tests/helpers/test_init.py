@@ -1,4 +1,5 @@
 """Test component helpers."""
+# pylint: skip-file
 # pylint: disable=protected-access
 from collections import OrderedDict
 import unittest

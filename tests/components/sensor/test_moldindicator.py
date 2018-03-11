@@ -1,4 +1,5 @@
 """The tests for the MoldIndicator sensor."""
+# pylint: skip-file
 import unittest
 
 from homeassistant.setup import setup_component

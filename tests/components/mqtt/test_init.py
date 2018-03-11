@@ -1,4 +1,5 @@
 """The tests for the MQTT component."""
+# pylint: skip-file
 import asyncio
 import unittest
 from unittest import mock

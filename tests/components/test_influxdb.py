@@ -1,4 +1,5 @@
 """The tests for the InfluxDB component."""
+# pylint: skip-file
 import datetime
 import unittest
 from unittest import mock

@@ -1,4 +1,5 @@
 """Test for smart home alexa support."""
+# pylint: skip-file
 import asyncio
 import json
 from uuid import uuid4

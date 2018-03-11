@@ -1,4 +1,5 @@
 """The tests for the rest command platform."""
+# pylint: skip-file
 import asyncio
 
 import aiohttp

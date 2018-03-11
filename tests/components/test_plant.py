@@ -1,4 +1,5 @@
 """Unit tests for platform/plant.py."""
+# pylint: skip-file
 import asyncio
 import unittest
 import pytest

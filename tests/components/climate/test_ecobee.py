@@ -1,4 +1,5 @@
 """The test for the Ecobee thermostat module."""
+# pylint: skip-file
 import unittest
 from unittest import mock
 import homeassistant.const as const

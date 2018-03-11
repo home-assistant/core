@@ -1,4 +1,5 @@
 """The tests for the Command line sensor platform."""
+# pylint: skip-file
 import unittest
 
 from homeassistant.helpers.template import Template
