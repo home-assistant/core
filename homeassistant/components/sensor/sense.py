@@ -27,6 +27,7 @@ DEVICES_NAME = "Devices"
 
 ACTIVE_TYPE = 'active'
 
+
 class SensorConfig(object):
     """Data structure holding sensor config."""
 
@@ -83,7 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def update_active():
         """Update the active power usage."""
-        realtime_data_wrapper.realtime_data
+        realtime_data_wrapper.update_realtime()
 
     devices = []
     for sensor in config.get(CONF_MONITORED_CONDITIONS):
@@ -96,29 +97,38 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 update_call = update_active
             else:
                 update_call = update_trends
-            devices.append(SenseProductionConsumption(data, name, sensor_type,
-                                is_production, update_call))
+            devices.append(
+                SenseProductionConsumption(data, name, sensor_type,
+                                           is_production, update_call))
         else:
             sense_devices = data.get_discovered_device_data()
-            devices.extend(map(lambda d: SenseDevice(realtime_data_wrapper, d['name'], d.get('location', ''), d['icon']), sense_devices))
+            devices.extend(map(
+                lambda d: SenseDevice(realtime_data_wrapper,
+                                      d['name'], d.get('location', ''),
+                                      d['icon']), sense_devices))
 
     add_devices(devices)
 
+
 class ThrottledRealtimeData():
+    """Implementation of throttled Sense realtime data wrapper."""
+
     def __init__(self, data):
+        """Initialize the throttled realtime data wrapper."""
         self._data = data
         self._realtime_data = None
 
     @property
     def realtime_data(self):
-        """Return the last fetched payload of realtime data"""
+        """Return the last fetched payload of realtime data."""
         self.update_realtime()
         return self._realtime_data
 
     @Throttle(MIN_TIME_BETWEEN_REALTIME_UPDATES)
     def update_realtime(self):
-        """Fetch and store an updated realtime payload"""
+        """Fetch and store an updated realtime payload."""
         self._realtime_data = self._data.get_realtime()
+
 
 class SenseProductionConsumption(Entity):
     """Implementation of a Sense energy sensor."""
@@ -190,38 +200,38 @@ class SenseDevice(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor"""
+        """Return the name of the sensor."""
         return self._name
 
     @property
     def state(self):
-        """Return the state of the sensor"""
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def force_update(self):
-        """Return if an unchanged sensor value should still count as an update"""
+        """Return if an same sensor value should still count as an update."""
         return True
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement of this entity"""
+        """Return the unit of measurement of this entity."""
         return 'W'
 
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        # A handful of devices from Sense coincidentally provide matching mdi icons
-        if (self._icon == 'fridge' or \
-            self._icon == 'lightbulb' or \
-            self._icon == 'stove' or \
-            self._icon == 'fan'):
+        # A handful of Sense icons happen to match mdi icons
+        if (self._icon == 'fridge' or
+                self._icon == 'lightbulb' or
+                self._icon == 'stove' or
+                self._icon == 'fan'):
             return 'mdi:{}'.format(self._icon)
         elif self._icon == 'microwave':
             return 'mdi:waves'
         elif self._icon == 'alwayson':
             return 'mdi:sync'
-        elif self._icon == 'home': # the other/unknown
+        elif self._icon == 'home':  # the other/unknown
             return 'mdi:help'
         elif self._icon == 'tv':
             return 'mdi:television'
@@ -231,8 +241,8 @@ class SenseDevice(Entity):
             return 'mdi:stove'
         elif self._icon == 'washer':
             return 'mdi:washing-machine'
-        else:
-            return CONSUMPTION_ICON
+
+        return CONSUMPTION_ICON
 
     def update(self):
         """Get the latest data, update state."""
@@ -240,9 +250,9 @@ class SenseDevice(Entity):
         device_on = False
         if 'devices' in payload:
             for device in payload['devices']:
-                if (device['name'] == self._device_name):
+                if device['name'] == self._device_name:
                     self._state = round(device['w'])
                     device_on = self._state > 0
 
-        if (device_on == False):
+        if not device_on:
             self._state = 0
