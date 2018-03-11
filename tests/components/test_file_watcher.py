@@ -47,3 +47,13 @@ class TestFolderWatcher(unittest.TestCase):
         }
         self.assertTrue(
             setup_component(self.hass, DOMAIN, config))
+
+    def test_invalid_path(self):
+        """Test that a valid path is setup."""
+        config = {
+            DOMAIN: {
+                CONF_WATCHERS: [{CONF_FOLDER: 'invalid_path'}]
+                }
+        }
+        self.assertFalse(
+            setup_component(self.hass, DOMAIN, config))
