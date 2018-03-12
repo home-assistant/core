@@ -17,7 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['iglo==1.2.5']
+REQUIREMENTS = ['iglo==1.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,13 +56,13 @@ class IGloLamp(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return int((self._lamp.state['brightness'] / 200.0) * 255)
+        return int((self._lamp.state()['brightness'] / 200.0) * 255)
 
     @property
     def color_temp(self):
         """Return the color temperature."""
         return color_util.color_temperature_kelvin_to_mired(
-            self._lamp.state['white'])
+            self._lamp.state()['white'])
 
     @property
     def min_mireds(self):
@@ -79,17 +79,17 @@ class IGloLamp(Light):
     @property
     def rgb_color(self):
         """Return the RGB value."""
-        return self._lamp.state['rgb']
+        return self._lamp.state()['rgb']
 
     @property
     def effect(self):
         """Return the current effect."""
-        return self._lamp.state['effect']
+        return self._lamp.state()['effect']
 
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return self._lamp.effect_list
+        return self._lamp.effect_list()
 
     @property
     def supported_features(self):
@@ -100,7 +100,7 @@ class IGloLamp(Light):
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self._lamp.state['on']
+        return self._lamp.state()['on']
 
     def turn_on(self, **kwargs):
         """Turn the light on."""

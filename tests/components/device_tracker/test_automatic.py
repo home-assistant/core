@@ -114,8 +114,6 @@ def test_valid_credentials(
     result = hass.loop.run_until_complete(
         async_setup_scanner(hass, config, mock_see))
 
-    hass.async_block_till_done()
-
     assert result
 
     assert mock_create_session.called

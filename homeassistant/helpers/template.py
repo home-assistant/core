@@ -20,7 +20,7 @@ from homeassistant.loader import bind_hass, get_component
 from homeassistant.util import convert
 from homeassistant.util import dt as dt_util
 from homeassistant.util import location as loc_util
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()

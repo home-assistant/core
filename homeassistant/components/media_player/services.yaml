@@ -242,6 +242,30 @@ sonos_set_option:
       description: Enable Speech Enhancement mode
       example: 'true'
 
+channels_seek_forward:
+  description: Seek forward by a set number of seconds.
+  fields:
+    entity_id:
+      description: Name of entity for the instance of Channels to seek in.
+      example: 'media_player.family_room_channels'
+
+channels_seek_backward:
+  description: Seek backward by a set number of seconds.
+  fields:
+    entity_id:
+      description: Name of entity for the instance of Channels to seek in.
+      example: 'media_player.family_room_channels'
+
+channels_seek_by:
+  description: Seek by an inputted number of seconds.
+  fields:
+    entity_id:
+      description: Name of entity for the instance of Channels to seek in.
+      example: 'media_player.family_room_channels'
+    seconds:
+      description: Number of seconds to seek by. Negative numbers seek backwards.
+      example: 120
+
 soundtouch_play_everywhere:
   description: Play on all Bose Soundtouch devices.
   fields:
@@ -364,3 +388,17 @@ bluesound_clear_sleep_timer:
     entity_id:
       description: Name(s) of entities that will have the timer cleared.
       example: 'media_player.bluesound_livingroom'
+
+songpal_set_sound_setting:
+  description: Change sound setting.
+
+  fields:
+    entity_id:
+      description: Target device.
+      example: 'media_player.my_soundbar'
+    name:
+      description: Name of the setting.
+      example: 'nightMode'
+    value:
+      description: Value to set.
+      example: 'on'

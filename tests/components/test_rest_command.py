@@ -222,21 +222,82 @@ class TestRestCommandComponent(object):
         assert len(aioclient_mock.mock_calls) == 1
         assert aioclient_mock.mock_calls[0][2] == b'data'
 
-    def test_rest_command_content_type(self, aioclient_mock):
-        """Call a rest command with a content type."""
-        data = {
-            'payload': 'item',
-            'content_type': 'text/plain'
+    def test_rest_command_headers(self, aioclient_mock):
+        """Call a rest command with custom headers and content types."""
+        header_config_variations = {
+            rc.DOMAIN: {
+                'no_headers_test': {},
+                'content_type_test': {
+                    'content_type': 'text/plain'
+                },
+                'headers_test': {
+                    'headers': {
+                        'Accept': 'application/json',
+                        'User-Agent': 'Mozilla/5.0'
+                    }
+                },
+                'headers_and_content_type_test': {
+                    'headers': {
+                        'Accept': 'application/json'
+                    },
+                    'content_type': 'text/plain'
+                },
+                'headers_and_content_type_override_test': {
+                    'headers': {
+                        'Accept': 'application/json',
+                        aiohttp.hdrs.CONTENT_TYPE: 'application/pdf'
+                    },
+                    'content_type': 'text/plain'
+                }
+            }
         }
-        self.config[rc.DOMAIN]['post_test'].update(data)
 
-        with assert_setup_component(4):
-            setup_component(self.hass, rc.DOMAIN, self.config)
+        # add common parameters
+        for variation in header_config_variations[rc.DOMAIN].values():
+            variation.update({'url': self.url, 'method': 'post',
+                              'payload': 'test data'})
 
+        with assert_setup_component(5):
+            setup_component(self.hass, rc.DOMAIN, header_config_variations)
+
+        # provide post request data
         aioclient_mock.post(self.url, content=b'success')
 
-        self.hass.services.call(rc.DOMAIN, 'post_test', {})
-        self.hass.block_till_done()
+        for test_service in ['no_headers_test',
+                             'content_type_test',
+                             'headers_test',
+                             'headers_and_content_type_test',
+                             'headers_and_content_type_override_test']:
+            self.hass.services.call(rc.DOMAIN, test_service, {})
 
-        assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2] == b'item'
+        self.hass.block_till_done()
+        assert len(aioclient_mock.mock_calls) == 5
+
+        # no_headers_test
+        assert aioclient_mock.mock_calls[0][3] is None
+
+        # content_type_test
+        assert len(aioclient_mock.mock_calls[1][3]) == 1
+        assert aioclient_mock.mock_calls[1][3].get(
+            aiohttp.hdrs.CONTENT_TYPE) == 'text/plain'
+
+        # headers_test
+        assert len(aioclient_mock.mock_calls[2][3]) == 2
+        assert aioclient_mock.mock_calls[2][3].get(
+            'Accept') == 'application/json'
+        assert aioclient_mock.mock_calls[2][3].get(
+            'User-Agent') == 'Mozilla/5.0'
+
+        # headers_and_content_type_test
+        assert len(aioclient_mock.mock_calls[3][3]) == 2
+        assert aioclient_mock.mock_calls[3][3].get(
+            aiohttp.hdrs.CONTENT_TYPE) == 'text/plain'
+        assert aioclient_mock.mock_calls[3][3].get(
+            'Accept') == 'application/json'
+
+        # headers_and_content_type_override_test
+        assert len(aioclient_mock.mock_calls[4][3]) == 2
+        assert aioclient_mock.mock_calls[4][3].get(
+            aiohttp.hdrs.CONTENT_TYPE) == 'text/plain'
+        assert aioclient_mock.mock_calls[4][3].get(
+            'Accept') == 'application/json'

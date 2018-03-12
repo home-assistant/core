@@ -777,20 +777,17 @@ class WUndergroundData(object):
 
         return url + '.json'
 
-    @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from WUnderground."""
         try:
             with async_timeout.timeout(10, loop=self._hass.loop):
-                response = yield from self._session.get(self._build_url())
-            result = yield from response.json()
+                response = await self._session.get(self._build_url())
+            result = await response.json()
             if "error" in result['response']:
                 raise ValueError(result['response']["error"]["description"])
             self.data = result
         except ValueError as err:
             _LOGGER.error("Check WUnderground API %s", err.args)
-            self.data = None
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("Error fetching WUnderground data: %s", repr(err))
-            self.data = None

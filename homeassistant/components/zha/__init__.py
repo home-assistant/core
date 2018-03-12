@@ -17,8 +17,8 @@ from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
 
 REQUIREMENTS = [
-    'bellows==0.5.0',
-    'zigpy==0.0.1',
+    'bellows==0.5.1',
+    'zigpy==0.0.3',
     'zigpy-xbee==0.0.2',
 ]
 
@@ -306,7 +306,7 @@ class Entity(entity.Entity):
 
     @property
     def unique_id(self) -> str:
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._unique_id
 
     @property

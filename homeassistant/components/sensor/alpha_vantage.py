@@ -70,8 +70,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from alpha_vantage.foreignexchange import ForeignExchange
 
     api_key = config.get(CONF_API_KEY)
-    symbols = config.get(CONF_SYMBOLS)
-    conversions = config.get(CONF_FOREIGN_EXCHANGE)
+    symbols = config.get(CONF_SYMBOLS, [])
+    conversions = config.get(CONF_FOREIGN_EXCHANGE, [])
 
     if not symbols and not conversions:
         msg = 'Warning: No symbols or currencies configured.'

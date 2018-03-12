@@ -303,8 +303,10 @@ class HistoryPeriodView(HomeAssistantView):
             entity_ids = entity_ids.lower().split(',')
         include_start_time_state = 'skip_initial_state' not in request.query
 
-        result = yield from request.app['hass'].async_add_job(
-            get_significant_states, request.app['hass'], start_time, end_time,
+        hass = request.app['hass']
+
+        result = yield from hass.async_add_job(
+            get_significant_states, hass, start_time, end_time,
             entity_ids, self.filters, include_start_time_state)
         result = result.values()
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -327,7 +329,8 @@ class HistoryPeriodView(HomeAssistantView):
             sorted_result.extend(result)
             result = sorted_result
 
-        return self.json(result)
+        response = yield from hass.async_add_job(self.json, result)
+        return response
 
 
 class Filters(object):

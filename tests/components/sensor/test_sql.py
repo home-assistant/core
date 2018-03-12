@@ -1,7 +1,11 @@
 """The test for the sql sensor platform."""
 import unittest
+import pytest
+import voluptuous as vol
 
+from homeassistant.components.sensor.sql import validate_sql_select
 from homeassistant.setup import setup_component
+from homeassistant.const import STATE_UNKNOWN
 
 from tests.common import get_test_home_assistant
 
@@ -25,7 +29,7 @@ class TestSQLSensor(unittest.TestCase):
                 'db_url': 'sqlite://',
                 'queries': [{
                     'name': 'count_tables',
-                    'query': 'SELECT count(*) value FROM sqlite_master;',
+                    'query': 'SELECT 5 as value',
                     'column': 'value',
                 }]
             }
@@ -34,4 +38,27 @@ class TestSQLSensor(unittest.TestCase):
         assert setup_component(self.hass, 'sensor', config)
 
         state = self.hass.states.get('sensor.count_tables')
-        self.assertEqual(state.state, '0')
+        assert state.state == '5'
+        assert state.attributes['value'] == 5
+
+    def test_invalid_query(self):
+        """Test the SQL sensor for invalid queries."""
+        with pytest.raises(vol.Invalid):
+            validate_sql_select("DROP TABLE *")
+
+        config = {
+            'sensor': {
+                'platform': 'sql',
+                'db_url': 'sqlite://',
+                'queries': [{
+                    'name': 'count_tables',
+                    'query': 'SELECT * value FROM sqlite_master;',
+                    'column': 'value',
+                }]
+            }
+        }
+
+        assert setup_component(self.hass, 'sensor', config)
+
+        state = self.hass.states.get('sensor.count_tables')
+        self.assertEqual(state.state, STATE_UNKNOWN)

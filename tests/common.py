@@ -1,5 +1,6 @@
 """Test the helper method for writing tests."""
 import asyncio
+from datetime import timedelta
 import functools as ft
 import os
 import sys
@@ -23,7 +24,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
 from homeassistant.components import mqtt, recorder
-from homeassistant.util.async import (
+from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
 _TEST_INSTANCE_PORT = SERVER_PORT
@@ -298,7 +299,7 @@ def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
     registry.entities = mock_entries or {}
-    hass.data[entity_platform.DATA_REGISTRY] = registry
+    hass.data[entity_registry.DATA_REGISTRY] = registry
     return registry
 
 
@@ -359,6 +360,32 @@ class MockPlatform(object):
 
         if setup_platform is None and async_setup_platform is None:
             self.async_setup_platform = mock_coro_func()
+
+
+class MockEntityPlatform(entity_platform.EntityPlatform):
+    """Mock class with some mock defaults."""
+
+    def __init__(
+        self, hass,
+        logger=None,
+        domain='test_domain',
+        platform_name='test_platform',
+        scan_interval=timedelta(seconds=15),
+        parallel_updates=0,
+        entity_namespace=None,
+        async_entities_added_callback=lambda: None
+    ):
+        """Initialize a mock entity platform."""
+        super().__init__(
+            hass=hass,
+            logger=logger,
+            domain=domain,
+            platform_name=platform_name,
+            scan_interval=scan_interval,
+            parallel_updates=parallel_updates,
+            entity_namespace=entity_namespace,
+            async_entities_added_callback=async_entities_added_callback,
+        )
 
 
 class MockToggleDevice(entity.ToggleEntity):

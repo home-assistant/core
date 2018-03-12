@@ -99,6 +99,6 @@ class DeconzBinarySensor(BinarySensorDevice):
         attr = {
             ATTR_BATTERY_LEVEL: self._sensor.battery,
         }
-        if self._sensor.type == PRESENCE:
+        if self._sensor.type in PRESENCE:
             attr['dark'] = self._sensor.dark
         return attr

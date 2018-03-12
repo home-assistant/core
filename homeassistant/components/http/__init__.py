@@ -4,21 +4,18 @@ This module provides WSGI application to serve the Home Assistant API.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/http/
 """
-import asyncio
+
 from ipaddress import ip_network
-import json
 import logging
 import os
 import ssl
 
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPUnauthorized, HTTPMovedPermanently
+from aiohttp.web_exceptions import HTTPMovedPermanently
 import voluptuous as vol
 
 from homeassistant.const import (
-    SERVER_PORT, CONTENT_TYPE_JSON,
-    EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,)
-from homeassistant.core import is_callback
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, SERVER_PORT)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.remote as rem
 import homeassistant.util as hass_util
@@ -28,9 +25,12 @@ from .auth import setup_auth
 from .ban import setup_bans
 from .cors import setup_cors
 from .real_ip import setup_real_ip
-from .const import KEY_AUTHENTICATED, KEY_REAL_IP
 from .static import (
     CachingFileResponse, CachingStaticResource, staticresource_middleware)
+
+# Import as alias
+from .const import KEY_AUTHENTICATED, KEY_REAL_IP  # noqa
+from .view import HomeAssistantView  # noqa
 
 REQUIREMENTS = ['aiohttp_cors==0.6.0']
 
@@ -98,8 +98,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the HTTP API and debug interface."""
     conf = config.get(DOMAIN)
 
@@ -135,16 +134,14 @@ def async_setup(hass, config):
         is_ban_enabled=is_ban_enabled
     )
 
-    @asyncio.coroutine
-    def stop_server(event):
+    async def stop_server(event):
         """Stop the server."""
-        yield from server.stop()
+        await server.stop()
 
-    @asyncio.coroutine
-    def start_server(event):
+    async def start_server(event):
         """Start the server."""
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
-        yield from server.start()
+        await server.start()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server)
 
@@ -252,13 +249,11 @@ class HomeAssistantHTTP(object):
             return
 
         if cache_headers:
-            @asyncio.coroutine
-            def serve_file(request):
+            async def serve_file(request):
                 """Serve file from disk."""
                 return CachingFileResponse(path)
         else:
-            @asyncio.coroutine
-            def serve_file(request):
+            async def serve_file(request):
                 """Serve file from disk."""
                 return web.FileResponse(path)
 
@@ -276,10 +271,13 @@ class HomeAssistantHTTP(object):
 
         self.app.router.add_route('GET', url_pattern, serve_file)
 
-    @asyncio.coroutine
-    def start(self):
+    async def start(self):
         """Start the WSGI server."""
-        yield from self.app.startup()
+        # We misunderstood the startup signal. You're not allowed to change
+        # anything during startup. Temp workaround.
+        # pylint: disable=protected-access
+        self.app._on_startup.freeze()
+        await self.app.startup()
 
         if self.ssl_certificate:
             try:
@@ -298,133 +296,24 @@ class HomeAssistantHTTP(object):
         # Aiohttp freezes apps after start so that no changes can be made.
         # However in Home Assistant components can be discovered after boot.
         # This will now raise a RunTimeError.
-        # To work around this we now fake that we are frozen.
-        # A more appropriate fix would be to create a new app and
-        # re-register all redirects, views, static paths.
-        self.app._frozen = True  # pylint: disable=protected-access
+        # To work around this we now prevent the router from getting frozen
+        self.app._router.freeze = lambda: None
 
         self._handler = self.app.make_handler(loop=self.hass.loop)
 
         try:
-            self.server = yield from self.hass.loop.create_server(
+            self.server = await self.hass.loop.create_server(
                 self._handler, self.server_host, self.server_port, ssl=context)
         except OSError as error:
             _LOGGER.error("Failed to create HTTP server at port %d: %s",
                           self.server_port, error)
 
-        # pylint: disable=protected-access
-        self.app._middlewares = tuple(self.app._prepare_middleware())
-        self.app._frozen = False
-
-    @asyncio.coroutine
-    def stop(self):
+    async def stop(self):
         """Stop the WSGI server."""
         if self.server:
             self.server.close()
-            yield from self.server.wait_closed()
-        yield from self.app.shutdown()
+            await self.server.wait_closed()
+        await self.app.shutdown()
         if self._handler:
-            yield from self._handler.shutdown(10)
-        yield from self.app.cleanup()
-
-
-class HomeAssistantView(object):
-    """Base view for all views."""
-
-    url = None
-    extra_urls = []
-    requires_auth = True  # Views inheriting from this class can override this
-
-    # pylint: disable=no-self-use
-    def json(self, result, status_code=200, headers=None):
-        """Return a JSON response."""
-        msg = json.dumps(
-            result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
-        response = web.Response(
-            body=msg, content_type=CONTENT_TYPE_JSON, status=status_code,
-            headers=headers)
-        response.enable_compression()
-        return response
-
-    def json_message(self, message, status_code=200, message_code=None,
-                     headers=None):
-        """Return a JSON message response."""
-        data = {'message': message}
-        if message_code is not None:
-            data['code'] = message_code
-        return self.json(data, status_code, headers=headers)
-
-    @asyncio.coroutine
-    # pylint: disable=no-self-use
-    def file(self, request, fil):
-        """Return a file."""
-        assert isinstance(fil, str), 'only string paths allowed'
-        return web.FileResponse(fil)
-
-    def register(self, router):
-        """Register the view with a router."""
-        assert self.url is not None, 'No url set for view'
-        urls = [self.url] + self.extra_urls
-
-        for method in ('get', 'post', 'delete', 'put'):
-            handler = getattr(self, method, None)
-
-            if not handler:
-                continue
-
-            handler = request_handler_factory(self, handler)
-
-            for url in urls:
-                router.add_route(method, url, handler)
-
-        # aiohttp_cors does not work with class based views
-        # self.app.router.add_route('*', self.url, self, name=self.name)
-
-        # for url in self.extra_urls:
-        #     self.app.router.add_route('*', url, self)
-
-
-def request_handler_factory(view, handler):
-    """Wrap the handler classes."""
-    assert asyncio.iscoroutinefunction(handler) or is_callback(handler), \
-        "Handler should be a coroutine or a callback."
-
-    @asyncio.coroutine
-    def handle(request):
-        """Handle incoming request."""
-        if not request.app['hass'].is_running:
-            return web.Response(status=503)
-
-        authenticated = request.get(KEY_AUTHENTICATED, False)
-
-        if view.requires_auth and not authenticated:
-            raise HTTPUnauthorized()
-
-        _LOGGER.info('Serving %s to %s (auth: %s)',
-                     request.path, request.get(KEY_REAL_IP), authenticated)
-
-        result = handler(request, **request.match_info)
-
-        if asyncio.iscoroutine(result):
-            result = yield from result
-
-        if isinstance(result, web.StreamResponse):
-            # The method handler returned a ready-made Response, how nice of it
-            return result
-
-        status_code = 200
-
-        if isinstance(result, tuple):
-            result, status_code = result
-
-        if isinstance(result, str):
-            result = result.encode('utf-8')
-        elif result is None:
-            result = b''
-        elif not isinstance(result, bytes):
-            assert False, ('Result should be None, string, bytes or Response. '
-                           'Got: {}').format(result)
-
-        return web.Response(body=result, status=status_code)
-
-    return handle
+            await self._handler.shutdown(10)
+        await self.app.cleanup()

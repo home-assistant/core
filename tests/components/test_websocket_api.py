@@ -23,7 +23,6 @@ def websocket_client(loop, hass, test_client):
 
     client = loop.run_until_complete(test_client(hass.http.app))
     ws = loop.run_until_complete(client.ws_connect(wapi.URL))
-
     auth_ok = loop.run_until_complete(ws.receive_json())
     assert auth_ok['type'] == wapi.TYPE_AUTH_OK
 
@@ -65,7 +64,7 @@ def mock_low_queue():
 @asyncio.coroutine
 def test_auth_via_msg(no_auth_websocket_client):
     """Test authenticating."""
-    no_auth_websocket_client.send_json({
+    yield from no_auth_websocket_client.send_json({
         'type': wapi.TYPE_AUTH,
         'api_password': API_PASSWORD
     })
@@ -80,7 +79,7 @@ def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
     """Test authenticating."""
     with patch('homeassistant.components.websocket_api.process_wrong_login',
                return_value=mock_coro()) as mock_process_wrong_login:
-        no_auth_websocket_client.send_json({
+        yield from no_auth_websocket_client.send_json({
             'type': wapi.TYPE_AUTH,
             'api_password': API_PASSWORD + 'wrong'
         })
@@ -95,7 +94,7 @@ def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
 @asyncio.coroutine
 def test_pre_auth_only_auth_allowed(no_auth_websocket_client):
     """Verify that before authentication, only auth messages are allowed."""
-    no_auth_websocket_client.send_json({
+    yield from no_auth_websocket_client.send_json({
         'type': wapi.TYPE_CALL_SERVICE,
         'domain': 'domain_test',
         'service': 'test_service',
@@ -113,7 +112,7 @@ def test_pre_auth_only_auth_allowed(no_auth_websocket_client):
 @asyncio.coroutine
 def test_invalid_message_format(websocket_client):
     """Test sending invalid JSON."""
-    websocket_client.send_json({'type': 5})
+    yield from websocket_client.send_json({'type': 5})
 
     msg = yield from websocket_client.receive_json()
 
@@ -126,7 +125,7 @@ def test_invalid_message_format(websocket_client):
 @asyncio.coroutine
 def test_invalid_json(websocket_client):
     """Test sending invalid JSON."""
-    websocket_client.send_str('this is not JSON')
+    yield from websocket_client.send_str('this is not JSON')
 
     msg = yield from websocket_client.receive()
 
@@ -155,7 +154,7 @@ def test_call_service(hass, websocket_client):
 
     hass.services.async_register('domain_test', 'test_service', service_call)
 
-    websocket_client.send_json({
+    yield from websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_CALL_SERVICE,
         'domain': 'domain_test',
@@ -183,7 +182,7 @@ def test_subscribe_unsubscribe_events(hass, websocket_client):
     """Test subscribe/unsubscribe events command."""
     init_count = sum(hass.bus.async_listeners().values())
 
-    websocket_client.send_json({
+    yield from websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_SUBSCRIBE_EVENTS,
         'event_type': 'test_event'
@@ -212,7 +211,7 @@ def test_subscribe_unsubscribe_events(hass, websocket_client):
     assert event['data'] == {'hello': 'world'}
     assert event['origin'] == 'LOCAL'
 
-    websocket_client.send_json({
+    yield from websocket_client.send_json({
         'id': 6,
         'type': wapi.TYPE_UNSUBSCRIBE_EVENTS,
         'subscription': 5
@@ -233,7 +232,7 @@ def test_get_states(hass, websocket_client):
     hass.states.async_set('greeting.hello', 'world')
     hass.states.async_set('greeting.bye', 'universe')
 
-    websocket_client.send_json({
+    yield from websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_GET_STATES,
     })
@@ -256,7 +255,7 @@ def test_get_states(hass, websocket_client):
 @asyncio.coroutine
 def test_get_services(hass, websocket_client):
     """Test get_services command."""
-    websocket_client.send_json({
+    yield from websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_GET_SERVICES,
     })
@@ -271,7 +270,7 @@ def test_get_services(hass, websocket_client):
 @asyncio.coroutine
 def test_get_config(hass, websocket_client):
     """Test get_config command."""
-    websocket_client.send_json({
+    yield from websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_GET_CONFIG,
     })
@@ -296,7 +295,7 @@ def test_get_panels(hass, websocket_client):
     yield from hass.components.frontend.async_register_built_in_panel(
         'map', 'Map', 'mdi:account-location')
     hass.data[frontend.DATA_JS_VERSION] = 'es5'
-    websocket_client.send_json({
+    yield from websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_GET_PANELS,
     })
@@ -318,7 +317,7 @@ def test_get_panels(hass, websocket_client):
 @asyncio.coroutine
 def test_ping(websocket_client):
     """Test get_panels command."""
-    websocket_client.send_json({
+    yield from websocket_client.send_json({
         'id': 5,
         'type': wapi.TYPE_PING,
     })
@@ -332,7 +331,7 @@ def test_ping(websocket_client):
 def test_pending_msg_overflow(hass, mock_low_queue, websocket_client):
     """Test get_panels command."""
     for idx in range(10):
-        websocket_client.send_json({
+        yield from websocket_client.send_json({
             'id': idx + 1,
             'type': wapi.TYPE_PING,
         })
