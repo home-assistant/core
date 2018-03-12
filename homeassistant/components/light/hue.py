@@ -123,14 +123,19 @@ def unthrottled_update_lights(hass, bridge, add_devices):
         api = bridge.get_api()
     except phue.PhueRequestTimeout:
         _LOGGER.warning("Timeout trying to reach the bridge")
+        bridge.available = False
         return
     except ConnectionRefusedError:
         _LOGGER.error("The bridge refused the connection")
+        bridge.available = False
         return
     except socket.error:
         # socket.error when we cannot reach Hue
         _LOGGER.exception("Cannot reach the bridge")
+        bridge.available = False
         return
+
+    bridge.available = True
 
     new_lights = process_lights(
         hass, api, bridge,
@@ -266,8 +271,9 @@ class HueLight(Light):
     @property
     def available(self):
         """Return if light is available."""
-        return (self.is_group or self.allow_unreachable or
-                self.info['state']['reachable'])
+        return self.bridge.available and (self.is_group or
+                                          self.allow_unreachable or
+                                          self.info['state']['reachable'])
 
     @property
     def supported_features(self):
