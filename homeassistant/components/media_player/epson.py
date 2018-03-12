@@ -1,5 +1,5 @@
 """
-Support for showing text in the frontend.
+Support for Epson projector
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/cookbook/python_component_basic_state/
