@@ -51,6 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.boolean,
     vol.Optional(CONF_REMOVE_UNAVAILABLE_CLIENTS, default=True):
     cv.boolean,
+    vol.Optional(CONF_CLIENT_REMOVE_INTERVAL, default=timedelta(seconds=600)):
+        vol.All(cv.time_period, cv.positive_timedelta),
 })
 
 PLEX_DATA = "plex"
@@ -200,9 +202,9 @@ def setup_plexserver(
 
             if config.get(CONF_REMOVE_UNAVAILABLE_CLIENTS) \
                     and not client.available:
-                interval = 10
+                interval = config.get(CONF_CLIENT_REMOVE_INTERVAL)
                 diff = dt.now() - client.marked_unavailable
-                if diff.total_seconds() >= interval:
+                if diff.total_seconds() >= interval.total_seconds():
                     hass.helpers.event.async_call_later(0,
                                                         client.async_remove())
                     removed_clients.append(client.machine_identifier)
