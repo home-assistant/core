@@ -5,11 +5,13 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/arlo/
 """
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 from requests.exceptions import HTTPError, ConnectTimeout
 
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util import Throttle
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 REQUIREMENTS = ['pyarlo==0.1.2']
@@ -45,6 +47,7 @@ def setup(hass, config):
         arlo = PyArlo(username, password, preload=False)
         if not arlo.is_connected:
             return False
+        arlo.update = Throttle(timedelta(seconds=10))(arlo.update)
         hass.data[DATA_ARLO] = arlo
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Netgear Arlo: %s", str(ex))
