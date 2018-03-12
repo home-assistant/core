@@ -118,16 +118,16 @@ class ONVIFHassCamera(Camera):
         self._media_service = \
             onvif.ONVIFService('http://{}:{}/onvif/device_service'.format(
                 self._host, self._port),
-                self._username, self._password,
-                '{}/wsdl/media.wsdl'.format(os.path.dirname(
-                    onvif.__file__)))
+                               self._username, self._password,
+                               '{}/wsdl/media.wsdl'.format(os.path.dirname(
+                                   onvif.__file__)))
 
         self._ptz_service = \
             onvif.ONVIFService('http://{}:{}/onvif/device_service'.format(
                 self._host, self._port),
-                self._username, self._password,
-                '{}/wsdl/ptz.wsdl'.format(os.path.dirname(
-                    onvif.__file__)))
+                               self._username, self._password,
+                               '{}/wsdl/ptz.wsdl'.format(os.path.dirname(
+                                   onvif.__file__)))
 
     def obtain_input_uri(self):
         """Set the input uri for the camera."""
