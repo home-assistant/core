@@ -14,7 +14,7 @@ KITCHEN = 'lock.kitchen_door'
 class TestLockDemo(unittest.TestCase):
     """Test the demo lock."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.assertTrue(setup_component(self.hass, lock.DOMAIN, {
@@ -23,7 +23,7 @@ class TestLockDemo(unittest.TestCase):
             }
         }))
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

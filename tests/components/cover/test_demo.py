@@ -13,14 +13,14 @@ ENTITY_COVER = 'cover.living_room_window'
 class TestCoverDemo(unittest.TestCase):
     """Test the Demo cover."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {'cover': {
             'platform': 'demo',
         }}))
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

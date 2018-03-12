@@ -35,11 +35,11 @@ def _get_dyson_account_device_error():
 class DysonTest(unittest.TestCase):
     """Dyson parent component test class."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

@@ -1,5 +1,4 @@
 """The tests for the Input select component."""
-# pylint: disable=protected-access
 import asyncio
 import unittest
 
@@ -17,12 +16,10 @@ from homeassistant.const import (
 class TestInputSelect(unittest.TestCase):
     """Test the input select component."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()

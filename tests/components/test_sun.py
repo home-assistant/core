@@ -1,5 +1,4 @@
 """The tests for the Sun component."""
-# pylint: disable=protected-access
 import unittest
 from unittest.mock import patch
 from datetime import timedelta, datetime
@@ -12,7 +11,6 @@ import homeassistant.components.sun as sun
 from tests.common import get_test_home_assistant
 
 
-# pylint: disable=invalid-name
 class TestSun(unittest.TestCase):
     """Test the sun module."""
 

@@ -1,5 +1,4 @@
 """The tests for the Home Assistant HTTP component."""
-# pylint: disable=protected-access
 from unittest.mock import patch, mock_open
 
 from aiohttp import web

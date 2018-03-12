@@ -1,5 +1,4 @@
 """The tests for the Switch component."""
-# pylint: disable=protected-access
 import unittest
 
 from homeassistant.setup import setup_component
@@ -13,7 +12,6 @@ from tests.common import get_test_home_assistant
 class TestSwitch(unittest.TestCase):
     """Test the switch module."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
@@ -23,7 +21,6 @@ class TestSwitch(unittest.TestCase):
         self.switch_1, self.switch_2, self.switch_3 = \
             platform.DEVICES
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()

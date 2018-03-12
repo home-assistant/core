@@ -21,7 +21,7 @@ from tests.common import get_test_home_assistant, load_fixture
 class TestMelissa(unittest.TestCase):
     """Tests for Melissa climate."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Set up test variables."""
         self.hass = get_test_home_assistant()
         self._serial = '12345678'
@@ -61,7 +61,7 @@ class TestMelissa(unittest.TestCase):
             self.api, device['serial_number'], device)
         self.thermostat.update()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Teardown this test class. Stop hass."""
         self.hass.stop()
 

@@ -19,7 +19,7 @@ CONFIG = {
 class TestNotifyDemo(unittest.TestCase):
     """Test the demo notify."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.events = []
@@ -32,7 +32,7 @@ class TestNotifyDemo(unittest.TestCase):
 
         self.hass.bus.listen(demo.EVENT_NOTIFY, record_event)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """"Stop down everything that was started."""
         self.hass.stop()
 

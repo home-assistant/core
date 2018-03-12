@@ -18,7 +18,6 @@ class TestTemplateCover(unittest.TestCase):
 
     hass = None
     calls = None
-    # pylint: disable=invalid-name
 
     def setup_method(self, method):
         """Initialize services when tests are started."""

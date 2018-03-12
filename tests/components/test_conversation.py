@@ -1,5 +1,4 @@
 """The tests for the Conversation component."""
-# pylint: disable=protected-access
 import asyncio
 
 import pytest

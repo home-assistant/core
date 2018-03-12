@@ -1,6 +1,4 @@
 """The tests for the Remote component, adapted from Light Test."""
-# pylint: disable=protected-access
-
 import unittest
 
 from homeassistant.setup import setup_component
@@ -17,12 +15,10 @@ SERVICE_SEND_COMMAND = 'send_command'
 class TestRemote(unittest.TestCase):
     """Test the remote module."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()

@@ -1,5 +1,4 @@
 """Tests for the Input slider component."""
-# pylint: disable=protected-access
 import asyncio
 import unittest
 import datetime
@@ -15,12 +14,10 @@ from tests.common import get_test_home_assistant, mock_restore_cache
 class TestInputDatetime(unittest.TestCase):
     """Test the input datetime component."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()

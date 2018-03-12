@@ -157,7 +157,6 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
 
-    # pylint: disable=invalid-name
     def test_flux_after_sunrise_before_sunset(self):
         """Test the flux switch after sunrise and before sunset."""
         platform = loader.get_component('light.test')
@@ -204,7 +203,6 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 180)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.431, 0.38])
 
-    # pylint: disable=invalid-name
     def test_flux_after_sunset_before_stop(self):
         """Test the flux switch after sunset and before stop."""
         platform = loader.get_component('light.test')
@@ -252,7 +250,6 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 153)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.496, 0.397])
 
-    # pylint: disable=invalid-name
     def test_flux_after_stop_before_sunrise(self):
         """Test the flux switch after stop and before sunrise."""
         platform = loader.get_component('light.test')
@@ -299,7 +296,6 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
 
-    # pylint: disable=invalid-name
     def test_flux_with_custom_start_stop_times(self):
         """Test the flux with custom start and stop times."""
         platform = loader.get_component('light.test')
@@ -398,7 +394,6 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
 
-    # pylint: disable=invalid-name
     def test_flux_after_sunrise_before_sunset_stop_next_day(self):
         """
         Test the flux switch after sunrise and before sunset.
@@ -450,7 +445,6 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 180)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.431, 0.38])
 
-    # pylint: disable=invalid-name
     def test_flux_after_sunset_before_midnight_stop_next_day(self):
         """Test the flux switch after sunset and before stop.
 
@@ -501,7 +495,6 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 126)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.574, 0.401])
 
-    # pylint: disable=invalid-name
     def test_flux_after_sunset_after_midnight_stop_next_day(self):
         """Test the flux switch after sunset and before stop.
 
@@ -552,7 +545,6 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 122)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.586, 0.397])
 
-    # pylint: disable=invalid-name
     def test_flux_after_stop_before_sunrise_stop_next_day(self):
         """Test the flux switch after stop and before sunrise.
 
@@ -603,7 +595,6 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 119)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.591, 0.395])
 
-    # pylint: disable=invalid-name
     def test_flux_with_custom_colortemps(self):
         """Test the flux with custom start and stop colortemps."""
         platform = loader.get_component('light.test')
@@ -653,7 +644,6 @@ class TestSwitchFlux(unittest.TestCase):
         self.assertEqual(call.data[light.ATTR_BRIGHTNESS], 167)
         self.assertEqual(call.data[light.ATTR_XY_COLOR], [0.461, 0.389])
 
-    # pylint: disable=invalid-name
     def test_flux_with_custom_brightness(self):
         """Test the flux with custom start and stop colortemps."""
         platform = loader.get_component('light.test')

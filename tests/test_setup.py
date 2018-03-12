@@ -1,5 +1,4 @@
 """Test component/platform setup."""
-# pylint: disable=protected-access
 import asyncio
 import os
 from unittest import mock
@@ -32,7 +31,6 @@ class TestSetup:
     hass = None
     backup_cache = None
 
-    # pylint: disable=invalid-name, no-self-use
     def setup_method(self, method):
         """Setup the test."""
         self.hass = get_test_home_assistant()

@@ -41,7 +41,7 @@ class TestCanary(unittest.TestCase):
         """Initialize values for this test case class."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

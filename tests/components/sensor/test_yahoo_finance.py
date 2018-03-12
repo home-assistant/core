@@ -17,7 +17,6 @@ VALID_CONFIG = {
 }
 
 
-# pylint: disable=invalid-name
 class TestYahooFinanceSetup(unittest.TestCase):
     """Test the Yahoo Finance platform."""
 

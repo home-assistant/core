@@ -1,5 +1,4 @@
 """The tests for the webdav calendar component."""
-# pylint: disable=protected-access
 import datetime
 import logging
 import unittest
@@ -145,13 +144,11 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
 
     hass = None  # HomeAssistant
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.calendar = _mock_calendar("Private")
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()

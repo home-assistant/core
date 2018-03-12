@@ -40,17 +40,16 @@ def async_mock_mqtt_client(hass, config=None):
 mock_mqtt_client = threadsafe_coroutine_factory(async_mock_mqtt_client)
 
 
-# pylint: disable=invalid-name
 class TestMQTTComponent(unittest.TestCase):
     """Test the MQTT component."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         self.calls = []
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -137,17 +136,16 @@ class TestMQTTComponent(unittest.TestCase):
         self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')
 
 
-# pylint: disable=invalid-name
 class TestMQTTCallbacks(unittest.TestCase):
     """Test the MQTT callbacks."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_client(self.hass)
         self.calls = []
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

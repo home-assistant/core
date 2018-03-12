@@ -20,9 +20,7 @@ SCHEDULE_TEMPORARY_HOLD = 2
 class TestNuHeat(unittest.TestCase):
     """Tests for NuHeat climate."""
 
-    # pylint: disable=protected-access, no-self-use
-
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Set up test variables."""
         serial_number = "12345"
         temperature_unit = "F"
@@ -53,7 +51,7 @@ class TestNuHeat(unittest.TestCase):
         self.thermostat = nuheat.NuHeatThermostat(
             self.api, serial_number, temperature_unit)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop hass."""
         self.hass.stop()
 

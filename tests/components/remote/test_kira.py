@@ -21,7 +21,6 @@ DISCOVERY_INFO = {
 class TestKiraSensor(unittest.TestCase):
     """Tests the Kira Sensor platform."""
 
-    # pylint: disable=invalid-name
     DEVICES = []
 
     def add_devices(self, devices):

@@ -9,7 +9,6 @@ from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_component)
 
 
-# pylint: disable=invalid-name
 class TestAutomationTemplate(unittest.TestCase):
     """Test the event automation."""
 

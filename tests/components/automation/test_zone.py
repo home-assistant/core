@@ -8,7 +8,6 @@ from homeassistant.components import automation, zone
 from tests.common import get_test_home_assistant, mock_component
 
 
-# pylint: disable=invalid-name
 class TestAutomationZone(unittest.TestCase):
     """Test the event automation."""
 

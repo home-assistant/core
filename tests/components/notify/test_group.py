@@ -13,7 +13,7 @@ from tests.common import assert_setup_component, get_test_home_assistant
 class TestNotifyGroup(unittest.TestCase):
     """Test the notify.group platform."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.events = []
@@ -52,7 +52,7 @@ class TestNotifyGroup(unittest.TestCase):
 
         assert self.service is not None
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """"Stop everything that was started."""
         self.hass.stop()
 

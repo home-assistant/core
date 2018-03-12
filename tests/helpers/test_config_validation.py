@@ -502,7 +502,6 @@ def test_deprecated(caplog):
     )
 
     deprecated_schema({'venus': True})
-    # pylint: disable=len-as-condition
     assert len(caplog.records) == 0
 
     deprecated_schema({'mars': True})
@@ -572,7 +571,7 @@ def test_enum():
         schema('value3')
 
 
-def test_socket_timeout():  # pylint: disable=invalid-name
+def test_socket_timeout():
     """Test socket timeout validator."""
     schema = vol.Schema(cv.socket_timeout)
 

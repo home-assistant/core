@@ -1,5 +1,4 @@
 """Test event helpers."""
-# pylint: disable=protected-access
 import asyncio
 import unittest
 from datetime import datetime, timedelta
@@ -35,12 +34,10 @@ from unittest.mock import patch
 class TestEventHelpers(unittest.TestCase):
     """Test the Home Assistant event helpers."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()

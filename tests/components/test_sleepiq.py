@@ -42,7 +42,7 @@ class TestSleepIQ(unittest.TestCase):
             }
         }
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

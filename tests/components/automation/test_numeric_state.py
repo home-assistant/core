@@ -13,7 +13,6 @@ from tests.common import (
     assert_setup_component)
 
 
-# pylint: disable=invalid-name
 class TestAutomationNumericState(unittest.TestCase):
     """Test the event automation."""
 
@@ -30,7 +29,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
         self.hass.services.register('test', 'automation', record_call)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

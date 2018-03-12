@@ -24,8 +24,6 @@ def mock_credstash():
 class TestYaml(unittest.TestCase):
     """Test util.yaml loader."""
 
-    # pylint: disable=no-self-use, invalid-name
-
     def test_simple_list(self):
         """Test simple list."""
         conf = "config:\n  - simple\n  - list"
@@ -289,7 +287,6 @@ class FakeKeyring():
         """Store keyring dictionary."""
         self._secrets = secrets_dict
 
-    # pylint: disable=protected-access
     def get_password(self, domain, name):
         """Retrieve password."""
         assert domain == yaml._SECRET_NAMESPACE
@@ -298,8 +295,6 @@ class FakeKeyring():
 
 class TestSecrets(unittest.TestCase):
     """Test the secrets parameter in the yaml utility."""
-
-    # pylint: disable=protected-access,invalid-name
 
     def setUp(self):
         """Create & load secrets file."""

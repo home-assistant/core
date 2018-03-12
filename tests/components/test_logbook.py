@@ -1,5 +1,4 @@
 """The tests for the logbook component."""
-# pylint: disable=protected-access,invalid-name
 import logging
 from datetime import timedelta
 import unittest
@@ -542,8 +541,7 @@ class TestComponentLogbook(unittest.TestCase):
 
     def create_state_changed_event(self, event_time_fired, entity_id, state,
                                    attributes=None, last_changed=None,
-                                   last_updated=None): \
-            # pylint: disable=no-self-use
+                                   last_updated=None):
         """Create state changed event."""
         # Logbook only cares about state change events that
         # contain an old state but will not actually act on it.

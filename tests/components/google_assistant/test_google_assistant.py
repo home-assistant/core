@@ -1,5 +1,4 @@
 """The tests for the Google Assistant component."""
-# pylint: disable=protected-access
 import asyncio
 import json
 

@@ -12,7 +12,6 @@ import homeassistant.components.switch.command_line as command_line
 from tests.common import get_test_home_assistant
 
 
-# pylint: disable=invalid-name
 class TestCommandSwitch(unittest.TestCase):
     """Test the command switch."""
 

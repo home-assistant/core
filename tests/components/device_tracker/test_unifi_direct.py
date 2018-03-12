@@ -45,8 +45,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
 
     @mock.patch(scanner_path,
                 return_value=mock.MagicMock())
-    def test_get_scanner(self, unifi_mock):  \
-            # pylint: disable=invalid-name
+    def test_get_scanner(self, unifi_mock):
         """Test creating an Unifi direct scanner with a password."""
         conf_dict = {
             DOMAIN: {
@@ -136,7 +135,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
         scanner = get_scanner(self.hass, conf_dict)
         # mock_sendline.side_effect = AssertionError("Test")
         mock_prompt.side_effect = AssertionError("Test")
-        devices = scanner._get_update()  # pylint: disable=protected-access
+        devices = scanner._get_update()
         self.assertTrue(devices is None)
 
     def test_good_response_parses(self):

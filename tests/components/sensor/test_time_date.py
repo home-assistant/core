@@ -11,7 +11,6 @@ from tests.common import get_test_home_assistant
 class TestTimeDateSensor(unittest.TestCase):
     """Tests the Kira Sensor platform."""
 
-    # pylint: disable=invalid-name
     DEVICES = []
 
     def add_devices(self, devices):
@@ -29,7 +28,6 @@ class TestTimeDateSensor(unittest.TestCase):
         dt_util.set_default_time_zone(self.DEFAULT_TIME_ZONE)
         self.hass.stop()
 
-    # pylint: disable=protected-access
     def test_intervals(self):
         """Test timing intervals of sensors."""
         device = time_date.TimeDateSensor(self.hass, 'time')

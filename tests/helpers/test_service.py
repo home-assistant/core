@@ -18,12 +18,12 @@ from tests.common import get_test_home_assistant, mock_service
 class TestServiceHelpers(unittest.TestCase):
     """Test the Home Assistant service helpers."""
 
-    def setUp(self):     # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.calls = mock_service(self.hass, 'test_domain', 'test_service')
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

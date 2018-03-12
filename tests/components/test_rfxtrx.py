@@ -1,5 +1,4 @@
 """The tests for the Rfxtrx component."""
-# pylint: disable=protected-access
 import unittest
 
 import pytest

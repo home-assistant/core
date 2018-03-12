@@ -1,5 +1,4 @@
 """The tests for the Group components."""
-# pylint: disable=protected-access
 import asyncio
 from collections import OrderedDict
 import unittest
@@ -17,12 +16,10 @@ from tests.common import get_test_home_assistant, assert_setup_component
 class TestComponentsGroup(unittest.TestCase):
     """Test Group component."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
@@ -430,7 +427,6 @@ def test_service_group_services(hass):
     assert hass.services.has_service('group', group.SERVICE_REMOVE)
 
 
-# pylint: disable=invalid-name
 @asyncio.coroutine
 def test_service_group_set_group_remove_group(hass):
     """Check if service are available."""

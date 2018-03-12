@@ -18,7 +18,7 @@ def prometheus_client(loop, hass, test_client):
 
 
 @asyncio.coroutine
-def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
+def test_view(prometheus_client):
     """Test prometheus metrics view."""
     resp = yield from prometheus_client.get(prometheus.API_ENDPOINT)
 

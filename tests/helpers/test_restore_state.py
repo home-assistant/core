@@ -132,7 +132,6 @@ def test_cache_timeout(hass):
 
 def _add_data_in_last_run(hass, entities):
     """Add test data in the last recorder_run."""
-    # pylint: disable=protected-access
     t_now = dt_util.utcnow() - timedelta(minutes=10)
     t_min_1 = t_now - timedelta(minutes=20)
     t_min_2 = t_now - timedelta(minutes=30)

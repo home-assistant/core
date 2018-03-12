@@ -342,7 +342,6 @@ def test_put_light_state_fan(hass_hue, hue_client):
     assert living_room_fan.attributes[fan.ATTR_SPEED] == fan.SPEED_MEDIUM
 
 
-# pylint: disable=invalid-name
 @asyncio.coroutine
 def test_put_with_form_urlencoded_content_type(hass_hue, hue_client):
     """Test the form with urlencoded content."""
@@ -419,7 +418,6 @@ def test_proper_put_state_request(hue_client):
     assert result.status == 400
 
 
-# pylint: disable=invalid-name
 async def perform_put_test_on_ceiling_lights(hass_hue, hue_client,
                                              content_type='application/json'):
     """Test the setting of a light."""

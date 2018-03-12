@@ -1,5 +1,4 @@
 """The tests for the Cast Media player platform."""
-# pylint: disable=protected-access
 import asyncio
 from typing import Optional
 from unittest.mock import patch, MagicMock, Mock
@@ -22,7 +21,6 @@ def cast_mock():
         yield
 
 
-# pylint: disable=invalid-name
 FakeUUID = UUID('57355bce-9364-4aa6-ac1e-eb849dccf9e2')
 
 

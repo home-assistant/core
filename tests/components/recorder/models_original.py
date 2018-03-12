@@ -17,7 +17,6 @@ from homeassistant.core import Event, EventOrigin, State, split_entity_id
 from homeassistant.remote import JSONEncoder
 
 # SQLAlchemy Schema
-# pylint: disable=invalid-name
 Base = declarative_base()
 
 _LOGGER = logging.getLogger(__name__)

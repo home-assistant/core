@@ -36,7 +36,6 @@ def test_sensor_temperature_celsius():
     assert len(mock_type.mock_calls) == 1
 
 
-# pylint: disable=invalid-name
 def test_sensor_temperature_fahrenheit():
     """Test temperature sensor with Fahrenheit as unit."""
     mock_type = MagicMock()

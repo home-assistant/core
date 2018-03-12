@@ -1,5 +1,4 @@
 """The tests for the Recorder component."""
-# pylint: disable=protected-access
 import unittest
 from unittest.mock import patch
 
@@ -18,13 +17,13 @@ from tests.common import get_test_home_assistant, init_recorder_component
 class TestRecorder(unittest.TestCase):
     """Test the recorder module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)
         self.hass.start()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -127,7 +126,6 @@ def _add_events(hass, events):
         return [ev.to_native() for ev in session.query(Events)]
 
 
-# pylint: disable=redefined-outer-name,invalid-name
 def test_saving_state_include_domains(hass_recorder):
     """Test saving and restoring a state."""
     hass = hass_recorder({'include': {'domains': 'test2'}})

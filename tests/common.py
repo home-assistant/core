@@ -80,7 +80,6 @@ def get_test_home_assistant():
 
     def run_loop():
         """Run event loop."""
-        # pylint: disable=protected-access
         loop._thread_ident = threading.get_ident()
         loop.run_forever()
         stop_event.set()
@@ -105,7 +104,6 @@ def get_test_home_assistant():
     return hass
 
 
-# pylint: disable=protected-access
 @asyncio.coroutine
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
@@ -180,7 +178,7 @@ def async_mock_service(hass, domain, service, schema=None):
     calls = []
 
     @asyncio.coroutine
-    def mock_service_log(call):  # pylint: disable=unnecessary-lambda
+    def mock_service_log(call):
         """Mock service call."""
         calls.append(call)
 
@@ -306,7 +304,6 @@ def mock_registry(hass, mock_entries=None):
 class MockModule(object):
     """Representation of a fake module."""
 
-    # pylint: disable=invalid-name
     def __init__(self, domain=None, dependencies=None, setup=None,
                  requirements=None, config_schema=None, platform_schema=None,
                  async_setup=None, async_setup_entry=None,
@@ -342,7 +339,6 @@ class MockModule(object):
 class MockPlatform(object):
     """Provide a fake platform."""
 
-    # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
                  platform_schema=None, async_setup_platform=None):
         """Initialize the platform."""

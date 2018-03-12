@@ -1,5 +1,4 @@
 """The tests for the Home Assistant API component."""
-# pylint: disable=protected-access
 import asyncio
 import json
 
@@ -69,7 +68,6 @@ def test_api_state_change(hass, mock_api_client):
     assert hass.states.get("test.test").state == "debug_state_change2"
 
 
-# pylint: disable=invalid-name
 @asyncio.coroutine
 def test_api_state_change_of_non_existing_entity(hass, mock_api_client):
     """Test if changing a state of a non existing entity is possible."""
@@ -85,7 +83,6 @@ def test_api_state_change_of_non_existing_entity(hass, mock_api_client):
         new_state
 
 
-# pylint: disable=invalid-name
 @asyncio.coroutine
 def test_api_state_change_with_bad_data(hass, mock_api_client):
     """Test if API sends appropriate error if we omit state."""
@@ -96,7 +93,6 @@ def test_api_state_change_with_bad_data(hass, mock_api_client):
     assert resp.status == 400
 
 
-# pylint: disable=invalid-name
 @asyncio.coroutine
 def test_api_state_change_to_zero_value(hass, mock_api_client):
     """Test if changing a state to a zero value is possible."""
@@ -113,7 +109,6 @@ def test_api_state_change_to_zero_value(hass, mock_api_client):
     assert resp.status == 200
 
 
-# pylint: disable=invalid-name
 @asyncio.coroutine
 def test_api_state_change_push(hass, mock_api_client):
     """Test if we can push a change the state of an entity."""
@@ -141,7 +136,6 @@ def test_api_state_change_push(hass, mock_api_client):
     assert len(events) == 1
 
 
-# pylint: disable=invalid-name
 @asyncio.coroutine
 def test_api_fire_event_with_no_data(hass, mock_api_client):
     """Test if the API allows us to fire an event."""
@@ -161,7 +155,6 @@ def test_api_fire_event_with_no_data(hass, mock_api_client):
     assert len(test_value) == 1
 
 
-# pylint: disable=invalid-name
 @asyncio.coroutine
 def test_api_fire_event_with_data(hass, mock_api_client):
     """Test if the API allows us to fire an event."""
@@ -187,7 +180,6 @@ def test_api_fire_event_with_data(hass, mock_api_client):
     assert len(test_value) == 1
 
 
-# pylint: disable=invalid-name
 @asyncio.coroutine
 def test_api_fire_event_with_invalid_json(hass, mock_api_client):
     """Test if the API allows us to fire an event."""

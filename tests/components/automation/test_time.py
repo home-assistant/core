@@ -13,7 +13,6 @@ from tests.common import (
     mock_component)
 
 
-# pylint: disable=invalid-name
 class TestAutomationTime(unittest.TestCase):
     """Test the event automation."""
 

@@ -56,18 +56,18 @@ BAD_CONF_DATA = {
 }
 
 
-def _yql_queryMock(yql):  # pylint: disable=invalid-name
+def _yql_queryMock(yql):
     """Mock yahoo query language query."""
     return ('{"query": {"count": 1, "created": "2017-11-17T13:40:47Z", '
             '"lang": "en-US", "results": {"place": {"woeid": "23511632"}}}}')
 
 
-def get_woeidMock(lat, lon):  # pylint: disable=invalid-name
+def get_woeidMock(lat, lon):
     """Mock get woeid Where On Earth Identifiers."""
     return '23511632'
 
 
-def get_woeidNoneMock(lat, lon):  # pylint: disable=invalid-name
+def get_woeidNoneMock(lat, lon):
     """Mock get woeid Where On Earth Identifiers."""
     return None
 
@@ -81,46 +81,45 @@ class YahooWeatherMock():
         self.temp_unit = temp_unit
         self._data = json.loads(load_fixture('yahooweather.json'))
 
-    # pylint: disable=no-self-use
-    def updateWeather(self):  # pylint: disable=invalid-name
+    def updateWeather(self):
         """Return sample values."""
         return True
 
     @property
-    def RawData(self):  # pylint: disable=invalid-name
+    def RawData(self):
         """Raw Data."""
         if self.woeid == '12345':
             return json.loads('[]')
         return self._data
 
     @property
-    def Units(self):  # pylint: disable=invalid-name
+    def Units(self):
         """Return dict with units."""
         return self._data['query']['results']['channel']['units']
 
     @property
-    def Now(self):  # pylint: disable=invalid-name
+    def Now(self):
         """Current weather data."""
         if self.woeid == '111':
             raise ValueError
         return self._data['query']['results']['channel']['item']['condition']
 
     @property
-    def Atmosphere(self):  # pylint: disable=invalid-name
+    def Atmosphere(self):
         """Atmosphere weather data."""
         return self._data['query']['results']['channel']['atmosphere']
 
     @property
-    def Wind(self):  # pylint: disable=invalid-name
+    def Wind(self):
         """Wind weather data."""
         return self._data['query']['results']['channel']['wind']
 
     @property
-    def Forecast(self):  # pylint: disable=invalid-name
+    def Forecast(self):
         """Forecast data 0-5 Days."""
         return self._data['query']['results']['channel']['item']['forecast']
 
-    def getWeatherImage(self, code):  # pylint: disable=invalid-name
+    def getWeatherImage(self, code):
         """Create a link to weather image from yahoo code."""
         return "https://l.yimg.com/a/i/us/we/52/{}.gif".format(code)
 

@@ -14,7 +14,6 @@ from tests.common import (
     mock_component)
 
 
-# pylint: disable=invalid-name
 class TestAutomationState(unittest.TestCase):
     """Test the event automation."""
 

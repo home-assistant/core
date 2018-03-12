@@ -1,5 +1,4 @@
 """The tests for the Script component."""
-# pylint: disable=protected-access
 from datetime import timedelta
 from unittest import mock
 import unittest
@@ -19,12 +18,10 @@ ENTITY_ID = 'script.test'
 class TestScriptHelper(unittest.TestCase):
     """Test the Script component."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()

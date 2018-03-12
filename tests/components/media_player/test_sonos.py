@@ -134,7 +134,6 @@ def add_devices_factory(hass):
 class TestSonosMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
@@ -147,7 +146,6 @@ class TestSonosMediaPlayer(unittest.TestCase):
         self.real_available = sonos.SonosDevice.available
         sonos.SonosDevice.available = monkey_available
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         # Monkey patches

@@ -17,7 +17,6 @@ from tests.common import (
     mock_service, async_mock_service, mock_restore_cache)
 
 
-# pylint: disable=invalid-name
 class TestAutomation(unittest.TestCase):
     """Test the event automation."""
 

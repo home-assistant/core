@@ -20,7 +20,6 @@ class TestBinarySensorTemplate(unittest.TestCase):
     """Test for Binary sensor template platform."""
 
     hass = None
-    # pylint: disable=invalid-name
 
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
@@ -175,7 +174,6 @@ class TestBinarySensorTemplate(unittest.TestCase):
         run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
         self.assertFalse(vs.is_on)
 
-        # pylint: disable=protected-access
         vs._template = template_hlpr.Template("{{ 2 > 1 }}", self.hass)
 
         run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()

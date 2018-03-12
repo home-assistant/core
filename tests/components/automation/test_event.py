@@ -8,7 +8,6 @@ import homeassistant.components.automation as automation
 from tests.common import get_test_home_assistant, mock_component
 
 
-# pylint: disable=invalid-name
 class TestAutomationEvent(unittest.TestCase):
     """Test the event automation."""
 

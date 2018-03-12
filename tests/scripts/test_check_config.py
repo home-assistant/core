@@ -1,7 +1,7 @@
 """Test check_config script."""
 import asyncio
 import logging
-import os  # noqa: F401 pylint: disable=unused-import
+import os  # noqa: F401
 import unittest
 from unittest.mock import patch
 
@@ -31,7 +31,6 @@ def normalize_yaml_files(check_dict):
             for key in sorted(check_dict['yaml_files'].keys())]
 
 
-# pylint: disable=unsubscriptable-object
 class TestCheckConfig(unittest.TestCase):
     """Tests for the homeassistant.scripts.check_config module."""
 
@@ -47,9 +46,8 @@ class TestCheckConfig(unittest.TestCase):
             asyncio.set_event_loop(asyncio.new_event_loop())
 
         # Will allow seeing full diff
-        self.maxDiff = None  # pylint: disable=invalid-name
+        self.maxDiff = None
 
-    # pylint: disable=no-self-use,invalid-name
     @patch('os.path.isfile', return_value=True)
     def test_config_platform_valid(self, isfile_patch):
         """Test a valid platform setup."""
@@ -172,8 +170,7 @@ class TestCheckConfig(unittest.TestCase):
                 '.../configuration.yaml', '.../secrets.yaml']
 
     @patch('os.path.isfile', return_value=True)
-    def test_package_invalid(self, isfile_patch): \
-            # pylint: disable=no-self-use,invalid-name
+    def test_package_invalid(self, isfile_patch):
         """Test a valid platform setup."""
         files = {
             YAML_CONFIG_FILE: BASE_CONFIG + (
@@ -194,8 +191,7 @@ class TestCheckConfig(unittest.TestCase):
             assert res['secrets'] == {}
             assert len(res['yaml_files']) == 1
 
-    def test_bootstrap_error(self): \
-            # pylint: disable=no-self-use,invalid-name
+    def test_bootstrap_error(self):
         """Test a valid platform setup."""
         files = {
             YAML_CONFIG_FILE: BASE_CONFIG + 'automation: !include no.yaml',

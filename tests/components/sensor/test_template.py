@@ -8,7 +8,6 @@ class TestTemplateSensor:
     """Test the Template sensor."""
 
     hass = None
-    # pylint: disable=invalid-name
 
     def setup_method(self, method):
         """Setup things to be run when tests are started."""

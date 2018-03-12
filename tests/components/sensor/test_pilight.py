@@ -18,7 +18,6 @@ def fire_pilight_message(protocol, data):
     HASS.bus.fire(pilight.EVENT, message)
 
 
-# pylint: disable=invalid-name
 def setup_function():
     """Initialize a Home Assistant server."""
     global HASS
@@ -27,7 +26,6 @@ def setup_function():
     mock_component(HASS, 'pilight')
 
 
-# pylint: disable=invalid-name
 def teardown_function():
     """Stop the Home Assistant server."""
     HASS.stop()

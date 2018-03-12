@@ -1,5 +1,4 @@
 """The tests for the Entity component helper."""
-# pylint: disable=protected-access
 import asyncio
 from collections import OrderedDict
 import logging
@@ -28,11 +27,11 @@ DOMAIN = "test_domain"
 class TestHelpersEntityComponent(unittest.TestCase):
     """Test homeassistant.helpers.entity_component module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Initialize a test Home Assistant instance."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Clean up the test Home Assistant instance."""
         self.hass.stop()
 

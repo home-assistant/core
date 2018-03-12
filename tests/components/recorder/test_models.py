@@ -15,7 +15,7 @@ ENGINE = None
 SESSION = None
 
 
-def setUpModule():  # pylint: disable=invalid-name
+def setUpModule():
     """Set up a database to use."""
     global ENGINE
     global SESSION
@@ -26,7 +26,7 @@ def setUpModule():  # pylint: disable=invalid-name
     SESSION = scoped_session(session_factory)
 
 
-def tearDownModule():  # pylint: disable=invalid-name
+def tearDownModule():
     """Close database."""
     global ENGINE
     global SESSION
@@ -39,7 +39,6 @@ def tearDownModule():  # pylint: disable=invalid-name
 class TestEvents(unittest.TestCase):
     """Test Events model."""
 
-    # pylint: disable=no-self-use
     def test_from_event(self):
         """Test converting event to db event."""
         event = ha.Event('test_event', {
@@ -50,8 +49,6 @@ class TestEvents(unittest.TestCase):
 
 class TestStates(unittest.TestCase):
     """Test States model."""
-
-    # pylint: disable=no-self-use
 
     def test_from_event(self):
         """Test converting event to db state."""
@@ -82,14 +79,14 @@ class TestStates(unittest.TestCase):
 class TestRecorderRuns(unittest.TestCase):
     """Test recorder run model."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Set up recorder runs."""
         self.session = session = SESSION()
         session.query(Events).delete()
         session.query(States).delete()
         session.query(RecorderRuns).delete()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Clean up."""
         self.session.rollback()
 

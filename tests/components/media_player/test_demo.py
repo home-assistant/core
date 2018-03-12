@@ -24,7 +24,7 @@ entity_id = 'media_player.walkman'
 class TestDemoMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 

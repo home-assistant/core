@@ -33,7 +33,7 @@ class TestRing(unittest.TestCase):
         self.cache = get_test_config_dir(ring.DEFAULT_CACHEDB)
         self.config = VALID_CONFIG
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
         self.cleanup()

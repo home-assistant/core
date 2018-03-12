@@ -122,7 +122,7 @@ class SyncMediaPlayer(mp.MediaPlayerDevice):
 class TestAsyncMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.player = AsyncMediaPlayer(self.hass)
@@ -175,7 +175,7 @@ class TestAsyncMediaPlayer(unittest.TestCase):
 class TestSyncMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.player = SyncMediaPlayer(self.hass)

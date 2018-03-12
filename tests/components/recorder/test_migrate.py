@@ -1,5 +1,4 @@
 """The tests for the Recorder component."""
-# pylint: disable=protected-access
 import asyncio
 from unittest.mock import patch, call
 

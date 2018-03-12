@@ -27,7 +27,7 @@ class TestVultr(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.config = VALID_CONFIG
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that we started."""
         self.hass.stop()
 

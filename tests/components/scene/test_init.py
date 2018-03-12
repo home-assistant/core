@@ -13,7 +13,7 @@ from tests.common import get_test_home_assistant
 class TestScene(unittest.TestCase):
     """Test the scene component."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         test_light = loader.get_component('light.test')
@@ -33,7 +33,7 @@ class TestScene(unittest.TestCase):
         self.assertFalse(self.light_1.is_on)
         self.assertFalse(self.light_2.is_on)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

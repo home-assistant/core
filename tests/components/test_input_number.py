@@ -1,5 +1,4 @@
 """The tests for the Input number component."""
-# pylint: disable=protected-access
 import asyncio
 import unittest
 
@@ -14,12 +13,10 @@ from tests.common import get_test_home_assistant, mock_restore_cache
 class TestInputNumber(unittest.TestCase):
     """Test the input number component."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()

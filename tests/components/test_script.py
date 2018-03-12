@@ -1,5 +1,4 @@
 """The tests for the Script component."""
-# pylint: disable=protected-access
 import unittest
 from unittest.mock import patch
 
@@ -16,12 +15,10 @@ ENTITY_ID = 'script.test'
 class TestScriptComponent(unittest.TestCase):
     """Test the Script component."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()

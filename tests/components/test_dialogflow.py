@@ -1,5 +1,4 @@
 """The tests for the Dialogflow component."""
-# pylint: disable=protected-access
 import json
 import unittest
 
@@ -34,12 +33,10 @@ MAX_RESPONSE_TIME = 5  # https://dialogflow.com/docs/fulfillment
 # allow the test to finish
 REQUEST_TIMEOUT = 15
 
-# pylint: disable=invalid-name
 hass = None
 calls = []
 
 
-# pylint: disable=invalid-name
 def setUpModule():
     """Initialize a Home Assistant server for testing this module."""
     global hass
@@ -110,7 +107,6 @@ def setUpModule():
     hass.start()
 
 
-# pylint: disable=invalid-name
 def tearDownModule():
     """Stop the Home Assistant server."""
     hass.stop()

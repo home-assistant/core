@@ -1,5 +1,4 @@
 """The test for the History Statistics sensor platform."""
-# pylint: disable=protected-access
 from datetime import timedelta
 import unittest
 from unittest.mock import patch

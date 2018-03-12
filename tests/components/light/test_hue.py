@@ -18,7 +18,7 @@ HUE_LIGHT_NS = 'homeassistant.components.light.hue.'
 class TestSetup(unittest.TestCase):
     """Test the Hue light platform."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.skip_teardown_stop = False
@@ -450,7 +450,7 @@ class TestSetup(unittest.TestCase):
 class TestHueLight(unittest.TestCase):
     """Test the HueLight class."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.skip_teardown_stop = False

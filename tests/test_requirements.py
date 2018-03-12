@@ -14,7 +14,6 @@ class TestRequirements:
     hass = None
     backup_cache = None
 
-    # pylint: disable=invalid-name, no-self-use
     def setup_method(self, method):
         """Setup the test."""
         self.hass = get_test_home_assistant()

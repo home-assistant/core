@@ -157,7 +157,7 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
 class TestMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
@@ -208,7 +208,7 @@ class TestMediaPlayer(unittest.TestCase):
             }
         }
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

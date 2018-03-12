@@ -1,5 +1,4 @@
 """Test config utils."""
-# pylint: disable=protected-access
 import asyncio
 import os
 import unittest
@@ -51,12 +50,10 @@ def create_file(path):
 class TestConfig(unittest.TestCase):
     """Test the configutils."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Initialize a test Home Assistant instance."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Clean up."""
         dt_util.DEFAULT_TIME_ZONE = ORIG_TIMEZONE
@@ -84,7 +81,6 @@ class TestConfig(unittest.TestCase):
 
         self.hass.stop()
 
-    # pylint: disable=no-self-use
     def test_create_default_config(self):
         """Test creation of default config."""
         config_util.create_default_config(CONFIG_DIR, False)
@@ -208,7 +204,6 @@ class TestConfig(unittest.TestCase):
                 os.path.join(CONFIG_DIR, 'non_existing_dir/'), False))
         self.assertTrue(mock_print.called)
 
-    # pylint: disable=no-self-use
     def test_core_config_schema(self):
         """Test core config schema."""
         for value in (
@@ -545,7 +540,6 @@ class TestConfig(unittest.TestCase):
         ).result() == 'hello'
 
 
-# pylint: disable=redefined-outer-name
 @pytest.fixture
 def merge_log_err(hass):
     """Patch _merge_log_error from packages."""

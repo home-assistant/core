@@ -1,5 +1,4 @@
 """The tests for the Light component."""
-# pylint: disable=protected-access
 import unittest
 import os
 
@@ -18,12 +17,10 @@ from tests.common import (
 class TestLight(unittest.TestCase):
     """Test the light module."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()

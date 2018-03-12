@@ -5,7 +5,6 @@ from unittest.mock import call, patch, ANY
 
 import voluptuous as vol
 
-# pylint: disable=unused-import
 from pyhap.accessory_driver import AccessoryDriver  # noqa F401
 
 from homeassistant import setup

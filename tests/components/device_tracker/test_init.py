@@ -1,5 +1,4 @@
 """The tests for the device tracker component."""
-# pylint: disable=protected-access
 import asyncio
 import json
 import logging
@@ -39,13 +38,11 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     hass = None  # HomeAssistant
     yaml_devices = None  # type: str
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.yaml_devices = self.hass.config.path(device_tracker.YAML_DEVICES)
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         if os.path.isfile(self.yaml_devices):
@@ -65,7 +62,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         self.assertFalse(device_tracker.is_on(self.hass, entity_id))
 
-    # pylint: disable=no-self-use
     def test_reading_broken_yaml_config(self):
         """Test when known devices contains invalid data."""
         files = {'empty.yaml': '',
@@ -114,7 +110,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(device.vendor, config.vendor)
         self.assertEqual(device.icon, config.icon)
 
-    # pylint: disable=invalid-name
     @patch('homeassistant.components.device_tracker._LOGGER.warning')
     def test_track_with_duplicate_mac_dev_id(self, mock_warning):
         """Test adding duplicate MACs or device IDs to DeviceTracker."""
@@ -466,7 +461,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             'vendor': 'unknown',
         }
 
-    # pylint: disable=invalid-name
     def test_not_write_duplicate_yaml_keys(self):
         """Test that the device tracker will not generate invalid YAML."""
         with assert_setup_component(1, device_tracker.DOMAIN):
@@ -482,7 +476,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                             timedelta(seconds=0))
         assert len(config) == 2
 
-    # pylint: disable=invalid-name
     def test_not_allow_invalid_dev_id(self):
         """Test that the device tracker will not allow invalid dev ids."""
         with assert_setup_component(1, device_tracker.DOMAIN):

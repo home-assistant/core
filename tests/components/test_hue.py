@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 class TestSetup(unittest.TestCase):
     """Test the Hue component."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.skip_teardown_stop = False
@@ -199,7 +199,7 @@ class TestSetup(unittest.TestCase):
 class TestHueBridge(unittest.TestCase):
     """Test the HueBridge class."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.data[hue.DOMAIN] = {}

@@ -9,7 +9,6 @@ import voluptuous as vol
 class TestColorUtil(unittest.TestCase):
     """Test color util methods."""
 
-    # pylint: disable=invalid-name
     def test_color_RGB_to_xy(self):
         """Test color_RGB_to_xy."""
         self.assertEqual((0, 0, 0), color_util.color_RGB_to_xy(0, 0, 0))

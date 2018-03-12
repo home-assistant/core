@@ -52,13 +52,13 @@ def test_async_track_states(hass):
 class TestStateHelpers(unittest.TestCase):
     """Test the Home Assistant event helpers."""
 
-    def setUp(self):     # pylint: disable=invalid-name
+    def setUp(self):
         """Run when tests are started."""
         self.hass = get_test_home_assistant()
         run_coroutine_threadsafe(core_components.async_setup(
             self.hass, {}), self.hass.loop).result()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop when tests are finished."""
         self.hass.stop()
 

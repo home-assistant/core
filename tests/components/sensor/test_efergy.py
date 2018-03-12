@@ -73,7 +73,7 @@ class TestEfergySensor(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.config = ONE_SENSOR_CONFIG
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

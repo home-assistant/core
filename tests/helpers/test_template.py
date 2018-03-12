@@ -25,7 +25,6 @@ from tests.common import get_test_home_assistant
 class TestHelpersTemplate(unittest.TestCase):
     """Test the Template."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup the tests."""
         self.hass = get_test_home_assistant()
@@ -33,7 +32,6 @@ class TestHelpersTemplate(unittest.TestCase):
                                             LENGTH_METERS, VOLUME_LITERS,
                                             MASS_GRAMS)
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop down stuff we started."""
         self.hass.stop()

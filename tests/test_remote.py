@@ -1,5 +1,4 @@
 """Test Home Assistant remote methods and classes."""
-# pylint: disable=protected-access
 import unittest
 
 from homeassistant import remote, setup, core as ha
@@ -26,7 +25,6 @@ def _url(path=''):
     return HTTP_BASE_URL + path
 
 
-# pylint: disable=invalid-name
 def setUpModule():
     """Initialization of a Home Assistant server instance."""
     global hass, master_api
@@ -48,7 +46,6 @@ def setUpModule():
     master_api = remote.API('127.0.0.1', API_PASSWORD, MASTER_PORT)
 
 
-# pylint: disable=invalid-name
 def tearDownModule():
     """Stop the Home Assistant server."""
     hass.stop()

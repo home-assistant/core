@@ -25,11 +25,11 @@ PLATFORM = 'test_platform'
 class TestHelpersEntityPlatform(unittest.TestCase):
     """Test homeassistant.helpers.entity_component module."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Initialize a test Home Assistant instance."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Clean up the test Home Assistant instance."""
         self.hass.stop()
 

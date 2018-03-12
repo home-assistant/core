@@ -477,7 +477,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         }}
         self.device_config = {self.entity_id: {}}
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -790,7 +790,7 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.services.call('zwave', 'stop_network', {})
         self.hass.block_till_done()

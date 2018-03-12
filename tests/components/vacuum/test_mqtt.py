@@ -16,7 +16,7 @@ from tests.common import (
 class TestVacuumMQTT(unittest.TestCase):
     """MQTT vacuum component test class."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
@@ -43,7 +43,7 @@ class TestVacuumMQTT(unittest.TestCase):
             mqtt.CONF_FAN_SPEED_LIST: ['min', 'medium', 'high', 'max'],
         }
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

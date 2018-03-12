@@ -18,7 +18,7 @@ class MockSMTP(smtp.MailNotificationService):
 class TestNotifySmtp(unittest.TestCase):
     """Test the smtp notify."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mailer = MockSMTP('localhost', 25, 5, 'test@test.com', 1,
@@ -26,7 +26,7 @@ class TestNotifySmtp(unittest.TestCase):
                                ['recip1@example.com', 'testrecip@test.com'],
                                'HomeAssistant', 0)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """"Stop down everything that was started."""
         self.hass.stop()
 

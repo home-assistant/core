@@ -1,5 +1,4 @@
 """The tests for the Alert component."""
-# pylint: disable=protected-access
 from copy import deepcopy
 import unittest
 
@@ -31,7 +30,6 @@ TEST_NOACK = [NAME, NAME, DONE_MESSAGE, "sensor.test",
 ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
 
 
-# pylint: disable=invalid-name
 class TestAlert(unittest.TestCase):
     """Test the alert module."""
 

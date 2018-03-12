@@ -9,7 +9,6 @@ from tests.common import (
     mock_component)
 
 
-# pylint: disable=invalid-name
 class TestAutomationMQTT(unittest.TestCase):
     """Test the event automation."""
 

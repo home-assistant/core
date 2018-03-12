@@ -1,5 +1,4 @@
 """The tests for the google calendar component."""
-# pylint: disable=protected-access
 import logging
 import unittest
 from unittest.mock import patch
@@ -23,7 +22,6 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
 
     hass = None  # HomeAssistant
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
@@ -32,7 +30,6 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         # This keeps UTC-6 all year round
         dt_util.set_default_time_zone(dt_util.get_time_zone('America/Regina'))
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         dt_util.set_default_time_zone(dt_util.get_time_zone('UTC'))

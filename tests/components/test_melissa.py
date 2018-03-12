@@ -15,12 +15,12 @@ VALID_CONFIG = {
 class TestMelissa(unittest.TestCase):
     """Test the Melissa component."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Initialize the values for this test class."""
         self.hass = get_test_home_assistant()
         self.config = VALID_CONFIG
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Teardown this test class. Stop hass."""
         self.hass.stop()
 

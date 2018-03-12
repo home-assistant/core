@@ -1,5 +1,4 @@
 """The tests for the Alexa component."""
-# pylint: disable=protected-access
 import asyncio
 import json
 
@@ -16,7 +15,6 @@ REQUEST_ID = "amzn1.echo-api.request.0000000-0000-0000-0000-00000000000"
 AUTHORITY_ID = "amzn1.er-authority.000000-d0ed-0000-ad00-000000d00ebe.ZODIAC"
 BUILTIN_AUTH_ID = "amzn1.er-authority.000000-d0ed-0000-ad00-000000d00ebe.TEST"
 
-# pylint: disable=invalid-name
 calls = []
 
 NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"

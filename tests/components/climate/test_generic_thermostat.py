@@ -41,11 +41,11 @@ HOT_TOLERANCE = 0.5
 class TestSetupClimateGenericThermostat(unittest.TestCase):
     """Test the Generic thermostat with custom config."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -78,7 +78,7 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
     Different toggle type devices are tested.
     """
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
@@ -86,7 +86,7 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
             comps.async_setup(self.hass, {}), self.hass.loop
         ).result())
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -151,7 +151,7 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
 class TestClimateGenericThermostat(unittest.TestCase):
     """Test the Generic thermostat."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
@@ -165,7 +165,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
             'away_temp': 16
         }})
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -390,7 +390,7 @@ class TestClimateGenericThermostat(unittest.TestCase):
 class TestClimateGenericThermostatACMode(unittest.TestCase):
     """Test the Generic thermostat."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
@@ -405,7 +405,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
             'ac_mode': True
         }})
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -555,7 +555,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
 class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
     """Test the Generic Thermostat."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
@@ -570,7 +570,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
             'min_cycle_duration': datetime.timedelta(minutes=10)
         }})
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -649,7 +649,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
 class TestClimateGenericThermostatMinCycle(unittest.TestCase):
     """Test the Generic thermostat."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
@@ -663,7 +663,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
             'min_cycle_duration': datetime.timedelta(minutes=10)
         }})
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -742,7 +742,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
 class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
     """Test the Generic Thermostat."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
@@ -758,7 +758,7 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
             'keep_alive': datetime.timedelta(minutes=10)
         }})
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -835,7 +835,7 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
 class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
     """Test the Generic Thermostat."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
@@ -850,7 +850,7 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
             'keep_alive': datetime.timedelta(minutes=10)
         }})
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 
@@ -998,12 +998,12 @@ def test_no_restore_state(hass):
 class TestClimateGenericThermostatRestoreState(unittest.TestCase):
     """Test generic thermostat when restore state from HA startup."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

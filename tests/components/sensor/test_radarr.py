@@ -191,7 +191,6 @@ def mocked_requests_get(*args, **kwargs):
 class TestRadarrSetup(unittest.TestCase):
     """Test the Radarr platform."""
 
-    # pylint: disable=invalid-name
     DEVICES = []
 
     def add_devices(self, devices, update):
@@ -205,7 +204,7 @@ class TestRadarrSetup(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.hass.config.time_zone = 'America/Los_Angeles'
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

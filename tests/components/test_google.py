@@ -13,11 +13,11 @@ _LOGGER = logging.getLogger(__name__)
 class TestGoogle(unittest.TestCase):
     """Test the Google component."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

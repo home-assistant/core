@@ -26,13 +26,13 @@ ENTITY_VACUUM_NONE = '{}.{}'.format(DOMAIN, DEMO_VACUUM_NONE).lower()
 class TestVacuumDemo(unittest.TestCase):
     """Test the Demo vacuum."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.assertTrue(setup_component(
             self.hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: 'demo'}}))
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
 

@@ -33,7 +33,7 @@ def mock_process_creator(error: bool = False) -> asyncio.coroutine:
 class TestShellCommand(unittest.TestCase):
     """Test the shell_command component."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started.
 
         Also seems to require a child watcher attached to the loop when run
@@ -42,7 +42,7 @@ class TestShellCommand(unittest.TestCase):
         self.hass = get_test_home_assistant()
         asyncio.get_child_watcher().attach_loop(self.hass.loop)
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 

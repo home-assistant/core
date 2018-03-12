@@ -1,5 +1,4 @@
 """The tests for the timer component."""
-# pylint: disable=protected-access
 import asyncio
 import unittest
 import logging
@@ -23,12 +22,10 @@ _LOGGER = logging.getLogger(__name__)
 class TestTimer(unittest.TestCase):
     """Test the timer component."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()

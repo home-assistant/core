@@ -1,5 +1,4 @@
 """Test the entity helper."""
-# pylint: disable=protected-access
 import asyncio
 from unittest.mock import MagicMock, patch
 

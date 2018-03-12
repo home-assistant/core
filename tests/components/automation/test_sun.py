@@ -14,7 +14,6 @@ from tests.common import (
     fire_time_changed, get_test_home_assistant, mock_component)
 
 
-# pylint: disable=invalid-name
 class TestAutomationSun(unittest.TestCase):
     """Test the sun automation."""
 

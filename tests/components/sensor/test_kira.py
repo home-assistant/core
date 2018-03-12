@@ -19,7 +19,6 @@ DISCOVERY_INFO = {
 class TestKiraSensor(unittest.TestCase):
     """Tests the Kira Sensor platform."""
 
-    # pylint: disable=invalid-name
     DEVICES = []
 
     def add_devices(self, devices):
@@ -38,7 +37,6 @@ class TestKiraSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    # pylint: disable=protected-access
     def test_kira_sensor_callback(self):
         """Ensure Kira sensor properly updates its attributes from callback."""
         kira.setup_platform(self.hass, TEST_CONFIG, self.add_devices,

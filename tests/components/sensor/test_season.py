@@ -1,5 +1,4 @@
 """The tests for the Season sensor platform."""
-# pylint: disable=protected-access
 import unittest
 from datetime import datetime
 
@@ -52,7 +51,6 @@ HEMISPHERE_EMPTY = {
 }
 
 
-# pylint: disable=invalid-name
 class TestSeason(unittest.TestCase):
     """Test the season platform."""
 

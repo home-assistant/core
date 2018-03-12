@@ -325,7 +325,6 @@ class BaseMQTT(unittest.TestCase):
 class TestDeviceTrackerOwnTracks(BaseMQTT):
     """Test the OwnTrack sensor."""
 
-    # pylint: disable=invalid-name
     def setup_method(self, _):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
@@ -396,7 +395,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         state = self.hass.states.get(dev_id)
         self.assertEqual(state.attributes.get('gps_accuracy'), accuracy)
 
-    def test_location_invalid_devid(self):  # pylint: disable=invalid-name
+    def test_location_invalid_devid(self):
         """Test the update of a location."""
         self.send_message('owntracks/paulus/nexus-5x', LOCATION_MESSAGE)
         state = self.hass.states.get('device_tracker.paulus_nexus5x')
@@ -1312,8 +1311,6 @@ def mock_cipher():
 
 class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
     """Test the OwnTrack sensor."""
-
-    # pylint: disable=invalid-name
 
     def setup_method(self, method):
         """Setup things to be run when tests are started."""

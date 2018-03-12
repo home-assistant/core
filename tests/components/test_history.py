@@ -1,5 +1,4 @@
 """The tests the History component."""
-# pylint: disable=protected-access,invalid-name
 from datetime import timedelta
 import unittest
 from unittest.mock import patch, sentinel
@@ -16,11 +15,11 @@ from tests.common import (
 class TestComponentHistory(unittest.TestCase):
     """Test History component."""
 
-    def setUp(self):  # pylint: disable=invalid-name
+    def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    def tearDown(self):  # pylint: disable=invalid-name
+    def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
@@ -395,8 +394,7 @@ class TestComponentHistory(unittest.TestCase):
                     history.CONF_ENTITIES: ['media_player.test']}}})
         self.check_significant_states(zero, four, states, config)
 
-    def check_significant_states(self, zero, four, states, config): \
-            # pylint: disable=no-self-use
+    def check_significant_states(self, zero, four, states, config):
         """Check if significant states are retrieved."""
         filters = history.Filters()
         exclude = config[history.DOMAIN].get(history.CONF_EXCLUDE)

@@ -1,5 +1,4 @@
 """The tests for the demo light component."""
-# pylint: disable=protected-access
 import unittest
 
 from homeassistant.setup import setup_component
@@ -13,7 +12,6 @@ ENTITY_LIGHT = 'light.bed_light'
 class TestDemoLight(unittest.TestCase):
     """Test the demo light."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
@@ -21,7 +19,6 @@ class TestDemoLight(unittest.TestCase):
             'platform': 'demo',
         }}))
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()

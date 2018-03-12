@@ -1,5 +1,4 @@
 """Test the translation helper."""
-# pylint: disable=protected-access
 from os import path
 
 import homeassistant.helpers.translation as translation

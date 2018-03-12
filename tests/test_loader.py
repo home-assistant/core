@@ -1,5 +1,4 @@
 """Test to verify that we can load components."""
-# pylint: disable=protected-access
 import asyncio
 import unittest
 
@@ -15,12 +14,10 @@ from tests.common import (
 class TestLoader(unittest.TestCase):
     """Test the loader module."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup tests."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()

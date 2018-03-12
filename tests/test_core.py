@@ -1,5 +1,4 @@
 """Test to verify that Home Assistant core works."""
-# pylint: disable=protected-access
 import asyncio
 import logging
 import os
@@ -116,12 +115,10 @@ def test_stage_shutdown():
 class TestHomeAssistant(unittest.TestCase):
     """Test the Home Assistant core classes."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
@@ -272,13 +269,11 @@ class TestEvent(unittest.TestCase):
 class TestEventBus(unittest.TestCase):
     """Test EventBus methods."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.bus = self.hass.bus
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop down stuff we started."""
         self.hass.stop()
@@ -476,7 +471,6 @@ class TestState(unittest.TestCase):
 class TestStateMachine(unittest.TestCase):
     """Test State machine methods."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
@@ -484,7 +478,6 @@ class TestStateMachine(unittest.TestCase):
         self.states.set("light.Bowl", "on")
         self.states.set("switch.AC", "off")
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop down stuff we started."""
         self.hass.stop()
@@ -603,7 +596,6 @@ class TestServiceCall(unittest.TestCase):
 class TestServiceRegistry(unittest.TestCase):
     """Test ServicerRegistry methods."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
@@ -624,7 +616,6 @@ class TestServiceRegistry(unittest.TestCase):
 
         self.hass.bus.listen(EVENT_SERVICE_REGISTERED, mock_event_register)
 
-    # pylint: disable=invalid-name
     def tearDown(self):
         """Stop down stuff we started."""
         self.hass.stop()
@@ -758,7 +749,6 @@ class TestServiceRegistry(unittest.TestCase):
 class TestConfig(unittest.TestCase):
     """Test configuration methods."""
 
-    # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.config = ha.Config()
