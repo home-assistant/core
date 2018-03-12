@@ -181,6 +181,7 @@ class HueBridge(object):
         self.allow_in_emulated_hue = allow_in_emulated_hue
         self.allow_hue_groups = allow_hue_groups
 
+        self.available = True
         self.bridge = None
         self.lights = {}
         self.lightgroups = {}
