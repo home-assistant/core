@@ -5,14 +5,7 @@ import logging
 from asyncio import coroutines
 from asyncio.futures import Future
 
-try:
-    # pylint: disable=ungrouped-imports
-    from asyncio import ensure_future
-except ImportError:
-    # Python 3.4.3 and earlier has this as async
-    # pylint: disable=unused-import
-    from asyncio import async
-    ensure_future = async
+from asyncio import ensure_future
 
 
 _LOGGER = logging.getLogger(__name__)
