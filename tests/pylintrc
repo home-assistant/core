@@ -1,0 +1,63 @@
+[MASTER]
+reports=no
+
+# Reasons disabled:
+# locally-disabled - it spams too much
+# duplicate-code - unavoidable
+# cyclic-import - doesn't test if both import on load
+# abstract-class-little-used - prevents from setting right foundation
+# abstract-class-not-used - is flaky, should not show up but does
+# unused-argument - generic callbacks and setup methods create a lot of warnings
+# global-statement - used for the on-demand requirement installation
+# redefined-variable-type - this is Python, we're duck typing!
+# too-many-* - are not enforced for the sake of readability
+# too-few-* - same as too-many-*
+# abstract-method - with intro of async there are always methods missing
+# inconsistent-return-statements - doesn't handle raise
+
+# Reasons disabled for tests/
+# invalid-name - tests can have long names
+# redefined-outer-name - test fixtures
+# attribute-defined-outside-init - would only break tests anyway
+# unnecessary-lambda - Too verbose for tests and good for readability
+# no-self-use - Not good for unittest.TestCase
+# not-an-iterable - coroutine bug https://github.com/PyCQA/pylint/issues/996
+# unsubscriptable-object - MagicMock#mock_calls[]
+# unused-import - Fixtures + handled by flake8 anyway
+
+generated-members=botocore.errorfactory
+
+disable=
+  abstract-class-little-used,
+  abstract-class-not-used,
+  abstract-method,
+  cyclic-import,
+  duplicate-code,
+  global-statement,
+  inconsistent-return-statements,
+  locally-disabled,
+  not-context-manager,
+  redefined-variable-type,
+  too-few-public-methods,
+  too-many-arguments,
+  too-many-branches,
+  too-many-instance-attributes,
+  too-many-lines,
+  too-many-locals,
+  too-many-public-methods,
+  too-many-return-statements,
+  too-many-statements,
+  unused-argument,
+  invalid-name,
+  redefined-outer-name,
+  protected-access,
+  len-as-condition,
+  attribute-defined-outside-init,
+  unnecessary-lambda,
+  no-self-use,
+  not-an-iterable,
+  unsubscriptable-object,
+  unused-import
+
+[EXCEPTIONS]
+overgeneral-exceptions=Exception,HomeAssistantError
