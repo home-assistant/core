@@ -240,7 +240,11 @@ class ActiveConnection:
                 if message is None:
                     break
                 self.debug("Sending", message)
-                await self.wsock.send_json(message, dumps=JSON_DUMP)
+                try:
+                    await self.wsock.send_json(message, dumps=JSON_DUMP)
+                except TypeError as err:
+                    _LOGGER.error('Unable to serialize to JSON: %s\n%s',
+                                  err, message)
 
     @callback
     def send_message_outside(self, message):
