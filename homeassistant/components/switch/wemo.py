@@ -65,17 +65,28 @@ class WemoSwitch(SwitchDevice):
 
         wemo = get_component('wemo')
         wemo.SUBSCRIPTION_REGISTRY.register(self.wemo)
-        wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)
+        wemo.SUBSCRIPTION_REGISTRY.on(
+            self.wemo, None, self._subscription_callback)
 
-    def _update_callback(self, _device, _type, _params):
+    def _subscription_callback(self, _device, _type, _params):
         """Update the state by the Wemo device."""
-        _LOGGER.info("Subscription update for  %s", _device)
+        _LOGGER.info("Subscription update for %s", self.name)
         updated = self.wemo.subscription_update(_type, _params)
-        self._update(force_update=(not updated))
 
         if not hasattr(self, 'hass'):
             return
-        self.schedule_update_ha_state()
+
+        self.hass.add_job(
+            self._async_locked_subscription_callback(not updated))
+
+    async def _async_locked_subscription_callback(self, force_update):
+        """Helper to handle an update from a subscription."""
+        # If an update is in progress, we don't do anything
+        if self._update_lock.locked():
+            return
+
+        await self._async_locked_update(force_update)
+        self.async_schedule_update_ha_state()
 
     @property
     def should_poll(self):
@@ -193,13 +204,11 @@ class WemoSwitch(SwitchDevice):
         """Turn the switch on."""
         self._state = WEMO_ON
         self.wemo.on()
-        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
         self._state = WEMO_OFF
         self.wemo.off()
-        self.schedule_update_ha_state()
 
     async def async_added_to_hass(self):
         """Wemo switch added to HASS."""
@@ -214,22 +223,23 @@ class WemoSwitch(SwitchDevice):
         Wemo switch is unreachable. If update goes through, it will be made
         available again.
         """
+        # If an update is in progress, we don't do anything
         if self._update_lock.locked():
             return
 
         try:
             with async_timeout.timeout(5):
-                await asyncio.shield(self._async_locked_update())
+                await asyncio.shield(self._async_locked_update(True))
         except asyncio.TimeoutError:
             _LOGGER.warning('Lost connection to %s', self.name)
             self._available = False
 
-    async def _async_locked_update(self):
+    async def _async_locked_update(self, force_update):
         """Try updating within an async lock."""
         async with self._update_lock:
-            await self.hass.async_add_job(self._update)
+            await self.hass.async_add_job(self._update, force_update)
 
-    def _update(self, force_update=True):
+    def _update(self, force_update):
         """Update the device state."""
         try:
             self._state = self.wemo.get_state(force_update)
