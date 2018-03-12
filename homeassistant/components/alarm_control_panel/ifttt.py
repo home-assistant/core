@@ -2,16 +2,17 @@
 Interfaces with alarm control panels that have to be controlled through IFTTT.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.ifttt_securitysystem/
+https://home-assistant.io/components/alarm_control_panel.ifttt/
 """
 import logging
+
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.components.ifttt import (
     ATTR_EVENT, DOMAIN as IFTTT_DOMAIN, SERVICE_TRIGGER)
-from homeassistant.const import STATE_ALARM_DISARMED, CONF_NAME, CONF_CODE
+from homeassistant.const import CONF_NAME, CONF_CODE
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['ifttt']
@@ -36,20 +37,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     code = config.get(CONF_CODE)
 
-    alarmpanel = IFTTTAlarmPanel(hass, name, code)
+    alarmpanel = IFTTTAlarmPanel(name, code)
     add_devices([alarmpanel])
 
 
 class IFTTTAlarmPanel(alarm.AlarmControlPanel):
     """Representation of an alarm control panel controlled throught IFTTT."""
 
-    def __init__(self, hass, name, code):
+    def __init__(self, name, code):
         """Initialize the alarm control panel."""
-        self._hass = hass
         self._name = name
         self._code = code
-        # Set default state to disarmed
-        self._state = STATE_ALARM_DISARMED
+        self._state = None
 
     @property
     def name(self):
@@ -75,31 +74,31 @@ class IFTTTAlarmPanel(alarm.AlarmControlPanel):
         """Send disarm command."""
         if not self._check_code(code):
             return
-        self.set_alarm_state(EVENT_ALARM_DISARM, code)
+        self.set_alarm_state(EVENT_ALARM_DISARM)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         if not self._check_code(code):
             return
-        self.set_alarm_state(EVENT_ALARM_ARM_AWAY, code)
+        self.set_alarm_state(EVENT_ALARM_ARM_AWAY)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         if not self._check_code(code):
             return
-        self.set_alarm_state(EVENT_ALARM_ARM_HOME, code)
+        self.set_alarm_state(EVENT_ALARM_ARM_HOME)
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
         if not self._check_code(code):
             return
-        self.set_alarm_state(EVENT_ALARM_ARM_NIGHT, code)
+        self.set_alarm_state(EVENT_ALARM_ARM_NIGHT)
 
-    def set_alarm_state(self, event, code):
+    def set_alarm_state(self, event):
         """Call the IFTTT trigger service to change the alarm state."""
         data = {ATTR_EVENT: event}
 
-        self._hass.services.call(IFTTT_DOMAIN, SERVICE_TRIGGER, data)
+        self.hass.services.call(IFTTT_DOMAIN, SERVICE_TRIGGER, data)
         _LOGGER.debug("Called IFTTT component to trigger event %s", event)
 
     def _check_code(self, code):
