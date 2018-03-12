@@ -4,9 +4,12 @@ This component provides light support for the Philips Hue system.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.hue/
 """
+import asyncio
 from datetime import timedelta
 import logging
 import random
+
+import async_timeout
 
 import homeassistant.components.hue as hue
 from homeassistant.components.light import (
@@ -43,6 +46,18 @@ SUPPORT_HUE = {
 ATTR_IS_HUE_GROUP = 'is_hue_group'
 
 
+class BoolProxy:
+    """Proxy value for a boolean."""
+
+    def __init__(self, initial):
+        """Initialize boolean proxy."""
+        self.value = initial
+
+    def __bool__(self):
+        """Return the proxied boolean value."""
+        return self.value
+
+
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the Hue lights."""
@@ -53,21 +68,35 @@ async def async_setup_platform(hass, config, async_add_devices,
     aiobridge = bridge.aiobridge
     cur_lights = {}
     cur_groups = {}
+    bridge_available = BoolProxy(True)
     await async_update_lights(
         hass, aiobridge, cur_lights, cur_groups, async_add_devices,
-        bridge.allow_groups, bridge.allow_unreachable)
+        bridge_available, bridge.allow_groups, bridge.allow_unreachable)
 
 
 async def async_update_lights(hass, bridge, cur_lights, cur_groups,
-                              async_add_devices, allow_groups,
-                              allow_unreachable):
+                              async_add_devices, bridge_available,
+                              allow_groups, allow_unreachable):
     """Update the lights."""
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def throttled_update(**kw):
         """Throttled update lights."""
-        await async_update_lights(
-            hass, bridge, cur_lights, cur_groups, async_add_devices,
-            allow_groups, allow_unreachable, **kw)
+        bridge_available.value = True
+        try:
+            with async_timeout.timeout(9):
+                await async_update_lights(
+                    hass, bridge, cur_lights, cur_groups, async_add_devices,
+                    bridge_available, allow_groups, allow_unreachable, **kw)
+        except asyncio.TimeoutError:
+            _LOGGER.error('Unable to reach bridge')
+
+            bridge_available.value = False
+
+            for light in cur_lights.values():
+                light.async_schedule_update_ha_state()
+
+            for group in cur_groups.values():
+                group.async_schedule_update_ha_state()
 
     await bridge.lights.update()
 
@@ -77,7 +106,8 @@ async def async_update_lights(hass, bridge, cur_lights, cur_groups,
             cur_lights[light_id].async_schedule_update_ha_state()
         else:
             cur_lights[light_id] = HueLight(
-                bridge.lights[light_id], throttled_update, allow_unreachable)
+                bridge.lights[light_id], throttled_update, bridge_available,
+                allow_unreachable)
 
             new_lights.append(cur_lights[light_id])
 
@@ -93,8 +123,8 @@ async def async_update_lights(hass, bridge, cur_lights, cur_groups,
             cur_groups[group_id].async_schedule_update_ha_state()
         else:
             cur_groups[group_id] = HueLight(
-                bridge.groups[group_id], throttled_update, allow_unreachable,
-                True)
+                bridge.groups[group_id], throttled_update, bridge_available,
+                allow_unreachable, True)
 
             new_lights.append(cur_groups[group_id])
 
@@ -105,11 +135,12 @@ async def async_update_lights(hass, bridge, cur_lights, cur_groups,
 class HueLight(Light):
     """Representation of a Hue light."""
 
-    def __init__(self, light, update_lights_cb,
+    def __init__(self, light, update_lights_cb, bridge_available,
                  allow_unreachable, is_group=False):
         """Initialize the light."""
         self.light = light
         self.async_update_lights = update_lights_cb
+        self.bridge_available = bridge_available
         self.allow_unreachable = allow_unreachable
         self.is_group = is_group
 
@@ -163,8 +194,9 @@ class HueLight(Light):
     @property
     def available(self):
         """Return if light is available."""
-        return (self.is_group or self.allow_unreachable or
-                self.light.state['reachable'])
+        return self.bridge_available and (self.is_group or
+                                          self.allow_unreachable or
+                                          self.light.state['reachable'])
 
     @property
     def supported_features(self):
