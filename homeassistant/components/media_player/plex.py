@@ -535,7 +535,7 @@ class PlexClient(MediaPlayerDevice):
 
     @property
     def marked_unavailable(self):
-        """Return time device was marked unavailable"""
+        """Return time device was marked unavailable."""
         return self._marked_unavailable
 
     @property
