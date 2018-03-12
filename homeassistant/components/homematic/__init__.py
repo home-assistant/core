@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.39']
+REQUIREMENTS = ['pyhomematic==0.1.40']
 DOMAIN = 'homematic'
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,8 +82,13 @@ HM_DEVICE_TYPES = {
 }
 
 HM_IGNORE_DISCOVERY_NODE = [
+    'ACTUAL_TEMPERATURE',
     'ACTUAL_HUMIDITY'
 ]
+
+HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
+    'ACTUAL_TEMPERATURE': ['IPAreaThermostat'],
+}
 
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
@@ -504,7 +509,7 @@ def _get_devices(hass, discovery_type, keys, interface):
 
         # Generate options for 1...n elements with 1...n parameters
         for param, channels in metadata.items():
-            if param in HM_IGNORE_DISCOVERY_NODE:
+            if param in HM_IGNORE_DISCOVERY_NODE and not class_name in HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS.get(param, []):
                 continue
 
             # Add devices
