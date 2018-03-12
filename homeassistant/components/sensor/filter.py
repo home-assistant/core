@@ -302,20 +302,19 @@ class TimeSMAFilter(Filter):
         self.last_leak = None
         self.queue = deque()
 
-    def _leak(self):
+    def _leak(self, now):
         """Remove timeouted elements."""
-        now = int(datetime.now().timestamp())
-
         while self.queue:
             timestamp, _ = self.queue[0]
             if timestamp + self._time_window <= now:
                 self.last_leak = self.queue.popleft()
             else:
-                break
-        return now
+                return
 
     def _filter_state(self, new_state):
-        now = self._leak()
+        now = int(datetime.now().timestamp())
+
+        self._leak(now)
         self.queue.append((now, float(new_state)))
         moving_sum = 0
         start = now - self._time_window
