@@ -4,8 +4,11 @@ Support for WeMo switches.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.wemo/
 """
+import asyncio
 import logging
 from datetime import datetime, timedelta
+
+import async_timeout
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.util import convert
@@ -14,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wemo']
+SCAN_INTERVAL = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +58,8 @@ class WemoSwitch(SwitchDevice):
         self.maker_params = None
         self.coffeemaker_mode = None
         self._state = None
+        self._available = True
+        self._update_lock = None
         # look up model name once as it incurs network traffic
         self._model_name = self.wemo.model_name
 
@@ -73,10 +79,12 @@ class WemoSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """No polling needed with subscriptions."""
-        if self._model_name == 'Insight':
-            return True
-        return False
+        """Device should poll.
+
+        Subscriptions push the state, however it won't detect if a device
+        is no longer available. Use polling to detect if a device is available.
+        """
+        return True
 
     @property
     def unique_id(self):
@@ -172,13 +180,7 @@ class WemoSwitch(SwitchDevice):
     @property
     def available(self):
         """Return true if switch is available."""
-        if self._model_name == 'Insight' and self.insight_params is None:
-            return False
-        if self._model_name == 'Maker' and self.maker_params is None:
-            return False
-        if self._model_name == 'CoffeeMaker' and self.coffeemaker_mode is None:
-            return False
-        return True
+        return self._available
 
     @property
     def icon(self):
@@ -199,9 +201,33 @@ class WemoSwitch(SwitchDevice):
         self.wemo.off()
         self.schedule_update_ha_state()
 
-    def update(self):
-        """Update WeMo state."""
-        self._update(force_update=True)
+    async def async_added_to_hass(self):
+        """Wemo switch added to HASS."""
+        # Define inside async context so we know our event loop
+        self._update_lock = asyncio.Lock()
+
+    async def async_update(self):
+        """Update WeMo state.
+
+        Wemo has an aggressive retry logic that sometimes can take over a
+        minute to return. If we don't get a state after 5 seconds, assume the
+        Wemo switch is unreachable. If update goes through, it will be made
+        available again.
+        """
+        if self._update_lock.locked():
+            return
+
+        try:
+            with async_timeout.timeout(5):
+                await asyncio.shield(self._async_locked_update())
+        except asyncio.TimeoutError:
+            _LOGGER.warning('Lost connection to %s', self.name)
+            self._available = False
+
+    async def _async_locked_update(self):
+        """Try updating within an async lock."""
+        async with self._update_lock:
+            await self.hass.async_add_job(self._update)
 
     def _update(self, force_update=True):
         """Update the device state."""
@@ -215,6 +241,11 @@ class WemoSwitch(SwitchDevice):
                 self.maker_params = self.wemo.maker_params
             elif self._model_name == 'CoffeeMaker':
                 self.coffeemaker_mode = self.wemo.mode
+
+            if not self._available:
+                _LOGGER.info('Reconnected to %s', self.name)
+                self._available = True
         except AttributeError as err:
             _LOGGER.warning("Could not update status for %s (%s)",
                             self.name, err)
+            self._available = False
