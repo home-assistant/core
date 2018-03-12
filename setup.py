@@ -49,7 +49,6 @@ REQUIRES = [
     'pip>=8.0.3',
     'jinja2>=2.10',
     'voluptuous==0.11.1',
-    'typing>=3,<4',
     'aiohttp==3.0.6',
     'async_timeout==2.0.0',
     'astral==1.5',
