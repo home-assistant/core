@@ -80,25 +80,18 @@ class SHTClient(object):
     def __init__(self, adafruit_sht):
         """Initialize the sensor."""
         self.adafruit_sht = adafruit_sht
-        self.data = dict()
+        self.temperature = None
+        self.humidity = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data the SHT sensor."""
         temperature, humidity = self.adafruit_sht.read_temperature_humidity()
-        if not (math.isnan(temperature) or math.isnan(humidity)):
-            self.data[SENSOR_TEMPERATURE] = temperature
-            self.data[SENSOR_HUMIDITY] = humidity
-        else:
+        if math.isnan(temperature) or math.isnan(humidity):
             _LOGGER.warning("Bad sample from sensor SHT31")
-
-    def get_latest_temperature(self):
-        """Get latest temperature."""
-        return self.data.get(SENSOR_TEMPERATURE)
-
-    def get_latest_humidity(self):
-        """Get latest humidity."""
-        return self.data.get(SENSOR_HUMIDITY)
+            return
+        self.temperature = temperature
+        self.humidity = humidity
 
 
 class SHTSensor(Entity):
@@ -136,7 +129,7 @@ class SHTSensorTemperature(SHTSensor):
     def update(self):
         """Fetch temperature from the sensor."""
         super().update()
-        temp_celsius = self._sensor.get_latest_temperature()
+        temp_celsius = self._sensor.temperature
         if temp_celsius is not None:
             self._state = display_temp(self.hass, temp_celsius,
                                        TEMP_CELSIUS, PRECISION_TENTHS)
@@ -153,6 +146,6 @@ class SHTSensorHumidity(SHTSensor):
     def update(self):
         """Fetch humidity from the sensor."""
         super().update()
-        humidity = self._sensor.get_latest_humidity()
+        humidity = self._sensor.humidity
         if humidity is not None:
             self._state = round(humidity)
