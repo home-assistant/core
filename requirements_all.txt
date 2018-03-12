@@ -956,12 +956,17 @@ python-roku==3.1.5
 python-sochain-api==0.0.2
 
 <<<<<<< Upstream, based on origin/dev
+<<<<<<< Upstream, based on origin/dev
 # homeassistant.components.media_player.songpal
 python-songpal==0.0.6
 =======
 # homeassistant.components.sensor.syncthru
 pysyncthru==0.2.2
 >>>>>>> 42e9f99 Pinned pysyncthru in requirements_all, having trouble with friendly_name
+=======
+# homeassistant.components.media_player.songpal
+python-songpal==0.0.6
+>>>>>>> 0cfe92f ran gen_reqirements_all.py
 
 # homeassistant.components.sensor.synologydsm
 python-synology==0.1.0
