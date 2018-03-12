@@ -10,7 +10,6 @@ import threading
 
 from typing import Optional, List
 
-from homeassistant import monkey_patch
 from homeassistant.const import (
     __version__,
     EVENT_HOMEASSISTANT_START,
@@ -334,11 +333,6 @@ def try_to_restart() -> None:
 def main() -> int:
     """Start Home Assistant."""
     validate_python()
-
-    if os.environ.get('HASS_NO_MONKEY') != '1':
-        if sys.version_info[:2] >= (3, 6):
-            monkey_patch.disable_c_asyncio()
-        monkey_patch.patch_weakref_tasks()
 
     attempt_use_uvloop()
 
