@@ -1304,7 +1304,7 @@ youtube_dl==2018.03.10
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.19.1
+zeroconf==0.20.0
 
 # homeassistant.components.media_player.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.0.0
