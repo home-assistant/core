@@ -11,7 +11,8 @@ from homeassistant.components.scene import Scene
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up scenes for deCONZ component."""
     if discovery_info is None:
         return

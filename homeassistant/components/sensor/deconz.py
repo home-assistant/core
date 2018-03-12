@@ -17,7 +17,8 @@ DEPENDENCIES = ['deconz']
 ATTR_EVENT_ID = 'event_id'
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the deCONZ sensors."""
     if discovery_info is None:
         return

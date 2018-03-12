@@ -13,7 +13,8 @@ from homeassistant.core import callback
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the deCONZ binary sensor."""
     if discovery_info is None:
         return

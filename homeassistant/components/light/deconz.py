@@ -17,7 +17,8 @@ from homeassistant.util.color import color_RGB_to_xy
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the deCONZ light."""
     if discovery_info is None:
         return
