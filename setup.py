@@ -52,7 +52,7 @@ REQUIRES = [
     'typing>=3,<4',
     'aiohttp==3.0.6',
     'async_timeout==2.0.0',
-    'astral==1.5',
+    'astral==1.6',
     'certifi>=2017.4.17',
     'attrs==17.4.0',
 ]
