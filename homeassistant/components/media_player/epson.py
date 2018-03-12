@@ -66,7 +66,6 @@ SUPPORT_EPSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUP
 
 EPSON_SCHEMA =  MEDIA_PLAYER_SCHEMA.extend({
     vol.Optional(ATTR_MASTER): cv.entity_id,
-    vol.Optional(ATTR_CMODE): cv.boolean,
 })
 
 # ATTR_TO_PROPERTY = ATTR_TO_PROPERTY.extend(ATTR_CMODE)
@@ -87,21 +86,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     epson.update()
     known_devices.add(host)
     async_add_devices([epson])
-
-    @asyncio.coroutine
-    def async_service_handler(service):
-        """Handle for services."""
-        entity_ids = service.data.get('entity_id')
-        if entity_ids:
-            devices = [device for device in hass.data[DATA_EPSON].devices
-                       if device.entity_id in entity_ids]
-        else:
-            devices = hass.data[DATA_EPSON].devices
-        for device in devices:
-            yield from device.update()
-    hass.services.async_register(
-        DOMAIN, ATTR_CMODE, async_service_handler,
-        schema=EPSON_SCHEMA)
+    #
+    # @asyncio.coroutine
+    # def async_service_handler(service):
+    #     """Handle for services."""
+    #     entity_ids = service.data.get('entity_id')
+    #     if entity_ids:
+    #         devices = [device for device in hass.data[DATA_EPSON].devices
+    #                    if device.entity_id in entity_ids]
+    #     else:
+    #         devices = hass.data[DATA_EPSON].devices
+    #     for device in devices:
+    #         yield from device.update()
+    # hass.services.async_register(
+    #     DOMAIN, ATTR_CMODE, async_service_handler,
+    #     schema=EPSON_SCHEMA)
     return True
 
 class EpsonProjector(MediaPlayerDevice):
@@ -112,6 +111,7 @@ class EpsonProjector(MediaPlayerDevice):
         self._name = name
         self._host = host
         self._port = port
+        self._cmode = None
         self._source_list = list(DEFAULT_SOURCES.values())
         self.KEY_COMMANDS = key_commands
         self._encryption = encryption
@@ -131,9 +131,9 @@ class EpsonProjector(MediaPlayerDevice):
     @asyncio.coroutine
     def update(self):
         """Update state of device."""
-        self._state = STATE_ON
-        self._cmode = CMODE_LIST['15']
-        return True
+        # self._state = STATE_ON
+        # self._cmode = CMODE_LIST['15']
+        # return True
         try:
             with async_timeout.timeout(10, loop=self._hass.loop):
                 response = yield from self.websession.get(
@@ -146,6 +146,7 @@ class EpsonProjector(MediaPlayerDevice):
             response_json = yield from response.json()
             if (response_json['projector']['feature']['reply'] == 'ERR'):
                 self._state = STATE_OFF
+                # self._cmode = CMODE_LIST['15']
             else:
                 self._state = STATE_ON
                 self._cmode = CMODE_LIST[response_json['projector']['feature']['reply']]
@@ -171,13 +172,6 @@ class EpsonProjector(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_EPSON
-
-    @property
-    def effect_list(self):
-        """Return the list of supported effects."""
-        return [
-            'COLOR', 'BLACK'
-        ]
 
     def async_turn_on(self):
         """Turn on epson"""
@@ -215,6 +209,17 @@ class EpsonProjector(MediaPlayerDevice):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("[%s] Error getting info", DOMAIN)
         return None
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        attributes = {}
+
+        if self._cmode is not None:
+            attributes[ATTR_CMODE] = self._cmode
+
+        return attributes
+
 
 #curl 'http://192.168.4.131/cgi-bin/json_query?jsoncallback=HDMILINK?%2001&_=1520179300356' -H 'Accept-Encoding: gzip, deflate'  -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: http://192.168.4.131/cgi-bin/webconf' -H 'X-Requested-With: XMLHttpRequest' -H 'Connection: keep-alive' --compressed
 # def setup(hass, config):
