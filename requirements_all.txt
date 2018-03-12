@@ -1093,7 +1093,7 @@ samsungctl[websocket]==0.7.1
 satel_integra==0.1.0
 
 # homeassistant.components.sensor.deutsche_bahn
-schiene==0.21
+schiene==0.22
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
