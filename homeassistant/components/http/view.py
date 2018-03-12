@@ -9,7 +9,7 @@ import json
 import logging
 
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPUnauthorized
+from aiohttp.web_exceptions import HTTPUnauthorized, HTTPInternalServerError
 
 import homeassistant.remote as rem
 from homeassistant.core import is_callback
@@ -31,8 +31,12 @@ class HomeAssistantView(object):
     # pylint: disable=no-self-use
     def json(self, result, status_code=200, headers=None):
         """Return a JSON response."""
-        msg = json.dumps(
-            result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
+        try:
+            msg = json.dumps(
+                result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
+        except TypeError as err:
+            _LOGGER.error('Unable to serialize to JSON: %s\n%s', err, result)
+            raise HTTPInternalServerError
         response = web.Response(
             body=msg, content_type=CONTENT_TYPE_JSON, status=status_code,
             headers=headers)
