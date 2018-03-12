@@ -39,6 +39,8 @@ CONF_INCLUDE_NON_CLIENTS = 'include_non_clients'
 CONF_USE_EPISODE_ART = 'use_episode_art'
 CONF_USE_CUSTOM_ENTITY_IDS = 'use_custom_entity_ids'
 CONF_SHOW_ALL_CONTROLS = 'show_all_controls'
+CONF_REMOVE_UNAVAILABLE_CLIENTS = 'remove_unavailable_clients'
+CONF_CLIENT_REMOVE_INTERVAL = 'client_remove_interval'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCLUDE_NON_CLIENTS, default=False):
@@ -46,6 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USE_EPISODE_ART, default=False):
     cv.boolean,
     vol.Optional(CONF_USE_CUSTOM_ENTITY_IDS, default=False):
+    cv.boolean,
+    vol.Optional(CONF_REMOVE_UNAVAILABLE_CLIENTS, default=True):
     cv.boolean,
 })
 
@@ -185,6 +189,7 @@ def setup_plexserver(
                 else:
                     plex_clients[machine_identifier].refresh(None, session)
 
+        removed_clients = []
         for client in plex_clients.values():
             # force devices to idle that do not have a valid session
             if client.session is None:
@@ -192,6 +197,19 @@ def setup_plexserver(
 
             client.set_availability(client.machine_identifier
                                     in available_client_ids)
+
+            if config.get(CONF_REMOVE_UNAVAILABLE_CLIENTS) \
+                    and not client.available:
+                interval = 10
+                diff = dt.now() - client.marked_unavailable
+                if diff.total_seconds() >= interval:
+                    hass.helpers.event.async_call_later(0,
+                                                        client.async_remove())
+                    removed_clients.append(client.machine_identifier)
+
+        while removed_clients:
+            clientid = removed_clients.pop()
+            del plex_clients[clientid]
 
         if new_plex_clients:
             add_devices_callback(new_plex_clients)
