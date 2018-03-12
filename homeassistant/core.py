@@ -117,11 +117,7 @@ class HomeAssistant(object):
         else:
             self.loop = loop or asyncio.get_event_loop()
 
-        executor_opts = {'max_workers': 10}
-        if sys.version_info[:2] >= (3, 5):
-            # It will default set to the number of processors on the machine,
-            # multiplied by 5. That is better for overlap I/O workers.
-            executor_opts['max_workers'] = None
+        executor_opts = {'max_workers': None}
         if sys.version_info[:2] >= (3, 6):
             executor_opts['thread_name_prefix'] = 'SyncWorker'
 

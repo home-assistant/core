@@ -95,9 +95,7 @@ def run(script_args: List) -> int:
     if args.files:
         print(color(C_HEAD, 'yaml files'), '(used /',
               color('red', 'not used') + ')')
-        # Python 3.5 gets a recursive, but not in 3.4
-        for yfn in sorted(glob(os.path.join(config_dir, '*.yaml')) +
-                          glob(os.path.join(config_dir, '*/*.yaml'))):
+        for yfn in sorted(glob(os.path.join(config_dir, '**/*.yaml'))):
             the_color = '' if yfn in res['yaml_files'] else 'red'
             print(color(the_color, '-', yfn))
 
