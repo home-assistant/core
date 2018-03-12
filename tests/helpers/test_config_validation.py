@@ -180,6 +180,17 @@ def test_entity_domain():
 
     assert schema('sensor.LIGHT') == 'sensor.light'
 
+    # Test with domain list
+    schema = vol.Schema(cv.entities_domain(['input_boolean', 'remote']))
+
+    options = (
+        'input_boolean.demo',
+        'remote.demo',
+    )
+
+    for value in options:
+        assert schema(value)
+
 
 def test_entities_domain():
     """Test entities domain validation."""
@@ -211,6 +222,14 @@ def test_entities_domain():
     assert schema(['sensor.light', 'SENSOR.demo']) == [
         'sensor.light', 'sensor.demo'
     ]
+
+    # Test with domain list
+    schema = vol.Schema(cv.entities_domain(['input_boolean', 'remote']))
+
+    with pytest.raises(vol.MultipleInvalid):
+        schema(['input_boolean.demo', 'remote.demo', 'light.demo'])
+
+    assert schema(['input_boolean.demo', 'remote.demo'])
 
 
 def test_ensure_list_csv():
