@@ -8,6 +8,7 @@ import logging
 import statistics
 from collections import deque, Counter
 from numbers import Number
+from datetime import datetime
 
 import voluptuous as vol
 
@@ -26,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 FILTER_NAME_LOWPASS = 'lowpass'
 FILTER_NAME_OUTLIER = 'outlier'
 FILTER_NAME_THROTTLE = 'throttle'
+FILTER_NAME_TIME_SMA = 'time_sma'
 FILTERS = Registry()
 
 CONF_FILTERS = 'filters'
@@ -44,22 +46,30 @@ NAME_TEMPLATE = "{} filter"
 ICON = 'mdi:chart-line-variant'
 
 FILTER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_FILTER_WINDOW_SIZE,
-                 default=DEFAULT_WINDOW_SIZE): vol.Coerce(int),
     vol.Optional(CONF_FILTER_PRECISION,
                  default=DEFAULT_PRECISION): vol.Coerce(int),
 })
 
 FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_OUTLIER,
+    vol.Optional(CONF_FILTER_WINDOW_SIZE,
+                 default=DEFAULT_WINDOW_SIZE): vol.Coerce(int),
     vol.Optional(CONF_FILTER_RADIUS,
                  default=DEFAULT_FILTER_RADIUS): vol.Coerce(float),
 })
 
 FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_LOWPASS,
+    vol.Optional(CONF_FILTER_WINDOW_SIZE,
+                 default=DEFAULT_WINDOW_SIZE): vol.Coerce(int),
     vol.Optional(CONF_FILTER_TIME_CONSTANT,
                  default=DEFAULT_FILTER_TIME_CONSTANT): vol.Coerce(int),
+})
+
+FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend({
+    vol.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_SMA,
+    vol.Required(CONF_FILTER_WINDOW_SIZE): vol.All(cv.time_period,
+                                                   cv.positive_timedelta)
 })
 
 FILTER_THROTTLE_SCHEMA = FILTER_SCHEMA.extend({
@@ -72,6 +82,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FILTERS): vol.All(cv.ensure_list,
                                         [vol.Any(FILTER_OUTLIER_SCHEMA,
                                                  FILTER_LOWPASS_SCHEMA,
+                                                 FILTER_TIME_SMA_SCHEMA,
                                                  FILTER_THROTTLE_SCHEMA)])
 })
 
@@ -275,6 +286,47 @@ class LowPassFilter(Filter):
         filtered = prev_weight * self.states[-1] + new_weight * new_state
 
         return filtered
+
+
+@FILTERS.register(FILTER_NAME_TIME_SMA)
+class TimeSMAFilter(Filter):
+    """Simple Moving Average (SMA) Filter.
+
+    The window_size is determined by time, and SMA is time weighted.
+    """
+
+    def __init__(self, window_size, precision, entity):
+        """Initialize Filter."""
+        super().__init__(FILTER_NAME_TIME_SMA, 0, precision, entity)
+        self._time_window = int(window_size.total_seconds())
+        self.last_leak = None
+        self.queue = deque()
+
+    def _leak(self):
+        """Remove timeouted elements."""
+        now = int(datetime.now().timestamp())
+
+        while self.queue:
+            timestamp, _ = self.queue[0]
+            if timestamp + self._time_window <= now:
+                self.last_leak = self.queue.popleft()
+            else:
+                break
+        return now
+
+    def _filter_state(self, new_state):
+        now = self._leak()
+        self.queue.append((now, float(new_state)))
+        moving_sum = 0
+        start = now - self._time_window
+        _, prev_val = self.last_leak or (0, float(new_state))
+
+        for timestamp, val in self.queue:
+            moving_sum += (timestamp-start)*prev_val
+            start, prev_val = timestamp, val
+        moving_sum += (now-start)*prev_val
+
+        return moving_sum/self._time_window
 
 
 @FILTERS.register(FILTER_NAME_THROTTLE)
