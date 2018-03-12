@@ -1,7 +1,5 @@
-"""
-Connect to a Samsung Printer via it's SyncThru
- web interface and read data
-"""
+"""Connect to a Samsung Printer via SyncThru web interface."""
+
 import logging
 import voluptuous as vol
 
@@ -102,7 +100,7 @@ class SyncThruSensor(Entity):
     """Implementation of an abstract Samsung Printer sensor platform."""
 
     def __init__(self, hass, syncthru, name):
-        """Initialize the sensor"""
+        """Initialize the sensor."""
         self._hass = hass
         self.syncthru = syncthru
         self._attributes = {}
@@ -129,7 +127,7 @@ class SyncThruSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measuremnt"""
+        """Return the unit of measuremnt."""
         return self._unit_of_measurement
 
     @property
@@ -140,7 +138,7 @@ class SyncThruSensor(Entity):
 
 
 class SyncThruMain(SyncThruSensor):
-    """Implementaion of the main device sensor, monitoring the general state"""
+    """Implementaion of the main sensor, monitoring the general state."""
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
@@ -156,7 +154,7 @@ class SyncThruToner(SyncThruSensor):
     """Implementation of a Samsung Printer toner sensor platform."""
 
     def __init__(self, hass, syncthru, name, color):
-        """Initialize the sensor"""
+        """Initialize the sensor."""
         super().__init__(hass, syncthru, name)
         self._name = "{} toner {}".format(name, color)
         self._color = color
@@ -179,7 +177,7 @@ class SyncThruDrum(SyncThruSensor):
     """Implementation of a Samsung Printer toner sensor platform."""
 
     def __init__(self, hass, syncthru, name, color):
-        """Initialize the sensor"""
+        """Initialize the sensor."""
         super().__init__(hass, syncthru, name)
         self._name = "{} drum {}".format(name, color)
         self._color = color
@@ -202,7 +200,7 @@ class SyncThruInputTray(SyncThruSensor):
     """Implementation of a Samsung Printer input tray sensor platform."""
 
     def __init__(self, hass, syncthru, name, number):
-        """Initialize the sensor"""
+        """Initialize the sensor."""
         super().__init__(hass, syncthru, name)
         self._name = "{} tray {}".format(name, number)
         self._number = number
@@ -226,7 +224,7 @@ class SyncThruOutputTray(SyncThruSensor):
     """Implementation of a Samsung Printer input tray sensor platform."""
 
     def __init__(self, hass, syncthru, name, number):
-        """Initialize the sensor"""
+        """Initialize the sensor."""
         super().__init__(hass, syncthru, name)
         self._name = "{} output tray {}".format(name, number)
         self._number = number
