@@ -33,6 +33,8 @@ STATES = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Egardia platform."""
+    if discovery_info is None:
+        return
     device = EgardiaAlarm(
         discovery_info['name'],
         hass.data[EGARDIA_DEVICE],
