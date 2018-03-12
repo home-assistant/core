@@ -508,8 +508,8 @@ def _get_devices(hass, discovery_type, keys, interface):
             metadata.update({None: device.ELEMENT})
 
         # Generate options for 1...n elements with 1...n parameters
-        for param, channels in metadata.items():
-            if param in HM_IGNORE_DISCOVERY_NODE and not class_name in HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS.get(param, []):
+            if param in HM_IGNORE_DISCOVERY_NODE and class_name not in \
+              HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS.get(param, []):
                 continue
 
             # Add devices
