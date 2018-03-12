@@ -1,4 +1,5 @@
 """Test deprecation helpers."""
+# pylint: skip-file
 from homeassistant.helpers.deprecation import (
     deprecated_substitute, get_deprecated)
 

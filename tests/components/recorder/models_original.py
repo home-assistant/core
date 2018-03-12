@@ -3,6 +3,7 @@
 This file contains the original models definitions before schema tracking was
 implemented. It is used to test the schema migration logic.
 """
+# pylint: skip-file
 
 import json
 from datetime import datetime

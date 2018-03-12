@@ -1,4 +1,5 @@
 """Fixtures for Hass.io."""
+# pylint: skip-file
 import os
 from unittest.mock import patch, Mock
 

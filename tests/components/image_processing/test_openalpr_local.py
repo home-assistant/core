@@ -1,4 +1,5 @@
 """The tests for the openalpr local platform."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import patch, PropertyMock, MagicMock
 

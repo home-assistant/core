@@ -1,4 +1,5 @@
 """The tests for the emulated Hue component."""
+# pylint: skip-file
 import asyncio
 import json
 from unittest.mock import patch

@@ -1,4 +1,5 @@
 """Test event helpers."""
+# pylint: skip-file
 import asyncio
 import unittest
 from datetime import datetime, timedelta

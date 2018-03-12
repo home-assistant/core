@@ -1,4 +1,5 @@
 """The tests for Core components."""
+# pylint: skip-file
 import asyncio
 import unittest
 from unittest.mock import patch, Mock

@@ -1,4 +1,5 @@
 """The tests for Efergy sensor platform."""
+# pylint: skip-file
 import unittest
 
 import requests_mock

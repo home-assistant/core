@@ -1,4 +1,5 @@
 """Test the UPNP component."""
+# pylint: skip-file
 import asyncio
 from collections import OrderedDict
 from unittest.mock import patch, MagicMock

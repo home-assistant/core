@@ -1,4 +1,5 @@
 """Test the Dyson fan component."""
+# pylint: skip-file
 import unittest
 from unittest import mock
 

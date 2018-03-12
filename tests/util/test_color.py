@@ -1,4 +1,5 @@
 """Test Home Assistant color util methods."""
+# pylint: skip-file
 import unittest
 import homeassistant.util.color as color_util
 

@@ -1,4 +1,5 @@
 """The tests for the webdav calendar component."""
+# pylint: skip-file
 import datetime
 import logging
 import unittest

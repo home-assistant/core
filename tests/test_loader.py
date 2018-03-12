@@ -1,4 +1,5 @@
 """Test to verify that we can load components."""
+# pylint: skip-file
 import asyncio
 import unittest
 

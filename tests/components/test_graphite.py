@@ -1,4 +1,5 @@
 """The tests for the Graphite component."""
+# pylint: skip-file
 import socket
 import unittest
 from unittest import mock

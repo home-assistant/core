@@ -1,4 +1,5 @@
 """The tests for the device tracker component."""
+# pylint: skip-file
 import asyncio
 import json
 import logging

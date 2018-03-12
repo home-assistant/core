@@ -1,4 +1,5 @@
 """Test hassbian config."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import patch
 

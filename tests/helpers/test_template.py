@@ -1,4 +1,5 @@
 """Test Home Assistant template helper methods."""
+# pylint: skip-file
 import asyncio
 from datetime import datetime
 import unittest

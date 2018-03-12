@@ -4,6 +4,7 @@ Test setup of rflink switch component/platform. State tracking and
 control of Rflink switch devices.
 
 """
+# pylint: skip-file
 
 import asyncio
 

@@ -1,4 +1,5 @@
 """The tests for the SleepIQ component."""
+# pylint: skip-file
 import unittest
 from unittest.mock import MagicMock, patch
 

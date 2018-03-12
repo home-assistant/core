@@ -1,4 +1,5 @@
 """Tests for samsungtv Components."""
+# pylint: skip-file
 import unittest
 from subprocess import CalledProcessError
 

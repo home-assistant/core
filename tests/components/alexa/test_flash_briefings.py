@@ -1,4 +1,5 @@
 """The tests for the Alexa component."""
+# pylint: skip-file
 import asyncio
 import datetime
 

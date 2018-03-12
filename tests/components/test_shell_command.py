@@ -1,4 +1,5 @@
 """The tests for the Shell command component."""
+# pylint: skip-file
 import asyncio
 import os
 import tempfile

@@ -1,4 +1,5 @@
 """The tests for the hassio component."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import patch, Mock, MagicMock
 

@@ -1,4 +1,5 @@
 """Test Z-Wave lights."""
+# pylint: skip-file
 from unittest.mock import patch, MagicMock
 
 import homeassistant.components.zwave

@@ -1,4 +1,5 @@
 """The tests for the automation component."""
+# pylint: skip-file
 import asyncio
 from datetime import timedelta
 import unittest

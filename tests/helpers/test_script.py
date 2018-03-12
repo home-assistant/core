@@ -1,4 +1,5 @@
 """The tests for the Script component."""
+# pylint: skip-file
 from datetime import timedelta
 from unittest import mock
 import unittest

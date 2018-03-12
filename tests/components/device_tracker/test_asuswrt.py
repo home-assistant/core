@@ -1,4 +1,5 @@
 """The tests for the ASUSWRT device tracker platform."""
+# pylint: skip-file
 import os
 from datetime import timedelta
 import unittest

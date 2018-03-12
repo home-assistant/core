@@ -1,4 +1,5 @@
 """Test Z-Wave locks."""
+# pylint: skip-file
 import asyncio
 
 from unittest.mock import patch, MagicMock

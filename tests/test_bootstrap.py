@@ -1,4 +1,5 @@
 """Test the bootstrapping."""
+# pylint: skip-file
 import asyncio
 import os
 from unittest.mock import Mock, patch

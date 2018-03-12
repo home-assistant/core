@@ -1,4 +1,5 @@
 """Test for Melissa climate component."""
+# pylint: skip-file
 import unittest
 import json
 from unittest.mock import Mock

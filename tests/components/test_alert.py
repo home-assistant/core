@@ -1,4 +1,5 @@
 """The tests for the Alert component."""
+# pylint: skip-file
 from copy import deepcopy
 import unittest
 

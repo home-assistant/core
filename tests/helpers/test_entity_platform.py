@@ -1,4 +1,5 @@
 """Tests for the EntityPlatform helper."""
+# pylint: skip-file
 import asyncio
 import logging
 import unittest

@@ -1,4 +1,5 @@
 """The tests for the Script component."""
+# pylint: skip-file
 import unittest
 from unittest.mock import patch
 

@@ -1,4 +1,5 @@
 """Test the config manager."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import MagicMock, patch, mock_open
 

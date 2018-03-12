@@ -1,4 +1,5 @@
 """The tests for the discovery component."""
+# pylint: skip-file
 import asyncio
 import os
 from unittest.mock import patch, MagicMock

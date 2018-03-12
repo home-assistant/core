@@ -1,4 +1,5 @@
 """Test Home Assistant package util methods."""
+# pylint: skip-file
 import asyncio
 import logging
 import os

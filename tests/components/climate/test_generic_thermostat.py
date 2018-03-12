@@ -1,4 +1,5 @@
 """The tests for the generic_thermostat."""
+# pylint: skip-file
 import asyncio
 import datetime
 import unittest

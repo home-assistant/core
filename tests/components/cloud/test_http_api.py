@@ -1,4 +1,5 @@
 """Tests for the HTTP API for the cloud component."""
+# pylint: skip-file
 import asyncio
 from unittest.mock import patch, MagicMock
 

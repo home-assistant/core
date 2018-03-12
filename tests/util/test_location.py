@@ -1,4 +1,5 @@
 """Test Home Assistant location util methods."""
+# pylint: skip-file
 from unittest import TestCase
 from unittest.mock import patch
 

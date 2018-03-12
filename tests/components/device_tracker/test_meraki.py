@@ -1,4 +1,5 @@
 """The tests the for Meraki device tracker."""
+# pylint: skip-file
 import asyncio
 import json
 

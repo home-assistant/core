@@ -1,4 +1,5 @@
 """The tests for numeric state automation."""
+# pylint: skip-file
 from datetime import timedelta
 import unittest
 from unittest.mock import patch

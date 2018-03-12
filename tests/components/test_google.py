@@ -1,4 +1,5 @@
 """The tests for the Google Calendar component."""
+# pylint: skip-file
 import logging
 import unittest
 from unittest.mock import patch
