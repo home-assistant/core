@@ -14,7 +14,6 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.util import convert
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
-from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wemo']
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -63,19 +62,10 @@ class WemoSwitch(SwitchDevice):
         # look up model name once as it incurs network traffic
         self._model_name = self.wemo.model_name
 
-        wemo = get_component('wemo')
-        wemo.SUBSCRIPTION_REGISTRY.register(self.wemo)
-        wemo.SUBSCRIPTION_REGISTRY.on(
-            self.wemo, None, self._subscription_callback)
-
     def _subscription_callback(self, _device, _type, _params):
         """Update the state by the Wemo device."""
         _LOGGER.info("Subscription update for %s", self.name)
         updated = self.wemo.subscription_update(_type, _params)
-
-        if not hasattr(self, 'hass'):
-            return
-
         self.hass.add_job(
             self._async_locked_subscription_callback(not updated))
 
@@ -202,18 +192,20 @@ class WemoSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._state = WEMO_ON
         self.wemo.on()
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self._state = WEMO_OFF
         self.wemo.off()
 
     async def async_added_to_hass(self):
         """Wemo switch added to HASS."""
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
+
+        registry = self.hass.components.wemo.SUBSCRIPTION_REGISTRY
+        await self.hass.async_add_job(registry.register, self.wemo)
+        registry.on(self.wemo, None, self._subscription_callback)
 
     async def async_update(self):
         """Update WeMo state.
