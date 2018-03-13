@@ -56,7 +56,7 @@ class WindowCovering(HomeAccessory):
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
         if value != self.current_position:
-            _LOGGER.debug("%s: Set position to %d", self._entity_id, value)
+            _LOGGER.debug('%s: Set position to %d', self._entity_id, value)
             self.homekit_target = value
             if value > self.current_position:
                 self.char_position_state.set_value(1)

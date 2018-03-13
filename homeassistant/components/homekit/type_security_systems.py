@@ -60,7 +60,7 @@ class SecuritySystem(HomeAccessory):
 
     def set_security_state(self, value):
         """Move security state to value if call came from HomeKit."""
-        _LOGGER.debug("%s: Set security state to %d",
+        _LOGGER.debug('%s: Set security state to %d',
                       self._entity_id, value)
         self.flag_target_state = True
         hass_value = HOMEKIT_TO_HASS[value]
@@ -82,7 +82,7 @@ class SecuritySystem(HomeAccessory):
         current_security_state = HASS_TO_HOMEKIT[hass_state]
         self.char_current_state.set_value(current_security_state,
                                           should_callback=False)
-        _LOGGER.debug("%s: Updated current state to %s (%d)",
+        _LOGGER.debug('%s: Updated current state to %s (%d)',
                       self._entity_id, hass_state, current_security_state)
 
         if not self.flag_target_state:

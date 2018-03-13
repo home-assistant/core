@@ -15,11 +15,12 @@ from homeassistant.const import (
     CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 from .const import (
-    DOMAIN, HOMEKIT_FILE, CONF_AUTO_START, CONF_ENTITY_CONFIG, DEFAULT_PORT,
-    DEFAULT_AUTO_START, DEFAULT_ENTITY_CONFIG, SERVICE_HOMEKIT_START)
+    DOMAIN, HOMEKIT_FILE, CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FILTER,
+    DEFAULT_PORT, DEFAULT_AUTO_START, SERVICE_HOMEKIT_START)
 from .util import (
     validate_entity_config, show_setup_message)
 
@@ -33,22 +34,23 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
         vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
-        vol.Optional(CONF_ENTITY_CONFIG, default=DEFAULT_ENTITY_CONFIG):
-            validate_entity_config,
+        vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
+        vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
     })
 }, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
     """Setup the HomeKit component."""
-    _LOGGER.debug("Begin setup HomeKit")
+    _LOGGER.debug('Begin setup HomeKit')
 
     conf = config[DOMAIN]
     port = conf[CONF_PORT]
     auto_start = conf[CONF_AUTO_START]
-    entities = conf[CONF_ENTITY_CONFIG]
+    entity_filter = conf[CONF_FILTER]
+    entity_config = conf[CONF_ENTITY_CONFIG]
 
-    homekit = HomeKit(hass, port, entities)
+    homekit = HomeKit(hass, port, entity_filter, entity_config)
     homekit.setup()
 
     if auto_start:
@@ -58,7 +60,7 @@ async def async_setup(hass, config):
     def handle_homekit_service_start(service):
         """Handle start HomeKit service call."""
         if homekit.started:
-            _LOGGER.warning("HomeKit is already running")
+            _LOGGER.warning('HomeKit is already running')
             return
         homekit.start()
 
@@ -70,7 +72,7 @@ async def async_setup(hass, config):
 
 def get_accessory(hass, state, aid, config):
     """Take state and return an accessory object if supported."""
-    print('==>', state.entity_id, '==>', aid, '==>', config)
+    _LOGGER.debug('%s: <aid=%d config=%s>')
     if not aid:
         _LOGGER.warning('The entitiy "%s" is not supported, since it '
                         'generates an invalid aid, please change it.',
@@ -80,7 +82,7 @@ def get_accessory(hass, state, aid, config):
     if state.domain == 'sensor':
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if unit == TEMP_CELSIUS or unit == TEMP_FAHRENHEIT:
-            _LOGGER.debug("Add \"%s\" as \"%s\"",
+            _LOGGER.debug('Add "%s" as "%s"',
                           state.entity_id, 'TemperatureSensor')
             return TYPES['TemperatureSensor'](hass, state.entity_id,
                                               state.name, aid=aid)
@@ -88,13 +90,13 @@ def get_accessory(hass, state, aid, config):
     elif state.domain == 'cover':
         # Only add covers that support set_cover_position
         if state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & 4:
-            _LOGGER.debug("Add \"%s\" as \"%s\"",
+            _LOGGER.debug('Add "%s" as "%s"',
                           state.entity_id, 'WindowCovering')
             return TYPES['WindowCovering'](hass, state.entity_id, state.name,
                                            aid=aid)
 
     elif state.domain == 'alarm_control_panel':
-        _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id,
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id,
                       'SecuritySystem')
         return TYPES['SecuritySystem'](hass, state.entity_id, state.name,
                                        alarm_code=config[ATTR_CODE], aid=aid)
@@ -106,16 +108,16 @@ def get_accessory(hass, state, aid, config):
         # Check if climate device supports auto mode
         support_auto = bool(features & support_temp_range)
 
-        _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'Thermostat')
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Thermostat')
         return TYPES['Thermostat'](hass, state.entity_id,
                                    state.name, support_auto, aid=aid)
 
     elif state.domain == 'switch' or state.domain == 'remote' \
             or state.domain == 'input_boolean':
-        _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'Switch')
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Switch')
         return TYPES['Switch'](hass, state.entity_id, state.name, aid=aid)
 
-    _LOGGER.warning("The entity \"%s\" is not supported yet",
+    _LOGGER.warning('The entity "%s" is not supported yet',
                     state.entity_id)
     return None
 
@@ -131,11 +133,12 @@ def generate_aid(entity_id):
 class HomeKit():
     """Class to handle all actions between HomeKit and Home Assistant."""
 
-    def __init__(self, hass, port, config):
+    def __init__(self, hass, port, entity_filter, entity_config):
         """Initialize a HomeKit object."""
         self._hass = hass
         self._port = port
-        self._config = config
+        self._filter = entity_filter
+        self._config = entity_config
         self.started = False
 
         self.bridge = None
@@ -154,8 +157,8 @@ class HomeKit():
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
-        if not state:
-            return None
+        if not state or not self._filter(state.entity_id):
+            return
         aid = generate_aid(state.entity_id)
         conf = self._config.pop(state.entity_id, {})
         acc = get_accessory(self._hass, state, aid, conf)
@@ -176,14 +179,14 @@ class HomeKit():
         for state in self._hass.states.all():
             self.add_bridge_accessory(state)
         for entity_id in self._config:
-            _LOGGER.warning("The entity \"%s\" was not setup when HomeKit "
-                            "was started", entity_id)
+            _LOGGER.warning('The entity "%s" was not setup when HomeKit '
+                            'was started', entity_id)
         self.bridge.set_broker(self.driver)
 
         if not self.bridge.paired:
             show_setup_message(self.bridge, self._hass)
 
-        _LOGGER.debug("Driver start")
+        _LOGGER.debug('Driver start')
         self.driver.start()
 
     def stop(self, *args):
@@ -191,6 +194,6 @@ class HomeKit():
         if not self.started:
             return
 
-        _LOGGER.debug("Driver stop")
+        _LOGGER.debug('Driver stop')
         if self.driver and self.driver.run_sentinel:
             self.driver.stop()

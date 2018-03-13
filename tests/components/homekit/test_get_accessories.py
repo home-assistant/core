@@ -20,11 +20,11 @@ def test_get_accessory_invalid(caplog):
     """Test with unsupported component."""
     assert get_accessory(None, State('test.unsupported', 'on'), 2, None) \
         is None
-    assert caplog.records[0].levelname == 'WARNING'
+    assert caplog.records[1].levelname == 'WARNING'
 
     assert get_accessory(None, State('test.test', 'on'), None, None) \
         is None
-    assert caplog.records[1].levelname == 'WARNING'
+    assert caplog.records[3].levelname == 'WARNING'
 
 
 class TestGetAccessories(unittest.TestCase):

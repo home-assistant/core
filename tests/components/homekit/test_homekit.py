@@ -8,7 +8,8 @@ from homeassistant.components.homekit import HomeKit, generate_aid
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     DOMAIN, HOMEKIT_FILE, CONF_AUTO_START,
-    DEFAULT_ENTITY_CONFIG, DEFAULT_PORT, SERVICE_HOMEKIT_START)
+    DEFAULT_PORT, SERVICE_HOMEKIT_START)
+from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.const import (
     CONF_PORT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
@@ -46,7 +47,7 @@ class TestHomeKit(unittest.TestCase):
             self.hass, DOMAIN, {DOMAIN: {}}))
 
         self.assertEqual(mock_homekit.mock_calls, [
-            call(self.hass, DEFAULT_PORT, DEFAULT_ENTITY_CONFIG),
+            call(self.hass, DEFAULT_PORT, ANY, {}),
             call().setup()])
 
         # Test auto start enabled
@@ -68,9 +69,8 @@ class TestHomeKit(unittest.TestCase):
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
 
-        print(mock_homekit.mock_calls)
         self.assertEqual(mock_homekit.mock_calls, [
-            call(self.hass, 11111, DEFAULT_ENTITY_CONFIG),
+            call(self.hass, 11111, ANY, {}),
             call().setup()])
 
         # Test start call with driver stopped.
@@ -89,7 +89,7 @@ class TestHomeKit(unittest.TestCase):
 
     def test_homekit_setup(self):
         """Test setup of bridge and driver."""
-        homekit = HomeKit(self.hass, DEFAULT_PORT, {'demo.test': {'aid': 2}})
+        homekit = HomeKit(self.hass, DEFAULT_PORT, {}, {})
 
         with patch(PATH_HOMEKIT + '.accessories.HomeDriver') as mock_driver, \
                 patch('homeassistant.util.get_local_ip') as mock_ip:
@@ -107,7 +107,7 @@ class TestHomeKit(unittest.TestCase):
 
     def test_homekit_add_accessory(self):
         """Add accessory if config exists and get_acc returns an accessory."""
-        homekit = HomeKit(self.hass, None, DEFAULT_ENTITY_CONFIG)
+        homekit = HomeKit(self.hass, None, lambda entity_id: True, {})
         homekit.bridge = HomeBridge(self.hass)
 
         with patch(PATH_HOMEKIT + '.accessories.HomeBridge.add_accessory') \
@@ -127,11 +127,30 @@ class TestHomeKit(unittest.TestCase):
                              call(self.hass, ANY, 429982757, {}))
             self.assertEqual(mock_add_acc.mock_calls, [call('acc')])
 
+    def test_homekit_entity_filter(self):
+        """Test the entity filter."""
+        entity_filter = generate_filter(['cover'], ['demo.test'], [], [])
+        homekit = HomeKit(self.hass, None, entity_filter, {})
+
+        with patch(PATH_HOMEKIT + '.get_accessory') as mock_get_acc:
+            mock_get_acc.return_value = None
+
+            homekit.add_bridge_accessory(State('cover.test', 'open'))
+            self.assertTrue(mock_get_acc.called)
+            mock_get_acc.reset_mock()
+
+            homekit.add_bridge_accessory(State('demo.test', 'on'))
+            self.assertTrue(mock_get_acc.called)
+            mock_get_acc.reset_mock()
+
+            homekit.add_bridge_accessory(State('light.demo', 'light'))
+            self.assertFalse(mock_get_acc.called)
+
     @patch(PATH_HOMEKIT + '.show_setup_message')
     @patch(PATH_HOMEKIT + '.HomeKit.add_bridge_accessory')
     def test_homekit_start(self, mock_add_bridge_acc, mock_show_setup_msg):
         """Test HomeKit start method."""
-        homekit = HomeKit(self.hass, None, {'demo.test': {'aid': 2}})
+        homekit = HomeKit(self.hass, None, {}, {'cover.demo': {}})
         homekit.bridge = HomeBridge(self.hass)
         homekit.driver = Mock()
 
@@ -153,7 +172,7 @@ class TestHomeKit(unittest.TestCase):
 
     def test_homekit_stop(self):
         """Test HomeKit stop method."""
-        homekit = HomeKit(None, None, None)
+        homekit = HomeKit(None, None, None, None)
         homekit.driver = Mock()
 
         # Test if started = False

@@ -42,7 +42,7 @@ class Switch(HomeAccessory):
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
-        _LOGGER.debug("%s: Set switch state to %s",
+        _LOGGER.debug('%s: Set switch state to %s',
                       self._entity_id, value)
         self.flag_target_state = True
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
@@ -56,7 +56,7 @@ class Switch(HomeAccessory):
 
         current_state = (new_state.state == STATE_ON)
         if not self.flag_target_state:
-            _LOGGER.debug("%s: Set current state to %s",
+            _LOGGER.debug('%s: Set current state to %s',
                           self._entity_id, current_state)
             self.char_on.set_value(current_state, should_callback=False)
 

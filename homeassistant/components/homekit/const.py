@@ -8,11 +8,11 @@ QR_CODE_NAME = 'homekit_qr.png'
 # #### CONFIG ####
 CONF_AUTO_START = 'auto_start'
 CONF_ENTITY_CONFIG = 'entity_config'
+CONF_FILTER = 'filter'
 
 # #### CONFIG DEFAULTS ####
 DEFAULT_AUTO_START = True
 DEFAULT_PORT = 51827
-DEFAULT_ENTITY_CONFIG = {}
 
 # #### HOMEKIT COMPONENT SERVICES ####
 SERVICE_HOMEKIT_START = 'start'

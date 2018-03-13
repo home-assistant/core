@@ -67,5 +67,5 @@ class TemperatureSensor(HomeAccessory):
         temperature = calc_temperature(new_state.state, unit)
         if temperature is not None:
             self.char_temp.set_value(temperature)
-            _LOGGER.debug("%s: Current temperature set to %d°C",
+            _LOGGER.debug('%s: Current temperature set to %d°C',
                           self._entity_id, temperature)
