@@ -86,8 +86,9 @@ async def async_setup_platform(hass, config, async_add_devices,
     # If automatic polling is enabled, Home Assistant will call the entity
     # update method after it is done calling all the services. This means that
     # when we update, we know all commands have been processed. If we trigger
-    # the update from inside async_turn_on, the update will not be capture the
-    # changes to the second entity until the next polling update.
+    # the update from inside async_turn_on, the update will not capture the
+    # changes to the second entity until the next polling update because the
+    # throttle decorator will prevent the call.
     #
     # Given the two approaches, the first one results in some extra work
     # for Home Assistant but with no impact on the states (as duplicate states
