@@ -515,16 +515,20 @@ class MQTT(object):
         This method is a coroutine.
         """
         result = None  # type: int
-        result = await self.hass.async_add_job(
-            self._mqttc.connect, self.broker, self.port, self.keepalive)
+        try:
+            result = await self.hass.async_add_job(
+                self._mqttc.connect, self.broker, self.port, self.keepalive)
+        except OSError as err:
+            _LOGGER.error('Failed to connect due to exception: %s', err)
+            return False
 
         if result != 0:
             import paho.mqtt.client as mqtt
             _LOGGER.error('Failed to connect: %s', mqtt.error_string(result))
-        else:
-            self._mqttc.loop_start()
+            return False
 
-        return not result
+        self._mqttc.loop_start()
+        return True
 
     @callback
     def async_disconnect(self):
