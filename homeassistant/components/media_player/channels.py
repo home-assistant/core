@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice)
 
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_IDLE, STATE_PAUSED, STATE_PLAYING,
+    CONF_HOST, CONF_PORT, CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING,
     ATTR_ENTITY_ID)
 
 import homeassistant.helpers.config_validation as cv
