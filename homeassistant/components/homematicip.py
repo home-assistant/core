@@ -6,13 +6,15 @@ https://home-assistant.io/components/homematicip/
 """
 
 import logging
-from datetime import timedelta
 from socket import timeout
 
 import voluptuous as vol
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (async_dispatcher_send,
+                                              async_dispatcher_connect)
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['homematicip==0.8']
 
@@ -23,20 +25,12 @@ DOMAIN = 'homematicip'
 CONF_NAME = 'name'
 CONF_ACCESSPOINT = 'accesspoint'
 CONF_AUTHTOKEN = 'authtoken'
-CONF_TIMEOUT = 'timeout'
-CONF_RECONNECT = 'reconnect'
-CONF_DISCOVERY = 'discovery'
 
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN): [vol.Schema({
         vol.Optional(CONF_NAME, default=''): cv.string,
         vol.Required(CONF_ACCESSPOINT): cv.string,
         vol.Required(CONF_AUTHTOKEN): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=timedelta(seconds=20)): (
-            vol.All(cv.time_period, cv.positive_timedelta)),
-        vol.Optional(CONF_RECONNECT, default=timedelta(minutes=10)): (
-            vol.All(cv.time_period, cv.positive_timedelta)),
-        vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
     })],
 }, extra=vol.ALLOW_EXTRA)
 
@@ -45,6 +39,16 @@ EVENT_DEVICE_CHANGED = 'homematicip_device_changed'
 EVENT_GROUP_CHANGED = 'homematicip_group_changed'
 EVENT_SECURITY_CHANGED = 'homematicip_security_changed'
 EVENT_JOURNAL_CHANGED = 'homematicip_journal_changed'
+
+ATTR_HOME_ID = 'home_id'
+ATTR_HOME_LABEL = 'home_label'
+ATTR_DEVICE_ID = 'device_id'
+ATTR_DEVICE_LABEL = 'device_label'
+ATTR_STATUS_UPDATE = 'status_update'
+ATTR_FIRMWARE_STATE = 'firmware_state'
+ATTR_LOW_BATTERY = 'low_battery'
+ATTR_SABOTAGE = 'sabotage'
+ATTR_RSSI = 'rssi'
 
 
 def setup(hass, config):
@@ -55,29 +59,25 @@ def setup(hass, config):
     homes = hass.data[DOMAIN]
     accesspoints = config.get(DOMAIN, [])
 
-    @callback
-    def event_handle(events):
+    def _update_event(events):
         """Handle incoming HomeMaticIP events."""
         for event in events:
             etype = event['eventType']
             edata = event['data']
-            _LOGGER.debug("Event: %s", event)
             if etype == 'DEVICE_CHANGED':
-                hass.bus.fire(EVENT_DEVICE_CHANGED, edata.id)
+                async_dispatcher_send(hass, EVENT_DEVICE_CHANGED, edata.id)
             elif etype == 'GROUP_CHANGED':
-                hass.bus.fire(EVENT_GROUP_CHANGED, edata.id)
+                async_dispatcher_send(hass, EVENT_GROUP_CHANGED, edata.id)
             elif etype == 'HOME_CHANGED':
-                hass.bus.fire(EVENT_HOME_CHANGED, edata.id)
+                async_dispatcher_send(hass, EVENT_HOME_CHANGED, edata.id)
             elif etype == 'JOURNAL_CHANGED':
-                hass.bus.fire(EVENT_SECURITY_CHANGED, edata.id)
+                async_dispatcher_send(hass, EVENT_SECURITY_CHANGED, edata.id)
         return True
 
     for device in accesspoints:
         name = device.get(CONF_NAME)
         accesspoint = device.get(CONF_ACCESSPOINT)
         authtoken = device.get(CONF_AUTHTOKEN)
-        # timeout = device.get(CONF_TIMEOUT)
-        # reconnect = device.get(CONF_RECONNECT)
 
         home = Home()
         if name.lower() == 'none':
@@ -90,10 +90,12 @@ def setup(hass, config):
                 _LOGGER.info("Connection to HMIP established")
             else:
                 _LOGGER.warning("Connection to HMIP could not be established")
+                return False
         except timeout:
             _LOGGER.warning("Connection to HMIP could not be established")
+            return False
         homes[home.id] = home
-        home.onEvent += event_handle
+        home.onEvent += _update_event
         home.enable_events()
         _LOGGER.info('HUB name: %s, id: %s', home.label, home.id)
 
@@ -101,3 +103,68 @@ def setup(hass, config):
             load_platform(hass, component, DOMAIN,
                           {'homeid': home.id}, config)
     return True
+
+
+class HomematicipGenericDevice(Entity):
+    """Representation of an HomematicIP generic device."""
+
+    def __init__(self, hass, home, device, signal=None):
+        """Initialize the generic device."""
+        self.hass = hass
+        self._home = home
+        self._device = device
+        async_dispatcher_connect(
+            self.hass, EVENT_DEVICE_CHANGED, self._device_changed)
+
+    @callback
+    def _device_changed(self, deviceid):
+        """Handle device state changes."""
+        if deviceid is None or deviceid == self._device.id:
+            _LOGGER.debug('Event device %s', self._device.label)
+            self.async_schedule_update_ha_state()
+
+    def _name(self, addon=''):
+        """Return the name of the device."""
+        name = ''
+        if self._home.label != '':
+            name += self._home.label + ' '
+        name += self._device.label
+        if addon != '':
+            name += ' ' + addon
+        return name
+
+    @property
+    def name(self):
+        """Return the name of the generic device."""
+        return self._name()
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def available(self):
+        """Device available."""
+        return not self._device.unreach
+
+    def _generic_state_attributes(self):
+        """Return the state attributes of the generic device."""
+        laststatus = ''
+        if self._device.lastStatusUpdate is not None:
+            laststatus = self._device.lastStatusUpdate.isoformat()
+        return {
+            ATTR_HOME_LABEL: self._home.label,
+            ATTR_DEVICE_LABEL: self._device.label,
+            ATTR_HOME_ID: self._device.homeId,
+            ATTR_DEVICE_ID: self._device.id.lower(),
+            ATTR_STATUS_UPDATE: laststatus,
+            ATTR_FIRMWARE_STATE: self._device.updateState.lower(),
+            ATTR_LOW_BATTERY: self._device.lowBat,
+            ATTR_RSSI: self._device.rssiDeviceValue,
+        }
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the generic device."""
+        return self._generic_state_attributes()
