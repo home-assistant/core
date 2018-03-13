@@ -32,11 +32,13 @@ _LOGGER = logging.getLogger(__name__)
 
 # Quiet down soco logging to just actual problems.
 logging.getLogger('soco').setLevel(logging.WARNING)
+logging.getLogger('soco.data_structures_entry').setLevel(logging.ERROR)
 _SOCO_SERVICES_LOGGER = logging.getLogger('soco.services')
 
 SUPPORT_SONOS = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
-    SUPPORT_PLAY_MEDIA | SUPPORT_SEEK | SUPPORT_CLEAR_PLAYLIST |\
-    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | SUPPORT_STOP
+    SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_SELECT_SOURCE |\
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK |\
+    SUPPORT_PLAY_MEDIA | SUPPORT_SHUFFLE_SET | SUPPORT_CLEAR_PLAYLIST
 
 SERVICE_JOIN = 'sonos_join'
 SERVICE_UNJOIN = 'sonos_unjoin'
@@ -68,7 +70,7 @@ ATTR_SPEECH_ENHANCE = 'speech_enhance'
 
 ATTR_IS_COORDINATOR = 'is_coordinator'
 
-UPNP_ERRORS_TO_IGNORE = ['701']
+UPNP_ERRORS_TO_IGNORE = ['701', '711']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
@@ -112,6 +114,7 @@ class SonosData:
 
     def __init__(self):
         """Initialize the data."""
+        self.uids = set()
         self.devices = []
         self.topology_lock = threading.Lock()
 
@@ -119,6 +122,21 @@ class SonosData:
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sonos platform."""
     import soco
+    import soco.events
+    import soco.exceptions
+
+    orig_parse_event_xml = soco.events.parse_event_xml
+
+    def safe_parse_event_xml(xml):
+        """Avoid SoCo 0.14 event thread dying from invalid xml."""
+        try:
+            return orig_parse_event_xml(xml)
+        # pylint: disable=broad-except
+        except Exception as ex:
+            _LOGGER.debug("Dodged exception: %s %s", type(ex), str(ex))
+            return {}
+
+    soco.events.parse_event_xml = safe_parse_event_xml
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
@@ -131,15 +149,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         player = soco.SoCo(discovery_info.get('host'))
 
         # If device already exists by config
-        if player.uid in [x.unique_id for x in hass.data[DATA_SONOS].devices]:
+        if player.uid in hass.data[DATA_SONOS].uids:
             return
 
         if player.is_visible:
-            device = SonosDevice(player)
-            hass.data[DATA_SONOS].devices.append(device)
-            add_devices([device])
-            if len(hass.data[DATA_SONOS].devices) > 1:
-                return
+            hass.data[DATA_SONOS].uids.add(player.uid)
+            add_devices([SonosDevice(player)])
     else:
         players = None
         hosts = config.get(CONF_HOSTS, None)
@@ -163,19 +178,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.warning("No Sonos speakers found")
             return
 
-        hass.data[DATA_SONOS].devices = [SonosDevice(p) for p in players]
-        add_devices(hass.data[DATA_SONOS].devices)
+        hass.data[DATA_SONOS].uids.update([p.uid for p in players])
+        add_devices([SonosDevice(p) for p in players])
         _LOGGER.debug("Added %s Sonos speakers", len(players))
 
     def service_handle(service):
         """Handle for services."""
         entity_ids = service.data.get('entity_id')
 
+        devices = hass.data[DATA_SONOS].devices
         if entity_ids:
-            devices = [device for device in hass.data[DATA_SONOS].devices
-                       if device.entity_id in entity_ids]
-        else:
-            devices = hass.data[DATA_SONOS].devices
+            devices = [d for d in devices if d.entity_id in entity_ids]
 
         if service.service == SERVICE_JOIN:
             master = [device for device in hass.data[DATA_SONOS].devices
@@ -307,8 +320,10 @@ def _timespan_secs(timespan):
 
 def _is_radio_uri(uri):
     """Return whether the URI is a radio stream."""
-    return uri.startswith('x-rincon-mp3radio:') or \
-        uri.startswith('x-sonosapi-stream:')
+    radio_schemes = (
+        'x-rincon-mp3radio:', 'x-sonosapi-stream:', 'x-sonosapi-radio:',
+        'hls-radio:')
+    return uri.startswith(radio_schemes)
 
 
 class SonosDevice(MediaPlayerDevice):
@@ -326,7 +341,6 @@ class SonosDevice(MediaPlayerDevice):
         self._name = None
         self._coordinator = None
         self._status = None
-        self._extra_features = 0
         self._media_duration = None
         self._media_position = None
         self._media_position_updated_at = None
@@ -347,11 +361,12 @@ class SonosDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Subscribe sonos events."""
+        self.hass.data[DATA_SONOS].devices.append(self)
         self.hass.async_add_job(self._subscribe_to_player_events)
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._unique_id
 
     @property
@@ -417,6 +432,10 @@ class SonosDevice(MediaPlayerDevice):
         """Add event subscriptions."""
         player = self.soco
 
+        # New player available, build the current group topology
+        for device in self.hass.data[DATA_SONOS].devices:
+            device.process_zonegrouptopology_event(None)
+
         queue = _ProcessSonosEventQueue(self.process_avtransport_event)
         player.avTransport.subscribe(auto_renew=True, event_queue=queue)
 
@@ -446,19 +465,18 @@ class SonosDevice(MediaPlayerDevice):
                 self._media_artist = None
                 self._media_album_name = None
                 self._media_title = None
-                self._extra_features = 0
                 self._source_name = None
 
     def process_avtransport_event(self, event):
         """Process a track change event coming from a coordinator."""
-        variables = event.variables
+        transport_info = self.soco.get_current_transport_info()
+        new_status = transport_info.get('current_transport_state')
 
         # Ignore transitions, we should get the target state soon
-        new_status = variables.get('transport_state')
         if new_status == 'TRANSITIONING':
             return
 
-        self._play_mode = variables.get('current_play_mode', self._play_mode)
+        self._play_mode = self.soco.play_mode
 
         if self.soco.is_playing_tv:
             self._refresh_linein(SOURCE_TV)
@@ -467,17 +485,13 @@ class SonosDevice(MediaPlayerDevice):
         else:
             track_info = self.soco.get_current_track_info()
 
-            media_info = self.soco.avTransport.GetMediaInfo(
-                [('InstanceID', 0)]
-            )
-
             if _is_radio_uri(track_info['uri']):
-                self._refresh_radio(variables, media_info, track_info)
+                self._refresh_radio(event.variables, track_info)
             else:
-                self._refresh_music(variables, media_info, track_info)
+                update_position = (new_status != self._status)
+                self._refresh_music(update_position, track_info)
 
-        if new_status:
-            self._status = new_status
+        self._status = new_status
 
         self.schedule_update_ha_state()
 
@@ -507,11 +521,11 @@ class SonosDevice(MediaPlayerDevice):
 
     def process_zonegrouptopology_event(self, event):
         """Process a zone group topology event coming from a player."""
-        if not hasattr(event, 'zone_player_uui_ds_in_group'):
+        if event and not hasattr(event, 'zone_player_uui_ds_in_group'):
             return
 
         with self.hass.data[DATA_SONOS].topology_lock:
-            group = event.zone_player_uui_ds_in_group
+            group = event and event.zone_player_uui_ds_in_group
             if group:
                 # New group information is pushed
                 coordinator_uid, *slave_uids = group.split(',')
@@ -547,8 +561,6 @@ class SonosDevice(MediaPlayerDevice):
 
     def _refresh_linein(self, source):
         """Update state when playing from line-in/tv."""
-        self._extra_features = 0
-
         self._media_duration = None
         self._media_position = None
         self._media_position_updated_at = None
@@ -561,14 +573,13 @@ class SonosDevice(MediaPlayerDevice):
 
         self._source_name = source
 
-    def _refresh_radio(self, variables, media_info, track_info):
+    def _refresh_radio(self, variables, track_info):
         """Update state when streaming radio."""
-        self._extra_features = 0
-
         self._media_duration = None
         self._media_position = None
         self._media_position_updated_at = None
 
+        media_info = self.soco.avTransport.GetMediaInfo([('InstanceID', 0)])
         self._media_image_url = self._radio_artwork(media_info['CurrentURI'])
 
         self._media_artist = track_info.get('artist')
@@ -585,9 +596,7 @@ class SonosDevice(MediaPlayerDevice):
             )
         else:
             # "On Now" field in the sonos pc app
-            current_track_metadata = variables.get(
-                'current_track_meta_data'
-            )
+            current_track_metadata = variables.get('current_track_meta_data')
             if current_track_metadata:
                 self._media_artist = \
                     current_track_metadata.radio_show.split(',')[0]
@@ -625,30 +634,8 @@ class SonosDevice(MediaPlayerDevice):
             if fav.reference.get_uri() == media_info['CurrentURI']:
                 self._source_name = fav.title
 
-    def _refresh_music(self, variables, media_info, track_info):
+    def _refresh_music(self, update_media_position, track_info):
         """Update state when playing music tracks."""
-        self._extra_features = SUPPORT_PAUSE | SUPPORT_SHUFFLE_SET |\
-            SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
-
-        playlist_position = track_info.get('playlist_position')
-        if playlist_position in ('', 'NOT_IMPLEMENTED', None):
-            playlist_position = None
-        else:
-            playlist_position = int(playlist_position)
-
-        playlist_size = media_info.get('NrTracks')
-        if playlist_size in ('', 'NOT_IMPLEMENTED', None):
-            playlist_size = None
-        else:
-            playlist_size = int(playlist_size)
-
-        if playlist_position is not None and playlist_size is not None:
-            if playlist_position <= 1:
-                self._extra_features &= ~SUPPORT_PREVIOUS_TRACK
-
-            if playlist_position == playlist_size:
-                self._extra_features &= ~SUPPORT_NEXT_TRACK
-
         self._media_duration = _timespan_secs(track_info.get('duration'))
 
         position_info = self.soco.avTransport.GetPositionInfo(
@@ -658,25 +645,21 @@ class SonosDevice(MediaPlayerDevice):
         rel_time = _timespan_secs(position_info.get("RelTime"))
 
         # player no longer reports position?
-        update_media_position = rel_time is None and \
+        update_media_position |= rel_time is None and \
             self._media_position is not None
 
         # player started reporting position?
         update_media_position |= rel_time is not None and \
             self._media_position is None
 
-        if self._status != variables.get('transport_state'):
-            update_media_position = True
-        else:
-            # position jumped?
-            if rel_time is not None and self._media_position is not None:
-                time_diff = utcnow() - self._media_position_updated_at
-                time_diff = time_diff.total_seconds()
+        # position jumped?
+        if rel_time is not None and self._media_position is not None:
+            time_diff = utcnow() - self._media_position_updated_at
+            time_diff = time_diff.total_seconds()
 
-                calculated_position = self._media_position + time_diff
+            calculated_position = self._media_position + time_diff
 
-                update_media_position = \
-                    abs(calculated_position - rel_time) > 1.5
+            update_media_position |= abs(calculated_position - rel_time) > 1.5
 
         if update_media_position:
             self._media_position = rel_time
@@ -763,7 +746,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_coordinator
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_SONOS | self._extra_features
+        return SUPPORT_SONOS
 
     @soco_error()
     def volume_up(self):
@@ -853,19 +836,19 @@ class SonosDevice(MediaPlayerDevice):
         """Send pause command."""
         self.soco.pause()
 
-    @soco_error()
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_next_track(self):
         """Send next track command."""
         self.soco.next()
 
-    @soco_error()
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_previous_track(self):
         """Send next track command."""
         self.soco.previous()
 
-    @soco_error()
+    @soco_error(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_seek(self, position):
         """Send seek command."""

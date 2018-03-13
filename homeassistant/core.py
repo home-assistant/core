@@ -33,7 +33,7 @@ from homeassistant.const import (
 from homeassistant import loader
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, InvalidStateError)
-from homeassistant.util.async import (
+from homeassistant.util.async_ import (
     run_coroutine_threadsafe, run_callback_threadsafe,
     fire_coroutine_threadsafe)
 import homeassistant.util as util
@@ -1064,7 +1064,7 @@ class Config(object):
         """Check if the path is valid for access from outside."""
         assert path is not None
 
-        parent = pathlib.Path(path).parent
+        parent = pathlib.Path(path)
         try:
             parent = parent.resolve()  # pylint: disable=no-member
         except (FileNotFoundError, RuntimeError, PermissionError):

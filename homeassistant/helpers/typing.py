@@ -8,6 +8,7 @@ import homeassistant.core
 GPSType = Tuple[float, float]
 ConfigType = Dict[str, Any]
 HomeAssistantType = homeassistant.core.HomeAssistant
+ServiceDataType = Dict[str, Any]
 
 # Custom type for recorder Queries
 QueryType = Any

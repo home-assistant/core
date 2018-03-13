@@ -7,6 +7,7 @@ from uuid import UUID
 
 import pytest
 
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.media_player import cast
@@ -196,6 +197,10 @@ def test_create_cast_device_with_uuid(hass):
 @asyncio.coroutine
 def test_normal_chromecast_not_starting_discovery(hass):
     """Test cast platform not starting discovery when not required."""
+    import pychromecast  # imports mock pychromecast
+
+    pychromecast.ChromecastConnectionError = IOError
+
     chromecast = get_fake_chromecast()
 
     with patch('pychromecast.Chromecast', return_value=chromecast):
@@ -215,6 +220,11 @@ def test_normal_chromecast_not_starting_discovery(hass):
         add_devices = yield from async_setup_cast(
             hass, discovery_info={'host': 'host1', 'port': 42})
         assert add_devices.call_count == 0
+
+    with patch('pychromecast.Chromecast',
+               side_effect=pychromecast.ChromecastConnectionError):
+        with pytest.raises(PlatformNotReady):
+            yield from async_setup_cast(hass, {'host': 'host3'})
 
 
 @asyncio.coroutine

@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -93,7 +93,7 @@ class Entity(object):
 
     @property
     def unique_id(self) -> str:
-        """Return an unique ID."""
+        """Return a unique ID."""
         return None
 
     @property
@@ -332,13 +332,18 @@ class Entity(object):
             if self.parallel_updates:
                 self.parallel_updates.release()
 
-    @asyncio.coroutine
-    def async_remove(self):
+    async def async_remove(self):
         """Remove entity from Home Assistant."""
         if self.platform is not None:
-            yield from self.platform.async_remove_entity(self.entity_id)
+            await self.platform.async_remove_entity(self.entity_id)
         else:
             self.hass.states.async_remove(self.entity_id)
+
+    @callback
+    def async_registry_updated(self, old, new):
+        """Called when the entity registry has been updated."""
+        self.registry_name = new.name
+        self.async_schedule_update_ha_state()
 
     def __eq__(self, other):
         """Return the comparison."""

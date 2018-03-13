@@ -1,6 +1,7 @@
 """Module to handle messages from Home Assistant cloud."""
 import asyncio
 import logging
+import pprint
 
 from aiohttp import hdrs, client_exceptions, WSMsgType
 
@@ -10,7 +11,7 @@ from homeassistant.components.google_assistant import smart_home as ga
 from homeassistant.util.decorator import Registry
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from . import auth_api
-from .const import MESSAGE_EXPIRATION
+from .const import MESSAGE_EXPIRATION, MESSAGE_AUTH_FAIL
 
 HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
@@ -77,9 +78,9 @@ class CloudIoT:
             self.tries += 1
 
             try:
-                # Sleep 0, 5, 10, 15 ... 30 seconds between retries
+                # Sleep 2^tries seconds between retries
                 self.retry_task = hass.async_add_job(asyncio.sleep(
-                    min(30, (self.tries - 1) * 5), loop=hass.loop))
+                    2**min(9, self.tries), loop=hass.loop))
                 yield from self.retry_task
                 self.retry_task = None
             except asyncio.CancelledError:
@@ -97,13 +98,23 @@ class CloudIoT:
 
         try:
             yield from hass.async_add_job(auth_api.check_token, self.cloud)
+        except auth_api.Unauthenticated as err:
+            _LOGGER.error('Unable to refresh token: %s', err)
+
+            hass.components.persistent_notification.async_create(
+                MESSAGE_AUTH_FAIL, 'Home Assistant Cloud',
+                'cloud_subscription_expired')
+
+            # Don't await it because it will cancel this task
+            hass.async_add_job(self.cloud.logout())
+            return
         except auth_api.CloudError as err:
-            _LOGGER.warning("Unable to connect: %s", err)
+            _LOGGER.warning("Unable to refresh token: %s", err)
             return
 
         if self.cloud.subscription_expired:
             hass.components.persistent_notification.async_create(
-                MESSAGE_EXPIRATION, 'Subscription expired',
+                MESSAGE_EXPIRATION, 'Home Assistant Cloud',
                 'cloud_subscription_expired')
             self.close_requested = True
             return
@@ -144,7 +155,9 @@ class CloudIoT:
                     disconnect_warn = 'Received invalid JSON.'
                     break
 
-                _LOGGER.debug("Received message: %s", msg)
+                if _LOGGER.isEnabledFor(logging.DEBUG):
+                    _LOGGER.debug("Received message:\n%s\n",
+                                  pprint.pformat(msg))
 
                 response = {
                     'msgid': msg['msgid'],
@@ -166,7 +179,9 @@ class CloudIoT:
                     _LOGGER.exception("Error handling message")
                     response['error'] = 'exception'
 
-                _LOGGER.debug("Publishing message: %s", response)
+                if _LOGGER.isEnabledFor(logging.DEBUG):
+                    _LOGGER.debug("Publishing message:\n%s\n",
+                                  pprint.pformat(response))
                 yield from client.send_json(response)
 
         except client_exceptions.WSServerHandshakeError as err:

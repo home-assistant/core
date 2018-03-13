@@ -152,10 +152,8 @@ CONFIG_SCHEMA = vol.Schema({
                 vol.Optional(CONF_BAUD_RATE, default=DEFAULT_BAUD_RATE):
                     cv.positive_int,
                 vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
-                vol.Optional(CONF_TOPIC_IN_PREFIX, default=''):
-                    valid_subscribe_topic,
-                vol.Optional(CONF_TOPIC_OUT_PREFIX, default=''):
-                    valid_publish_topic,
+                vol.Optional(CONF_TOPIC_IN_PREFIX): valid_subscribe_topic,
+                vol.Optional(CONF_TOPIC_OUT_PREFIX): valid_publish_topic,
                 vol.Optional(CONF_NODES, default={}): NODE_SCHEMA,
             }]
         ),
@@ -358,8 +356,8 @@ def setup(hass, config):
             hass.config.path('mysensors{}.pickle'.format(index + 1)))
         baud_rate = gway.get(CONF_BAUD_RATE)
         tcp_port = gway.get(CONF_TCP_PORT)
-        in_prefix = gway.get(CONF_TOPIC_IN_PREFIX)
-        out_prefix = gway.get(CONF_TOPIC_OUT_PREFIX)
+        in_prefix = gway.get(CONF_TOPIC_IN_PREFIX, '')
+        out_prefix = gway.get(CONF_TOPIC_OUT_PREFIX, '')
         ready_gateway = setup_gateway(
             device, persistence_file, baud_rate, tcp_port, in_prefix,
             out_prefix)

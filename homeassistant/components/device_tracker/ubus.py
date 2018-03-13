@@ -23,7 +23,8 @@ CONF_DHCP_SOFTWARE = 'dhcp_software'
 DEFAULT_DHCP_SOFTWARE = 'dnsmasq'
 DHCP_SOFTWARES = [
     'dnsmasq',
-    'odhcpd'
+    'odhcpd',
+    'none'
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -40,8 +41,10 @@ def get_scanner(hass, config):
     dhcp_sw = config[DOMAIN][CONF_DHCP_SOFTWARE]
     if dhcp_sw == 'dnsmasq':
         scanner = DnsmasqUbusDeviceScanner(config[DOMAIN])
-    else:
+    elif dhcp_sw == 'odhcpd':
         scanner = OdhcpdUbusDeviceScanner(config[DOMAIN])
+    else:
+        scanner = UbusDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -92,8 +95,8 @@ class UbusDeviceScanner(DeviceScanner):
         return self.last_results
 
     def _generate_mac2name(self):
-        """Must be implemented depending on the software."""
-        raise NotImplementedError
+        """Return empty MAC to name dict. Overriden if DHCP server is set."""
+        self.mac2name = dict()
 
     @_refresh_on_access_denied
     def get_device_name(self, device):

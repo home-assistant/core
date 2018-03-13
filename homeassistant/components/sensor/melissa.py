@@ -22,8 +22,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = api.fetch_devices().values()
 
     for device in devices:
-        sensors.append(MelissaTemperatureSensor(device, api))
-        sensors.append(MelissaHumiditySensor(device, api))
+        if device['type'] == 'melissa':
+            sensors.append(MelissaTemperatureSensor(device, api))
+            sensors.append(MelissaHumiditySensor(device, api))
     add_devices(sensors)
 
 

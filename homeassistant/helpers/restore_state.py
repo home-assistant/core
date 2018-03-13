@@ -49,9 +49,8 @@ def _load_restore_cache(hass: HomeAssistant):
     _LOGGER.debug('Created cache with %s', list(hass.data[DATA_RESTORE_CACHE]))
 
 
-@asyncio.coroutine
 @bind_hass
-def async_get_last_state(hass, entity_id: str):
+async def async_get_last_state(hass, entity_id: str):
     """Restore state."""
     if DATA_RESTORE_CACHE in hass.data:
         return hass.data[DATA_RESTORE_CACHE].get(entity_id)
@@ -66,7 +65,7 @@ def async_get_last_state(hass, entity_id: str):
 
     try:
         with async_timeout.timeout(RECORDER_TIMEOUT, loop=hass.loop):
-            connected = yield from wait_connection_ready(hass)
+            connected = await wait_connection_ready(hass)
     except asyncio.TimeoutError:
         return None
 
@@ -76,25 +75,24 @@ def async_get_last_state(hass, entity_id: str):
     if _LOCK not in hass.data:
         hass.data[_LOCK] = asyncio.Lock(loop=hass.loop)
 
-    with (yield from hass.data[_LOCK]):
+    with (await hass.data[_LOCK]):
         if DATA_RESTORE_CACHE not in hass.data:
-            yield from hass.async_add_job(
+            await hass.async_add_job(
                 _load_restore_cache, hass)
 
     return hass.data.get(DATA_RESTORE_CACHE, {}).get(entity_id)
 
 
-@asyncio.coroutine
-def async_restore_state(entity, extract_info):
+async def async_restore_state(entity, extract_info):
     """Call entity.async_restore_state with cached info."""
     if entity.hass.state not in (CoreState.starting, CoreState.not_running):
         _LOGGER.debug("Not restoring state for %s: Hass is not starting: %s",
                       entity.entity_id, entity.hass.state)
         return
 
-    state = yield from async_get_last_state(entity.hass, entity.entity_id)
+    state = await async_get_last_state(entity.hass, entity.entity_id)
 
     if not state:
         return
 
-    yield from entity.async_restore_state(**extract_info(state))
+    await entity.async_restore_state(**extract_info(state))

@@ -165,7 +165,6 @@ class Recorder(threading.Thread):
         self.hass = hass
         self.keep_days = keep_days
         self.purge_interval = purge_interval
-        self.did_vacuum = False
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
@@ -269,7 +268,7 @@ class Recorder(threading.Thread):
             def async_purge(now):
                 """Trigger the purge and schedule the next run."""
                 self.queue.put(
-                    PurgeTask(self.keep_days, repack=not self.did_vacuum))
+                    PurgeTask(self.keep_days, repack=False))
                 self.hass.helpers.event.async_track_point_in_time(
                     async_purge, now + timedelta(days=self.purge_interval))
 

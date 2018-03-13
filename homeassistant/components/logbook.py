@@ -282,7 +282,7 @@ def _get_events(hass, config, start_day, end_day):
             .filter((Events.time_fired > start_day)
                     & (Events.time_fired < end_day)) \
             .filter((States.last_updated == States.last_changed)
-                    | (States.last_updated.is_(None)))
+                    | (States.state_id.is_(None)))
         events = execute(query)
     return humanify(_exclude_events(events, config))
 

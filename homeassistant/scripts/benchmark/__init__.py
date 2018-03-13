@@ -50,8 +50,7 @@ def benchmark(func):
 
 
 @benchmark
-@asyncio.coroutine
-def async_million_events(hass):
+async def async_million_events(hass):
     """Run a million events."""
     count = 0
     event_name = 'benchmark_event'
@@ -73,15 +72,14 @@ def async_million_events(hass):
 
     start = timer()
 
-    yield from event.wait()
+    await event.wait()
 
     return timer() - start
 
 
 @benchmark
-@asyncio.coroutine
 # pylint: disable=invalid-name
-def async_million_time_changed_helper(hass):
+async def async_million_time_changed_helper(hass):
     """Run a million events through time changed helper."""
     count = 0
     event = asyncio.Event(loop=hass.loop)
@@ -105,15 +103,14 @@ def async_million_time_changed_helper(hass):
 
     start = timer()
 
-    yield from event.wait()
+    await event.wait()
 
     return timer() - start
 
 
 @benchmark
-@asyncio.coroutine
 # pylint: disable=invalid-name
-def async_million_state_changed_helper(hass):
+async def async_million_state_changed_helper(hass):
     """Run a million events through state changed helper."""
     count = 0
     entity_id = 'light.kitchen'
@@ -141,7 +138,7 @@ def async_million_state_changed_helper(hass):
 
     start = timer()
 
-    yield from event.wait()
+    await event.wait()
 
     return timer() - start
 

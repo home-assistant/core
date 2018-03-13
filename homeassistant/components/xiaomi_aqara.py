@@ -23,7 +23,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['PyXiaomiGateway==0.8.1']
+REQUIREMENTS = ['PyXiaomiGateway==0.8.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,19 +182,19 @@ def setup(hass, config):
 
     gateway_only_schema = _add_gateway_to_schema(xiaomi, vol.Schema({}))
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_PLAY_RINGTONE, play_ringtone_service,
         schema=_add_gateway_to_schema(xiaomi, SERVICE_SCHEMA_PLAY_RINGTONE))
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_STOP_RINGTONE, stop_ringtone_service,
         schema=gateway_only_schema)
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_ADD_DEVICE, add_device_service,
         schema=gateway_only_schema)
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_REMOVE_DEVICE, remove_device_service,
         schema=_add_gateway_to_schema(xiaomi, SERVICE_SCHEMA_REMOVE_DEVICE))
 
@@ -242,7 +242,7 @@ class XiaomiDevice(Entity):
 
     @property
     def unique_id(self) -> str:
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._unique_id
 
     @property

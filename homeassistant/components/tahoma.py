@@ -14,7 +14,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['tahoma-api==0.0.12']
+REQUIREMENTS = ['tahoma-api==0.0.13']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,5 +1,6 @@
 """Test different accessory types: Covers."""
 import unittest
+from unittest.mock import patch
 
 from homeassistant.core import callback
 from homeassistant.components.cover import (
@@ -10,6 +11,9 @@ from homeassistant.const import (
     ATTR_SERVICE, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE)
 
 from tests.common import get_test_home_assistant
+from tests.mock.homekit import get_patch_paths, mock_preload_service
+
+PATH_ACC, PATH_FILE = get_patch_paths('covers')
 
 
 class TestHomekitSensors(unittest.TestCase):
@@ -28,20 +32,21 @@ class TestHomekitSensors(unittest.TestCase):
         self.hass.bus.listen(EVENT_CALL_SERVICE, record_event)
 
     def tearDown(self):
-        """Stop down everthing that was started."""
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_window_set_cover_position(self):
         """Test if accessory and HA are updated accordingly."""
         window_cover = 'cover.window'
 
-        acc = Window(self.hass, window_cover, 'Cover')
-        acc.run()
+        with patch(PATH_ACC, side_effect=mock_preload_service):
+            with patch(PATH_FILE, side_effect=mock_preload_service):
+                acc = Window(self.hass, window_cover, 'Cover')
+                acc.run()
 
         self.assertEqual(acc.char_current_position.value, 0)
         self.assertEqual(acc.char_target_position.value, 0)
-        # Temporarily disabled due to bug in HAP-python==1.15 with py3.5
-        # self.assertEqual(acc.char_position_state.value, 0)
+        self.assertEqual(acc.char_position_state.value, 0)
 
         self.hass.states.set(window_cover, STATE_UNKNOWN,
                              {ATTR_CURRENT_POSITION: None})
@@ -49,8 +54,7 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 0)
         self.assertEqual(acc.char_target_position.value, 0)
-        # Temporarily disabled due to bug in HAP-python==1.15 with py3.5
-        # self.assertEqual(acc.char_position_state.value, 0)
+        self.assertEqual(acc.char_position_state.value, 0)
 
         self.hass.states.set(window_cover, STATE_OPEN,
                              {ATTR_CURRENT_POSITION: 50})
