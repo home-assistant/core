@@ -142,6 +142,5 @@ class ModbusThermostat(ClimateDevice):
         register_value = format(val, '.{}f'.format(self._precision))
         return register_value
 
-
     def write_register(self, register, value):
         modbus.HUB.write_registers(self._slave, register, [value, 0])
