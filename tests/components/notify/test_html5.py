@@ -12,7 +12,7 @@ CONFIG_FILE = 'file.conf'
 SUBSCRIPTION_1 = {
     'browser': 'chrome',
     'subscription': {
-        'endpoint': 'https://google.com',
+        'endpoint': 'https://googleapis.com',
         'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
     },
 }
@@ -39,7 +39,7 @@ SUBSCRIPTION_3 = {
 SUBSCRIPTION_4 = {
     'browser': 'chrome',
     'subscription': {
-        'endpoint': 'https://google.com',
+        'endpoint': 'https://googleapis.com',
         'expirationTime': None,
         'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
     },
@@ -114,6 +114,41 @@ class TestHtml5Notify(object):
 
         assert payload['body'] == 'Hello'
         assert payload['icon'] == 'beer.png'
+
+    @patch('pywebpush.WebPusher')
+    def test_gcm_key_include(self, mock_wp):
+        """Test if the gcm_key is only included for GCM endpoints."""
+        hass = MagicMock()
+
+        data = {
+            'chrome': SUBSCRIPTION_1,
+            'firefox': SUBSCRIPTION_2
+        }
+
+        m = mock_open(read_data=json.dumps(data))
+        with patch('homeassistant.util.json.open', m, create=True):
+            service = html5.get_service(hass, {
+                'gcm_sender_id': '100',
+                'gcm_api_key': 'Y6i0JdZ0mj9LOaSI'
+            })
+
+        assert service is not None
+
+        service.send_message('Hello', target=['chrome', 'firefox'])
+
+        assert len(mock_wp.mock_calls) == 6
+
+        # WebPusher constructor
+        assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1['subscription']
+        assert mock_wp.mock_calls[3][1][0] == SUBSCRIPTION_2['subscription']
+
+        # Third mock_call checks the status_code of the response.
+        assert mock_wp.mock_calls[2][0] == '().send().status_code.__eq__'
+        assert mock_wp.mock_calls[5][0] == '().send().status_code.__eq__'
+
+        # Get the keys passed to the WebPusher's send method
+        assert mock_wp.mock_calls[1][2]['gcm_key'] is not None
+        assert mock_wp.mock_calls[4][2]['gcm_key'] is None
 
 
 async def test_registering_new_device_view(hass, test_client):

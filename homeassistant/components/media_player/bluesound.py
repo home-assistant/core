@@ -423,19 +423,17 @@ class BluesoundPlayer(MediaPlayerDevice):
         for player in self._hass.data[DATA_BLUESOUND]:
             yield from player.force_update_sync_status()
 
-    @asyncio.coroutine
     @Throttle(SYNC_STATUS_INTERVAL)
-    def async_update_sync_status(self, on_updated_cb=None,
-                                 raise_timeout=False):
+    async def async_update_sync_status(self, on_updated_cb=None,
+                                       raise_timeout=False):
         """Update sync status."""
-        yield from self.force_update_sync_status(
+        await self.force_update_sync_status(
             on_updated_cb, raise_timeout=False)
 
-    @asyncio.coroutine
     @Throttle(UPDATE_CAPTURE_INTERVAL)
-    def async_update_captures(self):
+    async def async_update_captures(self):
         """Update Capture sources."""
-        resp = yield from self.send_bluesound_command(
+        resp = await self.send_bluesound_command(
             'RadioBrowse?service=Capture')
         if not resp:
             return
@@ -459,11 +457,10 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         return self._capture_items
 
-    @asyncio.coroutine
     @Throttle(UPDATE_PRESETS_INTERVAL)
-    def async_update_presets(self):
+    async def async_update_presets(self):
         """Update Presets."""
-        resp = yield from self.send_bluesound_command('Presets')
+        resp = await self.send_bluesound_command('Presets')
         if not resp:
             return
         self._preset_items = []
@@ -488,11 +485,10 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         return self._preset_items
 
-    @asyncio.coroutine
     @Throttle(UPDATE_SERVICES_INTERVAL)
-    def async_update_services(self):
+    async def async_update_services(self):
         """Update Services."""
-        resp = yield from self.send_bluesound_command('Services')
+        resp = await self.send_bluesound_command('Services')
         if not resp:
             return
         self._services_items = []

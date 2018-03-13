@@ -13,7 +13,7 @@ from homeassistant.components.homekit.accessories import (
     HomeAccessory, HomeBridge)
 from homeassistant.components.homekit.const import (
     SERV_ACCESSORY_INFO, SERV_BRIDGING_STATE,
-    CHAR_MODEL, CHAR_MANUFACTURER, CHAR_SERIAL_NUMBER)
+    CHAR_MODEL, CHAR_MANUFACTURER, CHAR_NAME, CHAR_SERIAL_NUMBER)
 
 from tests.mock.homekit import (
     get_patch_paths, mock_preload_service,
@@ -69,21 +69,23 @@ def test_override_properties():
 def test_set_accessory_info():
     """Test setting of basic accessory information with MockAccessory."""
     acc = MockAccessory('Accessory')
-    set_accessory_info(acc, 'model', 'manufacturer', '0000')
+    set_accessory_info(acc, 'name', 'model', 'manufacturer', '0000')
 
     assert len(acc.services) == 1
     serv = acc.services[0]
 
     assert serv.display_name == SERV_ACCESSORY_INFO
-    assert len(serv.characteristics) == 3
+    assert len(serv.characteristics) == 4
     chars = serv.characteristics
 
-    assert chars[0].display_name == CHAR_MODEL
-    assert chars[0].value == 'model'
-    assert chars[1].display_name == CHAR_MANUFACTURER
-    assert chars[1].value == 'manufacturer'
-    assert chars[2].display_name == CHAR_SERIAL_NUMBER
-    assert chars[2].value == '0000'
+    assert chars[0].display_name == CHAR_NAME
+    assert chars[0].value == 'name'
+    assert chars[1].display_name == CHAR_MODEL
+    assert chars[1].value == 'model'
+    assert chars[2].display_name == CHAR_MANUFACTURER
+    assert chars[2].value == 'manufacturer'
+    assert chars[3].display_name == CHAR_SERIAL_NUMBER
+    assert chars[3].value == '0000'
 
 
 @patch(PATH_ACC, side_effect=mock_preload_service)

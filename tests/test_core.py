@@ -14,7 +14,7 @@ import pytest
 import homeassistant.core as ha
 from homeassistant.exceptions import (InvalidEntityFormatError,
                                       InvalidStateError)
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (

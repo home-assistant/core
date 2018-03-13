@@ -5,16 +5,17 @@ from pyhap.accessory import Accessory, Bridge, Category
 
 from .const import (
     SERV_ACCESSORY_INFO, SERV_BRIDGING_STATE, MANUFACTURER,
-    CHAR_MODEL, CHAR_MANUFACTURER, CHAR_SERIAL_NUMBER)
+    CHAR_MODEL, CHAR_MANUFACTURER, CHAR_NAME, CHAR_SERIAL_NUMBER)
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def set_accessory_info(acc, model, manufacturer=MANUFACTURER,
+def set_accessory_info(acc, name, model, manufacturer=MANUFACTURER,
                        serial_number='0000'):
     """Set the default accessory information."""
     service = acc.get_service(SERV_ACCESSORY_INFO)
+    service.get_characteristic(CHAR_NAME).set_value(name)
     service.get_characteristic(CHAR_MODEL).set_value(model)
     service.get_characteristic(CHAR_MANUFACTURER).set_value(manufacturer)
     service.get_characteristic(CHAR_SERIAL_NUMBER).set_value(serial_number)
@@ -49,7 +50,7 @@ class HomeAccessory(Accessory):
     def __init__(self, display_name, model, category='OTHER', **kwargs):
         """Initialize a Accessory object."""
         super().__init__(display_name, **kwargs)
-        set_accessory_info(self, model)
+        set_accessory_info(self, display_name, model)
         self.category = getattr(Category, category, Category.OTHER)
 
     def _set_services(self):
@@ -62,7 +63,7 @@ class HomeBridge(Bridge):
     def __init__(self, display_name, model, pincode, **kwargs):
         """Initialize a Bridge object."""
         super().__init__(display_name, pincode=pincode, **kwargs)
-        set_accessory_info(self, model)
+        set_accessory_info(self, display_name, model)
 
     def _set_services(self):
         add_preload_service(self, SERV_ACCESSORY_INFO)

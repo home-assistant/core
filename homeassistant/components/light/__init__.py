@@ -86,8 +86,6 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 PROP_TO_ATTR = {
     'brightness': ATTR_BRIGHTNESS,
     'color_temp': ATTR_COLOR_TEMP,
-    'min_mireds': ATTR_MIN_MIREDS,
-    'max_mireds': ATTR_MAX_MIREDS,
     'rgb_color': ATTR_RGB_COLOR,
     'xy_color': ATTR_XY_COLOR,
     'white_value': ATTR_WHITE_VALUE,
@@ -475,6 +473,10 @@ class Light(ToggleEntity):
     def state_attributes(self):
         """Return optional state attributes."""
         data = {}
+
+        if self.supported_features & SUPPORT_COLOR_TEMP:
+            data[ATTR_MIN_MIREDS] = self.min_mireds
+            data[ATTR_MAX_MIREDS] = self.max_mireds
 
         if self.is_on:
             for prop, attr in PROP_TO_ATTR.items():

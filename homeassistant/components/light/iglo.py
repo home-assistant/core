@@ -17,7 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['iglo==1.2.6']
+REQUIREMENTS = ['iglo==1.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ DEFAULT_PORT = 8080
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 
@@ -89,7 +89,7 @@ class IGloLamp(Light):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return self._lamp.effect_list
+        return self._lamp.effect_list()
 
     @property
     def supported_features(self):
