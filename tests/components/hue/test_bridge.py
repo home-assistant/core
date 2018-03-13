@@ -13,10 +13,10 @@ from tests.common import mock_coro
 class MockBridge(hue.HueBridge):
     """Class that sets default for constructor."""
 
-    def __init__(self, hass, bridge_id='mock-123', host='1.2.3.4',
-                 filename='mock-bridge.conf', username=None, **kwargs):
+    def __init__(self, hass, host='1.2.3.4', filename='mock-bridge.conf',
+                 username=None, **kwargs):
         """Initialize a mock bridge."""
-        super().__init__(bridge_id, host, hass, filename, username, **kwargs)
+        super().__init__(host, hass, filename, username, **kwargs)
 
 
 @pytest.fixture
@@ -85,8 +85,7 @@ async def test_configurator_callback(hass, mock_request):
         inst.username = 'mock-user'
         inst.create_user = mock_create
         inst.initialize = mock_init
-        callback(None)
-        await hass.async_block_till_done()
+        await callback(None)
 
     assert len(mock_create.mock_calls) == 1
     assert len(mock_init.mock_calls) == 1

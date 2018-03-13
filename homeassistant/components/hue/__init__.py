@@ -6,9 +6,9 @@ https://home-assistant.io/components/hue/
 """
 import asyncio
 import json
+import ipaddress
 import logging
 import os
-import socket
 
 import async_timeout
 import voluptuous as vol
@@ -40,7 +40,8 @@ CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
 DEFAULT_ALLOW_HUE_GROUPS = True
 
 BRIDGE_CONFIG_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string,
+    # Validate as IP address and then convert back to a string.
+    vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
     vol.Optional(CONF_FILENAME, default=PHUE_CONFIG_FILE): cv.string,
     vol.Optional(CONF_ALLOW_UNREACHABLE,
                  default=DEFAULT_ALLOW_UNREACHABLE): cv.boolean,
@@ -132,21 +133,19 @@ async def async_setup_bridge(
         username=None):
     """Set up a given Hue bridge."""
     assert filename or username, 'Need to pass at least a username or filename'
-    # Resolve host to IP
-    resolved_host = await hass.async_add_job(socket.gethostbyname, host)
 
     # Only register a device once
-    if resolved_host in hass.data[DOMAIN]:
+    if host in hass.data[DOMAIN]:
         return
 
     if username is None:
         username = await hass.async_add_job(
             _find_username_from_config, hass, filename)
 
-    bridge = HueBridge(resolved_host, host, hass, filename, username,
-                       allow_unreachable, allow_hue_groups)
+    bridge = HueBridge(host, hass, filename, username, allow_unreachable,
+                       allow_hue_groups)
     await bridge.async_setup()
-    hass.data[DOMAIN][resolved_host] = bridge
+    hass.data[DOMAIN][host] = bridge
 
 
 def _find_username_from_config(hass, filename):
@@ -163,10 +162,9 @@ def _find_username_from_config(hass, filename):
 class HueBridge(object):
     """Manages a single Hue bridge."""
 
-    def __init__(self, bridge_id, host, hass, filename, username,
+    def __init__(self, host, hass, filename, username,
                  allow_unreachable=False, allow_groups=True):
         """Initialize the system."""
-        self.bridge_id = bridge_id
         self.host = host
         self.hass = hass
         self.filename = filename
@@ -228,7 +226,7 @@ class HueBridge(object):
 
         self.hass.async_add_job(discovery.async_load_platform(
             self.hass, 'light', DOMAIN,
-            {'bridge_id': self.bridge_id}))
+            {'host': self.host}))
 
         self.hass.services.async_register(
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene,

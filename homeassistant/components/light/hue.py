@@ -50,7 +50,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     if discovery_info is None:
         return
 
-    bridge = hass.data[hue.DOMAIN][discovery_info['bridge_id']]
+    bridge = hass.data[hue.DOMAIN][discovery_info['host']]
     cur_lights = {}
     cur_groups = {}
 

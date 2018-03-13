@@ -16,7 +16,7 @@ async def test_setup_with_multiple_hosts(hass, mock_bridge):
     })
 
     assert len(mock_bridge.mock_calls) == 2
-    hosts = sorted(mock_call[1][1] for mock_call in mock_bridge.mock_calls)
+    hosts = sorted(mock_call[1][0] for mock_call in mock_bridge.mock_calls)
     assert hosts == ['127.0.0.1', '192.168.1.10']
     assert len(hass.data[hue.DOMAIN]) == 2
 
@@ -32,7 +32,7 @@ async def test_bridge_discovered(hass, mock_bridge):
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_calls) == 1
-    assert mock_bridge.mock_calls[0][1][1] == '192.168.1.10'
+    assert mock_bridge.mock_calls[0][1][0] == '192.168.1.10'
     assert len(hass.data[hue.DOMAIN]) == 1
 
 
@@ -47,7 +47,7 @@ async def test_bridge_configure_and_discovered(hass, mock_bridge):
     })
 
     assert len(mock_bridge.mock_calls) == 1
-    assert mock_bridge.mock_calls[0][1][1] == '192.168.1.10'
+    assert mock_bridge.mock_calls[0][1][0] == '192.168.1.10'
     assert len(hass.data[hue.DOMAIN]) == 1
 
     mock_bridge.reset_mock()
