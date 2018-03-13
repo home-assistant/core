@@ -18,15 +18,13 @@ from homeassistant.components.light import (
     FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR,
     SUPPORT_TRANSITION, SUPPORT_XY_COLOR, Light)
-import homeassistant.util as util
 import homeassistant.util.color as color_util
+from homeassistant.util.decorator import async_join_concurrent
 
 DEPENDENCIES = ['hue']
+SCAN_INTERVAL = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 SUPPORT_HUE_ON_OFF = (SUPPORT_FLASH | SUPPORT_TRANSITION)
 SUPPORT_HUE_DIMMABLE = (SUPPORT_HUE_ON_OFF | SUPPORT_BRIGHTNESS)
@@ -56,25 +54,61 @@ async def async_setup_platform(hass, config, async_add_devices,
     cur_lights = {}
     cur_groups = {}
 
-    await async_update_lights(
-        hass, bridge, cur_lights, cur_groups, async_add_devices)
+    # Hue updates all lights via a single API call.
+    #
+    # If we call a service to update 2 lights, we only want the API to be
+    # called once.
+    #
+    # The throttle decorator will return right away if a call is currently
+    # in progress. This means that if we are updating 2 lights, the first one
+    # is in the update method, the second one will skip it and assume the
+    # update went through and updates it's data, not good!
+    #
+    # The @async_join_concurrent will make sure that all lights will wait till
+    # the update call is done before writing their data to the state machine.
+    #
+    # One thing to note is that a call to `update_bridge` will call
+    # `async_schedule_update_ha_state` on all lights and groups, including the
+    # ones that are about to be written and triggered the call to
+    # `update_bridge` to begin with! There are 2 scenarios why we do this:
+    #
+    #  1. The bridge is no longer available. We trigger an update on all lights
+    #     and groups to make sure they mark themselves as unavailable.
+    #  2. If we are updating 1 light with a service call, we also want to
+    #     capture changes that occured to other lights (either via outside
+    #     control or because the 1 light was actually a group in Hue).
+    #
+    # An alternative approach would be to disable automatic polling by Home
+    # Assistant and take control ourselves. This works great for polling as now
+    # we trigger from 1 time update an update to all entities. However it gets
+    # tricky from inside async_turn_on and async_turn_off.
+    #
+    # If automatic polling is enabled, Home Assistant will call the entity
+    # update method after it is done calling all the services. This means that
+    # when we update, we know all commands have been processed. If we trigger
+    # the update from inside async_turn_on, the update will not be capture the
+    # changes to the second entity until the next polling update.
+    #
+    # Given the two approaches, the first one results in some extra work
+    # for Home Assistant but with no impact on the states (as duplicate states
+    # are discarded). The second approach will cause the states to be
+    # temporarily inconsistent. Below the first approach has been implemented.
 
+    @async_join_concurrent
+    async def update_bridge():
+        """Update the values of the bridge."""
+        import aiohue
 
-async def async_update_lights(hass, bridge, cur_lights, cur_groups,
-                              async_add_devices):
-    """Update the lights."""
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    async def throttled_update(**kw):
-        """Throttled update lights."""
-        bridge.available = True
         try:
-            with async_timeout.timeout(9):
+            with async_timeout.timeout(4):
                 await async_update_lights(
                     hass, bridge, cur_lights, cur_groups, async_add_devices,
-                    **kw)
-        except asyncio.TimeoutError:
-            _LOGGER.error('Unable to reach bridge')
+                    update_bridge)
+        except (asyncio.TimeoutError, aiohue.AiohueException):
+            if not bridge.available:
+                return
 
+            _LOGGER.error('Unable to reach bridge %s', bridge.host)
             bridge.available = False
 
             for light in cur_lights.values():
@@ -83,7 +117,17 @@ async def async_update_lights(hass, bridge, cur_lights, cur_groups,
             for group in cur_groups.values():
                 group.async_schedule_update_ha_state()
 
+    await update_bridge()
+
+
+async def async_update_lights(hass, bridge, cur_lights, cur_groups,
+                              async_add_devices, update_bridge):
+    """Update the lights."""
     await bridge.api.lights.update()
+
+    if not bridge.available:
+        _LOGGER.info('Reconnected to bridge %s', bridge.host)
+        bridge.available = True
 
     new_lights = []
     for light_id in bridge.api.lights:
@@ -91,7 +135,7 @@ async def async_update_lights(hass, bridge, cur_lights, cur_groups,
             cur_lights[light_id].async_schedule_update_ha_state()
         else:
             cur_lights[light_id] = HueLight(
-                bridge.api.lights[light_id], throttled_update, bridge)
+                bridge.api.lights[light_id], update_bridge, bridge)
 
             new_lights.append(cur_lights[light_id])
 
@@ -107,7 +151,7 @@ async def async_update_lights(hass, bridge, cur_lights, cur_groups,
             cur_groups[group_id].async_schedule_update_ha_state()
         else:
             cur_groups[group_id] = HueLight(
-                bridge.api.groups[group_id], throttled_update, bridge, True)
+                bridge.api.groups[group_id], update_bridge, bridge, True)
 
             new_lights.append(cur_groups[group_id])
 
@@ -118,10 +162,10 @@ async def async_update_lights(hass, bridge, cur_lights, cur_groups,
 class HueLight(Light):
     """Representation of a Hue light."""
 
-    def __init__(self, light, update_lights_cb, bridge, is_group=False):
+    def __init__(self, light, update_bridge, bridge, is_group=False):
         """Initialize the light."""
         self.light = light
-        self.async_update_lights = update_lights_cb
+        self.async_update_bridge = update_bridge
         self.bridge = bridge
         self.is_group = is_group
 
@@ -273,7 +317,7 @@ class HueLight(Light):
 
     async def async_update(self):
         """Synchronize state with bridge."""
-        await self.async_update_lights(no_throttle=True)
+        await self.async_update_bridge()
 
     @property
     def device_state_attributes(self):

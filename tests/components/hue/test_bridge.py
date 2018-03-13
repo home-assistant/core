@@ -15,11 +15,13 @@ class MockBridge(hue.HueBridge):
 
     def __init__(self, hass, bridge_id='mock-123', host='1.2.3.4',
                  filename='mock-bridge.conf', username=None, **kwargs):
+        """Initialize a mock bridge."""
         super().__init__(bridge_id, host, hass, filename, username, **kwargs)
 
 
 @pytest.fixture
 def mock_request():
+    """Mock configurator.async_request_config."""
     with patch('homeassistant.components.configurator.'
                'async_request_config') as mock_request:
         yield mock_request

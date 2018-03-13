@@ -21,7 +21,7 @@ from homeassistant.helpers import discovery, aiohttp_client
 from homeassistant import config_entries
 from homeassistant.util.json import save_json
 
-REQUIREMENTS = ['aiohue==1.0.0']
+REQUIREMENTS = ['aiohue==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -246,9 +246,12 @@ class HueBridge(object):
                 "Failed to register, please try again.")
             return
 
+        async def config_callback(data):
+            """Callback for configurator data."""
+            await self.async_setup()
+
         self.config_request_id = configurator.async_request_config(
-            "Philips Hue",
-            callback(lambda data: self.hass.async_add_job(self.async_setup())),
+            "Philips Hue", config_callback,
             description=CONFIG_INSTRUCTIONS,
             entity_picture="/static/images/logo_philips_hue.png",
             submit_caption="I have pressed the button"
@@ -261,11 +264,11 @@ class HueBridge(object):
 
         group = next(
             (group for group in self.api.groups.values()
-                if group.name == group_name), None)
+             if group.name == group_name), None)
 
         scene_id = next(
             (scene.id for scene in self.api.scenes.values()
-                if scene.name == scene_name), None)
+             if scene.name == scene_name), None)
 
         # If we can't find it, fetch latest info.
         if not updated and (group is None or scene_id is None):

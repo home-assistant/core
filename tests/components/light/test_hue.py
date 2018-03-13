@@ -506,40 +506,28 @@ class TestHueLight(unittest.TestCase):
 def test_available():
     """Test available property."""
     light = hue_light.HueLight(
-        info={'state': {'reachable': False}},
-        allow_unreachable=False,
-        is_group=False,
-
-        light_id=None,
-        bridge=mock.Mock(),
+        light=Mock(state={'reachable': False}),
         update_lights_cb=None,
-        allow_in_emulated_hue=False,
+        bridge=Mock(allow_unreachable=False),
+        is_group=False,
     )
 
     assert light.available is False
 
     light = hue_light.HueLight(
-        info={'state': {'reachable': False}},
-        allow_unreachable=True,
-        is_group=False,
-
-        light_id=None,
-        bridge=mock.Mock(),
+        light=Mock(state={'reachable': False}),
         update_lights_cb=None,
-        allow_in_emulated_hue=False,
+        bridge=Mock(allow_unreachable=True),
+        is_group=False,
     )
 
     assert light.available is True
 
     light = hue_light.HueLight(
-        info={'state': {'reachable': False}},
-        allow_unreachable=False,
-        is_group=True,
-
-        light_id=None,
-        bridge=mock.Mock(),
+        light=Mock(state={'reachable': False}),
         update_lights_cb=None,
-        allow_in_emulated_hue=False,
+        bridge=Mock(allow_unreachable=False),
+        is_group=True,
     )
 
     assert light.available is True
