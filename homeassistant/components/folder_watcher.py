@@ -19,9 +19,6 @@ CONF_PATTERNS = 'patterns'
 CONF_WATCHERS = 'watchers'
 DEFAULT_PATTERN = '*'
 DOMAIN = "folder_watcher"
-EVENT_TYPE = "event_type"
-FILE = 'file'
-FOLDER = 'folder'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
@@ -40,7 +37,7 @@ def setup(hass, config):
         patterns = watcher[CONF_PATTERNS]
         if not hass.config.is_allowed_path(path):
             _LOGGER.error("folder %s is not valid or allowed", path)
-            continue
+            False
         Watcher(path, patterns, hass)
 
     return True
@@ -61,12 +58,13 @@ def create_event_handler(patterns, hass):
         def process(self, event):
             """On Watcher event, fire HA event."""
             if not event.is_directory:
-                folder_path, file_name = os.path.split(event.src_path)
+                folder, file_name = os.path.split(event.src_path)
                 self.hass.bus.fire(
                     DOMAIN, {
-                        EVENT_TYPE: event.event_type,
-                        FILE: file_name,
-                        FOLDER: folder_path
+                        "event_type": event.event_type,
+                        'path': event.src_path,
+                        'file': file_name,
+                        'folder': folder,
                         })
 
         def on_modified(self, event):
