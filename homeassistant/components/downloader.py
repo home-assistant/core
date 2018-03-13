@@ -25,6 +25,8 @@ ATTR_OVERWRITE = 'overwrite'
 CONF_DOWNLOAD_DIR = 'download_dir'
 
 DOMAIN = 'downloader'
+DOWNLOAD_FAILED_EVENT = 'download_failed'
+DOWNLOAD_COMPLETED_EVENT = 'download_completed'
 
 SERVICE_DOWNLOAD_FILE = 'download_file'
 
@@ -133,19 +135,17 @@ def setup(hass, config):
                             fil.write(chunk)
 
                     _LOGGER.debug("Downloading of %s done", url)
-                    hass.components.persistent_notification.create(
-                        "Info: {} download finished successfully"
-                        "".format(filename),
-                        title='Download Request',
-                        notification_id='download_request')
+                    hass.bus.fire("{}.{}".format(DOMAIN, DOWNLOAD_COMPLETED_EVENT), {
+                        'url': url,
+                        'filename': filename
+                    })
 
             except requests.exceptions.ConnectionError:
                 _LOGGER.exception("ConnectionError occurred for %s", url)
-                hass.components.persistent_notification.create(
-                    "Error: {} download failed"
-                    "".format(filename),
-                    title='Download Request',
-                    notification_id='download_request')
+                hass.bus.fire("{}.{}".format(DOMAIN, DOWNLOAD_FAILED_EVENT), {
+                        'url': url,
+                        'filename': filename
+                    })
 
                 # Remove file if we started downloading but failed
                 if final_path and os.path.isfile(final_path):
