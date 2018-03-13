@@ -88,6 +88,10 @@ async def async_setup_platform(hass, config, async_add_devices,
         We will only make 1 request to the server for updating at a time. If a
         request is in progress, we will join the request that is in progress.
 
+        This approach is possible because should_poll=True. That means that
+        Home Assistant will ask lights for updates during a polling cycle or
+        after it has called a service.
+
         We keep track of the lights that are waiting for the request to finish.
         When new data comes in, we'll trigger an update for all non-waiting
         lights. This covers the case where a service is called to enable 2
