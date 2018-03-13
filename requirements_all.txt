@@ -350,7 +350,7 @@ hikvision==0.4
 hipnotify==1.0.8
 
 # homeassistant.components.binary_sensor.workday
-holidays==0.9.3
+holidays==0.9.4
 
 # homeassistant.components.frontend
 home-assistant-frontend==20180310.0
