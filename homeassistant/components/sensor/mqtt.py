@@ -24,6 +24,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
+REQUIREMENTS = ['flatten_json==0.1.6']
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_EXPIRE_AFTER = 'expire_after'
@@ -92,6 +94,7 @@ class MqttSensor(MqttAvailability, Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Subscribe to MQTT events."""
+        from flatten_json import flatten
         yield from super().async_added_to_hass()
 
         @callback
@@ -116,8 +119,9 @@ class MqttSensor(MqttAvailability, Entity):
                 try:
                     json_dict = json.loads(payload)
                     if isinstance(json_dict, dict):
-                        attrs = {k: json_dict[k] for k in
-                                 self._json_attributes & json_dict.keys()}
+                        flattened_dict = flatten(json_dict, '.')
+                        attrs = {k: flattened_dict[k] for k in
+                                 self._json_attributes & flattened_dict.keys()}
                         self._attributes = attrs
                     else:
                         _LOGGER.warning("JSON result was not a dictionary")
@@ -128,6 +132,8 @@ class MqttSensor(MqttAvailability, Entity):
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload, self._state)
+            else:
+                payload = payload[:254]
             self._state = payload
             self.async_schedule_update_ha_state()
 

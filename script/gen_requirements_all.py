@@ -47,6 +47,7 @@ TEST_REQUIREMENTS = (
     'ephem',
     'evohomeclient',
     'feedparser',
+    'flatten_json',
     'gTTS-token',
     'HAP-python',
     'ha-ffmpeg',
