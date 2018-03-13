@@ -58,9 +58,9 @@ REQUIREMENTS = ['pychannels==1.0.0']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Channels platform."""
     device = ChannelsPlayer(
-        config.get('name', DEFAULT_NAME),
+        config.get('name'),
         config.get(CONF_HOST),
-        config.get(CONF_PORT, DEFAULT_PORT)
+        config.get(CONF_PORT)
         )
 
     if DATA_CHANNELS not in hass.data:
