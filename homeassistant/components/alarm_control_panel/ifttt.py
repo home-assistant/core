@@ -9,16 +9,25 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.components.ifttt import (
     ATTR_EVENT, DOMAIN as IFTTT_DOMAIN, SERVICE_TRIGGER)
-from homeassistant.const import CONF_NAME, CONF_CODE
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_STATE, CONF_NAME, CONF_CODE,
+    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY)
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['ifttt']
 
 _LOGGER = logging.getLogger(__name__)
 
+ALLOWED_STATES = [
+    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME]
+
+DATA_IFTT_ALARM = 'ifttt_alarm'
 DEFAULT_NAME = "Home"
 
 EVENT_ALARM_ARM_AWAY = "alarm_arm_away"
@@ -31,14 +40,48 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CODE): cv.string,
 })
 
+SERVICE_PUSH_ALARM_STATE = "push_alarm_state"
+
+PUSH_ALARM_STATE_SERVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_STATE): cv.string,
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a control panel managed through IFTTT."""
+    if DATA_IFTT_ALARM not in hass.data:
+        hass.data[DATA_IFTT_ALARM] = IFTTTAlarmData()
+
     name = config.get(CONF_NAME)
     code = config.get(CONF_CODE)
 
     alarmpanel = IFTTTAlarmPanel(name, code)
+    hass.data[DATA_IFTT_ALARM].devices.append(alarmpanel)
     add_devices([alarmpanel])
+
+    def push_state_update(service):
+        """Set the service state as device state attribute."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        state = service.data.get(ATTR_STATE)
+        devices = hass.data[DATA_IFTT_ALARM].devices
+        if entity_ids:
+            devices = [d for d in devices if d.entity_id in entity_ids]
+
+        for device in devices:
+            device.push_alarm_state(state)
+            device.schedule_update_ha_state()
+
+    hass.services.register(DOMAIN, SERVICE_PUSH_ALARM_STATE, push_state_update,
+                           schema=PUSH_ALARM_STATE_SERVICE_SCHEMA)
+
+
+class IFTTTAlarmData:
+    """Storage class to keep track of the alarm systems globally."""
+
+    def __init__(self):
+        """Initialize the data."""
+        self.devices = []
 
 
 class IFTTTAlarmPanel(alarm.AlarmControlPanel):
@@ -100,6 +143,12 @@ class IFTTTAlarmPanel(alarm.AlarmControlPanel):
 
         self.hass.services.call(IFTTT_DOMAIN, SERVICE_TRIGGER, data)
         _LOGGER.debug("Called IFTTT component to trigger event %s", event)
+
+    def push_alarm_state(self, value):
+        """Push the alarm state to the given value."""
+        if value in ALLOWED_STATES:
+            _LOGGER.debug("Pushed the alarm state to %s", value)
+            self._state = value
 
     def _check_code(self, code):
         return self._code is None or self._code == code
