@@ -10,10 +10,11 @@ https://home-assistant.io/components/climate.modbus/
 """
 import logging
 import struct
+
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME, CONF_SLAVE, ATTR_TEMPERATURE, STATE_OK, STATE_PROBLEM)
+    CONF_NAME, CONF_SLAVE, ATTR_TEMPERATURE)
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE)
 
@@ -49,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(config, add_devices, discovery_info=None):
     """Set up the Modbus Thermostat Platform."""
     name = config.get(CONF_NAME)
     modbus_slave = config.get(CONF_SLAVE)
@@ -59,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     count = config.get(CONF_COUNT)
     precision = config.get(CONF_PRECISION)
 
-    add_devices([ModbusThermostat(hass, name, modbus_slave,
+    add_devices([ModbusThermostat(name, modbus_slave,
                                   target_temp_register, current_temp_register,
                                   data_type, count, precision)], True)
 
@@ -67,10 +68,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ModbusThermostat(ClimateDevice):
     """Representation of a Modbus Thermostat."""
 
-    def __init__(self, hass, name, modbus_slave, target_temp_register,
+    def __init__(self, name, modbus_slave, target_temp_register,
                  current_temp_register, data_type, count, precision):
         """Initialize the unit."""
-        self.hass = hass
         self._name = name
         self._slave = modbus_slave
         self._target_temperature_register = target_temp_register
@@ -81,7 +81,6 @@ class ModbusThermostat(ClimateDevice):
         self._count = int(count)
         self._precision = precision
         self._structure = '>f'
-        self._error = False
 
         data_types = {DATA_TYPE_INT: {1: 'h', 2: 'i', 4: 'q'},
                       DATA_TYPE_UINT: {1: 'H', 2: 'I', 4: 'Q'},
@@ -97,48 +96,15 @@ class ModbusThermostat(ClimateDevice):
 
     def update(self):
         """Update Target & Current Temperature."""
-        try:
-            result = modbus.HUB.read_holding_registers(
-                self._slave, self._target_temperature_register, self._count)
-        except AttributeError as ex:
-            self._error = True
-            _LOGGER.error(ex)
-
-        byte_string = b''.join(
-            [x.to_bytes(2, byteorder='big') for x in result.registers])
-        val = struct.unpack(self._structure, byte_string)[0]
-        formatted_string = format(val, '.{}f'.format(self._precision))
-        self._target_temperature = float(formatted_string)
-
-        try:
-            result = modbus.HUB.read_holding_registers(
-                self._slave, self._current_temperature_register, self._count)
-        except AttributeError as ex:
-            self._error = True
-            _LOGGER.error(ex)
-
-        byte_string = b''.join(
-            [x.to_bytes(2, byteorder='big') for x in result.registers])
-        val = struct.unpack(self._structure, byte_string)[0]
-        formatted_string = format(val, '.{}f'.format(self._precision))
-        self._current_temperature = float(formatted_string)
+        self._target_temperature = self.read_register(
+            self._target_temperature_register)
+        self._current_temperature = self.read_register(
+            self._current_temperature_register)
 
     @property
     def name(self):
         """Return the name of the climate device."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the current state - implied."""
-        if self._error:
-            return STATE_PROBLEM
-        return STATE_OK
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return self.hass.config.units.temperature_unit
 
     @property
     def current_temperature(self):
@@ -159,9 +125,23 @@ class ModbusThermostat(ClimateDevice):
         register_value = struct.unpack('>h', byte_string[0:2])[0]
 
         try:
-            modbus.HUB.write_registers(self._slave,
-                                       self._target_temperature_register,
-                                       [register_value, 0])
+            self.write_register(self._target_temperature_register,
+                                register_value)
         except AttributeError as ex:
-            self._error = True
             _LOGGER.error(ex)
+
+    def read_register(self, register):
+        try:
+            result = modbus.HUB.read_holding_registers(self._slave, register,
+                                                       self._count)
+        except AttributeError as ex:
+            _LOGGER.error(ex)
+        byte_string = b''.join(
+            [x.to_bytes(2, byteorder='big') for x in result.registers])
+        val = struct.unpack(self._structure, byte_string)[0]
+        register_value = format(val, '.{}f'.format(self._precision))
+        return register_value
+
+
+    def write_register(self, register, value):
+        modbus.HUB.write_registers(self._slave, register, [value, 0])
