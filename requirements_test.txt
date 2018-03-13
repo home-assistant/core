@@ -11,7 +11,7 @@ pydocstyle==1.1.1
 pylint==1.8.2
 pytest-aiohttp==0.3.0
 pytest-cov==2.5.1
-pytest-sugar==0.9.0
+pytest-sugar==0.9.1
 pytest-timeout>=1.2.1
-pytest==3.3.1
+pytest==3.4.2
 requests_mock==1.4
