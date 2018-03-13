@@ -4,6 +4,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/homekit/
 """
 import logging
+from zlib import adler32
 
 import voluptuous as vol
 
@@ -11,16 +12,16 @@ from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
     ATTR_CODE, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    CONF_PORT, CONF_ENTITIES, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 from .const import (
-    DOMAIN, HOMEKIT_FILE, CONF_AID, CONF_AUTO_START,
-    DEFAULT_PORT, DEFAULT_AUTO_START, SERVICE_HOMEKIT_START)
+    DOMAIN, HOMEKIT_FILE, CONF_AUTO_START, CONF_ENTITY_CONFIG, DEFAULT_PORT,
+    DEFAULT_AUTO_START, DEFAULT_ENTITY_CONFIG, SERVICE_HOMEKIT_START)
 from .util import (
-    validate_entities, show_setup_message)
+    validate_entity_config, show_setup_message)
 
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +33,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
         vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
-        vol.Required(CONF_ENTITIES): validate_entities,
+        vol.Optional(CONF_ENTITY_CONFIG, default=DEFAULT_ENTITY_CONFIG):
+            validate_entity_config,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -44,7 +46,7 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
     port = conf[CONF_PORT]
     auto_start = conf[CONF_AUTO_START]
-    entities = conf[CONF_ENTITIES]
+    entities = conf[CONF_ENTITY_CONFIG]
 
     homekit = HomeKit(hass, port, entities)
     homekit.setup()
@@ -66,15 +68,22 @@ async def async_setup(hass, config):
     return True
 
 
-def get_accessory(hass, state, config):
+def get_accessory(hass, state, aid, config):
     """Take state and return an accessory object if supported."""
+    print('==>', state.entity_id, '==>', aid, '==>', config)
+    if not aid:
+        _LOGGER.warning('The entitiy "%s" is not supported, since it '
+                        'generates an invalid aid, please change it.',
+                        state.entity_id)
+        return None
+
     if state.domain == 'sensor':
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         if unit == TEMP_CELSIUS or unit == TEMP_FAHRENHEIT:
             _LOGGER.debug("Add \"%s\" as \"%s\"",
                           state.entity_id, 'TemperatureSensor')
             return TYPES['TemperatureSensor'](hass, state.entity_id,
-                                              state.name, aid=config[CONF_AID])
+                                              state.name, aid=aid)
 
     elif state.domain == 'cover':
         # Only add covers that support set_cover_position
@@ -82,14 +91,13 @@ def get_accessory(hass, state, config):
             _LOGGER.debug("Add \"%s\" as \"%s\"",
                           state.entity_id, 'WindowCovering')
             return TYPES['WindowCovering'](hass, state.entity_id, state.name,
-                                           aid=config[CONF_AID])
+                                           aid=aid)
 
     elif state.domain == 'alarm_control_panel':
         _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id,
                       'SecuritySystem')
         return TYPES['SecuritySystem'](hass, state.entity_id, state.name,
-                                       alarm_code=config[ATTR_CODE],
-                                       aid=config[CONF_AID])
+                                       alarm_code=config[ATTR_CODE], aid=aid)
 
     elif state.domain == 'climate':
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -100,18 +108,24 @@ def get_accessory(hass, state, config):
 
         _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'Thermostat')
         return TYPES['Thermostat'](hass, state.entity_id,
-                                   state.name, support_auto,
-                                   aid=config[CONF_AID])
+                                   state.name, support_auto, aid=aid)
 
     elif state.domain == 'switch' or state.domain == 'remote' \
             or state.domain == 'input_boolean':
         _LOGGER.debug("Add \"%s\" as \"%s\"", state.entity_id, 'Switch')
-        return TYPES['Switch'](hass, state.entity_id, state.name,
-                               aid=config[CONF_AID])
+        return TYPES['Switch'](hass, state.entity_id, state.name, aid=aid)
 
     _LOGGER.warning("The entity \"%s\" is not supported yet",
                     state.entity_id)
     return None
+
+
+def generate_aid(entity_id):
+    """Generate accessory aid with zlib adler32."""
+    aid = adler32(entity_id.encode('utf-8'))
+    if aid == 0 or aid == 1:
+        return None
+    return aid
 
 
 class HomeKit():
@@ -140,10 +154,11 @@ class HomeKit():
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
-        if not state or state.entity_id not in self._config:
+        if not state:
             return None
-        conf = self._config.pop(state.entity_id)
-        acc = get_accessory(self._hass, state, conf)
+        aid = generate_aid(state.entity_id)
+        conf = self._config.pop(state.entity_id, {})
+        acc = get_accessory(self._hass, state, aid, conf)
         if acc is not None:
             self.bridge.add_accessory(acc)
 

@@ -7,10 +7,11 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
-    CONF_AID, HOMEKIT_NOTIFY_ID, QR_CODE_NAME)
+    HOMEKIT_NOTIFY_ID, QR_CODE_NAME)
 from homeassistant.components.homekit.util import (
-    validate_aid, validate_entities,
     show_setup_message, dismiss_setup_message, ATTR_CODE)
+from homeassistant.components.homekit.util import validate_entity_config \
+    as vec
 from homeassistant.components.persistent_notification import (
     SERVICE_CREATE, SERVICE_DISMISS, ATTR_NOTIFICATION_ID)
 from homeassistant.const import (
@@ -38,54 +39,20 @@ class TestUtil(unittest.TestCase):
         """Stop down everything that was started."""
         self.hass.stop()
 
-    def test_validate_aid(self):
-        """Test validate aid."""
-        for value, aids in {-1: None, 1: None, 2: [2]}.items():
-            with self.assertRaises(vol.Invalid):
-                validate_aid(None, value, aids)
-
-        aids = set()
-        self.assertEqual(validate_aid(None, 2, aids), 2)
-        self.assertEqual(aids, {2})
-        self.assertEqual(validate_aid(None, 3, aids), 3)
-        self.assertEqual(aids, {2, 3})
-
-    def test_validate_entities(self):
+    def test_validate_entity_config(self):
         """Test validate entities."""
-        # General failures
-        configs = [{'demo.test': 1}, {'demo.test': 2, 'light.demo': 2},
-                   {'demo.test': '1'}, {'demo.test': [1]},
-                   {'demo.test': {'aid': '2'}}]
+        configs = [{'invalid_entity_id': {}}, {'demo.test': 1},
+                   {'demo.test': 'test'}, {'demo.test': [1, 2]},
+                   {'demo.test': None}]
 
         for conf in configs:
             with self.assertRaises(vol.Invalid):
-                validate_entities(conf)
+                vec(conf)
 
-        # Device specific failures
-        configs = []
-
-        for conf in configs:
-            with self.assertRaises(vol.Invalid):
-                validate_entities(conf)
-
-        # General validations
-        self.assertEqual(validate_entities(
-            {'demo.test': 2}), {'demo.test': {CONF_AID: 2}})
-        self.assertEqual(validate_entities(
-            {'demo.test': {CONF_AID: 2}}), {'demo.test': {CONF_AID: 2}})
+        self.assertEqual(vec({}), {})
         self.assertEqual(
-            validate_entities({'demo.test': 2, 'demo.test_2': 3}),
-            {'demo.test': {CONF_AID: 2}, 'demo.test_2': {CONF_AID: 3}})
-
-        # Device specific validations
-        self.assertEqual(
-            validate_entities({'alarm_control_panel.demo': {CONF_AID: 2}}),
-            {'alarm_control_panel.demo': {CONF_AID: 2, ATTR_CODE: None}})
-        self.assertEqual(
-            validate_entities(
-                {'alarm_control_panel.demo': {
-                    CONF_AID: 2, ATTR_CODE: '1234'}}),
-            {'alarm_control_panel.demo': {CONF_AID: 2, ATTR_CODE: '1234'}})
+            vec({'alarm_control_panel.demo': {ATTR_CODE: '1234'}}),
+            {'alarm_control_panel.demo': {ATTR_CODE: '1234'}})
 
     def test_show_setup_msg(self):
         """Test show setup message as persistence notification."""

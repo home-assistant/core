@@ -9,49 +9,27 @@ from homeassistant.const import (
     ATTR_CODE)
 import homeassistant.helpers.config_validation as cv
 from .const import (
-    CONF_AID, HOMEKIT_NOTIFY_ID, QR_CODE_NAME)
+    HOMEKIT_NOTIFY_ID, QR_CODE_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def validate_aid(entity, value, aids):
-    """Validate the value is a unique aid."""
-    if value < 2:
-        raise vol.Invalid('Accessory ID for "{}" must be 2 or higher'
-                          .format(entity))
-    if value in aids:
-        raise vol.Invalid('Accessory ID for "{}" is not unique'
-                          .format(entity))
-    aids.add(value)
-    return value
-
-
-def validate_entities(values):
-    """Validate config entry for 'entities'."""
-    aids = set()
+def validate_entity_config(values):
+    """Validate config entry for CONF_ENTITY."""
     entities = {}
     for key, config in values.items():
         entity = cv.entity_id(key)
         params = {}
-        if isinstance(config, int):
-            params[CONF_AID] = validate_aid(entity, config, aids)
-        elif isinstance(config, dict):
-            aid = config.get(CONF_AID, None)
-            if isinstance(aid, int):
-                params[CONF_AID] = validate_aid(entity, aid, aids)
-            else:
-                raise vol.Invalid('"{}" must have an unique Accessory ID'
-                                  .format(entity))
-            config.pop(CONF_AID, None)
-            domain, _ = split_entity_id(entity)
-            # Domain specific config options can be added here
-            if domain == 'alarm_control_panel':
-                code = config.get(ATTR_CODE)
-                params[ATTR_CODE] = cv.string(code) if code else None
-        else:
-            raise vol.Invalid(
-                'The configuration for "{}" must either be '
-                'of type integer or type dictionary.'.format(entity))
+        if not isinstance(config, dict):
+            raise vol.Invalid('The configuration for "{}" must be '
+                              ' an dictionary.'.format(entity))
+
+        domain, _ = split_entity_id(entity)
+
+        if domain == 'alarm_control_panel':
+            code = config.get(ATTR_CODE)
+            params[ATTR_CODE] = cv.string(code) if code else None
+
         entities[entity] = params
     return entities
 
