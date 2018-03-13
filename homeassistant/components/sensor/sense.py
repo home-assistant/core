@@ -56,6 +56,21 @@ VALID_SENSORS.append(DEVICES_NAME.lower())
 CONSUMPTION_ICON = 'mdi:flash'
 PRODUCTION_ICON = 'mdi:white-balance-sunny'
 
+DEVICE_ICON_TO_MDI_MAP = {
+    'alwayson': 'mdi:sync',
+    'cup': 'mdi:coffee',
+    'fan': 'mdi:fan',
+    'fridge': 'mdi:fridge',
+    'home': 'mdi:help',
+    'lightbulb': 'mdi:lightbulb',
+    'microwave': 'mdi:waves',
+    'stove': 'mdi:stove',
+    'toaster_oven': 'mdi:stove',
+    'tv': 'mdi:television',
+    'washer': 'mdi:washing-machine'
+}
+
+
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
 MIN_TIME_BETWEEN_REALTIME_UPDATES = timedelta(seconds=30)
 
@@ -221,28 +236,11 @@ class SenseDevice(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        # A handful of Sense icons happen to match mdi icons
-        if (self._icon == 'fridge' or
-                self._icon == 'lightbulb' or
-                self._icon == 'stove' or
-                self._icon == 'fan'):
-            return 'mdi:{}'.format(self._icon)
-        elif self._icon == 'microwave':
-            return 'mdi:waves'
-        elif self._icon == 'alwayson':
-            return 'mdi:sync'
-        elif self._icon == 'home':  # the other/unknown
-            return 'mdi:help'
-        elif self._icon == 'tv':
-            return 'mdi:television'
-        elif self._icon == 'cup':
-            return 'mdi:coffee'
-        elif self._icon == 'toaster_oven':
-            return 'mdi:stove'
-        elif self._icon == 'washer':
-            return 'mdi:washing-machine'
-
-        return CONSUMPTION_ICON
+        try:
+            icon = DEVICE_ICON_TO_MDI_MAP[self._icon]
+        except KeyError:
+            icon = CONSUMPTION_ICON
+        return icon
 
     def update(self):
         """Get the latest data, update state."""
