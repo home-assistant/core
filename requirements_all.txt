@@ -5,9 +5,9 @@ pytz>=2017.02
 pip>=8.0.3
 jinja2>=2.10
 voluptuous==0.11.1
-aiohttp==3.0.6
+aiohttp==3.0.7
 async_timeout==2.0.0
-astral==1.5
+astral==1.6
 certifi>=2017.4.17
 attrs==17.4.0
 
@@ -51,7 +51,7 @@ SoCo==0.14
 TravisPy==0.3.5
 
 # homeassistant.components.notify.twitter
-TwitterAPI==2.4.8
+TwitterAPI==2.4.10
 
 # homeassistant.components.notify.yessssms
 YesssSMS==0.1.1b3
@@ -331,7 +331,7 @@ gstreamer-player==1.1.0
 ha-ffmpeg==1.9
 
 # homeassistant.components.media_player.philips_js
-ha-philipsjs==0.0.1
+ha-philipsjs==0.0.2
 
 # homeassistant.components.sensor.geo_rss_events
 haversine==0.4.5
@@ -644,7 +644,7 @@ pyHS100==0.3.0
 pyRFXtrx==0.21.1
 
 # homeassistant.components.sensor.tibber
-pyTibber==0.3.2
+pyTibber==0.4.0
 
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
@@ -700,7 +700,7 @@ pycsspeechtts==1.0.2
 pydaikin==0.4
 
 # homeassistant.components.deconz
-pydeconz==30
+pydeconz==31
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -1092,7 +1092,7 @@ samsungctl[websocket]==0.7.1
 satel_integra==0.1.0
 
 # homeassistant.components.sensor.deutsche_bahn
-schiene==0.21
+schiene==0.22
 
 # homeassistant.components.scsgate
 scsgate==0.1.0
@@ -1297,13 +1297,13 @@ yeelight==0.4.0
 yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.02.11
+youtube_dl==2018.03.10
 
 # homeassistant.components.light.zengge
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.19.1
+zeroconf==0.20.0
 
 # homeassistant.components.media_player.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.0.0

@@ -4,8 +4,6 @@ Support for deCONZ sensor.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.deconz/
 """
-import asyncio
-
 from homeassistant.components.deconz import (
     DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
 from homeassistant.const import ATTR_BATTERY_LEVEL, CONF_EVENT, CONF_ID
@@ -19,8 +17,8 @@ DEPENDENCIES = ['deconz']
 ATTR_EVENT_ID = 'event_id'
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the deCONZ sensors."""
     if discovery_info is None:
         return
@@ -48,8 +46,7 @@ class DeconzSensor(Entity):
         """Set up sensor and add update callback to get data from websocket."""
         self._sensor = sensor
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
@@ -125,8 +122,7 @@ class DeconzBattery(Entity):
         self._device_class = 'battery'
         self._unit_of_measurement = "%"
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self._device.register_async_callback(self.async_update_callback)
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._device.deconz_id
