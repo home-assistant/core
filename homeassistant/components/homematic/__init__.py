@@ -68,7 +68,7 @@ HM_DEVICE_TYPES = {
         'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
         'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch',
         'FillingLevel', 'ValveDrive', 'EcoLogic', 'IPThermostatWall',
-        'IPSmoke', 'RFSiren', 'PresenceIP'],
+        'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
@@ -85,6 +85,10 @@ HM_IGNORE_DISCOVERY_NODE = [
     'ACTUAL_TEMPERATURE',
     'ACTUAL_HUMIDITY'
 ]
+
+HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
+    'ACTUAL_TEMPERATURE': ['IPAreaThermostat'],
+}
 
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
@@ -505,7 +509,8 @@ def _get_devices(hass, discovery_type, keys, interface):
 
         # Generate options for 1...n elements with 1...n parameters
         for param, channels in metadata.items():
-            if param in HM_IGNORE_DISCOVERY_NODE:
+            if param in HM_IGNORE_DISCOVERY_NODE and class_name not in \
+             HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS.get(param, []):
                 continue
 
             # Add devices
