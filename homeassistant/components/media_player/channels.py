@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice)
 
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING,
+    CONF_HOST, CONF_PORT, STATE_IDLE, STATE_PAUSED, STATE_PLAYING,
     ATTR_ENTITY_ID)
 
 import homeassistant.helpers.config_validation as cv
@@ -33,8 +33,7 @@ FEATURE_SUPPORT = SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | \
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}
-)
+})
 
 SERVICE_SEEK_FORWARD = 'channels_seek_forward'
 SERVICE_SEEK_BACKWARD = 'channels_seek_backward'
