@@ -83,13 +83,22 @@ async def async_setup_platform(hass, config, async_add_devices,
     group_progress = set()
 
     async def request_update(is_group, object_id):
-        """Request an update."""
+        """Request an update.
+
+        We will only make 1 request to the server for updating at a time. If a
+        request is in progress, we will join the request that is in progress.
+
+        We keep track of the lights that are waiting for the request to finish.
+        When new data comes in, we'll trigger an update for all non-waiting
+        lights. This covers the case where a service is called to enable 2
+        lights but in the meanwhile some other light has changed too.
+        """
         nonlocal progress
 
         progress_set = group_progress if is_group else light_progress
+        progress_set.add(object_id)
 
         if progress is not None:
-            progress_set.add(object_id)
             return await progress
 
         progress = asyncio.ensure_future(update_bridge())
@@ -100,7 +109,10 @@ async def async_setup_platform(hass, config, async_add_devices,
         return result
 
     async def update_bridge():
-        """Update the values of the bridge."""
+        """Update the values of the bridge.
+
+        Will update lights and, if enabled, groups from the bridge.
+        """
         tasks = []
         tasks.append(async_update_items(
             hass, bridge, async_add_devices, request_update,
