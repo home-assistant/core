@@ -352,7 +352,6 @@ holidays==0.9.3
 home-assistant-frontend==20180227.0
 
 # homeassistant.components.homematicip
-# homeassistant.components.sensor.homematicip
 homematicip==0.8
 
 # homeassistant.components.camera.onvif
