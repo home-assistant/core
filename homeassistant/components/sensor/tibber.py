@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['pyTibber==0.3.2']
+REQUIREMENTS = ['pyTibber==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ class TibberSensor(Entity):
                 price_time = dt_util.as_utc(dt_util.parse_datetime(key))
                 time_diff = (now - price_time).total_seconds()/60
                 if time_diff >= 0 and time_diff < 60:
-                    self._state = round(price_total, 2)
+                    self._state = round(price_total, 3)
                     self._last_updated = key
                     return True
             return False
