@@ -14,10 +14,12 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY,
     SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_MUTE,
     MediaPlayerDevice)
+from homeassistant.helpers.dispatcher import (dispatcher_send,
+                                              async_dispatcher_connect)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_OPTIMISTIC, CONF_TIMEOUT,
     STATE_PAUSED, STATE_PLAYING, STATE_STANDBY,
-    STATE_ON)
+    STATE_ON, STATE_OFF, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 REQUIREMENTS = ['pymediaroom==0.5']
 
@@ -28,6 +30,7 @@ NOTIFICATION_ID = 'mediaroom_notification'
 DEFAULT_NAME = 'Mediaroom STB'
 DEFAULT_TIMEOUT = 9
 DATA_MEDIAROOM = "mediaroom_known_stb"
+SIGNAL_STB_NOTIFY = 'stb_discovered'
 
 SUPPORT_MEDIAROOM = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
@@ -41,28 +44,41 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Mediaroom platform."""
-    hosts = []
-
     known_hosts = hass.data.get(DATA_MEDIAROOM)
     if known_hosts is None:
         known_hosts = hass.data[DATA_MEDIAROOM] = []
 
-    host = config.get(CONF_HOST, None)
-    if host is None:
-        _LOGGER.info("Trying to discover Mediaroom STB")
-
-        from pymediaroom import Remote
-
-        host = Remote.discover(known_hosts)
-        if host is None:
-            _LOGGER.warning("Can't find any STB")
+    _LOGGER.info("Trying to discover Mediaroom STB")
+    
+    def callback_notify(notify):
+        if notify.ip_address in hass.data[DATA_MEDIAROOM]:
+            _LOGGER.debug("Discovered previous stb %s", notify.ip_address)
+            dispatcher_send(hass, SIGNAL_STB_NOTIFY, notify)
             return
-    hosts.append(host)
-    known_hosts.append(host)
+        
+        _LOGGER.debug("Discovered new stb %s", notify.ip_address)
 
+        hass.data[DATA_MEDIAROOM].append(notify.ip_address)
+        
+        new_stb = MediaroomDevice(
+                    config.get(CONF_NAME), notify.ip_address,
+                    config.get(CONF_OPTIMISTIC),
+                    config.get(CONF_TIMEOUT)
+                    )
+
+        if new_stb is not None:
+                async_add_devices([new_stb])
+
+    from pymediaroom import installMediaroomProtocol
+    mr_protocol = await installMediaroomProtocol(responses_callback=callback_notify)
+    _LOGGER.debug("Auto discovery installed")
+
+    hosts = []
+    host = config.get(CONF_HOST, None)
+    if host:
+        hosts = [host]
     stbs = []
 
     try:
@@ -84,7 +100,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
 
-    add_devices(stbs)
+    async_add_devices(stbs)
 
 
 class MediaroomDevice(MediaPlayerDevice):
@@ -94,7 +110,8 @@ class MediaroomDevice(MediaPlayerDevice):
         """Initialize the device."""
         from pymediaroom import Remote
 
-        self.stb = Remote(host, timeout=timeout)
+        self.host = host
+        self.stb = Remote(host)
         _LOGGER.info(
             "Found %s at %s%s", name, host,
             " - I'm optimistic" if optimistic else "")
@@ -103,18 +120,28 @@ class MediaroomDevice(MediaPlayerDevice):
         self._current = None
         self._optimistic = optimistic
         self._state = STATE_STANDBY
+        
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
 
-    def update(self):
+    async def async_added_to_hass(self):
         """Retrieve latest state."""
-        if not self._optimistic:
-            self._is_standby = self.stb.get_standby()
-        if self._is_standby:
-            self._state = STATE_STANDBY
-        elif self._state not in [STATE_PLAYING, STATE_PAUSED]:
-            self._state = STATE_PLAYING
-        _LOGGER.debug(
-            "%s(%s) is [%s]",
-            self._name, self.stb.stb_ip, self._state)
+        from pymediaroom import installMediaroomProtocol 
+        
+        def async_notify_received(notify):
+            _LOGGER.debug(notify)
+            if notify.tune:
+                self._state = STATE_PLAYING 
+            else:
+                self._state = STATE_STANDBY
+            _LOGGER.debug(
+                    "%s(%s) is [%s]",
+                    self._name, self.host, self._state)
+
+        await self.stb.open_control()
+        async_dispatcher_connect(self.hass, SIGNAL_STB_NOTIFY, async_notify_received)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media."""
