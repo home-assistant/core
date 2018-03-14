@@ -237,7 +237,6 @@ CONF_UNIT_SYSTEM_IMPERIAL = 'imperial'  # type: str
 
 # Electrical attributes
 ATTR_VOLTAGE = 'voltage'
-ATTR_CURRENT = 'current'
 
 # Contains the information that is discovered
 ATTR_DISCOVERED = 'discovered'

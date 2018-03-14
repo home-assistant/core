@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.deconz/
 from homeassistant.components.deconz import (
     DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_CURRENT, ATTR_VOLTAGE, CONF_EVENT, CONF_ID)
+    ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, CONF_EVENT, CONF_ID)
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -15,6 +15,7 @@ from homeassistant.util import slugify
 
 DEPENDENCIES = ['deconz']
 
+ATTR_CURRENT = 'current'
 ATTR_EVENT_ID = 'event_id'
 
 
