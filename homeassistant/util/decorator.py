@@ -1,6 +1,4 @@
 """Decorator utility functions."""
-import asyncio
-from functools import wraps
 
 
 class Registry(dict):

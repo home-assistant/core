@@ -4,7 +4,6 @@ Support for MQTT discovery.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/#discovery
 """
-import asyncio
 import json
 import logging
 import re
@@ -35,12 +34,9 @@ ALLOWED_PLATFORMS = {
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
 
 
-@asyncio.coroutine
-def async_start(hass, discovery_topic, hass_config):
+async def async_start(hass, discovery_topic, hass_config):
     """Initialize of MQTT Discovery."""
-    # pylint: disable=unused-variable
-    @asyncio.coroutine
-    def async_device_message_received(topic, payload, qos):
+    async def async_device_message_received(topic, payload, qos):
         """Process the received message."""
         match = TOPIC_MATCHER.match(topic)
 
@@ -88,10 +84,10 @@ def async_start(hass, discovery_topic, hass_config):
 
         _LOGGER.info("Found new component: %s %s", component, discovery_id)
 
-        yield from async_load_platform(
+        await async_load_platform(
             hass, component, platform, payload, hass_config)
 
-    yield from mqtt.async_subscribe(
+    await mqtt.async_subscribe(
         hass, discovery_topic + '/#', async_device_message_received, 0)
 
     return True
