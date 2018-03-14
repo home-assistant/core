@@ -61,7 +61,7 @@ class StrideNotificationService(BaseNotificationService):
             if ((data.get(CONF_PANEL) is not None)
                     and (data.get(CONF_PANEL) in VALID_PANELS)):
                 panel = data.get(CONF_PANEL)
- 
+
         message_text = {
                     'type': 'paragraph',
                     'content':
