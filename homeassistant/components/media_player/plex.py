@@ -200,14 +200,15 @@ def setup_plexserver(
             client.set_availability(client.machine_identifier
                                     in available_client_ids)
 
-            if config.get(CONF_REMOVE_UNAVAILABLE_CLIENTS) \
-                    and not client.available:
-                interval = config.get(CONF_CLIENT_REMOVE_INTERVAL)
-                diff = dt.now() - client.marked_unavailable
-                if diff.total_seconds() >= interval.total_seconds():
-                    hass.helpers.event.async_call_later(0,
-                                                        client.async_remove())
-                    removed_clients.append(client.machine_identifier)
+            if not config.get(CONF_REMOVE_UNAVAILABLE_CLIENTS) \
+                    or client.available:
+                continue
+
+            if (dt.now() - client.marked_unavailable).total_seconds() >= \
+                    (config.get(CONF_CLIENT_REMOVE_INTERVAL)).total_seconds():
+                hass.helpers.event.async_call_later(0,
+                                                    client.async_remove())
+                removed_clients.append(client.machine_identifier)
 
         while removed_clients:
             clientid = removed_clients.pop()
