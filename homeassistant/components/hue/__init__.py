@@ -21,7 +21,7 @@ from homeassistant.helpers import discovery, aiohttp_client
 from homeassistant import config_entries
 from homeassistant.util.json import save_json
 
-REQUIREMENTS = ['aiohue==1.1.0']
+REQUIREMENTS = ['aiohue==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 

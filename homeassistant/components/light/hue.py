@@ -213,9 +213,7 @@ class HueLight(Light):
     @property
     def unique_id(self):
         """Return the ID of this Hue light."""
-        if self.is_group:
-            return None
-        return self.light.unique_id
+        return self.light.uniqueid
 
     @property
     def name(self):
