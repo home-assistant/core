@@ -27,32 +27,29 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     switches = []
 
-    try:
-        manager = VeSync(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
-    except ValueError:
-        _LOGGER.error("Unable to setup VeSync platform")
-    else:
-        if manager.login():
-            manager.update()
+    manager = VeSync(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
 
-            if manager.devices is not None and manager.devices:
+    if not manager.login():
+        _LOGGER.error("Unable to login to VeSync")
+        return
 
-                if len(manager.devices) == 1:
-                    count_string = 'switch'
-                else:
-                    count_string = 'switches'
+    manager.update()
 
-                _LOGGER.info("Discovered %d VeSync %s",
-                             len(manager.devices), count_string)
-
-                for switch in manager.devices:
-                    switches.append(VeSyncSwitchHA(switch))
-                    _LOGGER.info("Added a VeSync switch named '%s'",
-                                 switch.device_name)
-            else:
-                _LOGGER.info("No VeSync devices found")
+    if manager.devices is not None and manager.devices:
+        if len(manager.devices) == 1:
+            count_string = 'switch'
         else:
-            _LOGGER.info("Unable to login to VeSync")
+            count_string = 'switches'
+
+        _LOGGER.info("Discovered %d VeSync %s",
+                        len(manager.devices), count_string)
+
+        for switch in manager.devices:
+            switches.append(VeSyncSwitchHA(switch))
+            _LOGGER.info("Added a VeSync switch named '%s'",
+                            switch.device_name)
+    else:
+        _LOGGER.info("No VeSync devices found")
 
     add_devices(switches)
 
