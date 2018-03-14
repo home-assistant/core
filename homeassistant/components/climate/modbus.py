@@ -131,6 +131,7 @@ class ModbusThermostat(ClimateDevice):
             _LOGGER.error(ex)
 
     def read_register(self, register):
+        """Reads holding registers using the modbus hub slave."""
         try:
             result = modbus.HUB.read_holding_registers(self._slave, register,
                                                        self._count)
@@ -143,4 +144,5 @@ class ModbusThermostat(ClimateDevice):
         return register_value
 
     def write_register(self, register, value):
+        """Writes registers using the modbus hub slave."""
         modbus.HUB.write_registers(self._slave, register, [value, 0])
