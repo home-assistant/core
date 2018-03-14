@@ -43,7 +43,7 @@ async def async_start(hass, discovery_topic, hass_config):
         if not match:
             return
 
-        prefix_topic, component, node_id, object_id = match.groups()
+        _prefix_topic, component, node_id, object_id = match.groups()
 
         try:
             payload = json.loads(payload)
