@@ -1,9 +1,8 @@
 """Philips Hue lights platform tests."""
 import asyncio
 from collections import deque
-from copy import deepcopy
 import logging
-from unittest.mock import patch, Mock
+from unittest.mock import Mock
 
 import aiohue
 from aiohue.lights import Lights
