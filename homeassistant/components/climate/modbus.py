@@ -119,9 +119,8 @@ class ModbusThermostat(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
-            self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        byte_string = struct.pack(self._structure,
-                                  self._target_temperature)
+            target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack('>h', byte_string[0:2])[0]
 
         try:
