@@ -426,7 +426,17 @@ class SonosDevice(MediaPlayerDevice):
         self._play_mode = self.soco.play_mode
         self._night_sound = self.soco.night_mode
         self._speech_enhance = self.soco.dialog_mode
-        self._favorites = self.soco.music_library.get_sonos_favorites()
+
+        self._favorites = []
+        for fav in self.soco.music_library.get_sonos_favorites():
+            # SoCo 0.14 raises a generic Exception on invalid xml in favorites.
+            # Filter those out now so our list is safe to use.
+            try:
+                if fav.reference.get_uri():
+                    self._favorites.append(fav)
+            # pylint: disable=broad-except
+            except Exception:
+                _LOGGER.debug("Ignoring invalid favorite '%s'", fav.title)
 
     def _subscribe_to_player_events(self):
         """Add event subscriptions."""
