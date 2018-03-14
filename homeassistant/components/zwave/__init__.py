@@ -203,7 +203,8 @@ def get_config_value(node, value_index, tries=5):
     return None
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the Z-Wave platform (generic part)."""
     if discovery_info is None or DATA_NETWORK not in hass.data:
         return False
