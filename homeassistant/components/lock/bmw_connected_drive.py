@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for vehicle in account.account.vehicles:
             device = BMWLock(account, vehicle, 'lock', 'BMW lock')
             devices.append(device)
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class BMWLock(LockDevice):
@@ -58,7 +58,6 @@ class BMWLock(LockDevice):
         """Return the state attributes of the lock."""
         vehicle_state = self._vehicle.state
         return {
-            'last_update': vehicle_state.timestamp,
             'car': self._vehicle.modelName,
             'door_lock_state': vehicle_state.door_lock_state.value
         }
@@ -96,7 +95,9 @@ class BMWLock(LockDevice):
         self._state = (STATE_LOCKED if vehicle_state.door_lock_state.value
                        in ('LOCKED', 'SECURED') else STATE_UNLOCKED)
 
-        self.schedule_update_ha_state()
+    def update_callback(self):
+        """Schedule a state update."""
+        self.schedule_update_ha_state(True)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -104,5 +105,4 @@ class BMWLock(LockDevice):
 
         Show latest data after startup.
         """
-        self._account.add_update_listener(self.update)
-        yield from self.hass.async_add_job(self.update)
+        self._account.add_update_listener(self.update_callback)

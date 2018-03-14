@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device = BMWConnectedDriveSensor(account, vehicle, key,
                                                  value[0], value[1])
                 devices.append(device)
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class BMWConnectedDriveSensor(BinarySensorDevice):
@@ -74,7 +74,6 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         """Return the state attributes of the binary sensor."""
         vehicle_state = self._vehicle.state
         result = {
-            'last_update': vehicle_state.timestamp,
             'car': self._vehicle.modelName
         }
 
@@ -105,7 +104,9 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             self._state = bool(vehicle_state.door_lock_state.value
                                in ('SELECTIVELOCKED', 'UNLOCKED'))
 
-        self.schedule_update_ha_state()
+    def update_callback(self):
+        """Schedule a state update."""
+        self.schedule_update_ha_state(True)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -113,5 +114,4 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
 
         Show latest data after startup.
         """
-        self._account.add_update_listener(self.update)
-        yield from self.hass.async_add_job(self.update)
+        self._account.add_update_listener(self.update_callback)

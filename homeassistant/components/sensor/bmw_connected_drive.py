@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device = BMWConnectedDriveSensor(account, vehicle, key,
                                                  value[0], value[1])
                 devices.append(device)
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class BMWConnectedDriveSensor(Entity):
@@ -86,16 +86,13 @@ class BMWConnectedDriveSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the binary sensor."""
-        vehicle_state = self._vehicle.state
-
         return {
-            'last_update': vehicle_state.timestamp,
             'car': self._vehicle.modelName
         }
 
     def update(self) -> None:
         """Read new state data from the library."""
-        _LOGGER.debug('Updating %s', self.entity_id)
+        _LOGGER.debug('Updating %s', self._vehicle.modelName)
         vehicle_state = self._vehicle.state
         self._state = getattr(vehicle_state, self._attribute)
 
@@ -106,7 +103,9 @@ class BMWConnectedDriveSensor(Entity):
         else:
             self._unit_of_measurement = None
 
-        self.schedule_update_ha_state()
+    def update_callback(self):
+        """Schedule a state update."""
+        self.schedule_update_ha_state(True)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -114,5 +113,4 @@ class BMWConnectedDriveSensor(Entity):
 
         Show latest data after startup.
         """
-        self._account.add_update_listener(self.update)
-        yield from self.hass.async_add_job(self.update)
+        self._account.add_update_listener(self.update_callback)
