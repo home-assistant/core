@@ -64,33 +64,33 @@ class StrideNotificationService(BaseNotificationService):
                 panel = data.get(CONF_PANEL)
         
         message_text = {
-                    'type': 'paragraph', 
-                    'content': 
+                    'type': 'paragraph',
+                    'content':
                     [{
-                        'type': 'text', 
+                        'type': 'text',
                         'text': message
                     }]
                 }
         panel_text = message_text
         if panel is not None:
             panel_text = {
-                    'type': 'panel', 
-                    'attrs': 
+                    'type': 'panel',
+                    'attrs':
                     {
                         'panelType': panel
                     },
-                    'content': 
+                    'content':
                     [
                         message_text,
                     ]
                 }
 
         message_doc = {
-                    'body': 
+                    'body':
                     {
                         'version': 1,
                         'type': 'doc',
-                        'content': 
+                        'content':
                         [
                             panel_text,
                         ]
