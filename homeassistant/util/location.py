@@ -10,7 +10,7 @@ from typing import Any, Optional, Tuple, Dict
 import requests
 
 ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
-FREEGEO_API = 'https://freegeoip.io/json/'
+FREEGEO_API = 'https://freegeoip.net/json/'
 IP_API = 'http://ip-api.com/json'
 
 # Constants from https://github.com/maurycyp/vincenty
