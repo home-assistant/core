@@ -1,4 +1,5 @@
 """Test Google Smart Home."""
+from homeassistant.core import State
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 from homeassistant.setup import async_setup_component
@@ -243,4 +244,18 @@ async def test_raising_error_trait(hass):
                 "errorCode": "valueOutOfRange"
             }]
         }
+    }
+
+
+def test_serialize_input_boolean():
+    """Test serializing an input boolean entity."""
+    state = State('input_boolean.bla', 'on')
+    entity = sh._GoogleEntity(None, BASIC_CONFIG, state)
+    assert entity.sync_serialize() == {
+        'id': 'input_boolean.bla',
+        'attributes': {},
+        'name': {'name': 'bla'},
+        'traits': ['action.devices.traits.OnOff'],
+        'type': 'action.devices.types.SWITCH',
+        'willReportState': False,
     }
