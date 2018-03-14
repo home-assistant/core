@@ -41,6 +41,11 @@ SUPPORT_HUE = {
     }
 
 ATTR_IS_HUE_GROUP = 'is_hue_group'
+# Minimum Hue Bridge API version to support groups
+# 1.4.0 introduced extended group info
+# 1.12 introduced the state object for groups
+# 1.13 introduced "any_on" to group state objects
+GROUP_MIN_API_VERSION = (1, 13, 0)
 
 
 async def async_setup_platform(hass, config, async_add_devices,
@@ -52,6 +57,14 @@ async def async_setup_platform(hass, config, async_add_devices,
     bridge = hass.data[hue.DOMAIN][discovery_info['host']]
     cur_lights = {}
     cur_groups = {}
+
+    api_version = tuple(
+        int(v) for v in bridge.api.config.apiversion.split('.'))
+
+    allow_groups = bridge.allow_groups
+    if allow_groups and api_version < GROUP_MIN_API_VERSION:
+        _LOGGER.warning('Please update your Hue bridge to support groups')
+        allow_groups = False
 
     # Hue updates all lights via a single API call.
     #
@@ -123,7 +136,7 @@ async def async_setup_platform(hass, config, async_add_devices,
             False, cur_lights, light_progress
         ))
 
-        if bridge.allow_groups:
+        if allow_groups:
             tasks.append(async_update_items(
                 hass, bridge, async_add_devices, request_update,
                 True, cur_groups, group_progress
