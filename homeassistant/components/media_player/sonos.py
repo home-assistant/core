@@ -896,7 +896,8 @@ class SonosDevice(MediaPlayerDevice):
             self.soco.unjoin()
 
         for slave in slaves:
-            slave.soco.join(self.soco)
+            if slave.unique_id != self.unique_id:
+                slave.soco.join(self.soco)
 
     @soco_error()
     def unjoin(self):
