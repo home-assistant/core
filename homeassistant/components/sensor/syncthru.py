@@ -1,10 +1,15 @@
-"""Connect to a Samsung Printer via SyncThru web interface."""
+"""
+Support for Samsung Printers with SyncThru web interface.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/sensor.syncthru/
+"""
 
 import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_RESOURCE, STATE_UNKNOWN, CONF_HOST, CONF_NAME, CONF_FRIENDLY_NAME,
+    CONF_RESOURCE, CONF_HOST, CONF_NAME, CONF_FRIENDLY_NAME,
     CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -67,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # Test if the discovered device actually is a syncthru printer
         if not test_syncthru(host):
             _LOGGER.error("No SyncThru Printer found at %s", host)
-            return False
+            return
         monitored = DEFAULT_MONITORED_CONDITIONS
     else:
         host = config.get(CONF_RESOURCE)
@@ -75,38 +80,42 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         monitored = config.get(CONF_MONITORED_CONDITIONS)
 
     # Main device, always added
-    printer = SyncThru(host)
+    try:
+        printer = SyncThru(host)
+    except BaseException:
+        # if an exception is thrown, printer cannot be set up
+        return
     printer.update()
     devices = [SyncThruMain(hass, printer, name)]
 
     for key in printer.tonerStatus(filter_supported=True):
-        if 'toner_' + str(key) in monitored:
+        if 'toner_{}'.format(key) in monitored:
             devices.append(SyncThruToner(hass, printer, name, key))
     for key in printer.drumStatus(filter_supported=True):
-        if 'drum_' + str(key) in monitored:
+        if 'drum_{}'.format(key) in monitored:
             devices.append(SyncThruDrum(hass, printer, name, key))
     for key in printer.inputTrayStatus(filter_supported=True):
-        if 'tray_' + str(key) in monitored:
+        if 'tray_{}'.format(key) in monitored:
             devices.append(SyncThruInputTray(hass, printer, name, key))
     for key in printer.outputTrayStatus():
-        if 'output_tray_' + str(key) in monitored:
+        if 'output_tray_{}'.format(key) in monitored:
             devices.append(SyncThruOutputTray(hass, printer, name, key))
 
     add_devices(devices, True)
-    return True
+    return
+
 
 
 class SyncThruSensor(Entity):
     """Implementation of an abstract Samsung Printer sensor platform."""
 
+
     def __init__(self, hass, syncthru, name):
         """Initialize the sensor."""
-        self._hass = hass
         self.syncthru = syncthru
         self._attributes = {}
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._name = name
-        self._friendly_name = name
         self._icon = 'mdi:printer'
         self._unit_of_measurement = None
 
@@ -133,12 +142,11 @@ class SyncThruSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        self._attributes[CONF_FRIENDLY_NAME] = self._friendly_name
         return self._attributes
 
 
 class SyncThruMain(SyncThruSensor):
-    """Implementaion of the main sensor, monitoring the general state."""
+    """Implementation of the main sensor, monitoring the general state."""
 
     def update(self):
         """Get the latest data from SyncThru and update the state."""
@@ -146,7 +154,6 @@ class SyncThruMain(SyncThruSensor):
         self._state = self.syncthru.deviceStatus()
 
         if self.syncthru.isOnline():
-            self._friendly_name = self.syncthru.model()
             self._state = self.syncthru.deviceStatus()
 
 
@@ -156,7 +163,7 @@ class SyncThruToner(SyncThruSensor):
     def __init__(self, hass, syncthru, name, color):
         """Initialize the sensor."""
         super().__init__(hass, syncthru, name)
-        self._name = "{} toner {}".format(name, color)
+        self._name = "{} Toner {}".format(name, color)
         self._color = color
         self._unit_of_measurement = '%'
 
@@ -167,10 +174,7 @@ class SyncThruToner(SyncThruSensor):
         if self.syncthru.isOnline():
             self._attributes = self.syncthru.tonerStatus(
                 ).get(self._color, {})
-            self._state = self._attributes.get(
-                'remaining', STATE_UNKNOWN)
-            self._friendly_name = "{} Toner {}".format(
-                self._color, self.syncthru.model())
+            self._state = self._attributes.get('remaining')
 
 
 class SyncThruDrum(SyncThruSensor):
@@ -179,7 +183,7 @@ class SyncThruDrum(SyncThruSensor):
     def __init__(self, hass, syncthru, name, color):
         """Initialize the sensor."""
         super().__init__(hass, syncthru, name)
-        self._name = "{} drum {}".format(name, color)
+        self._name = "{} Drum {}".format(name, color)
         self._color = color
         self._unit_of_measurement = '%'
 
@@ -190,10 +194,7 @@ class SyncThruDrum(SyncThruSensor):
         if self.syncthru.isOnline():
             self._attributes = self.syncthru.drumStatus(
                 ).get(self._color, {})
-            self._state = self._attributes.get(
-                'remaining', STATE_UNKNOWN)
-            self._friendly_name = "{} Drum {}".format(
-                self._color, self.syncthru.model())
+            self._state = self._attributes.get('remaining')
 
 
 class SyncThruInputTray(SyncThruSensor):
@@ -202,7 +203,7 @@ class SyncThruInputTray(SyncThruSensor):
     def __init__(self, hass, syncthru, name, number):
         """Initialize the sensor."""
         super().__init__(hass, syncthru, name)
-        self._name = "{} tray {}".format(name, number)
+        self._name = "{} Tray {}".format(name, number)
         self._number = number
 
     def update(self):
@@ -212,12 +213,9 @@ class SyncThruInputTray(SyncThruSensor):
         if self.syncthru.isOnline():
             self._attributes = self.syncthru.inputTrayStatus(
                 ).get(self._number, {})
-            self._state = self._attributes.get(
-                'newError', STATE_UNKNOWN)
+            self._state = self._attributes.get('newError')
             if self._state == '':
                 self._state = 'Ready'
-            self._friendly_name = "Tray {} {}".format(
-                self._number, self.syncthru.model())
 
 
 class SyncThruOutputTray(SyncThruSensor):
@@ -226,7 +224,7 @@ class SyncThruOutputTray(SyncThruSensor):
     def __init__(self, hass, syncthru, name, number):
         """Initialize the sensor."""
         super().__init__(hass, syncthru, name)
-        self._name = "{} output tray {}".format(name, number)
+        self._name = "{} Output Tray {}".format(name, number)
         self._number = number
 
     def update(self):
@@ -236,9 +234,6 @@ class SyncThruOutputTray(SyncThruSensor):
         if self.syncthru.isOnline():
             self._attributes = self.syncthru.outputTrayStatus(
                 ).get(self._number, {})
-            self._state = self._attributes.get(
-                'status', STATE_UNKNOWN)
+            self._state = self._attributes.get('status')
             if self._state == '':
                 self._state = 'Ready'
-            self._friendly_name = "Output Tray {} {}".format(
-                self._number, self.syncthru.model())
