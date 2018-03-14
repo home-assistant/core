@@ -136,7 +136,7 @@ def setup(hass, config):
 
                     _LOGGER.debug("Downloading of %s done", url)
                     hass.bus.fire(
-                         "{}.{}".format(DOMAIN, DOWNLOAD_COMPLETED_EVENT), {
+                         "{}_{}".format(DOMAIN, DOWNLOAD_COMPLETED_EVENT), {
                                 'url': url,
                                 'filename': filename
                                 })
@@ -144,7 +144,7 @@ def setup(hass, config):
             except requests.exceptions.ConnectionError:
                 _LOGGER.exception("ConnectionError occurred for %s", url)
                 hass.bus.fire(
-                    "{}.{}".format(DOMAIN, DOWNLOAD_FAILED_EVENT), {
+                    "{}_{}".format(DOMAIN, DOWNLOAD_FAILED_EVENT), {
                             'url': url,
                             'filename': filename
                             })
