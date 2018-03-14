@@ -1153,7 +1153,7 @@ somecomfort==0.5.0
 speedtest-cli==2.0.0
 
 # homeassistant.components.sensor.spotcrime
-spotcrime==1.0.2
+spotcrime==1.0.3
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
