@@ -61,6 +61,7 @@ DEPRECATED_TURN_OFF_ACTIONS = {
 # https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
 MEDIA_TYPES = {
     'music': MEDIA_TYPE_MUSIC,
+    'audio': MEDIA_TYPE_MUSIC,
     'artist': MEDIA_TYPE_MUSIC,
     'album': MEDIA_TYPE_MUSIC,
     'song': MEDIA_TYPE_MUSIC,
