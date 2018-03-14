@@ -84,12 +84,12 @@ class VeSyncSwitchHA(SwitchDevice):
     @property
     def available(self) -> bool:
         """Return True if switch is available."""
-        return bool(self.smartplug.connection_status == "online")
+        return self.smartplug.connection_status == "online"
 
     @property
     def is_on(self):
         """Return True if switch is on."""
-        return bool(self.smartplug.device_status == "on")
+        return self.smartplug.device_status == "on"
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
