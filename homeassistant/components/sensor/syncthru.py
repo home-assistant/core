@@ -9,13 +9,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_RESOURCE, CONF_HOST, CONF_NAME,
-    CONF_MONITORED_CONDITIONS)
+    CONF_RESOURCE, CONF_HOST, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
-REQUIREMENTS = ['pysyncthru==0.3']
+REQUIREMENTS = ['pysyncthru==0.3.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
