@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.loader import bind_hass
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.location import distance
 
 _LOGGER = logging.getLogger(__name__)

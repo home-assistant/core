@@ -84,7 +84,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(ATTR_MODE, default=MODE_RGBW):
         vol.All(cv.string, vol.In([MODE_RGBW, MODE_RGB])),
-    vol.Optional(CONF_PROTOCOL, default=None):
+    vol.Optional(CONF_PROTOCOL):
         vol.All(cv.string, vol.In(['ledenet'])),
 })
 
@@ -104,7 +104,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device = {}
         device['name'] = device_config[CONF_NAME]
         device['ipaddr'] = ipaddr
-        device[CONF_PROTOCOL] = device_config[CONF_PROTOCOL]
+        device[CONF_PROTOCOL] = device_config.get(CONF_PROTOCOL)
         device[ATTR_MODE] = device_config[ATTR_MODE]
         light = FluxLight(device)
         lights.append(light)

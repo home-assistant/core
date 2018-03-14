@@ -10,8 +10,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.components import history, recorder
 
 from tests.common import (
-    init_recorder_component, mock_http_component, mock_state_change_event,
-    get_test_home_assistant)
+    init_recorder_component, mock_state_change_event, get_test_home_assistant)
 
 
 class TestComponentHistory(unittest.TestCase):
@@ -38,7 +37,6 @@ class TestComponentHistory(unittest.TestCase):
 
     def test_setup(self):
         """Test setup method of history."""
-        mock_http_component(self.hass)
         config = history.CONFIG_SCHEMA({
             # ha.DOMAIN: {},
             history.DOMAIN: {
@@ -403,12 +401,12 @@ class TestComponentHistory(unittest.TestCase):
         filters = history.Filters()
         exclude = config[history.DOMAIN].get(history.CONF_EXCLUDE)
         if exclude:
-            filters.excluded_entities = exclude[history.CONF_ENTITIES]
-            filters.excluded_domains = exclude[history.CONF_DOMAINS]
+            filters.excluded_entities = exclude.get(history.CONF_ENTITIES, [])
+            filters.excluded_domains = exclude.get(history.CONF_DOMAINS, [])
         include = config[history.DOMAIN].get(history.CONF_INCLUDE)
         if include:
-            filters.included_entities = include[history.CONF_ENTITIES]
-            filters.included_domains = include[history.CONF_DOMAINS]
+            filters.included_entities = include.get(history.CONF_ENTITIES, [])
+            filters.included_domains = include.get(history.CONF_DOMAINS, [])
 
         hist = history.get_significant_states(
             self.hass, zero, four, filters=filters)

@@ -14,7 +14,7 @@ def test_setup_check_env_prevents_load(hass, loop):
     with patch.dict(os.environ, clear=True), \
             patch.object(config, 'SECTIONS', ['hassbian']), \
             patch('homeassistant.components.http.'
-                  'HomeAssistantWSGI.register_view') as reg_view:
+                  'HomeAssistantHTTP.register_view') as reg_view:
         loop.run_until_complete(async_setup_component(hass, 'config', {}))
     assert 'config' in hass.config.components
     assert reg_view.called is False
@@ -25,7 +25,7 @@ def test_setup_check_env_works(hass, loop):
     with patch.dict(os.environ, {'FORCE_HASSBIAN': '1'}), \
             patch.object(config, 'SECTIONS', ['hassbian']), \
             patch('homeassistant.components.http.'
-                  'HomeAssistantWSGI.register_view') as reg_view:
+                  'HomeAssistantHTTP.register_view') as reg_view:
         loop.run_until_complete(async_setup_component(hass, 'config', {}))
     assert 'config' in hass.config.components
     assert len(reg_view.mock_calls) == 2

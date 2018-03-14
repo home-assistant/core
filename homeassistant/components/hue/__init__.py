@@ -4,20 +4,24 @@ This component provides basic support for the Philips Hue system.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/hue/
 """
+import asyncio
 import json
+from functools import partial
 import logging
 import os
 import socket
 
+import async_timeout
 import requests
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_HUE
 from homeassistant.const import CONF_FILENAME, CONF_HOST
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, aiohttp_client
+from homeassistant import config_entries
 
-REQUIREMENTS = ['phue==1.0']
+REQUIREMENTS = ['phue==1.0', 'aiohue==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,13 +137,14 @@ def bridge_discovered(hass, service, discovery_info):
 
 
 def setup_bridge(host, hass, filename=None, allow_unreachable=False,
-                 allow_in_emulated_hue=True, allow_hue_groups=True):
+                 allow_in_emulated_hue=True, allow_hue_groups=True,
+                 username=None):
     """Set up a given Hue bridge."""
     # Only register a device once
     if socket.gethostbyname(host) in hass.data[DOMAIN]:
         return
 
-    bridge = HueBridge(host, hass, filename, allow_unreachable,
+    bridge = HueBridge(host, hass, filename, username, allow_unreachable,
                        allow_in_emulated_hue, allow_hue_groups)
     bridge.setup()
 
@@ -164,17 +169,19 @@ def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
 class HueBridge(object):
     """Manages a single Hue bridge."""
 
-    def __init__(self, host, hass, filename, allow_unreachable=False,
+    def __init__(self, host, hass, filename, username, allow_unreachable=False,
                  allow_in_emulated_hue=True, allow_hue_groups=True):
         """Initialize the system."""
         self.host = host
         self.bridge_id = socket.gethostbyname(host)
         self.hass = hass
         self.filename = filename
+        self.username = username
         self.allow_unreachable = allow_unreachable
         self.allow_in_emulated_hue = allow_in_emulated_hue
         self.allow_hue_groups = allow_hue_groups
 
+        self.available = True
         self.bridge = None
         self.lights = {}
         self.lightgroups = {}
@@ -189,10 +196,14 @@ class HueBridge(object):
         import phue
 
         try:
-            self.bridge = phue.Bridge(
-                self.host,
-                config_file_path=self.hass.config.path(self.filename))
-        except ConnectionRefusedError:  # Wrong host was given
+            kwargs = {}
+            if self.username is not None:
+                kwargs['username'] = self.username
+            if self.filename is not None:
+                kwargs['config_file_path'] = \
+                    self.hass.config.path(self.filename)
+            self.bridge = phue.Bridge(self.host, **kwargs)
+        except OSError:  # Wrong host was given
             _LOGGER.error("Error connecting to the Hue bridge at %s",
                           self.host)
             return
@@ -200,6 +211,10 @@ class HueBridge(object):
             _LOGGER.warning("Connected to Hue at %s but not registered.",
                             self.host)
             self.request_configuration()
+            return
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unknown error connecting with Hue bridge at %s",
+                              self.host)
             return
 
         # If we came here and configuring this host, mark as done
@@ -257,3 +272,109 @@ class HueBridge(object):
     def set_group(self, light_id, command):
         """Change light settings for a group. See phue for detail."""
         return self.bridge.set_group(light_id, command)
+
+
+@config_entries.HANDLERS.register(DOMAIN)
+class HueFlowHandler(config_entries.ConfigFlowHandler):
+    """Handle a Hue config flow."""
+
+    VERSION = 1
+
+    def __init__(self):
+        """Initialize the Hue flow."""
+        self.host = None
+
+    @property
+    def _websession(self):
+        """Return a websession.
+
+        Cannot assign in init because hass variable is not set yet.
+        """
+        return aiohttp_client.async_get_clientsession(self.hass)
+
+    async def async_step_init(self, user_input=None):
+        """Handle a flow start."""
+        from aiohue.discovery import discover_nupnp
+
+        if user_input is not None:
+            self.host = user_input['host']
+            return await self.async_step_link()
+
+        try:
+            with async_timeout.timeout(5):
+                bridges = await discover_nupnp(websession=self._websession)
+        except asyncio.TimeoutError:
+            return self.async_abort(
+                reason='discover_timeout'
+            )
+
+        if not bridges:
+            return self.async_abort(
+                reason='no_bridges'
+            )
+
+        # Find already configured hosts
+        configured_hosts = set(
+            entry.data['host'] for entry
+            in self.hass.config_entries.async_entries(DOMAIN))
+
+        hosts = [bridge.host for bridge in bridges
+                 if bridge.host not in configured_hosts]
+
+        if not hosts:
+            return self.async_abort(
+                reason='all_configured'
+            )
+
+        elif len(hosts) == 1:
+            self.host = hosts[0]
+            return await self.async_step_link()
+
+        return self.async_show_form(
+            step_id='init',
+            data_schema=vol.Schema({
+                vol.Required('host'): vol.In(hosts)
+            })
+        )
+
+    async def async_step_link(self, user_input=None):
+        """Attempt to link with the Hue bridge."""
+        import aiohue
+        errors = {}
+
+        if user_input is not None:
+            bridge = aiohue.Bridge(self.host, websession=self._websession)
+            try:
+                with async_timeout.timeout(5):
+                    # Create auth token
+                    await bridge.create_user('home-assistant')
+                    # Fetches name and id
+                    await bridge.initialize()
+            except (asyncio.TimeoutError, aiohue.RequestError,
+                    aiohue.LinkButtonNotPressed):
+                errors['base'] = 'register_failed'
+            except aiohue.AiohueException:
+                errors['base'] = 'linking'
+                _LOGGER.exception('Unknown Hue linking error occurred')
+            else:
+                return self.async_create_entry(
+                    title=bridge.config.name,
+                    data={
+                        'host': bridge.host,
+                        'bridge_id': bridge.config.bridgeid,
+                        'username': bridge.username,
+                    }
+                )
+
+        return self.async_show_form(
+            step_id='link',
+            errors=errors,
+        )
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a bridge for a config entry."""
+    await hass.async_add_job(partial(
+        setup_bridge, entry.data['host'], hass,
+        username=entry.data['username']))
+    return True

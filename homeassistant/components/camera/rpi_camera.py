@@ -106,6 +106,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("'%s' is not a whitelisted directory", file_path)
         return False
 
+    add_devices([RaspberryCamera(setup_config)])
+
 
 class RaspberryCamera(Camera):
     """Representation of a Raspberry Pi camera."""

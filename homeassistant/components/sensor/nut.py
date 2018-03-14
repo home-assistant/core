@@ -126,9 +126,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_ALIAS, default=None): cv.string,
-    vol.Optional(CONF_USERNAME, default=None): cv.string,
-    vol.Optional(CONF_PASSWORD, default=None): cv.string,
+    vol.Optional(CONF_ALIAS): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
     vol.Required(CONF_RESOURCES, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })

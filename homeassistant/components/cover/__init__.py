@@ -150,16 +150,14 @@ def stop_cover_tilt(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_STOP_COVER_TILT, data)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Track states and offer events for covers."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_COVERS)
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_handle_cover_service(service):
+    async def async_handle_cover_service(service):
         """Handle calls to the cover services."""
         covers = component.async_extract_from_service(service)
         method = SERVICE_TO_METHOD.get(service.service)
@@ -169,13 +167,13 @@ def async_setup(hass, config):
         # call method
         update_tasks = []
         for cover in covers:
-            yield from getattr(cover, method['method'])(**params)
+            await getattr(cover, method['method'])(**params)
             if not cover.should_poll:
                 continue
             update_tasks.append(cover.async_update_ha_state(True))
 
         if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks, loop=hass.loop)
 
     for service_name in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service_name].get(

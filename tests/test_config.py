@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT)
 from homeassistant.util import location as location_util, dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.config.group import (
     CONFIG_PATH as GROUP_CONFIG_PATH)
@@ -158,11 +158,11 @@ class TestConfig(unittest.TestCase):
     def test_load_yaml_config_preserves_key_order(self):
         """Test removal of library."""
         with open(YAML_PATH, 'w') as f:
-            f.write('hello: 0\n')
+            f.write('hello: 2\n')
             f.write('world: 1\n')
 
         self.assertEqual(
-            [('hello', 0), ('world', 1)],
+            [('hello', 2), ('world', 1)],
             list(config_util.load_yaml_config_file(YAML_PATH).items()))
 
     @mock.patch('homeassistant.util.location.detect_location_info',

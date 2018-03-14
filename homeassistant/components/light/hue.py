@@ -123,14 +123,19 @@ def unthrottled_update_lights(hass, bridge, add_devices):
         api = bridge.get_api()
     except phue.PhueRequestTimeout:
         _LOGGER.warning("Timeout trying to reach the bridge")
+        bridge.available = False
         return
     except ConnectionRefusedError:
         _LOGGER.error("The bridge refused the connection")
+        bridge.available = False
         return
     except socket.error:
         # socket.error when we cannot reach Hue
         _LOGGER.exception("Cannot reach the bridge")
+        bridge.available = False
         return
+
+    bridge.available = True
 
     new_lights = process_lights(
         hass, api, bridge,
@@ -261,10 +266,14 @@ class HueLight(Light):
         """Return true if device is on."""
         if self.is_group:
             return self.info['state']['any_on']
-        elif self.allow_unreachable:
-            return self.info['state']['on']
-        return self.info['state']['reachable'] and \
-            self.info['state']['on']
+        return self.info['state']['on']
+
+    @property
+    def available(self):
+        """Return if light is available."""
+        return self.bridge.available and (self.is_group or
+                                          self.allow_unreachable or
+                                          self.info['state']['reachable'])
 
     @property
     def supported_features(self):
@@ -287,22 +296,21 @@ class HueLight(Light):
             if self.info.get('manufacturername') == 'OSRAM':
                 color_hue, sat = color_util.color_xy_to_hs(
                     *kwargs[ATTR_XY_COLOR])
-                command['hue'] = color_hue
-                command['sat'] = sat
+                command['hue'] = color_hue / 360 * 65535
+                command['sat'] = sat / 100 * 255
             else:
                 command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
             if self.info.get('manufacturername') == 'OSRAM':
                 hsv = color_util.color_RGB_to_hsv(
                     *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-                command['hue'] = hsv[0]
-                command['sat'] = hsv[1]
-                command['bri'] = hsv[2]
+                command['hue'] = hsv[0] / 360 * 65535
+                command['sat'] = hsv[1] / 100 * 255
+                command['bri'] = hsv[2] / 100 * 255
             else:
                 xyb = color_util.color_RGB_to_xy(
                     *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
                 command['xy'] = xyb[0], xyb[1]
-                command['bri'] = xyb[2]
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))

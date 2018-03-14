@@ -4,8 +4,6 @@ Support for deCONZ devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/deconz/
 """
-
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -13,12 +11,13 @@ import voluptuous as vol
 from homeassistant.components.discovery import SERVICE_DECONZ
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==28']
+REQUIREMENTS = ['pydeconz==31']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,30 +55,28 @@ Unlock your deCONZ gateway to register with Home Assistant.
 """
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up services and configuration for deCONZ component."""
     result = False
-    config_file = yield from hass.async_add_job(
+    config_file = await hass.async_add_job(
         load_json, hass.config.path(CONFIG_FILE))
 
-    @asyncio.coroutine
-    def async_deconz_discovered(service, discovery_info):
+    async def async_deconz_discovered(service, discovery_info):
         """Call when deCONZ gateway has been found."""
         deconz_config = {}
         deconz_config[CONF_HOST] = discovery_info.get(CONF_HOST)
         deconz_config[CONF_PORT] = discovery_info.get(CONF_PORT)
-        yield from async_request_configuration(hass, config, deconz_config)
+        await async_request_configuration(hass, config, deconz_config)
 
     if config_file:
-        result = yield from async_setup_deconz(hass, config, config_file)
+        result = await async_setup_deconz(hass, config, config_file)
 
     if not result and DOMAIN in config and CONF_HOST in config[DOMAIN]:
         deconz_config = config[DOMAIN]
         if CONF_API_KEY in deconz_config:
-            result = yield from async_setup_deconz(hass, config, deconz_config)
+            result = await async_setup_deconz(hass, config, deconz_config)
         else:
-            yield from async_request_configuration(hass, config, deconz_config)
+            await async_request_configuration(hass, config, deconz_config)
             return True
 
     if not result:
@@ -88,8 +85,7 @@ def async_setup(hass, config):
     return True
 
 
-@asyncio.coroutine
-def async_setup_deconz(hass, config, deconz_config):
+async def async_setup_deconz(hass, config, deconz_config):
     """Set up a deCONZ session.
 
     Load config, group, light and sensor data for server information.
@@ -99,7 +95,7 @@ def async_setup_deconz(hass, config, deconz_config):
     from pydeconz import DeconzSession
     websession = async_get_clientsession(hass)
     deconz = DeconzSession(hass.loop, websession, **deconz_config)
-    result = yield from deconz.async_load_parameters()
+    result = await deconz.async_load_parameters()
     if result is False:
         _LOGGER.error("Failed to communicate with deCONZ")
         return False
@@ -112,8 +108,7 @@ def async_setup_deconz(hass, config, deconz_config):
             hass, component, DOMAIN, {}, config))
     deconz.start()
 
-    @asyncio.coroutine
-    def async_configure(call):
+    async def async_configure(call):
         """Set attribute of device in deCONZ.
 
         Field is a string representing a specific device in deCONZ
@@ -139,29 +134,38 @@ def async_setup_deconz(hass, config, deconz_config):
             if field is None:
                 _LOGGER.error('Could not find the entity %s', entity_id)
                 return
-        yield from deconz.async_put_state(field, data)
+        await deconz.async_put_state(field, data)
     hass.services.async_register(
         DOMAIN, 'configure', async_configure, schema=SERVICE_SCHEMA)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deconz.close)
+    @callback
+    def deconz_shutdown(event):
+        """
+        Wrap the call to deconz.close.
+
+        Used as an argument to EventBus.async_listen_once - EventBus calls
+        this method with the event as the first argument, which should not
+        be passed on to deconz.close.
+        """
+        deconz.close()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deconz_shutdown)
     return True
 
 
-@asyncio.coroutine
-def async_request_configuration(hass, config, deconz_config):
+async def async_request_configuration(hass, config, deconz_config):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
 
-    @asyncio.coroutine
-    def async_configuration_callback(data):
+    async def async_configuration_callback(data):
         """Set up actions to do when our configuration callback is called."""
         from pydeconz.utils import async_get_api_key
-        api_key = yield from async_get_api_key(hass.loop, **deconz_config)
+        api_key = await async_get_api_key(hass.loop, **deconz_config)
         if api_key:
             deconz_config[CONF_API_KEY] = api_key
-            result = yield from async_setup_deconz(hass, config, deconz_config)
+            result = await async_setup_deconz(hass, config, deconz_config)
             if result:
-                yield from hass.async_add_job(
+                await hass.async_add_job(
                     save_json, hass.config.path(CONFIG_FILE), deconz_config)
                 configurator.async_request_done(request_id)
                 return

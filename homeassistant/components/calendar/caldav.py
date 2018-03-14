@@ -166,7 +166,7 @@ class WebDavCalendarData(object):
         self.event = {
             "summary": vevent.summary.value,
             "start": self.get_hass_date(vevent.dtstart.value),
-            "end": self.get_hass_date(vevent.dtend.value),
+            "end": self.get_hass_date(self.get_end_date(vevent)),
             "location": self.get_attr_value(vevent, "location"),
             "description": self.get_attr_value(vevent, "description")
         }
@@ -194,7 +194,7 @@ class WebDavCalendarData(object):
     @staticmethod
     def is_over(vevent):
         """Return if the event is over."""
-        return dt.now() > WebDavCalendarData.to_datetime(vevent.dtend.value)
+        return dt.now() > WebDavCalendarData.get_end_date(vevent)
 
     @staticmethod
     def get_hass_date(obj):
@@ -217,3 +217,17 @@ class WebDavCalendarData(object):
         if hasattr(obj, attribute):
             return getattr(obj, attribute).value
         return None
+
+    @staticmethod
+    def get_end_date(obj):
+        """Return the end datetime as determined by dtend or duration."""
+        if hasattr(obj, "dtend"):
+            enddate = obj.dtend.value
+
+        elif hasattr(obj, "duration"):
+            enddate = obj.dtstart.value + obj.duration.value
+
+        else:
+            enddate = obj.dtstart.value + timedelta(days=1)
+
+        return WebDavCalendarData.to_datetime(enddate)

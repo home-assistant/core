@@ -22,7 +22,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-REQUIREMENTS = ['ihcsdk==2.1.1']
+REQUIREMENTS = ['ihcsdk==2.2.0']
 
 DOMAIN = 'ihc'
 IHC_DATA = 'ihc'
@@ -46,7 +46,7 @@ AUTO_SETUP_SCHEMA = vol.Schema({
             vol.All({
                 vol.Required(CONF_XPATH): cv.string,
                 vol.Required(CONF_NODE): cv.string,
-                vol.Optional(CONF_TYPE, default=None): cv.string,
+                vol.Optional(CONF_TYPE): cv.string,
                 vol.Optional(CONF_INVERTING, default=False): cv.boolean,
             })
         ]),

@@ -31,7 +31,7 @@ from homeassistant.helpers import script, config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.util.yaml import dump
 
-REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
+REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
     vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
-    vol.Optional(CONF_TURN_ON_ACTION, default=None): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_TURN_ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_TURN_OFF_ACTION):
         vol.Any(cv.SCRIPT_SCHEMA, vol.In(DEPRECATED_TURN_OFF_ACTIONS)),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,

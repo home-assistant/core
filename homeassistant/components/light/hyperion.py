@@ -213,9 +213,10 @@ class Hyperion(Light):
             except (KeyError, IndexError):
                 pass
 
-            if not response['info']['activeLedColor']:
+            led_color = response['info']['activeLedColor']
+            if not led_color or led_color[0]['RGB value'] == [0, 0, 0]:
                 # Get the active effect
-                if response['info']['activeEffects']:
+                if response['info'].get('activeEffects'):
                     self._rgb_color = [175, 0, 255]
                     self._icon = 'mdi:lava-lamp'
                     try:

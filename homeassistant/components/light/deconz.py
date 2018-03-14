@@ -4,8 +4,6 @@ Support for deCONZ light.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.deconz/
 """
-import asyncio
-
 from homeassistant.components.deconz import (
     DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
 from homeassistant.components.light import (
@@ -19,8 +17,8 @@ from homeassistant.util.color import color_RGB_to_xy
 DEPENDENCIES = ['deconz']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the deCONZ light."""
     if discovery_info is None:
         return
@@ -59,8 +57,7 @@ class DeconzLight(Light):
         if self._light.effect is not None:
             self._features |= SUPPORT_EFFECT
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe to lights events."""
         self._light.register_async_callback(self.async_update_callback)
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._light.deconz_id
@@ -120,8 +117,7 @@ class DeconzLight(Light):
         """No polling needed."""
         return False
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn on light."""
         data = {'on': True}
 
@@ -157,10 +153,9 @@ class DeconzLight(Light):
             else:
                 data['effect'] = 'none'
 
-        yield from self._light.async_set_state(data)
+        await self._light.async_set_state(data)
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn off light."""
         data = {'on': False}
 
@@ -176,4 +171,4 @@ class DeconzLight(Light):
                 data['alert'] = 'lselect'
                 del data['on']
 
-        yield from self._light.async_set_state(data)
+        await self._light.async_set_state(data)

@@ -241,12 +241,12 @@ def async_setup(hass, config):
     filters = Filters()
     exclude = config[DOMAIN].get(CONF_EXCLUDE)
     if exclude:
-        filters.excluded_entities = exclude[CONF_ENTITIES]
-        filters.excluded_domains = exclude[CONF_DOMAINS]
+        filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
+        filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
     include = config[DOMAIN].get(CONF_INCLUDE)
     if include:
-        filters.included_entities = include[CONF_ENTITIES]
-        filters.included_domains = include[CONF_DOMAINS]
+        filters.included_entities = include.get(CONF_ENTITIES, [])
+        filters.included_domains = include.get(CONF_DOMAINS, [])
     use_include_order = config[DOMAIN].get(CONF_ORDER)
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
@@ -303,8 +303,10 @@ class HistoryPeriodView(HomeAssistantView):
             entity_ids = entity_ids.lower().split(',')
         include_start_time_state = 'skip_initial_state' not in request.query
 
-        result = yield from request.app['hass'].async_add_job(
-            get_significant_states, request.app['hass'], start_time, end_time,
+        hass = request.app['hass']
+
+        result = yield from hass.async_add_job(
+            get_significant_states, hass, start_time, end_time,
             entity_ids, self.filters, include_start_time_state)
         result = result.values()
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -327,7 +329,8 @@ class HistoryPeriodView(HomeAssistantView):
             sorted_result.extend(result)
             result = sorted_result
 
-        return self.json(result)
+        response = yield from hass.async_add_job(self.json, result)
+        return response
 
 
 class Filters(object):

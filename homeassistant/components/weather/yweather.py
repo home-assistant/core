@@ -50,7 +50,7 @@ CONDITION_CLASSES = {
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_WOEID, default=None): cv.string,
+    vol.Optional(CONF_WOEID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 

@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 Vagrant.configure(2) do |config|
-  config.vm.box = "debian/contrib-jessie64"
+  config.vm.box = "debian/contrib-stretch64"
   config.vm.synced_folder "../../", "/home-assistant"
   config.vm.synced_folder "./config", "/root/.homeassistant"
   config.vm.network "forwarded_port", guest: 8123, host: 8123

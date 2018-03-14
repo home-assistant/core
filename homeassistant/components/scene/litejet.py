@@ -43,11 +43,6 @@ class LiteJetScene(Scene):
         return self._name
 
     @property
-    def should_poll(self):
-        """Return that polling is not necessary."""
-        return False
-
-    @property
     def device_state_attributes(self):
         """Return the device-specific state attributes."""
         return {
