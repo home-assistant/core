@@ -11,7 +11,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import CONF_TOKEN, CONF_HOST, CONF_ROOM
+from homeassistant.const import CONF_TOKEN, CONF_ROOM
 
 REQUIREMENTS = ['pystride==0.1.7']
 
@@ -42,8 +42,7 @@ def get_service(hass, config, discovery_info=None):
 class StrideNotificationService(BaseNotificationService):
     """Implement the notification service for Stride."""
 
-    def __init__(self, token, default_room, default_panel,# default_notify,
-                 cloudid):
+    def __init__(self, token, default_room, default_panel, cloudid):
         """Initialize the service."""
         self._token = token
         self._default_room = default_room
@@ -62,7 +61,7 @@ class StrideNotificationService(BaseNotificationService):
             if ((data.get(CONF_PANEL) is not None)
                     and (data.get(CONF_PANEL) in VALID_PANELS)):
                 panel = data.get(CONF_PANEL)
-        
+ 
         message_text = {
                     'type': 'paragraph',
                     'content':
