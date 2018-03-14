@@ -157,12 +157,12 @@ class Thermostat(HomeAccessory):
 
         # Update current temperature
         current_temp = new_state.attributes.get(ATTR_CURRENT_TEMPERATURE)
-        if current_temp is not None:
+        if isinstance(current_temp, (int, float)):
             self.char_current_temp.set_value(current_temp)
 
         # Update target temperature
         target_temp = new_state.attributes.get(ATTR_TEMPERATURE)
-        if target_temp is not None:
+        if isinstance(target_temp, (int, float)):
             if not self.temperature_flag_target_state:
                 self.char_target_temp.set_value(target_temp,
                                                 should_callback=False)
