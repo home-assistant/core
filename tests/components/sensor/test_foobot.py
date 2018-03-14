@@ -1,17 +1,16 @@
 """The tests for the Foobot sensor platform."""
 
 import re
-import sys
 import unittest
 
 import homeassistant.components.sensor as sensor
-from homeassistant.setup import setup_component
 from homeassistant.const import (TEMP_CELSIUS)
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.setup import setup_component
 from tests.common import (
-    get_test_home_assistant, load_fixture, assert_setup_component)
+    assert_setup_component, get_test_home_assistant, load_fixture)
 
 from ...test_util.aiohttp import mock_aiohttp_client
-from homeassistant.exceptions import PlatformNotReady, HomeAssistantError
 
 VALID_CONFIG = {
     'platform': 'foobot',
@@ -33,8 +32,6 @@ class TestFoobotSetup(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @unittest.skipIf(sys.version_info < (3, 5),
-                     "Test not working on Python 3.4")
     def test_default_setup(self):
         """Test the default setup."""
         with mock_aiohttp_client() as aioclient_mock:
@@ -60,13 +57,11 @@ class TestFoobotSetup(unittest.TestCase):
                 self.assertEqual(value[1],
                                  state.attributes.get('unit_of_measurement'))
 
-    @unittest.skipIf(sys.version_info < (3, 5),
-                     "Test not working on Python 3.4")
     def test_setup_error(self):
         """Expected failures caused by various errors in API response."""
-        errors = [[400, HomeAssistantError],
-                  [401, HomeAssistantError],
-                  [403, HomeAssistantError],
+        errors = [[400, None],
+                  [401, None],
+                  [403, None],
                   [429, PlatformNotReady],
                   [500, PlatformNotReady]]
 

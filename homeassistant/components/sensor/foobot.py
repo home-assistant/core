@@ -12,7 +12,7 @@ import aiohttp
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.exceptions import PlatformNotReady, HomeAssistantError
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
     ATTR_TIME, ATTR_TEMPERATURE, CONF_TOKEN, CONF_USERNAME, TEMP_CELSIUS)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -50,8 +50,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the devices associated with the account."""
     from foobot_async import FoobotClient
 
@@ -64,10 +64,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     data = {}
     dev = []
     try:
-        devices = yield from client.get_devices()
+        devices = await client.get_devices()
         _LOGGER.debug("The following devices were found: %s", devices)
         for device in devices:
-            for sensor_type in SENSOR_TYPES.keys():
+            for sensor_type in SENSOR_TYPES:
                 if sensor_type == 'time':
                     continue
                 foobot_sensor = FoobotSensor(client, data, device,
@@ -78,9 +78,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             FoobotClient.InternalError):
         _LOGGER.exception('Failed to connect to foobot servers.')
         raise PlatformNotReady
-    except (FoobotClient.ClientError):
-        _LOGGER.exception('Failed to fetch data from foobot servers.')
-        raise HomeAssistantError
+    except FoobotClient.ClientError:
+        _LOGGER.error('Failed to fetch data from foobot servers.')
+        return
     async_add_devices(dev, True)
 
 
@@ -88,6 +88,7 @@ class FoobotSensor(Entity):
     """Implementation of a Foobot sensor."""
 
     __cache = {}
+    __nb_requests = 0
 
     def __init__(self, client, data, device, sensor_type):
         """Initialize the sensor."""
@@ -122,13 +123,10 @@ class FoobotSensor(Entity):
         """Return the unit of measurement of this entity."""
         return self._unit_of_measurement
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data."""
         if self._uuid in self.__cache:
             last_request = self.__cache[self._uuid]['last_request']
-            _LOGGER.debug('last_update: %s', last_request)
-            _LOGGER.debug('now: %s', datetime.utcnow())
             if last_request + SCAN_INTERVAL > datetime.utcnow():
                 # If the last request made is recent enough,
                 # just skip the update
@@ -137,14 +135,16 @@ class FoobotSensor(Entity):
 
         interval = SCAN_INTERVAL.total_seconds()
         try:
-            response = yield from self._client.get_last_data(self._uuid,
-                                                             interval,
-                                                             interval + 1)
+            response = await self._client.get_last_data(self._uuid,
+                                                        interval,
+                                                        interval + 1)
         except (aiohttp.client_exceptions.ClientConnectorError,
                 asyncio.TimeoutError, self._client.TooManyRequests,
                 self._client.InternalError):
-            raise HomeAssistantError
+            _LOGGER.debug("Couldn't fetch data")
         if response:
+            self.__nb_requests = self.__nb_requests + 1
+            _LOGGER.debug("Number of requests: %d", self.__nb_requests)
             _LOGGER.debug("The data response is: %s", response)
             self.__cache[self._uuid] = {k: round(v, 1) for k, v in
                                         response[0].items()}
