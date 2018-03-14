@@ -151,3 +151,31 @@ class TestSun(unittest.TestCase):
         assert dt_util.parse_datetime(
             state.attributes[sun.STATE_ATTR_NEXT_SETTING]) == \
             datetime(2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC)
+
+    def test_irradiance_calculation(self):
+        """Test if max irradiance is calculated based on elevation."""
+        now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)
+        with patch('homeassistant.helpers.condition.dt_util.utcnow',
+                   return_value=now):
+            setup_component(self.hass, sun.DOMAIN, {
+                sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+
+        self.hass.block_till_done()
+
+        test_time = dt_util.parse_datetime(
+            self.hass.states.get(sun.ENTITY_ID)
+                .attributes[sun.STATE_ATTR_NEXT_RISING])
+        self.assertIsNotNone(test_time)
+
+        # Irradiance is 0 at night
+        assert self.hass.states.get(sun.ENTITY_ID) \
+                   .attributes[sun.STATE_ATTR_IRRADIANCE] == 0
+
+        self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
+                           {ha.ATTR_NOW: test_time + timedelta(minutes=5)})
+
+        self.hass.block_till_done()
+
+        # Irradiance is larger dan 0 at daytime
+        assert self.hass.states.get(sun.ENTITY_ID) \
+                   .attributes[sun.STATE_ATTR_IRRADIANCE] > 0
