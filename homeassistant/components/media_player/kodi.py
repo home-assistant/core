@@ -481,7 +481,12 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        return MEDIA_TYPES.get(self._item.get('type'))
+        """If item type is unknown to Kodi, return type of first player instead, if any"""
+        if MEDIA_TYPES.get(self._item.get('type')) is None and self._players:            
+            content_type = MEDIA_TYPES.get(self._players[0]['type'])
+        else:
+            content_type = MEDIA_TYPES.get(self._item.get('type'))
+        return content_type
 
     @property
     def media_duration(self):
