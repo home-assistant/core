@@ -699,6 +699,7 @@ omit =
     homeassistant/components/switch/telnet.py
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
+    homeassistant/components/switch/vesync.py
     homeassistant/components/switch/xiaomi_miio.py
     homeassistant/components/telegram_bot/*
     homeassistant/components/thingspeak.py
