@@ -15,9 +15,6 @@ REQUIREMENTS = ['pyvesync==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-API_BASE_URL = 'https://smartapi.vesync.com'
-API_RATE_LIMIT = 30
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
