@@ -42,12 +42,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             count_string = 'switches'
 
         _LOGGER.info("Discovered %d VeSync %s",
-                        len(manager.devices), count_string)
+                     len(manager.devices), count_string)
 
         for switch in manager.devices:
             switches.append(VeSyncSwitchHA(switch))
             _LOGGER.info("Added a VeSync switch named '%s'",
-                            switch.device_name)
+                         switch.device_name)
     else:
         _LOGGER.info("No VeSync devices found")
 
