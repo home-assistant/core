@@ -60,7 +60,7 @@ DEPRECATED_TURN_OFF_ACTIONS = {
 
 # https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
 MEDIA_TYPES = {
-    'music': MEDIA_TYPE_MUSIC,    
+    'music': MEDIA_TYPE_MUSIC,
     'artist': MEDIA_TYPE_MUSIC,
     'album': MEDIA_TYPE_MUSIC,
     'song': MEDIA_TYPE_MUSIC,
@@ -483,13 +483,12 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        """If item type is unknown to Kodi, 
+        """If item type is unknown to Kodi,
            return type of first player instead, if any"""
-        if MEDIA_TYPES.get(self._item.get('type')) is None and self._players:            
+        if MEDIA_TYPES.get(self._item.get('type')) is None and self._players:
             return MEDIA_TYPES.get(self._players[0]['type'])
         else:
             return MEDIA_TYPES.get(self._item.get('type'))
-        
 
     @property
     def media_duration(self):
