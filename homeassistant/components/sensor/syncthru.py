@@ -9,13 +9,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_RESOURCE, CONF_HOST, CONF_NAME, CONF_FRIENDLY_NAME,
+    CONF_RESOURCE, CONF_HOST, CONF_NAME,
     CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
-REQUIREMENTS = ['pysyncthru==0.2.2']
+REQUIREMENTS = ['pysyncthru==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,10 +105,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return
 
 
-
 class SyncThruSensor(Entity):
     """Implementation of an abstract Samsung Printer sensor platform."""
-
 
     def __init__(self, hass, syncthru, name):
         """Initialize the sensor."""
