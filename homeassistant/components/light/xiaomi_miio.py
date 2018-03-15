@@ -59,22 +59,6 @@ ATTR_AUTOMATIC_COLOR_TEMPERATURE = 'automatic_color_temperature'
 ATTR_REMINDER = 'reminder'
 ATTR_EYECARE_MODE = 'eyecare_mode'
 
-SUPPORT_SET_SCENE = 1
-SUPPORT_SET_DELAYED_TURN_OFF = 2
-SUPPORT_REMINDER = 4
-SUPPORT_NIGHT_LIGHT_MODE = 8
-SUPPORT_EYECARE_MODE = 16
-
-ADDITIONAL_SUPPORT_FLAGS_GENERIC = (
-    SUPPORT_SET_SCENE |
-    SUPPORT_SET_DELAYED_TURN_OFF)
-
-ADDITIONAL_SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT = (
-    ADDITIONAL_SUPPORT_FLAGS_GENERIC |
-    SUPPORT_REMINDER |
-    SUPPORT_NIGHT_LIGHT_MODE |
-    SUPPORT_EYECARE_MODE)
-
 SERVICE_SET_SCENE = 'xiaomi_miio_set_scene'
 SERVICE_SET_DELAYED_TURN_OFF = 'xiaomi_miio_set_delayed_turn_off'
 SERVICE_REMINDER_ON = 'xiaomi_miio_reminder_on'
@@ -218,7 +202,6 @@ class XiaomiPhilipsAbstractLight(Light):
         self._state_attrs = {
             ATTR_MODEL: self._model,
         }
-        self._additional_supported_features = 0
 
     @property
     def should_poll(self):
@@ -253,7 +236,7 @@ class XiaomiPhilipsAbstractLight(Light):
     @property
     def supported_features(self):
         """Return the supported features."""
-        return 0
+        return SUPPORT_BRIGHTNESS
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a light command handling error messages."""
@@ -268,49 +251,6 @@ class XiaomiPhilipsAbstractLight(Light):
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
             return False
-
-    async def async_turn_on(self, **kwargs):
-        """Turn the light on."""
-        await self._try_command(
-            "Turning the light on failed.", self._light.on)
-
-    async def async_turn_off(self, **kwargs):
-        """Turn the light off."""
-        await self._try_command(
-            "Turning the light off failed.", self._light.off)
-
-    async def async_update(self):
-        """Fetch state from the device."""
-        from miio import DeviceException
-        try:
-            state = await self.hass.async_add_job(self._light.status)
-            _LOGGER.debug("Got new state: %s", state)
-
-            self._state = state.is_on
-
-        except DeviceException as ex:
-            self._state = None
-            _LOGGER.error("Got exception while fetching the state: %s", ex)
-
-
-class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
-    """Representation of a Xiaomi Philips Light."""
-
-    def __init__(self, name, light, model):
-        """Initialize the light device."""
-        XiaomiPhilipsAbstractLight.__init__(self, name, light, model)
-
-        self._color_temp = None
-        self._state_attrs.update({
-            ATTR_SCENE: None,
-            ATTR_DELAYED_TURN_OFF: None,
-        })
-        self._additional_supported_features = ADDITIONAL_SUPPORT_FLAGS_GENERIC
-
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_BRIGHTNESS
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -347,6 +287,33 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
             self._state = state.is_on
             self._brightness = ceil((255 / 100.0) * state.brightness)
 
+        except DeviceException as ex:
+            self._state = None
+            _LOGGER.error("Got exception while fetching the state: %s", ex)
+
+
+class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
+    """Representation of a Xiaomi Philips Light."""
+
+    def __init__(self, name, light, model):
+        """Initialize the light device."""
+        XiaomiPhilipsAbstractLight.__init__(self, name, light, model)
+
+        self._state_attrs.update({
+            ATTR_SCENE: None,
+            ATTR_DELAYED_TURN_OFF: None,
+        })
+
+    async def async_update(self):
+        """Fetch state from the device."""
+        from miio import DeviceException
+        try:
+            state = await self.hass.async_add_job(self._light.status)
+            _LOGGER.debug("Got new state: %s", state)
+
+            self._state = state.is_on
+            self._brightness = ceil((255 / 100.0) * state.brightness)
+
             delayed_turn_off = self.delayed_turn_off_timestamp(
                 state.delay_off_countdown,
                 dt.utcnow(),
@@ -363,19 +330,12 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
     async def async_set_scene(self, scene: int = 1):
         """Set the fixed scene."""
-        if self._additional_supported_features & SUPPORT_SET_SCENE == 0:
-            return
-
         await self._try_command(
             "Setting a fixed scene failed.",
             self._light.set_scene, scene)
 
     async def async_set_delayed_turn_off(self, time_period: timedelta):
         """Set delayed turn off."""
-        if self._additional_supported_features & \
-                SUPPORT_SET_DELAYED_TURN_OFF == 0:
-            return
-
         await self._try_command(
             "Setting the turn off delay failed.",
             self._light.delay_off, time_period.total_seconds())
@@ -435,6 +395,12 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
 class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
     """Representation of a Xiaomi Philips Bulb."""
+
+    def __init__(self, name, light, model):
+        """Initialize the light device."""
+        XiaomiPhilipsGenericLight.__init__(self, name, light, model)
+
+        self._color_temp = None
 
     @property
     def color_temp(self):
@@ -620,8 +586,6 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
             ATTR_NIGHT_LIGHT_MODE: None,
             ATTR_EYECARE_MODE: None,
         })
-        self._additional_supported_features = \
-            ADDITIONAL_SUPPORT_FLAGS_SREAD1_EYECARE_LIGHT
 
     @property
     def supported_features(self):
@@ -657,64 +621,42 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
     async def async_set_delayed_turn_off(self, time_period: timedelta):
         """Set delayed turn off."""
-        if self._additional_supported_features & \
-                SUPPORT_SET_DELAYED_TURN_OFF == 0:
-            return
-
         await self._try_command(
             "Setting the turn off delay failed.",
             self._light.delay_off, round(time_period.total_seconds() / 60))
 
     async def async_reminder_on(self):
         """Enable the eye fatigue notification."""
-        if self._additional_supported_features & SUPPORT_REMINDER == 0:
-            return
-
         await self._try_command(
             "Turning on the reminder failed.",
             self._light.reminder_on)
 
     async def async_reminder_off(self):
         """Disable the eye fatigue notification."""
-        if self._additional_supported_features & SUPPORT_REMINDER == 0:
-            return
-
         await self._try_command(
             "Turning off the reminder failed.",
             self._light.reminder_off)
 
     async def async_night_light_mode_on(self):
         """Turn the smart night light mode on."""
-        if self._additional_supported_features & SUPPORT_NIGHT_LIGHT_MODE == 0:
-            return
-
         await self._try_command(
             "Turning on the smart night light mode failed.",
             self._light.smart_night_light_on)
 
     async def async_night_light_mode_off(self):
         """Turn the smart night light mode off."""
-        if self._additional_supported_features & SUPPORT_NIGHT_LIGHT_MODE == 0:
-            return
-
         await self._try_command(
             "Turning off the smart night light mode failed.",
             self._light.smart_night_light_off)
 
     async def async_eyecare_mode_on(self):
         """Turn the eyecare mode on."""
-        if self._additional_supported_features & SUPPORT_EYECARE_MODE == 0:
-            return
-
         await self._try_command(
             "Turning on the eyecare mode failed.",
             self._light.eyecare_on)
 
     async def async_eyecare_mode_off(self):
         """Turn the eyecare mode off."""
-        if self._additional_supported_features & SUPPORT_EYECARE_MODE == 0:
-            return
-
         await self._try_command(
             "Turning off the eyecare mode failed.",
             self._light.eyecare_off)
