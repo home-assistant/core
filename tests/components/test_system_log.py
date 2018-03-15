@@ -14,16 +14,16 @@ _LOGGER = logging.getLogger('test_logger')
 
 @pytest.fixture(autouse=True)
 @asyncio.coroutine
-def setup_test_case(hass, test_client):
+def setup_test_case(hass, aiohttp_client):
     """Setup system_log component before test case."""
     config = {'system_log': {'max_entries': 2}}
     yield from async_setup_component(hass, system_log.DOMAIN, config)
 
 
 @asyncio.coroutine
-def get_error_log(hass, test_client, expected_count):
+def get_error_log(hass, aiohttp_client, expected_count):
     """Fetch all entries from system_log via the API."""
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
     resp = yield from client.get('/api/error/all')
     assert resp.status == 200
 
@@ -53,41 +53,41 @@ def get_frame(name):
 
 
 @asyncio.coroutine
-def test_normal_logs(hass, test_client):
+def test_normal_logs(hass, aiohttp_client):
     """Test that debug and info are not logged."""
     _LOGGER.debug('debug')
     _LOGGER.info('info')
 
     # Assert done by get_error_log
-    yield from get_error_log(hass, test_client, 0)
+    yield from get_error_log(hass, aiohttp_client, 0)
 
 
 @asyncio.coroutine
-def test_exception(hass, test_client):
+def test_exception(hass, aiohttp_client):
     """Test that exceptions are logged and retrieved correctly."""
     _generate_and_log_exception('exception message', 'log message')
-    log = (yield from get_error_log(hass, test_client, 1))[0]
+    log = (yield from get_error_log(hass, aiohttp_client, 1))[0]
     assert_log(log, 'exception message', 'log message', 'ERROR')
 
 
 @asyncio.coroutine
-def test_warning(hass, test_client):
+def test_warning(hass, aiohttp_client):
     """Test that warning are logged and retrieved correctly."""
     _LOGGER.warning('warning message')
-    log = (yield from get_error_log(hass, test_client, 1))[0]
+    log = (yield from get_error_log(hass, aiohttp_client, 1))[0]
     assert_log(log, '', 'warning message', 'WARNING')
 
 
 @asyncio.coroutine
-def test_error(hass, test_client):
+def test_error(hass, aiohttp_client):
     """Test that errors are logged and retrieved correctly."""
     _LOGGER.error('error message')
-    log = (yield from get_error_log(hass, test_client, 1))[0]
+    log = (yield from get_error_log(hass, aiohttp_client, 1))[0]
     assert_log(log, '', 'error message', 'ERROR')
 
 
 @asyncio.coroutine
-def test_error_posted_as_event(hass, test_client):
+def test_error_posted_as_event(hass, aiohttp_client):
     """Test that error are posted as events."""
     events = []
 
@@ -106,26 +106,26 @@ def test_error_posted_as_event(hass, test_client):
 
 
 @asyncio.coroutine
-def test_critical(hass, test_client):
+def test_critical(hass, aiohttp_client):
     """Test that critical are logged and retrieved correctly."""
     _LOGGER.critical('critical message')
-    log = (yield from get_error_log(hass, test_client, 1))[0]
+    log = (yield from get_error_log(hass, aiohttp_client, 1))[0]
     assert_log(log, '', 'critical message', 'CRITICAL')
 
 
 @asyncio.coroutine
-def test_remove_older_logs(hass, test_client):
+def test_remove_older_logs(hass, aiohttp_client):
     """Test that older logs are rotated out."""
     _LOGGER.error('error message 1')
     _LOGGER.error('error message 2')
     _LOGGER.error('error message 3')
-    log = yield from get_error_log(hass, test_client, 2)
+    log = yield from get_error_log(hass, aiohttp_client, 2)
     assert_log(log[0], '', 'error message 3', 'ERROR')
     assert_log(log[1], '', 'error message 2', 'ERROR')
 
 
 @asyncio.coroutine
-def test_clear_logs(hass, test_client):
+def test_clear_logs(hass, aiohttp_client):
     """Test that the log can be cleared via a service call."""
     _LOGGER.error('error message')
 
@@ -135,7 +135,7 @@ def test_clear_logs(hass, test_client):
     yield from hass.async_block_till_done()
 
     # Assert done by get_error_log
-    yield from get_error_log(hass, test_client, 0)
+    yield from get_error_log(hass, aiohttp_client, 0)
 
 
 @asyncio.coroutine
@@ -182,12 +182,12 @@ def test_write_choose_level(hass):
 
 
 @asyncio.coroutine
-def test_unknown_path(hass, test_client):
+def test_unknown_path(hass, aiohttp_client):
     """Test error logged from unknown path."""
     _LOGGER.findCaller = MagicMock(
         return_value=('unknown_path', 0, None, None))
     _LOGGER.error('error message')
-    log = (yield from get_error_log(hass, test_client, 1))[0]
+    log = (yield from get_error_log(hass, aiohttp_client, 1))[0]
     assert log['source'] == 'unknown_path'
 
 
@@ -207,30 +207,30 @@ def log_error_from_test_path(path):
 
 
 @asyncio.coroutine
-def test_homeassistant_path(hass, test_client):
+def test_homeassistant_path(hass, aiohttp_client):
     """Test error logged from homeassistant path."""
     with patch('homeassistant.components.system_log.HOMEASSISTANT_PATH',
                new=['venv_path/homeassistant']):
         log_error_from_test_path(
             'venv_path/homeassistant/component/component.py')
-        log = (yield from get_error_log(hass, test_client, 1))[0]
+        log = (yield from get_error_log(hass, aiohttp_client, 1))[0]
     assert log['source'] == 'component/component.py'
 
 
 @asyncio.coroutine
-def test_config_path(hass, test_client):
+def test_config_path(hass, aiohttp_client):
     """Test error logged from config path."""
     with patch.object(hass.config, 'config_dir', new='config'):
         log_error_from_test_path('config/custom_component/test.py')
-        log = (yield from get_error_log(hass, test_client, 1))[0]
+        log = (yield from get_error_log(hass, aiohttp_client, 1))[0]
     assert log['source'] == 'custom_component/test.py'
 
 
 @asyncio.coroutine
-def test_netdisco_path(hass, test_client):
+def test_netdisco_path(hass, aiohttp_client):
     """Test error logged from netdisco path."""
     with patch.dict('sys.modules',
                     netdisco=MagicMock(__path__=['venv_path/netdisco'])):
         log_error_from_test_path('venv_path/netdisco/disco_component.py')
-        log = (yield from get_error_log(hass, test_client, 1))[0]
+        log = (yield from get_error_log(hass, aiohttp_client, 1))[0]
     assert log['source'] == 'disco_component.py'
