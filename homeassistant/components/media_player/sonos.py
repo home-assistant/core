@@ -172,8 +172,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.warning("No Sonos speakers found")
             return
 
-    hass.data[DATA_SONOS].uids.update([p.uid for p in players])
-    add_devices([SonosDevice(p) for p in players])
+    hass.data[DATA_SONOS].uids.update(p.uid for p in players)
+    add_devices(SonosDevice(p) for p in players)
     _LOGGER.debug("Added %s Sonos speakers", len(players))
 
     def service_handle(service):

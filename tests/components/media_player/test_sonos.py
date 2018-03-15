@@ -161,7 +161,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
             'host': '192.0.2.1'
         })
 
-        devices = self.hass.data[sonos.DATA_SONOS].devices
+        devices = list(self.hass.data[sonos.DATA_SONOS].devices)
         self.assertEqual(len(devices), 1)
         self.assertEqual(devices[0].name, 'Kitchen')
 
@@ -241,7 +241,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     def test_ensure_setup_sonos_discovery(self, *args):
         """Test a single device using the autodiscovery provided by Sonos."""
         sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass))
-        devices = self.hass.data[sonos.DATA_SONOS].devices
+        devices = list(self.hass.data[sonos.DATA_SONOS].devices)
         self.assertEqual(len(devices), 1)
         self.assertEqual(devices[0].name, 'Kitchen')
 
@@ -253,7 +253,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
         sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass), {
             'host': '192.0.2.1'
         })
-        device = self.hass.data[sonos.DATA_SONOS].devices[-1]
+        device = list(self.hass.data[sonos.DATA_SONOS].devices)[-1]
         device.hass = self.hass
 
         device.set_sleep_timer(30)
@@ -267,7 +267,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
         sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass), {
             'host': '192.0.2.1'
         })
-        device = self.hass.data[sonos.DATA_SONOS].devices[-1]
+        device = list(self.hass.data[sonos.DATA_SONOS].devices)[-1]
         device.hass = self.hass
 
         device.set_sleep_timer(None)
@@ -281,7 +281,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
         sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass), {
             'host': '192.0.2.1'
         })
-        device = self.hass.data[sonos.DATA_SONOS].devices[-1]
+        device = list(self.hass.data[sonos.DATA_SONOS].devices)[-1]
         device.hass = self.hass
         alarm1 = alarms.Alarm(soco_mock)
         alarm1.configure_mock(_alarm_id="1", start_time=None, enabled=False,
@@ -311,7 +311,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
         sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass), {
             'host': '192.0.2.1'
         })
-        device = self.hass.data[sonos.DATA_SONOS].devices[-1]
+        device = list(self.hass.data[sonos.DATA_SONOS].devices)[-1]
         device.hass = self.hass
 
         snapshotMock.return_value = True
@@ -329,7 +329,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
         sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass), {
             'host': '192.0.2.1'
         })
-        device = self.hass.data[sonos.DATA_SONOS].devices[-1]
+        device = list(self.hass.data[sonos.DATA_SONOS].devices)[-1]
         device.hass = self.hass
 
         restoreMock.return_value = True
