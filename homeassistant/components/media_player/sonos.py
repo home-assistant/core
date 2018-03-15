@@ -188,13 +188,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             master = [device for device in hass.data[DATA_SONOS].devices
                       if device.entity_id == service.data[ATTR_MASTER]]
             if master:
-                master[0].join(devices)
+                with hass.data[DATA_SONOS].topology_lock:
+                    master[0].join(devices)
+            return
+
+        if service.service == SERVICE_UNJOIN:
+            with hass.data[DATA_SONOS].topology_lock:
+                for device in devices:
+                    device.unjoin()
             return
 
         for device in devices:
-            if service.service == SERVICE_UNJOIN:
-                device.unjoin()
-            elif service.service == SERVICE_SNAPSHOT:
+            if service.service == SERVICE_SNAPSHOT:
                 device.snapshot(service.data[ATTR_WITH_GROUP])
             elif service.service == SERVICE_RESTORE:
                 device.restore(service.data[ATTR_WITH_GROUP])
@@ -887,16 +892,19 @@ class SonosDevice(MediaPlayerDevice):
     def join(self, slaves):
         """Form a group with other players."""
         if self._coordinator:
-            self.soco.unjoin()
+            self.unjoin()
 
         for slave in slaves:
             if slave.unique_id != self.unique_id:
                 slave.soco.join(self.soco)
+                # pylint: disable=protected-access
+                slave._coordinator = self
 
     @soco_error()
     def unjoin(self):
         """Unjoin the player from a group."""
         self.soco.unjoin()
+        self._coordinator = None
 
     @soco_error()
     def snapshot(self, with_group=True):
