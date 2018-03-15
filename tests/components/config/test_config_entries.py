@@ -17,11 +17,11 @@ from tests.common import MockConfigEntry, MockModule, mock_coro_func
 
 
 @pytest.fixture
-def client(hass, test_client):
+def client(hass, aiohttp_client):
     """Fixture that can interact with the config manager API."""
     hass.loop.run_until_complete(async_setup_component(hass, 'http', {}))
     hass.loop.run_until_complete(config_entries.async_setup(hass))
-    yield hass.loop.run_until_complete(test_client(hass.http.app))
+    yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @asyncio.coroutine
