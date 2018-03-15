@@ -12,7 +12,7 @@ from tests.common import mock_coro
 
 
 @pytest.fixture
-def cloud_client(hass, test_client):
+def cloud_client(hass, aiohttp_client):
     """Fixture that can fetch from the cloud client."""
     with patch('homeassistant.components.cloud.Cloud.async_start',
                return_value=mock_coro()):
@@ -28,7 +28,7 @@ def cloud_client(hass, test_client):
     hass.data['cloud']._decode_claims = \
         lambda token: jwt.get_unverified_claims(token)
     with patch('homeassistant.components.cloud.Cloud.write_user_info'):
-        yield hass.loop.run_until_complete(test_client(hass.http.app))
+        yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
