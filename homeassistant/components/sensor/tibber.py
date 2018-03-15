@@ -61,7 +61,8 @@ class TibberSensor(Entity):
         self._state = None
         self._device_state_attributes = {}
         self._unit_of_measurement = self._tibber_home.price_unit
-        self._name = 'Electricity price {}'.format(tibber_home.address1)
+        self._name = 'Electricity price {}'.format(tibber_home.info['viewer']
+                                                   ['home']['appNickname'])
 
     async def async_update(self):
         """Get the latest data and updates the states."""
