@@ -93,7 +93,7 @@ def test_register_before_setup(hass):
 
 
 @asyncio.coroutine
-def test_http_processing_intent(hass, test_client):
+def test_http_processing_intent(hass, aiohttp_client):
     """Test processing intent via HTTP API."""
     class TestIntentHandler(intent.IntentHandler):
         intent_type = 'OrderBeer'
@@ -122,7 +122,7 @@ def test_http_processing_intent(hass, test_client):
     })
     assert result
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
     resp = yield from client.post('/api/conversation/process', json={
         'text': 'I would like the Grolsch beer'
     })
@@ -224,7 +224,7 @@ def test_toggle_intent(hass, sentence):
 
 
 @asyncio.coroutine
-def test_http_api(hass, test_client):
+def test_http_api(hass, aiohttp_client):
     """Test the HTTP conversation API."""
     result = yield from component.async_setup(hass, {})
     assert result
@@ -232,7 +232,7 @@ def test_http_api(hass, test_client):
     result = yield from async_setup_component(hass, 'conversation', {})
     assert result
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
     hass.states.async_set('light.kitchen', 'off')
     calls = async_mock_service(hass, 'homeassistant', 'turn_on')
 
@@ -249,7 +249,7 @@ def test_http_api(hass, test_client):
 
 
 @asyncio.coroutine
-def test_http_api_wrong_data(hass, test_client):
+def test_http_api_wrong_data(hass, aiohttp_client):
     """Test the HTTP conversation API."""
     result = yield from component.async_setup(hass, {})
     assert result
@@ -257,7 +257,7 @@ def test_http_api_wrong_data(hass, test_client):
     result = yield from async_setup_component(hass, 'conversation', {})
     assert result
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
 
     resp = yield from client.post('/api/conversation/process', json={
         'text': 123
