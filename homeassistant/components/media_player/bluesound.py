@@ -7,6 +7,7 @@ https://home-assistant.io/components/media_player.bluesound/
 import asyncio
 from datetime import timedelta
 import logging
+import time
 
 import aiohttp
 from aiohttp.client_exceptions import ClientError
@@ -129,6 +130,7 @@ def _add_player(hass, async_add_devices, host, port=None, name=None):
     else:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _init_player)
 
+
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the Bluesound platforms."""
@@ -206,7 +208,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             return string.index(search_string)
         except ValueError:
             return -1
-    
+
     async def force_update_sync_status(
             self, on_updated_cb=None, raise_timeout=False):
         """Update the internal status."""
@@ -249,7 +251,6 @@ class BluesoundPlayer(MediaPlayerDevice):
             on_updated_cb()
         return True
 
-    
     async def _start_poll_command(self):
         """Loop which polls the status of the player."""
         try:
