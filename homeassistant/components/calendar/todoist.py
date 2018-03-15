@@ -87,7 +87,9 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(PROJECT_NAME, default='inbox'): vol.All(cv.string, vol.Lower),
     vol.Optional(LABELS): cv.ensure_list_csv,
     vol.Optional(PRIORITY): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
-    vol.Optional(DUE_DATE): cv.string,
+    vol.Optional(DATE_STRING): cv.string,
+    vol.Optional(DATE_LANG): vol.All(cv.string, vol.Length(min=2, max=2)),
+    vol.Optional(DUE_DATE): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
