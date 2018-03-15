@@ -73,6 +73,8 @@ MEDIA_TYPES = {
     'episode': MEDIA_TYPE_TVSHOW,
     # Type 'channel' is used for radio or tv streams from pvr
     'channel': MEDIA_TYPE_CHANNEL,
+    # Type 'audio' is used for audio media, that Kodi couldn't scroblle
+    'audio': MEDIA_TYPE_MUSIC,
 }
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -480,7 +482,12 @@ class KodiDevice(MediaPlayerDevice):
 
     @property
     def media_content_type(self):
-        """Content type of current playing media."""
+        """Content type of current playing media.
+
+        If the media type cannot be detected, the player type is used.
+        """
+        if MEDIA_TYPES.get(self._item.get('type')) is None and self._players:
+            return MEDIA_TYPES.get(self._players[0]['type'])
         return MEDIA_TYPES.get(self._item.get('type'))
 
     @property
