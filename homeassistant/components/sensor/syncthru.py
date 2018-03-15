@@ -84,6 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except TypeError:
         # if an exception is thrown, printer cannot be set up
         return
+
     printer.update()
     devices = [SyncThruMainSensor(printer, name)]
 
