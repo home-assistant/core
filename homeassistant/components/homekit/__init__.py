@@ -73,7 +73,8 @@ async def async_setup(hass, config):
 
 def get_accessory(hass, state, aid, config):
     """Take state and return an accessory object if supported."""
-    _LOGGER.debug('%s: <aid=%d config=%s>')
+    _LOGGER.debug('<entity_id=%s aid=%d config=%s>',
+                  state.entity_id, aid, config)
     if not aid:
         _LOGGER.warning('The entitiy "%s" is not supported, since it '
                         'generates an invalid aid, please change it.',
