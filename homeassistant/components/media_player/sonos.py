@@ -54,7 +54,6 @@ DATA_SONOS = 'sonos'
 SOURCE_LINEIN = 'Line-in'
 SOURCE_TV = 'TV'
 
-CONF_ADVERTISE_ADDR = 'advertise_addr'
 CONF_INTERFACE_ADDR = 'interface_addr'
 
 # Service call validation schemas
@@ -73,7 +72,6 @@ ATTR_IS_COORDINATOR = 'is_coordinator'
 UPNP_ERRORS_TO_IGNORE = ['701', '711']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
     vol.Optional(CONF_INTERFACE_ADDR): cv.string,
     vol.Optional(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string]),
 })
@@ -141,10 +139,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
 
-    advertise_addr = config.get(CONF_ADVERTISE_ADDR, None)
-    if advertise_addr:
-        soco.config.EVENT_ADVERTISE_IP = advertise_addr
-
+    players = []
     if discovery_info:
         player = soco.SoCo(discovery_info.get('host'))
 
@@ -152,25 +147,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if player.uid in hass.data[DATA_SONOS].uids:
             return
 
-        if player.is_visible:
-            hass.data[DATA_SONOS].uids.add(player.uid)
-            add_devices([SonosDevice(player)])
+        # If invisible, such as a stereo slave
+        if not player.is_visible:
+            return
+
+        players.append(player)
     else:
-        players = None
-        hosts = config.get(CONF_HOSTS, None)
+        hosts = config.get(CONF_HOSTS)
         if hosts:
             # Support retro compatibility with comma separated list of hosts
             # from config
             hosts = hosts[0] if len(hosts) == 1 else hosts
             hosts = hosts.split(',') if isinstance(hosts, str) else hosts
-            players = []
             for host in hosts:
                 try:
                     players.append(soco.SoCo(socket.gethostbyname(host)))
                 except OSError:
                     _LOGGER.warning("Failed to initialize '%s'", host)
-
-        if not players:
+        else:
             players = soco.discover(
                 interface_addr=config.get(CONF_INTERFACE_ADDR))
 
@@ -178,9 +172,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.warning("No Sonos speakers found")
             return
 
-        hass.data[DATA_SONOS].uids.update([p.uid for p in players])
-        add_devices([SonosDevice(p) for p in players])
-        _LOGGER.debug("Added %s Sonos speakers", len(players))
+    hass.data[DATA_SONOS].uids.update(p.uid for p in players)
+    add_devices(SonosDevice(p) for p in players)
+    _LOGGER.debug("Added %s Sonos speakers", len(players))
 
     def service_handle(service):
         """Handle for services."""
