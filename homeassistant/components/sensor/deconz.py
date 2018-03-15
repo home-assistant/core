@@ -6,7 +6,8 @@ https://home-assistant.io/components/sensor.deconz/
 """
 from homeassistant.components.deconz import (
     DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
-from homeassistant.const import ATTR_BATTERY_LEVEL, CONF_EVENT, CONF_ID
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, CONF_EVENT, CONF_ID)
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -14,6 +15,7 @@ from homeassistant.util import slugify
 
 DEPENDENCIES = ['deconz']
 
+ATTR_CURRENT = 'current'
 ATTR_EVENT_ID = 'event_id'
 
 
@@ -27,8 +29,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     sensors = hass.data[DATA_DECONZ].sensors
     entities = []
 
-    for key in sorted(sensors.keys(), key=int):
-        sensor = sensors[key]
+    for sensor in sensors.values():
         if sensor and sensor.type in DECONZ_SENSOR:
             if sensor.type in DECONZ_REMOTE:
                 DeconzEvent(hass, sensor)
@@ -106,9 +107,12 @@ class DeconzSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        attr = {
-            ATTR_BATTERY_LEVEL: self._sensor.battery,
-        }
+        attr = {}
+        if self._sensor.battery:
+            attr[ATTR_BATTERY_LEVEL] = self._sensor.battery
+        if self.unit_of_measurement == 'Watts':
+            attr[ATTR_CURRENT] = self._sensor.current
+            attr[ATTR_VOLTAGE] = self._sensor.voltage
         return attr
 
 
