@@ -488,8 +488,7 @@ class KodiDevice(MediaPlayerDevice):
         """
         if MEDIA_TYPES.get(self._item.get('type')) is None and self._players:
             return MEDIA_TYPES.get(self._players[0]['type'])
-        else:
-            return MEDIA_TYPES.get(self._item.get('type'))
+        return MEDIA_TYPES.get(self._item.get('type'))
 
     @property
     def media_duration(self):
