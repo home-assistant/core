@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.foobot/
 """
 import asyncio
 import logging
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 import aiohttp
 import voluptuous as vol
@@ -18,6 +18,8 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+
 
 REQUIREMENTS = ['foobot_async==0.3.0']
 
@@ -61,17 +63,16 @@ async def async_setup_platform(hass, config, async_add_devices,
     client = FoobotClient(token, username,
                           async_get_clientsession(hass),
                           timeout=TIMEOUT)
-    data = {}
     dev = []
     try:
         devices = await client.get_devices()
         _LOGGER.debug("The following devices were found: %s", devices)
         for device in devices:
+            foobot_data = FoobotData(client, device['uuid'])
             for sensor_type in SENSOR_TYPES:
                 if sensor_type == 'time':
                     continue
-                foobot_sensor = FoobotSensor(client, data, device,
-                                             sensor_type)
+                foobot_sensor = FoobotSensor(foobot_data, device, sensor_type)
                 dev.append(foobot_sensor)
     except (aiohttp.client_exceptions.ClientConnectorError,
             asyncio.TimeoutError, FoobotClient.TooManyRequests,
@@ -87,13 +88,10 @@ async def async_setup_platform(hass, config, async_add_devices,
 class FoobotSensor(Entity):
     """Implementation of a Foobot sensor."""
 
-    __cache = {}
-    __nb_requests = 0
-
-    def __init__(self, client, data, device, sensor_type):
+    def __init__(self, data, device, sensor_type):
         """Initialize the sensor."""
-        self._client = client
         self._uuid = device['uuid']
+        self.foobot_data = data
         self._name = 'Foobot {} {}'.format(device['name'],
                                            SENSOR_TYPES[sensor_type][0])
         self.type = sensor_type
@@ -113,10 +111,15 @@ class FoobotSensor(Entity):
     def state(self):
         """Return the state of the device."""
         try:
-            data = self.__cache[self._uuid][self.type]
+            data = self.foobot_data.data[self.type]
         except(KeyError, TypeError):
             data = None
         return data
+
+    @property
+    def unique_id(self):
+        """Return the unique id of this entity."""
+        return "{}_{}".format(self._uuid, self.type)
 
     @property
     def unit_of_measurement(self):
@@ -125,14 +128,21 @@ class FoobotSensor(Entity):
 
     async def async_update(self):
         """Get the latest data."""
-        if self._uuid in self.__cache:
-            last_request = self.__cache[self._uuid]['last_request']
-            if last_request + SCAN_INTERVAL > datetime.utcnow():
-                # If the last request made is recent enough,
-                # just skip the update
-                _LOGGER.debug('Skipping update')
-                return
+        await self.foobot_data.async_update()
 
+
+class FoobotData(Entity):
+    """Get data from Foobot API."""
+
+    def __init__(self, client, uuid):
+        """Initialize the data object."""
+        self._client = client
+        self._uuid = uuid
+        self.data = {}
+
+    @Throttle(SCAN_INTERVAL)
+    async def async_update(self):
+        """Get the data from Foobot API."""
         interval = SCAN_INTERVAL.total_seconds()
         try:
             response = await self._client.get_last_data(self._uuid,
@@ -142,10 +152,7 @@ class FoobotSensor(Entity):
                 asyncio.TimeoutError, self._client.TooManyRequests,
                 self._client.InternalError):
             _LOGGER.debug("Couldn't fetch data")
-        if response:
-            self.__nb_requests = self.__nb_requests + 1
-            _LOGGER.debug("Number of requests: %d", self.__nb_requests)
-            _LOGGER.debug("The data response is: %s", response)
-            self.__cache[self._uuid] = {k: round(v, 1) for k, v in
-                                        response[0].items()}
-            self.__cache[self._uuid]['last_request'] = datetime.utcnow()
+            return False
+        _LOGGER.debug("The data response is: %s", response)
+        self.data = {k: round(v, 1) for k, v in response[0].items()}
+        return True
