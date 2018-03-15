@@ -1,7 +1,6 @@
 """Script to check the configuration file."""
 
 import argparse
-from fnmatch import fnmatch
 import logging
 import os
 from collections import OrderedDict, namedtuple
@@ -96,11 +95,10 @@ def run(script_args: List) -> int:
     if args.files:
         print(color(C_HEAD, 'yaml files'), '(used /',
               color('red', 'not used') + ')')
-        yaml_files = []
-        for f in glob(os.path.join(config_dir, '**/*.yaml'), recursive=True):
-            if fnmatch(f, os.path.join(config_dir, 'deps/**/*.yaml')):
-                continue
-            yaml_files.append(f)
+        deps = os.path.join(config_dir, 'deps')
+        yaml_files = [f for f in glob(os.path.join(config_dir, '**/*.yaml'),
+                                      recursive=True)
+                      if not f.startswith(deps)]
 
         for yfn in sorted(yaml_files):
             the_color = '' if yfn in res['yaml_files'] else 'red'
