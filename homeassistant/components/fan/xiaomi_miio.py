@@ -325,12 +325,14 @@ async def async_setup_platform(hass, config, async_add_devices,
     model = config.get(CONF_MODEL)
 
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
+    unique_id = None
 
     if model is None:
         try:
             miio_device = Device(host, token)
             device_info = miio_device.info()
             model = device_info.model
+            unique_id = "{}-{}".format(model, device_info.mac_address)
             _LOGGER.info("%s %s %s detected",
                          model,
                          device_info.firmware_version,
@@ -341,11 +343,11 @@ async def async_setup_platform(hass, config, async_add_devices,
     if model.startswith('zhimi.airpurifier.'):
         from miio import AirPurifier
         air_purifier = AirPurifier(host, token)
-        device = XiaomiAirPurifier(name, air_purifier, model)
+        device = XiaomiAirPurifier(name, air_purifier, model, unique_id)
     elif model.startswith('zhimi.humidifier.'):
         from miio import AirHumidifier
         air_humidifier = AirHumidifier(host, token)
-        device = XiaomiAirHumidifier(name, air_humidifier, model)
+        device = XiaomiAirHumidifier(name, air_humidifier, model, unique_id)
     else:
         _LOGGER.error(
             'Unsupported device found! Please create an issue at '
@@ -386,11 +388,12 @@ async def async_setup_platform(hass, config, async_add_devices,
 class XiaomiGenericDevice(FanEntity):
     """Representation of a generic Xiaomi device."""
 
-    def __init__(self, name, device, model):
+    def __init__(self, name, device, model, unique_id):
         """Initialize the generic Xiaomi device."""
         self._name = name
         self._device = device
         self._model = model
+        self._unique_id = unique_id
         self._state = None
         self._state_attrs = {
             ATTR_MODEL: self._model,
@@ -407,6 +410,11 @@ class XiaomiGenericDevice(FanEntity):
     def should_poll(self):
         """Poll the device."""
         return True
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._unique_id
 
     @property
     def name(self):
@@ -550,9 +558,9 @@ class XiaomiGenericDevice(FanEntity):
 class XiaomiAirPurifier(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Purifier."""
 
-    def __init__(self, name, device, model):
+    def __init__(self, name, device, model, unique_id):
         """Initialize the plug switch."""
-        XiaomiGenericDevice.__init__(self, name, device, model)
+        XiaomiGenericDevice.__init__(self, name, device, model, unique_id)
 
         if self._model == MODEL_AIRPURIFIER_PRO:
             self._additional_supported_features = SUPPORT_FLAGS_AIRPURIFIER_PRO
@@ -744,9 +752,9 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 class XiaomiAirHumidifier(XiaomiGenericDevice):
     """Representation of a Xiaomi Air Humidifier."""
 
-    def __init__(self, name, device, model):
+    def __init__(self, name, device, model, unique_id):
         """Initialize the plug switch."""
-        XiaomiGenericDevice.__init__(self, name, device, model)
+        XiaomiGenericDevice.__init__(self, name, device, model, unique_id)
 
         self._additional_supported_features = SUPPORT_FLAGS_AIRHUMIDIFIER
         self._state_attrs.update({attribute: None for attribute in
