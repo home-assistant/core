@@ -1,17 +1,13 @@
 """Test different accessory types: Sensors."""
 import unittest
-from unittest.mock import patch
 
 from homeassistant.components.homekit.const import PROP_CELSIUS
-from homeassistant.components.homekit.sensors import (
+from homeassistant.components.homekit.type_sensors import (
     TemperatureSensor, calc_temperature)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_UNKNOWN)
+    ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.common import get_test_home_assistant
-from tests.mock.homekit import get_patch_paths, mock_preload_service
-
-PATH_ACC, PATH_FILE = get_patch_paths('sensors')
 
 
 def test_calc_temperature():
@@ -32,7 +28,6 @@ class TestHomekitSensors(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        get_patch_paths('sensors')
 
     def tearDown(self):
         """Stop down everything that was started."""
@@ -40,27 +35,28 @@ class TestHomekitSensors(unittest.TestCase):
 
     def test_temperature(self):
         """Test if accessory is updated after state change."""
-        temperature_sensor = 'sensor.temperature'
+        entity_id = 'sensor.temperature'
 
-        with patch(PATH_ACC, side_effect=mock_preload_service):
-            with patch(PATH_FILE, side_effect=mock_preload_service):
-                acc = TemperatureSensor(self.hass, temperature_sensor,
-                                        'Temperature')
-                acc.run()
+        acc = TemperatureSensor(self.hass, entity_id, 'Temperature', aid=2)
+        acc.run()
+
+        self.assertEqual(acc.aid, 2)
+        self.assertEqual(acc.category, 10)  # Sensor
 
         self.assertEqual(acc.char_temp.value, 0.0)
-        self.assertEqual(acc.char_temp.properties, PROP_CELSIUS)
+        for key, value in PROP_CELSIUS.items():
+            self.assertEqual(acc.char_temp.properties[key], value)
 
-        self.hass.states.set(temperature_sensor, STATE_UNKNOWN,
+        self.hass.states.set(entity_id, STATE_UNKNOWN,
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.block_till_done()
 
-        self.hass.states.set(temperature_sensor, '20',
+        self.hass.states.set(entity_id, '20',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.block_till_done()
         self.assertEqual(acc.char_temp.value, 20)
 
-        self.hass.states.set(temperature_sensor, '75.2',
+        self.hass.states.set(entity_id, '75.2',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT})
         self.hass.block_till_done()
         self.assertEqual(acc.char_temp.value, 24)
