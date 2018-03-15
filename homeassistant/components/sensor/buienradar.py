@@ -190,7 +190,7 @@ class BrSensor(Entity):
 
         # All continuous sensors should be forced to be updated
         self._force_update = self.type != SYMBOL and \
-                             not self.type.startswith(CONDITION)
+            not self.type.startswith(CONDITION)
 
         if self.type.startswith(PRECIPITATION_FORECAST):
             self._timeframe = None
