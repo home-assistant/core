@@ -110,12 +110,14 @@ async def async_setup_platform(hass, config, async_add_devices,
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
     devices = []
+    unique_id = None
 
     if model is None:
         try:
             miio_device = Device(host, token)
             device_info = miio_device.info()
             model = device_info.model
+            unique_id = "{}-{}".format(model, device_info.mac_address)
             _LOGGER.info("%s %s %s detected",
                          model,
                          device_info.firmware_version,
@@ -131,7 +133,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         # A switch device per channel will be created.
         for channel_usb in [True, False]:
             device = ChuangMiPlugV1Switch(
-                name, plug, model, channel_usb)
+                name, plug, model, unique_id, channel_usb)
             devices.append(device)
             hass.data[DATA_KEY][host] = device
 
@@ -139,14 +141,14 @@ async def async_setup_platform(hass, config, async_add_devices,
                    'zimi.powerstrip.v2']:
         from miio import PowerStrip
         plug = PowerStrip(host, token)
-        device = XiaomiPowerStripSwitch(name, plug, model)
+        device = XiaomiPowerStripSwitch(name, plug, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
     elif model in ['chuangmi.plug.m1',
                    'chuangmi.plug.v2']:
         from miio import Plug
         plug = Plug(host, token)
-        device = XiaomiPlugGenericSwitch(name, plug, model)
+        device = XiaomiPlugGenericSwitch(name, plug, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
     else:
@@ -187,13 +189,14 @@ async def async_setup_platform(hass, config, async_add_devices,
 class XiaomiPlugGenericSwitch(SwitchDevice):
     """Representation of a Xiaomi Plug Generic."""
 
-    def __init__(self, name, plug, model):
+    def __init__(self, name, plug, model, unique_id):
         """Initialize the plug switch."""
         self._name = name
-        self._icon = 'mdi:power-socket'
-        self._model = model
-
         self._plug = plug
+        self._model = model
+        self._unique_id = unique_id
+
+        self._icon = 'mdi:power-socket'
         self._state = None
         self._state_attrs = {
             ATTR_TEMPERATURE: None,
@@ -206,6 +209,11 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
     def should_poll(self):
         """Poll the plug."""
         return True
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._unique_id
 
     @property
     def name(self):
@@ -322,9 +330,9 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
 class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
     """Representation of a Xiaomi Power Strip."""
 
-    def __init__(self, name, plug, model):
+    def __init__(self, name, plug, model, unique_id):
         """Initialize the plug switch."""
-        XiaomiPlugGenericSwitch.__init__(self, name, plug, model)
+        XiaomiPlugGenericSwitch.__init__(self, name, plug, model, unique_id)
 
         if self._model == MODEL_POWER_STRIP_V2:
             self._additional_supported_features = \
@@ -396,11 +404,14 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
 class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch):
     """Representation of a Chuang Mi Plug V1."""
 
-    def __init__(self, name, plug, model, channel_usb):
+    def __init__(self, name, plug, model, unique_id, channel_usb):
         """Initialize the plug switch."""
         name = '{} USB'.format(name) if channel_usb else name
 
-        XiaomiPlugGenericSwitch.__init__(self, name, plug, model)
+        if unique_id is not None and channel_usb:
+            unique_id = "{}-{}".format(unique_id, 'usb')
+
+        XiaomiPlugGenericSwitch.__init__(self, name, plug, model, unique_id)
         self._channel_usb = channel_usb
 
     async def async_turn_on(self, **kwargs):
