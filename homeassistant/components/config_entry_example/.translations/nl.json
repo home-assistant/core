@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "invalid_object_id": "Ongeldig object ID"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "object_id": "Object ID"
+                },
+                "description": "Voer een object_id in voor het testen van de entiteit.",
+                "title": "Kies object id"
+            },
+            "name": {
+                "data": {
+                    "name": "Naam"
+                },
+                "description": "Voer een naam in voor het testen van de entiteit.",
+                "title": "Naam van de entiteit"
+            }
+        }
+    }
+}
