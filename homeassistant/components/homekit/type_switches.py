@@ -1,7 +1,8 @@
 """Class to hold all switch accessories."""
 import logging
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON)
 from homeassistant.core import split_entity_id
 from homeassistant.helpers.event import async_track_state_change
 
@@ -16,9 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 class Switch(HomeAccessory):
     """Generate a Switch accessory."""
 
-    def __init__(self, hass, entity_id, display_name):
+    def __init__(self, hass, entity_id, display_name, *args, **kwargs):
         """Initialize a Switch accessory object to represent a remote."""
-        super().__init__(display_name, entity_id, 'SWITCH')
+        super().__init__(display_name, entity_id, 'SWITCH', *args, **kwargs)
 
         self._hass = hass
         self._entity_id = entity_id
@@ -26,8 +27,8 @@ class Switch(HomeAccessory):
 
         self.flag_target_state = False
 
-        self.service_switch = add_preload_service(self, SERV_SWITCH)
-        self.char_on = self.service_switch.get_characteristic(CHAR_ON)
+        serv_switch = add_preload_service(self, SERV_SWITCH)
+        self.char_on = serv_switch.get_characteristic(CHAR_ON)
         self.char_on.value = False
         self.char_on.setter_callback = self.set_state
 
@@ -41,10 +42,10 @@ class Switch(HomeAccessory):
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
-        _LOGGER.debug("%s: Set switch state to %s",
+        _LOGGER.debug('%s: Set switch state to %s',
                       self._entity_id, value)
         self.flag_target_state = True
-        service = 'turn_on' if value else 'turn_off'
+        service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         self._hass.services.call(self._domain, service,
                                  {ATTR_ENTITY_ID: self._entity_id})
 
@@ -53,10 +54,10 @@ class Switch(HomeAccessory):
         if new_state is None:
             return
 
-        current_state = (new_state.state == 'on')
+        current_state = (new_state.state == STATE_ON)
         if not self.flag_target_state:
-            _LOGGER.debug("%s: Set current state to %s",
+            _LOGGER.debug('%s: Set current state to %s',
                           self._entity_id, current_state)
             self.char_on.set_value(current_state, should_callback=False)
-        else:
-            self.flag_target_state = False
+
+        self.flag_target_state = False
