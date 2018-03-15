@@ -100,7 +100,7 @@ class TadoDeviceScanner(DeviceScanner):
         last_results = []
 
         try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
+            with async_timeout.timeout(10):
                 # Format the URL here, so we can log the template URL if
                 # anything goes wrong without exposing username and password.
                 url = self.tadoapiurl.format(
