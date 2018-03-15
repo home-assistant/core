@@ -561,6 +561,7 @@ async def test_logbook_view(hass, aiohttp_client):
     """Test the logbook view."""
     await hass.async_add_job(init_recorder_component, hass)
     await async_setup_component(hass, 'logbook', {})
+    await hass.components.recorder.wait_connection_ready()
     client = await aiohttp_client(hass.http.app)
     response = await client.get(
         '/api/logbook/{}'.format(dt_util.utcnow().isoformat()))
