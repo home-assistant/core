@@ -128,7 +128,11 @@ class SamsungTVDevice(MediaPlayerDevice):
         if sys.platform == 'win32':
             _ping_cmd = ['ping', '-n 1', '-w', '1000', self._config['host']]
         else:
-            _ping_cmd = ['ping', '-n', '-q', '-c1', '-W1',
+            if sys.platform == 'darwin':
+                _ping_location = '/sbin/ping'
+            else:
+                _ping_location = '/bin/ping'
+            _ping_cmd = [_ping_location, '-n', '-q', '-c1', '-W1',
                          self._config['host']]
 
         ping = subprocess.Popen(
