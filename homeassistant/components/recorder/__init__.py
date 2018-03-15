@@ -91,7 +91,7 @@ CONFIG_SCHEMA = vol.Schema({
 @bind_hass
 async def wait_connection_ready(hass):
     """Wait till the connection is ready."""
-    return (await hass.data[DATA_INSTANCE].async_db_ready)
+    return await hass.data[DATA_INSTANCE].async_db_ready
 
 
 def run_information(hass, point_in_time: Optional[datetime] = None):
