@@ -47,12 +47,12 @@ async def mock_handler(request):
 
 
 @pytest.fixture
-def client(loop, test_client):
+def client(loop, aiohttp_client):
     """Fixture to setup a web.Application."""
     app = web.Application()
     app.router.add_get('/', mock_handler)
     setup_cors(app, [TRUSTED_ORIGIN])
-    return loop.run_until_complete(test_client(app))
+    return loop.run_until_complete(aiohttp_client(app))
 
 
 async def test_cors_requests(client):
