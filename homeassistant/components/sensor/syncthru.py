@@ -81,33 +81,32 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Main device, always added
     try:
         printer = SyncThru(host)
-    except BaseException:
+    except TypeError:
         # if an exception is thrown, printer cannot be set up
         return
     printer.update()
-    devices = [SyncThruMain(hass, printer, name)]
+    devices = [SyncThruMainSensor(printer, name)]
 
     for key in printer.tonerStatus(filter_supported=True):
         if 'toner_{}'.format(key) in monitored:
-            devices.append(SyncThruToner(hass, printer, name, key))
+            devices.append(SyncThruTonerSensor(printer, name, key))
     for key in printer.drumStatus(filter_supported=True):
         if 'drum_{}'.format(key) in monitored:
-            devices.append(SyncThruDrum(hass, printer, name, key))
+            devices.append(SyncThruDrumSensor(printer, name, key))
     for key in printer.inputTrayStatus(filter_supported=True):
         if 'tray_{}'.format(key) in monitored:
-            devices.append(SyncThruInputTray(hass, printer, name, key))
+            devices.append(SyncThruInputTraySensor(printer, name, key))
     for key in printer.outputTrayStatus():
         if 'output_tray_{}'.format(key) in monitored:
-            devices.append(SyncThruOutputTray(hass, printer, name, key))
+            devices.append(SyncThruOutputTraySensor(printer, name, key))
 
     add_devices(devices, True)
-    return
 
 
 class SyncThruSensor(Entity):
     """Implementation of an abstract Samsung Printer sensor platform."""
 
-    def __init__(self, hass, syncthru, name):
+    def __init__(self, syncthru, name):
         """Initialize the sensor."""
         self.syncthru = syncthru
         self._attributes = {}
@@ -142,7 +141,7 @@ class SyncThruSensor(Entity):
         return self._attributes
 
 
-class SyncThruMain(SyncThruSensor):
+class SyncThruMainSensor(SyncThruSensor):
     """Implementation of the main sensor, monitoring the general state."""
 
     def update(self):
@@ -150,16 +149,13 @@ class SyncThruMain(SyncThruSensor):
         self.syncthru.update()
         self._state = self.syncthru.deviceStatus()
 
-        if self.syncthru.isOnline():
-            self._state = self.syncthru.deviceStatus()
 
-
-class SyncThruToner(SyncThruSensor):
+class SyncThruTonerSensor(SyncThruSensor):
     """Implementation of a Samsung Printer toner sensor platform."""
 
-    def __init__(self, hass, syncthru, name, color):
+    def __init__(self, syncthru, name, color):
         """Initialize the sensor."""
-        super().__init__(hass, syncthru, name)
+        super().__init__(syncthru, name)
         self._name = "{} Toner {}".format(name, color)
         self._color = color
         self._unit_of_measurement = '%'
@@ -174,12 +170,12 @@ class SyncThruToner(SyncThruSensor):
             self._state = self._attributes.get('remaining')
 
 
-class SyncThruDrum(SyncThruSensor):
+class SyncThruDrumSensor(SyncThruSensor):
     """Implementation of a Samsung Printer toner sensor platform."""
 
-    def __init__(self, hass, syncthru, name, color):
+    def __init__(self, syncthru, name, color):
         """Initialize the sensor."""
-        super().__init__(hass, syncthru, name)
+        super().__init__(syncthru, name)
         self._name = "{} Drum {}".format(name, color)
         self._color = color
         self._unit_of_measurement = '%'
@@ -194,12 +190,12 @@ class SyncThruDrum(SyncThruSensor):
             self._state = self._attributes.get('remaining')
 
 
-class SyncThruInputTray(SyncThruSensor):
+class SyncThruInputTraySensor(SyncThruSensor):
     """Implementation of a Samsung Printer input tray sensor platform."""
 
-    def __init__(self, hass, syncthru, name, number):
+    def __init__(self, syncthru, name, number):
         """Initialize the sensor."""
-        super().__init__(hass, syncthru, name)
+        super().__init__(syncthru, name)
         self._name = "{} Tray {}".format(name, number)
         self._number = number
 
@@ -215,12 +211,12 @@ class SyncThruInputTray(SyncThruSensor):
                 self._state = 'Ready'
 
 
-class SyncThruOutputTray(SyncThruSensor):
+class SyncThruOutputTraySensor(SyncThruSensor):
     """Implementation of a Samsung Printer input tray sensor platform."""
 
-    def __init__(self, hass, syncthru, name, number):
+    def __init__(self, syncthru, name, number):
         """Initialize the sensor."""
-        super().__init__(hass, syncthru, name)
+        super().__init__(syncthru, name)
         self._name = "{} Output Tray {}".format(name, number)
         self._number = number
 
