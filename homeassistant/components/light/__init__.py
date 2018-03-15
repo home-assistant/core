@@ -79,6 +79,8 @@ EFFECT_COLORLOOP = "colorloop"
 EFFECT_RANDOM = "random"
 EFFECT_WHITE = "white"
 
+ATTR_MODE = "mode"
+
 COLOR_GROUP = "Color descriptors"
 
 LIGHT_PROFILES_FILE = "light_profiles.csv"
@@ -118,6 +120,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
     ATTR_EFFECT: cv.string,
+    ATTR_MODE: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=5)),
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
@@ -151,12 +154,13 @@ def is_on(hass, entity_id=None):
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
             brightness_pct=None, rgb_color=None, xy_color=None,
             color_temp=None, kelvin=None, white_value=None,
-            profile=None, flash=None, effect=None, color_name=None):
+            profile=None, flash=None, effect=None, color_name=None,
+            mode=None):
     """Turn all or specified light on."""
     hass.add_job(
         async_turn_on, hass, entity_id, transition, brightness, brightness_pct,
         rgb_color, xy_color, color_temp, kelvin, white_value,
-        profile, flash, effect, color_name)
+        profile, flash, effect, color_name, mode)
 
 
 @callback
@@ -164,7 +168,8 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
 def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
                   brightness_pct=None, rgb_color=None, xy_color=None,
                   color_temp=None, kelvin=None, white_value=None,
-                  profile=None, flash=None, effect=None, color_name=None):
+                  profile=None, flash=None, effect=None, color_name=None,
+                  mode=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -181,6 +186,7 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
+            (ATTR_MODE, mode),
         ] if value is not None
     }
 

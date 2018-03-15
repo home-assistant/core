@@ -38,6 +38,8 @@ CONF_MODE_MUSIC = 'use_music_mode'
 
 DOMAIN = 'yeelight'
 
+ATTR_MODE = 'mode'
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
@@ -417,6 +419,7 @@ class YeelightLight(Light):
     def turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""
         import yeelight
+        mode = yeelight.enums.PowerMode(kwargs.get(ATTR_MODE, 0))
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         colortemp = kwargs.get(ATTR_COLOR_TEMP)
         rgb = kwargs.get(ATTR_RGB_COLOR)
@@ -429,7 +432,7 @@ class YeelightLight(Light):
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         try:
-            self._bulb.turn_on(duration=duration)
+            self._bulb.turn_on(duration=duration, power_mode=mode)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb on: %s", ex)
             return

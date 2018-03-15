@@ -46,6 +46,9 @@ turn_on:
       values:
         - colorloop
         - random
+    mode:
+      description: Operation mode for the light. Valid modes are 0 (Last), 1 (Normal), 2 (RGB), 3 (HSV), 4 (Color flow) and 5 (Moonlight).
+      example: 5
 
 turn_off:
   description: Turn a light off.
