@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import dispatcher_connect
 from homeassistant.components.homematicip import (
     HomematicipGenericDevice, DOMAIN, EVENT_HOME_CHANGED,
     ATTR_HOME_LABEL, ATTR_HOME_ID, ATTR_LOW_BATTERY, ATTR_RSSI)
@@ -64,7 +64,7 @@ class HomematicipAccesspoint(Entity):
         """Initialize the access point sensor."""
         self.hass = hass
         self._home = home
-        async_dispatcher_connect(
+        dispatcher_connect(
             self.hass, EVENT_HOME_CHANGED, self._home_changed)
         _LOGGER.debug('Setting up access point %s', home.label)
 

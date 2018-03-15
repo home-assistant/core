@@ -11,7 +11,7 @@ from socket import timeout
 import voluptuous as vol
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (async_dispatcher_send,
+from homeassistant.helpers.dispatcher import (dispatcher_send,
                                               async_dispatcher_connect)
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
@@ -65,13 +65,13 @@ def setup(hass, config):
             etype = event['eventType']
             edata = event['data']
             if etype == 'DEVICE_CHANGED':
-                async_dispatcher_send(hass, EVENT_DEVICE_CHANGED, edata.id)
+                dispatcher_send(hass, EVENT_DEVICE_CHANGED, edata.id)
             elif etype == 'GROUP_CHANGED':
-                async_dispatcher_send(hass, EVENT_GROUP_CHANGED, edata.id)
+                dispatcher_send(hass, EVENT_GROUP_CHANGED, edata.id)
             elif etype == 'HOME_CHANGED':
-                async_dispatcher_send(hass, EVENT_HOME_CHANGED, edata.id)
+                dispatcher_send(hass, EVENT_HOME_CHANGED, edata.id)
             elif etype == 'JOURNAL_CHANGED':
-                async_dispatcher_send(hass, EVENT_SECURITY_CHANGED, edata.id)
+                dispatcher_send(hass, EVENT_SECURITY_CHANGED, edata.id)
         return True
 
     for device in accesspoints:
