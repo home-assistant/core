@@ -174,7 +174,7 @@ class BrSensor(Entity):
 
     def __init__(self, sensor_type, client_name):
         """Initialize the sensor."""
-        from buienradar.buienradar import (PRECIPITATION_FORECAST)
+        from buienradar.buienradar import (PRECIPITATION_FORECAST, CONDITION)
 
         self.client_name = client_name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -185,6 +185,10 @@ class BrSensor(Entity):
         self._attribution = None
         self._measured = None
         self._stationname = None
+
+        # All continuous sensors should be forced to be updated
+        self._force_update = self.type != SYMBOL and \
+                             not self.type.startswith(CONDITION)
 
         if self.type.startswith(PRECIPITATION_FORECAST):
             self._timeframe = None
@@ -197,6 +201,11 @@ class BrSensor(Entity):
                                            IMAGE, MEASURED,
                                            PRECIPITATION_FORECAST, STATIONNAME,
                                            TIMEFRAME)
+
+        # Check if we have a new measurement,
+        # otherwise we do not have to update the sensor
+        if self._measured == data.get(MEASURED):
+            return False
 
         self._attribution = data.get(ATTRIBUTION)
         self._stationname = data.get(STATIONNAME)
@@ -246,17 +255,11 @@ class BrSensor(Entity):
                 return False
             else:
                 try:
-                    new_state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                    self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                    return True
                 except IndexError:
                     _LOGGER.warning("No forecast for fcday=%s...", fcday)
                     return False
-
-                if new_state != self._state:
-                    self._state = new_state
-                    return True
-                return False
-
-            return False
 
         if self.type == SYMBOL or self.type.startswith(CONDITION):
             # update weather symbol & status text
@@ -286,21 +289,15 @@ class BrSensor(Entity):
         if self.type.startswith(PRECIPITATION_FORECAST):
             # update nested precipitation forecast sensors
             nested = data.get(PRECIPITATION_FORECAST)
-            new_state = nested.get(self.type[len(PRECIPITATION_FORECAST)+1:])
             self._timeframe = nested.get(TIMEFRAME)
             # pylint: disable=protected-access
-            if new_state != self._state:
-                self._state = new_state
-                return True
-            return False
+            self._state = nested.get(self.type[len(PRECIPITATION_FORECAST)+1:])
+            return True
 
         # update all other sensors
-        new_state = data.get(self.type)
         # pylint: disable=protected-access
-        if new_state != self._state:
-            self._state = new_state
-            return True
-        return False
+        self._state = data.get(self.type)
+        return True
 
     @property
     def attribution(self):
@@ -360,6 +357,10 @@ class BrSensor(Entity):
         """Return possible sensor specific icon."""
         return SENSOR_TYPES[self.type][2]
 
+    @property
+    def force_update(self):
+        """Return true for continuous sensors, false for discrete sensors"""
+        return self._force_update
 
 class BrData(object):
     """Get the latest data and updates the states."""
