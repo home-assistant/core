@@ -72,7 +72,8 @@ FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
 FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_SMA,
     vol.Optional(CONF_TIME_SMA_TYPE,
-                 default=TIME_SMA_LAST): vol.All(cv.ensure_list, [vol.Any(TIME_SMA_LAST)]),
+                 default=TIME_SMA_LAST): vol.All(
+                     cv.ensure_list, [vol.Any(TIME_SMA_LAST)]),
 
     vol.Required(CONF_FILTER_WINDOW_SIZE): vol.All(cv.time_period,
                                                    cv.positive_timedelta)
