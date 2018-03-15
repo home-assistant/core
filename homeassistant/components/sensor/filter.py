@@ -8,7 +8,6 @@ import logging
 import statistics
 from collections import deque, Counter
 from numbers import Number
-from datetime import datetime
 
 import voluptuous as vol
 
@@ -21,6 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.decorator import Registry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +36,9 @@ CONF_FILTER_WINDOW_SIZE = 'window_size'
 CONF_FILTER_PRECISION = 'precision'
 CONF_FILTER_RADIUS = 'radius'
 CONF_FILTER_TIME_CONSTANT = 'time_constant'
+CONF_TIME_SMA_TYPE = 'variant'
+
+TIME_SMA_LAST = 'last'
 
 DEFAULT_WINDOW_SIZE = 1
 DEFAULT_PRECISION = 2
@@ -68,6 +71,9 @@ FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
 
 FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_SMA,
+    vol.Optional(CONF_TIME_SMA_TYPE,
+                 default=TIME_SMA_LAST): vol.All(cv.ensure_list, [vol.Any(TIME_SMA_LAST)]),
+
     vol.Required(CONF_FILTER_WINDOW_SIZE): vol.All(cv.time_period,
                                                    cv.positive_timedelta)
 })
@@ -293,9 +299,12 @@ class TimeSMAFilter(Filter):
     """Simple Moving Average (SMA) Filter.
 
     The window_size is determined by time, and SMA is time weighted.
+
+    Args:
+        variant (enum): type of argorithm used to connect discrete values
     """
 
-    def __init__(self, window_size, precision, entity):
+    def __init__(self, window_size, precision, entity, variant):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_TIME_SMA, 0, precision, entity)
         self._time_window = int(window_size.total_seconds())
@@ -312,7 +321,7 @@ class TimeSMAFilter(Filter):
                 return
 
     def _filter_state(self, new_state):
-        now = int(datetime.now().timestamp())
+        now = int(dt_util.utcnow().timestamp())
 
         self._leak(now)
         self.queue.append((now, float(new_state)))
