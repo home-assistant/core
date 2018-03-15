@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
+from homeassistant.components.cover import SUPPORT_SET_POSITION
 from homeassistant.const import (
     ATTR_CODE, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
@@ -27,12 +28,12 @@ from .util import (
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==1.1.7', 'pypng==0.0.18']
+REQUIREMENTS = ['HAP-python==1.1.7']
 
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
         vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
         vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
@@ -89,7 +90,8 @@ def get_accessory(hass, state, aid, config):
 
     elif state.domain == 'cover':
         # Only add covers that support set_cover_position
-        if state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & 4:
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if features & SUPPORT_SET_POSITION:
             _LOGGER.debug('Add "%s" as "%s"',
                           state.entity_id, 'WindowCovering')
             return TYPES['WindowCovering'](hass, state.entity_id, state.name,

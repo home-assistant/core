@@ -3,7 +3,6 @@
 DOMAIN = 'homekit'
 HOMEKIT_FILE = '.homekit.state'
 HOMEKIT_NOTIFY_ID = 4663548
-QR_CODE_NAME = 'homekit_qr.png'
 
 # #### CONFIG ####
 CONF_AUTO_START = 'auto_start'

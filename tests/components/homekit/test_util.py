@@ -1,13 +1,11 @@
 """Test HomeKit util module."""
 import unittest
-from unittest.mock import call, patch, ANY
 
 import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.homekit.accessories import HomeBridge
-from homeassistant.components.homekit.const import (
-    HOMEKIT_NOTIFY_ID, QR_CODE_NAME)
+from homeassistant.components.homekit.const import HOMEKIT_NOTIFY_ID
 from homeassistant.components.homekit.util import (
     show_setup_message, dismiss_setup_message, ATTR_CODE)
 from homeassistant.components.homekit.util import validate_entity_config \
@@ -58,20 +56,8 @@ class TestUtil(unittest.TestCase):
         """Test show setup message as persistence notification."""
         bridge = HomeBridge(self.hass)
 
-        with patch('homeassistant.components.homekit.accessories.'
-                   'HomeBridge.qr_code') as mock_qr_code, \
-                patch('os.path.isfile') as mock_is_file:
-            mock_is_file.side_effect = [True, False]
-            mock_qr_code.png.side_effect = [None, OSError]
-            show_setup_message(bridge, self.hass)
-            self.hass.block_till_done()
-            show_setup_message(bridge, self.hass)
-            self.hass.block_till_done()
-
-        path = self.hass.config.path('www/' + QR_CODE_NAME)
-        self.assertEqual(
-            mock_qr_code.mock_calls[0],
-            call.png(path, background=ANY, quiet_zone=ANY, scale=ANY))
+        show_setup_message(bridge, self.hass)
+        self.hass.block_till_done()
 
         data = self.events[0].data
         self.assertEqual(
@@ -84,12 +70,8 @@ class TestUtil(unittest.TestCase):
 
     def test_dismiss_setup_msg(self):
         """Test dismiss setup message."""
-        with patch('os.remove') as mock_remove:
-            mock_remove.side_effect = [True, OSError]
-            dismiss_setup_message(self.hass)
-            self.hass.block_till_done()
-            dismiss_setup_message(self.hass)
-            self.hass.block_till_done()
+        dismiss_setup_message(self.hass)
+        self.hass.block_till_done()
 
         data = self.events[0].data
         self.assertEqual(
