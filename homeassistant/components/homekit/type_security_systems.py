@@ -28,9 +28,11 @@ STATE_TO_SERVICE = {STATE_ALARM_DISARMED: 'alarm_disarm',
 class SecuritySystem(HomeAccessory):
     """Generate an SecuritySystem accessory for an alarm control panel."""
 
-    def __init__(self, hass, entity_id, display_name, alarm_code=None):
+    def __init__(self, hass, entity_id, display_name,
+                 alarm_code, *args, **kwargs):
         """Initialize a SecuritySystem accessory object."""
-        super().__init__(display_name, entity_id, 'ALARM_SYSTEM')
+        super().__init__(display_name, entity_id, 'ALARM_SYSTEM',
+                         *args, **kwargs)
 
         self._hass = hass
         self._entity_id = entity_id
@@ -38,11 +40,11 @@ class SecuritySystem(HomeAccessory):
 
         self.flag_target_state = False
 
-        self.service_alarm = add_preload_service(self, SERV_SECURITY_SYSTEM)
-        self.char_current_state = self.service_alarm. \
+        serv_alarm = add_preload_service(self, SERV_SECURITY_SYSTEM)
+        self.char_current_state = serv_alarm. \
             get_characteristic(CHAR_CURRENT_SECURITY_STATE)
         self.char_current_state.value = 3
-        self.char_target_state = self.service_alarm. \
+        self.char_target_state = serv_alarm. \
             get_characteristic(CHAR_TARGET_SECURITY_STATE)
         self.char_target_state.value = 3
 
@@ -58,15 +60,13 @@ class SecuritySystem(HomeAccessory):
 
     def set_security_state(self, value):
         """Move security state to value if call came from HomeKit."""
-        _LOGGER.debug("%s: Set security state to %d",
+        _LOGGER.debug('%s: Set security state to %d',
                       self._entity_id, value)
         self.flag_target_state = True
         hass_value = HOMEKIT_TO_HASS[value]
         service = STATE_TO_SERVICE[hass_value]
 
-        params = {ATTR_ENTITY_ID: self._entity_id}
-        if self._alarm_code is not None:
-            params[ATTR_CODE] = self._alarm_code
+        params = {ATTR_ENTITY_ID: self._entity_id, ATTR_CODE: self._alarm_code}
         self._hass.services.call('alarm_control_panel', service, params)
 
     def update_security_state(self, entity_id=None,
@@ -78,15 +78,15 @@ class SecuritySystem(HomeAccessory):
         hass_state = new_state.state
         if hass_state not in HASS_TO_HOMEKIT:
             return
+
         current_security_state = HASS_TO_HOMEKIT[hass_state]
-        self.char_current_state.set_value(current_security_state)
-        _LOGGER.debug("%s: Updated current state to %s (%d)",
-                      self._entity_id, hass_state,
-                      current_security_state)
+        self.char_current_state.set_value(current_security_state,
+                                          should_callback=False)
+        _LOGGER.debug('%s: Updated current state to %s (%d)',
+                      self._entity_id, hass_state, current_security_state)
 
         if not self.flag_target_state:
             self.char_target_state.set_value(current_security_state,
                                              should_callback=False)
-        elif self.char_target_state.get_value() \
-                == self.char_current_state.get_value():
+        if self.char_target_state.value == self.char_current_state.value:
             self.flag_target_state = False

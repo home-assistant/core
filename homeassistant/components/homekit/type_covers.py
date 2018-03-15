@@ -14,16 +14,17 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@TYPES.register('Window')
-class Window(HomeAccessory):
+@TYPES.register('WindowCovering')
+class WindowCovering(HomeAccessory):
     """Generate a Window accessory for a cover entity.
 
     The cover entity must support: set_cover_position.
     """
 
-    def __init__(self, hass, entity_id, display_name):
+    def __init__(self, hass, entity_id, display_name, *args, **kwargs):
         """Initialize a Window accessory object."""
-        super().__init__(display_name, entity_id, 'WINDOW')
+        super().__init__(display_name, entity_id, 'WINDOW_COVERING',
+                         *args, **kwargs)
 
         self._hass = hass
         self._entity_id = entity_id
@@ -31,12 +32,12 @@ class Window(HomeAccessory):
         self.current_position = None
         self.homekit_target = None
 
-        self.serv_cover = add_preload_service(self, SERV_WINDOW_COVERING)
-        self.char_current_position = self.serv_cover. \
+        serv_cover = add_preload_service(self, SERV_WINDOW_COVERING)
+        self.char_current_position = serv_cover. \
             get_characteristic(CHAR_CURRENT_POSITION)
-        self.char_target_position = self.serv_cover. \
+        self.char_target_position = serv_cover. \
             get_characteristic(CHAR_TARGET_POSITION)
-        self.char_position_state = self.serv_cover. \
+        self.char_position_state = serv_cover. \
             get_characteristic(CHAR_POSITION_STATE)
         self.char_current_position.value = 0
         self.char_target_position.value = 0
@@ -55,15 +56,14 @@ class Window(HomeAccessory):
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
         if value != self.current_position:
-            _LOGGER.debug("%s: Set position to %d", self._entity_id, value)
+            _LOGGER.debug('%s: Set position to %d', self._entity_id, value)
             self.homekit_target = value
             if value > self.current_position:
                 self.char_position_state.set_value(1)
             elif value < self.current_position:
                 self.char_position_state.set_value(0)
-            self._hass.services.call(
-                'cover', 'set_cover_position',
-                {'entity_id': self._entity_id, 'position': value})
+            self._hass.components.cover.set_cover_position(
+                value, self._entity_id)
 
     def update_cover_position(self, entity_id=None, old_state=None,
                               new_state=None):
@@ -71,9 +71,10 @@ class Window(HomeAccessory):
         if new_state is None:
             return
 
-        current_position = new_state.attributes[ATTR_CURRENT_POSITION]
+        current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
         if current_position is None:
             return
+
         self.current_position = int(current_position)
         self.char_current_position.set_value(self.current_position)
 
