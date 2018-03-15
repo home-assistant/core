@@ -5,7 +5,6 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR, ATTR_BRIGHTNESS,
     SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF
-from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service
@@ -129,13 +128,6 @@ class Lightbulb(HomeAccessory):
             self.char_saturation.setter_callback = self.set_saturation
             self.char_saturation.value = 75
 
-    def run(self):
-        """Method called by object after driver is stated."""
-        state = self._hass.states.get(self._entity_id)
-        self.update_state(new_state=state)
-        async_track_state_change(
-            self._hass, self._entity_id, self.update_state)
-
     def set_state(self, value):
         """Set state if call came from HomeKit."""
         if self._flag[CHAR_BRIGHTNESS]:
@@ -182,8 +174,7 @@ class Lightbulb(HomeAccessory):
             self._hass.components.light.turn_on(
                 self._entity_id, rgb_color=color)
 
-    def update_state(self, entity_id=None, old_state=None,
-                     new_state=None):
+    def update_state(self, entity_id=None, old_state=None, new_state=None):
         """Update light after state change."""
         if not new_state:
             return

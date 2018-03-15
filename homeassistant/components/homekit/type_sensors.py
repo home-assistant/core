@@ -3,7 +3,6 @@ import logging
 
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, TEMP_FAHRENHEIT, TEMP_CELSIUS)
-from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
 from .accessories import (
@@ -49,16 +48,7 @@ class TemperatureSensor(HomeAccessory):
         self.char_temp.value = 0
         self.unit = None
 
-    def run(self):
-        """Method called be object after driver is started."""
-        state = self._hass.states.get(self._entity_id)
-        self.update_temperature(new_state=state)
-
-        async_track_state_change(
-            self._hass, self._entity_id, self.update_temperature)
-
-    def update_temperature(self, entity_id=None, old_state=None,
-                           new_state=None):
+    def update_state(self, entity_id=None, old_state=None, new_state=None):
         """Update temperature after state changed."""
         if new_state is None:
             return
