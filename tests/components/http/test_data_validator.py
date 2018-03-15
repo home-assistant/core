@@ -8,7 +8,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
 
-async def get_client(test_client, validator):
+async def get_client(aiohttp_client, validator):
     """Generate a client that hits a view decorated with validator."""
     app = web.Application()
     app['hass'] = Mock(is_running=True)
@@ -24,14 +24,14 @@ async def get_client(test_client, validator):
             return b''
 
     TestView().register(app.router)
-    client = await test_client(app)
+    client = await aiohttp_client(app)
     return client
 
 
-async def test_validator(test_client):
+async def test_validator(aiohttp_client):
     """Test the validator."""
     client = await get_client(
-        test_client, RequestDataValidator(vol.Schema({
+        aiohttp_client, RequestDataValidator(vol.Schema({
             vol.Required('test'): str
         })))
 
@@ -49,10 +49,10 @@ async def test_validator(test_client):
     assert resp.status == 400
 
 
-async def test_validator_allow_empty(test_client):
+async def test_validator_allow_empty(aiohttp_client):
     """Test the validator with empty data."""
     client = await get_client(
-        test_client, RequestDataValidator(vol.Schema({
+        aiohttp_client, RequestDataValidator(vol.Schema({
             # Although we allow empty, our schema should still be able
             # to validate an empty dict.
             vol.Optional('test'): str

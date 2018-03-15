@@ -8,7 +8,7 @@ from tests.common import (
 
 
 @asyncio.coroutine
-def test_run_camera_setup(hass, test_client):
+def test_run_camera_setup(hass, aiohttp_client):
     """Test that it fetches the given payload."""
     topic = 'test/camera'
     yield from async_mock_mqtt_component(hass)
@@ -24,7 +24,7 @@ def test_run_camera_setup(hass, test_client):
     async_fire_mqtt_message(hass, topic, 'beer')
     yield from hass.async_block_till_done()
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
     resp = yield from client.get(url)
     assert resp.status == 200
     body = yield from resp.text()

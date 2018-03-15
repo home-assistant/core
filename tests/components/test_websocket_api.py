@@ -16,12 +16,12 @@ API_PASSWORD = 'test1234'
 
 
 @pytest.fixture
-def websocket_client(loop, hass, test_client):
+def websocket_client(loop, hass, aiohttp_client):
     """Websocket client fixture connected to websocket server."""
     assert loop.run_until_complete(
         async_setup_component(hass, 'websocket_api'))
 
-    client = loop.run_until_complete(test_client(hass.http.app))
+    client = loop.run_until_complete(aiohttp_client(hass.http.app))
     ws = loop.run_until_complete(client.ws_connect(wapi.URL))
     auth_ok = loop.run_until_complete(ws.receive_json())
     assert auth_ok['type'] == wapi.TYPE_AUTH_OK
@@ -33,7 +33,7 @@ def websocket_client(loop, hass, test_client):
 
 
 @pytest.fixture
-def no_auth_websocket_client(hass, loop, test_client):
+def no_auth_websocket_client(hass, loop, aiohttp_client):
     """Websocket connection that requires authentication."""
     assert loop.run_until_complete(
         async_setup_component(hass, 'websocket_api', {
@@ -42,7 +42,7 @@ def no_auth_websocket_client(hass, loop, test_client):
             }
         }))
 
-    client = loop.run_until_complete(test_client(hass.http.app))
+    client = loop.run_until_complete(aiohttp_client(hass.http.app))
     ws = loop.run_until_complete(client.ws_connect(wapi.URL))
 
     auth_ok = loop.run_until_complete(ws.receive_json())
