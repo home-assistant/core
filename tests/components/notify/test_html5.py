@@ -269,8 +269,8 @@ async def test_unregistering_device_view(hass, aiohttp_client):
     }
 
 
-async def test_unregister_device_view_handle_unknown_subscription(hass,
-                                                                  aiohttp_client):
+async def test_unregister_device_view_handle_unknown_subscription(
+        hass, aiohttp_client):
     """Test that the HTML unregister view handles unknown subscriptions."""
     registrations = {}
     client = await mock_client(hass, aiohttp_client, registrations)
@@ -285,7 +285,8 @@ async def test_unregister_device_view_handle_unknown_subscription(hass,
     assert len(mock_save.mock_calls) == 0
 
 
-async def test_unregistering_device_view_handles_save_error(hass, aiohttp_client):
+async def test_unregistering_device_view_handles_save_error(
+        hass, aiohttp_client):
     """Test that the HTML unregister view handles save errors."""
     registrations = {
         'some device': SUBSCRIPTION_1,
