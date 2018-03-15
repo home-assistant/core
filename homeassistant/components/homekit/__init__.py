@@ -88,6 +88,11 @@ def get_accessory(hass, state, aid, config):
                           state.entity_id, 'TemperatureSensor')
             return TYPES['TemperatureSensor'](hass, state.entity_id,
                                               state.name, aid=aid)
+        elif unit == '%':
+            _LOGGER.debug('Add "%s" as %s"',
+                          state.entity_id, 'HumiditySensor')
+            return TYPES['HumiditySensor'](hass, state.entity_id, state.name,
+                                           aid=aid)
 
     elif state.domain == 'cover':
         # Only add covers that support set_cover_position
