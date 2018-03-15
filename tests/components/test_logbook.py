@@ -11,7 +11,7 @@ from homeassistant.const import (
     ATTR_HIDDEN, STATE_NOT_HOME, STATE_ON, STATE_OFF)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import (
     init_recorder_component, get_test_home_assistant)
@@ -555,3 +555,13 @@ class TestComponentLogbook(unittest.TestCase):
             'old_state': state,
             'new_state': state,
         }, time_fired=event_time_fired)
+
+
+async def test_logbook_view(hass, aiohttp_client):
+    """Test the logbook view."""
+    await hass.async_add_job(init_recorder_component, hass)
+    await async_setup_component(hass, 'logbook', {})
+    client = await aiohttp_client(hass.http.app)
+    response = await client.get(
+        '/api/logbook/{}'.format(dt_util.utcnow().isoformat()))
+    assert response.status == 200
