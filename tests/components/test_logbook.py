@@ -10,7 +10,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     ATTR_HIDDEN, STATE_NOT_HOME, STATE_ON, STATE_OFF)
 import homeassistant.util.dt as dt_util
-from homeassistant.components import logbook
+from homeassistant.components import logbook, recorder
 from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import (
@@ -562,7 +562,7 @@ async def test_logbook_view(hass, aiohttp_client):
     await hass.async_add_job(init_recorder_component, hass)
     await async_setup_component(hass, 'logbook', {})
     await hass.components.recorder.wait_connection_ready()
-    await hass.async_block_till_done()
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
     client = await aiohttp_client(hass.http.app)
     response = await client.get(
         '/api/logbook/{}'.format(dt_util.utcnow().isoformat()))
