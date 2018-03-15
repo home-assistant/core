@@ -115,6 +115,9 @@ def get_accessory(hass, state, aid, config):
         return TYPES['Thermostat'](hass, state.entity_id,
                                    state.name, support_auto, aid=aid)
 
+    elif state.domain == 'light':
+        return TYPES['Lightbulb'](hass, state.entity_id, state.name, aid=aid)
+
     elif state.domain == 'switch' or state.domain == 'remote' \
             or state.domain == 'input_boolean' or state.domain == 'script':
         _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Switch')
@@ -176,7 +179,7 @@ class HomeKit():
 
         # pylint: disable=unused-variable
         from . import (  # noqa F401
-            type_covers, type_security_systems, type_sensors,
+            type_covers, type_lights, type_security_systems, type_sensors,
             type_switches, type_thermostats)
 
         for state in self._hass.states.all():

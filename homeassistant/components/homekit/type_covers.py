@@ -22,7 +22,7 @@ class WindowCovering(HomeAccessory):
     """
 
     def __init__(self, hass, entity_id, display_name, *args, **kwargs):
-        """Initialize a Window accessory object."""
+        """Initialize a WindowCovering accessory object."""
         super().__init__(display_name, entity_id, 'WINDOW_COVERING',
                          *args, **kwargs)
 
@@ -46,7 +46,7 @@ class WindowCovering(HomeAccessory):
         self.char_target_position.setter_callback = self.move_cover
 
     def run(self):
-        """Method called be object after driver is started."""
+        """Method called by object after driver is started."""
         state = self._hass.states.get(self._entity_id)
         self.update_cover_position(new_state=state)
 
