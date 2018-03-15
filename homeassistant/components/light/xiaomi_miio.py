@@ -37,7 +37,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         ['philips.light.sread1',
          'philips.light.ceiling',
          'philips.light.zyceiling',
-         'philips.light.bulb']),
+         'philips.light.bulb',
+         'philips.light.candle2']),
 })
 
 REQUIREMENTS = ['python-miio==0.3.7']
@@ -145,7 +146,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         device = XiaomiPhilipsCeilingLamp(name, light, model)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
-    elif model == 'philips.light.bulb':
+    elif model in ['philips.light.bulb', 'philips.light.candle2']:
         from miio import PhilipsBulb
         light = PhilipsBulb(host, token)
         device = XiaomiPhilipsBulb(name, light, model)
