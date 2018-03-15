@@ -22,10 +22,10 @@ class Color:
 
     # pylint: disable=invalid-name
 
-    def __init__(self):
+    def __init__(self, hue=None, saturation=None):
         """Initialize a new Color object."""
-        self.hue = None         # [0, 360]
-        self.saturation = None  # [0, 1]
+        self.hue = hue                # [0, 360]
+        self.saturation = saturation  # [0, 1]
 
     def calc_hsv_to_rgb(self):
         """Convert hsv_color value to rgb_color."""
@@ -80,15 +80,15 @@ class Color:
         return (hue, saturation)
 
 
-@TYPES.register('Lightbulb')
-class Lightbulb(HomeAccessory):
-    """Generate a Lightbulb accessory for a light entity.
+@TYPES.register('Light')
+class Light(HomeAccessory):
+    """Generate a Light accessory for a light entity.
 
     Currently supports: state, brightness, rgb_color.
     """
 
     def __init__(self, hass, entity_id, name, *args, **kwargs):
-        """Initialize a new Lightbulb accessory object."""
+        """Initialize a new Light accessory object."""
         super().__init__(name, entity_id, CATEGORY_LIGHT, *args, **kwargs)
 
         self._hass = hass
@@ -117,7 +117,7 @@ class Lightbulb(HomeAccessory):
             self.char_brightness = serv_light \
                 .get_characteristic(CHAR_BRIGHTNESS)
             self.char_brightness.setter_callback = self.set_brightness
-            self.char_brightness.value = 100
+            self.char_brightness.value = 0
         if CHAR_HUE in self.chars:
             self.char_hue = serv_light.get_characteristic(CHAR_HUE)
             self.char_hue.setter_callback = self.set_hue

@@ -3,7 +3,7 @@ import unittest
 
 from homeassistant.components.homekit.const import PROP_CELSIUS
 from homeassistant.components.homekit.type_sensors import (
-    TemperatureSensor, calc_temperature)
+    TemperatureSensor, HumiditySensor, calc_temperature, calc_humidity)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
@@ -20,6 +20,15 @@ def test_calc_temperature():
 
     assert calc_temperature('75.2', TEMP_FAHRENHEIT) == 24
     assert calc_temperature('-20.6', TEMP_FAHRENHEIT) == -29.22
+
+
+def test_calc_humidity():
+    """Test if humidity is a integer."""
+    assert calc_humidity(STATE_UNKNOWN) is None
+    assert calc_humidity('test') is None
+
+    assert calc_humidity('20') == 20
+    assert calc_humidity('75.2') == 75.2
 
 
 class TestHomekitSensors(unittest.TestCase):
@@ -60,3 +69,23 @@ class TestHomekitSensors(unittest.TestCase):
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT})
         self.hass.block_till_done()
         self.assertEqual(acc.char_temp.value, 24)
+
+    def test_humidity(self):
+        """Test if accessory is updated after state change."""
+        entity_id = 'sensor.humidity'
+
+        acc = HumiditySensor(self.hass, entity_id, 'Humidity', aid=2)
+        acc.run()
+
+        self.assertEqual(acc.aid, 2)
+        self.assertEqual(acc.category, 10)  # Sensor
+
+        self.assertEqual(acc.char_humidity.value, 0)
+
+        self.hass.states.set(entity_id, STATE_UNKNOWN,
+                             {ATTR_UNIT_OF_MEASUREMENT: "%"})
+        self.hass.block_till_done()
+
+        self.hass.states.set(entity_id, '20', {ATTR_UNIT_OF_MEASUREMENT: "%"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_humidity.value, 20)

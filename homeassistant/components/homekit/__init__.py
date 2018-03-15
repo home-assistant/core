@@ -121,7 +121,7 @@ def get_accessory(hass, state, aid, config):
                                    state.name, support_auto, aid=aid)
 
     elif state.domain == 'light':
-        return TYPES['Lightbulb'](hass, state.entity_id, state.name, aid=aid)
+        return TYPES['Light'](hass, state.entity_id, state.name, aid=aid)
 
     elif state.domain == 'switch' or state.domain == 'remote' \
             or state.domain == 'input_boolean' or state.domain == 'script':
