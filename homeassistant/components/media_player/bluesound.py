@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.bluesound/
 """
 import asyncio
+from asyncio.futures import CancelledError
 from datetime import timedelta
 import logging
 import time
@@ -172,6 +173,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         hass.services.async_register(
             DOMAIN, service, async_service_handler, schema=schema)
 
+
 class BluesoundPlayer(MediaPlayerDevice):
     """Representation of a Bluesound Player."""
 
@@ -307,7 +309,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         await self.async_update_services()
 
     async def send_bluesound_command(self, method, raise_timeout=False,
-                               allow_offline=False):
+                                     allow_offline=False):
         """Send command to the player."""
         import xmltodict
 
