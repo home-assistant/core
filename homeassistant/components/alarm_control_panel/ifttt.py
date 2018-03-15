@@ -27,7 +27,7 @@ ALLOWED_STATES = [
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME]
 
-DATA_IFTT_ALARM = 'ifttt_alarm'
+DATA_IFTTT_ALARM = 'ifttt_alarm'
 DEFAULT_NAME = "Home"
 
 EVENT_ALARM_ARM_AWAY = "alarm_arm_away"
@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CODE): cv.string,
 })
 
-SERVICE_PUSH_ALARM_STATE = "push_alarm_state"
+SERVICE_PUSH_ALARM_STATE = "ifttt_push_alarm_state"
 
 PUSH_ALARM_STATE_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
@@ -50,38 +50,30 @@ PUSH_ALARM_STATE_SERVICE_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a control panel managed through IFTTT."""
-    if DATA_IFTT_ALARM not in hass.data:
-        hass.data[DATA_IFTT_ALARM] = IFTTTAlarmData()
+    if DATA_IFTTT_ALARM not in hass.data:
+        hass.data[DATA_IFTTT_ALARM] = []
 
     name = config.get(CONF_NAME)
     code = config.get(CONF_CODE)
 
     alarmpanel = IFTTTAlarmPanel(name, code)
-    hass.data[DATA_IFTT_ALARM].devices.append(alarmpanel)
+    hass.data[DATA_IFTTT_ALARM].append(alarmpanel)
     add_devices([alarmpanel])
 
-    def push_state_update(service):
+    async def push_state_update(service):
         """Set the service state as device state attribute."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         state = service.data.get(ATTR_STATE)
-        devices = hass.data[DATA_IFTT_ALARM].devices
+        devices = hass.data[DATA_IFTTT_ALARM]
         if entity_ids:
             devices = [d for d in devices if d.entity_id in entity_ids]
 
         for device in devices:
             device.push_alarm_state(state)
-            device.schedule_update_ha_state()
+            device.async_schedule_update_ha_state()
 
     hass.services.register(DOMAIN, SERVICE_PUSH_ALARM_STATE, push_state_update,
                            schema=PUSH_ALARM_STATE_SERVICE_SCHEMA)
-
-
-class IFTTTAlarmData:
-    """Storage class to keep track of the alarm systems globally."""
-
-    def __init__(self):
-        """Initialize the data."""
-        self.devices = []
 
 
 class IFTTTAlarmPanel(alarm.AlarmControlPanel):
