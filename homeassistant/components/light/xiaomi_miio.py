@@ -115,12 +115,14 @@ async def async_setup_platform(hass, config, async_add_devices,
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
     devices = []
+    unique_id = None
 
     if model is None:
         try:
             miio_device = Device(host, token)
             device_info = miio_device.info()
             model = device_info.model
+            unique_id = "{}-{}".format(model, device_info.mac_address)
             _LOGGER.info("%s %s %s detected",
                          model,
                          device_info.firmware_version,
@@ -131,25 +133,26 @@ async def async_setup_platform(hass, config, async_add_devices,
     if model == 'philips.light.sread1':
         from miio import PhilipsEyecare
         light = PhilipsEyecare(host, token)
-        primary_device = XiaomiPhilipsEyecareLamp(name, light, model)
+        primary_device = XiaomiPhilipsEyecareLamp(
+            name, light, model, unique_id)
         devices.append(primary_device)
         hass.data[DATA_KEY][host] = primary_device
 
         secondary_device = XiaomiPhilipsEyecareLampAmbientLight(
-            name, light, model)
+            name, light, model, unique_id)
         devices.append(secondary_device)
         # The ambient light doesn't expose additional services.
         # A hass.data[DATA_KEY] entry isn't needed.
     elif model in ['philips.light.ceiling', 'philips.light.zyceiling']:
         from miio import Ceil
         light = Ceil(host, token)
-        device = XiaomiPhilipsCeilingLamp(name, light, model)
+        device = XiaomiPhilipsCeilingLamp(name, light, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
     elif model in ['philips.light.bulb', 'philips.light.candle2']:
         from miio import PhilipsBulb
         light = PhilipsBulb(host, token)
-        device = XiaomiPhilipsBulb(name, light, model)
+        device = XiaomiPhilipsBulb(name, light, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
     else:
@@ -191,11 +194,12 @@ async def async_setup_platform(hass, config, async_add_devices,
 class XiaomiPhilipsAbstractLight(Light):
     """Representation of a Abstract Xiaomi Philips Light."""
 
-    def __init__(self, name, light, model):
+    def __init__(self, name, light, model, unique_id):
         """Initialize the light device."""
         self._name = name
         self._light = light
         self._model = model
+        self._unique_id = unique_id
 
         self._brightness = None
 
@@ -208,6 +212,11 @@ class XiaomiPhilipsAbstractLight(Light):
     def should_poll(self):
         """Poll the light."""
         return True
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._unique_id
 
     @property
     def name(self):
@@ -296,9 +305,10 @@ class XiaomiPhilipsAbstractLight(Light):
 class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
     """Representation of a Generic Xiaomi Philips Light."""
 
-    def __init__(self, name, light, model):
+    def __init__(self, name, light, model, unique_id):
         """Initialize the light device."""
-        XiaomiPhilipsAbstractLight.__init__(self, name, light, model)
+        XiaomiPhilipsAbstractLight.__init__(self, name, light, model,
+                                            unique_id)
 
         self._state_attrs.update({
             ATTR_SCENE: None,
@@ -397,9 +407,9 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
     """Representation of a Xiaomi Philips Bulb."""
 
-    def __init__(self, name, light, model):
+    def __init__(self, name, light, model, unique_id):
         """Initialize the light device."""
-        XiaomiPhilipsGenericLight.__init__(self, name, light, model)
+        XiaomiPhilipsGenericLight.__init__(self, name, light, model, unique_id)
 
         self._color_temp = None
 
@@ -524,9 +534,9 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
     """Representation of a Xiaomi Philips Ceiling Lamp."""
 
-    def __init__(self, name, light, model):
+    def __init__(self, name, light, model, unique_id):
         """Initialize the light device."""
-        XiaomiPhilipsBulb.__init__(self, name, light, model)
+        XiaomiPhilipsBulb.__init__(self, name, light, model, unique_id)
 
         self._state_attrs.update({
             ATTR_NIGHT_LIGHT_MODE: None,
@@ -578,9 +588,9 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
 class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
     """Representation of a Xiaomi Philips Eyecare Lamp 2."""
 
-    def __init__(self, name, light, model):
+    def __init__(self, name, light, model, unique_id):
         """Initialize the light device."""
-        XiaomiPhilipsGenericLight.__init__(self, name, light, model)
+        XiaomiPhilipsGenericLight.__init__(self, name, light, model, unique_id)
 
         self._state_attrs.update({
             ATTR_REMINDER: None,
@@ -683,10 +693,13 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
     """Representation of a Xiaomi Philips Eyecare Lamp Ambient Light."""
 
-    def __init__(self, name, light, model):
+    def __init__(self, name, light, model, unique_id):
         """Initialize the light device."""
         name = '{} Ambient Light'.format(name)
-        XiaomiPhilipsAbstractLight.__init__(self, name, light, model)
+        if unique_id is not None:
+            unique_id = "{}-{}".format(unique_id, 'ambient')
+        XiaomiPhilipsAbstractLight.__init__(self, name, light, model,
+                                            unique_id)
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
