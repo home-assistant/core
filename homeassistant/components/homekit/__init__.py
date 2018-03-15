@@ -116,7 +116,7 @@ def get_accessory(hass, state, aid, config):
                                    state.name, support_auto, aid=aid)
 
     elif state.domain == 'switch' or state.domain == 'remote' \
-            or state.domain == 'input_boolean':
+            or state.domain == 'input_boolean' or state.domain == 'script':
         _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Switch')
         return TYPES['Switch'](hass, state.entity_id, state.name, aid=aid)
 
