@@ -56,23 +56,6 @@ async def async_setup_platform(hass, config, async_add_devices,
     async_add_devices([ProxyCamera(hass, config)])
 
 
-# This routine is adapted from the one in mjpeg.py.  They should probably
-# be merged together
-async def extract_images_from_mjpeg(req, chunk_size):
-    """Take in a MJPEG stream object, return the jpg from it."""
-    stream = req.content
-    data = b''
-    while True:
-        chunk = await stream.read(chunk_size)
-        data += chunk
-        jpg_start = data.find(b'\xff\xd8')
-        jpg_end = data.find(b'\xff\xd9')
-        if jpg_start != -1 and jpg_end != -1:
-            jpg = data[jpg_start:jpg_end + 2]
-            data = data[jpg_end + 2:]
-            yield jpg
-
-
 def _resize_image(image, opts):
     """Resize image."""
     from PIL import Image
@@ -229,10 +212,23 @@ class ProxyCamera(Camera):
             req = await stream_coro
 
         try:
-            async for image in extract_images_from_mjpeg(req, 102400):
-                image = await self.hass.async_add_job(
-                    _resize_image, image, self._stream_opts)
-                await write(image)
+            # This would be nicer as an async generator
+            # But that would only be supported for python >=3.6
+            data = b''
+            stream = req.content
+            while True:
+                chunk = await stream.read(102400)
+                if not chunk:
+                    break
+                data += chunk
+                jpg_start = data.find(b'\xff\xd8')
+                jpg_end = data.find(b'\xff\xd9')
+                if jpg_start != -1 and jpg_end != -1:
+                    image = data[jpg_start:jpg_end + 2]
+                    image = await self.hass.async_add_job(
+                        _resize_image, image, self._stream_opts)
+                    await write(image)
+                    data = data[jpg_end + 2:]
         except asyncio.CancelledError:
             _LOGGER.debug("Stream closed by frontend.")
             req.close()
