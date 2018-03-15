@@ -55,11 +55,12 @@ async def async_setup_platform(hass, config, async_add_devices,
         air_quality_monitor = AirQualityMonitor(host, token)
         device_info = air_quality_monitor.info()
         model = device_info.model
+        unique_id = "{}-{}".format(model, device_info.mac_address)
         _LOGGER.info("%s %s %s detected",
                      model,
                      device_info.firmware_version,
                      device_info.hardware_version)
-        device = XiaomiAirQualityMonitor(name, air_quality_monitor, model)
+        device = XiaomiAirQualityMonitor(name, air_quality_monitor, model, unique_id)
     except DeviceException:
         raise PlatformNotReady
 
@@ -70,10 +71,11 @@ async def async_setup_platform(hass, config, async_add_devices,
 class XiaomiAirQualityMonitor(ToggleEntity):
     """Representation of a Xiaomi Air Quality Monitor."""
 
-    def __init__(self, name, device, model):
+    def __init__(self, name, device, model, unique_id):
         """Initialize the entity."""
         self._name = name
         self._model = model
+        self._unique_id = unique_id
         self._icon = 'mdi:cloud'
         self._unit_of_measurement = 'AQI'
 
@@ -92,6 +94,11 @@ class XiaomiAirQualityMonitor(ToggleEntity):
     def should_poll(self):
         """Poll the miio device."""
         return True
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._unique_id
 
     @property
     def name(self):
