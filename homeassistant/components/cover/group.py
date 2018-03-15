@@ -68,39 +68,42 @@ class CoverGroup(CoverDevice):
     def update_supported_features(self, entity_id, old_state, new_state,
                                   update_state=True):
         """Update dictionaries with supported features."""
-        if new_state is None:
+        if not new_state:
             for values in self._covers.values():
                 values.discard(entity_id)
             for values in self._tilts.values():
                 values.discard(entity_id)
+            if update_state:
+                self.async_schedule_update_ha_state(True)
+            return
+
+        features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        if features & (SUPPORT_OPEN | SUPPORT_CLOSE):
+            self._covers[KEY_OPEN_CLOSE].add(entity_id)
         else:
-            features = new_state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            self._covers[KEY_OPEN_CLOSE].discard(entity_id)
+        if features & (SUPPORT_STOP):
+            self._covers[KEY_STOP].add(entity_id)
+        else:
+            self._covers[KEY_STOP].discard(entity_id)
+        if features & (SUPPORT_SET_POSITION):
+            self._covers[KEY_POSITION].add(entity_id)
+        else:
+            self._covers[KEY_POSITION].discard(entity_id)
 
-            if features & (SUPPORT_OPEN | SUPPORT_CLOSE):
-                self._covers[KEY_OPEN_CLOSE].add(entity_id)
-            else:
-                self._covers[KEY_OPEN_CLOSE].discard(entity_id)
-            if features & (SUPPORT_STOP):
-                self._covers[KEY_STOP].add(entity_id)
-            else:
-                self._covers[KEY_STOP].discard(entity_id)
-            if features & (SUPPORT_SET_POSITION):
-                self._covers[KEY_POSITION].add(entity_id)
-            else:
-                self._covers[KEY_POSITION].discard(entity_id)
-
-            if features & (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT):
-                self._tilts[KEY_OPEN_CLOSE].add(entity_id)
-            else:
-                self._tilts[KEY_OPEN_CLOSE].discard(entity_id)
-            if features & (SUPPORT_STOP_TILT):
-                self._tilts[KEY_STOP].add(entity_id)
-            else:
-                self._tilts[KEY_STOP].discard(entity_id)
-            if features & (SUPPORT_SET_TILT_POSITION):
-                self._tilts[KEY_POSITION].add(entity_id)
-            else:
-                self._tilts[KEY_POSITION].discard(entity_id)
+        if features & (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT):
+            self._tilts[KEY_OPEN_CLOSE].add(entity_id)
+        else:
+            self._tilts[KEY_OPEN_CLOSE].discard(entity_id)
+        if features & (SUPPORT_STOP_TILT):
+            self._tilts[KEY_STOP].add(entity_id)
+        else:
+            self._tilts[KEY_STOP].discard(entity_id)
+        if features & (SUPPORT_SET_TILT_POSITION):
+            self._tilts[KEY_POSITION].add(entity_id)
+        else:
+            self._tilts[KEY_POSITION].discard(entity_id)
 
         if update_state:
             self.async_schedule_update_ha_state(True)
@@ -111,9 +114,9 @@ class CoverGroup(CoverDevice):
             new_state = self.hass.states.get(entity_id)
             self.update_supported_features(entity_id, None, new_state,
                                            update_state=False)
-        await self.async_update()
         async_track_state_change(self.hass, self._entities,
                                  self.update_supported_features)
+        await self.async_update()
 
     @property
     def name(self):
