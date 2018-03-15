@@ -29,6 +29,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
+from homeassistant.loader import bind_hass
 
 from . import migration, purge
 from .const import DATA_INSTANCE
@@ -87,14 +88,10 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def wait_connection_ready(hass):
-    """
-    Wait till the connection is ready.
-
-    Returns a coroutine object.
-    """
-    return (yield from hass.data[DATA_INSTANCE].async_db_ready)
+@bind_hass
+async def wait_connection_ready(hass):
+    """Wait till the connection is ready."""
+    return await hass.data[DATA_INSTANCE].async_db_ready
 
 
 def run_information(hass, point_in_time: Optional[datetime] = None):
