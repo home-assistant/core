@@ -23,8 +23,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     sensors = hass.data[DATA_DECONZ].sensors
     entities = []
 
-    for key in sorted(sensors.keys(), key=int):
-        sensor = sensors[key]
+    for sensor in sensors.values():
         if sensor and sensor.type in DECONZ_BINARY_SENSOR:
             entities.append(DeconzBinarySensor(sensor))
     async_add_devices(entities, True)
@@ -93,9 +92,9 @@ class DeconzBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         from pydeconz.sensor import PRESENCE
-        attr = {
-            ATTR_BATTERY_LEVEL: self._sensor.battery,
-        }
-        if self._sensor.type in PRESENCE:
+        attr = {}
+        if self._sensor.battery:
+            attr[ATTR_BATTERY_LEVEL] = self._sensor.battery
+        if self._sensor.type in PRESENCE and self._sensor.dark:
             attr['dark'] = self._sensor.dark
         return attr
