@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Alle Philips Hue bridges zijn al geconfigureerd",
+            "discover_timeout": "Hue bridges kunnen niet worden gevonden",
+            "no_bridges": "Geen Philips Hue bridges ontdekt"
+        },
+        "error": {
+            "linking": "Er is een onbekende verbindingsfout opgetreden.",
+            "register_failed": "Registratie is mislukt, probeer het opnieuw"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Kies Hue bridge"
+            },
+            "link": {
+                "description": "Druk op de knop van de bridge om Philips Hue te registreren met de Home Assistant.  ![Locatie van de knop op bridge] (/static/images/config_philips_hue.jpg)",
+                "title": "Link Hub"
+            }
+        },
+        "title": "Philips Hue Bridge"
+    }
+}
