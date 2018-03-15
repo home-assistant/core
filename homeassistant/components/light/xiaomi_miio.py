@@ -189,7 +189,7 @@ async def async_setup_platform(hass, config, async_add_devices,
 
 
 class XiaomiPhilipsAbstractLight(Light):
-    """Representation of a Abstract Light."""
+    """Representation of a Abstract Xiaomi Philips Light."""
 
     def __init__(self, name, light, model):
         """Initialize the light device."""
@@ -294,7 +294,7 @@ class XiaomiPhilipsAbstractLight(Light):
 
 
 class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
-    """Representation of a Xiaomi Philips Light."""
+    """Representation of a Generic Xiaomi Philips Light."""
 
     def __init__(self, name, light, model):
         """Initialize the light device."""
@@ -588,11 +588,6 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
             ATTR_EYECARE_MODE: None,
         })
 
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_BRIGHTNESS
-
     async def async_update(self):
         """Fetch state from the device."""
         from miio import DeviceException
@@ -692,11 +687,6 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         """Initialize the light device."""
         name = '{} Ambient Light'.format(name)
         XiaomiPhilipsAbstractLight.__init__(self, name, light, model)
-
-    @property
-    def supported_features(self):
-        """Return the supported features."""
-        return SUPPORT_BRIGHTNESS
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
