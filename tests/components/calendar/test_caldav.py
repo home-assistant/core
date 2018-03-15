@@ -105,6 +105,20 @@ LOCATION:Hamburg
 DESCRIPTION:What a day
 END:VEVENT
 END:VCALENDAR
+""",
+    """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Global Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:7
+DTSTART;TZID=America/Los_Angeles:20171127T083000
+DTSTAMP:20180301T020053Z
+DTEND;TZID=America/Los_Angeles:20171127T093000
+SUMMARY:Enjoy the sun
+LOCATION:San Francisco
+DESCRIPTION:Sunny day
+END:VEVENT
+END:VCALENDAR
 """
 
 ]
@@ -225,7 +239,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
                               },
                               _add_device)
 
-    @patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 30))
+    @patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 45))
     def test_ongoing_event(self, mock_now):
         """Test that the ongoing event is returned."""
         cal = caldav.WebDavCalendarEventDevice(self.hass,
@@ -242,6 +256,44 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-27 18:00:00",
             "location": "Hamburg",
             "description": "Surprisingly rainy"
+        })
+
+    @patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 30))
+    def test_just_ended_event(self, mock_now):
+        """Test that the next ongoing event is returned."""
+        cal = caldav.WebDavCalendarEventDevice(self.hass,
+                                               DEVICE_DATA,
+                                               self.calendar)
+
+        self.assertEqual(cal.name, DEVICE_DATA["name"])
+        self.assertEqual(cal.state, STATE_ON)
+        self.assertEqual(cal.device_state_attributes, {
+            "message": "This is a normal event",
+            "all_day": False,
+            "offset_reached": False,
+            "start_time": "2017-11-27 17:00:00",
+            "end_time": "2017-11-27 18:00:00",
+            "location": "Hamburg",
+            "description": "Surprisingly rainy"
+        })
+
+    @patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 00))
+    def test_ongoing_event_different_tz(self, mock_now):
+        """Test that the ongoing event with another timezone is returned."""
+        cal = caldav.WebDavCalendarEventDevice(self.hass,
+                                               DEVICE_DATA,
+                                               self.calendar)
+
+        self.assertEqual(cal.name, DEVICE_DATA["name"])
+        self.assertEqual(cal.state, STATE_ON)
+        self.assertEqual(cal.device_state_attributes, {
+            "message": "Enjoy the sun",
+            "all_day": False,
+            "offset_reached": False,
+            "start_time": "2017-11-27 16:30:00",
+            "description": "Sunny day",
+            "end_time": "2017-11-27 17:30:00",
+            "location": "San Francisco"
         })
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(8, 30))
