@@ -312,7 +312,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
     def __init__(self, name, light, model, unique_id):
         """Initialize the light device."""
-        super().__init__(self, name, light, model, unique_id)
+        super().__init__(name, light, model, unique_id)
 
         self._state_attrs.update({
             ATTR_SCENE: None,
@@ -384,7 +384,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
     def __init__(self, name, light, model, unique_id):
         """Initialize the light device."""
-        super().__init__(self, name, light, model, unique_id)
+        super().__init__(name, light, model, unique_id)
 
         self._color_temp = None
 
@@ -512,7 +512,7 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
 
     def __init__(self, name, light, model, unique_id):
         """Initialize the light device."""
-        super().__init__(self, name, light, model, unique_id)
+        super().__init__(name, light, model, unique_id)
 
         self._state_attrs.update({
             ATTR_NIGHT_LIGHT_MODE: None,
@@ -567,7 +567,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
     def __init__(self, name, light, model, unique_id):
         """Initialize the light device."""
-        super().__init__(self, name, light, model, unique_id)
+        super().__init__(name, light, model, unique_id)
 
         self._state_attrs.update({
             ATTR_REMINDER: None,
@@ -676,7 +676,7 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
         name = '{} Ambient Light'.format(name)
         if unique_id is not None:
             unique_id = "{}-{}".format(unique_id, 'ambient')
-        super().__init__(self, name, light, model, unique_id)
+        super().__init__(name, light, model, unique_id)
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
