@@ -394,6 +394,8 @@ class XiaomiGenericDevice(FanEntity):
         self._device = device
         self._model = model
         self._unique_id = unique_id
+
+        self._available = False
         self._state = None
         self._state_attrs = {
             ATTR_MODEL: self._model,
@@ -424,7 +426,7 @@ class XiaomiGenericDevice(FanEntity):
     @property
     def available(self):
         """Return true when state is known."""
-        return self._state is not None
+        return self._available
 
     @property
     def device_state_attributes(self):
@@ -458,6 +460,7 @@ class XiaomiGenericDevice(FanEntity):
             return result == SUCCESS
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
+            self._available = False
             return False
 
     async def async_turn_on(self, speed: str = None,
@@ -589,6 +592,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
                 self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
+            self._available = True
             self._state = state.is_on
 
             if self._model == MODEL_AIRPURIFIER_PRO:
@@ -608,7 +612,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
                      AVAILABLE_ATTRIBUTES_AIRPURIFIER.items()})
 
         except DeviceException as ex:
-            self._state = None
+            self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
@@ -774,6 +778,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
                 self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
+            self._available = True
             self._state = state.is_on
 
             self._state_attrs.update(
@@ -781,7 +786,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
                  key, value in AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER.items()})
 
         except DeviceException as ex:
-            self._state = None
+            self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     def speed_list(self) -> list:
