@@ -10,14 +10,14 @@ import logging
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import dispatcher_connect
-from homeassistant.components.homematicip import (
+from homeassistant.components.homematicip_cloud import (
     HomematicipGenericDevice, DOMAIN, EVENT_HOME_CHANGED,
     ATTR_HOME_LABEL, ATTR_HOME_ID, ATTR_LOW_BATTERY, ATTR_RSSI)
 from homeassistant.const import TEMP_CELSIUS, STATE_OK
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['homematicip']
+DEPENDENCIES = ['homematicip_cloud']
 
 ATTR_VALVE_STATE = 'valve_state'
 ATTR_VALVE_POSITION = 'valve_position'

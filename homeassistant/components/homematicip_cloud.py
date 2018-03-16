@@ -20,7 +20,7 @@ REQUIREMENTS = ['homematicip==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'homematicip'
+DOMAIN = 'homematicip_cloud'
 
 CONF_NAME = 'name'
 CONF_ACCESSPOINT = 'accesspoint'
