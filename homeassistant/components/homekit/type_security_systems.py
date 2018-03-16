@@ -5,7 +5,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
     ATTR_ENTITY_ID, ATTR_CODE)
-from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service
@@ -50,14 +49,6 @@ class SecuritySystem(HomeAccessory):
 
         self.char_target_state.setter_callback = self.set_security_state
 
-    def run(self):
-        """Method called be object after driver is started."""
-        state = self._hass.states.get(self._entity_id)
-        self.update_security_state(new_state=state)
-
-        async_track_state_change(self._hass, self._entity_id,
-                                 self.update_security_state)
-
     def set_security_state(self, value):
         """Move security state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set security state to %d',
@@ -69,8 +60,7 @@ class SecuritySystem(HomeAccessory):
         params = {ATTR_ENTITY_ID: self._entity_id, ATTR_CODE: self._alarm_code}
         self._hass.services.call('alarm_control_panel', service, params)
 
-    def update_security_state(self, entity_id=None,
-                              old_state=None, new_state=None):
+    def update_state(self, entity_id=None, old_state=None, new_state=None):
         """Update security state after state changed."""
         if new_state is None:
             return

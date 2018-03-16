@@ -4,6 +4,8 @@ import logging
 from pyhap.accessory import Accessory, Bridge, Category
 from pyhap.accessory_driver import AccessoryDriver
 
+from homeassistant.helpers.event import async_track_state_change
+
 from .const import (
     ACCESSORY_MODEL, ACCESSORY_NAME, BRIDGE_MODEL, BRIDGE_NAME,
     MANUFACTURER, SERV_ACCESSORY_INFO, SERV_BRIDGING_STATE,
@@ -49,6 +51,8 @@ def override_properties(char, properties=None, valid_values=None):
 class HomeAccessory(Accessory):
     """Adapter class for Accessory."""
 
+    # pylint: disable=no-member
+
     def __init__(self, name=ACCESSORY_NAME, model=ACCESSORY_MODEL,
                  category='OTHER', **kwargs):
         """Initialize a Accessory object."""
@@ -58,6 +62,13 @@ class HomeAccessory(Accessory):
 
     def _set_services(self):
         add_preload_service(self, SERV_ACCESSORY_INFO)
+
+    def run(self):
+        """Method called by accessory after driver is started."""
+        state = self._hass.states.get(self._entity_id)
+        self.update_state(new_state=state)
+        async_track_state_change(
+            self._hass, self._entity_id, self.update_state)
 
 
 class HomeBridge(Bridge):
