@@ -8,7 +8,6 @@ from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_AUTO)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
-from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service
@@ -96,14 +95,6 @@ class Thermostat(HomeAccessory):
             self.char_cooling_thresh_temp = None
             self.char_heating_thresh_temp = None
 
-    def run(self):
-        """Method called be object after driver is started."""
-        state = self._hass.states.get(self._entity_id)
-        self.update_thermostat(new_state=state)
-
-        async_track_state_change(self._hass, self._entity_id,
-                                 self.update_thermostat)
-
     def set_heat_cool(self, value):
         """Move operation mode to value if call came from HomeKit."""
         if value in HC_HOMEKIT_TO_HASS:
@@ -142,8 +133,7 @@ class Thermostat(HomeAccessory):
         self._hass.components.climate.set_temperature(
             temperature=value, entity_id=self._entity_id)
 
-    def update_thermostat(self, entity_id=None,
-                          old_state=None, new_state=None):
+    def update_state(self, entity_id=None, old_state=None, new_state=None):
         """Update security state after state changed."""
         if new_state is None:
             return
