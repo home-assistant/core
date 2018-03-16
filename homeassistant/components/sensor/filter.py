@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 FILTER_NAME_LOWPASS = 'lowpass'
 FILTER_NAME_OUTLIER = 'outlier'
 FILTER_NAME_THROTTLE = 'throttle'
-FILTER_NAME_TIME_SMA = 'time_sma'
+FILTER_NAME_TIME_SMA = 'time_simple_moving_average'
 FILTERS = Registry()
 
 CONF_FILTERS = 'filters'
@@ -36,7 +36,7 @@ CONF_FILTER_WINDOW_SIZE = 'window_size'
 CONF_FILTER_PRECISION = 'precision'
 CONF_FILTER_RADIUS = 'radius'
 CONF_FILTER_TIME_CONSTANT = 'time_constant'
-CONF_TIME_SMA_TYPE = 'variant'
+CONF_TIME_SMA_TYPE = 'type'
 
 TIME_SMA_LAST = 'last'
 
@@ -72,8 +72,8 @@ FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
 FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_SMA,
     vol.Optional(CONF_TIME_SMA_TYPE,
-                 default=TIME_SMA_LAST): vol.All(
-                     cv.ensure_list, [vol.Any(TIME_SMA_LAST)]),
+                 default=TIME_SMA_LAST): vol.In(
+                     [None, TIME_SMA_LAST]),
 
     vol.Required(CONF_FILTER_WINDOW_SIZE): vol.All(cv.time_period,
                                                    cv.positive_timedelta)
@@ -305,7 +305,7 @@ class TimeSMAFilter(Filter):
         variant (enum): type of argorithm used to connect discrete values
     """
 
-    def __init__(self, window_size, precision, entity, variant):
+    def __init__(self, window_size, precision, entity, type):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_TIME_SMA, 0, precision, entity)
         self._time_window = int(window_size.total_seconds())
