@@ -88,7 +88,7 @@ SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Xiaomi vacuum cleaner robot platform."""
-    from miio import Device, DeviceException, Vacuum
+    from miio import Vacuum, DeviceException
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
@@ -100,8 +100,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
     try:
-        miio_device = Device(host, token)
-        device_info = miio_device.info()
+        vacuum = Vacuum(host, token)
+        device_info = vacuum.info()
         model = device_info.model
         unique_id = "{}-{}".format(model, device_info.mac_address)
         _LOGGER.info("%s %s %s detected",
@@ -111,7 +111,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     except DeviceException:
         raise PlatformNotReady
 
-    vacuum = Vacuum(host, token)
     mirobo = MiroboVacuum(name, vacuum, unique_id)
     hass.data[DATA_KEY][host] = mirobo
 
