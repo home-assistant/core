@@ -8,7 +8,6 @@ import asyncio
 from asyncio.futures import CancelledError
 from datetime import timedelta
 import logging
-import time
 
 import aiohttp
 from aiohttp.client_exceptions import ClientError
@@ -386,7 +385,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     self._group_name = group_name
                     # the sleep is needed to make sure that the
                     # devices is synced
-                    time.sleep(1)
+                    await asyncio.sleep(1, loop=self._hass.loop)
                     await self.async_trigger_sync_on_all()
                 elif self.is_grouped:
                     # when player is grouped we need to fetch volume from
