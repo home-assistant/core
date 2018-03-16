@@ -159,12 +159,16 @@ class Thermostat(ClimateDevice):
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        return self.thermostat['runtime']['desiredHeat'] / 10.0
+        if self.current_operation == STATE_AUTO:
+            return self.thermostat['runtime']['desiredHeat'] / 10.0
+        return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        return self.thermostat['runtime']['desiredCool'] / 10.0
+        if self.current_operation == STATE_AUTO:
+            return self.thermostat['runtime']['desiredCool'] / 10.0
+        return None
 
     @property
     def target_temperature(self):
