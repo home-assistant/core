@@ -53,6 +53,7 @@ FILTER_SCHEMA = vol.Schema({
                  default=DEFAULT_PRECISION): vol.Coerce(int),
 })
 
+# pylint: disable=redefined-builtin
 FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_OUTLIER,
     vol.Optional(CONF_FILTER_WINDOW_SIZE,
