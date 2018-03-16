@@ -178,6 +178,8 @@ async def async_setup_platform(hass, config, async_add_devices,
 
         update_tasks = []
         for target_device in target_devices:
+            if not hasattr(target_device, method['method']):
+                continue
             await getattr(target_device, method['method'])(**params)
             update_tasks.append(target_device.async_update_ha_state(True))
 
@@ -372,36 +374,6 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
             return new
 
         return None
-
-    # pylint: disable=no-self-use
-    async def async_reminder_on(self):
-        """Enable the eye fatigue notification."""
-        return
-
-    # pylint: disable=no-self-use
-    async def async_reminder_off(self):
-        """Disable the eye fatigue notification."""
-        return
-
-    # pylint: disable=no-self-use
-    async def async_night_light_mode_on(self):
-        """Turn the smart night light mode on."""
-        return
-
-    # pylint: disable=no-self-use
-    async def async_night_light_mode_off(self):
-        """Turn the smart night light mode off."""
-        return
-
-    # pylint: disable=no-self-use
-    async def async_eyecare_mode_on(self):
-        """Turn the eyecare mode on."""
-        return
-
-    # pylint: disable=no-self-use
-    async def async_eyecare_mode_off(self):
-        """Turn the eyecare mode off."""
-        return
 
 
 class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
