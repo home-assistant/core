@@ -60,7 +60,8 @@ async def async_setup_platform(hass, config, async_add_devices,
                      model,
                      device_info.firmware_version,
                      device_info.hardware_version)
-        device = XiaomiAirQualityMonitor(name, air_quality_monitor, model, unique_id)
+        device = XiaomiAirQualityMonitor(
+            name, air_quality_monitor, model, unique_id)
     except DeviceException:
         raise PlatformNotReady
 
@@ -68,19 +69,19 @@ async def async_setup_platform(hass, config, async_add_devices,
     async_add_devices([device], update_before_add=True)
 
 
-class XiaomiAirQualityMonitor(ToggleEntity):
+class XiaomiAirQualityMonitor():
     """Representation of a Xiaomi Air Quality Monitor."""
 
     def __init__(self, name, device, model, unique_id):
         """Initialize the entity."""
         self._name = name
+        self._device = device
         self._model = model
         self._unique_id = unique_id
+
         self._icon = 'mdi:cloud'
         self._unit_of_measurement = 'AQI'
-
-        self._device = device
-        self._is_on = None
+        self._available = None
         self._state = None
         self._state_attrs = {
             ATTR_POWER: None,
@@ -118,7 +119,7 @@ class XiaomiAirQualityMonitor(ToggleEntity):
     @property
     def available(self):
         """Return true when state is known."""
-        return self._state is not None
+        return self._available
 
     @property
     def state(self):
@@ -129,11 +130,6 @@ class XiaomiAirQualityMonitor(ToggleEntity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
-
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._is_on
 
     async def _try_command(self, mask_error, func, *args, **kwargs):
         """Call a device command handling error messages."""
@@ -147,17 +143,8 @@ class XiaomiAirQualityMonitor(ToggleEntity):
             return result == SUCCESS
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
+            self._available = False
             return False
-
-    async def async_turn_on(self, **kwargs):
-        """Turn the miio device on."""
-        await self._try_command(
-            "Turning the miio device on failed.", self._device.on)
-
-    async def async_turn_off(self, **kwargs):
-        """Turn the miio device off."""
-        await self._try_command(
-            "Turning the miio device off failed.", self._device.off)
 
     async def async_update(self):
         """Fetch state from the miio device."""
@@ -167,8 +154,8 @@ class XiaomiAirQualityMonitor(ToggleEntity):
             state = await self.hass.async_add_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
+            self._available = True
             self._state = state.aqi
-            self._is_on = state.is_on
             self._state_attrs.update({
                 ATTR_POWER: state.power,
                 ATTR_CHARGING: state.usb_power,
@@ -177,5 +164,5 @@ class XiaomiAirQualityMonitor(ToggleEntity):
             })
 
         except DeviceException as ex:
-            self._state = None
+            self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
