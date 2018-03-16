@@ -17,9 +17,7 @@ def test_calc_temperature():
 
     assert calc_temperature('20') == 20
     assert calc_temperature('20.12', TEMP_CELSIUS) == 20.12
-
     assert calc_temperature('75.2', TEMP_FAHRENHEIT) == 24
-    assert calc_temperature('-20.6', TEMP_FAHRENHEIT) == -29.22
 
 
 def test_calc_humidity():
