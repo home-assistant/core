@@ -2,7 +2,6 @@
 import logging
 
 from homeassistant.components.cover import ATTR_CURRENT_POSITION
-from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service
@@ -22,7 +21,7 @@ class WindowCovering(HomeAccessory):
     """
 
     def __init__(self, hass, entity_id, display_name, *args, **kwargs):
-        """Initialize a Window accessory object."""
+        """Initialize a WindowCovering accessory object."""
         super().__init__(display_name, entity_id, 'WINDOW_COVERING',
                          *args, **kwargs)
 
@@ -45,14 +44,6 @@ class WindowCovering(HomeAccessory):
 
         self.char_target_position.setter_callback = self.move_cover
 
-    def run(self):
-        """Method called be object after driver is started."""
-        state = self._hass.states.get(self._entity_id)
-        self.update_cover_position(new_state=state)
-
-        async_track_state_change(
-            self._hass, self._entity_id, self.update_cover_position)
-
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
         if value != self.current_position:
@@ -65,8 +56,7 @@ class WindowCovering(HomeAccessory):
             self._hass.components.cover.set_cover_position(
                 value, self._entity_id)
 
-    def update_cover_position(self, entity_id=None, old_state=None,
-                              new_state=None):
+    def update_state(self, entity_id=None, old_state=None, new_state=None):
         """Update cover position after state changed."""
         if new_state is None:
             return
