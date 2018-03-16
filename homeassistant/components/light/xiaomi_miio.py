@@ -205,6 +205,7 @@ class XiaomiPhilipsAbstractLight(Light):
 
         self._brightness = None
 
+        self._available = False
         self._state = None
         self._state_attrs = {
             ATTR_MODEL: self._model,
@@ -228,7 +229,7 @@ class XiaomiPhilipsAbstractLight(Light):
     @property
     def available(self):
         """Return true when state is known."""
-        return self._state is not None
+        return self._available
 
     @property
     def device_state_attributes(self):
@@ -262,6 +263,7 @@ class XiaomiPhilipsAbstractLight(Light):
             return result == SUCCESS
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
+            self._available = False
             return False
 
     async def async_turn_on(self, **kwargs):
@@ -296,11 +298,12 @@ class XiaomiPhilipsAbstractLight(Light):
             state = await self.hass.async_add_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
+            self._available = True
             self._state = state.is_on
             self._brightness = ceil((255 / 100.0) * state.brightness)
 
         except DeviceException as ex:
-            self._state = None
+            self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
@@ -324,6 +327,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
             state = await self.hass.async_add_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
+            self._available = True
             self._state = state.is_on
             self._brightness = ceil((255 / 100.0) * state.brightness)
 
@@ -338,7 +342,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
             })
 
         except DeviceException as ex:
-            self._state = None
+            self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     async def async_set_scene(self, scene: int = 1):
@@ -473,6 +477,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
             state = await self.hass.async_add_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
+            self._available = True
             self._state = state.is_on
             self._brightness = ceil((255 / 100.0) * state.brightness)
             self._color_temp = self.translate(
@@ -491,7 +496,7 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
             })
 
         except DeviceException as ex:
-            self._state = None
+            self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @staticmethod
@@ -532,6 +537,7 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
             state = await self.hass.async_add_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
+            self._available = True
             self._state = state.is_on
             self._brightness = ceil((255 / 100.0) * state.brightness)
             self._color_temp = self.translate(
@@ -553,7 +559,7 @@ class XiaomiPhilipsCeilingLamp(XiaomiPhilipsBulb):
             })
 
         except DeviceException as ex:
-            self._state = None
+            self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
 
@@ -577,6 +583,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
             state = await self.hass.async_add_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
+            self._available = True
             self._state = state.is_on
             self._brightness = ceil((255 / 100.0) * state.brightness)
 
@@ -594,7 +601,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
             })
 
         except DeviceException as ex:
-            self._state = None
+            self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     async def async_set_delayed_turn_off(self, time_period: timedelta):
@@ -705,9 +712,10 @@ class XiaomiPhilipsEyecareLampAmbientLight(XiaomiPhilipsAbstractLight):
             state = await self.hass.async_add_job(self._light.status)
             _LOGGER.debug("Got new state: %s", state)
 
+            self._available = True
             self._state = state.eyecare
             self._brightness = ceil((255 / 100.0) * state.ambient_brightness)
 
         except DeviceException as ex:
-            self._state = None
+            self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
