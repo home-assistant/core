@@ -17,6 +17,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VACUUM_SERVICE_SCHEMA, VacuumDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-miio==0.3.8']
@@ -87,7 +88,7 @@ SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Xiaomi vacuum cleaner robot platform."""
-    from miio import Vacuum
+    from miio import Device, DeviceException, Vacuum
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
@@ -97,9 +98,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # Create handler
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
-    vacuum = Vacuum(host, token)
 
-    mirobo = MiroboVacuum(name, vacuum)
+    try:
+        miio_device = Device(host, token)
+        device_info = miio_device.info()
+        model = device_info.model
+        unique_id = "{}-{}".format(model, device_info.mac_address)
+        _LOGGER.info("%s %s %s detected",
+                     model,
+                     device_info.firmware_version,
+                     device_info.hardware_version)
+    except DeviceException:
+        raise PlatformNotReady
+
+    vacuum = Vacuum(host, token)
+    mirobo = MiroboVacuum(name, vacuum, unique_id)
     hass.data[DATA_KEY][host] = mirobo
 
     async_add_devices([mirobo], update_before_add=True)
@@ -139,11 +152,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MiroboVacuum(VacuumDevice):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
-    def __init__(self, name, vacuum):
+    def __init__(self, name, vacuum, unique_id):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         self._name = name
         self._icon = ICON
         self._vacuum = vacuum
+        self._unique_id = unique_id
 
         self.vacuum_state = None
         self._is_on = False
@@ -152,6 +166,11 @@ class MiroboVacuum(VacuumDevice):
         self.consumable_state = None
         self.clean_history = None
         self.dnd_state = None
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._unique_id
 
     @property
     def name(self):
