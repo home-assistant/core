@@ -178,7 +178,7 @@ def test_create_cast_device_without_uuid(hass):
 
 def test_create_cast_device_with_uuid(hass):
     """Test create cast devices with UUID."""
-    added_casts = hass.data[cast.ADDED_CAST_DEVICES_KEY] = {}
+    added_casts = hass.data[cast.ADDED_CAST_DEVICES_KEY] = set()
     chromecast = get_fake_chromecast()
     cast_device = cast._async_create_cast_device(hass, chromecast)
     assert cast_device is not None
