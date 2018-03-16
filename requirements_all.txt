@@ -287,6 +287,9 @@ fixerio==0.1.1
 # homeassistant.components.light.flux_led
 flux_led==0.21
 
+# homeassistant.components.sensor.foobot
+foobot_async==0.3.0
+
 # homeassistant.components.notify.free_mobile
 freesms==0.1.2
 
