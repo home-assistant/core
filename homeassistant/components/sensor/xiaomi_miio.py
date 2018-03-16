@@ -10,6 +10,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_TOKEN)
 from homeassistant.exceptions import PlatformNotReady
@@ -68,7 +69,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     async_add_devices([device], update_before_add=True)
 
 
-class XiaomiAirQualityMonitor():
+class XiaomiAirQualityMonitor(Entity):
     """Representation of a Xiaomi Air Quality Monitor."""
 
     def __init__(self, name, device, model, unique_id):
