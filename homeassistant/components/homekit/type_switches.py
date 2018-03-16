@@ -4,7 +4,6 @@ import logging
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON)
 from homeassistant.core import split_entity_id
-from homeassistant.helpers.event import async_track_state_change
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service
@@ -31,14 +30,6 @@ class Switch(HomeAccessory):
         self.char_on = serv_switch.get_characteristic(CHAR_ON)
         self.char_on.value = False
         self.char_on.setter_callback = self.set_state
-
-    def run(self):
-        """Method called be object after driver is started."""
-        state = self._hass.states.get(self._entity_id)
-        self.update_state(new_state=state)
-
-        async_track_state_change(self._hass, self._entity_id,
-                                 self.update_state)
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
