@@ -401,7 +401,7 @@ class XiaomiGenericDevice(FanEntity):
         self._state_attrs = {
             ATTR_MODEL: self._model,
         }
-        self._device_features = DEVICE_FEATURE_FLAGS_GENERIC
+        self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
 
     @property
