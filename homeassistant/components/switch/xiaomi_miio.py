@@ -24,6 +24,7 @@ DATA_KEY = 'switch.xiaomi_miio'
 
 CONF_MODEL = 'model'
 MODEL_POWER_STRIP_V2 = 'zimi.powerstrip.v2'
+MODEL_PLUG_V3 = 'chuangmi.plug.v3'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -34,7 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'qmi.powerstrip.v1',
          'zimi.powerstrip.v2',
          'chuangmi.plug.m1',
-         'chuangmi.plug.v2']),
+         'chuangmi.plug.v2',
+         'chuangmi.plug.v3']),
 })
 
 REQUIREMENTS = ['python-miio==0.3.9']
@@ -63,6 +65,8 @@ ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V1 = (SUPPORT_SET_POWER_MODE |
 
 ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V2 = (SUPPORT_SET_WIFI_LED |
                                            SUPPORT_SET_POWER_PRICE)
+
+ADDITIONAL_SUPPORT_FLAGS_PLUG_V3 = (SUPPORT_SET_WIFI_LED)
 
 SERVICE_SET_WIFI_LED_ON = 'xiaomi_miio_set_wifi_led_on'
 SERVICE_SET_WIFI_LED_OFF = 'xiaomi_miio_set_wifi_led_off'
@@ -124,14 +128,18 @@ async def async_setup_platform(hass, config, async_add_devices,
         except DeviceException:
             raise PlatformNotReady
 
-    if model in ['chuangmi.plug.v1']:
-        from miio import PlugV1
-        plug = PlugV1(host, token)
+    if model in ['chuangmi.plug.v1', 'chuangmi.plug.v3']:
+        if model == MODEL_PLUG_V3:
+            from miio import PlugV3
+            plug = PlugV3(host, token)
+        else:
+            from miio import PlugV1
+            plug = PlugV1(host, token)
 
         # The device has two switchable channels (mains and a USB port).
         # A switch device per channel will be created.
         for channel_usb in [True, False]:
-            device = ChuangMiPlugV1Switch(
+            device = ChuangMiPlugSwitch(
                 name, plug, model, unique_id, channel_usb)
             devices.append(device)
             hass.data[DATA_KEY][host] = device
@@ -251,6 +259,10 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
 
             _LOGGER.debug("Response received from plug: %s", result)
 
+            # The Chuangmi Plug V3 returns 0 on success on usb_on/usb_off.
+            if func in ['usb_on', 'usb_off'] and result == 0:
+                return True
+
             return result == SUCCESS
         except DeviceException as exc:
             _LOGGER.error(mask_error, exc)
@@ -331,7 +343,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
 
     def __init__(self, name, plug, model, unique_id):
         """Initialize the plug switch."""
-        XiaomiPlugGenericSwitch.__init__(self, name, plug, model, unique_id)
+        super().__init__(name, plug, model, unique_id)
 
         if self._model == MODEL_POWER_STRIP_V2:
             self._additional_supported_features = \
@@ -401,8 +413,8 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
             self._plug.set_power_mode, PowerMode(mode))
 
 
-class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch):
-    """Representation of a Chuang Mi Plug V1."""
+class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
+    """Representation of a Chuang Mi Plug V1 and V3."""
 
     def __init__(self, name, plug, model, unique_id, channel_usb):
         """Initialize the plug switch."""
@@ -411,8 +423,12 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch):
         if unique_id is not None and channel_usb:
             unique_id = "{}-{}".format(unique_id, 'usb')
 
-        XiaomiPlugGenericSwitch.__init__(self, name, plug, model, unique_id)
+        super().__init__(name, plug, model, unique_id)
         self._channel_usb = channel_usb
+
+        if self._model == MODEL_PLUG_V3:
+            self._additional_supported_features = \
+                ADDITIONAL_SUPPORT_FLAGS_PLUG_V3
 
     async def async_turn_on(self, **kwargs):
         """Turn a channel on."""
