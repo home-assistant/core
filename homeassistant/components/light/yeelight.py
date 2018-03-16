@@ -172,7 +172,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         for target_device in target_devices:
             if service.service == SERVICE_SET_MODE:
-                _LOGGER.error("seltsam")
                 target_device.set_mode(**params)
 
     hass.services.register(
