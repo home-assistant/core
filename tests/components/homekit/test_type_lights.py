@@ -2,7 +2,7 @@
 import unittest
 
 from homeassistant.core import callback
-from homeassistant.components.homekit.type_lights import Light, Color
+from homeassistant.components.homekit.type_lights import Light
 from homeassistant.components.light import (
     DOMAIN, ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_RGB_COLOR,
     SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR)
@@ -12,34 +12,6 @@ from homeassistant.const import (
     SERVICE_TURN_OFF, STATE_ON, STATE_OFF, STATE_UNKNOWN)
 
 from tests.common import get_test_home_assistant
-
-
-def test_calc_hsv_to_rgb():
-    """Test conversion hsv to rgb."""
-    color = Color(43, 23 / 100)
-    assert color.calc_hsv_to_rgb() == [255, 238, 196]
-
-    color.hue, color.saturation = (79, 12 / 100)
-    assert color.calc_hsv_to_rgb() == [245, 255, 224]
-
-    color.hue, color.saturation = (177, 2 / 100)
-    assert color.calc_hsv_to_rgb() == [250, 255, 255]
-
-    color.hue, color.saturation = (212, 26 / 100)
-    assert color.calc_hsv_to_rgb() == [189, 220, 255]
-
-    color.hue, color.saturation = (271, 93 / 100)
-    assert color.calc_hsv_to_rgb() == [140, 18, 255]
-
-    color.hue, color.saturation = (355, 100 / 100)
-    assert color.calc_hsv_to_rgb() == [255, 0, 21]
-
-
-def test_calc_rgb_to_hsv():
-    """Test conversion rgb to hsv."""
-    assert Color.calc_rgb_to_hsv([255, 0, 21]) == (355, 100)
-    assert Color.calc_rgb_to_hsv([245, 255, 224]) == (79, 12)
-    assert Color.calc_rgb_to_hsv([189, 220, 255]) == (212, 26)
 
 
 class TestHomekitLights(unittest.TestCase):
@@ -137,15 +109,15 @@ class TestHomekitLights(unittest.TestCase):
         entity_id = 'light.demo'
         self.hass.states.set(entity_id, STATE_ON, {
             ATTR_SUPPORTED_FEATURES: SUPPORT_RGB_COLOR,
-            ATTR_RGB_COLOR: (120, 20, 300)})
+            ATTR_RGB_COLOR: (120, 20, 255)})
         acc = Light(self.hass, entity_id, 'Light', aid=2)
         self.assertEqual(acc.char_hue.value, 0)
         self.assertEqual(acc.char_saturation.value, 75)
 
         acc.run()
         self.hass.block_till_done()
-        self.assertEqual(acc.char_hue.value, 261)
-        self.assertEqual(acc.char_saturation.value, 93)
+        self.assertEqual(acc.char_hue.value, 265.532)
+        self.assertEqual(acc.char_saturation.value, 92.157)
 
         # Set from HomeKit
         acc.char_hue.set_value(145)
@@ -157,4 +129,4 @@ class TestHomekitLights(unittest.TestCase):
             self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE_DATA], {
-                ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: [64, 255, 143]})
+                ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (63, 255, 143)})

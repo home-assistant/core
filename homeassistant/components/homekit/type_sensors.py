@@ -3,6 +3,7 @@ import logging
 
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, TEMP_FAHRENHEIT, TEMP_CELSIUS)
+from homeassistant.util.temperature import fahrenheit_to_celsius
 
 from . import TYPES
 from .accessories import (
@@ -26,7 +27,7 @@ def calc_temperature(state, unit=TEMP_CELSIUS):
     except ValueError:
         return None
 
-    return round((value - 32) / 1.8, 2) if unit == TEMP_FAHRENHEIT else value
+    return fahrenheit_to_celsius(value) if unit == TEMP_FAHRENHEIT else value
 
 
 def calc_humidity(state):
