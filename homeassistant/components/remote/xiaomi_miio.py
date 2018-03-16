@@ -86,7 +86,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                      model,
                      device_info.firmware_version,
                      device_info.hardware_version)
-    except DeviceException:
+    except DeviceException as ex:
         _LOGGER.error("Device unavailable or token incorrect: %s", ex)
         raise PlatformNotReady
 
