@@ -232,8 +232,8 @@ class CastStatusListener(object):
     """Helper class to handle pychromecast status callbacks.
 
     Necessary because a CastDevice entity can create a new socket client
-    and therefore callbacks from multiple chromecast connections can potentially
-    arrive. This class allows invalidating past chromecast objects.
+    and therefore callbacks from multiple chromecast connections can
+    potentially arrive. This class allows invalidating past chromecast objects.
     """
 
     def __init__(self, cast_device, chromecast):
