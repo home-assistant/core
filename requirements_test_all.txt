@@ -144,7 +144,7 @@ pynx584==0.4
 
 # homeassistant.components.sensor.darksky
 # homeassistant.components.weather.darksky
-python-forecastio==1.3.5
+python-forecastio==1.4.0
 
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3
