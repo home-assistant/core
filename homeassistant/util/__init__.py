@@ -261,6 +261,16 @@ class Throttle(object):
 
     def __call__(self, method):
         """Caller for the throttle."""
+        # Make sure we return a coroutine if the method is async.
+        if asyncio.iscoroutinefunction(method):
+            async def throttled_value():
+                """Stand-in function for when real func is being throttled."""
+                return None
+        else:
+            def throttled_value():
+                """Stand-in function for when real func is being throttled."""
+                return None
+
         if self.limit_no_throttle is not None:
             method = Throttle(self.limit_no_throttle)(method)
 
@@ -276,16 +286,6 @@ class Throttle(object):
         # be prefixed by '.<locals>.' so we strip that out.
         is_func = (not hasattr(method, '__self__') and
                    '.' not in method.__qualname__.split('.<locals>.')[-1])
-
-        # Make sure we return a coroutine if the method is async.
-        if asyncio.iscoroutinefunction(method):
-            async def throttled_value():
-                """Stand-in function for when real func is being throttled."""
-                return None
-        else:
-            def throttled_value():
-                """Stand-in function for when real func is being throttled."""
-                return None
 
         @wraps(method)
         def wrapper(*args, **kwargs):

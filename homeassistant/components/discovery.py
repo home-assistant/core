@@ -6,7 +6,6 @@ Will emit EVENT_PLATFORM_DISCOVERED whenever a new service has been discovered.
 Knows which components handle certain types, will make sure they are
 loaded before the EVENT_PLATFORM_DISCOVERED is fired.
 """
-import asyncio
 import json
 from datetime import timedelta
 import logging
@@ -84,8 +83,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Start a discovery service."""
     from netdisco.discovery import NetworkDiscovery
 
@@ -99,8 +97,7 @@ def async_setup(hass, config):
     # Platforms ignore by config
     ignored_platforms = config[DOMAIN][CONF_IGNORE]
 
-    @asyncio.coroutine
-    def new_service_found(service, info):
+    async def new_service_found(service, info):
         """Handle a new service if one is found."""
         if service in ignored_platforms:
             logger.info("Ignoring service: %s %s", service, info)
@@ -124,15 +121,14 @@ def async_setup(hass, config):
         component, platform = comp_plat
 
         if platform is None:
-            yield from async_discover(hass, service, info, component, config)
+            await async_discover(hass, service, info, component, config)
         else:
-            yield from async_load_platform(
+            await async_load_platform(
                 hass, component, platform, info, config)
 
-    @asyncio.coroutine
-    def scan_devices(now):
+    async def scan_devices(now):
         """Scan for devices."""
-        results = yield from hass.async_add_job(_discover, netdisco)
+        results = await hass.async_add_job(_discover, netdisco)
 
         for result in results:
             hass.async_add_job(new_service_found(*result))
