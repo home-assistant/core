@@ -330,6 +330,7 @@ class SonosDevice(MediaPlayerDevice):
 
     def __init__(self, player):
         """Initialize the Sonos device."""
+        self._receives_events = False
         self._volume_increment = 5
         self._unique_id = player.uid
         self._player = player
@@ -450,6 +451,8 @@ class SonosDevice(MediaPlayerDevice):
 
     def _subscribe_to_player_events(self):
         """Add event subscriptions."""
+        self._receives_events = False
+
         # New player available, build the current group topology
         for device in self.hass.data[DATA_SONOS].devices:
             device.update_groups()
@@ -486,6 +489,11 @@ class SonosDevice(MediaPlayerDevice):
                 self._media_album_name = None
                 self._media_title = None
                 self._source_name = None
+        elif available and not self._receives_events:
+            self.update_groups()
+            self.update_volume()
+            if self.is_coordinator:
+                self.update_media()
 
     def update_media(self, event=None):
         """Update information about currently playing media."""
@@ -662,8 +670,11 @@ class SonosDevice(MediaPlayerDevice):
 
     def update_groups(self, event=None):
         """Process a zone group topology event coming from a player."""
-        if event and not hasattr(event, 'zone_player_uui_ds_in_group'):
-            return
+        if event:
+            self._receives_events = True
+
+            if not hasattr(event, 'zone_player_uui_ds_in_group'):
+                return
 
         with self.hass.data[DATA_SONOS].topology_lock:
             group = event and event.zone_player_uui_ds_in_group
