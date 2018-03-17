@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.boolean,
     vol.Optional(CONF_REMOVE_UNAVAILABLE_CLIENTS, default=True):
     cv.boolean,
-    vol.Optional(CONF_CLIENT_REMOVE_INTERVAL, default=timedelta(seconds=600)):
+    vol.Optional(CONF_CLIENT_REMOVE_INTERVAL, default=timedelta(seconds=10)):
         vol.All(cv.time_period, cv.positive_timedelta),
 })
 
@@ -191,7 +191,7 @@ def setup_plexserver(
                 else:
                     plex_clients[machine_identifier].refresh(None, session)
 
-        removed_clients = []
+        clients_to_remove = []
         for client in plex_clients.values():
             # force devices to idle that do not have a valid session
             if client.session is None:
@@ -204,15 +204,13 @@ def setup_plexserver(
                     or client.available:
                 continue
 
-            if (dt.now() - client.marked_unavailable).total_seconds() >= \
-                    (config.get(CONF_CLIENT_REMOVE_INTERVAL)).total_seconds():
-                hass.helpers.event.async_call_later(0,
-                                                    client.async_remove())
-                removed_clients.append(client.machine_identifier)
+            if (dt.now() - client.marked_unavailable) >= \
+                    (config.get(CONF_CLIENT_REMOVE_INTERVAL)):
+                hass.add_job(client.async_remove())
+                clients_to_remove.append(client.machine_identifier)
 
-        while removed_clients:
-            clientid = removed_clients.pop()
-            del plex_clients[clientid]
+        while clients_to_remove:
+            del plex_clients[clients_to_remove.pop()]
 
         if new_plex_clients:
             add_devices_callback(new_plex_clients)
@@ -237,7 +235,6 @@ def setup_plexserver(
 
     update_sessions()
     update_devices()
-
 
 def request_configuration(host, hass, config, add_devices_callback):
     """Request configuration steps from the user."""
