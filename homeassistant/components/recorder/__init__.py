@@ -35,7 +35,7 @@ from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.2']
+REQUIREMENTS = ['sqlalchemy==1.2.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,16 +64,13 @@ CONNECT_RETRY_WAIT = 3
 
 FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
+        vol.Optional(CONF_DOMAINS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ENTITIES): cv.entity_ids,
-        vol.Optional(CONF_DOMAINS):
-            vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EVENT_TYPES):
-            vol.All(cv.ensure_list, [cv.string])
+        vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string]),
     }),
     vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
+        vol.Optional(CONF_DOMAINS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ENTITIES): cv.entity_ids,
-        vol.Optional(CONF_DOMAINS):
-            vol.All(cv.ensure_list, [cv.string])
     })
 })
 
@@ -255,7 +252,7 @@ class Recorder(threading.Thread):
         self.hass.add_job(register)
         result = hass_started.result()
 
-        # If shutdown happened before HASS finished starting
+        # If shutdown happened before Home Assistant finished starting
         if result is shutdown_task:
             return
 
