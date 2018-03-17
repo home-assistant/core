@@ -517,7 +517,7 @@ class CastDevice(MediaPlayerDevice):
     def state(self):
         """Return the state of the player."""
         if self._media_status is None:
-            return STATE_UNKNOWN
+            return None
         elif self._media_status.player_is_playing:
             return STATE_PLAYING
         elif self._media_status.player_is_paused:
@@ -526,7 +526,7 @@ class CastDevice(MediaPlayerDevice):
             return STATE_IDLE
         elif self._chromecast is not None and self._chromecast.is_idle:
             return STATE_OFF
-        return STATE_UNKNOWN
+        return None
 
     @property
     def available(self):
