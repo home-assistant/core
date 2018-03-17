@@ -23,7 +23,7 @@ from homeassistant.components.media_player import (
     SUPPORT_STOP, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-    STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
