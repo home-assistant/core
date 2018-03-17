@@ -79,7 +79,7 @@ def callback(func: Callable[..., None]) -> Callable[..., None]:
 
 def is_callback(func: Callable[..., Any]) -> bool:
     """Check if function is safe to be called in the event loop."""
-    return '_hass_callback' in func.__dict__
+    return '_hass_callback' in getattr(func, '__dict__', {})
 
 
 @callback
