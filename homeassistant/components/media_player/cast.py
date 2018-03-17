@@ -303,7 +303,7 @@ class CastDevice(MediaPlayerDevice):
 
         async_dispatcher_connect(self.hass, SIGNAL_CAST_DISCOVERED,
                                  async_cast_discovered)
-        await self.async_set_cast_info(self._cast_info)
+        self.hass.async_add_job(self.async_set_cast_info(self._cast_info))
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect Chromecast object when removed."""
