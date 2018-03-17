@@ -9,8 +9,8 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, STATE_HEAT, STATE_IDLE, SUPPORT_AUX_HEAT,
-    SUPPORT_TARGET_TEMPERATURE)
+    ClimateDevice, PLATFORM_SCHEMA, STATE_HEAT, STATE_AUTO, SUPPORT_AUX_HEAT,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD, ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
@@ -61,9 +61,11 @@ class EphEmberThermostat(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         if self._hot_water:
-            return SUPPORT_AUX_HEAT
+            return SUPPORT_AUX_HEAT | SUPPORT_OPERATION_MODE
 
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_AUX_HEAT
+        return (SUPPORT_TARGET_TEMPERATURE |
+                SUPPORT_AUX_HEAT |
+                SUPPORT_OPERATION_MODE)
 
     @property
     def name(self):
@@ -98,7 +100,17 @@ class EphEmberThermostat(ClimateDevice):
         """Return current operation ie. heat, cool, idle."""
         if self._zone['isCurrentlyActive']:
             return STATE_HEAT
-        return STATE_IDLE
+        return STATE_AUTO
+
+    @property
+    def operation_list(self):
+        """List of available operation modes."""
+        return [STATE_HEAT, STATE_AUTO]
+
+    def set_operation_mode(self, operation_mode):
+        """Set operation mode.
+        Changing modes currently not supported"""
+        return
 
     @property
     def is_aux_heat_on(self):
