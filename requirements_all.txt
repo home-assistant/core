@@ -52,7 +52,7 @@ SoCo==0.14
 TravisPy==0.3.5
 
 # homeassistant.components.notify.twitter
-TwitterAPI==2.4.10
+TwitterAPI==2.5.0
 
 # homeassistant.components.notify.yessssms
 YesssSMS==0.1.1b3
