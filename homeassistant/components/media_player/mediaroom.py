@@ -24,7 +24,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pymediaroom==0.5']
+REQUIREMENTS = ['pymediaroom==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
