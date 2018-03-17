@@ -348,7 +348,8 @@ def convert_to_camel(data):
 class DarkSkyData(object):
     """Get the latest data from Darksky."""
 
-    def __init__(self, api_key, latitude, longitude, units, language, interval):
+    def __init__(self, api_key, latitude, longitude, units, language,
+                 interval):
         """Initialize the data object."""
         self._api_key = api_key
         self.latitude = latitude
