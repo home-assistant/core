@@ -5,19 +5,18 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alexa/
 """
 import copy
-import logging
 from datetime import datetime
+import logging
 import uuid
 
+from homeassistant.components import http
 from homeassistant.core import callback
 from homeassistant.helpers import template
-from homeassistant.components import http
 
 from .const import (
-    CONF_UID, CONF_TITLE, CONF_AUDIO, CONF_TEXT, CONF_DISPLAY_URL, ATTR_UID,
-    ATTR_UPDATE_DATE, ATTR_TITLE_TEXT, ATTR_STREAM_URL, ATTR_MAIN_TEXT,
-    ATTR_REDIRECTION_URL, DATE_FORMAT)
-
+    ATTR_MAIN_TEXT, ATTR_REDIRECTION_URL, ATTR_STREAM_URL, ATTR_TITLE_TEXT,
+    ATTR_UID, ATTR_UPDATE_DATE, CONF_AUDIO, CONF_DISPLAY_URL, CONF_TEXT,
+    CONF_TITLE, CONF_UID, DATE_FORMAT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,11 +45,11 @@ class AlexaFlashBriefingView(http.HomeAssistantView):
     @callback
     def get(self, request, briefing_id):
         """Handle Alexa Flash Briefing request."""
-        _LOGGER.debug('Received Alexa flash briefing request for: %s',
+        _LOGGER.debug("Received Alexa flash briefing request for: %s",
                       briefing_id)
 
         if self.flash_briefings.get(briefing_id) is None:
-            err = 'No configured Alexa flash briefing was found for: %s'
+            err = "No configured Alexa flash briefing was found for: %s"
             _LOGGER.error(err, briefing_id)
             return b'', 404
 

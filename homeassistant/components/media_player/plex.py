@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.plex/
 """
 import json
 import logging
+
 from datetime import timedelta
 
 import requests
@@ -23,7 +24,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['plexapi==3.0.5']
+REQUIREMENTS = ['plexapi==3.0.6']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -47,9 +48,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.boolean,
 })
 
+PLEX_DATA = "plex"
+
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up the Plex platform."""
+    if PLEX_DATA not in hass.data:
+        hass.data[PLEX_DATA] = {}
+
     # get config from plex.conf
     file_config = load_json(hass.config.path(PLEX_CONFIG_FILE))
 
@@ -130,7 +136,7 @@ def setup_plexserver(
 
     _LOGGER.info('Connected to: %s://%s', http_prefix, host)
 
-    plex_clients = {}
+    plex_clients = hass.data[PLEX_DATA]
     plex_sessions = {}
     track_utc_time_change(hass, lambda now: update_devices(), second=30)
 
@@ -148,10 +154,13 @@ def setup_plexserver(
             return
 
         new_plex_clients = []
+        available_client_ids = []
         for device in devices:
             # For now, let's allow all deviceClass types
             if device.deviceClass in ['badClient']:
                 continue
+
+            available_client_ids.append(device.machineIdentifier)
 
             if device.machineIdentifier not in plex_clients:
                 new_client = PlexClient(config, device, None,
@@ -175,10 +184,13 @@ def setup_plexserver(
                 else:
                     plex_clients[machine_identifier].refresh(None, session)
 
-        for machine_identifier, client in plex_clients.items():
+        for client in plex_clients.values():
             # force devices to idle that do not have a valid session
             if client.session is None:
                 client.force_idle()
+
+            client.set_availability(client.machine_identifier
+                                    in available_client_ids)
 
         if new_plex_clients:
             add_devices_callback(new_plex_clients)
@@ -253,6 +265,7 @@ class PlexClient(MediaPlayerDevice):
         """Initialize the Plex device."""
         self._app_name = ''
         self._device = None
+        self._available = False
         self._device_protocol_capabilities = None
         self._is_player_active = False
         self._is_player_available = False
@@ -370,7 +383,8 @@ class PlexClient(MediaPlayerDevice):
                 self._is_player_available = False
             self._media_position = self._session.viewOffset
             self._media_content_id = self._session.ratingKey
-            self._media_content_rating = self._session.contentRating
+            self._media_content_rating = getattr(
+                self._session, 'contentRating', None)
 
         self._set_player_state()
 
@@ -399,6 +413,12 @@ class PlexClient(MediaPlayerDevice):
             thumb_url = self.session.url(self._session.art)
 
         self._media_image_url = thumb_url
+
+    def set_availability(self, available):
+        """Set the device as available/unavailable noting time."""
+        if not available:
+            self._clear_media_details()
+        self._available = available
 
     def _set_player_state(self):
         if self._player_state == 'playing':
@@ -459,8 +479,12 @@ class PlexClient(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return the id of this plex client."""
-        return '{}.{}'.format(self.__class__, self.machine_identifier or
-                              self.name)
+        return self.machine_identifier
+
+    @property
+    def available(self):
+        """Return the availability of the client."""
+        return self._available
 
     @property
     def name(self):

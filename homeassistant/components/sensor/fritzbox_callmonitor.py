@@ -70,8 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         phonebook = FritzBoxPhonebook(
             host=host, port=port, username=username, password=password,
             phonebook_id=phonebook_id, prefixes=prefixes)
-    # pylint: disable=bare-except
-    except:
+    except:  # noqa: E722  # pylint: disable=bare-except
         phonebook = None
         _LOGGER.warning("Phonebook with ID %s not found on Fritz!Box",
                         phonebook_id)

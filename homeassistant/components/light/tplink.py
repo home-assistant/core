@@ -56,7 +56,7 @@ def brightness_from_percentage(percent):
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(self, smartbulb: 'SmartBulb', name):
+    def __init__(self, smartbulb: 'SmartBulb', name) -> None:
         """Initialize the bulb."""
         self.smartbulb = smartbulb
         self._name = name
@@ -100,7 +100,7 @@ class TPLinkSmartBulb(Light):
             hsv = (hue / 65536 * 360, sat / 255 * 100, 100)
             self.smartbulb.hsv = hsv
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the light off."""
         self.smartbulb.state = self.smartbulb.BULB_STATE_OFF
 

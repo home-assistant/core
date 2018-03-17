@@ -27,11 +27,11 @@ SUPPORT_DEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up the demo light platform."""
     add_devices_callback([
-        DemoLight("Bed Light", False, True, effect_list=LIGHT_EFFECT_LIST,
+        DemoLight(1, "Bed Light", False, True, effect_list=LIGHT_EFFECT_LIST,
                   effect=LIGHT_EFFECT_LIST[0]),
-        DemoLight("Ceiling Lights", True, True,
+        DemoLight(2, "Ceiling Lights", True, True,
                   LIGHT_COLORS[0], LIGHT_TEMPS[1]),
-        DemoLight("Kitchen Lights", True, True,
+        DemoLight(3, "Kitchen Lights", True, True,
                   LIGHT_COLORS[1], LIGHT_TEMPS[0])
     ])
 
@@ -39,9 +39,11 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class DemoLight(Light):
     """Representation of a demo light."""
 
-    def __init__(self, name, state, available=False, hs_color=None, ct=None,
-                 brightness=180, white=200, effect_list=None, effect=None):
+    def __init__(self, unique_id, name, state, available=False, hs_color=None,
+                 ct=None, brightness=180, white=200, effect_list=None,
+                 effect=None):
         """Initialize the light."""
+        self._unique_id = unique_id
         self._name = name
         self._state = state
         self._hs_color = hs_color
@@ -60,6 +62,11 @@ class DemoLight(Light):
     def name(self) -> str:
         """Return the name of the light if any."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return unique ID for light."""
+        return self._unique_id
 
     @property
     def available(self) -> bool:

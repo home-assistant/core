@@ -41,6 +41,11 @@ LOCK_SERVICE_SCHEMA = vol.Schema({
 
 _LOGGER = logging.getLogger(__name__)
 
+PROP_TO_ATTR = {
+    'changed_by': ATTR_CHANGED_BY,
+    'code_format': ATTR_CODE_FORMAT,
+}
+
 
 @bind_hass
 def is_locked(hass, entity_id=None):
@@ -156,12 +161,11 @@ class LockDevice(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        if self.code_format is None:
-            return None
-        state_attr = {
-            ATTR_CODE_FORMAT: self.code_format,
-            ATTR_CHANGED_BY: self.changed_by
-        }
+        state_attr = {}
+        for prop, attr in PROP_TO_ATTR.items():
+            value = getattr(self, prop)
+            if value is not None:
+                state_attr[attr] = value
         return state_attr
 
     @property

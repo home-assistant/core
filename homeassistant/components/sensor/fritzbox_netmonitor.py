@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.fritzbox_netmonitor/
 """
 import logging
 from datetime import timedelta
+from requests.exceptions import RequestException
 
 import voluptuous as vol
 
@@ -14,8 +15,6 @@ from homeassistant.const import (CONF_HOST, STATE_UNAVAILABLE)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-
-from requests.exceptions import RequestException
 
 REQUIREMENTS = ['fritzconnection==0.6.5']
 

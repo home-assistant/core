@@ -93,7 +93,7 @@ def async_setup(hass, config):
         if LOGGER_LOGS in logfilter:
             logs.update(logfilter[LOGGER_LOGS])
 
-        # Add new logpoints mapped to correc severity
+        # Add new logpoints mapped to correct severity
         for key, value in logpoints.items():
             logs[key] = LOGSEVERITY[value]
 

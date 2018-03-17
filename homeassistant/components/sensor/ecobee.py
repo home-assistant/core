@@ -50,17 +50,12 @@ class EcobeeSensor(Entity):
     @property
     def name(self):
         """Return the name of the Ecobee sensor."""
-        return self._name.rstrip()
+        return self._name
 
     @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
-
-    @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return "sensor_ecobee_{}_{}".format(self._name, self.index)
 
     @property
     def unit_of_measurement(self):

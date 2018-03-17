@@ -333,3 +333,63 @@ class TestThresholdSensor(unittest.TestCase):
 
         self.assertEqual('unknown', state.attributes.get('position'))
         assert state.state == 'off'
+
+    def test_sensor_lower_zero_threshold(self):
+        """Test if a lower threshold of zero is set."""
+        config = {
+            'binary_sensor': {
+                'platform': 'threshold',
+                'lower': '0',
+                'entity_id': 'sensor.test_monitored',
+            }
+        }
+
+        assert setup_component(self.hass, 'binary_sensor', config)
+
+        self.hass.states.set('sensor.test_monitored', 16)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.threshold')
+
+        self.assertEqual('lower', state.attributes.get('type'))
+        self.assertEqual(float(config['binary_sensor']['lower']),
+                         state.attributes.get('lower'))
+
+        assert state.state == 'off'
+
+        self.hass.states.set('sensor.test_monitored', -3)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.threshold')
+
+        assert state.state == 'on'
+
+    def test_sensor_upper_zero_threshold(self):
+        """Test if an upper threshold of zero is set."""
+        config = {
+            'binary_sensor': {
+                'platform': 'threshold',
+                'upper': '0',
+                'entity_id': 'sensor.test_monitored',
+            }
+        }
+
+        assert setup_component(self.hass, 'binary_sensor', config)
+
+        self.hass.states.set('sensor.test_monitored', -10)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.threshold')
+
+        self.assertEqual('upper', state.attributes.get('type'))
+        self.assertEqual(float(config['binary_sensor']['upper']),
+                         state.attributes.get('upper'))
+
+        assert state.state == 'off'
+
+        self.hass.states.set('sensor.test_monitored', 2)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.threshold')
+
+        assert state.state == 'on'

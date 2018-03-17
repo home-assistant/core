@@ -4,18 +4,18 @@ Support for WebDav Calendar.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/calendar.caldav/
 """
+from datetime import datetime, timedelta
 import logging
 import re
-from datetime import datetime, timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.calendar import (
-    CalendarEventDevice, PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA, CalendarEventDevice)
 from homeassistant.const import (
     CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME)
-from homeassistant.util import dt, Throttle
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle, dt
 
 REQUIREMENTS = ['caldav==0.5.0']
 
@@ -39,9 +39,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CUSTOM_CALENDARS, default=[]):
         vol.All(cv.ensure_list, vol.Schema([
             vol.Schema({
-                vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_CALENDAR): cv.string,
-                vol.Required(CONF_SEARCH): cv.string
+                vol.Required(CONF_NAME): cv.string,
+                vol.Required(CONF_SEARCH): cv.string,
             })
         ]))
 })
@@ -53,12 +53,12 @@ def setup_platform(hass, config, add_devices, disc_info=None):
     """Set up the WebDav Calendar platform."""
     import caldav
 
-    client = caldav.DAVClient(config.get(CONF_URL),
-                              None,
-                              config.get(CONF_USERNAME),
-                              config.get(CONF_PASSWORD))
+    url = config.get(CONF_URL)
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
 
-    # Retrieve all the remote calendars
+    client = caldav.DAVClient(url, None, username, password)
+
     calendars = client.principal().calendars()
 
     calendar_devices = []
@@ -70,8 +70,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
             _LOGGER.debug("Ignoring calendar '%s'", calendar.name)
             continue
 
-        # Create additional calendars based on custom filtering
-        # rules
+        # Create additional calendars based on custom filtering rules
         for cust_calendar in config.get(CONF_CUSTOM_CALENDARS):
             # Check that the base calendar matches
             if cust_calendar.get(CONF_CALENDAR) != calendar.name:
@@ -85,12 +84,9 @@ def setup_platform(hass, config, add_devices, disc_info=None):
             }
 
             calendar_devices.append(
-                WebDavCalendarEventDevice(hass,
-                                          device_data,
-                                          calendar,
-                                          True,
-                                          cust_calendar.get(CONF_SEARCH))
-                )
+                WebDavCalendarEventDevice(
+                    hass, device_data, calendar, True,
+                    cust_calendar.get(CONF_SEARCH)))
 
         # Create a default calendar if there was no custom one
         if not config.get(CONF_CUSTOM_CALENDARS):
@@ -102,18 +98,13 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                 WebDavCalendarEventDevice(hass, device_data, calendar)
             )
 
-    # Finally add all the calendars we've created
     add_devices(calendar_devices)
 
 
 class WebDavCalendarEventDevice(CalendarEventDevice):
     """A device for getting the next Task from a WebDav Calendar."""
 
-    def __init__(self,
-                 hass,
-                 device_data,
-                 calendar,
-                 all_day=False,
+    def __init__(self, hass, device_data, calendar, all_day=False,
                  search=None):
         """Create the WebDav Calendar Event Device."""
         self.data = WebDavCalendarData(calendar, all_day, search)
@@ -167,9 +158,7 @@ class WebDavCalendarData(object):
         if vevent is None:
             _LOGGER.debug(
                 "No matching event found in the %d results for %s",
-                len(results),
-                self.calendar.name,
-            )
+                len(results), self.calendar.name)
             self.event = None
             return True
 
@@ -177,7 +166,7 @@ class WebDavCalendarData(object):
         self.event = {
             "summary": vevent.summary.value,
             "start": self.get_hass_date(vevent.dtstart.value),
-            "end": self.get_hass_date(vevent.dtend.value),
+            "end": self.get_hass_date(self.get_end_date(vevent)),
             "location": self.get_attr_value(vevent, "location"),
             "description": self.get_attr_value(vevent, "description")
         }
@@ -185,7 +174,7 @@ class WebDavCalendarData(object):
 
     @staticmethod
     def is_matching(vevent, search):
-        """Return if the event matches the filter critera."""
+        """Return if the event matches the filter criteria."""
         if search is None:
             return True
 
@@ -205,7 +194,9 @@ class WebDavCalendarData(object):
     @staticmethod
     def is_over(vevent):
         """Return if the event is over."""
-        return dt.now() > WebDavCalendarData.to_datetime(vevent.dtend.value)
+        return dt.now() >= WebDavCalendarData.to_datetime(
+            WebDavCalendarData.get_end_date(vevent)
+        )
 
     @staticmethod
     def get_hass_date(obj):
@@ -228,3 +219,17 @@ class WebDavCalendarData(object):
         if hasattr(obj, attribute):
             return getattr(obj, attribute).value
         return None
+
+    @staticmethod
+    def get_end_date(obj):
+        """Return the end datetime as determined by dtend or duration."""
+        if hasattr(obj, "dtend"):
+            enddate = obj.dtend.value
+
+        elif hasattr(obj, "duration"):
+            enddate = obj.dtstart.value + obj.duration.value
+
+        else:
+            enddate = obj.dtstart.value + timedelta(days=1)
+
+        return enddate

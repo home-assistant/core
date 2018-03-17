@@ -16,12 +16,16 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ENTITIES = 'entities'
+CONF_RELATIVE_URL_ERROR_MSG = "Invalid relative URL. Absolute path required."
+CONF_RELATIVE_URL_REGEX = r'\A/'
 
 DOMAIN = 'weblink'
 
 ENTITIES_SCHEMA = vol.Schema({
     # pylint: disable=no-value-for-parameter
-    vol.Required(CONF_URL): vol.Url(),
+    vol.Required(CONF_URL): vol.Any(
+        vol.Match(CONF_RELATIVE_URL_REGEX, msg=CONF_RELATIVE_URL_ERROR_MSG),
+        vol.Url()),
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
 })

@@ -91,13 +91,13 @@ def async_snapshot(hass, filename, entity_id=None):
 @bind_hass
 @asyncio.coroutine
 def async_get_image(hass, entity_id, timeout=10):
-    """Fetch a image from a camera entity."""
+    """Fetch an image from a camera entity."""
     websession = async_get_clientsession(hass)
     state = hass.states.get(entity_id)
 
     if state is None:
         raise HomeAssistantError(
-            "No entity '{0}' for grab a image".format(entity_id))
+            "No entity '{0}' for grab an image".format(entity_id))
 
     url = "{0}{1}".format(
         hass.config.api.base_url,
@@ -124,15 +124,15 @@ def async_setup(hass, config):
     """Set up the camera component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
-    hass.http.register_view(CameraImageView(component.entities))
-    hass.http.register_view(CameraMjpegStream(component.entities))
+    hass.http.register_view(CameraImageView(component))
+    hass.http.register_view(CameraMjpegStream(component))
 
     yield from component.async_setup(config)
 
     @callback
     def update_tokens(time):
         """Update tokens of the entities."""
-        for entity in component.entities.values():
+        for entity in component.entities:
             entity.async_update_token()
             hass.async_add_job(entity.async_update_ha_state())
 
@@ -264,9 +264,9 @@ class Camera(Entity):
                                  'boundary=--frameboundary')
         yield from response.prepare(request)
 
-        def write(img_bytes):
+        async def write(img_bytes):
             """Write image to stream."""
-            response.write(bytes(
+            await response.write(bytes(
                 '--frameboundary\r\n'
                 'Content-Type: {}\r\n'
                 'Content-Length: {}\r\n\r\n'.format(
@@ -282,15 +282,14 @@ class Camera(Entity):
                     break
 
                 if img_bytes and img_bytes != last_image:
-                    write(img_bytes)
+                    yield from write(img_bytes)
 
                     # Chrome seems to always ignore first picture,
                     # print it twice.
                     if last_image is None:
-                        write(img_bytes)
+                        yield from write(img_bytes)
 
                     last_image = img_bytes
-                    yield from response.drain()
 
                 yield from asyncio.sleep(.5)
 
@@ -358,14 +357,14 @@ class CameraView(HomeAssistantView):
 
     requires_auth = False
 
-    def __init__(self, entities):
+    def __init__(self, component):
         """Initialize a basic camera view."""
-        self.entities = entities
+        self.component = component
 
     @asyncio.coroutine
     def get(self, request, entity_id):
         """Start a GET request."""
-        camera = self.entities.get(entity_id)
+        camera = self.component.get_entity(entity_id)
 
         if camera is None:
             status = 404 if request[KEY_AUTHENTICATED] else 401

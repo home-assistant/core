@@ -3,7 +3,7 @@ import asyncio
 import logging
 import threading
 
-from .async import run_coroutine_threadsafe
+from .async_ import run_coroutine_threadsafe
 
 
 class HideSensitiveDataFilter(logging.Filter):
@@ -23,7 +23,7 @@ class HideSensitiveDataFilter(logging.Filter):
 
 # pylint: disable=invalid-name
 class AsyncHandler(object):
-    """Logging handler wrapper to add a async layer."""
+    """Logging handler wrapper to add an async layer."""
 
     def __init__(self, loop, handler):
         """Initialize async logging handler wrapper."""

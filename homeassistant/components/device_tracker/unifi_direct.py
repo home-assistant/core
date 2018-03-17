@@ -98,11 +98,15 @@ class UnifiDeviceScanner(DeviceScanner):
         self.connected = False
 
     def _get_update(self):
-        from pexpect import pxssh
+        from pexpect import pxssh, exceptions
 
         try:
             if not self.connected:
                 self._connect()
+            # If we still aren't connected at this point
+            # don't try to send anything to the AP.
+            if not self.connected:
+                return None
             self.ssh.sendline(UNIFI_COMMAND)
             self.ssh.prompt()
             return self.ssh.before
@@ -110,7 +114,7 @@ class UnifiDeviceScanner(DeviceScanner):
             _LOGGER.error("Unexpected SSH error: %s", str(err))
             self._disconnect()
             return None
-        except AssertionError as err:
+        except (AssertionError, exceptions.EOF) as err:
             _LOGGER.error("Connection to AP unavailable: %s", str(err))
             self._disconnect()
             return None

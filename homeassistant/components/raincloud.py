@@ -5,20 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/raincloud/
 """
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
+from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
-from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.entity import Entity
+    ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
-
-from requests.exceptions import HTTPError, ConnectTimeout
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import track_time_interval
 
 REQUIREMENTS = ['raincloudy==0.0.4']
 
@@ -115,7 +114,7 @@ def setup(hass, config):
 
     def hub_refresh(event_time):
         """Call Raincloud hub to refresh information."""
-        _LOGGER.debug("Updating RainCloud Hub component.")
+        _LOGGER.debug("Updating RainCloud Hub component")
         hass.data[DATA_RAINCLOUD].data.update()
         dispatcher_send(hass, SIGNAL_UPDATE_RAINCLOUD)
 
@@ -156,7 +155,7 @@ class RainCloudEntity(Entity):
             self.hass, SIGNAL_UPDATE_RAINCLOUD, self._update_callback)
 
     def _update_callback(self):
-        """Callback update method."""
+        """Call update method."""
         self.schedule_update_ha_state(True)
 
     @property
@@ -175,5 +174,5 @@ class RainCloudEntity(Entity):
 
     @property
     def icon(self):
-        """Icon to use in the frontend, if any."""
+        """Return the icon to use in the frontend, if any."""
         return ICON_MAP.get(self._sensor_type)

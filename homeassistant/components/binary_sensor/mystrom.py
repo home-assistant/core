@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.mystrom/
 import asyncio
 import logging
 
-from homeassistant.components.binary_sensor import (BinarySensorDevice, DOMAIN)
+from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import HTTP_UNPROCESSABLE_ENTITY
 
@@ -37,7 +37,7 @@ class MyStromView(HomeAssistantView):
 
     @asyncio.coroutine
     def get(self, request):
-        """The GET request received from a myStrom button."""
+        """Handle the GET request received from a myStrom button."""
         res = yield from self._handle(request.app['hass'], request.query)
         return res
 

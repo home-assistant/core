@@ -67,11 +67,6 @@ COVER_SCHEMA = vol.Schema({
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
 
-COVER_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    COVER_SCHEMA,
-)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
 })

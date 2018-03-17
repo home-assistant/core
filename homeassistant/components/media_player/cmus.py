@@ -77,7 +77,7 @@ class CmusDevice(MediaPlayerDevice):
         """Get the latest data and update the state."""
         status = self.cmus.get_status_dict()
         if not status:
-            _LOGGER.warning("Recieved no status from cmus")
+            _LOGGER.warning("Received no status from cmus")
         else:
             self.status = status
 

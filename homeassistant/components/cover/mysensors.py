@@ -5,12 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.mysensors/
 """
 from homeassistant.components import mysensors
-from homeassistant.components.cover import CoverDevice, ATTR_POSITION, DOMAIN
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverDevice
+from homeassistant.const import STATE_OFF, STATE_ON
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for covers."""
+    """Set up the MySensors platform for covers."""
     mysensors.setup_mysensors_platform(
         hass, DOMAIN, discovery_info, MySensorsCover, add_devices=add_devices)
 

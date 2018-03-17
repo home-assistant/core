@@ -9,7 +9,7 @@ from homeassistant.const import ATTR_ENTITY_PICTURE
 import homeassistant.components.camera as camera
 import homeassistant.components.http as http
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant, get_test_instance_port, assert_setup_component)
@@ -83,7 +83,7 @@ class TestGetImage(object):
     @patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
            autospec=True, return_value=b'Test')
     def test_get_image_from_camera(self, mock_camera):
-        """Grab a image from camera entity."""
+        """Grab an image from camera entity."""
         self.hass.start()
 
         image = run_coroutine_threadsafe(camera.async_get_image(

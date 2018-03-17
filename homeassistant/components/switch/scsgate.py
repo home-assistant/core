@@ -155,7 +155,7 @@ class SCSGateSwitch(SwitchDevice):
 class SCSGateScenarioSwitch(object):
     """Provides a SCSGate scenario switch.
 
-    This switch is always in a 'off" state, when toggled it's used to trigger
+    This switch is always in an 'off" state, when toggled it's used to trigger
     events.
     """
 

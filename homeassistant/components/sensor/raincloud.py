@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 RainCloudSensor(raincloud.controller.faucet,
                                 sensor_type))
         else:
-            # create an sensor for each zone managed by a faucet
+            # create a sensor for each zone managed by a faucet
             for zone in raincloud.controller.faucet.zones:
                 sensors.append(RainCloudSensor(zone, sensor_type))
 

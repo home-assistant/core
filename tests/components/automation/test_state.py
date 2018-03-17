@@ -198,7 +198,7 @@ class TestAutomationState(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'state',
-                    'entity_id': 'test.anoter_entity',
+                    'entity_id': 'test.another_entity',
                 },
                 'action': {
                     'service': 'test.automation'
@@ -468,7 +468,7 @@ class TestAutomationState(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_for_condition(self):
-        """Test for firing if contition is on."""
+        """Test for firing if condition is on."""
         point1 = dt_util.utcnow()
         point2 = point1 + timedelta(seconds=10)
         with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
@@ -504,7 +504,7 @@ class TestAutomationState(unittest.TestCase):
             self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_for_condition_attribute_change(self):
-        """Test for firing if contition is on with attribute change."""
+        """Test for firing if condition is on with attribute change."""
         point1 = dt_util.utcnow()
         point2 = point1 + timedelta(seconds=4)
         point3 = point1 + timedelta(seconds=8)

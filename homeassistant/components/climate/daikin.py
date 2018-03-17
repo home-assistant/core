@@ -9,38 +9,26 @@ import re
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import (
-    ATTR_OPERATION_MODE, ATTR_FAN_MODE, ATTR_SWING_MODE,
-    ATTR_CURRENT_TEMPERATURE, ClimateDevice, PLATFORM_SCHEMA,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_SWING_MODE, STATE_OFF, STATE_AUTO, STATE_HEAT, STATE_COOL,
-    STATE_DRY, STATE_FAN_ONLY
-)
+    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_MODE, ATTR_OPERATION_MODE,
+    ATTR_SWING_MODE, PLATFORM_SCHEMA, STATE_AUTO, STATE_COOL, STATE_DRY,
+    STATE_FAN_ONLY, STATE_HEAT, STATE_OFF, SUPPORT_FAN_MODE,
+    SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE, SUPPORT_TARGET_TEMPERATURE,
+    ClimateDevice)
 from homeassistant.components.daikin import (
-    daikin_api_setup,
-    ATTR_TARGET_TEMPERATURE,
-    ATTR_INSIDE_TEMPERATURE,
-    ATTR_OUTSIDE_TEMPERATURE
-)
+    ATTR_INSIDE_TEMPERATURE, ATTR_OUTSIDE_TEMPERATURE, ATTR_TARGET_TEMPERATURE,
+    daikin_api_setup)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME,
-    TEMP_CELSIUS,
-    ATTR_TEMPERATURE
-)
+    ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pydaikin==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
-                 SUPPORT_FAN_MODE |
-                 SUPPORT_OPERATION_MODE |
-                 SUPPORT_SWING_MODE)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 HA_STATE_TO_DAIKIN = {
@@ -56,19 +44,22 @@ HA_ATTR_TO_DAIKIN = {
     ATTR_OPERATION_MODE: 'mode',
     ATTR_FAN_MODE: 'f_rate',
     ATTR_SWING_MODE: 'f_dir',
+    ATTR_INSIDE_TEMPERATURE: 'htemp',
+    ATTR_OUTSIDE_TEMPERATURE: 'otemp',
+    ATTR_TARGET_TEMPERATURE: 'stemp'
 }
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Daikin HVAC platform."""
+    """Set up the Daikin HVAC platform."""
     if discovery_info is not None:
         host = discovery_info.get('ip')
         name = None
-        _LOGGER.info("Discovered a Daikin AC on %s", host)
+        _LOGGER.debug("Discovered a Daikin AC on %s", host)
     else:
         host = config.get(CONF_HOST)
         name = config.get(CONF_NAME)
-        _LOGGER.info("Added Daikin AC on %s", host)
+        _LOGGER.debug("Added Daikin AC on %s", host)
 
     api = daikin_api_setup(hass, host, name)
     add_devices([DaikinClimate(api)], True)
@@ -101,6 +92,23 @@ class DaikinClimate(ClimateDevice):
             ),
         }
 
+        self._supported_features = SUPPORT_TARGET_TEMPERATURE \
+            | SUPPORT_OPERATION_MODE
+
+        daikin_attr = HA_ATTR_TO_DAIKIN[ATTR_FAN_MODE]
+        if self._api.device.values.get(daikin_attr) is not None:
+            self._supported_features |= SUPPORT_FAN_MODE
+        else:
+            # even devices without support must have a default valid value
+            self._api.device.values[daikin_attr] = 'A'
+
+        daikin_attr = HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE]
+        if self._api.device.values.get(daikin_attr) is not None:
+            self._supported_features |= SUPPORT_SWING_MODE
+        else:
+            # even devices without support must have a default valid value
+            self._api.device.values[daikin_attr] = '0'
+
     def get(self, key):
         """Retrieve device settings from API library cache."""
         value = None
@@ -108,29 +116,34 @@ class DaikinClimate(ClimateDevice):
 
         if key in [ATTR_TEMPERATURE, ATTR_INSIDE_TEMPERATURE,
                    ATTR_CURRENT_TEMPERATURE]:
-            value = self._api.device.values.get('htemp')
+            key = ATTR_INSIDE_TEMPERATURE
+
+        daikin_attr = HA_ATTR_TO_DAIKIN.get(key)
+
+        if key == ATTR_INSIDE_TEMPERATURE:
+            value = self._api.device.values.get(daikin_attr)
             cast_to_float = True
-        if key == ATTR_TARGET_TEMPERATURE:
-            value = self._api.device.values.get('stemp')
+        elif key == ATTR_TARGET_TEMPERATURE:
+            value = self._api.device.values.get(daikin_attr)
             cast_to_float = True
         elif key == ATTR_OUTSIDE_TEMPERATURE:
-            value = self._api.device.values.get('otemp')
+            value = self._api.device.values.get(daikin_attr)
             cast_to_float = True
         elif key == ATTR_FAN_MODE:
-            value = self._api.device.represent('f_rate')[1].title()
+            value = self._api.device.represent(daikin_attr)[1].title()
         elif key == ATTR_SWING_MODE:
-            value = self._api.device.represent('f_dir')[1].title()
+            value = self._api.device.represent(daikin_attr)[1].title()
         elif key == ATTR_OPERATION_MODE:
             # Daikin can return also internal states auto-1 or auto-7
             # and we need to translate them as AUTO
             value = re.sub(
                 '[^a-z]',
                 '',
-                self._api.device.represent('mode')[1]
+                self._api.device.represent(daikin_attr)[1]
             ).title()
 
         if value is None:
-            _LOGGER.warning("Invalid value requested for key %s", key)
+            _LOGGER.error("Invalid value requested for key %s", key)
         else:
             if value == "-" or value == "--":
                 value = None
@@ -171,14 +184,9 @@ class DaikinClimate(ClimateDevice):
             self._api.device.set(values)
 
     @property
-    def unique_id(self):
-        """Return the ID of this AC."""
-        return "{}.{}".format(self.__class__, self._api.ip_address)
-
-    @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        return self._supported_features
 
     @property
     def name(self):
@@ -228,9 +236,9 @@ class DaikinClimate(ClimateDevice):
         """Return the fan setting."""
         return self.get(ATTR_FAN_MODE)
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set fan mode."""
-        self.set({ATTR_FAN_MODE: fan})
+        self.set({ATTR_FAN_MODE: fan_mode})
 
     @property
     def fan_list(self):

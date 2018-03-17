@@ -50,10 +50,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CAMERAS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_HOME): cv.string,
-    vol.Optional(CONF_PRESENCE_SENSORS, default=PRESENCE_SENSOR_TYPES):
+    vol.Optional(CONF_PRESENCE_SENSORS, default=list(PRESENCE_SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(PRESENCE_SENSOR_TYPES)]),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_WELCOME_SENSORS, default=WELCOME_SENSOR_TYPES):
+    vol.Optional(CONF_WELCOME_SENSORS, default=list(WELCOME_SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(WELCOME_SENSOR_TYPES)]),
 })
 
@@ -131,10 +131,6 @@ class NetatmoBinarySensor(BinarySensorDevice):
             self._name += ' / ' + module_name
         self._sensor_name = sensor
         self._name += ' ' + sensor
-        camera_id = data.camera_data.cameraByName(
-            camera=camera_name, home=home)['id']
-        self._unique_id = "Netatmo_binary_sensor {0} - {1}".format(
-            self._name, camera_id)
         self._cameratype = camera_type
         self._state = None
 
@@ -142,11 +138,6 @@ class NetatmoBinarySensor(BinarySensorDevice):
     def name(self):
         """Return the name of the Netatmo device and this sensor."""
         return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this sensor."""
-        return self._unique_id
 
     @property
     def device_class(self):

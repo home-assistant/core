@@ -147,7 +147,7 @@ class TadoSensor(Entity):
         data = self._store.get_data(self._data_id)
 
         if data is None:
-            _LOGGER.debug("Recieved no data for zone %s", self.zone_name)
+            _LOGGER.debug("Received no data for zone %s", self.zone_name)
             return
 
         unit = TEMP_CELSIUS

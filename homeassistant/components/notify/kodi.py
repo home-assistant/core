@@ -51,7 +51,7 @@ def async_get_service(hass, config, discovery_info=None):
     encryption = config.get(CONF_PROXY_SSL)
 
     if host.startswith('http://') or host.startswith('https://'):
-        host = host.lstrip('http://').lstrip('https://')
+        host = host[host.index('://') + 3:]
         _LOGGER.warning(
             "Kodi host name should no longer contain http:// See updated "
             "definitions here: "

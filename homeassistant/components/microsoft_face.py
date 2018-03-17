@@ -161,7 +161,7 @@ def async_setup(hass, config):
             face.store.pop(g_id)
 
             entity = entities.pop(g_id)
-            yield from entity.async_remove()
+            hass.states.async_remove(entity.entity_id)
         except HomeAssistantError as err:
             _LOGGER.error("Can't delete group '%s' with error: %s", g_id, err)
 
@@ -337,7 +337,7 @@ class MicrosoftFace(object):
     @asyncio.coroutine
     def call_api(self, method, function, data=None, binary=False,
                  params=None):
-        """Make a api call."""
+        """Make an api call."""
         headers = {"Ocp-Apim-Subscription-Key": self._api_key}
         url = self._server_url.format(function)
 

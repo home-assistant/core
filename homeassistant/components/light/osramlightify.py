@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     setup_bridge(bridge, add_devices, add_groups)
 
 
-def setup_bridge(bridge, add_devices_callback, add_groups):
+def setup_bridge(bridge, add_devices, add_groups):
     """Set up the Lightify bridge."""
     lights = {}
 
@@ -100,7 +100,7 @@ def setup_bridge(bridge, add_devices_callback, add_groups):
                     lights[group_name].group = group
 
         if new_lights:
-            add_devices_callback(new_lights)
+            add_devices(new_lights)
 
     update_lights()
 
@@ -109,7 +109,7 @@ class Luminary(Light):
     """Representation of Luminary Lights and Groups."""
 
     def __init__(self, luminary, update_lights):
-        """Initize a Luminary light."""
+        """Initialize a Luminary light."""
         self.update_lights = update_lights
         self._luminary = luminary
         self._brightness = None

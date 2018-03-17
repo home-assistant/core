@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
 
-    # non specificy repository selected, then show all associated
+    # non specific repository selected, then show all associated
     if not repositories:
         all_repos = travis.repos(member=user.login)
         repositories = [repo.slug for repo in all_repos]

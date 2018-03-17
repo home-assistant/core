@@ -13,7 +13,7 @@ virtualkey:
       description: Event to send i.e. PRESS_LONG, PRESS_SHORT.
       example: PRESS_LONG
     interface:
-      description: (Optional) for set a interface value.
+      description: (Optional) for set an interface value.
       example: Interfaces name from config
 
 set_variable_value:
@@ -42,7 +42,7 @@ set_device_value:
       description: Event to send i.e. PRESS_LONG, PRESS_SHORT
       example: PRESS_LONG
     interface:
-      description: (Optional) for set a interface value
+      description: (Optional) for set an interface value
       example: Interfaces name from config
     value:
       description: New value

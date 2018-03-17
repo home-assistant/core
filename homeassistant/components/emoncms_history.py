@@ -59,7 +59,7 @@ def setup(hass, config):
                     payload, fullurl, req.status_code)
 
     def update_emoncms(time):
-        """Send whitelisted entities states reguarly to Emoncms."""
+        """Send whitelisted entities states regularly to Emoncms."""
         payload_dict = {}
 
         for entity_id in whitelist:

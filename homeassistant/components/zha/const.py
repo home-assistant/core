@@ -11,19 +11,15 @@ def populate_data():
     These cannot be module level, as importing bellows must be done in a
     in a function.
     """
-    from bellows.zigbee import zcl
-    from bellows.zigbee.profiles import PROFILES, zha, zll
+    from zigpy import zcl
+    from zigpy.profiles import PROFILES, zha, zll
 
     DEVICE_CLASS[zha.PROFILE_ID] = {
-        zha.DeviceType.ON_OFF_SWITCH: 'switch',
         zha.DeviceType.SMART_PLUG: 'switch',
 
         zha.DeviceType.ON_OFF_LIGHT: 'light',
         zha.DeviceType.DIMMABLE_LIGHT: 'light',
         zha.DeviceType.COLOR_DIMMABLE_LIGHT: 'light',
-        zha.DeviceType.ON_OFF_LIGHT_SWITCH: 'light',
-        zha.DeviceType.DIMMER_SWITCH: 'light',
-        zha.DeviceType.COLOR_DIMMER_SWITCH: 'light',
     }
     DEVICE_CLASS[zll.PROFILE_ID] = {
         zll.DeviceType.ON_OFF_LIGHT: 'light',
@@ -37,6 +33,7 @@ def populate_data():
 
     SINGLE_CLUSTER_DEVICE_CLASS.update({
         zcl.clusters.general.OnOff: 'switch',
+        zcl.clusters.measurement.RelativeHumidity: 'sensor',
         zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
         zcl.clusters.security.IasZone: 'binary_sensor',
     })

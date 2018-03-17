@@ -139,12 +139,12 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
         devices = scanner._get_update()  # pylint: disable=protected-access
         self.assertTrue(devices is None)
 
-    def test_good_reponse_parses(self):
+    def test_good_response_parses(self):
         """Test that the response form the AP parses to JSON correctly."""
         response = _response_to_json(load_fixture('unifi_direct.txt'))
         self.assertTrue(response != {})
 
-    def test_bad_reponse_returns_none(self):
+    def test_bad_response_returns_none(self):
         """Test that a bad response form the AP parses to JSON correctly."""
         self.assertTrue(_response_to_json("{(}") == {})
 

@@ -52,7 +52,7 @@ class RainBirdSwitch(SwitchDevice):
         self._devid = dev_id
         self._zone = int(dev.get(CONF_ZONE))
         self._name = dev.get(CONF_FRIENDLY_NAME,
-                             "Sprinker {}".format(self._zone))
+                             "Sprinkler {}".format(self._zone))
         self._state = None
         self._duration = dev.get(CONF_TRIGGER_TIME)
         self._attributes = {

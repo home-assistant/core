@@ -40,8 +40,8 @@ SUPPORT_LIFX = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR |
                 SUPPORT_TRANSITION)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SERVER, default=None): cv.string,
-    vol.Optional(CONF_BROADCAST, default=None): cv.string,
+    vol.Optional(CONF_SERVER): cv.string,
+    vol.Optional(CONF_BROADCAST): cv.string,
 })
 
 

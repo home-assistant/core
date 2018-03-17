@@ -183,7 +183,7 @@ class NestDevice(object):
                 "Connection error logging into the nest web service.")
 
     def smoke_co_alarms(self):
-        """Generate a list of smoke co alarams."""
+        """Generate a list of smoke co alarms."""
         try:
             for structure in self.nest.structures:
                 if structure.name in self.local_structure:

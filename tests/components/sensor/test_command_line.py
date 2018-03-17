@@ -3,7 +3,6 @@ import unittest
 
 from homeassistant.helpers.template import Template
 from homeassistant.components.sensor import command_line
-from homeassistant import setup
 from tests.common import get_test_home_assistant
 
 
@@ -39,16 +38,6 @@ class TestCommandSensorSensor(unittest.TestCase):
         self.assertEqual('Test', entity.name)
         self.assertEqual('in', entity.unit_of_measurement)
         self.assertEqual('5', entity.state)
-
-    def test_setup_bad_config(self):
-        """Test setup with a bad configuration."""
-        config = {'name': 'test',
-                  'platform': 'not_command_line',
-                  }
-
-        self.assertFalse(setup.setup_component(self.hass, 'test', {
-            'command_line': config,
-        }))
 
     def test_template(self):
         """Test command sensor with template."""

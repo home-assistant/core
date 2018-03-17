@@ -11,11 +11,11 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_SELECT_SOURCE,
-    DOMAIN, PLATFORM_SCHEMA, MediaPlayerDevice)
+    DOMAIN, PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, CONF_HOST,
-    CONF_PORT, ATTR_ENTITY_ID)
+    ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, STATE_IDLE, STATE_OFF, STATE_ON,
+    STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['snapcast==2.0.8']
@@ -42,14 +42,14 @@ SERVICE_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT): cv.port
+    vol.Optional(CONF_PORT): cv.port,
 })
 
 
 # pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Snapcast platform."""
+    """Set up the Snapcast platform."""
     import snapcast.control
     from snapcast.control.server import CONTROL_PORT
     host = config.get(CONF_HOST)
@@ -68,25 +68,23 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 yield from device.async_restore()
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SNAPSHOT, _handle_service,
-        schema=SERVICE_SCHEMA)
+        DOMAIN, SERVICE_SNAPSHOT, _handle_service, schema=SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_RESTORE, _handle_service,
-        schema=SERVICE_SCHEMA)
+        DOMAIN, SERVICE_RESTORE, _handle_service, schema=SERVICE_SCHEMA)
 
     try:
         server = yield from snapcast.control.create_server(
             hass.loop, host, port, reconnect=True)
     except socket.gaierror:
-        _LOGGER.error('Could not connect to Snapcast server at %s:%d',
+        _LOGGER.error("Could not connect to Snapcast server at %s:%d",
                       host, port)
-        return False
+        return
+
     groups = [SnapcastGroupDevice(group) for group in server.groups]
     clients = [SnapcastClientDevice(client) for client in server.clients]
     devices = groups + clients
     hass.data[DATA_KEY] = devices
     async_add_devices(devices)
-    return True
 
 
 class SnapcastGroupDevice(MediaPlayerDevice):

@@ -87,7 +87,7 @@ def test_initialize_loads_info(mock_os, hass):
 
     with patch('homeassistant.components.cloud.open', mopen, create=True), \
             patch('homeassistant.components.cloud.Cloud._decode_claims'):
-        cl._start_cloud(None)
+        yield from cl.async_start(None)
 
     assert cl.id_token == 'test-id-token'
     assert cl.access_token == 'test-access-token'

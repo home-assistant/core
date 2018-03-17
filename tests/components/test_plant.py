@@ -101,11 +101,11 @@ class TestPlant(unittest.TestCase):
                              {ATTR_UNIT_OF_MEASUREMENT: 'us/cm'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
-        self.assertEquals(STATE_PROBLEM, state.state)
-        self.assertEquals(5, state.attributes[plant.READING_MOISTURE])
+        self.assertEqual(STATE_PROBLEM, state.state)
+        self.assertEqual(5, state.attributes[plant.READING_MOISTURE])
 
     @pytest.mark.skipif(plant.ENABLE_LOAD_HISTORY is False,
-                        reason="tests for loading from DB are instable, thus"
+                        reason="tests for loading from DB are unstable, thus"
                                "this feature is turned of until tests become"
                                "stable")
     def test_load_from_db(self):
@@ -132,10 +132,10 @@ class TestPlant(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('plant.'+plant_name)
-        self.assertEquals(STATE_UNKNOWN, state.state)
+        self.assertEqual(STATE_UNKNOWN, state.state)
         max_brightness = state.attributes.get(
             plant.ATTR_MAX_BRIGHTNESS_HISTORY)
-        self.assertEquals(30, max_brightness)
+        self.assertEqual(30, max_brightness)
 
     def test_brightness_history(self):
         """Test the min_brightness check."""
@@ -149,19 +149,19 @@ class TestPlant(unittest.TestCase):
                              {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
-        self.assertEquals(STATE_PROBLEM, state.state)
+        self.assertEqual(STATE_PROBLEM, state.state)
 
         self.hass.states.set(BRIGHTNESS_ENTITY, 600,
                              {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
-        self.assertEquals(STATE_OK, state.state)
+        self.assertEqual(STATE_OK, state.state)
 
         self.hass.states.set(BRIGHTNESS_ENTITY, 100,
                              {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
-        self.assertEquals(STATE_OK, state.state)
+        self.assertEqual(STATE_OK, state.state)
 
 
 class TestDailyHistory(unittest.TestCase):
@@ -195,4 +195,4 @@ class TestDailyHistory(unittest.TestCase):
 
         for i in range(len(days)):
             dh.add_measurement(values[i], days[i])
-            self.assertEquals(max_values[i], dh.max)
+            self.assertEqual(max_values[i], dh.max)

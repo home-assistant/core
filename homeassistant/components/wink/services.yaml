@@ -10,7 +10,7 @@ pair_new_device:
       description: One of ["zigbee", "zwave", "zwave_exclusion", "zwave_network_rediscovery", "lutron", "bluetooth", "kidde"].
       example: 'zigbee'
     kidde_radio_code:
-      description: 'A string of 8 1s and 0s one for each dip switch on the kidde device left --> right = 1 --> 8'
+      description: 'A string of 8 1s and 0s one for each dip switch on the kidde device left --> right = 1 --> 8. Down = 1 and Up = 0'
       example: '10101010'
 
 rename_wink_device:

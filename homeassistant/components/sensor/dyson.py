@@ -1,23 +1,23 @@
-"""Support for Dyson Pure Cool Link Sensors.
+"""
+Support for Dyson Pure Cool Link Sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dyson/
 """
-import logging
 import asyncio
+import logging
 
-from homeassistant.const import TEMP_CELSIUS, STATE_OFF
 from homeassistant.components.dyson import DYSON_DEVICES
-
+from homeassistant.const import STATE_OFF, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['dyson']
 
 SENSOR_UNITS = {
-    "filter_life": "hours",
-    "humidity": "%",
-    "dust": "level",
-    "air_quality": "level"
+    'air_quality': 'level',
+    'dust': 'level',
+    'filter_life': 'hours',
+    'humidity': '%',
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Dyson Sensors."""
-    _LOGGER.info("Creating new Dyson fans")
+    _LOGGER.debug("Creating new Dyson fans")
     devices = []
     unit = hass.config.units.temperature_unit
     # Get Dyson Devices from parent component
@@ -52,12 +52,12 @@ class DysonSensor(Entity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+        """Call when entity is added to hass."""
         self.hass.async_add_job(
             self._device.add_message_listener, self.on_message)
 
     def on_message(self, message):
-        """Called when new messages received from the fan."""
+        """Handle new messages which are received from the fan."""
         # Prevent refreshing if not needed
         if self._old_value is None or self._old_value != self.state:
             _LOGGER.debug("Message received for %s device: %s", self.name,

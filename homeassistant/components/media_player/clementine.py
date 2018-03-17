@@ -37,7 +37,7 @@ SUPPORT_CLEMENTINE = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_ACCESS_TOKEN, default=None): cv.positive_int,
+    vol.Optional(CONF_ACCESS_TOKEN): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
@@ -97,7 +97,7 @@ class ClementineDevice(MediaPlayerDevice):
                 self._track_artist = client.current_track['track_artist']
                 self._track_album_name = client.current_track['track_album']
 
-        except:
+        except Exception:
             self._state = STATE_OFF
             raise
 

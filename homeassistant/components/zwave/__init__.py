@@ -7,7 +7,6 @@ https://home-assistant.io/components/zwave/
 import asyncio
 import copy
 import logging
-import time
 from pprint import pprint
 
 import voluptuous as vol
@@ -21,7 +20,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import track_time_change
-from homeassistant.util import convert, slugify
+from homeassistant.util import convert
+import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
@@ -33,7 +33,7 @@ from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import check_node_schema, check_value_schema, node_name
 
-REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.0.35']
+REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +52,6 @@ CONF_DEVICE_CONFIG = 'device_config'
 CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
 CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
 CONF_NETWORK_KEY = 'network_key'
-CONF_NEW_ENTITY_IDS = 'new_entity_ids'
 
 ATTR_POWER = 'power_consumption'
 
@@ -161,7 +160,6 @@ CONFIG_SCHEMA = vol.Schema({
             cv.positive_int,
         vol.Optional(CONF_USB_STICK_PATH, default=DEFAULT_CONF_USB_STICK_PATH):
             cv.string,
-        vol.Optional(CONF_NEW_ENTITY_IDS, default=True): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -170,33 +168,12 @@ def _obj_to_dict(obj):
     """Convert an object into a hash for debug."""
     return {key: getattr(obj, key) for key
             in dir(obj)
-            if key[0] != '_' and not hasattr(getattr(obj, key), '__call__')}
+            if key[0] != '_' and not callable(getattr(obj, key))}
 
 
 def _value_name(value):
     """Return the name of the value."""
     return '{} {}'.format(node_name(value.node), value.label).strip()
-
-
-def _node_object_id(node):
-    """Return the object_id of the node."""
-    node_object_id = '{}_{}'.format(slugify(node_name(node)), node.node_id)
-    return node_object_id
-
-
-def object_id(value):
-    """Return the object_id of the device value.
-
-    The object_id contains node_id and value instance id
-    to not collide with other entity_ids.
-    """
-    _object_id = "{}_{}_{}".format(slugify(_value_name(value)),
-                                   value.node.node_id, value.index)
-
-    # Add the instance id if there is more than one instance for the value
-    if value.instance > 1:
-        return '{}_{}'.format(_object_id, value.instance)
-    return _object_id
 
 
 def nice_print_node(node):
@@ -219,15 +196,15 @@ def get_config_value(node, value_index, tries=5):
                     and value.index == value_index):
                 return value.data
     except RuntimeError:
-        # If we get an runtime error the dict has changed while
+        # If we get a runtime error the dict has changed while
         # we was looking for a value, just do it again
         return None if tries <= 0 else get_config_value(
             node, value_index, tries=tries - 1)
     return None
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the Z-Wave platform (generic part)."""
     if discovery_info is None or DATA_NETWORK not in hass.data:
         return False
@@ -260,13 +237,6 @@ def setup(hass, config):
         config[DOMAIN][CONF_DEVICE_CONFIG],
         config[DOMAIN][CONF_DEVICE_CONFIG_DOMAIN],
         config[DOMAIN][CONF_DEVICE_CONFIG_GLOB])
-    new_entity_ids = config[DOMAIN][CONF_NEW_ENTITY_IDS]
-    if not new_entity_ids:
-        _LOGGER.warning(
-            "ZWave entity_ids will soon be changing. To opt in to new "
-            "entity_ids now, set `new_entity_ids: true` under zwave in your "
-            "configuration.yaml. See the following blog post for details: "
-            "https://home-assistant.io/blog/2017/06/15/zwave-entity-ids/")
 
     # Setup options
     options = ZWaveOption(
@@ -328,12 +298,9 @@ def setup(hass, config):
 
     def node_added(node):
         """Handle a new node on the network."""
-        entity = ZWaveNodeEntity(node, network, new_entity_ids)
+        entity = ZWaveNodeEntity(node, network)
         name = node_name(node)
-        if new_entity_ids:
-            generated_id = generate_entity_id(DOMAIN + '.{}', name, [])
-        else:
-            generated_id = entity.entity_id
+        generated_id = generate_entity_id(DOMAIN + '.{}', name, [])
         node_config = device_config.get(generated_id)
         if node_config.get(CONF_IGNORED):
             _LOGGER.info(
@@ -537,8 +504,7 @@ def setup(hass, config):
                          "target node:%s, instance=%s", node_id, group,
                          target_node_id, instance)
 
-    @asyncio.coroutine
-    def async_refresh_entity(service):
+    async def async_refresh_entity(service):
         """Refresh values that specific entity depends on."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         async_dispatcher_send(
@@ -592,25 +558,39 @@ def setup(hass, config):
         network.start()
         hass.bus.fire(const.EVENT_NETWORK_START)
 
-        # Need to be in STATE_AWAKED before talking to nodes.
-        # Wait up to NETWORK_READY_WAIT_SECS seconds for the zwave network
-        # to be ready.
-        for i in range(const.NETWORK_READY_WAIT_SECS):
+        async def _check_awaked():
+            """Wait for Z-wave awaked state (or timeout) and finalize start."""
             _LOGGER.debug(
                 "network state: %d %s", network.state,
                 network.state_str)
-            if network.state >= network.STATE_AWAKED:
-                _LOGGER.info("Z-Wave ready after %d seconds", i)
-                break
-            time.sleep(1)
-        else:
-            _LOGGER.warning(
-                "zwave not ready after %d seconds, continuing anyway",
-                const.NETWORK_READY_WAIT_SECS)
-            _LOGGER.info(
-                "final network state: %d %s", network.state,
-                network.state_str)
 
+            start_time = dt_util.utcnow()
+            while True:
+                waited = int((dt_util.utcnow()-start_time).total_seconds())
+
+                if network.state >= network.STATE_AWAKED:
+                    # Need to be in STATE_AWAKED before talking to nodes.
+                    _LOGGER.info("Z-Wave ready after %d seconds", waited)
+                    break
+                elif waited >= const.NETWORK_READY_WAIT_SECS:
+                    # Wait up to NETWORK_READY_WAIT_SECS seconds for the Z-Wave
+                    # network to be ready.
+                    _LOGGER.warning(
+                        "Z-Wave not ready after %d seconds, continuing anyway",
+                        waited)
+                    _LOGGER.info(
+                        "final network state: %d %s", network.state,
+                        network.state_str)
+                    break
+                else:
+                    await asyncio.sleep(1, loop=hass.loop)
+
+            hass.async_add_job(_finalize_start)
+
+        hass.add_job(_check_awaked)
+
+    def _finalize_start():
+        """Perform final initializations after Z-Wave network is awaked."""
         polling_interval = convert(
             config[DOMAIN].get(CONF_POLLING_INTERVAL), int)
         if polling_interval is not None:
@@ -779,11 +759,7 @@ class ZWaveDeviceEntityValues():
             component = workaround_component
 
         value_name = _value_name(self.primary)
-        if self._zwave_config[DOMAIN][CONF_NEW_ENTITY_IDS]:
-            generated_id = generate_entity_id(
-                component + '.{}', value_name, [])
-        else:
-            generated_id = "{}.{}".format(component, object_id(self.primary))
+        generated_id = generate_entity_id(component + '.{}', value_name, [])
         node_config = self._device_config.get(generated_id)
 
         # Configure node
@@ -816,21 +792,14 @@ class ZWaveDeviceEntityValues():
             self._workaround_ignore = True
             return
 
-        device.old_entity_id = "{}.{}".format(
-            component, object_id(self.primary))
-        device.new_entity_id = "{}.{}".format(component, slugify(device.name))
-        if not self._zwave_config[DOMAIN][CONF_NEW_ENTITY_IDS]:
-            device.entity_id = device.old_entity_id
-
         self._entity = device
 
         dict_id = id(self)
 
-        @asyncio.coroutine
-        def discover_device(component, device, dict_id):
+        async def discover_device(component, device, dict_id):
             """Put device in a dictionary and call discovery on it."""
             self._hass.data[DATA_DEVICES][dict_id] = device
-            yield from discovery.async_load_platform(
+            await discovery.async_load_platform(
                 self._hass, component, DOMAIN,
                 {const.DISCOVERY_DEVICE: dict_id}, self._zwave_config)
         self._hass.add_job(discover_device, component, device, dict_id)
@@ -850,8 +819,8 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self.values.primary.set_change_verified(False)
 
         self._name = _value_name(self.values.primary)
-        self._unique_id = "ZWAVE-{}-{}".format(self.node.node_id,
-                                               self.values.primary.object_id)
+        self._unique_id = "{}-{}".format(self.node.node_id,
+                                         self.values.primary.object_id)
         self._update_attributes()
 
         dispatcher.connect(
@@ -872,8 +841,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self.update_properties()
         self.maybe_schedule_update()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Add device to dict."""
         async_dispatcher_connect(
             self.hass,
@@ -901,7 +869,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._unique_id
 
     @property
@@ -917,8 +885,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
             const.ATTR_VALUE_INDEX: self.values.primary.index,
             const.ATTR_VALUE_INSTANCE: self.values.primary.instance,
             const.ATTR_VALUE_ID: str(self.values.primary.value_id),
-            'old_entity_id': self.old_entity_id,
-            'new_entity_id': self.new_entity_id,
         }
 
         if self.power_consumption is not None:

@@ -24,7 +24,7 @@ DEPENDENCIES = ['vultr']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SUBSCRIPTION): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -90,12 +90,12 @@ class VultrSwitch(SwitchDevice):
             ATTR_VCPUS: self.data.get('vcpu_count'),
         }
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Boot-up the subscription."""
         if self.data['power_status'] != 'running':
             self._vultr.start(self.subscription)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Halt the subscription."""
         if self.data['power_status'] == 'running':
             self._vultr.halt(self.subscription)

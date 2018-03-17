@@ -28,7 +28,7 @@ class TestAuroraSensorSetUp(unittest.TestCase):
     def test_setup_and_initial_state(self, mock_req):
         """Test that the component is created and initialized as expected."""
         uri = re.compile(
-            "http://services\.swpc\.noaa\.gov/text/aurora-nowcast-map\.txt"
+            r"http://services\.swpc\.noaa\.gov/text/aurora-nowcast-map\.txt"
         )
         mock_req.get(uri, text=load_fixture('aurora.txt'))
 
@@ -66,7 +66,7 @@ class TestAuroraSensorSetUp(unittest.TestCase):
     def test_custom_threshold_works(self, mock_req):
         """Test that the config can take a custom forecast threshold."""
         uri = re.compile(
-            "http://services\.swpc\.noaa\.gov/text/aurora-nowcast-map\.txt"
+            r"http://services\.swpc\.noaa\.gov/text/aurora-nowcast-map\.txt"
         )
         mock_req.get(uri, text=load_fixture('aurora.txt'))
 

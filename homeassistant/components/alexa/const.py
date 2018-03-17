@@ -8,6 +8,9 @@ CONF_AUDIO = 'audio'
 CONF_TEXT = 'text'
 CONF_DISPLAY_URL = 'display_url'
 
+CONF_FILTER = 'filter'
+CONF_ENTITY_CONFIG = 'entity_config'
+
 ATTR_UID = 'uid'
 ATTR_UPDATE_DATE = 'updateDate'
 ATTR_TITLE_TEXT = 'titleText'

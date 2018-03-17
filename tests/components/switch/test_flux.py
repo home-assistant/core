@@ -238,7 +238,8 @@ class TestSwitchFlux(unittest.TestCase):
                     switch.DOMAIN: {
                         'platform': 'flux',
                         'name': 'flux',
-                        'lights': [dev1.entity_id]
+                        'lights': [dev1.entity_id],
+                        'stop_time': '22:00'
                     }
                 })
                 turn_on_calls = mock_service(
@@ -638,7 +639,8 @@ class TestSwitchFlux(unittest.TestCase):
                         'name': 'flux',
                         'lights': [dev1.entity_id],
                         'start_colortemp': '1000',
-                        'stop_colortemp': '6000'
+                        'stop_colortemp': '6000',
+                        'stop_time': '22:00'
                     }
                 })
                 turn_on_calls = mock_service(
@@ -686,7 +688,8 @@ class TestSwitchFlux(unittest.TestCase):
                         'platform': 'flux',
                         'name': 'flux',
                         'lights': [dev1.entity_id],
-                        'brightness': 255
+                        'brightness': 255,
+                        'stop_time': '22:00'
                     }
                 })
                 turn_on_calls = mock_service(

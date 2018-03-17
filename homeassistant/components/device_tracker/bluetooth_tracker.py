@@ -41,7 +41,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         result = bluetooth.discover_devices(
             duration=8, lookup_names=True, flush_cache=True,
             lookup_class=False)
-        _LOGGER.debug("Bluetooth devices discovered = " + str(len(result)))
+        _LOGGER.debug("Bluetooth devices discovered = %d", len(result))
         return result
 
     yaml_path = hass.config.path(YAML_DEVICES)

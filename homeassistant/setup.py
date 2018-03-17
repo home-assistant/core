@@ -1,41 +1,37 @@
 """All methods needed to bootstrap a Home Assistant instance."""
 import asyncio
 import logging.handlers
-import os
 from timeit import default_timer as timer
 
 from types import ModuleType
 from typing import Optional, Dict
 
-import homeassistant.config as conf_util
-import homeassistant.core as core
-import homeassistant.loader as loader
-import homeassistant.util.package as pkg_util
+from homeassistant import requirements, core, loader, config as conf_util
 from homeassistant.config import async_notify_setup_error
-from homeassistant.const import (
-    EVENT_COMPONENT_LOADED, PLATFORM_FORMAT, CONSTRAINT_FILE)
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.async_ import run_coroutine_threadsafe
+
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT = 'component'
 
 DATA_SETUP = 'setup_tasks'
-DATA_PIP_LOCK = 'pip_lock'
+DATA_DEPS_REQS = 'deps_reqs_processed'
 
 SLOW_SETUP_WARNING = 10
 
 
 def setup_component(hass: core.HomeAssistant, domain: str,
-                    config: Optional[Dict]=None) -> bool:
+                    config: Optional[Dict] = None) -> bool:
     """Set up a component and all its dependencies."""
     return run_coroutine_threadsafe(
         async_setup_component(hass, domain, config), loop=hass.loop).result()
 
 
-@asyncio.coroutine
-def async_setup_component(hass: core.HomeAssistant, domain: str,
-                          config: Optional[Dict]=None) -> bool:
+async def async_setup_component(hass: core.HomeAssistant, domain: str,
+                                config: Optional[Dict] = None) -> bool:
     """Set up a component and all its dependencies.
 
     This method is a coroutine.
@@ -46,7 +42,7 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
     setup_tasks = hass.data.get(DATA_SETUP)
 
     if setup_tasks is not None and domain in setup_tasks:
-        return (yield from setup_tasks[domain])
+        return await setup_tasks[domain]
 
     if config is None:
         config = {}
@@ -57,48 +53,10 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
     task = setup_tasks[domain] = hass.async_add_job(
         _async_setup_component(hass, domain, config))
 
-    return (yield from task)
+    return await task
 
 
-@asyncio.coroutine
-def _async_process_requirements(hass: core.HomeAssistant, name: str,
-                                requirements) -> bool:
-    """Install the requirements for a component.
-
-    This method is a coroutine.
-    """
-    if hass.config.skip_pip:
-        return True
-
-    pip_lock = hass.data.get(DATA_PIP_LOCK)
-    if pip_lock is None:
-        pip_lock = hass.data[DATA_PIP_LOCK] = asyncio.Lock(loop=hass.loop)
-
-    def pip_install(mod):
-        """Install packages."""
-        if pkg_util.running_under_virtualenv():
-            return pkg_util.install_package(
-                mod, constraints=os.path.join(
-                    os.path.dirname(__file__), CONSTRAINT_FILE))
-        return pkg_util.install_package(
-            mod, target=hass.config.path('deps'),
-            constraints=os.path.join(
-                os.path.dirname(__file__), CONSTRAINT_FILE))
-
-    with (yield from pip_lock):
-        for req in requirements:
-            ret = yield from hass.async_add_job(pip_install, req)
-            if not ret:
-                _LOGGER.error("Not initializing %s because could not install "
-                              "dependency %s", name, req)
-                async_notify_setup_error(hass, name)
-                return False
-
-    return True
-
-
-@asyncio.coroutine
-def _async_process_dependencies(hass, config, name, dependencies):
+async def _async_process_dependencies(hass, config, name, dependencies):
     """Ensure all dependencies are set up."""
     blacklisted = [dep for dep in dependencies
                    if dep in loader.DEPENDENCY_BLACKLIST]
@@ -115,7 +73,7 @@ def _async_process_dependencies(hass, config, name, dependencies):
     if not tasks:
         return True
 
-    results = yield from asyncio.gather(*tasks, loop=hass.loop)
+    results = await asyncio.gather(*tasks, loop=hass.loop)
 
     failed = [dependencies[idx] for idx, res
               in enumerate(results) if not res]
@@ -129,9 +87,8 @@ def _async_process_dependencies(hass, config, name, dependencies):
     return True
 
 
-@asyncio.coroutine
-def _async_setup_component(hass: core.HomeAssistant,
-                           domain: str, config) -> bool:
+async def _async_setup_component(hass: core.HomeAssistant,
+                                 domain: str, config) -> bool:
     """Set up a component for Home Assistant.
 
     This method is a coroutine.
@@ -162,22 +119,11 @@ def _async_setup_component(hass: core.HomeAssistant,
         log_error("Invalid config.")
         return False
 
-    if not hass.config.skip_pip and hasattr(component, 'REQUIREMENTS'):
-        req_success = yield from _async_process_requirements(
-            hass, domain, component.REQUIREMENTS)
-        if not req_success:
-            log_error("Could not install all requirements.")
-            return False
-
-    if hasattr(component, 'DEPENDENCIES'):
-        dep_success = yield from _async_process_dependencies(
-            hass, config, domain, component.DEPENDENCIES)
-
-        if not dep_success:
-            log_error("Could not setup all dependencies.")
-            return False
-
-    async_comp = hasattr(component, 'async_setup')
+    try:
+        await async_process_deps_reqs(hass, config, domain, component)
+    except HomeAssistantError as err:
+        log_error(str(err))
+        return False
 
     start = timer()
     _LOGGER.info("Setting up %s", domain)
@@ -192,10 +138,10 @@ def _async_setup_component(hass: core.HomeAssistant,
             domain, SLOW_SETUP_WARNING)
 
     try:
-        if async_comp:
-            result = yield from component.async_setup(hass, processed_config)
+        if hasattr(component, 'async_setup'):
+            result = await component.async_setup(hass, processed_config)
         else:
-            result = yield from hass.async_add_job(
+            result = await hass.async_add_job(
                 component.setup, hass, processed_config)
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error during setup of component %s", domain)
@@ -216,6 +162,9 @@ def _async_setup_component(hass: core.HomeAssistant,
         loader.set_component(domain, None)
         return False
 
+    for entry in hass.config_entries.async_entries(domain):
+        await entry.async_setup(hass, component=component)
+
     hass.config.components.add(component.DOMAIN)
 
     # Cleanup
@@ -229,9 +178,8 @@ def _async_setup_component(hass: core.HomeAssistant,
     return True
 
 
-@asyncio.coroutine
-def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
-                                 platform_name: str) \
+async def async_prepare_setup_platform(hass: core.HomeAssistant, config,
+                                       domain: str, platform_name: str) \
                                  -> Optional[ModuleType]:
     """Load a platform and makes sure dependencies are setup.
 
@@ -256,21 +204,40 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
     elif platform_path in hass.config.components:
         return platform
 
-    # Load dependencies
-    if hasattr(platform, 'DEPENDENCIES'):
-        dep_success = yield from _async_process_dependencies(
-            hass, config, platform_path, platform.DEPENDENCIES)
-
-        if not dep_success:
-            log_error("Could not setup all dependencies.")
-            return None
-
-    if not hass.config.skip_pip and hasattr(platform, 'REQUIREMENTS'):
-        req_success = yield from _async_process_requirements(
-            hass, platform_path, platform.REQUIREMENTS)
-
-        if not req_success:
-            log_error("Could not install all requirements.")
-            return None
+    try:
+        await async_process_deps_reqs(
+            hass, config, platform_path, platform)
+    except HomeAssistantError as err:
+        log_error(str(err))
+        return None
 
     return platform
+
+
+async def async_process_deps_reqs(hass, config, name, module):
+    """Process all dependencies and requirements for a module.
+
+    Module is a Python module of either a component or platform.
+    """
+    processed = hass.data.get(DATA_DEPS_REQS)
+
+    if processed is None:
+        processed = hass.data[DATA_DEPS_REQS] = set()
+    elif name in processed:
+        return
+
+    if hasattr(module, 'DEPENDENCIES'):
+        dep_success = await _async_process_dependencies(
+            hass, config, name, module.DEPENDENCIES)
+
+        if not dep_success:
+            raise HomeAssistantError("Could not setup all dependencies.")
+
+    if not hass.config.skip_pip and hasattr(module, 'REQUIREMENTS'):
+        req_success = await requirements.async_process_requirements(
+            hass, name, module.REQUIREMENTS)
+
+        if not req_success:
+            raise HomeAssistantError("Could not install all requirements.")
+
+    processed.add(name)

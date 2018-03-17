@@ -54,7 +54,7 @@ class TestConfiguration(unittest.TestCase):
     def test_invalid_data(self):
         """Test starts with invalid data and should not raise an exception."""
         with patch("builtins.open",
-                   mock_open(read_data='random charachters')),\
+                   mock_open(read_data='random characters')),\
                 patch("os.path.isfile", Mock(return_value=True)):
             config = rtm.RememberTheMilkConfiguration(self.hass)
         self.assertIsNotNone(config)

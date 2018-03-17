@@ -17,13 +17,14 @@ import jinja2
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.auth import is_trusted_ip
+from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180119.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20180316.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -260,10 +261,10 @@ def async_register_panel(hass, component_name, path, md5=None,
     component_name: name of the web component
     path: path to the HTML of the web component
           (required unless url is provided)
-    md5: the md5 hash of the web component (for versioning in url, optional)
+    md5: the md5 hash of the web component (for versioning in URL, optional)
     sidebar_title: title to show in the sidebar (optional)
     sidebar_icon: icon to show next to title in sidebar (optional)
-    url_path: name to use in the url (defaults to component_name)
+    url_path: name to use in the URL (defaults to component_name)
     config: config to be passed into the web component
     """
     panel = ExternalPanel(component_name, path, md5, sidebar_title,
@@ -300,7 +301,8 @@ def async_setup(hass, config):
 
     if is_dev:
         for subpath in ["src", "build-translations", "build-temp", "build",
-                        "hass_frontend", "bower_components", "panels"]:
+                        "hass_frontend", "bower_components", "panels",
+                        "hassio"]:
             hass.http.register_static_path(
                 "/home-assistant-polymer/{}".format(subpath),
                 os.path.join(repo_path, subpath),
@@ -378,6 +380,8 @@ def async_setup(hass, config):
 
     async_setup_themes(hass, conf.get(CONF_THEMES))
 
+    hass.http.register_view(TranslationsView)
+
     return True
 
 
@@ -407,7 +411,7 @@ def async_setup_themes(hass, themes):
 
     @callback
     def set_theme(call):
-        """Set backend-prefered theme."""
+        """Set backend-preferred theme."""
         data = call.data
         name = data[CONF_NAME]
         if name == DEFAULT_THEME or name in hass.data[DATA_THEMES]:
@@ -489,7 +493,7 @@ class IndexView(HomeAssistantView):
             panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_es5
 
         no_auth = '1'
-        if hass.config.api.api_password and not is_trusted_ip(request):
+        if hass.config.api.api_password and not request[KEY_AUTHENTICATED]:
             # do not try to auto connect on load
             no_auth = '0'
 
@@ -540,6 +544,23 @@ class ThemesView(HomeAssistantView):
         })
 
 
+class TranslationsView(HomeAssistantView):
+    """View to return backend defined translations."""
+
+    url = '/api/translations/{language}'
+    name = 'api:translations'
+
+    @asyncio.coroutine
+    def get(self, request, language):
+        """Return translations."""
+        hass = request.app['hass']
+
+        resources = yield from async_get_translations(hass, language)
+        return self.json({
+            'resources': resources,
+        })
+
+
 def _fingerprint(path):
     """Fingerprint a file."""
     with open(path) as fil:
@@ -552,6 +573,8 @@ def _is_latest(js_option, request):
 
     Set according to user's preference and URL override.
     """
+    import hass_frontend
+
     if request is None:
         return js_option == 'latest'
 
@@ -572,23 +595,5 @@ def _is_latest(js_option, request):
         return js_option == 'latest'
 
     useragent = request.headers.get('User-Agent')
-    if not useragent:
-        return False
 
-    from user_agents import parse
-    useragent = parse(useragent)
-
-    # on iOS every browser is a Safari which we support from version 11.
-    if useragent.os.family == 'iOS':
-        # Was >= 10, temp setting it to 12 to work around issue #11387
-        return useragent.os.version[0] >= 12
-
-    family_min_version = {
-        'Chrome': 50,   # Probably can reduce this
-        'Firefox': 43,  # Array.protopype.includes added in 43
-        'Opera': 40,    # Probably can reduce this
-        'Edge': 14,     # Array.protopype.includes added in 14
-        'Safari': 10,   # many features not supported by 9
-    }
-    version = family_min_version.get(useragent.browser.family)
-    return version and useragent.browser.version[0] >= version
+    return useragent and hass_frontend.version(useragent)

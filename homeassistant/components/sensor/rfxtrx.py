@@ -9,14 +9,14 @@ import logging
 import voluptuous as vol
 
 import homeassistant.components.rfxtrx as rfxtrx
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.rfxtrx import (
+    ATTR_DATA_TYPE, ATTR_FIRE_EVENT, ATTR_NAME, CONF_AUTOMATIC_ADD,
+    CONF_DATA_TYPE, CONF_DEVICES, CONF_FIRE_EVENT, DATA_TYPES)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.components.rfxtrx import (
-    ATTR_NAME, ATTR_FIRE_EVENT, ATTR_DATA_TYPE, CONF_AUTOMATIC_ADD,
-    CONF_FIRE_EVENT, CONF_DEVICES, DATA_TYPES, CONF_DATA_TYPE)
 
 DEPENDENCIES = ['rfxtrx']
 
@@ -35,13 +35,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the RFXtrx platform."""
     from RFXtrx import SensorEvent
     sensors = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
         event = rfxtrx.get_rfx_object(packet_id)
-        device_id = "sensor_" + slugify(event.device.id_string.lower())
+        device_id = "sensor_{}".format(slugify(event.device.id_string.lower()))
         if device_id in rfxtrx.RFX_DEVICES:
             continue
         _LOGGER.info("Add %s rfxtrx.sensor", entity_info[ATTR_NAME])
@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             sensors.append(new_sensor)
             sub_sensors[_data_type] = new_sensor
         rfxtrx.RFX_DEVICES[device_id] = sub_sensors
-    add_devices_callback(sensors)
+    add_devices(sensors)
 
     def sensor_update(event):
         """Handle sensor updates from the RFXtrx gateway."""
@@ -71,15 +71,19 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         if device_id in rfxtrx.RFX_DEVICES:
             sensors = rfxtrx.RFX_DEVICES[device_id]
-            for key in sensors:
-                sensor = sensors[key]
+            for data_type in sensors:
+                # Some multi-sensor devices send individual messages for each
+                # of their sensors. Update only if event contains the
+                # right data_type for the sensor.
+                if data_type not in event.values:
+                    continue
+                sensor = sensors[data_type]
                 sensor.event = event
                 # Fire event
-                if sensors[key].should_fire_event:
+                if sensor.should_fire_event:
                     sensor.hass.bus.fire(
                         "signal_received", {
-                            ATTR_ENTITY_ID:
-                                sensors[key].entity_id,
+                            ATTR_ENTITY_ID: sensor.entity_id,
                         }
                     )
             return
@@ -100,7 +104,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         sub_sensors = {}
         sub_sensors[new_sensor.data_type] = new_sensor
         rfxtrx.RFX_DEVICES[device_id] = sub_sensors
-        add_devices_callback([new_sensor])
+        add_devices([new_sensor])
 
     if sensor_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
         rfxtrx.RECEIVED_EVT_SUBSCRIBERS.append(sensor_update)
@@ -135,7 +139,7 @@ class RfxtrxSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes."""
+        """Return the device state attributes."""
         if not self.event:
             return None
         return self.event.values

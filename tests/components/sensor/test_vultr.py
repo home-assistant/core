@@ -70,10 +70,8 @@ class TestVultrSensorSetup(unittest.TestCase):
             base_vultr.setup(self.hass, VALID_CONFIG)
 
         for config in self.configs:
-            setup = vultr.setup_platform(self.hass,
-                                         config,
-                                         self.add_devices,
-                                         None)
+            setup = vultr.setup_platform(
+                self.hass, config, self.add_devices, None)
 
             self.assertIsNone(setup)
 
@@ -161,10 +159,8 @@ class TestVultrSensorSetup(unittest.TestCase):
             CONF_MONITORED_CONDITIONS: vultr.MONITORED_CONDITIONS,
         }  # No subs at all
 
-        no_sub_setup = vultr.setup_platform(self.hass,
-                                            bad_conf,
-                                            self.add_devices,
-                                            None)
+        no_sub_setup = vultr.setup_platform(
+            self.hass, bad_conf, self.add_devices, None)
 
-        self.assertIsNotNone(no_sub_setup)
+        self.assertIsNone(no_sub_setup)
         self.assertEqual(0, len(self.DEVICES))

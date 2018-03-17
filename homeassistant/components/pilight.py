@@ -130,7 +130,7 @@ class CallRateDelayThrottle(object):
     it should not block the mainloop.
     """
 
-    def __init__(self, hass, delay_seconds: float):
+    def __init__(self, hass, delay_seconds: float) -> None:
         """Initialize the delay handler."""
         self._delay = timedelta(seconds=max(0.0, delay_seconds))
         self._queue = []

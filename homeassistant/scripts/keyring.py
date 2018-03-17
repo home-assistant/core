@@ -5,7 +5,7 @@ import os
 
 from homeassistant.util.yaml import _SECRET_NAMESPACE
 
-REQUIREMENTS = ['keyring==10.6.0', 'keyrings.alt==2.3']
+REQUIREMENTS = ['keyring==11.0.0', 'keyrings.alt==2.3']
 
 
 def run(args):
@@ -29,7 +29,7 @@ def run(args):
 
     if args.action == 'info':
         keyr = keyring.get_keyring()
-        print('Keyring version {}\n'.format(keyring.__version__))
+        print('Keyring version {}\n'.format(REQUIREMENTS[0].split('==')[1]))
         print('Active keyring  : {}'.format(keyr.__module__))
         config_name = os.path.join(platform.config_root(), 'keyringrc.cfg')
         print('Config location : {}'.format(config_name))
