@@ -12,6 +12,7 @@ from typing import Optional, Tuple
 import voluptuous as vol
 import attr
 
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (dispatcher_send,
@@ -194,12 +195,12 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     hass.data.setdefault(KNOWN_CHROMECAST_INFO_KEY, set())
 
     info = None
-    if CONF_HOST in config:
-        info = ChromecastInfo(host=config[CONF_HOST],
-                              port=DEFAULT_PORT)
-    elif discovery_info is not None:
+    if discovery_info is not None:
         info = ChromecastInfo(host=discovery_info['host'],
                               port=discovery_info['port'])
+    elif CONF_HOST in config:
+        info = ChromecastInfo(host=config[CONF_HOST],
+                              port=DEFAULT_PORT)
 
     @callback
     def async_cast_discovered(discover: ChromecastInfo) -> None:
@@ -219,13 +220,17 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     for chromecast in list(hass.data[KNOWN_CHROMECAST_INFO_KEY]):
         async_cast_discovered(chromecast)
 
-    if info is not None and not info.is_audio_group:
-        # If we were a) not explicitly told to enable discovery or
-        # b) have a standard (non-group) cast device, we don't need internal
-        # discovery
-        hass.async_add_job(_discover_chromecast, hass, info)
-    else:
+    if info is None or info.is_audio_group:
+        # If we were a) explicitly told to enable discovery or
+        # b) have an audio group cast device, we need internal discovery.
         hass.async_add_job(_setup_internal_discovery, hass)
+    else:
+        info = await hass.async_add_job(_fill_out_missing_chromecast_info,
+                                        info)
+        if info.friendly_name is None:
+            # HTTP dial failed, so we won't be able to connect.
+            raise PlatformNotReady
+        hass.async_add_job(_discover_chromecast, hass, info)
 
 
 class CastStatusListener(object):
@@ -341,6 +346,7 @@ class CastDevice(MediaPlayerDevice):
         self._cast_status = chromecast.status
         self._media_status = chromecast.media_controller.status
         _LOGGER.debug("Connection successful!")
+        self.async_schedule_update_ha_state()
 
     @callback
     def _async_disconnect(self):
