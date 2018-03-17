@@ -311,7 +311,7 @@ class EntityPlatform(object):
                 self.scan_interval)
             return
 
-        with (await self._process_updates):
+        async with self._process_updates:
             tasks = []
             for entity in self.entities.values():
                 if not entity.should_poll:
