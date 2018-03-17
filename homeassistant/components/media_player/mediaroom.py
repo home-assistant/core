@@ -156,7 +156,8 @@ class MediaroomDevice(MediaPlayerDevice):
                 return
 
             await self.stb.send_cmd(int(media_id))
-            self._state = STATE_PLAYING
+            if self._optimistic:
+                self._state = STATE_PLAYING
         except PyMediaroomError:
             self._state = STATE_UNAVAILABLE
         self.schedule_update_ha_state()
@@ -221,7 +222,8 @@ class MediaroomDevice(MediaPlayerDevice):
         try:
             _LOGGER.debug("media_play()")
             await self.stb.send_cmd('PlayPause')
-            self._state = STATE_PLAYING
+            if self._optimistic:
+                self._state = STATE_PLAYING
         except PyMediaroomError:
             self._state = STATE_UNAVAILABLE
         self.schedule_update_ha_state()
@@ -231,7 +233,8 @@ class MediaroomDevice(MediaPlayerDevice):
         from pymediaroom import PyMediaroomError
         try:
             await self.stb.send_cmd('PlayPause')
-            self._state = STATE_PAUSED
+            if self._optimistic:
+                self._state = STATE_PAUSED
         except PyMediaroomError:
             self._state = STATE_UNAVAILABLE
         self.schedule_update_ha_state()
@@ -241,7 +244,8 @@ class MediaroomDevice(MediaPlayerDevice):
         from pymediaroom import PyMediaroomError
         try:
             await self.stb.send_cmd('Stop')
-            self._state = STATE_PAUSED
+            if self._optimistic:
+                self._state = STATE_PAUSED
         except PyMediaroomError:
             self._state = STATE_UNAVAILABLE
         self.schedule_update_ha_state()
@@ -251,7 +255,8 @@ class MediaroomDevice(MediaPlayerDevice):
         from pymediaroom import PyMediaroomError
         try:
             await self.stb.send_cmd('ProgDown')
-            self._state = STATE_PLAYING
+            if self._optimistic:
+                self._state = STATE_PLAYING
         except PyMediaroomError:
             self._state = STATE_UNAVAILABLE
         self.schedule_update_ha_state()
@@ -261,7 +266,8 @@ class MediaroomDevice(MediaPlayerDevice):
         from pymediaroom import PyMediaroomError
         try:
             await self.stb.send_cmd('ProgUp')
-            self._state = STATE_PLAYING
+            if self._optimistic:
+                self._state = STATE_PLAYING
         except PyMediaroomError:
             self._state = STATE_UNAVAILABLE
         self.schedule_update_ha_state()
