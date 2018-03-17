@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-forecastio==1.3.5']
+REQUIREMENTS = ['python-forecastio==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
