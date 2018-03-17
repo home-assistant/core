@@ -14,11 +14,12 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.components import sensor
 from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
     TEMP_FAHRENHEIT, TEMP_CELSIUS, LENGTH_INCHES, LENGTH_KILOMETERS,
-    LENGTH_MILES, LENGTH_FEET, ATTR_ATTRIBUTION)
+    LENGTH_MILES, LENGTH_FEET, ATTR_ATTRIBUTION, CONF_ENTITY_NAMESPACE)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -617,6 +618,8 @@ LANG_CODES = [
     'CY', 'SN', 'JI', 'YI',
 ]
 
+DEFAULT_ENTITY_NAMESPACE = 'pws'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_PWS_ID): cv.string,
@@ -627,22 +630,31 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                   'Latitude and longitude must exist together'): cv.longitude,
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_ENTITY_NAMESPACE,
+                 default=DEFAULT_ENTITY_NAMESPACE): cv.string,
 })
+
+# Stores a list of entity ids we added in order to support multiple stations
+# at once.
+ADDED_ENTITY_IDS_KEY = 'wunderground_added_entity_ids'
 
 
 @asyncio.coroutine
 def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                          async_add_devices, discovery_info=None):
     """Set up the WUnderground sensor."""
+    hass.data.setdefault(ADDED_ENTITY_IDS_KEY, set())
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+    namespace = config.get(CONF_ENTITY_NAMESPACE)
 
     rest = WUndergroundData(
         hass, config.get(CONF_API_KEY), config.get(CONF_PWS_ID),
         config.get(CONF_LANG), latitude, longitude)
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        sensors.append(WUndergroundSensor(hass, rest, variable))
+        sensors.append(WUndergroundSensor(hass, rest, variable, namespace))
 
     yield from rest.async_update()
     if not rest.data:
@@ -654,7 +666,8 @@ def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
 class WUndergroundSensor(Entity):
     """Implementing the WUnderground sensor."""
 
-    def __init__(self, hass: HomeAssistantType, rest, condition):
+    def __init__(self, hass: HomeAssistantType, rest, condition,
+                 namespace: str):
         """Initialize the sensor."""
         self.rest = rest
         self._condition = condition
@@ -666,8 +679,12 @@ class WUndergroundSensor(Entity):
         self._entity_picture = None
         self._unit_of_measurement = self._cfg_expand("unit_of_measurement")
         self.rest.request_feature(SENSOR_TYPES[condition].feature)
+        current_ids = set(hass.states.async_entity_ids(sensor.DOMAIN))
+        current_ids |= hass.data[ADDED_ENTITY_IDS_KEY]
         self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, "pws_" + condition, hass=hass)
+            ENTITY_ID_FORMAT, "{} {}".format(namespace, condition),
+            current_ids=current_ids)
+        hass.data[ADDED_ENTITY_IDS_KEY].add(self.entity_id)
 
     def _cfg_expand(self, what, default=None):
         """Parse and return sensor data."""
