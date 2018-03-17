@@ -8,6 +8,7 @@ from uuid import UUID
 import attr
 import pytest
 
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.components.media_player.cast import ChromecastInfo
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -228,6 +229,13 @@ async def test_normal_chromecast_not_starting_discovery(hass):
         await hass.async_block_till_done()
         assert add_devices.call_count == 0
         assert setup_discovery.call_count == 1
+
+
+async def test_normal_raises_platform_not_ready(hass):
+    """Test cast platform raises PlatformNotReady if HTTP dial fails."""
+    with patch('pychromecast.dial.get_device_status', return_value=None):
+        with pytest.raises(PlatformNotReady):
+            await async_setup_cast(hass, {'host': 'host1'})
 
 
 async def test_replay_past_chromecasts(hass):
