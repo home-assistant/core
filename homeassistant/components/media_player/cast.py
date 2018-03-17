@@ -372,7 +372,7 @@ class CastDevice(MediaPlayerDevice):
         apps don't always send them. Better poll every now and then if the
         chromecast is active (i.e. an app is running).
         """
-        if self._chromecast is None or not self._available:
+        if not self._available:
             # Not connected or not available.
             return
 
@@ -412,10 +412,6 @@ class CastDevice(MediaPlayerDevice):
         """Turn on the cast device."""
         import pychromecast
 
-        if self._chromecast is None:
-            # Cast device isn't connected yet.
-            return
-
         if not self._chromecast.is_idle:
             # Already turned on
             return
@@ -430,82 +426,42 @@ class CastDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off the cast device."""
-        if self._chromecast is None:
-            # Cast device isn't connected yet.
-            return
-
         self._chromecast.quit_app()
 
     def mute_volume(self, mute):
         """Mute the volume."""
-        if self._chromecast is None:
-            # Chromecast isn't connected yet.
-            return
-
         self._chromecast.set_volume_muted(mute)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        if self._chromecast is None:
-            # Cast device isn't connected yet.
-            return
-
         self._chromecast.set_volume(volume)
 
     def media_play(self):
         """Send play command."""
-        if self._chromecast is None:
-            # Cast device isn't connected yet.
-            return
-
         self._chromecast.media_controller.play()
 
     def media_pause(self):
         """Send pause command."""
-        if self._chromecast is None:
-            # Cast device isn't connected yet.
-            return
-
         self._chromecast.media_controller.pause()
 
     def media_stop(self):
         """Send stop command."""
-        if self._chromecast is None:
-            # Cast device isn't connected yet.
-            return
-
         self._chromecast.media_controller.stop()
 
     def media_previous_track(self):
         """Send previous track command."""
-        if self._chromecast is None:
-            # Cast device isn't connected yet.
-            return
-
         self._chromecast.media_controller.rewind()
 
     def media_next_track(self):
         """Send next track command."""
-        if self._chromecast is None:
-            # Cast device isn't connected yet.
-            return
-
         self._chromecast.media_controller.skip()
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
-        if self._chromecast is None:
-            # Cast device isn't connected yet.
-            return
-
         self._chromecast.media_controller.seek(position)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media from a URL."""
-        if self._chromecast is None:
-            # Cast device isn't connected yet.
-            return
-
         self._chromecast.media_controller.play_media(media_id, media_type)
 
     # ========== Properties ==========
