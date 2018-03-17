@@ -528,7 +528,7 @@ nuheat==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
-numpy==1.14.0
+numpy==1.14.2
 
 # homeassistant.components.google
 oauth2client==4.0.0
