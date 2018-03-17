@@ -8,8 +8,7 @@ from uuid import UUID
 import attr
 import pytest
 
-from components.media_player.cast import ChromecastInfo
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.components.media_player.cast import ChromecastInfo
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.media_player import cast
@@ -124,9 +123,9 @@ async def test_internal_discovery_callback_only_generates_once(hass):
     with patch('pychromecast.dial.get_device_status', return_value=None):
         discover_cast('the-service', info)
         await hass.async_block_till_done()
-        cast = signal.mock_calls[0][1][0]
+        discover = signal.mock_calls[0][1][0]
         # attr's __eq__ somehow breaks here, use tuples instead
-        assert attr.astuple(cast) == attr.astuple(info)
+        assert attr.astuple(discover) == attr.astuple(info)
         signal.reset_mock()
 
         discover_cast('the-service', info)
@@ -153,9 +152,9 @@ async def test_internal_discovery_callback_fill_out(hass):
         discover_cast('the-service', info)
         await hass.async_block_till_done()
 
-        cast = signal.mock_calls[0][1][0]
+        discover = signal.mock_calls[0][1][0]
         # attr's __eq__ somehow breaks here, use tuples instead
-        assert attr.astuple(cast) == attr.astuple(full_info)
+        assert attr.astuple(discover) == attr.astuple(full_info)
 
 
 def test_create_cast_device_without_uuid(hass):
@@ -182,6 +181,7 @@ def test_create_cast_device_with_uuid(hass):
 @patch('homeassistant.components.media_player.cast._setup_internal_discovery')
 async def test_normal_chromecast_not_starting_discovery(hass):
     """Test cast platform not starting discovery when not required."""
+    # pylint: disable=no-member
     add_devices = await async_setup_cast(hass, {'host': 'host1'})
     await hass.async_block_till_done()
     assert add_devices.call_count == 1
