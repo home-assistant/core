@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
-REQUIREMENTS = ['pysyncthru==0.3.0.1']
+REQUIREMENTS = ['pysyncthru==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,16 +88,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     printer.update()
     devices = [SyncThruMainSensor(printer, name)]
 
-    for key in printer.tonerStatus(filter_supported=True):
+    for key in printer.toner_status(filter_supported=True):
         if 'toner_{}'.format(key) in monitored:
             devices.append(SyncThruTonerSensor(printer, name, key))
-    for key in printer.drumStatus(filter_supported=True):
+    for key in printer.drum_status(filter_supported=True):
         if 'drum_{}'.format(key) in monitored:
             devices.append(SyncThruDrumSensor(printer, name, key))
-    for key in printer.inputTrayStatus(filter_supported=True):
+    for key in printer.input_tray_status(filter_supported=True):
         if 'tray_{}'.format(key) in monitored:
             devices.append(SyncThruInputTraySensor(printer, name, key))
-    for key in printer.outputTrayStatus():
+    for key in printer.output_tray_status():
         if 'output_tray_{}'.format(key) in monitored:
             devices.append(SyncThruOutputTraySensor(printer, name, key))
 
@@ -148,7 +148,7 @@ class SyncThruMainSensor(SyncThruSensor):
     def update(self):
         """Get the latest data from SyncThru and update the state."""
         self.syncthru.update()
-        self._state = self.syncthru.deviceStatus()
+        self._state = self.syncthru.device_status()
 
 
 class SyncThruTonerSensor(SyncThruSensor):
@@ -165,8 +165,8 @@ class SyncThruTonerSensor(SyncThruSensor):
         """Get the latest data from SyncThru and update the state."""
         # Data fetching is taken care of through the Main sensor
 
-        if self.syncthru.isOnline():
-            self._attributes = self.syncthru.tonerStatus(
+        if self.syncthru.is_online():
+            self._attributes = self.syncthru.toner_status(
                 ).get(self._color, {})
             self._state = self._attributes.get('remaining')
 
@@ -185,8 +185,8 @@ class SyncThruDrumSensor(SyncThruSensor):
         """Get the latest data from SyncThru and update the state."""
         # Data fetching is taken care of through the Main sensor
 
-        if self.syncthru.isOnline():
-            self._attributes = self.syncthru.drumStatus(
+        if self.syncthru.is_online():
+            self._attributes = self.syncthru.drum_status(
                 ).get(self._color, {})
             self._state = self._attributes.get('remaining')
 
@@ -204,8 +204,8 @@ class SyncThruInputTraySensor(SyncThruSensor):
         """Get the latest data from SyncThru and update the state."""
         # Data fetching is taken care of through the Main sensor
 
-        if self.syncthru.isOnline():
-            self._attributes = self.syncthru.inputTrayStatus(
+        if self.syncthru.is_online():
+            self._attributes = self.syncthru.input_tray_status(
                 ).get(self._number, {})
             self._state = self._attributes.get('newError')
             if self._state == '':
@@ -225,8 +225,8 @@ class SyncThruOutputTraySensor(SyncThruSensor):
         """Get the latest data from SyncThru and update the state."""
         # Data fetching is taken care of through the Main sensor
 
-        if self.syncthru.isOnline():
-            self._attributes = self.syncthru.outputTrayStatus(
+        if self.syncthru.is_online():
+            self._attributes = self.syncthru.output_tray_status(
                 ).get(self._number, {})
             self._state = self._attributes.get('status')
             if self._state == '':
