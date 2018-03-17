@@ -10,7 +10,7 @@ from bluetooth import BluetoothSocket
 import voluptuous as vol
 from homeassistant.const import (
     STATE_UNKNOWN, STATE_CLOSED, STATE_OPEN, CONF_COVERS,
-    CONF_NAME, CONF_MAC, CONF_PORT)
+    CONF_NAME, CONF_MAC, CONF_PORT, CONF_DEVICE_CLASS)
 from homeassistant.components.cover import (
     CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP,
     PLATFORM_SCHEMA)
@@ -31,7 +31,8 @@ STATES_MAP = {
 COVER_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_MAC): cv.string,
-    vol.Required(CONF_PORT): cv.positive_int
+    vol.Required(CONF_PORT): cv.positive_int,
+    vol.Required(CONF_DEVICE_CLASS): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -48,7 +49,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         args = {
             CONF_NAME: device_config.get(CONF_NAME),
             CONF_MAC: device_config.get(CONF_MAC),
-            CONF_PORT: device_config.get(CONF_PORT)
+            CONF_PORT: device_config.get(CONF_PORT),
+            CONF_DEVICE_CLASS: device_config.get(CONF_DEVICE_CLASS)
         }
         covers.append(dGarageCover(hass, args))
 
@@ -67,6 +69,11 @@ class dGarageCover(CoverDevice):
         self._state = STATE_UNKNOWN
         self._port = args[CONF_PORT]
         self._socket = BluetoothSocket(bluetooth.RFCOMM)
+        self._device_class = args[CONF_DEVICE_CLASS]
+
+    @property
+    def device_class(self):
+        return self._device_class
 
     @property
     def name(self):
