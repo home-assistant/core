@@ -4,7 +4,6 @@ Support for Xiaomi Mi Air Quality Monitor (PM2.5).
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/sensor.xiaomi_miio/
 """
-from functools import partial
 import logging
 
 import voluptuous as vol
