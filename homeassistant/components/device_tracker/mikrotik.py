@@ -137,9 +137,9 @@ class MikrotikScanner(DeviceScanner):
         self._update_info()
         return [device for device in self.last_results]
 
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        return self.last_results.get(mac)
+        return self.last_results.get(device)
 
     def _update_info(self):
         """Retrieve latest information from the Mikrotik box."""

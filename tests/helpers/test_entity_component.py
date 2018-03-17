@@ -12,7 +12,7 @@ import homeassistant.loader as loader
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.components import group
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 
 from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
@@ -305,3 +305,31 @@ def test_extract_from_service_no_group_expand(hass):
 
     extracted = component.async_extract_from_service(call, expand_group=False)
     assert extracted == [test_group]
+
+
+@asyncio.coroutine
+def test_setup_dependencies_platform(hass):
+    """Test we setup the dependencies of a platform.
+
+    We're explictely testing that we process dependencies even if a component
+    with the same name has already been loaded.
+    """
+    loader.set_component('test_component', MockModule('test_component'))
+    loader.set_component('test_component2', MockModule('test_component2'))
+    loader.set_component(
+        'test_domain.test_component',
+        MockPlatform(dependencies=['test_component', 'test_component2']))
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    yield from async_setup_component(hass, 'test_component', {})
+
+    yield from component.async_setup({
+        DOMAIN: {
+            'platform': 'test_component',
+        }
+    })
+
+    assert 'test_component' in hass.config.components
+    assert 'test_component2' in hass.config.components
+    assert 'test_domain.test_component' in hass.config.components

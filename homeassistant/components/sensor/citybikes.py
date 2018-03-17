@@ -13,15 +13,14 @@ import async_timeout
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
     ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE,
-    ATTR_FRIENDLY_NAME, STATE_UNKNOWN, LENGTH_METERS, LENGTH_FEET,
-    ATTR_ID)
+    STATE_UNKNOWN, LENGTH_METERS, LENGTH_FEET, ATTR_ID)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import location, distance
 
@@ -41,7 +40,7 @@ CONF_NETWORK = 'network'
 CONF_STATIONS_LIST = 'stations'
 
 DEFAULT_ENDPOINT = 'https://api.citybik.es/{uri}'
-DOMAIN = 'citybikes'
+PLATFORM = 'citybikes'
 
 MONITORED_NETWORKS = 'monitored-networks'
 
@@ -132,8 +131,8 @@ def async_citybikes_request(hass, uri, schema):
 def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up the CityBikes platform."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {MONITORED_NETWORKS: {}}
+    if PLATFORM not in hass.data:
+        hass.data[PLATFORM] = {MONITORED_NETWORKS: {}}
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -148,14 +147,14 @@ def async_setup_platform(hass, config, async_add_devices,
         network_id = yield from CityBikesNetwork.get_closest_network_id(
             hass, latitude, longitude)
 
-    if network_id not in hass.data[DOMAIN][MONITORED_NETWORKS]:
+    if network_id not in hass.data[PLATFORM][MONITORED_NETWORKS]:
         network = CityBikesNetwork(hass, network_id)
-        hass.data[DOMAIN][MONITORED_NETWORKS][network_id] = network
+        hass.data[PLATFORM][MONITORED_NETWORKS][network_id] = network
         hass.async_add_job(network.async_refresh)
         async_track_time_interval(hass, network.async_refresh,
                                   SCAN_INTERVAL)
     else:
-        network = hass.data[DOMAIN][MONITORED_NETWORKS][network_id]
+        network = hass.data[PLATFORM][MONITORED_NETWORKS][network_id]
 
     yield from network.ready.wait()
 
@@ -169,7 +168,7 @@ def async_setup_platform(hass, config, async_add_devices,
 
         if radius > dist or stations_list.intersection((station_id,
                                                         station_uid)):
-            devices.append(CityBikesStation(network, station_id, name))
+            devices.append(CityBikesStation(hass, network, station_id, name))
 
     async_add_devices(devices, True)
 
@@ -238,12 +237,17 @@ class CityBikesNetwork:
 class CityBikesStation(Entity):
     """CityBikes API Sensor."""
 
-    def __init__(self, network, station_id, base_name=''):
+    def __init__(self, hass, network, station_id, base_name=''):
         """Initialize the sensor."""
         self._network = network
         self._station_id = station_id
         self._station_data = {}
-        self._base_name = base_name
+        if base_name:
+            uid = "_".join([network.network_id, base_name, station_id])
+        else:
+            uid = "_".join([network.network_id, station_id])
+        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, uid,
+                                                  hass=hass)
 
     @property
     def state(self):
@@ -253,10 +257,9 @@ class CityBikesStation(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self._base_name:
-            return "{} {} {}".format(self._network.network_id, self._base_name,
-                                     self._station_id)
-        return "{} {}".format(self._network.network_id, self._station_id)
+        if ATTR_NAME in self._station_data:
+            return self._station_data[ATTR_NAME]
+        return None
 
     @asyncio.coroutine
     def async_update(self):
@@ -277,7 +280,6 @@ class CityBikesStation(Entity):
                 ATTR_LATITUDE: self._station_data[ATTR_LATITUDE],
                 ATTR_LONGITUDE: self._station_data[ATTR_LONGITUDE],
                 ATTR_EMPTY_SLOTS: self._station_data[ATTR_EMPTY_SLOTS],
-                ATTR_FRIENDLY_NAME: self._station_data[ATTR_NAME],
                 ATTR_TIMESTAMP: self._station_data[ATTR_TIMESTAMP],
             }
         return {ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION}

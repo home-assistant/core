@@ -141,11 +141,11 @@ class NetioSwitch(SwitchDevice):
         """Return true if entity is available."""
         return not hasattr(self, 'telnet')
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn switch on."""
         self._set(True)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn switch off."""
         self._set(False)
 

@@ -11,8 +11,7 @@ CONSTRAINT_FILE = 'package_constraints.txt'
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def async_process_requirements(hass, name, requirements):
+async def async_process_requirements(hass, name, requirements):
     """Install the requirements for a component or platform.
 
     This method is a coroutine.
@@ -24,9 +23,9 @@ def async_process_requirements(hass, name, requirements):
     pip_install = partial(pkg_util.install_package,
                           **pip_kwargs(hass.config.config_dir))
 
-    with (yield from pip_lock):
+    async with pip_lock:
         for req in requirements:
-            ret = yield from hass.async_add_job(pip_install, req)
+            ret = await hass.async_add_job(pip_install, req)
             if not ret:
                 _LOGGER.error("Not initializing %s because could not install "
                               "requirement %s", name, req)
@@ -40,6 +39,6 @@ def pip_kwargs(config_dir):
     kwargs = {
         'constraints': os.path.join(os.path.dirname(__file__), CONSTRAINT_FILE)
     }
-    if not pkg_util.running_under_virtualenv():
+    if not pkg_util.is_virtual_env():
         kwargs['target'] = os.path.join(config_dir, 'deps')
     return kwargs

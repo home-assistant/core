@@ -63,6 +63,7 @@ _IP_NEIGH_REGEX = re.compile(
     r'\w+\s'
     r'(\w+\s(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))))?\s'
     r'\s?(router)?'
+    r'\s?(nud)?'
     r'(?P<status>(\w+))')
 
 _ARP_CMD = 'arp -n'
@@ -211,6 +212,9 @@ class AsusWrtDeviceScanner(DeviceScanner):
         result = _parse_lines(lines, _IP_NEIGH_REGEX)
         devices = {}
         for device in result:
+            status = device['status']
+            if status is None or status.upper() != 'REACHABLE':
+                continue
             if device['mac'] is not None:
                 mac = device['mac'].upper()
                 old_device = cur_devices.get(mac)
@@ -225,7 +229,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
         result = _parse_lines(lines, _ARP_REGEX)
         devices = {}
         for device in result:
-            if device['mac']:
+            if device['mac'] is not None:
                 mac = device['mac'].upper()
                 devices[mac] = Device(mac, device['ip'], None)
         return devices
@@ -279,15 +283,15 @@ class SshConnection(_Connection):
             lines = self._ssh.before.split(b'\n')[1:-1]
             return [line.decode('utf-8') for line in lines]
         except exceptions.EOF as err:
-            _LOGGER.error("Connection refused. SSH enabled?")
+            _LOGGER.error("Connection refused. %s", self._ssh.before)
             self.disconnect()
             return None
         except pxssh.ExceptionPxssh as err:
-            _LOGGER.error("Unexpected SSH error: %s", str(err))
+            _LOGGER.error("Unexpected SSH error: %s", err)
             self.disconnect()
             return None
         except AssertionError as err:
-            _LOGGER.error("Connection to router unavailable: %s", str(err))
+            _LOGGER.error("Connection to router unavailable: %s", err)
             self.disconnect()
             return None
 
@@ -297,10 +301,10 @@ class SshConnection(_Connection):
 
         self._ssh = pxssh.pxssh()
         if self._ssh_key:
-            self._ssh.login(self._host, self._username,
+            self._ssh.login(self._host, self._username, quiet=False,
                             ssh_key=self._ssh_key, port=self._port)
         else:
-            self._ssh.login(self._host, self._username,
+            self._ssh.login(self._host, self._username, quiet=False,
                             password=self._password, port=self._port)
 
         super().connect()

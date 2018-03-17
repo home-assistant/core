@@ -185,7 +185,7 @@ class NuHeatThermostat(ClimateDevice):
         self._thermostat.resume_schedule()
         self._force_update = True
 
-    def set_hold_mode(self, hold_mode, **kwargs):
+    def set_hold_mode(self, hold_mode):
         """Update the hold mode of the thermostat."""
         if hold_mode == MODE_AUTO:
             schedule_mode = SCHEDULE_RUN

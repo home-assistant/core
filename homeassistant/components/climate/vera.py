@@ -85,13 +85,13 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         """Return a list of available fan modes."""
         return FAN_OPERATION_LIST
 
-    def set_fan_mode(self, mode):
+    def set_fan_mode(self, fan_mode):
         """Set new target temperature."""
-        if mode == FAN_OPERATION_LIST[0]:
+        if fan_mode == FAN_OPERATION_LIST[0]:
             self.vera_device.fan_on()
-        elif mode == FAN_OPERATION_LIST[1]:
+        elif fan_mode == FAN_OPERATION_LIST[1]:
             self.vera_device.fan_auto()
-        elif mode == FAN_OPERATION_LIST[2]:
+        elif fan_mode == FAN_OPERATION_LIST[2]:
             return self.vera_device.fan_cycle()
 
     @property

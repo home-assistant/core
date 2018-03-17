@@ -21,7 +21,7 @@ from homeassistant.components.camera import (
     PLATFORM_SCHEMA, DEFAULT_CONTENT_TYPE, Camera)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 

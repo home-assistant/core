@@ -41,9 +41,9 @@ VERSION_FILE = '.HA_VERSION'
 CONFIG_DIR_NAME = '.homeassistant'
 DATA_CUSTOMIZE = 'hass_customize'
 
-FILE_MIGRATION = [
-    ['ios.conf', '.ios.conf'],
-]
+FILE_MIGRATION = (
+    ('ios.conf', '.ios.conf'),
+)
 
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
@@ -94,10 +94,6 @@ conversation:
 
 # Enables support for tracking state changes over time
 history:
-
-# Tracked history is kept for 10 days
-recorder:
-  purge_keep_days: 10
 
 # View all events in a logbook
 logbook:
@@ -166,7 +162,7 @@ def get_default_config_dir() -> str:
     return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
-def ensure_config_exists(config_dir: str, detect_location: bool=True) -> str:
+def ensure_config_exists(config_dir: str, detect_location: bool = True) -> str:
     """Ensure a configuration file exists in given configuration directory.
 
     Creating a default one if needed.
@@ -264,8 +260,7 @@ def create_default_config(config_dir, detect_location=True):
         return None
 
 
-@asyncio.coroutine
-def async_hass_config_yaml(hass):
+async def async_hass_config_yaml(hass):
     """Load YAML from a Home Assistant configuration file.
 
     This function allow a component inside the asyncio loop to reload its
@@ -278,7 +273,7 @@ def async_hass_config_yaml(hass):
         conf = load_yaml_config_file(path)
         return conf
 
-    conf = yield from hass.async_add_job(_load_hass_yaml_config)
+    conf = await hass.async_add_job(_load_hass_yaml_config)
     return conf
 
 
@@ -309,6 +304,9 @@ def load_yaml_config_file(config_path):
         _LOGGER.error(msg)
         raise HomeAssistantError(msg)
 
+    # Convert values to dictionaries if they are None
+    for key, value in conf_dict.items():
+        conf_dict[key] = value or {}
     return conf_dict
 
 
@@ -350,14 +348,22 @@ def process_ha_config_upgrade(hass):
 
 @callback
 def async_log_exception(ex, domain, config, hass):
+    """Log an error for configuration validation.
+
+    This method must be run in the event loop.
+    """
+    if hass is not None:
+        async_notify_setup_error(hass, domain, True)
+    _LOGGER.error(_format_config_error(ex, domain, config))
+
+
+@callback
+def _format_config_error(ex, domain, config):
     """Generate log exception for configuration validation.
 
     This method must be run in the event loop.
     """
     message = "Invalid config for [{}]: ".format(domain)
-    if hass is not None:
-        async_notify_setup_error(hass, domain, True)
-
     if 'extra keys not allowed' in ex.error_message:
         message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
                    .format(ex.path[-1], domain, domain,
@@ -374,11 +380,10 @@ def async_log_exception(ex, domain, config, hass):
         message += ('Please check the docs at '
                     'https://home-assistant.io/components/{}/'.format(domain))
 
-    _LOGGER.error(message)
+    return message
 
 
-@asyncio.coroutine
-def async_process_ha_core_config(hass, config):
+async def async_process_ha_core_config(hass, config):
     """Process the [homeassistant] section from the configuration.
 
     This method is a coroutine.
@@ -465,7 +470,7 @@ def async_process_ha_core_config(hass, config):
     # If we miss some of the needed values, auto detect them
     if None in (hac.latitude, hac.longitude, hac.units,
                 hac.time_zone):
-        info = yield from hass.async_add_job(
+        info = await hass.async_add_job(
             loc_util.detect_location_info)
 
         if info is None:
@@ -491,7 +496,7 @@ def async_process_ha_core_config(hass, config):
 
     if hac.elevation is None and hac.latitude is not None and \
        hac.longitude is not None:
-        elevation = yield from hass.async_add_job(
+        elevation = await hass.async_add_job(
             loc_util.elevation, hac.latitude, hac.longitude)
         hac.elevation = elevation
         discovered.append(('elevation', elevation))
@@ -503,7 +508,7 @@ def async_process_ha_core_config(hass, config):
 
 
 def _log_pkg_error(package, component, config, message):
-    """Log an error while merging."""
+    """Log an error while merging packages."""
     message = "Package {} setup failed. Component {} {}".format(
         package, component, message)
 
@@ -529,7 +534,7 @@ def _identify_config_schema(module):
     return '', schema
 
 
-def merge_packages_config(config, packages):
+def merge_packages_config(config, packages, _log_pkg_error=_log_pkg_error):
     """Merge packages into the top-level configuration. Mutate config."""
     # pylint: disable=too-many-nested-blocks
     PACKAGES_CONFIG_SCHEMA(packages)
@@ -557,6 +562,9 @@ def merge_packages_config(config, packages):
                     continue
 
                 if merge_type == 'dict':
+                    if comp_conf is None:
+                        comp_conf = OrderedDict()
+
                     if not isinstance(comp_conf, dict):
                         _log_pkg_error(
                             pack_name, comp_name, config,
@@ -595,7 +603,7 @@ def merge_packages_config(config, packages):
 def async_process_component_config(hass, config, domain):
     """Check component configuration and return processed configuration.
 
-    Raise a vol.Invalid exception on error.
+    Returns None on error.
 
     This method must be run in the event loop.
     """
@@ -652,21 +660,20 @@ def async_process_component_config(hass, config, domain):
     return config
 
 
-@asyncio.coroutine
-def async_check_ha_config_file(hass):
+async def async_check_ha_config_file(hass):
     """Check if Home Assistant configuration file is valid.
 
     This method is a coroutine.
     """
-    proc = yield from asyncio.create_subprocess_exec(
+    proc = await asyncio.create_subprocess_exec(
         sys.executable, '-m', 'homeassistant', '--script',
         'check_config', '--config', hass.config.config_dir,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.STDOUT, loop=hass.loop)
 
     # Wait for the subprocess exit
-    log, _ = yield from proc.communicate()
-    exit_code = yield from proc.wait()
+    log, _ = await proc.communicate()
+    exit_code = await proc.wait()
 
     # Convert to ASCII
     log = RE_ASCII.sub('', log.decode())
@@ -677,7 +684,7 @@ def async_check_ha_config_file(hass):
 
 
 @callback
-def async_notify_setup_error(hass, component, link=False):
+def async_notify_setup_error(hass, component, display_link=False):
     """Print a persistent notification.
 
     This method must be run in the event loop.
@@ -689,7 +696,7 @@ def async_notify_setup_error(hass, component, link=False):
     if errors is None:
         errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
 
-    errors[component] = errors.get(component) or link
+    errors[component] = errors.get(component) or display_link
 
     message = 'The following components and platforms could not be set up:\n\n'
 

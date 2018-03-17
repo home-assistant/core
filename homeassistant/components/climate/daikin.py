@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 HA_STATE_TO_DAIKIN = {
@@ -236,9 +236,9 @@ class DaikinClimate(ClimateDevice):
         """Return the fan setting."""
         return self.get(ATTR_FAN_MODE)
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set fan mode."""
-        self.set({ATTR_FAN_MODE: fan})
+        self.set({ATTR_FAN_MODE: fan_mode})
 
     @property
     def fan_list(self):

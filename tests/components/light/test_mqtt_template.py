@@ -232,8 +232,9 @@ class TestLightMQTTTemplate(unittest.TestCase):
         light.turn_on(self.hass, 'light.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('test_light_rgb/set', 'on,,,,--', 2, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light_rgb/set', 'on,,,,--', 2, False)
+        self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
 
@@ -241,8 +242,9 @@ class TestLightMQTTTemplate(unittest.TestCase):
         light.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('test_light_rgb/set', 'off', 2, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light_rgb/set', 'off', 2, False)
+        self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
@@ -251,22 +253,16 @@ class TestLightMQTTTemplate(unittest.TestCase):
                       rgb_color=[75, 75, 75])
         self.hass.block_till_done()
 
-        self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-2][1][0])
-
-        # check the payload
-        payload = self.mock_publish.mock_calls[-2][1][1]
-        self.assertEqual('on,50,,,75-75-75', payload)
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light_rgb/set', 'on,50,,,75-75-75', 2, False)
+        self.mock_publish.async_publish.reset_mock()
 
         # turn on the light with color temp and white val
         light.turn_on(self.hass, 'light.test', color_temp=200, white_value=139)
         self.hass.block_till_done()
 
-        payload = self.mock_publish.mock_calls[-2][1][1]
-        self.assertEqual('on,,200,139,--', payload)
-
-        self.assertEqual(2, self.mock_publish.mock_calls[-2][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light_rgb/set', 'on,,200,139,--', 2, False)
 
         # check the state
         state = self.hass.states.get('light.test')
@@ -298,27 +294,16 @@ class TestLightMQTTTemplate(unittest.TestCase):
         light.turn_on(self.hass, 'light.test', flash='short')
         self.hass.block_till_done()
 
-        self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-2][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
-
-        # check the payload
-        payload = self.mock_publish.mock_calls[-2][1][1]
-        self.assertEqual('on,short', payload)
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light_rgb/set', 'on,short', 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         # long flash
         light.turn_on(self.hass, 'light.test', flash='long')
         self.hass.block_till_done()
 
-        self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-2][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
-
-        # check the payload
-        payload = self.mock_publish.mock_calls[-2][1][1]
-        self.assertEqual('on,long', payload)
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light_rgb/set', 'on,long', 0, False)
 
     def test_transition(self):
         """Test for transition time being sent when included."""
@@ -340,27 +325,16 @@ class TestLightMQTTTemplate(unittest.TestCase):
         light.turn_on(self.hass, 'light.test', transition=10)
         self.hass.block_till_done()
 
-        self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-2][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
-
-        # check the payload
-        payload = self.mock_publish.mock_calls[-2][1][1]
-        self.assertEqual('on,10', payload)
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light_rgb/set', 'on,10', 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         # transition off
         light.turn_off(self.hass, 'light.test', transition=4)
         self.hass.block_till_done()
 
-        self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-2][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
-
-        # check the payload
-        payload = self.mock_publish.mock_calls[-2][1][1]
-        self.assertEqual('off,4', payload)
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light_rgb/set', 'off,4', 0, False)
 
     def test_invalid_values(self): \
             # pylint: disable=invalid-name

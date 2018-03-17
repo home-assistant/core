@@ -4,7 +4,7 @@ import logging
 import functools as ft
 from timeit import default_timer as timer
 
-from typing import Optional, List
+from typing import Optional, List, Iterable
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
@@ -15,15 +15,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
 
 
 def generate_entity_id(entity_id_format: str, name: Optional[str],
-                       current_ids: Optional[List[str]]=None,
-                       hass: Optional[HomeAssistant]=None) -> str:
+                       current_ids: Optional[List[str]] = None,
+                       hass: Optional[HomeAssistant] = None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     if current_ids is None:
         if hass is None:
@@ -42,8 +42,8 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
 
 @callback
 def async_generate_entity_id(entity_id_format: str, name: Optional[str],
-                             current_ids: Optional[List[str]]=None,
-                             hass: Optional[HomeAssistant]=None) -> str:
+                             current_ids: Optional[Iterable[str]] = None,
+                             hass: Optional[HomeAssistant] = None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     if current_ids is None:
         if hass is None:
@@ -80,6 +80,9 @@ class Entity(object):
     # Process updates in parallel
     parallel_updates = None
 
+    # Name in the entity registry
+    registry_name = None
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -90,7 +93,7 @@ class Entity(object):
 
     @property
     def unique_id(self) -> str:
-        """Return an unique ID."""
+        """Return a unique ID."""
         return None
 
     @property
@@ -225,7 +228,7 @@ class Entity(object):
         if unit_of_measurement is not None:
             attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
 
-        name = self.name
+        name = self.registry_name or self.name
         if name is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
@@ -329,13 +332,18 @@ class Entity(object):
             if self.parallel_updates:
                 self.parallel_updates.release()
 
-    @asyncio.coroutine
-    def async_remove(self):
+    async def async_remove(self):
         """Remove entity from Home Assistant."""
         if self.platform is not None:
-            yield from self.platform.async_remove_entity(self.entity_id)
+            await self.platform.async_remove_entity(self.entity_id)
         else:
             self.hass.states.async_remove(self.entity_id)
+
+    @callback
+    def async_registry_updated(self, old, new):
+        """Called when the entity registry has been updated."""
+        self.registry_name = new.name
+        self.async_schedule_update_ha_state()
 
     def __eq__(self, other):
         """Return the comparison."""

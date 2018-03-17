@@ -116,7 +116,7 @@ class HiveDeviceLight(Light):
         for entity in self.session.entities:
             entity.handle_update(self.data_updatesource)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         self.session.light.turn_off(self.node_id)
         for entity in self.session.entities:

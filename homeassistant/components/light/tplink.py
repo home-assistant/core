@@ -118,7 +118,7 @@ class TPLinkSmartBulb(Light):
             rgb = kwargs.get(ATTR_RGB_COLOR)
             self.smartbulb.hsv = rgb_to_hsv(rgb)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the light off."""
         self.smartbulb.state = self.smartbulb.BULB_STATE_OFF
 

@@ -18,8 +18,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 DEPENDENCIES = ['doorbird']
 
 _CAMERA_LAST_VISITOR = "DoorBird Last Ring"
+_CAMERA_LAST_MOTION = "DoorBird Last Motion"
 _CAMERA_LIVE = "DoorBird Live"
 _LAST_VISITOR_INTERVAL = datetime.timedelta(minutes=1)
+_LAST_MOTION_INTERVAL = datetime.timedelta(minutes=1)
 _LIVE_INTERVAL = datetime.timedelta(seconds=1)
 _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 10  # seconds
@@ -34,6 +36,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         DoorBirdCamera(
             device.history_image_url(1, 'doorbell'), _CAMERA_LAST_VISITOR,
             _LAST_VISITOR_INTERVAL),
+        DoorBirdCamera(
+            device.history_image_url(1, 'motionsensor'), _CAMERA_LAST_MOTION,
+            _LAST_MOTION_INTERVAL),
     ])
 
 

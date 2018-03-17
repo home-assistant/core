@@ -130,7 +130,7 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
             self._white = white
             self._values[self.value_type] = hex_color
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         value_type = self.gateway.const.SetReq.V_LIGHT
         self.gateway.set_child_value(

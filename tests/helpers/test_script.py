@@ -71,13 +71,14 @@ class TestScriptHelper(unittest.TestCase):
         script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA({
             'event': event,
             'event_data_template': {
-                'hello': """
-                    {% if is_world == 'yes' %}
-                        world
-                    {% else %}
-                        not world
-                    {% endif %}
-                """
+                'dict': {
+                   1: '{{ is_world }}',
+                   2: '{{ is_world }}{{ is_world }}',
+                   3: '{{ is_world }}{{ is_world }}{{ is_world }}',
+                },
+                'list': [
+                    '{{ is_world }}', '{{ is_world }}{{ is_world }}'
+                ]
             }
         }))
 
@@ -86,7 +87,14 @@ class TestScriptHelper(unittest.TestCase):
         self.hass.block_till_done()
 
         assert len(calls) == 1
-        assert calls[0].data.get('hello') == 'world'
+        assert calls[0].data == {
+            'dict': {
+                1: 'yes',
+                2: 'yesyes',
+                3: 'yesyesyes',
+            },
+            'list': ['yes', 'yesyes']
+        }
         assert not script_obj.can_cancel
 
     def test_calling_service(self):

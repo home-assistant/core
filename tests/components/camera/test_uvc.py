@@ -9,7 +9,7 @@ from uvcclient import nvr
 
 from homeassistant.setup import setup_component
 from homeassistant.components.camera import uvc
-from tests.common import get_test_home_assistant, mock_http_component
+from tests.common import get_test_home_assistant
 
 
 class TestUVCSetup(unittest.TestCase):
@@ -18,7 +18,6 @@ class TestUVCSetup(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        mock_http_component(self.hass)
 
     def tearDown(self):
         """Stop everything that was started."""

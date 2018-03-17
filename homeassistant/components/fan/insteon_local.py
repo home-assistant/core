@@ -91,7 +91,7 @@ class InsteonLocalFanDevice(FanEntity):
         """Flag supported features."""
         return SUPPORT_INSTEON_LOCAL
 
-    def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
+    def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
         """Turn device on."""
         if speed is None:
             if ATTR_SPEED in kwargs:

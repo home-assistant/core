@@ -1,7 +1,7 @@
 """
 Support for Volvo heater.
 
-This platform uses the Telldus Live online service.
+This platform uses the Volvo online service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.volvooncall/

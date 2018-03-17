@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['holidays==0.9.3']
+REQUIREMENTS = ['holidays==0.9.4']
 
 # List of all countries currently supported by holidays
 # There seems to be no way to get the list out at runtime
@@ -47,7 +47,7 @@ DEFAULT_OFFSET = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COUNTRY): vol.In(ALL_COUNTRIES),
-    vol.Optional(CONF_PROVINCE, default=None): cv.string,
+    vol.Optional(CONF_PROVINCE): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
     vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS):

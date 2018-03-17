@@ -78,7 +78,7 @@ class WOLSwitch(SwitchDevice):
         """Return the name of the switch."""
         return self._name
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         if self._broadcast_address:
             self._wol.send_magic_packet(
@@ -86,7 +86,7 @@ class WOLSwitch(SwitchDevice):
         else:
             self._wol.send_magic_packet(self._mac_address)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off if an off action is present."""
         if self._off_script is not None:
             self._off_script.run()

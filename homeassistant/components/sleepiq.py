@@ -6,6 +6,7 @@ https://home-assistant.io/components/sleepiq/
 """
 import logging
 from datetime import timedelta
+from requests.exceptions import HTTPError
 
 import voluptuous as vol
 
@@ -14,7 +15,6 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
-from requests.exceptions import HTTPError
 
 DOMAIN = 'sleepiq'
 

@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Vsi mostovi Philips Hue so \u017ee konfigurirani",
+            "discover_timeout": "Ni bilo mogo\u010de odkriti Hue mostov",
+            "no_bridges": "Ni odkritih mostov Philips Hue"
+        },
+        "error": {
+            "linking": "Pri\u0161lo je do neznane napake pri povezavi.",
+            "register_failed": "Registracija ni uspela, poskusite znova"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Izberite Hue most"
+            },
+            "link": {
+                "description": "Pritisnite gumb na mostu, da registrirate Philips Hue s Home Assistentom. \n\n ! [Polo\u017eaj gumba na mostu] (/static/images/config_philips_hue.jpg)",
+                "title": "Link Hub"
+            }
+        },
+        "title": "Philips Hue Bridge"
+    }
+}

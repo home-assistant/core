@@ -1,0 +1,24 @@
+{
+    "config": {
+        "error": {
+            "invalid_object_id": "Neveljaven ID objekta"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "object_id": "ID objekta"
+                },
+                "description": "Prosimo, vnesite Id_objekta za testni subjekt.",
+                "title": "Izberite ID objekta"
+            },
+            "name": {
+                "data": {
+                    "name": "Ime"
+                },
+                "description": "Vnesite ime za testni subjekt.",
+                "title": "Ime subjekta"
+            }
+        },
+        "title": "Primer nastavitve"
+    }
+}

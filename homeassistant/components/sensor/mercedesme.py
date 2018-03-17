@@ -8,7 +8,7 @@ import logging
 import datetime
 
 from homeassistant.components.mercedesme import (
-    DATA_MME, MercedesMeEntity, SENSORS)
+    DATA_MME, FEATURE_NOT_AVAILABLE, MercedesMeEntity, SENSORS)
 
 
 DEPENDENCIES = ['mercedesme']
@@ -29,8 +29,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for car in data.cars:
         for key, value in sorted(SENSORS.items()):
-            devices.append(
-                MercedesMESensor(data, key, value[0], car["vin"], value[1]))
+            if car['availabilities'].get(key, 'INVALID') == 'VALID':
+                devices.append(
+                    MercedesMESensor(
+                        data, key, value[0], car["vin"], value[1]))
+            else:
+                _LOGGER.warning(FEATURE_NOT_AVAILABLE, key, car["license"])
 
     add_devices(devices, True)
 
