@@ -14,6 +14,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.components import sensor
 from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
@@ -629,11 +630,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
 })
 
+# Stores a list of entity ids we added in order to support multiple stations
+# at once.
+ADDED_ENTITY_IDS_KEY = 'wunderground_added_entity_ids'
+
 
 @asyncio.coroutine
 def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                          async_add_devices, discovery_info=None):
     """Set up the WUnderground sensor."""
+    hass.data.setdefault(ADDED_ENTITY_IDS_KEY, set())
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
@@ -666,8 +673,11 @@ class WUndergroundSensor(Entity):
         self._entity_picture = None
         self._unit_of_measurement = self._cfg_expand("unit_of_measurement")
         self.rest.request_feature(SENSOR_TYPES[condition].feature)
+        current_ids = set(hass.states.async_entity_ids(sensor.DOMAIN))
+        current_ids |= hass.data[ADDED_ENTITY_IDS_KEY]
         self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, "pws_" + condition, hass=hass)
+            ENTITY_ID_FORMAT, "pws_" + condition, current_ids=current_ids)
+        hass.data[ADDED_ENTITY_IDS_KEY].add(self.entity_id)
 
     def _cfg_expand(self, what, default=None):
         """Parse and return sensor data."""
