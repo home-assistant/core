@@ -119,8 +119,8 @@ def _discover_chromecast(hass: HomeAssistantType, info: ChromecastInfo):
         return
 
     # Either discovered completely new chromecast or a "moved" one.
-    _LOGGER.debug("Discovered chromecast %s", info)
     info = _fill_out_missing_chromecast_info(info)
+    _LOGGER.debug("Discovered chromecast %s", info)
 
     if info.uuid is not None:
         # Remove previous cast infos with same uuid from known chromecasts.
@@ -189,7 +189,7 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     import pychromecast
 
     # Import CEC IGNORE attributes
-    pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC)
+    pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC, [])
     hass.data.setdefault(ADDED_CAST_DEVICES_KEY, set())
     hass.data.setdefault(KNOWN_CHROMECAST_INFO_KEY, set())
 
@@ -298,12 +298,12 @@ class CastDevice(MediaPlayerDevice):
             if self._cast_info.uuid != discover.uuid:
                 # Discovered is not our device.
                 return
+            _LOGGER.debug("Discovered chromecast with same UUID: %s", discover)
             self.hass.async_add_job(self.async_set_cast_info(discover))
 
         async_dispatcher_connect(self.hass, SIGNAL_CAST_DISCOVERED,
                                  async_cast_discovered)
         await self.async_set_cast_info(self._cast_info)
-        self.async_schedule_update_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect Chromecast object when removed."""
@@ -328,6 +328,7 @@ class CastDevice(MediaPlayerDevice):
         # Failed connection will unfortunately never raise an exception, it
         # will instead just try connecting indefinitely.
         # pylint: disable=protected-access
+        _LOGGER.debug("Connecting to cast device %s", cast_info)
         chromecast = await self.hass.async_add_job(
             pychromecast._get_chromecast_from_host, attr.astuple(cast_info))
         self._chromecast = chromecast
@@ -339,6 +340,7 @@ class CastDevice(MediaPlayerDevice):
         self._available = True
         self._cast_status = chromecast.status
         self._media_status = chromecast.media_controller.status
+        _LOGGER.debug("Connection successful!")
 
     @callback
     def _async_disconnect(self):
@@ -346,6 +348,7 @@ class CastDevice(MediaPlayerDevice):
         if self._chromecast is None:
             # Can't disconnect if not connected.
             return
+        _LOGGER.debug("Disconnecting from previous chromecast socket.")
         self._available = False
         self._chromecast.disconnect(blocking=False)
         # Invalidate some attributes
@@ -393,6 +396,8 @@ class CastDevice(MediaPlayerDevice):
             # Connection status callbacks happen often when disconnected.
             # Only update state when availability changed to put less pressure
             # on state machine.
+            _LOGGER.debug("Cast device availability changed: %s",
+                          connection_status.status)
             self._available = new_available
             self.schedule_update_ha_state()
 
