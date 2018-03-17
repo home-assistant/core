@@ -82,7 +82,7 @@ class ChromecastInfo(object):
     @property
     def is_information_complete(self) -> bool:
         """Return if all information is filled out."""
-        return all(entry is not None for entry in attr.astuple(self))
+        return all(attr.astuple(self))
 
     @property
     def host_port(self) -> Tuple[str, int]:

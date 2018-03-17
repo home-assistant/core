@@ -5,8 +5,10 @@ from typing import Optional
 from unittest.mock import patch, MagicMock, Mock
 from uuid import UUID
 
+import attr
 import pytest
 
+from components.media_player.cast import ChromecastInfo
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -26,10 +28,15 @@ def cast_mock():
 FakeUUID = UUID('57355bce-9364-4aa6-ac1e-eb849dccf9e2')
 
 
-def get_fake_chromecast(host='192.168.178.42', port=8009,
-                        uuid: Optional[UUID] = FakeUUID):
+def get_fake_chromecast(info: ChromecastInfo):
     """Generate a Fake Chromecast object with the specified arguments."""
-    return MagicMock(host=host, port=port, uuid=uuid)
+    return MagicMock(host=info.host, port=info.port, uuid=info.uuid)
+
+
+def get_fake_chromecast_info(host='192.168.178.42', port=8009,
+                             uuid: Optional[UUID] = FakeUUID):
+    """Generate a Fake ChromecastInfo with the specified arguments."""
+    return ChromecastInfo(host=host, port=port, uuid=uuid)
 
 
 @asyncio.coroutine
@@ -48,8 +55,7 @@ def async_setup_cast(hass, config=None, discovery_info=None):
 
 @asyncio.coroutine
 def async_setup_cast_internal_discovery(hass, config=None,
-                                        discovery_info=None,
-                                        no_from_host_patch=False):
+                                        discovery_info=None):
     """Setup the cast platform and the discovery."""
     listener = MagicMock(services={})
 
@@ -63,16 +69,11 @@ def async_setup_cast_internal_discovery(hass, config=None,
 
         discovery_callback = start_discovery.call_args[0][0]
 
-    def discover_chromecast(service_name, chromecast):
+    def discover_chromecast(service_name: str, info: ChromecastInfo) -> None:
         """Discover a chromecast device."""
-        listener.services[service_name] = (
-            chromecast.host, chromecast.port, chromecast.uuid, None, None)
-        if no_from_host_patch:
-            discovery_callback(service_name)
-        else:
-            with patch('pychromecast._get_chromecast_from_host',
-                       return_value=chromecast):
-                discovery_callback(service_name)
+        listener.services[service_name] = (info.host, info.port,
+                                           info.uuid, info.model_name, None)
+        discovery_callback(service_name)
 
     return discover_chromecast, add_devices
 
@@ -112,140 +113,119 @@ def test_stop_discovery_called_on_stop(hass):
         assert start_discovery.call_count == 1
 
 
-@asyncio.coroutine
-def test_internal_discovery_callback_only_generates_once(hass):
-    """Test _get_chromecast_from_host only called once per device."""
-    discover_cast, _ = yield from async_setup_cast_internal_discovery(
-        hass, no_from_host_patch=True)
-    chromecast = get_fake_chromecast()
+async def test_internal_discovery_callback_only_generates_once(hass):
+    """Test discovery only called once per device."""
+    discover_cast, _ = await async_setup_cast_internal_discovery(hass)
+    info = get_fake_chromecast_info()
 
-    with patch('pychromecast._get_chromecast_from_host',
-               return_value=chromecast) as gen_chromecast:
-        discover_cast('the-service', chromecast)
-        mdns = (chromecast.host, chromecast.port, chromecast.uuid, None, None)
-        gen_chromecast.assert_called_once_with(mdns, blocking=True)
+    signal = MagicMock()
+    async_dispatcher_connect(hass, 'cast_discovered', signal)
 
-        discover_cast('the-service', chromecast)
-        gen_chromecast.reset_mock()
-        assert gen_chromecast.call_count == 0
+    with patch('pychromecast.dial.get_device_status', return_value=None):
+        discover_cast('the-service', info)
+        await hass.async_block_till_done()
+        cast = signal.mock_calls[0][1][0]
+        # attr's __eq__ somehow breaks here, use tuples instead
+        assert attr.astuple(cast) == attr.astuple(info)
+        signal.reset_mock()
 
-
-@asyncio.coroutine
-def test_internal_discovery_callback_calls_dispatcher(hass):
-    """Test internal discovery calls dispatcher."""
-    discover_cast, _ = yield from async_setup_cast_internal_discovery(hass)
-    chromecast = get_fake_chromecast()
-
-    with patch('pychromecast._get_chromecast_from_host',
-               return_value=chromecast):
-        signal = MagicMock()
-
-        async_dispatcher_connect(hass, 'cast_discovered', signal)
-        discover_cast('the-service', chromecast)
-        yield from hass.async_block_till_done()
-
-        signal.assert_called_once_with(chromecast)
+        discover_cast('the-service', info)
+        await hass.async_block_till_done()
+        assert signal.call_count == 0
 
 
-@asyncio.coroutine
-def test_internal_discovery_callback_with_connection_error(hass):
-    """Test internal discovery not calling dispatcher on ConnectionError."""
+async def test_internal_discovery_callback_fill_out(hass):
+    """Test internal discovery automatically filling out information."""
     import pychromecast  # imports mock pychromecast
 
     pychromecast.ChromecastConnectionError = IOError
 
-    discover_cast, _ = yield from async_setup_cast_internal_discovery(
-        hass, no_from_host_patch=True)
-    chromecast = get_fake_chromecast()
+    discover_cast, _ = await async_setup_cast_internal_discovery(hass)
+    info = get_fake_chromecast_info(uuid=None)
+    full_info = attr.evolve(info, model_name='google home',
+                            friendly_name='Speaker', uuid=FakeUUID)
 
-    with patch('pychromecast._get_chromecast_from_host',
-               side_effect=pychromecast.ChromecastConnectionError):
+    with patch('pychromecast.dial.get_device_status',
+               return_value=full_info):
         signal = MagicMock()
 
         async_dispatcher_connect(hass, 'cast_discovered', signal)
-        discover_cast('the-service', chromecast)
-        yield from hass.async_block_till_done()
+        discover_cast('the-service', info)
+        await hass.async_block_till_done()
 
-        assert signal.call_count == 0
+        cast = signal.mock_calls[0][1][0]
+        # attr's __eq__ somehow breaks here, use tuples instead
+        assert attr.astuple(cast) == attr.astuple(full_info)
 
 
 def test_create_cast_device_without_uuid(hass):
     """Test create a cast device without a UUID."""
-    chromecast = get_fake_chromecast(uuid=None)
-    cast_device = cast._async_create_cast_device(hass, chromecast)
+    info = get_fake_chromecast_info(uuid=None)
+    cast_device = cast._async_create_cast_device(hass, info)
     assert cast_device is not None
 
 
 def test_create_cast_device_with_uuid(hass):
     """Test create cast devices with UUID."""
     added_casts = hass.data[cast.ADDED_CAST_DEVICES_KEY] = set()
-    chromecast = get_fake_chromecast()
-    cast_device = cast._async_create_cast_device(hass, chromecast)
+    info = get_fake_chromecast_info()
+
+    cast_device = cast._async_create_cast_device(hass, info)
     assert cast_device is not None
-    assert chromecast.uuid in added_casts
+    assert info.uuid in added_casts
 
-    with patch.object(cast_device, 'async_set_chromecast') as mock_set:
-        assert cast._async_create_cast_device(hass, chromecast) is None
-        assert mock_set.call_count == 0
-
-        chromecast = get_fake_chromecast(host='192.168.178.1')
-        assert cast._async_create_cast_device(hass, chromecast) is None
-        assert mock_set.call_count == 1
-        mock_set.assert_called_once_with(chromecast)
+    # Sending second time should not create new entity
+    cast_device = cast._async_create_cast_device(hass, info)
+    assert cast_device is None
 
 
-@asyncio.coroutine
-def test_normal_chromecast_not_starting_discovery(hass):
+@patch('homeassistant.components.media_player.cast._setup_internal_discovery')
+async def test_normal_chromecast_not_starting_discovery(hass):
     """Test cast platform not starting discovery when not required."""
-    import pychromecast  # imports mock pychromecast
+    add_devices = await async_setup_cast(hass, {'host': 'host1'})
+    await hass.async_block_till_done()
+    assert add_devices.call_count == 1
+    assert cast._setup_internal_discovery.call_count == 0
 
-    pychromecast.ChromecastConnectionError = IOError
+    # Same entity twice
+    add_devices = await async_setup_cast(hass, {'host': 'host1'})
+    await hass.async_block_till_done()
+    assert add_devices.call_count == 0
+    assert cast._setup_internal_discovery.call_count == 0
 
-    chromecast = get_fake_chromecast()
+    hass.data[cast.ADDED_CAST_DEVICES_KEY] = {}
+    add_devices = await async_setup_cast(
+        hass, discovery_info={'host': 'host1', 'port': 8009})
+    await hass.async_block_till_done()
+    assert add_devices.call_count == 1
+    assert cast._setup_internal_discovery.call_count == 0
 
-    with patch('pychromecast.Chromecast', return_value=chromecast):
-        add_devices = yield from async_setup_cast(hass, {'host': 'host1'})
-        assert add_devices.call_count == 1
-
-        # Same entity twice
-        add_devices = yield from async_setup_cast(hass, {'host': 'host1'})
-        assert add_devices.call_count == 0
-
-        hass.data[cast.ADDED_CAST_DEVICES_KEY] = {}
-        add_devices = yield from async_setup_cast(
-            hass, discovery_info={'host': 'host1', 'port': 8009})
-        assert add_devices.call_count == 1
-
-        hass.data[cast.ADDED_CAST_DEVICES_KEY] = {}
-        add_devices = yield from async_setup_cast(
-            hass, discovery_info={'host': 'host1', 'port': 42})
-        assert add_devices.call_count == 0
-
-    with patch('pychromecast.Chromecast',
-               side_effect=pychromecast.ChromecastConnectionError):
-        with pytest.raises(PlatformNotReady):
-            yield from async_setup_cast(hass, {'host': 'host3'})
+    hass.data[cast.ADDED_CAST_DEVICES_KEY] = {}
+    add_devices = await async_setup_cast(
+        hass, discovery_info={'host': 'host1', 'port': 42})
+    await hass.async_block_till_done()
+    assert add_devices.call_count == 0
+    assert cast._setup_internal_discovery.call_count == 1
 
 
-@asyncio.coroutine
-def test_replay_past_chromecasts(hass):
+async def test_replay_past_chromecasts(hass):
     """Test cast platform re-playing past chromecasts when adding new one."""
-    cast_group1 = get_fake_chromecast(host='host1', port=42)
-    cast_group2 = get_fake_chromecast(host='host2', port=42, uuid=UUID(
+    cast_group1 = get_fake_chromecast_info(host='host1', port=42)
+    cast_group2 = get_fake_chromecast_info(host='host2', port=42, uuid=UUID(
         '9462202c-e747-4af5-a66b-7dce0e1ebc09'))
 
-    discover_cast, add_dev1 = yield from async_setup_cast_internal_discovery(
+    discover_cast, add_dev1 = await async_setup_cast_internal_discovery(
         hass, discovery_info={'host': 'host1', 'port': 42})
     discover_cast('service2', cast_group2)
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert add_dev1.call_count == 0
 
     discover_cast('service1', cast_group1)
-    yield from hass.async_block_till_done()
-    yield from hass.async_block_till_done()  # having jobs that add jobs
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()  # having tasks that add jobs
     assert add_dev1.call_count == 1
 
-    add_dev2 = yield from async_setup_cast(
+    add_dev2 = await async_setup_cast(
         hass, discovery_info={'host': 'host2', 'port': 42})
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert add_dev2.call_count == 1
