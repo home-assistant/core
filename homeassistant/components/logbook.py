@@ -139,9 +139,12 @@ class LogbookView(HomeAssistantView):
         end_day = start_day + timedelta(days=1)
         hass = request.app['hass']
 
-        events = yield from hass.async_add_job(
-            _get_events, hass, self.config, start_day, end_day)
-        response = yield from hass.async_add_job(self.json, events)
+        def json_events():
+            """Fetch events and generate JSON."""
+            return self.json(list(
+                _get_events(hass, self.config, start_day, end_day)))
+
+        response = yield from hass.async_add_job(json_events)
         return response
 
 

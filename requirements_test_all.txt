@@ -35,7 +35,7 @@ aioautomatic==0.6.5
 aiohttp_cors==0.6.0
 
 # homeassistant.components.hue
-aiohue==0.3.0
+aiohue==1.2.0
 
 # homeassistant.components.notify.apns
 apns2==0.3.0
@@ -62,6 +62,9 @@ evohomeclient==0.2.5
 # homeassistant.components.sensor.geo_rss_events
 feedparser==5.2.1
 
+# homeassistant.components.sensor.foobot
+foobot_async==0.3.0
+
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
 
@@ -78,7 +81,7 @@ hbmqtt==0.9.1
 holidays==0.9.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180315.0
+home-assistant-frontend==20180316.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb

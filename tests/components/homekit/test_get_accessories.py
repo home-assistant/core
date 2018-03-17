@@ -53,6 +53,13 @@ class TestGetAccessories(unittest.TestCase):
                           {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT})
             get_accessory(None, state, 2, {})
 
+    def test_sensor_humidity(self):
+        """Test humidity sensor with % as unit."""
+        with patch.dict(TYPES, {'HumiditySensor': self.mock_type}):
+            state = State('sensor.humidity', '20',
+                          {ATTR_UNIT_OF_MEASUREMENT: '%'})
+            get_accessory(None, state, 2, {})
+
     def test_cover_set_position(self):
         """Test cover with support for set_cover_position."""
         with patch.dict(TYPES, {'WindowCovering': self.mock_type}):
@@ -80,6 +87,12 @@ class TestGetAccessories(unittest.TestCase):
         # pylint: disable=unsubscriptable-object
         self.assertEqual(
             self.mock_type.call_args[0][-1], False)  # support_auto
+
+    def test_light(self):
+        """Test light devices."""
+        with patch.dict(TYPES, {'Light': self.mock_type}):
+            state = State('light.test', 'on')
+            get_accessory(None, state, 2, {})
 
     def test_climate_support_auto(self):
         """Test climate devices with support for auto mode."""

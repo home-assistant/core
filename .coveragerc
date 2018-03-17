@@ -519,6 +519,7 @@ omit =
     homeassistant/components/notify/sendgrid.py
     homeassistant/components/notify/simplepush.py
     homeassistant/components/notify/slack.py
+    homeassistant/components/notify/stride.py
     homeassistant/components/notify/smtp.py
     homeassistant/components/notify/synology_chat.py
     homeassistant/components/notify/syslog.py
@@ -578,6 +579,7 @@ omit =
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/folder.py
+    homeassistant/components/sensor/foobot.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
     homeassistant/components/sensor/fritzbox_netmonitor.py
     homeassistant/components/sensor/gearbest.py
