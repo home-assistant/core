@@ -236,6 +236,7 @@ def setup_plexserver(
     update_sessions()
     update_devices()
 
+
 def request_configuration(host, hass, config, add_devices_callback):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
