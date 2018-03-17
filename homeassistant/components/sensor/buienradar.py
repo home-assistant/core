@@ -359,8 +359,9 @@ class BrSensor(Entity):
 
     @property
     def force_update(self):
-        """Return true for continuous sensors, false for discrete sensors"""
+        """Return true for continuous sensors, false for discrete sensors."""
         return self._force_update
+
 
 class BrData(object):
     """Get the latest data and updates the states."""
