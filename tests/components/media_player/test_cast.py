@@ -179,14 +179,14 @@ async def test_internal_discovery_callback_fill_out(hass):
         assert attr.astuple(discover) == attr.astuple(full_info)
 
 
-def test_create_cast_device_without_uuid(hass):
+async def test_create_cast_device_without_uuid(hass):
     """Test create a cast device without a UUID."""
     info = get_fake_chromecast_info(uuid=None)
     cast_device = cast._async_create_cast_device(hass, info)
     assert cast_device is not None
 
 
-def test_create_cast_device_with_uuid(hass):
+async def test_create_cast_device_with_uuid(hass):
     """Test create cast devices with UUID."""
     added_casts = hass.data[cast.ADDED_CAST_DEVICES_KEY] = set()
     info = get_fake_chromecast_info()
