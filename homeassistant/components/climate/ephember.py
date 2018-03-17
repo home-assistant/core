@@ -108,8 +108,7 @@ class EphEmberThermostat(ClimateDevice):
         return [STATE_HEAT, STATE_AUTO]
 
     def set_operation_mode(self, operation_mode):
-        """Set operation mode.
-        Changing modes currently not supported"""
+        """Set operation mode"""
         return
 
     @property
