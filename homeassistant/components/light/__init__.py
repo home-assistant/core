@@ -114,7 +114,8 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
                 vol.Coerce(tuple)),
     vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP):
         vol.All(vol.ExactSequence(
-            (vol.All(vol.Coerce(int), vol.Range(min=0, max=65535)), cv.byte)),
+            (vol.All(vol.Coerce(int), vol.Range(min=0, max=360)),
+             vol.All(vol.Coerce(int), vol.Range(min=0, max=100)))),
                 vol.Coerce(tuple)),
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -154,13 +155,13 @@ def is_on(hass, entity_id=None):
 
 @bind_hass
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            brightness_pct=None, rgb_color=None, xy_color=None,
+            brightness_pct=None, rgb_color=None, xy_color=None, hs_color=None,
             color_temp=None, kelvin=None, white_value=None,
             profile=None, flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
     hass.add_job(
         async_turn_on, hass, entity_id, transition, brightness, brightness_pct,
-        rgb_color, xy_color, color_temp, kelvin, white_value,
+        rgb_color, xy_color, hs_color, color_temp, kelvin, white_value,
         profile, flash, effect, color_name)
 
 
@@ -168,8 +169,9 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
 @bind_hass
 def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
                   brightness_pct=None, rgb_color=None, xy_color=None,
-                  color_temp=None, kelvin=None, white_value=None,
-                  profile=None, flash=None, effect=None, color_name=None):
+                  hs_color=None, color_temp=None, kelvin=None,
+                  white_value=None, profile=None, flash=None, effect=None,
+                  color_name=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -180,6 +182,7 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_BRIGHTNESS_PCT, brightness_pct),
             (ATTR_RGB_COLOR, rgb_color),
             (ATTR_XY_COLOR, xy_color),
+            (ATTR_HS_COLOR, hs_color),
             (ATTR_COLOR_TEMP, color_temp),
             (ATTR_KELVIN, kelvin),
             (ATTR_WHITE_VALUE, white_value),
@@ -294,7 +297,7 @@ class SetIntentHandler(intent.IntentHandler):
 
         if 'color' in slots:
             intent.async_test_feature(
-                state, SUPPORT_RGB_COLOR, 'changing colors')
+                state, SUPPORT_COLOR, 'changing colors')
             service_data[ATTR_RGB_COLOR] = slots['color']['value']
             # Use original passed in value of the color because we don't have
             # human readable names for that internally.
@@ -442,7 +445,7 @@ class Light(ToggleEntity):
 
     @property
     def hs_color(self):
-        """Return the hue and saturation color value [int, int]."""
+        """Return the hue and saturation color value [float, float]."""
         return None
 
     @property

@@ -320,7 +320,7 @@ def color_RGB_to_hsv(iR: int, iG: int, iB: int) -> Tuple[float, float, float]:
 
 
 # pylint: disable=invalid-sequence-index
-def color_RGB_to_hs(iR: int, iG: int, iB: int) -> Tuple[int, int, int]:
+def color_RGB_to_hs(iR: int, iG: int, iB: int) -> Tuple[float, float]:
     """Convert an rgb color to its hs representation."""
     return color_RGB_to_hsv(iR, iG, iB)[:2]
 
@@ -338,20 +338,20 @@ def color_hsv_to_RGB(iH: float, iS: float, iV: float) -> Tuple[int, int, int]:
 
 
 # pylint: disable=invalid-sequence-index
-def color_hs_to_RGB(iH: int, iS: int) -> Tuple[int, int, int]:
+def color_hs_to_RGB(iH: float, iS: float) -> Tuple[int, int, int]:
     """Convert an hsv color into its rgb representation."""
-    return color_hsv_to_RGB(iH, iS, 255)
+    return color_hsv_to_RGB(iH, iS, 100)
 
 
 # pylint: disable=invalid-sequence-index
-def color_xy_to_hs(vX: float, vY: float) -> Tuple[int, int]:
+def color_xy_to_hs(vX: float, vY: float) -> Tuple[float, float]:
     """Convert an xy color to its hs representation."""
     h, s, _ = color_RGB_to_hsv(*color_xy_to_RGB(vX, vY))
     return (h, s)
 
 
 # pylint: disable=invalid-sequence-index
-def color_hs_to_xy(iH: int, iS: int) -> Tuple[int, int]:
+def color_hs_to_xy(iH: float, iS: float) -> Tuple[float, float]:
     """Convert an hs color to its xy representation."""
     return color_RGB_to_xy(*color_hs_to_RGB(iH, iS))
 

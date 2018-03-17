@@ -16,10 +16,10 @@ import voluptuous as vol
 from homeassistant import util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_NAME, ATTR_COLOR_TEMP,
-    ATTR_EFFECT, ATTR_KELVIN, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_XY_COLOR,
-    DOMAIN, LIGHT_TURN_ON_SCHEMA, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_HS_COLOR, SUPPORT_TRANSITION,
-    VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
+    ATTR_EFFECT, ATTR_HS_COLOR, ATTR_KELVIN, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    ATTR_XY_COLOR, COLOR_GROUP, DOMAIN, LIGHT_TURN_ON_SCHEMA, PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
+    SUPPORT_TRANSITION, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
     preprocess_turn_on_alternatives)
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
@@ -96,7 +96,8 @@ LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
                 vol.Coerce(tuple)),
     vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP):
         vol.All(vol.ExactSequence(
-            (vol.All(vol.Coerce(int), vol.Range(min=0, max=65535)), cv.byte)),
+            (vol.All(vol.Coerce(int), vol.Range(min=0, max=360)),
+             vol.All(vol.Coerce(int), vol.Range(min=0, max=100)))),
                 vol.Coerce(tuple)),
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP):
         vol.All(vol.Coerce(int), vol.Range(min=1)),

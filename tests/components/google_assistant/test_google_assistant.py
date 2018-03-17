@@ -174,7 +174,7 @@ def test_query_request(hass_fixture, assistant_client):
     assert devices['light.bed_light']['on'] is False
     assert devices['light.ceiling_lights']['on'] is True
     assert devices['light.ceiling_lights']['brightness'] == 70
-    assert devices['light.kitchen_lights']['color']['spectrumRGB'] == 16727918
+    assert devices['light.kitchen_lights']['color']['spectrumRGB'] == 16727919
     assert devices['light.kitchen_lights']['color']['temperature'] == 4166
     assert devices['media_player.lounge_room']['on'] is True
 

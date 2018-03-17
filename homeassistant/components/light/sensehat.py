@@ -96,7 +96,7 @@ class SenseHatLight(Light):
             self._hs_color = kwargs[ATTR_HS_COLOR]
 
         rgb = color_util.color_hsv_to_RGB(
-            self._hs_color[0], self._hs_color[1], self._brightness)
+            self._hs_color[0], self._hs_color[1], self._brightness / 255 * 100)
         self._sensehat.clear(*rgb)
 
         self._is_on = True

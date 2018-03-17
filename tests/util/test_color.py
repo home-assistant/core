@@ -152,20 +152,20 @@ class TestColorUtil(unittest.TestCase):
 
     def test_color_hs_to_xy(self):
         """Test color_hs_to_xy."""
-        self.assertEqual((0.679, 0.321),
-                         color_util.color_hs_to_xy(127, 255))
+        self.assertEqual((0.151, 0.343),
+                         color_util.color_hs_to_xy(180, 100))
 
-        self.assertEqual((0.356, 0.334),
-                         color_util.color_hs_to_xy(250, 32))
+        self.assertEqual((0.352, 0.329),
+                         color_util.color_hs_to_xy(350, 12.5))
 
-        self.assertEqual((0.514, 0.329),
-                         color_util.color_hs_to_xy(100, 128))
+        self.assertEqual((0.228, 0.476),
+                         color_util.color_hs_to_xy(140, 50))
 
-        self.assertEqual((0.462, 0.33),
-                         color_util.color_hs_to_xy(0, 100))
+        self.assertEqual((0.465, 0.33),
+                         color_util.color_hs_to_xy(0, 40))
 
         self.assertEqual((0.32, 0.336),
-                         color_util.color_hs_to_xy(255, 0))
+                         color_util.color_hs_to_xy(360, 0))
 
     def test_rgb_hex_to_rgb_list(self):
         """Test rgb_hex_to_rgb_list."""

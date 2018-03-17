@@ -102,8 +102,8 @@ class HiveDeviceLight(Light):
             new_color_temp = round(1000000 / tmp_new_color_temp)
         if ATTR_HS_COLOR in kwargs:
             get_new_color = kwargs.get(ATTR_HS_COLOR)
-            hue = int(round(get_new_color[0] / 65535 * 360))
-            saturation = int(round(get_new_color[1] / 255 * 100))
+            hue = int(get_new_color[0])
+            saturation = int(get_new_color[1])
             new_color = (hue, saturation, 100)
 
         self.session.light.turn_on(self.node_id, self.light_device_type,

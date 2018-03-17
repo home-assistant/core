@@ -33,11 +33,11 @@ class TestDemoLight(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_LIGHT)
         self.assertTrue(light.is_on(self.hass, ENTITY_LIGHT))
-        self.assertEqual((0.379, 0.573), state.attributes.get(
+        self.assertEqual((0.378, 0.574), state.attributes.get(
             light.ATTR_XY_COLOR))
         self.assertEqual(25, state.attributes.get(light.ATTR_BRIGHTNESS))
         self.assertEqual(
-            (208, 255, 0), state.attributes.get(light.ATTR_RGB_COLOR))
+            (207, 255, 0), state.attributes.get(light.ATTR_RGB_COLOR))
         self.assertEqual('rainbow', state.attributes.get(light.ATTR_EFFECT))
         light.turn_on(
             self.hass, ENTITY_LIGHT, rgb_color=(251, 253, 255),
@@ -46,9 +46,9 @@ class TestDemoLight(unittest.TestCase):
         state = self.hass.states.get(ENTITY_LIGHT)
         self.assertEqual(254, state.attributes.get(light.ATTR_WHITE_VALUE))
         self.assertEqual(
-            (251, 253, 255), state.attributes.get(light.ATTR_RGB_COLOR))
+            (250, 252, 255), state.attributes.get(light.ATTR_RGB_COLOR))
         self.assertEqual(
-            (0.316, 0.334), state.attributes.get(light.ATTR_XY_COLOR))
+            (0.316, 0.333), state.attributes.get(light.ATTR_XY_COLOR))
         light.turn_on(self.hass, ENTITY_LIGHT, color_temp=400, effect='none')
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_LIGHT)

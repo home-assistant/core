@@ -17,8 +17,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION, ATTR_HS_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
     FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR, SUPPORT_TRANSITION,
-    Light, PLATFORM_SCHEMA)
-import homeassistant.util.color as color_util
+    Light)
 
 DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -235,8 +234,8 @@ class HueLight(Light):
                 self.light.action.get('sat') / 255 * 100,
             )
         return (
-            self.light.stage.get('hue') / 65535 * 360,
-            self.light.stage.get('sat') / 255 * 100,
+            self.light.state.get('hue') / 65535 * 360,
+            self.light.state.get('sat') / 255 * 100,
         )
 
     @property
@@ -278,8 +277,8 @@ class HueLight(Light):
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_HS_COLOR in kwargs:
-            command['hue'] = kwargs[ATTR_HS_COLOR][0] / 360 * 65535
-            command['sat'] = kwargs[ATTR_HS_COLOR][1] / 100 * 255
+            command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
+            command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))

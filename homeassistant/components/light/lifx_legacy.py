@@ -160,7 +160,7 @@ class LIFXLight(Light):
     @property
     def hs_color(self):
         """Return the hs value."""
-        return (self._hue, self._sat / 65535 * 255)
+        return (self._hue / 65535 * 360, self._sat / 65535 * 100)
 
     @property
     def brightness(self):
@@ -197,7 +197,8 @@ class LIFXLight(Light):
 
         if ATTR_HS_COLOR in kwargs:
             hue, saturation = kwargs[ATTR_HS_COLOR]
-            saturation = saturation / 255 * 65535
+            hue = hue / 360 * 65535
+            saturation = saturation / 100 * 65535
         else:
             hue = self._hue
             saturation = self._sat

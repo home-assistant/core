@@ -102,7 +102,7 @@ class BlinkStickLight(Light):
             self._brightness = 255
 
         rgb_color = color_util.color_hsv_to_RGB(
-            self._hs_color[0], self._hs_color[1], self._brightness)
+            self._hs_color[0], self._hs_color[1], self._brightness / 255 * 100)
         self._stick.set_color(
             red=rgb_color[0], green=rgb_color[1], blue=rgb_color[2])
 

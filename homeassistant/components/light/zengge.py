@@ -144,7 +144,8 @@ class ZenggeLight(Light):
             self.set_white(self._white)
         else:
             rgb = color_util.color_hsv_to_RGB(
-                self._hs_color[0], self._hs_color[1], self._brightness)
+                self._hs_color[0], self._hs_color[1],
+                self._brightness / 255 * 100)
             self.set_rgb(*rgb)
 
     def turn_off(self, **kwargs):

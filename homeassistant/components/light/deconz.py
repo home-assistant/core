@@ -126,9 +126,6 @@ class DeconzLight(Light):
         if ATTR_HS_COLOR in kwargs:
             data['xy'] = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
 
-        if ATTR_XY_COLOR in kwargs:
-            data['xy'] = kwargs[ATTR_XY_COLOR]
-
         if ATTR_BRIGHTNESS in kwargs:
             data['bri'] = kwargs[ATTR_BRIGHTNESS]
 

@@ -232,9 +232,9 @@ def test_set_hs_color(mock_openzwave):
 
     assert color.data == '#0000000000'
 
-    device.turn_on(**{ATTR_HS_COLOR: (5461, 127)})
+    device.turn_on(**{ATTR_HS_COLOR: (30, 50)})
 
-    assert color.data == '#ffbf800000'
+    assert color.data == '#ffbf7f0000'
 
 
 def test_set_white_value(mock_openzwave):
@@ -329,7 +329,7 @@ def test_rgb_value_changed(mock_openzwave):
     color.data = '#ffbf800000'
     value_changed(color)
 
-    assert device.hs_color == (5418, 127)
+    assert device.hs_color == (29.764, 49.804)
 
 
 def test_rgbww_value_changed(mock_openzwave):
@@ -349,7 +349,7 @@ def test_rgbww_value_changed(mock_openzwave):
     color.data = '#c86400c800'
     value_changed(color)
 
-    assert device.hs_color == (5461, 255)
+    assert device.hs_color == (30, 100)
     assert device.white_value == 200
 
 
@@ -370,7 +370,7 @@ def test_rgbcw_value_changed(mock_openzwave):
     color.data = '#c86400c800'
     value_changed(color)
 
-    assert device.hs_color == (5461, 255)
+    assert device.hs_color == (30, 100)
     assert device.white_value == 200
 
 

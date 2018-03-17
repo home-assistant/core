@@ -12,8 +12,8 @@ from homeassistant.components.light import (
     SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light)
 
 LIGHT_COLORS = [
-    (10226, 219),
-    (62805, 192),
+    (56, 86),
+    (345, 75),
 ]
 
 LIGHT_EFFECT_LIST = ['rainbow', 'none']

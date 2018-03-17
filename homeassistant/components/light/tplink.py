@@ -97,7 +97,7 @@ class TPLinkSmartBulb(Light):
             self.smartbulb.brightness = brightness_to_percentage(brightness)
         if ATTR_HS_COLOR in kwargs:
             hue, sat = kwargs.get(ATTR_HS_COLOR)
-            hsv = (hue / 65536 * 360, sat / 255 * 100, 100)
+            hsv = (hue, sat, 100)
             self.smartbulb.hsv = hsv
 
     def turn_off(self, **kwargs):
@@ -152,7 +152,7 @@ class TPLinkSmartBulb(Light):
 
             if self._supported_features & SUPPORT_COLOR:
                 hue, sat, _ = self.smartbulb.hsv
-                self._hs = (hue / 360 * 65535, sat / 100 * 255)
+                self._hs = (hue, sat)
 
             if self.smartbulb.has_emeter:
                 self._emeter_params[ATTR_CURRENT_POWER_W] = '{:.1f}'.format(

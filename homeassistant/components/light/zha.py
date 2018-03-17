@@ -161,7 +161,7 @@ class Light(zha.Entity, light.Light):
 
         if self._supported_features & light.SUPPORT_COLOR:
             result = await zha.safe_read(self._endpoint.light_color,
-                                              ['current_x', 'current_y'])
+                                         ['current_x', 'current_y'])
             if 'current_x' in result and 'current_y' in result:
                 xy_color = (result['current_x'], result['current_y'])
                 self._hs_color = color_util.color_xy_to_hs(*xy_color)

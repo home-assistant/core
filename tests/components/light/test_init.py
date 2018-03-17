@@ -191,7 +191,7 @@ class TestLight(unittest.TestCase):
         self.assertEqual({
             light.ATTR_TRANSITION: 10,
             light.ATTR_BRIGHTNESS: 20,
-            light.ATTR_HS_COLOR: (43690, 255),
+            light.ATTR_HS_COLOR: (240, 100),
         }, data)
 
         _, data = dev2.last_call('turn_on')
@@ -202,11 +202,11 @@ class TestLight(unittest.TestCase):
 
         _, data = dev3.last_call('turn_on')
         self.assertEqual({
-            light.ATTR_HS_COLOR: (12935, 255),
+            light.ATTR_HS_COLOR: (71.059, 100),
         }, data)
 
         # One of the light profiles
-        prof_name, prof_h, prof_s, prof_bri = 'relax', 6541, 177, 144
+        prof_name, prof_h, prof_s, prof_bri = 'relax', 35.932, 69.412, 144
 
         # Test light profiles
         light.turn_on(self.hass, dev1.entity_id, profile=prof_name)
@@ -304,7 +304,7 @@ class TestLight(unittest.TestCase):
         _, data = dev1.last_call('turn_on')
 
         self.assertEqual({
-            light.ATTR_HS_COLOR: (12935, 255),
+            light.ATTR_HS_COLOR: (71.059, 100),
             light.ATTR_BRIGHTNESS: 100
         }, data)
 
@@ -312,7 +312,7 @@ class TestLight(unittest.TestCase):
 async def test_intent_set_color(hass):
     """Test the set color intent."""
     hass.states.async_set('light.hello_2', 'off', {
-        ATTR_SUPPORTED_FEATURES: light.SUPPORT_RGB_COLOR
+        ATTR_SUPPORTED_FEATURES: light.SUPPORT_COLOR
     })
     hass.states.async_set('switch.hello', 'off')
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
@@ -367,7 +367,7 @@ async def test_intent_set_color_and_brightness(hass):
     """Test the set color intent."""
     hass.states.async_set('light.hello_2', 'off', {
         ATTR_SUPPORTED_FEATURES: (
-            light.SUPPORT_RGB_COLOR | light.SUPPORT_BRIGHTNESS)
+            light.SUPPORT_COLOR | light.SUPPORT_BRIGHTNESS)
     })
     hass.states.async_set('switch.hello', 'off')
     calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)

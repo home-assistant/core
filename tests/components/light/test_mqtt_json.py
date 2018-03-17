@@ -240,7 +240,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.hass.block_till_done()
 
         light_state = self.hass.states.get('light.test')
-        self.assertEqual((0.141, 0.141),
+        self.assertEqual((0.141, 0.14),
                          light_state.attributes.get('xy_color'))
 
         fire_mqtt_message(self.hass, 'test_light_rgb',
