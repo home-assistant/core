@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.boolean,
     vol.Optional(CONF_REMOVE_UNAVAILABLE_CLIENTS, default=True):
     cv.boolean,
-    vol.Optional(CONF_CLIENT_REMOVE_INTERVAL, default=timedelta(seconds=10)):
+    vol.Optional(CONF_CLIENT_REMOVE_INTERVAL, default=timedelta(seconds=600)):
         vol.All(cv.time_period, cv.positive_timedelta),
 })
 
