@@ -4,7 +4,6 @@ Support for Xiaomi Mi Air Quality Monitor (PM2.5).
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/sensor.xiaomi_miio/
 """
-from functools import partial
 import logging
 
 import voluptuous as vol
@@ -130,21 +129,6 @@ class XiaomiAirQualityMonitor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
-
-    async def _try_command(self, mask_error, func, *args, **kwargs):
-        """Call a device command handling error messages."""
-        from miio import DeviceException
-        try:
-            result = await self.hass.async_add_job(
-                partial(func, *args, **kwargs))
-
-            _LOGGER.debug("Response received from miio device: %s", result)
-
-            return result == SUCCESS
-        except DeviceException as exc:
-            _LOGGER.error(mask_error, exc)
-            self._available = False
-            return False
 
     async def async_update(self):
         """Fetch state from the miio device."""
