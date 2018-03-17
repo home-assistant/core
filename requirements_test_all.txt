@@ -32,7 +32,7 @@ aioautomatic==0.6.5
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
-aiohttp_cors==0.6.0
+aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
 aiohue==1.2.0
