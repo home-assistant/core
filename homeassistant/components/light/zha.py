@@ -5,7 +5,6 @@ For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/light.zha/
 """
 import logging
-from zigpy.exceptions import DeliveryError
 from homeassistant.components import light, zha
 from homeassistant.util.color import color_RGB_to_xy
 from homeassistant.const import STATE_UNKNOWN
@@ -118,7 +117,7 @@ class Light(zha.Entity, light.Light):
             self._state = 1
             self.async_schedule_update_ha_state()
             return
-
+        from zigpy.exceptions import DeliveryError
         try:
             await self._endpoint.on_off.on()
         except DeliveryError as ex:
@@ -130,6 +129,7 @@ class Light(zha.Entity, light.Light):
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
+        from zigpy.exceptions import DeliveryError
         try:
             await self._endpoint.on_off.off()
         except DeliveryError as ex:

@@ -5,7 +5,7 @@ For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/switch.zha/
 """
 import logging
-from zigpy.exceptions import DeliveryError
+
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.components import zha
 
@@ -57,6 +57,7 @@ class Switch(zha.Entity, SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
+        from zigpy.exceptions import DeliveryError
         try:
             await self._endpoint.on_off.on()
         except DeliveryError as ex:
@@ -67,6 +68,7 @@ class Switch(zha.Entity, SwitchDevice):
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
+        from zigpy.exceptions import DeliveryError
         try:
             await self._endpoint.on_off.off()
         except DeliveryError as ex:
