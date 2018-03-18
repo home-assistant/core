@@ -41,7 +41,7 @@ LED_TYPE = ['rgbw', 'rgbww', 'white', 'bridge-led', 'dimmer']
 
 EFFECT_NIGHT = 'night'
 
-MIN_SATURATION = 40
+MIN_SATURATION = 10
 
 WHITE = [0, 0]
 
