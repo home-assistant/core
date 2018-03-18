@@ -40,6 +40,7 @@ SERVICE_HUE = 'philips_hue'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DAIKIN = 'daikin'
 SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
+SERVICE_HOMEKIT = 'homekit'
 
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_HUE: 'hue',
@@ -59,6 +60,7 @@ SERVICE_HANDLERS = {
     SERVICE_DECONZ: ('deconz', None),
     SERVICE_DAIKIN: ('daikin', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
+    SERVICE_HOMEKIT: ('homekit_controller', None),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),

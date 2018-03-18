@@ -109,6 +109,9 @@ omit =
     homeassistant/components/hive.py
     homeassistant/components/*/hive.py
 
+    homeassistant/components/homekit_controller.py
+    homeassistant/components/*/homekit_controller.py
+
     homeassistant/components/homematic/__init__.py
     homeassistant/components/*/homematic.py
 
@@ -418,6 +421,7 @@ omit =
     homeassistant/components/light/decora.py
     homeassistant/components/light/flux_led.py
     homeassistant/components/light/greenwave.py
+    homeassistant/components/light/homekit_controller.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
     homeassistant/components/light/iglo.py
