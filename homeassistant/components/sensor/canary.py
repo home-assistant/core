@@ -20,7 +20,7 @@ SENSOR_TYPES = [
     ["temperature", TEMP_CELSIUS, "mdi:thermometer", ["Canary"]],
     ["humidity", "%", "mdi:water-percent", ["Canary"]],
     ["air_quality", None, "mdi:weather-windy", ["Canary"]],
-    ["wifi_signal_strength", "dBm", "mdi:wifi", ["Canary Flex"]],
+    ["wifi", "dBm", "mdi:wifi", ["Canary Flex"]],
     ["battery", "%", "mdi:battery-50", ["Canary Flex"]],
 ]
 

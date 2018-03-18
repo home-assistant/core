@@ -181,7 +181,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         self.assertEqual("%", sensor.unit_of_measurement)
         self.assertEqual(50.46, sensor.state)
 
-    def test_wifi_signal_strength_sensor(self):
+    def test_wifi_sensor(self):
         """Test battery sensor."""
         device = mock_device(10, "Family Room", "Canary Flex")
         location = mock_location("Home")
@@ -192,6 +192,6 @@ class TestCanarySensorSetup(unittest.TestCase):
         sensor = CanarySensor(data, SENSOR_TYPES[3], location, device)
         sensor.update()
 
-        self.assertEqual("Home Family Room Wifi Signal Strength", sensor.name)
+        self.assertEqual("Home Family Room Wifi", sensor.name)
         self.assertEqual("dBm", sensor.unit_of_measurement)
         self.assertEqual(-57, sensor.state)
