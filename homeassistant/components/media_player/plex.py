@@ -8,7 +8,6 @@ import json
 import logging
 
 from datetime import timedelta
-from homeassistant.util import dt as dt_util
 
 import requests
 import voluptuous as vol
@@ -24,6 +23,8 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util.json import load_json, save_json
+from homeassistant.util import dt as dt_util
+
 
 REQUIREMENTS = ['plexapi==3.0.6']
 
@@ -440,7 +441,7 @@ class PlexClient(MediaPlayerDevice):
         if not available:
             self._clear_media_details()
             if self._marked_unavailable is None:
-                self._marked_unavailable = dt.now()
+                self._marked_unavailable = dt_util.utcnow()
         else:
             self._marked_unavailable = None
 
