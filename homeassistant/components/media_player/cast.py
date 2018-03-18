@@ -365,7 +365,7 @@ class CastDevice(MediaPlayerDevice):
         self._status_listener.invalidate()
         self._status_listener = None
 
-    async def async_update(self):
+    def update(self):
         """Periodically update the properties.
 
         Even though we receive callbacks for most state changes, some 3rd party
@@ -378,8 +378,7 @@ class CastDevice(MediaPlayerDevice):
 
         if self._chromecast.media_controller.is_active:
             # We can only update status if the media namespace is active
-            self.hass.async_add_job(
-                self._chromecast.media_controller.update_status)
+            self._chromecast.media_controller.update_status()
 
     # ========== Callbacks ==========
     def new_cast_status(self, cast_status):
