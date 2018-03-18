@@ -22,8 +22,8 @@ CONF_STATION = 'station'
 
 DEPENDENCIES = ['netatmo']
 
-# NetAtmo Data is uploaded to server every 10 minutes
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
+# NetAtmo Data is uploaded to server every 5 minutes
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
