@@ -8,7 +8,7 @@ import json
 import logging
 
 from datetime import timedelta
-from datetime import datetime as dt
+from homeassistant.util import dt as dt_util
 
 import requests
 import voluptuous as vol
@@ -204,7 +204,7 @@ def setup_plexserver(
                     or client.available:
                 continue
 
-            if (dt.now() - client.marked_unavailable) >= \
+            if (dt_util.utcnow() - client.marked_unavailable) >= \
                     (config.get(CONF_CLIENT_REMOVE_INTERVAL)):
                 hass.add_job(client.async_remove())
                 clients_to_remove.append(client.machine_identifier)
