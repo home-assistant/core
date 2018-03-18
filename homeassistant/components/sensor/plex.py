@@ -119,7 +119,7 @@ class PlexSensor(Entity):
             device = sess.players[0].title
             now_playing_user = "{0} - {1}".format(user, device)
             now_playing_title = ""
-            
+
             if sess.TYPE == 'episode':
                 # example:
                 # "Supernatural (2005) - S01 · E13 - Route 666"
@@ -149,7 +149,7 @@ class PlexSensor(Entity):
                 now_playing_title = sess.title
                 if sess.year is not None:
                     now_playing_title += " ({0})".format(sess.year)
-                    
+
             now_playing.append((now_playing_user, now_playing_title))
         self._state = len(sessions)
         self._now_playing = now_playing
