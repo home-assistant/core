@@ -90,6 +90,17 @@ class LW12WiFi(Light):
 
     def __init__(self, name, host, port, rgb_color, brightness, effect,
                  transition):
+        """Initialisation of LW-12 WiFi LED Controller.
+
+        Args:
+            name: Friendly name for this platform to use.
+            host: Hostname or IP address of the device.
+            port: Port (Default: 5000) to connect to.
+            rgb_color: Initial color to set after the light turned on.
+            brightness: Brightness of the LEDs to set.
+            effect: If not None, turn on the lights with the selected effect.
+            transition: Speed of the effects.
+        """
         import lw12
 
         self._light = lw12.LW12Controller(host, port)
@@ -139,6 +150,7 @@ class LW12WiFi(Light):
 
     @property
     def supported_features(self):
+        """Return a list of supported features."""
         return self._supported_features
 
     @property
@@ -198,5 +210,6 @@ class LW12WiFi(Light):
         self._state = True
 
     def turn_off(self, **kwargs):
+        """Instruct the light to turn off."""
         self._light.light_off()
         self._state = False
