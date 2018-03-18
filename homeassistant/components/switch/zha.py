@@ -5,7 +5,7 @@ For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/switch.zha/
 """
 import logging
-
+from zigpy.exceptions import DeliveryError
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.components import zha
 
@@ -57,10 +57,9 @@ class Switch(zha.Entity, SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        import bellows
         try:
             await self._endpoint.on_off.on()
-        except bellows.zigbee.exceptions.DeliveryError as ex:
+        except DeliveryError as ex:
             _LOGGER.error("Unable to turn the switch on: %s", ex)
             return
 
@@ -68,10 +67,9 @@ class Switch(zha.Entity, SwitchDevice):
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        import bellows
         try:
             await self._endpoint.on_off.off()
-        except bellows.zigbee.exceptions.DeliveryError as ex:
+        except DeliveryError as ex:
             _LOGGER.error("Unable to turn the switch off: %s", ex)
             return
 
