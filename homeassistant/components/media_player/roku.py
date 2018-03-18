@@ -1,28 +1,26 @@
 """
-Support for the roku media player.
+Support for the Roku media player.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.roku/
 """
 import logging
 
-import voluptuous as vol
 
+from homeassistant.components.roku import (DATA_ENTITIES)
 from homeassistant.components.media_player import (
     MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
+    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, STATE_HOME)
-import homeassistant.helpers.config_validation as cv
+    CONF_NAME, CONF_HOST, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN,
+    STATE_HOME)
 
 REQUIREMENTS = ['python-roku==3.1.5']
 
-KNOWN_HOSTS = []
-DEFAULT_PORT = 8060
+DEPENDENCIES = ['roku']
 
-NOTIFICATION_ID = 'roku_notification'
-NOTIFICATION_TITLE = 'Roku Media Player Setup'
+DEFAULT_PORT = 8060
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,65 +28,39 @@ SUPPORT_ROKU = SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |\
     SUPPORT_PLAY_MEDIA | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
-})
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Roku platform."""
-    hosts = []
+    if not discovery_info:
+        return
 
-    if discovery_info:
-        host = discovery_info.get("host")
+    # Manage entity cache for service handler
+    if DATA_ENTITIES not in hass.data:
+        hass.data[DATA_ENTITIES] = []
 
-        if host in KNOWN_HOSTS:
-            return
+    name = discovery_info[CONF_NAME]
+    host = discovery_info[CONF_HOST]
+    entity = RokuDevice(host, name)
 
-        _LOGGER.debug("Discovered Roku: %s", host)
-        hosts.append(discovery_info.get("host"))
+    if entity not in hass.data[DATA_ENTITIES]:
+        hass.data[DATA_ENTITIES].append(entity)
 
-    elif CONF_HOST in config:
-        hosts.append(config.get(CONF_HOST))
-
-    rokus = []
-    for host in hosts:
-        new_roku = RokuDevice(host)
-
-        try:
-            if new_roku.name is not None:
-                rokus.append(RokuDevice(host))
-                KNOWN_HOSTS.append(host)
-            else:
-                _LOGGER.error("Unable to initialize roku at %s", host)
-
-        except AttributeError:
-            _LOGGER.error("Unable to initialize roku at %s", host)
-            hass.components.persistent_notification.create(
-                'Error: Unable to initialize roku at {}<br />'
-                'Check its network connection or consider '
-                'using auto discovery.<br />'
-                'You will need to restart hass after fixing.'
-                ''.format(config.get(CONF_HOST)),
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
-
-    add_devices(rokus)
+    add_devices([entity])
 
 
 class RokuDevice(MediaPlayerDevice):
     """Representation of a Roku device on the network."""
 
-    def __init__(self, host):
+    def __init__(self, host, name):
         """Initialize the Roku device."""
         from roku import Roku
 
-        self.roku = Roku(host)
-        self.ip_address = host
-        self.channels = []
-        self.current_app = None
-        self.device_info = {}
-
+        self._roku = Roku(host)
+        self._ip_address = host
+        self._channels = []
+        self._current_app = None
+        self._device_info = {}
+        self._name = name
         self.update()
 
     def update(self):
@@ -96,14 +68,14 @@ class RokuDevice(MediaPlayerDevice):
         import requests.exceptions
 
         try:
-            self.device_info = self.roku.device_info
-            self.ip_address = self.roku.host
-            self.channels = self.get_source_list()
+            self._device_info = self._roku.device_info
+            self._ip_address = self._roku.host
+            self._channels = self.get_source_list()
 
-            if self.roku.current_app is not None:
-                self.current_app = self.roku.current_app
+            if self._roku.current_app is not None:
+                self._current_app = self._roku.current_app
             else:
-                self.current_app = None
+                self._current_app = None
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.ReadTimeout):
 
@@ -111,7 +83,7 @@ class RokuDevice(MediaPlayerDevice):
 
     def get_source_list(self):
         """Get the list of applications to be used as sources."""
-        return ["Home"] + sorted(channel.name for channel in self.roku.apps)
+        return ["Home"] + sorted(channel.name for channel in self._roku.apps)
 
     @property
     def should_poll(self):
@@ -121,22 +93,25 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        if self.device_info.userdevicename:
-            return self.device_info.userdevicename
-        return "Roku {}".format(self.device_info.sernum)
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._device_info.sernum
 
     @property
     def state(self):
         """Return the state of the device."""
-        if self.current_app is None:
+        if self._current_app is None:
             return STATE_UNKNOWN
 
-        if (self.current_app.name == "Power Saver" or
-                self.current_app.is_screensaver):
+        if (self._current_app.name == "Power Saver" or
+                self._current_app.is_screensaver):
             return STATE_IDLE
-        elif self.current_app.name == "Roku":
+        elif self._current_app.name == "Roku":
             return STATE_HOME
-        elif self.current_app.name is not None:
+        elif self._current_app.name is not None:
             return STATE_PLAYING
 
         return STATE_UNKNOWN
@@ -149,87 +124,95 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        if self.current_app is None:
+        if self._current_app is None:
             return None
-        elif self.current_app.name == "Power Saver":
+        elif self._current_app.name == "Power Saver":
             return None
-        elif self.current_app.name == "Roku":
+        elif self._current_app.name == "Roku":
             return None
         return MEDIA_TYPE_VIDEO
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if self.current_app is None:
+        if self._current_app is None:
             return None
-        elif self.current_app.name == "Roku":
+        elif self._current_app.name == "Roku":
             return None
-        elif self.current_app.name == "Power Saver":
+        elif self._current_app.name == "Power Saver":
             return None
-        elif self.current_app.id is None:
+        elif self._current_app.id is None:
             return None
 
         return 'http://{0}:{1}/query/icon/{2}'.format(
-            self.ip_address, DEFAULT_PORT, self.current_app.id)
+            self._ip_address, DEFAULT_PORT, self._current_app.id)
 
     @property
     def app_name(self):
         """Name of the current running app."""
-        if self.current_app is not None:
-            return self.current_app.name
+        if self._current_app is not None:
+            return self._current_app.name
 
     @property
     def app_id(self):
         """Return the ID of the current running app."""
-        if self.current_app is not None:
-            return self.current_app.id
+        if self._current_app is not None:
+            return self._current_app.id
 
     @property
     def source(self):
         """Return the current input source."""
-        if self.current_app is not None:
-            return self.current_app.name
+        if self._current_app is not None:
+            return self._current_app.name
 
     @property
     def source_list(self):
         """List of available input sources."""
-        return self.channels
+        return self._channels
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return True
 
     def media_play_pause(self):
         """Send play/pause command."""
-        if self.current_app is not None:
-            self.roku.play()
+        if self._current_app is not None:
+            self._roku.play()
 
     def media_previous_track(self):
-        """Send previous track command."""
-        if self.current_app is not None:
-            self.roku.reverse()
+        """Send previous track command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        if self._current_app is not None:
+            self._roku.reverse()
 
     def media_next_track(self):
         """Send next track command."""
-        if self.current_app is not None:
-            self.roku.forward()
+        if self._current_app is not None:
+            self._roku.forward()
 
     def mute_volume(self, mute):
         """Mute the volume."""
-        if self.current_app is not None:
-            self.roku.volume_mute()
+        if self._current_app is not None:
+            self._roku.volume_mute()
 
     def volume_up(self):
         """Volume up media player."""
-        if self.current_app is not None:
-            self.roku.volume_up()
+        if self._current_app is not None:
+            self._roku.volume_up()
 
     def volume_down(self):
         """Volume down media player."""
-        if self.current_app is not None:
-            self.roku.volume_down()
+        if self._current_app is not None:
+            self._roku.volume_down()
 
     def select_source(self, source):
         """Select input source."""
-        if self.current_app is not None:
+        if self._current_app is not None:
             if source == "Home":
-                self.roku.home()
+                self._roku.home()
             else:
-                channel = self.roku[source]
+                channel = self._roku[source]
                 channel.launch()
