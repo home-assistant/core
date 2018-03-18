@@ -25,7 +25,6 @@ light:
     rgb: [255, 255, 255]
 """
 
-import asyncio
 import logging
 import time
 
@@ -154,7 +153,7 @@ class LW12WiFi(Light):
 
     @property
     def assumed_state(self) -> bool:
-        """Return False if unable to access real state of the entity."""
+        """Return True if unable to access real state of the entity."""
         return True
 
     def turn_on(self, **kwargs):
