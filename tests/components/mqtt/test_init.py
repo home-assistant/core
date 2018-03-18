@@ -28,6 +28,7 @@ def async_mock_mqtt_client(hass, config=None):
     with mock.patch('paho.mqtt.client.Client') as mock_client:
         mock_client().connect.return_value = 0
         mock_client().subscribe.return_value = (0, 0)
+        mock_client().unsubscribe.return_value = (0, 0)
         mock_client().publish.return_value = (0, 0)
         result = yield from async_setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: config
@@ -58,7 +59,7 @@ class TestMQTTComponent(unittest.TestCase):
         """Helper for recording calls."""
         self.calls.append(args)
 
-    def test_client_stops_on_home_assistant_start(self):
+    def aiohttp_client_stops_on_home_assistant_start(self):
         """Test if client stops on HA stop."""
         self.hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
         self.hass.block_till_done()
@@ -155,7 +156,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         """Helper for recording calls."""
         self.calls.append(args)
 
-    def test_client_starts_on_home_assistant_mqtt_setup(self):
+    def aiohttp_client_starts_on_home_assistant_mqtt_setup(self):
         """Test if client is connected after mqtt init on bootstrap."""
         self.assertEqual(self.hass.data['mqtt']._mqttc.connect.call_count, 1)
 
@@ -171,6 +172,17 @@ class TestMQTTCallbacks(unittest.TestCase):
                 "WARNING:homeassistant.components.mqtt:Can't decode payload "
                 "b'\\x9a' on test-topic with encoding utf-8",
                 test_handle.output[0])
+
+    def test_all_subscriptions_run_when_decode_fails(self):
+        """Test all other subscriptions still run when decode fails for one."""
+        mqtt.subscribe(self.hass, 'test-topic', self.record_calls,
+                       encoding='ascii')
+        mqtt.subscribe(self.hass, 'test-topic', self.record_calls)
+
+        fire_mqtt_message(self.hass, 'test-topic', '°C')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
 
     def test_subscribe_topic(self):
         """Test the subscription of a topic."""

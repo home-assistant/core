@@ -68,8 +68,8 @@ def mock_env_copy():
 
 @pytest.fixture
 def mock_venv():
-    """Mock homeassistant.util.package.running_under_virtualenv."""
-    with patch('homeassistant.util.package.running_under_virtualenv') as mock:
+    """Mock homeassistant.util.package.is_virtual_env."""
+    with patch('homeassistant.util.package.is_virtual_env') as mock:
         mock.return_value = True
         yield mock
 

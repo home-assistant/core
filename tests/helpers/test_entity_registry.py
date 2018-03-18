@@ -148,6 +148,14 @@ test.named:
 test.no_name:
   platform: super_platform
   unique_id: without-name
+test.disabled_user:
+  platform: super_platform
+  unique_id: disabled-user
+  disabled_by: user
+test.disabled_hass:
+  platform: super_platform
+  unique_id: disabled-hass
+  disabled_by: hass
 """
 
     registry = entity_registry.EntityRegistry(hass)
@@ -162,3 +170,13 @@ test.no_name:
         'test', 'super_platform', 'without-name')
     assert entry_with_name.name == 'registry override'
     assert entry_without_name.name is None
+    assert not entry_with_name.disabled
+
+    entry_disabled_hass = registry.async_get_or_create(
+        'test', 'super_platform', 'disabled-hass')
+    entry_disabled_user = registry.async_get_or_create(
+        'test', 'super_platform', 'disabled-user')
+    assert entry_disabled_hass.disabled
+    assert entry_disabled_hass.disabled_by == entity_registry.DISABLED_HASS
+    assert entry_disabled_user.disabled
+    assert entry_disabled_user.disabled_by == entity_registry.DISABLED_USER

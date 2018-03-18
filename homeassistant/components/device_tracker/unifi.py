@@ -27,7 +27,6 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8443
 DEFAULT_VERIFY_SSL = True
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
-DEFAULT_SSID_FILTER = None
 
 NOTIFICATION_ID = 'unifi_notification'
 NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
@@ -42,8 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.boolean, cv.isfile),
     vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
         cv.time_period, cv.positive_timedelta),
-    vol.Optional(CONF_SSID_FILTER, default=DEFAULT_SSID_FILTER): vol.All(
-        cv.ensure_list, [cv.string])
+    vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
 })
 
 
@@ -99,8 +97,8 @@ class UnifiScanner(DeviceScanner):
 
         # Filter clients to provided SSID list
         if self._ssid_filter:
-            clients = filter(lambda x: x['essid'] in self._ssid_filter,
-                             clients)
+            clients = [client for client in clients
+                       if client['essid'] in self._ssid_filter]
 
         self._clients = {
             client['mac']: client

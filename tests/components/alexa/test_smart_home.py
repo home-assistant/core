@@ -515,17 +515,15 @@ def test_media_player(hass):
 
     call, _ = yield from assert_request_calls_service(
         'Alexa.StepSpeaker', 'AdjustVolume', 'media_player#test',
-        'media_player.volume_set',
+        'media_player.volume_up',
         hass,
         payload={'volumeSteps': 20})
-    assert call.data['volume_level'] == 0.95
 
     call, _ = yield from assert_request_calls_service(
         'Alexa.StepSpeaker', 'AdjustVolume', 'media_player#test',
-        'media_player.volume_set',
+        'media_player.volume_down',
         hass,
         payload={'volumeSteps': -20})
-    assert call.data['volume_level'] == 0.55
 
 
 @asyncio.coroutine
@@ -571,15 +569,11 @@ def test_group(hass):
     appliance = yield from discovery_test(device, hass)
 
     assert appliance['endpointId'] == 'group#test'
-    assert appliance['displayCategories'][0] == "SCENE_TRIGGER"
+    assert appliance['displayCategories'][0] == "OTHER"
     assert appliance['friendlyName'] == "Test group"
+    assert_endpoint_capabilities(appliance, 'Alexa.PowerController')
 
-    (capability,) = assert_endpoint_capabilities(
-        appliance,
-        'Alexa.SceneController')
-    assert capability['supportsDeactivation']
-
-    yield from assert_scene_controller_works(
+    yield from assert_power_controller_works(
         'group#test',
         'homeassistant.turn_on',
         'homeassistant.turn_off',
@@ -1205,10 +1199,10 @@ def test_unsupported_domain(hass):
 
 
 @asyncio.coroutine
-def do_http_discovery(config, hass, test_client):
+def do_http_discovery(config, hass, aiohttp_client):
     """Submit a request to the Smart Home HTTP API."""
     yield from async_setup_component(hass, alexa.DOMAIN, config)
-    http_client = yield from test_client(hass.http.app)
+    http_client = yield from aiohttp_client(hass.http.app)
 
     request = get_new_request('Alexa.Discovery', 'Discover')
     response = yield from http_client.post(
@@ -1219,7 +1213,7 @@ def do_http_discovery(config, hass, test_client):
 
 
 @asyncio.coroutine
-def test_http_api(hass, test_client):
+def test_http_api(hass, aiohttp_client):
     """With `smart_home:` HTTP API is exposed."""
     config = {
         'alexa': {
@@ -1227,7 +1221,7 @@ def test_http_api(hass, test_client):
         }
     }
 
-    response = yield from do_http_discovery(config, hass, test_client)
+    response = yield from do_http_discovery(config, hass, aiohttp_client)
     response_data = yield from response.json()
 
     # Here we're testing just the HTTP view glue -- details of discovery are
@@ -1236,12 +1230,12 @@ def test_http_api(hass, test_client):
 
 
 @asyncio.coroutine
-def test_http_api_disabled(hass, test_client):
+def test_http_api_disabled(hass, aiohttp_client):
     """Without `smart_home:`, the HTTP API is disabled."""
     config = {
         'alexa': {}
     }
-    response = yield from do_http_discovery(config, hass, test_client)
+    response = yield from do_http_discovery(config, hass, aiohttp_client)
 
     assert response.status == 404
 

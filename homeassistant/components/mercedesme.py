@@ -41,6 +41,8 @@ SENSORS = {
 DATA_MME = 'mercedesme'
 DOMAIN = 'mercedesme'
 
+FEATURE_NOT_AVAILABLE = "The feature %s is not available for your car %s"
+
 NOTIFICATION_ID = 'mercedesme_integration_notification'
 NOTIFICATION_TITLE = 'Mercedes me integration setup'
 

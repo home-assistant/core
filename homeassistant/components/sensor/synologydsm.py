@@ -78,8 +78,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]),
-    vol.Optional(CONF_DISKS, default=None): cv.ensure_list,
-    vol.Optional(CONF_VOLUMES, default=None): cv.ensure_list,
+    vol.Optional(CONF_DISKS): cv.ensure_list,
+    vol.Optional(CONF_VOLUMES): cv.ensure_list,
 })
 
 
@@ -106,22 +106,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                    if variable in _UTILISATION_MON_COND]
 
         # Handle all volumes
-        volumes = config['volumes']
-        if volumes is None:
-            volumes = api.storage.volumes
-
-        for volume in volumes:
+        for volume in config.get(CONF_VOLUMES, api.storage.volumes):
             sensors += [SynoNasStorageSensor(
                 api, variable, _STORAGE_VOL_MON_COND[variable], volume)
                         for variable in monitored_conditions
                         if variable in _STORAGE_VOL_MON_COND]
 
         # Handle all disks
-        disks = config['disks']
-        if disks is None:
-            disks = api.storage.disks
-
-        for disk in disks:
+        for disk in config.get(CONF_DISKS, api.storage.disks):
             sensors += [SynoNasStorageSensor(
                 api, variable, _STORAGE_DSK_MON_COND[variable], disk)
                         for variable in monitored_conditions

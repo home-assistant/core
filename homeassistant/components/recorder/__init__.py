@@ -29,12 +29,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
+from homeassistant.loader import bind_hass
 
 from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.2']
+REQUIREMENTS = ['sqlalchemy==1.2.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,16 +64,13 @@ CONNECT_RETRY_WAIT = 3
 
 FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-        vol.Optional(CONF_DOMAINS, default=[]):
-            vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EVENT_TYPES, default=[]):
-            vol.All(cv.ensure_list, [cv.string])
+        vol.Optional(CONF_DOMAINS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_ENTITIES): cv.entity_ids,
+        vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string]),
     }),
     vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-        vol.Optional(CONF_DOMAINS, default=[]):
-            vol.All(cv.ensure_list, [cv.string])
+        vol.Optional(CONF_DOMAINS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_ENTITIES): cv.entity_ids,
     })
 })
 
@@ -87,13 +85,10 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def wait_connection_ready(hass):
-    """
-    Wait till the connection is ready.
-
-    Returns a coroutine object.
-    """
-    return hass.data[DATA_INSTANCE].async_db_ready
+@bind_hass
+async def wait_connection_ready(hass):
+    """Wait till the connection is ready."""
+    return await hass.data[DATA_INSTANCE].async_db_ready
 
 
 def run_information(hass, point_in_time: Optional[datetime] = None):
@@ -164,7 +159,6 @@ class Recorder(threading.Thread):
         self.hass = hass
         self.keep_days = keep_days
         self.purge_interval = purge_interval
-        self.did_vacuum = False
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
@@ -255,34 +249,35 @@ class Recorder(threading.Thread):
                 self.hass.bus.async_listen_once(
                     EVENT_HOMEASSISTANT_START, notify_hass_started)
 
-            if self.keep_days and self.purge_interval:
-                @callback
-                def async_purge(now):
-                    """Trigger the purge and schedule the next run."""
-                    self.queue.put(
-                        PurgeTask(self.keep_days, repack=not self.did_vacuum))
-                    self.hass.helpers.event.async_track_point_in_time(
-                        async_purge, now + timedelta(days=self.purge_interval))
-
-                earliest = dt_util.utcnow() + timedelta(minutes=30)
-                run = latest = dt_util.utcnow() + \
-                    timedelta(days=self.purge_interval)
-                with session_scope(session=self.get_session()) as session:
-                    event = session.query(Events).first()
-                    if event is not None:
-                        session.expunge(event)
-                        run = dt_util.as_utc(event.time_fired) + \
-                            timedelta(days=self.keep_days+self.purge_interval)
-                run = min(latest, max(run, earliest))
-                self.hass.helpers.event.async_track_point_in_time(
-                    async_purge, run)
-
         self.hass.add_job(register)
         result = hass_started.result()
 
-        # If shutdown happened before HASS finished starting
+        # If shutdown happened before Home Assistant finished starting
         if result is shutdown_task:
             return
+
+        # Start periodic purge
+        if self.keep_days and self.purge_interval:
+            @callback
+            def async_purge(now):
+                """Trigger the purge and schedule the next run."""
+                self.queue.put(
+                    PurgeTask(self.keep_days, repack=False))
+                self.hass.helpers.event.async_track_point_in_time(
+                    async_purge, now + timedelta(days=self.purge_interval))
+
+            earliest = dt_util.utcnow() + timedelta(minutes=30)
+            run = latest = dt_util.utcnow() + \
+                timedelta(days=self.purge_interval)
+            with session_scope(session=self.get_session()) as session:
+                event = session.query(Events).first()
+                if event is not None:
+                    session.expunge(event)
+                    run = dt_util.as_utc(event.time_fired) + timedelta(
+                        days=self.keep_days+self.purge_interval)
+            run = min(latest, max(run, earliest))
+
+            self.hass.helpers.event.track_point_in_time(async_purge, run)
 
         while True:
             event = self.queue.get()
@@ -318,6 +313,7 @@ class Recorder(threading.Thread):
                     with session_scope(session=self.get_session()) as session:
                         dbevent = Events.from_event(event)
                         session.add(dbevent)
+                        session.flush()
 
                         if event.event_type == EVENT_STATE_CHANGED:
                             dbstate = States.from_event(event)

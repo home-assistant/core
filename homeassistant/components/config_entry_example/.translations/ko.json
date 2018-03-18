@@ -1,0 +1,24 @@
+{
+    "config": {
+        "error": {
+            "invalid_object_id": "\uc624\ube0c\uc81d\ud2b8 ID\uac00 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "object_id": "\uc624\ube0c\uc81d\ud2b8 ID"
+                },
+                "description": "\ud14c\uc2a4\ud2b8 \uad6c\uc131\uc694\uc18c\uc758 \uc624\ube0c\uc81d\ud2b8 ID \ub97c \uc785\ub825\ud558\uc138\uc694",
+                "title": "\uc624\ube0c\uc81d\ud2b8 ID \uc120\ud0dd"
+            },
+            "name": {
+                "data": {
+                    "name": "\uc774\ub984"
+                },
+                "description": "\ud14c\uc2a4\ud2b8 \uad6c\uc131\uc694\uc18c\uc758 \uc774\ub984\uc744 \uc785\ub825\ud558\uc138\uc694.",
+                "title": "\uad6c\uc131\uc694\uc18c \uc774\ub984"
+            }
+        },
+        "title": "\uc785\ub825 \uc608\uc81c \uad6c\uc131"
+    }
+}

@@ -169,3 +169,13 @@ xiaomi_miio_set_scene:
     scene:
       description: Number of the fixed scene, between 1 and 4.
       example: 1
+
+xiaomi_miio_set_delayed_turn_off:
+  description: Delayed turn off.
+  fields:
+    entity_id:
+      description: Name of the light entity.
+      example: 'light.xiaomi_miio'
+    time_period:
+      description: Time period for the delayed turn off.
+      example: "5, '0:05', {'minutes': 5}"
