@@ -29,7 +29,7 @@ CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_FORECAST = 'forecast'
 CONF_LANG = 'lang'
 
-DEFAULT_LANG = 'EN'
+DEFAULT_LANG = 'en'
 
 DEFAULT_NAME = 'Dark Sky'
 
