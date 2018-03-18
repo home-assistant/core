@@ -1063,18 +1063,17 @@ class TestZWaveServices(unittest.TestCase):
 
     def test_print_node(self):
         """Test zwave print_node_parameter service."""
-        node1 = MockNode(node_id=14)
-        node2 = MockNode(node_id=15)
-        self.zwave_network.nodes = {14: node1, 15: node2}
+        node = MockNode(node_id=14)
 
-        with patch.object(zwave, '_LOGGER') as mock_logger:
+        self.zwave_network.nodes = {14: node}
+
+        with self.assertLogs(level='INFO') as mock_logger:
             self.hass.services.call('zwave', 'print_node', {
                 const.ATTR_NODE_ID: 14
             })
             self.hass.block_till_done()
 
-            assert mock_logger.info.called
-
+            self.assertIn("FOUND NODE ", mock_logger.output[1])
 
     def test_set_wakeup(self):
         """Test zwave set_wakeup service."""
@@ -1082,7 +1081,7 @@ class TestZWaveServices(unittest.TestCase):
             index=12,
             command_class=const.COMMAND_CLASS_WAKE_UP,
         )
-        node = MockNode(node_id=14)
+        node = MockNode(node_id=14,)
         node.values = {12: value}
         node.get_values.return_value = node.values
         self.zwave_network.nodes = {14: node}

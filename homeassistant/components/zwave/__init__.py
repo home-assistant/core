@@ -183,8 +183,7 @@ def nice_print_node(node):
                            for value_id, value in node.values.items()}
 
     _LOGGER.info("FOUND NODE %s \n"
-                 "%s \n"
-                 "\n", node.product_name, node_dict)
+                 "%s", node.product_name, node_dict)
 
 
 def get_config_value(node, value_index, tries=5):
