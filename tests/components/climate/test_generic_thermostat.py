@@ -1267,27 +1267,6 @@ class TestClimateGenericThermostatDualSwitch(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH_AC, call.data['entity_id'])
 
-    @mock.patch('logging.Logger.error')
-    def test_invalid_both_heating_and_cooling_on(self, log_mock):
-        """Test error handling for state of heat and cool."""
-        self._setup_switch_heat(False)
-        self._setup_switch_ac(False)
-        self.hass.block_till_done()
-        self._setup_switch_ac(True)
-        self.hass.block_till_done()
-        self._setup_switch_heat(True)
-        self.hass.block_till_done()
-        self.assertEqual(log_mock.call_count, 1)
-        self.assertEqual(2, len(self.calls))
-        call1 = self.calls[0]
-        self.assertEqual('homeassistant', call1.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call1.service)
-        self.assertEqual(ENT_SWITCH_HEAT, call1.data['entity_id'])
-        call2 = self.calls[1]
-        self.assertEqual('homeassistant', call2.domain)
-        self.assertEqual(SERVICE_TURN_OFF, call2.service)
-        self.assertEqual(ENT_SWITCH_AC, call2.data['entity_id'])
-
     def test_sensor_move_outside_ac(self):
         """Test complete intervals.
 

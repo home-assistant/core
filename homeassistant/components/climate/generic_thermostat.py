@@ -478,16 +478,14 @@ class GenericThermostat(ClimateDevice):
         """Return true if toggleable heating device is currently active."""
         if self.heater_entity_id:
             return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
-        else:
-            return False
+        return False
 
     @property
     def _is_cooling(self):
         """Return true if toggleable cooling device is currently active."""
         if self.ac_entity_id:
             return self.hass.states.is_state(self.ac_entity_id, STATE_ON)
-        else:
-            return False
+        return False
 
     @property
     def supported_features(self):
