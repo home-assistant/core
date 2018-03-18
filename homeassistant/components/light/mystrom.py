@@ -11,10 +11,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
     Light, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT, ATTR_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR,
-    ATTR_RGB_COLOR)
+    SUPPORT_EFFECT, ATTR_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR,
+    ATTR_HS_COLOR)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, STATE_UNKNOWN
-from homeassistant.util.color import color_RGB_to_hsv, color_hsv_to_RGB
 
 REQUIREMENTS = ['python-mystrom==0.3.8']
 
@@ -24,7 +23,7 @@ DEFAULT_NAME = 'myStrom bulb'
 
 SUPPORT_MYSTROM = (
     SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH |
-    SUPPORT_RGB_COLOR
+    SUPPORT_COLOR
 )
 
 EFFECT_RAINBOW = 'rainbow'
@@ -91,9 +90,9 @@ class MyStromLight(Light):
         return self._brightness
 
     @property
-    def rgb_color(self):
+    def hs_color(self):
         """Return the color of the light."""
-        return color_hsv_to_RGB(self._color_h, self._color_s, self._brightness)
+        return self._color_h, self._color_s
 
     @property
     def available(self) -> bool:
@@ -117,12 +116,8 @@ class MyStromLight(Light):
         brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         effect = kwargs.get(ATTR_EFFECT)
 
-        if ATTR_RGB_COLOR in kwargs:
-            # New color, compute from RGB
-            color_h, color_s, brightness = color_RGB_to_hsv(
-                *kwargs[ATTR_RGB_COLOR]
-            )
-            brightness = brightness / 100 * 255
+        if ATTR_HS_COLOR in kwargs:
+            color_h, color_s = kwargs[ATTR_HS_COLOR]
         elif ATTR_BRIGHTNESS in kwargs:
             # Brightness update, keep color
             color_h, color_s = self._color_h, self._color_s

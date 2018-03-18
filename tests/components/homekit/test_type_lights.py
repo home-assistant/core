@@ -4,8 +4,8 @@ import unittest
 from homeassistant.core import callback
 from homeassistant.components.homekit.type_lights import Light
 from homeassistant.components.light import (
-    DOMAIN, ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_RGB_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR)
+    DOMAIN, ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR)
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_SERVICE, ATTR_SERVICE_DATA,
     ATTR_SUPPORTED_FEATURES, EVENT_CALL_SERVICE, SERVICE_TURN_ON,
@@ -108,16 +108,16 @@ class TestHomekitLights(unittest.TestCase):
         """Test light with rgb_color."""
         entity_id = 'light.demo'
         self.hass.states.set(entity_id, STATE_ON, {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_RGB_COLOR,
-            ATTR_RGB_COLOR: (120, 20, 255)})
+            ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR,
+            ATTR_HS_COLOR: (260, 90)})
         acc = Light(self.hass, entity_id, 'Light', aid=2)
         self.assertEqual(acc.char_hue.value, 0)
         self.assertEqual(acc.char_saturation.value, 75)
 
         acc.run()
         self.hass.block_till_done()
-        self.assertEqual(acc.char_hue.value, 265.532)
-        self.assertEqual(acc.char_saturation.value, 92.157)
+        self.assertEqual(acc.char_hue.value, 260)
+        self.assertEqual(acc.char_saturation.value, 90)
 
         # Set from HomeKit
         acc.char_hue.set_value(145)
@@ -129,4 +129,4 @@ class TestHomekitLights(unittest.TestCase):
             self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE_DATA], {
-                ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (63, 255, 143)})
+                ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (145, 75)})
