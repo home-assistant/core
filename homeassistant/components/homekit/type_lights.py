@@ -2,10 +2,8 @@
 import logging
 
 from homeassistant.components.light import (
-    ATTR_RGB_COLOR, ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR)
+    ATTR_HS_COLOR, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, SUPPORT_COLOR)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF
-from homeassistant.util.color import color_RGB_to_hsv, color_hsv_to_RGB
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service
@@ -40,7 +38,7 @@ class Light(HomeAccessory):
             .attributes.get(ATTR_SUPPORTED_FEATURES)
         if self._features & SUPPORT_BRIGHTNESS:
             self.chars.append(CHAR_BRIGHTNESS)
-        if self._features & SUPPORT_RGB_COLOR:
+        if self._features & SUPPORT_COLOR:
             self.chars.append(CHAR_HUE)
             self.chars.append(CHAR_SATURATION)
             self._hue = None
@@ -102,15 +100,15 @@ class Light(HomeAccessory):
 
     def set_color(self):
         """Set color if call came from HomeKit."""
-        # Handle RGB Color
-        if self._features & SUPPORT_RGB_COLOR and self._flag[CHAR_HUE] and \
+        # Handle Color
+        if self._features & SUPPORT_COLOR and self._flag[CHAR_HUE] and \
                 self._flag[CHAR_SATURATION]:
-            color = color_hsv_to_RGB(self._hue, self._saturation, 100)
-            _LOGGER.debug('%s: Set rgb_color to %s', self._entity_id, color)
+            color = (self._hue, self._saturation)
+            _LOGGER.debug('%s: Set hs_color to %s', self._entity_id, color)
             self._flag.update({
                 CHAR_HUE: False, CHAR_SATURATION: False, RGB_COLOR: True})
             self._hass.components.light.turn_on(
-                self._entity_id, rgb_color=color)
+                self._entity_id, hs_color=color)
 
     def update_state(self, entity_id=None, old_state=None, new_state=None):
         """Update light after state change."""
@@ -134,15 +132,11 @@ class Light(HomeAccessory):
                                                    should_callback=False)
             self._flag[CHAR_BRIGHTNESS] = False
 
-        # Handle RGB Color
+        # Handle Color
         if CHAR_SATURATION in self.chars and CHAR_HUE in self.chars:
-            rgb_color = new_state.attributes.get(ATTR_RGB_COLOR)
-            current_color = color_hsv_to_RGB(self._hue, self._saturation, 100)\
-                if self._hue and self._saturation else [None] * 3
-            if not self._flag[RGB_COLOR] and \
-                isinstance(rgb_color, (list, tuple)) and \
-                    tuple(rgb_color) != current_color:
-                hue, saturation, _ = color_RGB_to_hsv(*rgb_color)
+            hue, saturation = new_state.attributes.get(ATTR_HS_COLOR)
+            if not self._flag[RGB_COLOR] and (
+                    hue != self._hue or saturation != self._saturation):
                 self.char_hue.set_value(hue, should_callback=False)
                 self.char_saturation.set_value(saturation,
                                                should_callback=False)

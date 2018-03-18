@@ -13,12 +13,11 @@ import async_timeout
 
 import homeassistant.components.hue as hue
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
-    ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
-    FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION, SUPPORT_XY_COLOR, Light)
-import homeassistant.util.color as color_util
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
+    ATTR_TRANSITION, ATTR_HS_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
+    FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR, SUPPORT_TRANSITION,
+    Light)
 
 DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -28,8 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_HUE_ON_OFF = (SUPPORT_FLASH | SUPPORT_TRANSITION)
 SUPPORT_HUE_DIMMABLE = (SUPPORT_HUE_ON_OFF | SUPPORT_BRIGHTNESS)
 SUPPORT_HUE_COLOR_TEMP = (SUPPORT_HUE_DIMMABLE | SUPPORT_COLOR_TEMP)
-SUPPORT_HUE_COLOR = (SUPPORT_HUE_DIMMABLE | SUPPORT_EFFECT |
-                     SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR)
+SUPPORT_HUE_COLOR = (SUPPORT_HUE_DIMMABLE | SUPPORT_EFFECT | SUPPORT_COLOR)
 SUPPORT_HUE_EXTENDED = (SUPPORT_HUE_COLOR_TEMP | SUPPORT_HUE_COLOR)
 
 SUPPORT_HUE = {
@@ -228,11 +226,17 @@ class HueLight(Light):
         return self.light.state.get('bri')
 
     @property
-    def xy_color(self):
-        """Return the XY color value."""
+    def hs_color(self):
+        """Return the hs color value."""
         if self.is_group:
-            return self.light.action.get('xy')
-        return self.light.state.get('xy')
+            return (
+                self.light.action.get('hue') / 65535 * 360,
+                self.light.action.get('sat') / 255 * 100,
+            )
+        return (
+            self.light.state.get('hue') / 65535 * 360,
+            self.light.state.get('sat') / 255 * 100,
+        )
 
     @property
     def color_temp(self):
@@ -272,25 +276,9 @@ class HueLight(Light):
         if ATTR_TRANSITION in kwargs:
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
-        if ATTR_XY_COLOR in kwargs:
-            if self.is_osram:
-                color_hue, sat = color_util.color_xy_to_hs(
-                    *kwargs[ATTR_XY_COLOR])
-                command['hue'] = color_hue / 360 * 65535
-                command['sat'] = sat / 100 * 255
-            else:
-                command['xy'] = kwargs[ATTR_XY_COLOR]
-        elif ATTR_RGB_COLOR in kwargs:
-            if self.is_osram:
-                hsv = color_util.color_RGB_to_hsv(
-                    *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-                command['hue'] = hsv[0] / 360 * 65535
-                command['sat'] = hsv[1] / 100 * 255
-                command['bri'] = hsv[2] / 100 * 255
-            else:
-                xyb = color_util.color_RGB_to_xy(
-                    *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-                command['xy'] = xyb[0], xyb[1]
+        if ATTR_HS_COLOR in kwargs:
+            command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
+            command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
