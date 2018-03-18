@@ -119,13 +119,25 @@ class Light(zha.Entity, light.Light):
             self.async_schedule_update_ha_state()
             return
 
-        await self._endpoint.on_off.on()
+        import bellows
+        try:
+            await self._endpoint.on_off.on()
+        except bellows.zigbee.exceptions.DeliveryError as ex:
+            _LOGGER.error("Unable to turn the light on: %s", ex)
+            return
+
         self._state = 1
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        await self._endpoint.on_off.off()
+        import bellows
+        try:
+            await self._endpoint.on_off.off()
+        except bellows.zigbee.exceptions.DeliveryError as ex:
+            _LOGGER.error("Unable to turn the light off: %s", ex)
+            return
+
         self._state = 0
         self.async_schedule_update_ha_state()
 

@@ -57,12 +57,24 @@ class Switch(zha.Entity, SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        await self._endpoint.on_off.on()
+        import bellows
+        try:
+            await self._endpoint.on_off.on()
+        except bellows.zigbee.exceptions.DeliveryError as ex:
+            _LOGGER.error("Unable to turn the switch on: %s", ex)
+            return
+
         self._state = 1
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        await self._endpoint.on_off.off()
+        import bellows
+        try:
+            await self._endpoint.on_off.off()
+        except bellows.zigbee.exceptions.DeliveryError as ex:
+            _LOGGER.error("Unable to turn the switch off: %s", ex)
+            return
+
         self._state = 0
 
     async def async_update(self):
