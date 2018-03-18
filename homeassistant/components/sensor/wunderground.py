@@ -678,8 +678,7 @@ class WUndergroundSensor(Entity):
         self.rest.request_feature(SENSOR_TYPES[condition].feature)
         # This is only the suggested entity id, it might get changed by
         # the entity registry later.
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, 'pws_' + condition, hass=hass)
+        self.entity_id = sensor.ENTITY_ID_FORMAT.format('pws_' + condition)
         self._unique_id = "{},{}".format(unique_id_base, condition)
 
     def _cfg_expand(self, what, default=None):
