@@ -163,7 +163,7 @@ class KNXLight(Light):
                 await self.device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
         elif ATTR_HS_COLOR in kwargs:
             if self.device.supports_color:
-                await self.device.set_color(color_util.color_RGB_to_hs(
+                await self.device.set_color(color_util.color_hs_to_RGB(
                     *kwargs[ATTR_HS_COLOR]))
         else:
             await self.device.set_on()
