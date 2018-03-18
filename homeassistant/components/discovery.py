@@ -38,6 +38,7 @@ SERVICE_TELLDUSLIVE = 'tellstick'
 SERVICE_HUE = 'philips_hue'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DAIKIN = 'daikin'
+SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
@@ -53,6 +54,7 @@ SERVICE_HANDLERS = {
     SERVICE_HUE: ('hue', None),
     SERVICE_DECONZ: ('deconz', None),
     SERVICE_DAIKIN: ('daikin', None),
+    SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),

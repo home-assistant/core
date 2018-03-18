@@ -655,6 +655,7 @@ omit =
     homeassistant/components/sensor/supervisord.py
     homeassistant/components/sensor/swiss_hydrological_data.py
     homeassistant/components/sensor/swiss_public_transport.py
+    homeassistant/components/sensor/syncthru.py
     homeassistant/components/sensor/synologydsm.py
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/sytadin.py
