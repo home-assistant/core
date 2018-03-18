@@ -95,17 +95,21 @@ async def async_setup_platform(hass, config, async_add_devices,
 class MediaroomDevice(MediaPlayerDevice):
     """Representation of a Mediaroom set-up-box on the network."""
 
-    from pymediaroom import State
+    def set_state(self, mediaroom_state):
+        """Helper method to map pymediaroom states to HA states."""
+        from pymediaroom import State
 
-    STATE_MAP = {
-        State.OFF: STATE_OFF,
-        State.STANDBY: STATE_STANDBY,
-        State.PLAYING_LIVE_TV: STATE_PLAYING,
-        State.PLAYING_RECORDED_TV: STATE_PLAYING,
-        State.PLAYING_TIMESHIFT_TV: STATE_PLAYING,
-        State.STOPPED: STATE_PAUSED,
-        State.UNKNOWN: STATE_UNAVAILABLE
-        }
+        state_map = {
+            State.OFF: STATE_OFF,
+            State.STANDBY: STATE_STANDBY,
+            State.PLAYING_LIVE_TV: STATE_PLAYING,
+            State.PLAYING_RECORDED_TV: STATE_PLAYING,
+            State.PLAYING_TIMESHIFT_TV: STATE_PLAYING,
+            State.STOPPED: STATE_PAUSED,
+            State.UNKNOWN: STATE_UNAVAILABLE
+            }
+
+        self._state = state_map[mediaroom_state]
 
     def __init__(self, host, device_id, optimistic=False,
                  timeout=DEFAULT_TIMEOUT):
@@ -134,8 +138,7 @@ class MediaroomDevice(MediaPlayerDevice):
         """Retrieve latest state."""
         def notify_received(notify):
             """Process STB state from NOTIFY message."""
-            self._state = MediaroomDevice.STATE_MAP[
-                self.stb.notify_callback(notify)]
+            self.set_state(self.stb.notify_callback(notify))
             _LOGGER.debug("STB(%s) is [%s]", self.host, self._state)
             self.schedule_update_ha_state()
 
@@ -199,7 +202,7 @@ class MediaroomDevice(MediaPlayerDevice):
             return
 
         try:
-            self._state = MediaroomDevice.STATE_MAP[await self.stb.turn_on()]
+            self.set_state(await self.stb.turn_on())
         except PyMediaroomError:
             self._state = STATE_UNAVAILABLE
         self.schedule_update_ha_state()
@@ -211,7 +214,7 @@ class MediaroomDevice(MediaPlayerDevice):
             return
 
         try:
-            self._state = MediaroomDevice.STATE_MAP[await self.stb.turn_off()]
+            self.set_state(await self.stb.turn_off())
         except PyMediaroomError:
             self._state = STATE_UNAVAILABLE
         self.schedule_update_ha_state()
