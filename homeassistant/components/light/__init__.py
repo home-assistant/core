@@ -114,8 +114,8 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
                 vol.Coerce(tuple)),
     vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP):
         vol.All(vol.ExactSequence(
-            (vol.All(vol.Coerce(int), vol.Range(min=0, max=360)),
-             vol.All(vol.Coerce(int), vol.Range(min=0, max=100)))),
+            (vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+             vol.All(vol.Coerce(float), vol.Range(min=0, max=100)))),
                 vol.Coerce(tuple)),
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP):
         vol.All(vol.Coerce(int), vol.Range(min=1)),

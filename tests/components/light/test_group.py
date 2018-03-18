@@ -326,19 +326,19 @@ async def test_service_calls(hass):
     assert state.state == 'on'
     assert state.attributes['brightness'] == 128
     assert state.attributes['effect'] == 'Random'
-    assert state.attributes['rgb_color'] == (43, 255, 255)
+    assert state.attributes['rgb_color'] == (42, 255, 255)
 
     state = hass.states.get('light.ceiling_lights')
     assert state.state == 'on'
     assert state.attributes['brightness'] == 128
     assert state.attributes['effect'] == 'Random'
-    assert state.attributes['rgb_color'] == (43, 255, 255)
+    assert state.attributes['rgb_color'] == (42, 255, 255)
 
     state = hass.states.get('light.kitchen_lights')
     assert state.state == 'on'
     assert state.attributes['brightness'] == 128
     assert state.attributes['effect'] == 'Random'
-    assert state.attributes['rgb_color'] == (43, 255, 255)
+    assert state.attributes['rgb_color'] == (42, 255, 255)
 
 
 async def test_invalid_service_calls(hass):
