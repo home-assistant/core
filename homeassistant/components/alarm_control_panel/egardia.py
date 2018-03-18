@@ -12,21 +12,26 @@ import requests
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED)
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_TRIGGERED,
+    STATE_ALARM_ARMED_NIGHT)
 from homeassistant.components.egardia import (
     EGARDIA_DEVICE, EGARDIA_SERVER,
     REPORT_SERVER_CODES_IGNORE, CONF_REPORT_SERVER_CODES,
     CONF_REPORT_SERVER_ENABLED, CONF_REPORT_SERVER_PORT
     )
-REQUIREMENTS = ['pythonegardia==1.0.38']
+REQUIREMENTS = ['pythonegardia==1.0.39']
 
 _LOGGER = logging.getLogger(__name__)
 
+# Some states are mapped twice since different Egardia
+# versions return different state names.
 STATES = {
     'ARM': STATE_ALARM_ARMED_AWAY,
     'DAY HOME': STATE_ALARM_ARMED_HOME,
     'DISARM': STATE_ALARM_DISARMED,
     'ARMHOME': STATE_ALARM_ARMED_HOME,
+    'HOME': STATE_ALARM_ARMED_HOME,
+    'NIGHT HOME': STATE_ALARM_ARMED_NIGHT,
     'TRIGGERED': STATE_ALARM_TRIGGERED
 }
 
