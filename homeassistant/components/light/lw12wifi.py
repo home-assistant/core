@@ -1,5 +1,28 @@
 """
 Support for Lagute LW-12 WiFi LED Controller.
+
+Configuration example:
+
+light:
+  - platform: lw12wifi
+    # Host name or IP of LW-12 LED stripe to control
+    host: 192.168.0.1
+    # (Optional) Some firmware versions of the LW-12 controller listen
+    # on different ports.
+    port: 5000
+    # (Optional) Friendly name
+    name: LW-12 FC
+    # (Optional) Effect to use as default (Default=None).
+    # For a full list of supported effects see:
+    # https://github.com/jaypikay/python-lw12/blob/v0.9.2/lw12.py#L54
+    effect: "Gradient Cyan"
+    # (Optional) Transition speed for effects (Value: 0-255)
+    transition: 10
+    # (Optional) LED Brightness (Value: 0-255)
+    brightness: 10
+    # (Optional) RGB value array as standard color to set.
+    # This option is is ignored when effect is set.
+    rgb: [255, 255, 255]
 """
 
 import asyncio
