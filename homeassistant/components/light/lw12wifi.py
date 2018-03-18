@@ -26,15 +26,13 @@ light:
 """
 
 import asyncio
-from enum import Enum
 import logging
-import socket
 import time
 
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_RGB_COLOR, ATTR_TRANSITION, DOMAIN,
+    ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_RGB_COLOR, ATTR_TRANSITION,
     Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
     SUPPORT_RGB_COLOR, SUPPORT_TRANSITION
 )
@@ -63,20 +61,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_RGB, default=DEFAULT_RGB):
-    vol.All(list, vol.Length(min=3, max=3),
-            [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))]),
+        vol.All(list, vol.Length(min=3, max=3),
+                [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))]),
     vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS):
-    vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION):
-    vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup LW-12 WiFi LED Controller platform."""
-    import lw12
-
     # Assign configuration variables.
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -109,7 +105,6 @@ class LW12WiFi(Light):
         # Setup feature list
         self._supported_features = SUPPORT_BRIGHTNESS
         self._supported_features |= SUPPORT_EFFECT
-        self._supported_features |= SUPPORT_FLASH
         self._supported_features |= SUPPORT_RGB_COLOR
         self._supported_features |= SUPPORT_TRANSITION
 
@@ -134,10 +129,9 @@ class LW12WiFi(Light):
     @property
     def effect(self):
         """Return current light effect."""
-        try:
-            return self._effect.replace('_', ' ').title()
-        except AttributeError:
+        if self._effect is None:
             return None
+        return self._effect.replace('_', ' ').title()
 
     @property
     def is_on(self):
@@ -163,14 +157,11 @@ class LW12WiFi(Light):
         """Return False if unable to access real state of the entity."""
         return True
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        _LOGGER.debug('async_turn_on: {}'.format(kwargs))
         import lw12
         self._light.light_on()
-        if self._effect:
-            _LOGGER.debug('Resume effect: {}'.format(self._effect))
+        if self._effect is not None:
             # Effect is set as default: enable effect.
             kwargs['effect'] = self._effect
 
@@ -204,7 +195,6 @@ class LW12WiFi(Light):
                                          self._transition_speed)
         self._state = True
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    def turn_off(self, **kwargs):
         self._light.light_off()
         self._state = False
