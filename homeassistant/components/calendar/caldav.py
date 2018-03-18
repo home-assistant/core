@@ -194,7 +194,9 @@ class WebDavCalendarData(object):
     @staticmethod
     def is_over(vevent):
         """Return if the event is over."""
-        return dt.now() > WebDavCalendarData.get_end_date(vevent)
+        return dt.now() >= WebDavCalendarData.to_datetime(
+            WebDavCalendarData.get_end_date(vevent)
+        )
 
     @staticmethod
     def get_hass_date(obj):
@@ -230,4 +232,4 @@ class WebDavCalendarData(object):
         else:
             enddate = obj.dtstart.value + timedelta(days=1)
 
-        return WebDavCalendarData.to_datetime(enddate)
+        return enddate

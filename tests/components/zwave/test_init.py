@@ -17,7 +17,7 @@ from homeassistant.setup import setup_component
 import pytest
 
 from tests.common import (
-    get_test_home_assistant, async_fire_time_changed)
+    get_test_home_assistant, async_fire_time_changed, mock_coro)
 from tests.mock.zwave import MockNetwork, MockNode, MockValue, MockEntityValues
 
 
@@ -468,6 +468,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_entity_discovery(self, discovery, get_platform):
         """Test the creation of a new entity."""
+        discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
         get_platform.return_value = mock_platform
         mock_device = MagicMock()
@@ -500,8 +501,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
                                 key=lambda a: id(a)))
 
         assert discovery.async_load_platform.called
-        # Second call is to async yield from
-        assert len(discovery.async_load_platform.mock_calls) == 2
+        assert len(discovery.async_load_platform.mock_calls) == 1
         args = discovery.async_load_platform.mock_calls[0][1]
         assert args[0] == self.hass
         assert args[1] == 'mock_component'
@@ -532,6 +532,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_entity_existing_values(self, discovery, get_platform):
         """Test the loading of already discovered values."""
+        discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
         get_platform.return_value = mock_platform
         mock_device = MagicMock()
@@ -563,8 +564,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
                                 key=lambda a: id(a)))
 
         assert discovery.async_load_platform.called
-        # Second call is to async yield from
-        assert len(discovery.async_load_platform.mock_calls) == 2
+        assert len(discovery.async_load_platform.mock_calls) == 1
         args = discovery.async_load_platform.mock_calls[0][1]
         assert args[0] == self.hass
         assert args[1] == 'mock_component'
@@ -599,6 +599,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_entity_workaround_component(self, discovery, get_platform):
         """Test ignore workaround."""
+        discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
         get_platform.return_value = mock_platform
         mock_device = MagicMock()
@@ -629,8 +630,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         self.hass.block_till_done()
 
         assert discovery.async_load_platform.called
-        # Second call is to async yield from
-        assert len(discovery.async_load_platform.mock_calls) == 2
+        assert len(discovery.async_load_platform.mock_calls) == 1
         args = discovery.async_load_platform.mock_calls[0][1]
         assert args[1] == 'binary_sensor'
 
