@@ -161,8 +161,11 @@ class LW12WiFi(Light):
         import lw12
         self._light.light_on()
         if self._effect is not None:
-            # Effect is set as default: enable effect.
-            kwargs['effect'] = self._effect
+            if self._effect.replace(' ', '_').upper() in lw12.LW12_EFFECT:
+                kwargs['effect'] = self._effect
+            else:
+                # Unknown effect, changing to no selected effect.
+                self._effect = None
 
         if ATTR_RGB_COLOR in kwargs:
             rgb = kwargs.get(ATTR_RGB_COLOR)
