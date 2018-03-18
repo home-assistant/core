@@ -27,9 +27,9 @@ from homeassistant.components.config.script import (
     CONFIG_PATH as SCRIPTS_CONFIG_PATH)
 from homeassistant.components.config.customize import (
     CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
+import homeassistant.scripts.check_config as check_config
 
-from tests.common import (
-    get_test_config_dir, get_test_home_assistant, mock_coro, patch_yaml_files)
+from tests.common import get_test_config_dir, get_test_home_assistant
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -514,32 +514,25 @@ class TestConfig(unittest.TestCase):
         assert len(self.hass.config.whitelist_external_dirs) == 1
         assert "/test/config/www" in self.hass.config.whitelist_external_dirs
 
-    @mock.patch('os.path.isfile', return_value=True)
-    def test_check_ha_config_file_correct(self, mock_file):
+    @mock.patch('homeassistant.scripts.check_config.check_ha_config_file')
+    def test_check_ha_config_file_correct(self, mock_check):
         """Check that restart propagates to stop."""
-        conf = (
-            'homeassistant:\n'
-            '  name: Home\n'
-            '  latitude: -26.107361\n'
-            '  longitude: 28.054500\n'
-            '  elevation: 1600\n'
-            '  unit_system: metric\n'
-            '  time_zone: GMT\n'
-            '\n\n'
-        )
-        with patch_yaml_files({YAML_PATH: conf}):
-            assert run_coroutine_threadsafe(
-                config_util.async_check_ha_config_file(self.hass),
-                self.hass.loop
-            ).result() is None
-
-    @mock.patch('os.path.isfile', return_value=False)
-    def test_check_ha_config_file_wrong(self, mock_file):
-        """Check that restart with a bad config doesn't propagate to stop."""
+        mock_check.return_value = check_config.HomeAssistantConfig()
         assert run_coroutine_threadsafe(
             config_util.async_check_ha_config_file(self.hass),
             self.hass.loop
-        ).result() == 'File configuration.yaml not found.'
+        ).result() is None
+
+    @mock.patch('homeassistant.scripts.check_config.check_ha_config_file')
+    def test_check_ha_config_file_wrong(self, mock_check):
+        """Check that restart with a bad config doesn't propagate to stop."""
+        mock_check.return_value = check_config.HomeAssistantConfig()
+        mock_check.return_value.add_error("bad")
+
+        assert run_coroutine_threadsafe(
+            config_util.async_check_ha_config_file(self.hass),
+            self.hass.loop
+        ).result() == 'bad'
 
 
 # pylint: disable=redefined-outer-name

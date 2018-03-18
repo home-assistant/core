@@ -665,10 +665,8 @@ async def async_check_ha_config_file(hass):
     """
     from homeassistant.scripts.check_config import check_ha_config_file
 
-    def _load_hass_yaml_config():
-        return check_ha_config_file(hass.config.config_dir)
-
-    res = await hass.async_add_job(_load_hass_yaml_config)
+    res = await hass.async_add_job(
+        check_ha_config_file, hass.config.config_dir)
 
     if not res.errors:
         return None
