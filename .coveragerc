@@ -312,6 +312,7 @@ omit =
     homeassistant/components/alarm_control_panel/canary.py
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/ialarm.py
+    homeassistant/components/alarm_control_panel/ifttt.py
     homeassistant/components/alarm_control_panel/manual_mqtt.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
