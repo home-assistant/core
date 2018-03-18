@@ -75,7 +75,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         """Return the state attributes of the binary sensor."""
         vehicle_state = self._vehicle.state
         result = {
-            'car': self._vehicle.modelName
+            'car': self._vehicle.name
         }
 
         if self._attribute == 'lids':
@@ -91,6 +91,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
 
     def update(self):
         """Read new state data from the library."""
+        from bimmer_connected.state import LockState
         vehicle_state = self._vehicle.state
 
         # device class opening: On means open, Off means closed
@@ -101,9 +102,9 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             self._state = not vehicle_state.all_windows_closed
         # device class safety: On means unsafe, Off means safe
         if self._attribute == 'door_lock_state':
-            # Possible values: LOCKED, SECURED, SELECTIVELOCKED, UNLOCKED
-            self._state = bool(vehicle_state.door_lock_state.value
-                               in ('SELECTIVELOCKED', 'UNLOCKED'))
+            # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
+            self._state = vehicle_state.door_lock_state not in \
+                          [LockState.LOCKED, LockState.SECURED]
 
     def update_callback(self):
         """Schedule a state update."""

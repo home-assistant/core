@@ -88,19 +88,19 @@ class BMWConnectedDriveSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         return {
-            'car': self._vehicle.modelName
+            'car': self._vehicle.name
         }
 
     def update(self) -> None:
         """Read new state data from the library."""
-        _LOGGER.debug('Updating %s', self._vehicle.modelName)
+        _LOGGER.debug('Updating %s', self._vehicle.name)
         vehicle_state = self._vehicle.state
         self._state = getattr(vehicle_state, self._attribute)
 
         if self._attribute in LENGTH_ATTRIBUTES:
-            self._unit_of_measurement = vehicle_state.unit_of_length
+            self._unit_of_measurement = 'km'
         elif self._attribute == 'remaining_fuel':
-            self._unit_of_measurement = vehicle_state.unit_of_volume
+            self._unit_of_measurement = 'l'
         else:
             self._unit_of_measurement = None
 
