@@ -20,8 +20,7 @@ async def test_default_state(hass):
     assert state.state == 'unavailable'
     assert state.attributes['supported_features'] == 0
     assert state.attributes.get('brightness') is None
-    assert state.attributes.get('rgb_color') is None
-    assert state.attributes.get('xy_color') is None
+    assert state.attributes.get('hs_color') is None
     assert state.attributes.get('color_temp') is None
     assert state.attributes.get('white_value') is None
     assert state.attributes.get('effect_list') is None
@@ -85,61 +84,32 @@ async def test_brightness(hass):
     assert state.attributes['brightness'] == 100
 
 
-async def test_xy_color(hass):
-    """Test XY reporting."""
-    await async_setup_component(hass, 'light', {'light': {
-        'platform': 'group', 'entities': ['light.test1', 'light.test2']
-    }})
-
-    hass.states.async_set('light.test1', 'on',
-                          {'xy_color': (1.0, 1.0), 'supported_features': 64})
-    await hass.async_block_till_done()
-    state = hass.states.get('light.light_group')
-    assert state.state == 'on'
-    assert state.attributes['supported_features'] == 64
-    assert state.attributes['xy_color'] == (1.0, 1.0)
-
-    hass.states.async_set('light.test2', 'on',
-                          {'xy_color': (0.5, 0.5), 'supported_features': 64})
-    await hass.async_block_till_done()
-    state = hass.states.get('light.light_group')
-    assert state.state == 'on'
-    assert state.attributes['xy_color'] == (0.75, 0.75)
-
-    hass.states.async_set('light.test1', 'off',
-                          {'xy_color': (1.0, 1.0), 'supported_features': 64})
-    await hass.async_block_till_done()
-    state = hass.states.get('light.light_group')
-    assert state.state == 'on'
-    assert state.attributes['xy_color'] == (0.5, 0.5)
-
-
-async def test_rgb_color(hass):
+async def test_color(hass):
     """Test RGB reporting."""
     await async_setup_component(hass, 'light', {'light': {
         'platform': 'group', 'entities': ['light.test1', 'light.test2']
     }})
 
     hass.states.async_set('light.test1', 'on',
-                          {'rgb_color': (255, 0, 0), 'supported_features': 16})
+                          {'hs_color': (0, 100), 'supported_features': 16})
     await hass.async_block_till_done()
     state = hass.states.get('light.light_group')
     assert state.state == 'on'
     assert state.attributes['supported_features'] == 16
-    assert state.attributes['rgb_color'] == (255, 0, 0)
+    assert state.attributes['hs_color'] == (0, 100)
 
     hass.states.async_set('light.test2', 'on',
-                          {'rgb_color': (255, 255, 255),
+                          {'hs_color': (0, 50),
                            'supported_features': 16})
     await hass.async_block_till_done()
     state = hass.states.get('light.light_group')
-    assert state.attributes['rgb_color'] == (255, 127, 127)
+    assert state.attributes['hs_color'] == (0, 75)
 
     hass.states.async_set('light.test1', 'off',
-                          {'rgb_color': (255, 0, 0), 'supported_features': 16})
+                          {'hs_color': (0, 0), 'supported_features': 16})
     await hass.async_block_till_done()
     state = hass.states.get('light.light_group')
-    assert state.attributes['rgb_color'] == (255, 255, 255)
+    assert state.attributes['hs_color'] == (0, 50)
 
 
 async def test_white_value(hass):
@@ -413,5 +383,7 @@ async def test_invalid_service_calls(hass):
         }
         await grouped_light.async_turn_on(**data)
         data['entity_id'] = ['light.test1', 'light.test2']
+        data.pop('rgb_color')
+        data.pop('xy_color')
         mock_call.assert_called_once_with('light', 'turn_on', data,
                                           blocking=True)
