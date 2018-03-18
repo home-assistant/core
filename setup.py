@@ -50,7 +50,7 @@ REQUIRES = [
     'voluptuous==0.11.1',
     'typing>=3,<4',
     'aiohttp==3.0.9',
-    'async_timeout==2.0.0',
+    'async_timeout==2.0.1',
     'astral==1.6',
     'certifi>=2017.4.17',
     'attrs==17.4.0',
