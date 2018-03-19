@@ -6,18 +6,20 @@ from datetime import datetime
 from uuid import uuid4
 
 from homeassistant.components import (
-    alert, automation, cover, fan, group, input_boolean, light, lock,
+    alert, automation, cover, climate, fan, group, input_boolean, light, lock,
     media_player, scene, script, switch, http, sensor)
 import homeassistant.core as ha
 import homeassistant.util.color as color_util
+from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.util.decorator import Registry
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_NAME, SERVICE_LOCK,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
-    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, CONF_NAME,
+    SERVICE_LOCK, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_UNLOCK, SERVICE_VOLUME_SET, TEMP_FAHRENHEIT, TEMP_CELSIUS,
-    CONF_UNIT_OF_MEASUREMENT, STATE_LOCKED, STATE_UNLOCKED, STATE_ON)
+    CONF_UNIT_OF_MEASUREMENT, STATE_LOCKED, STATE_UNLOCKED, STATE_ON,
+    STATE_OFF)
 from .const import CONF_FILTER, CONF_ENTITY_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,6 +34,19 @@ API_PAYLOAD = 'payload'
 API_TEMP_UNITS = {
     TEMP_FAHRENHEIT: 'FAHRENHEIT',
     TEMP_CELSIUS: 'CELSIUS',
+}
+
+API_THERMOSTAT_MODES = {
+    climate.STATE_HEAT: 'HEAT',
+    climate.STATE_COOL: 'COOL',
+    climate.STATE_AUTO: 'AUTO',
+    climate.STATE_ECO: 'ECO',
+    climate.STATE_IDLE: 'OFF',
+    STATE_ON: 'AUTO',
+    STATE_OFF: 'OFF',
+    climate.STATE_FAN_ONLY: 'OFF',
+    climate.STATE_DRY: 'OFF',
+    climate.STATE_PERFORMANCE: 'AUTO',
 }
 
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
@@ -383,8 +398,59 @@ class _AlexaTemperatureSensor(_AlexaInterface):
             raise _UnsupportedProperty(name)
 
         unit = self.entity.attributes[CONF_UNIT_OF_MEASUREMENT]
+        temp = self.entity.state
+        if self.entity.domain == climate.DOMAIN:
+            temp = self.entity.attributes.get(
+                climate.ATTR_CURRENT_TEMPERATURE)
         return {
-            'value': float(self.entity.state),
+            'value': float(temp),
+            'scale': API_TEMP_UNITS[unit],
+        }
+
+
+class _AlexaThermostatController(_AlexaInterface):
+    def name(self):
+        return 'Alexa.ThermostatController'
+
+    def properties_supported(self):
+        properties = []
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & climate.SUPPORT_TARGET_TEMPERATURE:
+            properties.append({'name': 'targetSetpoint'})
+        if supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW:
+            properties.append({'name': 'lowerSetpoint'})
+        if supported & climate.SUPPORT_TARGET_TEMPERATURE_HIGH:
+            properties.append({'name': 'upperSetpoint'})
+        if supported & climate.SUPPORT_OPERATION_MODE:
+            properties.append({'name': 'thermostatMode'})
+        return properties
+
+    def properties_retrievable(self):
+        return True
+
+    def get_property(self, name):
+        if name == 'thermostatMode':
+            mode = API_THERMOSTAT_MODES.get(self.entity.state)
+            if mode is None:
+                _LOGGER.error("%s (%s) has unsupported state '%s'",
+                              self.entity.entity_id, type(self.entity),
+                              self.entity.state)
+                raise _UnsupportedProperty(name)
+            return mode
+
+        unit = self.entity.attributes[CONF_UNIT_OF_MEASUREMENT]
+        temp = None
+        if name == 'targetSetpoint':
+            temp = self.entity.attributes.get(ATTR_TEMPERATURE)
+        elif name == 'lowerSetpoint':
+            temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)
+        elif name == 'upperSetpoint':
+            temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)
+        if temp is None:
+            raise _UnsupportedProperty(name)
+
+        return {
+            'value': float(temp),
             'scale': API_TEMP_UNITS[unit],
         }
 
@@ -413,6 +479,16 @@ class _SwitchCapabilities(_AlexaEntity):
 
     def interfaces(self):
         return [_AlexaPowerController(self.entity)]
+
+
+@ENTITY_ADAPTERS.register(climate.DOMAIN)
+class _ClimateCapabilities(_AlexaEntity):
+    def default_display_categories(self):
+        return [_DisplayCategory.THERMOSTAT]
+
+    def interfaces(self):
+        yield _AlexaThermostatController(self.entity)
+        yield _AlexaTemperatureSensor(self.entity)
 
 
 @ENTITY_ADAPTERS.register(cover.DOMAIN)
@@ -682,17 +758,21 @@ def api_message(request,
     return response
 
 
-def api_error(request, error_type='INTERNAL_ERROR', error_message=""):
+def api_error(request,
+              namespace='Alexa',
+              error_type='INTERNAL_ERROR',
+              error_message="",
+              payload=None):
     """Create a API formatted error response.
 
     Async friendly.
     """
-    payload = {
-        'type': error_type,
-        'message': error_message,
-    }
+    payload = payload or {}
+    payload['type'] = error_type
+    payload['message'] = error_message
 
-    return api_message(request, name='ErrorResponse', payload=payload)
+    return api_message(
+        request, name='ErrorResponse', namespace=namespace, payload=payload)
 
 
 @HANDLERS.register(('Alexa.Discovery', 'Discover'))
@@ -1272,6 +1352,158 @@ def async_api_previous(hass, config, request, entity):
     yield from hass.services.async_call(
         entity.domain, SERVICE_MEDIA_PREVIOUS_TRACK,
         data, blocking=False)
+
+    return api_message(request)
+
+
+def api_error_temp_range(request, temp, min_temp, max_temp, unit):
+    """Create temperature value out of range API error response.
+
+    Async friendly.
+    """
+    temp_range = {
+        'minimumValue': {
+            'value': min_temp,
+            'scale': API_TEMP_UNITS[unit],
+        },
+        'maximumValue': {
+            'value': max_temp,
+            'scale': API_TEMP_UNITS[unit],
+        },
+    }
+
+    msg = 'The requested temperature {} is out of range'.format(temp)
+    _LOGGER.info(msg)
+    return api_error(
+        request,
+        error_type='TEMPERATURE_VALUE_OUT_OF_RANGE',
+        error_message=msg,
+        payload={'validRange': temp_range},
+    )
+
+
+def temperature_from_object(temp_obj, to_unit, absolute=True):
+    """Get temperature from Temperature object in requested unit."""
+    from_unit = TEMP_CELSIUS
+    temp = float(temp_obj['value'])
+
+    if temp_obj['scale'] == 'FAHRENHEIT':
+        from_unit = TEMP_FAHRENHEIT
+    elif temp_obj['scale'] == 'KELVIN':
+        # convert to Celsius if absolute temperature
+        if absolute:
+            temp -= 273.15
+
+    if not absolute:
+        if from_unit != to_unit:
+            if from_unit == TEMP_FAHRENHEIT:
+                return temp / 1.8
+            return temp * 1.8
+        return temp
+
+    return convert_temperature(temp, from_unit, to_unit)
+
+
+@HANDLERS.register(('Alexa.ThermostatController', 'SetTargetTemperature'))
+@extract_entity
+@asyncio.coroutine
+def async_api_set_target_temp(hass, config, request, entity):
+    """Process a set target temperature request."""
+    unit = entity.attributes[CONF_UNIT_OF_MEASUREMENT]
+    min_temp = entity.attributes[climate.ATTR_MIN_TEMP]
+    max_temp = entity.attributes[climate.ATTR_MAX_TEMP]
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id
+    }
+
+    payload = request[API_PAYLOAD]
+    if 'targetSetpoint' in payload:
+        temp = temperature_from_object(
+            payload['targetSetpoint'], unit)
+        if temp < min_temp or temp > max_temp:
+            return api_error_temp_range(
+                request, temp, min_temp, max_temp, unit)
+        data[ATTR_TEMPERATURE] = temp
+    if 'lowerSetpoint' in payload:
+        temp_low = temperature_from_object(
+            payload['lowerSetpoint'], unit)
+        if temp_low < min_temp or temp_low > max_temp:
+            return api_error_temp_range(
+                request, temp_low, min_temp, max_temp, unit)
+        data[climate.ATTR_TARGET_TEMP_LOW] = temp_low
+    if 'upperSetpoint' in payload:
+        temp_high = temperature_from_object(
+            payload['upperSetpoint'], unit)
+        if temp_high < min_temp or temp_high > max_temp:
+            return api_error_temp_range(
+                request, temp_high, min_temp, max_temp, unit)
+        data[climate.ATTR_TARGET_TEMP_HIGH] = temp_high
+
+    yield from hass.services.async_call(
+        entity.domain, climate.SERVICE_SET_TEMPERATURE, data, blocking=False)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.ThermostatController', 'AdjustTargetTemperature'))
+@extract_entity
+@asyncio.coroutine
+def async_api_adjust_target_temp(hass, config, request, entity):
+    """Process an adjust target temperature request."""
+    unit = entity.attributes[CONF_UNIT_OF_MEASUREMENT]
+    min_temp = entity.attributes[climate.ATTR_MIN_TEMP]
+    max_temp = entity.attributes[climate.ATTR_MAX_TEMP]
+
+    temp_delta = temperature_from_object(
+        request[API_PAYLOAD]['targetSetpointDelta'], unit, absolute=False)
+    target_temp = float(entity.attributes.get(ATTR_TEMPERATURE)) + temp_delta
+
+    if target_temp < min_temp or target_temp > max_temp:
+        return api_error_temp_range(
+            request, target_temp, min_temp, max_temp, unit)
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        ATTR_TEMPERATURE: target_temp,
+    }
+
+    yield from hass.services.async_call(
+        entity.domain, climate.SERVICE_SET_TEMPERATURE, data, blocking=False)
+
+    return api_message(request)
+
+
+@HANDLERS.register(('Alexa.ThermostatController', 'SetThermostatMode'))
+@extract_entity
+@asyncio.coroutine
+def async_api_set_thermostat_mode(hass, config, request, entity):
+    """Process a set thermostat mode request."""
+    mode = request[API_PAYLOAD]['thermostatMode']
+
+    operation_list = entity.attributes.get(climate.ATTR_OPERATION_LIST)
+    for ha_state, api_mode in API_THERMOSTAT_MODES.items():
+        if mode == api_mode and ha_state in operation_list:
+            mode = ha_state
+            break
+    else:
+        msg = 'The requested thermostat mode {} is not supported'.format(mode)
+        _LOGGER.info(msg)
+        return api_error(
+            request,
+            namespace='Alexa.ThermostatController',
+            error_type='UNSUPPORTED_THERMOSTAT_MODE',
+            error_message=msg
+        )
+
+    data = {
+        ATTR_ENTITY_ID: entity.entity_id,
+        climate.ATTR_OPERATION_MODE: mode,
+    }
+
+    yield from hass.services.async_call(
+        entity.domain, climate.SERVICE_SET_OPERATION_MODE, data,
+        blocking=False)
 
     return api_message(request)
 
