@@ -141,7 +141,7 @@ class TestComponentHistory(unittest.TestCase):
             self.hass.states.set(entity_id, state)
             self.wait_recording_done()
             return self.hass.states.get(entity_id)
-       
+
         start = dt_util.utcnow() - timedelta(minutes=2)
         point = start + timedelta(minutes=1)
         point2 = point + timedelta(minutes=1)
