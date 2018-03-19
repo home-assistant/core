@@ -1,6 +1,9 @@
 """The tests for the folder_watcher component."""
 import unittest
+from unittest.mock import patch, MagicMock  # , Mock
 import os
+
+import pytest
 
 from homeassistant.components.folder_watcher import (
     DOMAIN, CONF_FOLDER)
@@ -8,6 +11,15 @@ from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
 CWD = os.path.join(os.path.dirname(__file__))
+
+
+@pytest.fixture(autouse=True)
+def watchdog_mock():
+    """Mock pychromecast."""
+    with patch.dict('sys.modules', {
+        'watchdog': MagicMock(),
+    }):
+        yield
 
 
 class TestFolderWatcher(unittest.TestCase):
@@ -35,5 +47,7 @@ class TestFolderWatcher(unittest.TestCase):
         config = {
             DOMAIN: [{CONF_FOLDER: CWD}]
         }
-        self.assertTrue(
-            setup_component(self.hass, DOMAIN, config))
+
+        with patch('watchdog.observers', return_value=None) as mock_observer:
+            self.assertTrue(
+                setup_component(self.hass, DOMAIN, config))
