@@ -1043,7 +1043,7 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.services.call('zwave', 'set_config_parameter', {
             const.ATTR_NODE_ID: 14,
             const.ATTR_CONFIG_PARAMETER: 15,
-            const.ATTR_CONFIG_VALUE: '3',
+            const.ATTR_CONFIG_VALUE: 3,
         })
         self.hass.block_till_done()
 
