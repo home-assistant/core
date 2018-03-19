@@ -90,7 +90,7 @@ class Watcher():
     """Class for starting Watchdog."""
 
     def __init__(self, path, patterns, hass):
-        """Initialise the Watchdog oberver."""
+        """Initialise the watchdog observer."""
         from watchdog.observers import Observer
         self._observer = Observer()
         self._observer.schedule(
