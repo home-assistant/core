@@ -27,9 +27,9 @@ from homeassistant.components.config.script import (
     CONFIG_PATH as SCRIPTS_CONFIG_PATH)
 from homeassistant.components.config.customize import (
     CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
+import homeassistant.scripts.check_config as check_config
 
-from tests.common import (
-    get_test_config_dir, get_test_home_assistant, mock_coro)
+from tests.common import get_test_config_dir, get_test_home_assistant
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -514,35 +514,25 @@ class TestConfig(unittest.TestCase):
         assert len(self.hass.config.whitelist_external_dirs) == 1
         assert "/test/config/www" in self.hass.config.whitelist_external_dirs
 
-    @mock.patch('asyncio.create_subprocess_exec')
-    def test_check_ha_config_file_correct(self, mock_create):
+    @mock.patch('homeassistant.scripts.check_config.check_ha_config_file')
+    def test_check_ha_config_file_correct(self, mock_check):
         """Check that restart propagates to stop."""
-        process_mock = mock.MagicMock()
-        attrs = {
-            'communicate.return_value': mock_coro((b'output', None)),
-            'wait.return_value': mock_coro(0)}
-        process_mock.configure_mock(**attrs)
-        mock_create.return_value = mock_coro(process_mock)
-
+        mock_check.return_value = check_config.HomeAssistantConfig()
         assert run_coroutine_threadsafe(
-            config_util.async_check_ha_config_file(self.hass), self.hass.loop
+            config_util.async_check_ha_config_file(self.hass),
+            self.hass.loop
         ).result() is None
 
-    @mock.patch('asyncio.create_subprocess_exec')
-    def test_check_ha_config_file_wrong(self, mock_create):
+    @mock.patch('homeassistant.scripts.check_config.check_ha_config_file')
+    def test_check_ha_config_file_wrong(self, mock_check):
         """Check that restart with a bad config doesn't propagate to stop."""
-        process_mock = mock.MagicMock()
-        attrs = {
-            'communicate.return_value':
-                mock_coro(('\033[34mhello'.encode('utf-8'), None)),
-            'wait.return_value': mock_coro(1)}
-        process_mock.configure_mock(**attrs)
-        mock_create.return_value = mock_coro(process_mock)
+        mock_check.return_value = check_config.HomeAssistantConfig()
+        mock_check.return_value.add_error("bad")
 
         assert run_coroutine_threadsafe(
             config_util.async_check_ha_config_file(self.hass),
             self.hass.loop
-        ).result() == 'hello'
+        ).result() == 'bad'
 
 
 # pylint: disable=redefined-outer-name
