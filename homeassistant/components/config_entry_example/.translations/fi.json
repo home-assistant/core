@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "name": {
+                "data": {
+                    "name": "Nimi"
+                }
+            }
+        }
+    }
+}

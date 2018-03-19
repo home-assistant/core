@@ -4,9 +4,10 @@ import struct
 import binascii
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
+from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_HS_COLOR,
                                             SUPPORT_BRIGHTNESS,
-                                            SUPPORT_RGB_COLOR, Light)
+                                            SUPPORT_COLOR, Light)
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
     def __init__(self, device, name, xiaomi_hub):
         """Initialize the XiaomiGatewayLight."""
         self._data_key = 'rgb'
-        self._rgb = (255, 255, 255)
+        self._hs = (0, 0)
         self._brightness = 180
 
         XiaomiDevice.__init__(self, device, name, xiaomi_hub)
@@ -64,7 +65,7 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
         rgb = rgba[1:]
 
         self._brightness = int(255 * brightness / 100)
-        self._rgb = rgb
+        self._hs = color_util.color_RGB_to_hs(*rgb)
         self._state = True
         return True
 
@@ -74,24 +75,25 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
         return self._brightness
 
     @property
-    def rgb_color(self):
-        """Return the RBG color value."""
-        return self._rgb
+    def hs_color(self):
+        """Return the hs color value."""
+        return self._hs
 
     @property
     def supported_features(self):
         """Return the supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_RGB_COLOR in kwargs:
-            self._rgb = kwargs[ATTR_RGB_COLOR]
+        if ATTR_HS_COLOR in kwargs:
+            self._hs = kwargs[ATTR_HS_COLOR]
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = int(100 * kwargs[ATTR_BRIGHTNESS] / 255)
 
-        rgba = (self._brightness,) + self._rgb
+        rgb = color_util.color_hs_to_RGB(*self._hs)
+        rgba = (self._brightness,) + rgb
         rgbhex = binascii.hexlify(struct.pack('BBBB', *rgba)).decode("ASCII")
         rgbhex = int(rgbhex, 16)
 

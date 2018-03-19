@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['python-telegram-bot==9.0.0']
+REQUIREMENTS = ['python-telegram-bot==10.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -181,7 +181,7 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
             while retry_num < num_retries:
                 req = requests.get(url, **params)
                 if not req.ok:
-                    _LOGGER.warning("Status code %s (retry #%s) loading %s.",
+                    _LOGGER.warning("Status code %s (retry #%s) loading %s",
                                     req.status_code, retry_num + 1, url)
                 else:
                     data = io.BytesIO(req.content)
@@ -189,10 +189,10 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
                         data.seek(0)
                         data.name = url
                         return data
-                    _LOGGER.warning("Empty data (retry #%s) in %s).",
+                    _LOGGER.warning("Empty data (retry #%s) in %s)",
                                     retry_num + 1, url)
                 retry_num += 1
-            _LOGGER.warning("Can't load photo in %s after %s retries.",
+            _LOGGER.warning("Can't load photo in %s after %s retries",
                             url, retry_num)
         elif filepath is not None:
             if hass.config.is_allowed_path(filepath):

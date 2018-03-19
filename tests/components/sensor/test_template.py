@@ -131,6 +131,33 @@ class TestTemplateSensor:
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.attributes['friendly_name'] == 'It Works.'
 
+    def test_friendly_name_template_with_unknown_state(self):
+        """Test friendly_name template with an unknown value_template."""
+        with assert_setup_component(1):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template': "{{ states.fourohfour.state }}",
+                            'friendly_name_template':
+                                "It {{ states.sensor.test_state.state }}."
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes['friendly_name'] == 'It .'
+
+        self.hass.states.set('sensor.test_state', 'Works')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes['friendly_name'] == 'It Works.'
+
     def test_template_syntax_error(self):
         """Test templating syntax error."""
         with assert_setup_component(0):

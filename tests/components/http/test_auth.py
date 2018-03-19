@@ -55,19 +55,19 @@ async def test_auth_middleware_loaded_by_default(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_access_without_password(app, test_client):
+async def test_access_without_password(app, aiohttp_client):
     """Test access without password."""
     setup_auth(app, [], None)
-    client = await test_client(app)
+    client = await aiohttp_client(app)
 
     resp = await client.get('/')
     assert resp.status == 200
 
 
-async def test_access_with_password_in_header(app, test_client):
+async def test_access_with_password_in_header(app, aiohttp_client):
     """Test access with password in URL."""
     setup_auth(app, [], API_PASSWORD)
-    client = await test_client(app)
+    client = await aiohttp_client(app)
 
     req = await client.get(
         '/', headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
@@ -78,10 +78,10 @@ async def test_access_with_password_in_header(app, test_client):
     assert req.status == 401
 
 
-async def test_access_with_password_in_query(app, test_client):
+async def test_access_with_password_in_query(app, aiohttp_client):
     """Test access without password."""
     setup_auth(app, [], API_PASSWORD)
-    client = await test_client(app)
+    client = await aiohttp_client(app)
 
     resp = await client.get('/', params={
         'api_password': API_PASSWORD
@@ -97,10 +97,10 @@ async def test_access_with_password_in_query(app, test_client):
     assert resp.status == 401
 
 
-async def test_basic_auth_works(app, test_client):
+async def test_basic_auth_works(app, aiohttp_client):
     """Test access with basic authentication."""
     setup_auth(app, [], API_PASSWORD)
-    client = await test_client(app)
+    client = await aiohttp_client(app)
 
     req = await client.get(
         '/',
@@ -125,7 +125,7 @@ async def test_basic_auth_works(app, test_client):
     assert req.status == 401
 
 
-async def test_access_with_trusted_ip(test_client):
+async def test_access_with_trusted_ip(aiohttp_client):
     """Test access with an untrusted ip address."""
     app = web.Application()
     app.router.add_get('/', mock_handler)
@@ -133,7 +133,7 @@ async def test_access_with_trusted_ip(test_client):
     setup_auth(app, TRUSTED_NETWORKS, 'some-pass')
 
     set_mock_ip = mock_real_ip(app)
-    client = await test_client(app)
+    client = await aiohttp_client(app)
 
     for remote_addr in UNTRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
