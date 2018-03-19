@@ -12,24 +12,21 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT,
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT, CONF_SSL,
     CONF_DEVICES, CONF_EXCLUDE)
 
-REQUIREMENTS = ['pynetgear==0.3.4']
+REQUIREMENTS = ['pynetgear==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_APS = 'accesspoints'
 
-DEFAULT_HOST = 'routerlogin.net'
-DEFAULT_USER = 'admin'
-DEFAULT_PORT = 5000
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_USERNAME, default=DEFAULT_USER): cv.string,
+    vol.Optional(CONF_HOST, default=''): cv.string,
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_USERNAME, default=''): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_PORT, default=None): vol.Any(None, cv.port),
     vol.Optional(CONF_DEVICES, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_EXCLUDE, default=[]):
@@ -43,6 +40,7 @@ def get_scanner(hass, config):
     """Validate the configuration and returns a Netgear scanner."""
     info = config[DOMAIN]
     host = info.get(CONF_HOST)
+    ssl = info.get(CONF_SSL)
     username = info.get(CONF_USERNAME)
     password = info.get(CONF_PASSWORD)
     port = info.get(CONF_PORT)
@@ -50,7 +48,7 @@ def get_scanner(hass, config):
     excluded_devices = info.get(CONF_EXCLUDE)
     accesspoints = info.get(CONF_APS)
 
-    scanner = NetgearDeviceScanner(host, username, password, port,
+    scanner = NetgearDeviceScanner(host, ssl, username, password, port,
                                    devices, excluded_devices, accesspoints)
 
     return scanner if scanner.success_init else None
@@ -59,7 +57,7 @@ def get_scanner(hass, config):
 class NetgearDeviceScanner(DeviceScanner):
     """Queries a Netgear wireless router using the SOAP-API."""
 
-    def __init__(self, host, username, password, port, devices,
+    def __init__(self, host, ssl, username, password, port, devices,
                  excluded_devices, accesspoints):
         """Initialize the scanner."""
         import pynetgear
@@ -69,7 +67,7 @@ class NetgearDeviceScanner(DeviceScanner):
         self.tracked_accesspoints = accesspoints
 
         self.last_results = []
-        self._api = pynetgear.Netgear(password, host, username, port)
+        self._api = pynetgear.Netgear(password, host, username, port, ssl)
 
         _LOGGER.info("Logging in")
 
