@@ -1,5 +1,4 @@
 """Module to help with parsing and generating configuration files."""
-import asyncio
 from collections import OrderedDict
 # pylint: disable=no-name-in-module
 from distutils.version import LooseVersion  # pylint: disable=import-error
@@ -7,7 +6,6 @@ import logging
 import os
 import re
 import shutil
-import sys
 # pylint: disable=unused-import
 from typing import Any, List, Tuple  # NOQA
 
@@ -665,22 +663,14 @@ async def async_check_ha_config_file(hass):
 
     This method is a coroutine.
     """
-    proc = await asyncio.create_subprocess_exec(
-        sys.executable, '-m', 'homeassistant', '--script',
-        'check_config', '--config', hass.config.config_dir,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.STDOUT, loop=hass.loop)
+    from homeassistant.scripts.check_config import check_ha_config_file
 
-    # Wait for the subprocess exit
-    log, _ = await proc.communicate()
-    exit_code = await proc.wait()
+    res = await hass.async_add_job(
+        check_ha_config_file, hass.config.config_dir)
 
-    # Convert to ASCII
-    log = RE_ASCII.sub('', log.decode())
-
-    if exit_code != 0 or RE_YAML_ERROR.search(log):
-        return log
-    return None
+    if not res.errors:
+        return None
+    return '\n'.join([err.message for err in res.errors])
 
 
 @callback
