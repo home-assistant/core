@@ -37,7 +37,7 @@ def setup(hass, config):
         patterns = watcher[CONF_PATTERNS]
         if not hass.config.is_allowed_path(path):
             _LOGGER.error("folder %s is not valid or allowed", path)
-            False
+            return False
         Watcher(path, patterns, hass)
 
     return True
