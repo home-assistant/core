@@ -109,9 +109,6 @@ class Light(zha.Entity, light.Light):
                 brightness,
                 duration
             )
-            self._state = 1
-            self.async_schedule_update_ha_state()
-            return
 
         await self._endpoint.on_off.on()
         self._state = 1
