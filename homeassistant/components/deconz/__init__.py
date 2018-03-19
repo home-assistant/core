@@ -204,101 +204,44 @@ class DeconzFlowHandler(config_entries.ConfigFlowHandler):
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
-        # from aiohue.discovery import discover_nupnp
-
+        errors = {}
         print('step init - user input', user_input)
 
         if user_input is not None:
             self.host = user_input['host']
             self.port = user_input['port']
             return await self.async_step_link()
-        URL_DISCOVER = 'https://dresden-light.appspot.com/discover'
+        from pydeconz.utils import async_discovery
         session = aiohttp_client.async_get_clientsession(self.hass)
-        discovered = await session.get(URL_DISCOVER)
-        json_dict = await discovered.json()
-        print(json_dict)
-        # try:
-        #     with async_timeout.timeout(5):
-        #         bridges = await discover_nupnp(websession=self._websession)
-        # except asyncio.TimeoutError:
-        #     return self.async_abort(
-        #         reason='Unable to discover Hue bridges.'
-        #     )
+        response = await async_discovery(session)
+        print(response)
 
-        # if not bridges:
-        #     return self.async_abort(
-        #         reason='No Philips Hue bridges discovered.'
-        #     )
-
-        # # Find already configured hosts
-        # configured_hosts = set(
-        #     entry.data['host'] for entry
-        #     in self.hass.config_entries.async_entries(DOMAIN))
-
-        # hosts = [bridge.host for bridge in bridges
-        #          if bridge.host not in configured_hosts]
-
-        # if not hosts:
-        #     return self.async_abort(
-        #         reason='All Philips Hue bridges are already configured.'
-        #     )
-
-        # elif len(hosts) == 1:
-        #     self.host = hosts[0]
-        #     return await self.async_step_link()
 
         return self.async_show_form(
             step_id='init',
-            title='Identify deCONZ gateway',
             data_schema=vol.Schema({
                 'host': str,
                 'port': int,
             }),
+            errors=errors
         )
 
     async def async_step_link(self, user_input=None):
         """Attempt to link with the Deconz bridge."""
-        # import aiohue
         errors = {}
 
         print('step link - user input', user_input)
 
         if user_input is not None:
-            # bridge = aiohue.Bridge(self.host, websession=self._websession)
-            # try:
-            #     with async_timeout.timeout(5):
-            #         # Create auth token
-            #         await bridge.create_user('home-assistant')
-            #         # Fetches name and id
-            #         await bridge.initialize()
-            # except (asyncio.TimeoutError, aiohue.RequestError,
-            #         aiohue.LinkButtonNotPressed):
-            #     errors['base'] = 'Failed to register, please try again.'
-            # except aiohue.AiohueException:
-            #     errors['base'] = 'Unknown linking error occurred.'
-            #     _LOGGER.exception('Uknown Hue linking error occurred')
-            # else:
-            #     return self.async_create_entry(
-            #         title=bridge.config.name,
-            #         data={
-            #             'host': bridge.host,
-            #             'bridge_id': bridge.config.bridgeid,
-            #             'username': bridge.username,
-            #         }
-            #     )
             print('step link - user input', user_input)
 
         return self.async_show_form(
             step_id='link',
-            title='Link deCONZ',
-            description=instructions,
             errors=errors,
         )
 
 
 async def async_setup_entry(hass, entry):
     """Set up a bridge for a config entry."""
-    await hass.async_add_job(partial(
-        setup_bridge, entry.data['host'], hass,
-        username=entry.data['username']))
-    return True
+    print('async setup entry')
+
