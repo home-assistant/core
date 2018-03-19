@@ -26,6 +26,7 @@ CONF_MODEL = 'model'
 MODEL_AIRPURIFIER_PRO = 'zhimi.airpurifier.v6'
 MODEL_AIRPURIFIER_V3 = 'zhimi.airpurifier.v3'
 MODEL_AIRHUMIDIFIER_V1 = 'zhimi.humidifier.v1'
+MODEL_AIRHUMIDIFIER_CA = 'zhimi.humidifier.ca1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -529,7 +530,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
     def __init__(self, name, device, model, unique_id):
         """Initialize the plug switch."""
-        XiaomiGenericDevice.__init__(self, name, device, model, unique_id)
+        super().__init__(name, device, model, unique_id)
 
         if self._model == MODEL_AIRPURIFIER_PRO:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
@@ -721,11 +722,16 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 
     def __init__(self, name, device, model, unique_id):
         """Initialize the plug switch."""
-        XiaomiGenericDevice.__init__(self, name, device, model, unique_id)
+        super().__init__(name, device, model, unique_id)
 
-        self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
-        self._state_attrs.update({attribute: None for attribute in
-                                  AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER})
+        if self._model == MODEL_AIRHUMIDIFIER_CA:
+            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA
+            self._state_attrs.update({attribute: None for attribute in
+                                      AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA})
+        else:
+            self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
+            self._state_attrs.update({attribute: None for attribute in
+                                      AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER})
 
     async def async_update(self):
         """Fetch state from the device."""
@@ -744,9 +750,16 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
             self._available = True
             self._state = state.is_on
 
-            self._state_attrs.update(
-                {key: self._extract_value_from_attribute(state, value) for
-                 key, value in AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER.items()})
+            if self._model == MODEL_AIRHUMIDIFIER_CA:
+                self._state_attrs.update(
+                    {key: self._extract_value_from_attribute(state, value)
+                     for key, value in
+                     AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA.items()})
+            else:
+                self._state_attrs.update(
+                    {key: self._extract_value_from_attribute(state, value)
+                     for key, value in
+                     AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER.items()})
 
         except DeviceException as ex:
             self._available = False
@@ -758,6 +771,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
         if self._model == MODEL_AIRHUMIDIFIER_V1:
             return [mode.name for mode in OperationMode if mode.name != 'Auto']
 
+        # Air Humidifier CA
         return [mode.name for mode in OperationMode]
 
     @property
