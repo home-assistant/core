@@ -15,9 +15,9 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, ClimateDevice,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO,
-    ATTR_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, 
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW, 
-    SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE, SUPPORT_FAN_MODE, 
+    ATTR_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
+    SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE, SUPPORT_FAN_MODE,
     SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE, SUPPORT_AUX_HEAT)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME, CONF_VALUE_TEMPLATE)
@@ -95,7 +95,8 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_POWER_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_TEMPERATURE_STATE_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_TEMPERATURE_HIGH_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_TEMPERATURE_HIGH_STATE_TOPIC): 
+      mqtt.valid_subscribe_topic,
     vol.Optional(CONF_TEMPERATURE_LOW_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_SWING_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -475,7 +476,7 @@ class MqttClimate(MqttAvailability, ClimateDevice):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temperature
-        
+
     @property
     def target_temperature_high(self):
         """Return the highbound target temperature we try to reach."""
@@ -484,7 +485,7 @@ class MqttClimate(MqttAvailability, ClimateDevice):
     @property
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
-        return self._target_temperature_low       
+        return self._target_temperature_low
 
     @property
     def current_operation(self):
@@ -669,14 +670,14 @@ class MqttClimate(MqttAvailability, ClimateDevice):
         if (self._topic[CONF_TEMPERATURE_STATE_TOPIC] is not None) or \
            (self._topic[CONF_TEMPERATURE_COMMAND_TOPIC] is not None):
             support |= SUPPORT_TARGET_TEMPERATURE
-            
+
         if (self._topic[CONF_TEMPERATURE_HIGH_STATE_TOPIC] is not None) or \
            (self._topic[CONF_TEMPERATURE_HIGH_COMMAND_TOPIC] is not None):
             support |= SUPPORT_TARGET_TEMPERATURE_HIGH
-            
+
         if (self._topic[CONF_TEMPERATURE_LOW_STATE_TOPIC] is not None) or \
            (self._topic[CONF_TEMPERATURE_LOW_COMMAND_TOPIC] is not None):
-            support |= SUPPORT_TARGET_TEMPERATURE_LOW                        
+            support |= SUPPORT_TARGET_TEMPERATURE_LOW
 
         if (self._topic[CONF_MODE_COMMAND_TOPIC] is not None) or \
            (self._topic[CONF_MODE_STATE_TOPIC] is not None):
