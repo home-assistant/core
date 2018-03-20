@@ -18,8 +18,27 @@ def watchdog_mock():
     """Mock watchdog module."""
     with patch.dict('sys.modules', {
         'watchdog': MagicMock(),
+        'watchdog.observers': MagicMock(),
+        'watchdog.events': MagicMock(),
     }):
         yield
+
+
+class ObserverMock():
+    """Mock class for the observer object."""
+
+    def __init__(self):
+        """Initialize Telnet object."""
+        pass
+
+    def schedule(self, event_handler, path, recursive):
+        pass
+
+    def start(self):
+        pass
+
+    def stop(self):
+        pass
 
 
 class TestFolderWatcher(unittest.TestCase):
@@ -42,8 +61,7 @@ class TestFolderWatcher(unittest.TestCase):
         self.assertFalse(
             setup_component(self.hass, DOMAIN, config))
 
-    @patch('watchdog.observers')
-    def test_valid_path_setup(self, method):
+    def test_valid_path_setup(self):
         """Test that a valid path is setup."""
         config = {
             DOMAIN: [{CONF_FOLDER: CWD}]
