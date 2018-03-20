@@ -256,7 +256,7 @@ class Camera(Entity):
         return self.hass.async_add_job(self.camera_image)
 
     async def handle_async_still_stream(self, request,
-                                  interval=DEFAULT_STREAM_INTERVAL):
+                                        interval=DEFAULT_STREAM_INTERVAL):
         """Generate an HTTP MJPEG stream from camera images.
 
         This method must be run in the event loop.
