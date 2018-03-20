@@ -275,8 +275,8 @@ class Camera(Entity):
 
         last_image = None
 
-        interval = .5 # default stream framerate: 2 fps
-        min_interval = .05 # max stream framerate: 20 fps
+        interval = .5  # default stream framerate: 2 fps
+        min_interval = .05  # max stream framerate: 20 fps
 
         if request.query.get('interval'):
             interval = max(float(request.query.get('interval')), min_interval)
