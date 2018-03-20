@@ -15,7 +15,7 @@ CWD = os.path.join(os.path.dirname(__file__))
 
 @pytest.fixture(autouse=True)
 def watchdog_mock():
-    """Mock pychromecast."""
+    """Mock watchdog module."""
     with patch.dict('sys.modules', {
         'watchdog': MagicMock(),
     }):
@@ -42,12 +42,11 @@ class TestFolderWatcher(unittest.TestCase):
         self.assertFalse(
             setup_component(self.hass, DOMAIN, config))
 
-    def test_valid_path_setup(self):
+    @patch('watchdog.observers')
+    def test_valid_path_setup(self, method):
         """Test that a valid path is setup."""
         config = {
             DOMAIN: [{CONF_FOLDER: CWD}]
         }
 
-        with patch('watchdog.observers', return_value=None) as mock_observer:
-            self.assertTrue(
-                setup_component(self.hass, DOMAIN, config))
+        self.assertTrue(setup_component(self.hass, DOMAIN, config))
