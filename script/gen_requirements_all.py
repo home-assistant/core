@@ -33,6 +33,7 @@ COMMENT_REQUIREMENTS = (
     'i2csense',
     'credstash',
     'bme680',
+    'homekit',
 )
 
 TEST_REQUIREMENTS = (
