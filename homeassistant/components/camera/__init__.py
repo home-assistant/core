@@ -275,6 +275,12 @@ class Camera(Entity):
 
         last_image = None
 
+        interval = .5 # default stream framerate: 2 fps
+        min_interval = .05 # max stream framerate: 20 fps
+
+        if request.query.get('interval'):
+            interval = max(float(request.query.get('interval')), min_interval)
+
         try:
             while True:
                 img_bytes = yield from self.async_camera_image()
@@ -291,7 +297,7 @@ class Camera(Entity):
 
                     last_image = img_bytes
 
-                yield from asyncio.sleep(.5)
+                yield from asyncio.sleep(interval)
 
         except asyncio.CancelledError:
             _LOGGER.debug("Stream closed by frontend.")
