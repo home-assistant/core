@@ -255,9 +255,13 @@ class Camera(Entity):
         """
         return self.hass.async_add_job(self.camera_image)
 
-    async def async_setup_mjpeg_stream_response(self, request):
-        response = web.StreamResponse()
+    async def handle_async_still_stream(self, request,
+                                  interval=DEFAULT_STREAM_INTERVAL):
+        """Generate an HTTP MJPEG stream from camera images.
 
+        This method must be run in the event loop.
+        """
+        response = web.StreamResponse()
         response.content_type = ('multipart/x-mixed-replace; '
                                  'boundary=--frameboundary')
         await response.prepare(request)
@@ -271,45 +275,33 @@ class Camera(Entity):
                     self.content_type, len(img_bytes)),
                 'utf-8') + img_bytes + b'\r\n')
 
-        response.write_image = write_to_mjpeg_stream
-        return response
-
-    @asyncio.coroutine
-    def handle_async_still_stream(self, request,
-                                  interval=DEFAULT_STREAM_INTERVAL):
-        """Generate an HTTP MJPEG stream from camera images.
-
-        This method must be run in the event loop.
-        """
-        stream = yield from self.async_setup_mjpeg_stream_response(request)
-
         last_image = None
 
         try:
             while True:
-                img_bytes = yield from self.async_camera_image()
+                img_bytes = await self.async_camera_image()
                 if not img_bytes:
                     break
 
                 if img_bytes and img_bytes != last_image:
-                    yield from stream.write_image(img_bytes)
+                    await write_to_mjpeg_stream(img_bytes)
 
                     # Chrome seems to always ignore first picture,
                     # print it twice.
                     if last_image is None:
-                        yield from stream.write_image(img_bytes)
+                        await write_to_mjpeg_stream(img_bytes)
 
                     last_image = img_bytes
 
-                yield from asyncio.sleep(interval)
+                await asyncio.sleep(interval)
 
         except asyncio.CancelledError:
             _LOGGER.debug("Stream closed by frontend.")
-            stream = None
+            response = None
 
         finally:
-            if stream is not None:
-                yield from stream.write_eof()
+            if response is not None:
+                await response.write_eof()
 
     @asyncio.coroutine
     def handle_async_mjpeg_stream(self, request):
