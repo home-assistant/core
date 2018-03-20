@@ -109,6 +109,9 @@ omit =
     homeassistant/components/homematic/__init__.py
     homeassistant/components/*/homematic.py
 
+    homeassistant/components/homematicip_cloud.py
+    homeassistant/components/*/homematicip_cloud.py
+
     homeassistant/components/ihc/*
     homeassistant/components/*/ihc.py
 
@@ -309,6 +312,7 @@ omit =
     homeassistant/components/alarm_control_panel/canary.py
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/ialarm.py
+    homeassistant/components/alarm_control_panel/ifttt.py
     homeassistant/components/alarm_control_panel/manual_mqtt.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
@@ -651,6 +655,7 @@ omit =
     homeassistant/components/sensor/supervisord.py
     homeassistant/components/sensor/swiss_hydrological_data.py
     homeassistant/components/sensor/swiss_public_transport.py
+    homeassistant/components/sensor/syncthru.py
     homeassistant/components/sensor/synologydsm.py
     homeassistant/components/sensor/systemmonitor.py
     homeassistant/components/sensor/sytadin.py
@@ -660,6 +665,7 @@ omit =
     homeassistant/components/sensor/tibber.py
     homeassistant/components/sensor/time_date.py
     homeassistant/components/sensor/torque.py
+    homeassistant/components/sensor/trafikverket_weatherstation.py
     homeassistant/components/sensor/transmission.py
     homeassistant/components/sensor/travisci.py
     homeassistant/components/sensor/twitch.py
