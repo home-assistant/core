@@ -433,8 +433,8 @@ class CameraMjpegStream(CameraView):
 
     @asyncio.coroutine
     def handle(self, request, camera):
-        """Serve camera stream."""
         if request.query.get('interval'):
+            """Compose camera stream from stills."""
             interval = float(request.query.get('interval'))
             if interval < MIN_STREAM_INTERVAL:
                 return web.Response(status=403,
@@ -443,4 +443,5 @@ class CameraMjpegStream(CameraView):
                                     .format(MIN_STREAM_INTERVAL))
             yield from camera.handle_async_still_stream(request, interval)
         else:
+            """Serve camera stream."""
             yield from camera.handle_async_mjpeg_stream(request)
