@@ -166,6 +166,9 @@ omit =
     homeassistant/components/mailgun.py
     homeassistant/components/*/mailgun.py
 
+    homeassistant/components/matrix.py
+    homeassistant/components/*/matrix.py
+
     homeassistant/components/maxcube.py
     homeassistant/components/*/maxcube.py
 
