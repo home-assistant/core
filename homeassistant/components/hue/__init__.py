@@ -6,22 +6,22 @@ https://home-assistant.io/components/hue/
 """
 import asyncio
 import json
-from functools import partial
+import ipaddress
 import logging
 import os
-import socket
 
 import async_timeout
-import requests
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.discovery import SERVICE_HUE
 from homeassistant.const import CONF_FILENAME, CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery, aiohttp_client
 from homeassistant import config_entries
+from homeassistant.util.json import save_json
 
-REQUIREMENTS = ['phue==1.0', 'aiohue==0.3.0']
+REQUIREMENTS = ['aiohue==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,26 +36,23 @@ DEFAULT_ALLOW_UNREACHABLE = False
 
 PHUE_CONFIG_FILE = 'phue.conf'
 
-CONF_ALLOW_IN_EMULATED_HUE = "allow_in_emulated_hue"
-DEFAULT_ALLOW_IN_EMULATED_HUE = True
-
 CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
 DEFAULT_ALLOW_HUE_GROUPS = True
 
-BRIDGE_CONFIG_SCHEMA = vol.Schema([{
-    vol.Optional(CONF_HOST): cv.string,
+BRIDGE_CONFIG_SCHEMA = vol.Schema({
+    # Validate as IP address and then convert back to a string.
+    vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
     vol.Optional(CONF_FILENAME, default=PHUE_CONFIG_FILE): cv.string,
     vol.Optional(CONF_ALLOW_UNREACHABLE,
                  default=DEFAULT_ALLOW_UNREACHABLE): cv.boolean,
-    vol.Optional(CONF_ALLOW_IN_EMULATED_HUE,
-                 default=DEFAULT_ALLOW_IN_EMULATED_HUE): cv.boolean,
     vol.Optional(CONF_ALLOW_HUE_GROUPS,
                  default=DEFAULT_ALLOW_HUE_GROUPS): cv.boolean,
-}])
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_BRIDGES): BRIDGE_CONFIG_SCHEMA,
+        vol.Optional(CONF_BRIDGES):
+            vol.All(cv.ensure_list, [BRIDGE_CONFIG_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -73,7 +70,7 @@ Press the button on the bridge to register Philips Hue with Home Assistant.
 """
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Hue platform."""
     conf = config.get(DOMAIN)
     if conf is None:
@@ -82,135 +79,130 @@ def setup(hass, config):
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {}
 
-    discovery.listen(
-        hass,
-        SERVICE_HUE,
-        lambda service, discovery_info:
-        bridge_discovered(hass, service, discovery_info))
+    async def async_bridge_discovered(service, discovery_info):
+        """Dispatcher for Hue discovery events."""
+        # Ignore emulated hue
+        if "HASS Bridge" in discovery_info.get('name', ''):
+            return
+
+        await async_setup_bridge(
+            hass, discovery_info['host'],
+            'phue-{}.conf'.format(discovery_info['serial']))
+
+    discovery.async_listen(hass, SERVICE_HUE, async_bridge_discovered)
 
     # User has configured bridges
     if CONF_BRIDGES in conf:
         bridges = conf[CONF_BRIDGES]
+
     # Component is part of config but no bridges specified, discover.
     elif DOMAIN in config:
         # discover from nupnp
-        hosts = requests.get(API_NUPNP).json()
-        bridges = [{
+        websession = aiohttp_client.async_get_clientsession(hass)
+
+        async with websession.get(API_NUPNP) as req:
+            hosts = await req.json()
+
+        # Run through config schema to populate defaults
+        bridges = [BRIDGE_CONFIG_SCHEMA({
             CONF_HOST: entry['internalipaddress'],
             CONF_FILENAME: '.hue_{}.conf'.format(entry['id']),
-        } for entry in hosts]
+        }) for entry in hosts]
+
     else:
         # Component not specified in config, we're loaded via discovery
         bridges = []
 
-    for bridge in bridges:
-        filename = bridge.get(CONF_FILENAME)
-        allow_unreachable = bridge.get(CONF_ALLOW_UNREACHABLE)
-        allow_in_emulated_hue = bridge.get(CONF_ALLOW_IN_EMULATED_HUE)
-        allow_hue_groups = bridge.get(CONF_ALLOW_HUE_GROUPS)
+    if not bridges:
+        return True
 
-        host = bridge.get(CONF_HOST)
-
-        if host is None:
-            host = _find_host_from_config(hass, filename)
-
-        if host is None:
-            _LOGGER.error("No host found in configuration")
-            return False
-
-        setup_bridge(host, hass, filename, allow_unreachable,
-                     allow_in_emulated_hue, allow_hue_groups)
+    await asyncio.wait([
+        async_setup_bridge(
+            hass, bridge[CONF_HOST], bridge[CONF_FILENAME],
+            bridge[CONF_ALLOW_UNREACHABLE], bridge[CONF_ALLOW_HUE_GROUPS]
+        ) for bridge in bridges
+    ])
 
     return True
 
 
-def bridge_discovered(hass, service, discovery_info):
-    """Dispatcher for Hue discovery events."""
-    if "HASS Bridge" in discovery_info.get('name', ''):
-        return
-
-    host = discovery_info.get('host')
-    serial = discovery_info.get('serial')
-
-    filename = 'phue-{}.conf'.format(serial)
-    setup_bridge(host, hass, filename)
-
-
-def setup_bridge(host, hass, filename=None, allow_unreachable=False,
-                 allow_in_emulated_hue=True, allow_hue_groups=True,
-                 username=None):
+async def async_setup_bridge(
+        hass, host, filename=None,
+        allow_unreachable=DEFAULT_ALLOW_UNREACHABLE,
+        allow_hue_groups=DEFAULT_ALLOW_HUE_GROUPS,
+        username=None):
     """Set up a given Hue bridge."""
+    assert filename or username, 'Need to pass at least a username or filename'
+
     # Only register a device once
-    if socket.gethostbyname(host) in hass.data[DOMAIN]:
+    if host in hass.data[DOMAIN]:
         return
+
+    if username is None:
+        username = await hass.async_add_job(
+            _find_username_from_config, hass, filename)
 
     bridge = HueBridge(host, hass, filename, username, allow_unreachable,
-                       allow_in_emulated_hue, allow_hue_groups)
-    bridge.setup()
+                       allow_hue_groups)
+    await bridge.async_setup()
+    hass.data[DOMAIN][host] = bridge
 
 
-def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
-    """Attempt to detect host based on existing configuration."""
+def _find_username_from_config(hass, filename):
+    """Load username from config."""
     path = hass.config.path(filename)
 
     if not os.path.isfile(path):
         return None
 
-    try:
-        with open(path) as inp:
-            return next(iter(json.load(inp).keys()))
-    except (ValueError, AttributeError, StopIteration):
-        # ValueError if can't parse as JSON
-        # AttributeError if JSON value is not a dict
-        # StopIteration if no keys
-        return None
+    with open(path) as inp:
+        return list(json.load(inp).values())[0]['username']
 
 
 class HueBridge(object):
     """Manages a single Hue bridge."""
 
-    def __init__(self, host, hass, filename, username, allow_unreachable=False,
-                 allow_in_emulated_hue=True, allow_hue_groups=True):
+    def __init__(self, host, hass, filename, username,
+                 allow_unreachable=False, allow_groups=True):
         """Initialize the system."""
         self.host = host
-        self.bridge_id = socket.gethostbyname(host)
         self.hass = hass
         self.filename = filename
         self.username = username
         self.allow_unreachable = allow_unreachable
-        self.allow_in_emulated_hue = allow_in_emulated_hue
-        self.allow_hue_groups = allow_hue_groups
-
+        self.allow_groups = allow_groups
         self.available = True
-        self.bridge = None
-        self.lights = {}
-        self.lightgroups = {}
-
-        self.configured = False
         self.config_request_id = None
+        self.api = None
 
-        hass.data[DOMAIN][self.bridge_id] = self
-
-    def setup(self):
+    async def async_setup(self):
         """Set up a phue bridge based on host parameter."""
-        import phue
+        import aiohue
+
+        api = aiohue.Bridge(
+            self.host,
+            username=self.username,
+            websession=aiohttp_client.async_get_clientsession(self.hass)
+        )
 
         try:
-            kwargs = {}
-            if self.username is not None:
-                kwargs['username'] = self.username
-            if self.filename is not None:
-                kwargs['config_file_path'] = \
-                    self.hass.config.path(self.filename)
-            self.bridge = phue.Bridge(self.host, **kwargs)
-        except OSError:  # Wrong host was given
+            with async_timeout.timeout(5):
+                # Initialize bridge and validate our username
+                if not self.username:
+                    await api.create_user('home-assistant')
+                await api.initialize()
+        except (aiohue.LinkButtonNotPressed, aiohue.Unauthorized):
+            _LOGGER.warning("Connected to Hue at %s but not registered.",
+                            self.host)
+            self.async_request_configuration()
+            return
+        except (asyncio.TimeoutError, aiohue.RequestError):
             _LOGGER.error("Error connecting to the Hue bridge at %s",
                           self.host)
             return
-        except phue.PhueRegistrationException:
-            _LOGGER.warning("Connected to Hue at %s but not registered.",
-                            self.host)
-            self.request_configuration()
+        except aiohue.AiohueException:
+            _LOGGER.exception('Unknown Hue linking error occurred')
+            self.async_request_configuration()
             return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error connecting with Hue bridge at %s",
@@ -221,57 +213,77 @@ class HueBridge(object):
         if self.config_request_id:
             request_id = self.config_request_id
             self.config_request_id = None
-            configurator = self.hass.components.configurator
-            configurator.request_done(request_id)
+            self.hass.components.configurator.async_request_done(request_id)
 
-        self.configured = True
+            self.username = api.username
 
-        discovery.load_platform(
+            # Save config file
+            await self.hass.async_add_job(
+                save_json, self.hass.config.path(self.filename),
+                {self.host: {'username': api.username}})
+
+        self.api = api
+
+        self.hass.async_add_job(discovery.async_load_platform(
             self.hass, 'light', DOMAIN,
-            {'bridge_id': self.bridge_id})
+            {'host': self.host}))
 
-        # create a service for calling run_scene directly on the bridge,
-        # used to simplify automation rules.
-        def hue_activate_scene(call):
-            """Service to call directly into bridge to set scenes."""
-            group_name = call.data[ATTR_GROUP_NAME]
-            scene_name = call.data[ATTR_SCENE_NAME]
-            self.bridge.run_scene(group_name, scene_name)
-
-        self.hass.services.register(
-            DOMAIN, SERVICE_HUE_SCENE, hue_activate_scene,
+        self.hass.services.async_register(
+            DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene,
             schema=SCENE_SCHEMA)
 
-    def request_configuration(self):
+    @callback
+    def async_request_configuration(self):
         """Request configuration steps from the user."""
         configurator = self.hass.components.configurator
 
         # We got an error if this method is called while we are configuring
         if self.config_request_id:
-            configurator.notify_errors(
+            configurator.async_notify_errors(
                 self.config_request_id,
                 "Failed to register, please try again.")
             return
 
-        self.config_request_id = configurator.request_config(
-            "Philips Hue",
-            lambda data: self.setup(),
+        async def config_callback(data):
+            """Callback for configurator data."""
+            await self.async_setup()
+
+        self.config_request_id = configurator.async_request_config(
+            "Philips Hue", config_callback,
             description=CONFIG_INSTRUCTIONS,
             entity_picture="/static/images/logo_philips_hue.png",
             submit_caption="I have pressed the button"
         )
 
-    def get_api(self):
-        """Return the full api dictionary from phue."""
-        return self.bridge.get_api()
+    async def hue_activate_scene(self, call, updated=False):
+        """Service to call directly into bridge to set scenes."""
+        group_name = call.data[ATTR_GROUP_NAME]
+        scene_name = call.data[ATTR_SCENE_NAME]
 
-    def set_light(self, light_id, command):
-        """Adjust properties of one or more lights. See phue for details."""
-        return self.bridge.set_light(light_id, command)
+        group = next(
+            (group for group in self.api.groups.values()
+             if group.name == group_name), None)
 
-    def set_group(self, light_id, command):
-        """Change light settings for a group. See phue for detail."""
-        return self.bridge.set_group(light_id, command)
+        scene_id = next(
+            (scene.id for scene in self.api.scenes.values()
+             if scene.name == scene_name), None)
+
+        # If we can't find it, fetch latest info.
+        if not updated and (group is None or scene_id is None):
+            await self.api.groups.update()
+            await self.api.scenes.update()
+            await self.hue_activate_scene(call, updated=True)
+            return
+
+        if group is None:
+            _LOGGER.warning('Unable to find group %s', group_name)
+            return
+
+        if scene_id is None:
+            _LOGGER.warning('Unable to find scene %s', scene_name)
+            return
+
+        await group.set_action(scene=scene_id)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -374,7 +386,6 @@ class HueFlowHandler(config_entries.ConfigFlowHandler):
 
 async def async_setup_entry(hass, entry):
     """Set up a bridge for a config entry."""
-    await hass.async_add_job(partial(
-        setup_bridge, entry.data['host'], hass,
-        username=entry.data['username']))
+    await async_setup_bridge(hass, entry.data['host'],
+                             username=entry.data['username'])
     return True

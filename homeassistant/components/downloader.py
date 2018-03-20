@@ -25,6 +25,8 @@ ATTR_OVERWRITE = 'overwrite'
 CONF_DOWNLOAD_DIR = 'download_dir'
 
 DOMAIN = 'downloader'
+DOWNLOAD_FAILED_EVENT = 'download_failed'
+DOWNLOAD_COMPLETED_EVENT = 'download_completed'
 
 DOWNLOAD_FAILED_EVENT = 'download_failed'
 DOWNLOAD_COMPLETED_EVENT = 'download_completed'

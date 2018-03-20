@@ -17,7 +17,7 @@ from homeassistant.setup import setup_component
 import pytest
 
 from tests.common import (
-    get_test_home_assistant, async_fire_time_changed)
+    get_test_home_assistant, async_fire_time_changed, mock_coro)
 from tests.mock.zwave import MockNetwork, MockNode, MockValue, MockEntityValues
 
 
@@ -468,6 +468,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_entity_discovery(self, discovery, get_platform):
         """Test the creation of a new entity."""
+        discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
         get_platform.return_value = mock_platform
         mock_device = MagicMock()
@@ -500,8 +501,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
                                 key=lambda a: id(a)))
 
         assert discovery.async_load_platform.called
-        # Second call is to async yield from
-        assert len(discovery.async_load_platform.mock_calls) == 2
+        assert len(discovery.async_load_platform.mock_calls) == 1
         args = discovery.async_load_platform.mock_calls[0][1]
         assert args[0] == self.hass
         assert args[1] == 'mock_component'
@@ -532,6 +532,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_entity_existing_values(self, discovery, get_platform):
         """Test the loading of already discovered values."""
+        discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
         get_platform.return_value = mock_platform
         mock_device = MagicMock()
@@ -563,8 +564,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
                                 key=lambda a: id(a)))
 
         assert discovery.async_load_platform.called
-        # Second call is to async yield from
-        assert len(discovery.async_load_platform.mock_calls) == 2
+        assert len(discovery.async_load_platform.mock_calls) == 1
         args = discovery.async_load_platform.mock_calls[0][1]
         assert args[0] == self.hass
         assert args[1] == 'mock_component'
@@ -599,6 +599,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_entity_workaround_component(self, discovery, get_platform):
         """Test ignore workaround."""
+        discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
         get_platform.return_value = mock_platform
         mock_device = MagicMock()
@@ -629,8 +630,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         self.hass.block_till_done()
 
         assert discovery.async_load_platform.called
-        # Second call is to async yield from
-        assert len(discovery.async_load_platform.mock_calls) == 2
+        assert len(discovery.async_load_platform.mock_calls) == 1
         args = discovery.async_load_platform.mock_calls[0][1]
         assert args[1] == 'binary_sensor'
 
@@ -995,8 +995,21 @@ class TestZWaveServices(unittest.TestCase):
             type=const.TYPE_LIST,
             data_items=['item1', 'item2', 'item3'],
         )
+        value_list_int = MockValue(
+            index=15,
+            command_class=const.COMMAND_CLASS_CONFIGURATION,
+            type=const.TYPE_LIST,
+            data_items=['1', '2', '3'],
+        )
+        value_button = MockValue(
+            index=14,
+            command_class=const.COMMAND_CLASS_CONFIGURATION,
+            type=const.TYPE_BUTTON,
+        )
         node = MockNode(node_id=14)
-        node.get_values.return_value = {12: value, 13: value_list}
+        node.get_values.return_value = {12: value, 13: value_list,
+                                        14: value_button,
+                                        15: value_list_int}
         self.zwave_network.nodes = {14: node}
 
         self.hass.services.call('zwave', 'set_config_parameter', {
@@ -1010,12 +1023,31 @@ class TestZWaveServices(unittest.TestCase):
 
         self.hass.services.call('zwave', 'set_config_parameter', {
             const.ATTR_NODE_ID: 14,
+            const.ATTR_CONFIG_PARAMETER: 15,
+            const.ATTR_CONFIG_VALUE: 3,
+        })
+        self.hass.block_till_done()
+
+        assert value_list_int.data == '3'
+
+        self.hass.services.call('zwave', 'set_config_parameter', {
+            const.ATTR_NODE_ID: 14,
             const.ATTR_CONFIG_PARAMETER: 12,
             const.ATTR_CONFIG_VALUE: 7,
         })
         self.hass.block_till_done()
 
         assert value.data == 7
+
+        self.hass.services.call('zwave', 'set_config_parameter', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_CONFIG_PARAMETER: 14,
+            const.ATTR_CONFIG_VALUE: True,
+        })
+        self.hass.block_till_done()
+
+        assert self.zwave_network.manager.pressButton.called
+        assert self.zwave_network.manager.releaseButton.called
 
         self.hass.services.call('zwave', 'set_config_parameter', {
             const.ATTR_NODE_ID: 14,

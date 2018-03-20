@@ -496,6 +496,10 @@ class TodoistProjectData(object):
             # We had no valid tasks
             return True
 
+        # Make sure the task collection is reset to prevent an
+        # infinite collection repeating the same tasks
+        self.all_project_tasks.clear()
+
         # Organize the best tasks (so users can see all the tasks
         # they have, organized)
         while project_tasks:

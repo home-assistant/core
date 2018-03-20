@@ -6,12 +6,13 @@ https://home-assistant.io/components/light.mysensors/
 """
 from homeassistant.components import mysensors
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_WHITE_VALUE, DOMAIN,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE, Light)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_WHITE_VALUE, DOMAIN,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import rgb_hex_to_rgb_list
+import homeassistant.util.color as color_util
 
-SUPPORT_MYSENSORS = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR |
+SUPPORT_MYSENSORS = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR |
                      SUPPORT_WHITE_VALUE)
 
 
@@ -35,7 +36,7 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
         super().__init__(*args)
         self._state = None
         self._brightness = None
-        self._rgb = None
+        self._hs = None
         self._white = None
 
     @property
@@ -44,9 +45,9 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
         return self._brightness
 
     @property
-    def rgb_color(self):
-        """Return the RGB color value [int, int, int]."""
-        return self._rgb
+    def hs_color(self):
+        """Return the hs color value [int, int]."""
+        return self._hs
 
     @property
     def white_value(self):
@@ -103,10 +104,10 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
 
     def _turn_on_rgb_and_w(self, hex_template, **kwargs):
         """Turn on RGB or RGBW child device."""
-        rgb = self._rgb
+        rgb = color_util.color_hs_to_RGB(*self._hs)
         white = self._white
         hex_color = self._values.get(self.value_type)
-        new_rgb = kwargs.get(ATTR_RGB_COLOR)
+        new_rgb = color_util.color_hs_to_RGB(*kwargs.get(ATTR_HS_COLOR))
         new_white = kwargs.get(ATTR_WHITE_VALUE)
 
         if new_rgb is None and new_white is None:
@@ -126,7 +127,7 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
-            self._rgb = rgb
+            self._hs = color_util.color_RGB_to_hs(*rgb)
             self._white = white
             self._values[self.value_type] = hex_color
 
@@ -160,7 +161,7 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
         color_list = rgb_hex_to_rgb_list(value)
         if len(color_list) > 3:
             self._white = color_list.pop()
-        self._rgb = color_list
+        self._hs = color_util.color_RGB_to_hs(*color_list)
 
 
 class MySensorsLightDimmer(MySensorsLight):

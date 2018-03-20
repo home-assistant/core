@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['sqlalchemy==1.2.2']
+REQUIREMENTS = ['sqlalchemy==1.2.5']
 
 CONF_QUERIES = 'queries'
 CONF_QUERY = 'query'

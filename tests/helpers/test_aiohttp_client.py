@@ -14,7 +14,7 @@ from tests.common import get_test_home_assistant
 
 
 @pytest.fixture
-def camera_client(hass, test_client):
+def camera_client(hass, aiohttp_client):
     """Fixture to fetch camera streams."""
     assert hass.loop.run_until_complete(async_setup_component(hass, 'camera', {
         'camera': {
@@ -23,7 +23,7 @@ def camera_client(hass, test_client):
             'mjpeg_url': 'http://example.com/mjpeg_stream',
         }}))
 
-    yield hass.loop.run_until_complete(test_client(hass.http.app))
+    yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 class TestHelpersAiohttpClient(unittest.TestCase):
