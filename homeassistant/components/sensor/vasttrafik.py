@@ -127,7 +127,7 @@ class VasttrafikDepartureSensor(Entity):
                     return self._departureboard[0]['rtTime']
                 return self._departureboard[0]['time']
         # No departures of given lines found
-        _LOGGER.info(
+        _LOGGER.debug(
             "No departures from %s heading %s on line(s) %s",
             self._departure['name'],
             self._heading['name'] if self._heading else 'ANY',
