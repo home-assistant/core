@@ -53,6 +53,9 @@ ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 TOKEN_CHANGE_INTERVAL = timedelta(minutes=5)
 _RND = SystemRandom()
 
+DEFAULT_STREAM_INTERVAL = 0.5
+MIN_STREAM_INTERVAL = 0.05
+
 CAMERA_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
@@ -252,19 +255,14 @@ class Camera(Entity):
         """
         return self.hass.async_add_job(self.camera_image)
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
-        """Generate an HTTP MJPEG stream from camera images.
-
-        This method must be run in the event loop.
-        """
+    async def async_setup_mjpeg_stream_response(self, request):
         response = web.StreamResponse()
 
         response.content_type = ('multipart/x-mixed-replace; '
                                  'boundary=--frameboundary')
-        yield from response.prepare(request)
+        await response.prepare(request)
 
-        async def write(img_bytes):
+        async def write_to_mjpeg_stream(img_bytes):
             """Write image to stream."""
             await response.write(bytes(
                 '--frameboundary\r\n'
@@ -273,13 +271,19 @@ class Camera(Entity):
                     self.content_type, len(img_bytes)),
                 'utf-8') + img_bytes + b'\r\n')
 
+        response.write_image = write_to_mjpeg_stream
+        return response
+
+    @asyncio.coroutine
+    def handle_async_still_stream(self, request,
+                                  interval=DEFAULT_STREAM_INTERVAL):
+        """Generate an HTTP MJPEG stream from camera images.
+
+        This method must be run in the event loop.
+        """
+        stream = yield from self.async_setup_mjpeg_stream_response(request)
+
         last_image = None
-
-        interval = .5  # default stream framerate: 2 fps
-        min_interval = .05  # max stream framerate: 20 fps
-
-        if request.query.get('interval'):
-            interval = max(float(request.query.get('interval')), min_interval)
 
         try:
             while True:
@@ -288,12 +292,12 @@ class Camera(Entity):
                     break
 
                 if img_bytes and img_bytes != last_image:
-                    yield from write(img_bytes)
+                    yield from stream.write_image(img_bytes)
 
                     # Chrome seems to always ignore first picture,
                     # print it twice.
                     if last_image is None:
-                        yield from write(img_bytes)
+                        yield from stream.write_image(img_bytes)
 
                     last_image = img_bytes
 
@@ -301,11 +305,21 @@ class Camera(Entity):
 
         except asyncio.CancelledError:
             _LOGGER.debug("Stream closed by frontend.")
-            response = None
+            stream = None
 
         finally:
-            if response is not None:
-                yield from response.write_eof()
+            if stream is not None:
+                yield from stream.write_eof()
+
+    @asyncio.coroutine
+    def handle_async_mjpeg_stream(self, request):
+        """Generate an HTTP MJPEG stream from camera images.
+        This method can be overridden by camera plaforms to proxy
+        a direct stream from the camera.
+
+        This method must be run in the event loop.
+        """
+        yield from self.handle_async_still_stream(request)
 
     @property
     def state(self):
@@ -419,5 +433,14 @@ class CameraMjpegStream(CameraView):
 
     @asyncio.coroutine
     def handle(self, request, camera):
-        """Serve camera image."""
-        yield from camera.handle_async_mjpeg_stream(request)
+        """Serve camera stream."""
+        if request.query.get('interval'):
+            interval = float(request.query.get('interval'))
+            if interval < MIN_STREAM_INTERVAL:
+                return web.Response(status=403,
+                                    reason="Interval must be a number \
+                                    with a minumum value of {}"
+                                    .format(MIN_STREAM_INTERVAL))
+            yield from camera.handle_async_still_stream(request, interval)
+        else:
+            yield from camera.handle_async_mjpeg_stream(request)
