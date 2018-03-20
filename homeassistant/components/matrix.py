@@ -134,14 +134,14 @@ class MatrixBot(object):
             try:
                 if room_id in joined_rooms:
                     room = joined_rooms[room_id]
-                    _LOGGER.debug("Already in room {}".format(room_id))
+                    _LOGGER.debug("Already in room %s", room_id)
                 else:
                     room = self._client.join_room(room_id)
-                    _LOGGER.debug("Joined room {}".format(room_id))
+                    _LOGGER.debug("Joined room %s", room_id)
 
                 room.add_listener(room_message_cb, "m.room.message")
             except MatrixRequestError as ex:
-                _LOGGER.error("Could not join room {}: {}".format(room_id, ex))
+                _LOGGER.error("Could not join room %s: %s", room_id, ex)
 
     def _get_auth_tokens(self):
         """
