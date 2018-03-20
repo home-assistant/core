@@ -107,7 +107,8 @@ def get_accessory(hass, state, aid, config):
         _LOGGER.debug('Add "%s" as "%s"', state.entity_id,
                       'SecuritySystem')
         return TYPES['SecuritySystem'](hass, state.entity_id, state.name,
-                                       alarm_code=config[ATTR_CODE], aid=aid)
+                                       alarm_code=config.get(ATTR_CODE),
+                                       aid=aid)
 
     elif state.domain == 'climate':
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
