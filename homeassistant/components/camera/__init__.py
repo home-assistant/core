@@ -305,10 +305,10 @@ class Camera(Entity):
 
     @asyncio.coroutine
     def handle_async_mjpeg_stream(self, request):
-        """Generate an HTTP MJPEG stream from camera images.
+        """Serve an HTTP MJPEG stream from the camera.
+
         This method can be overridden by camera plaforms to proxy
         a direct stream from the camera.
-
         This method must be run in the event loop.
         """
         yield from self.handle_async_still_stream(request)
@@ -425,6 +425,7 @@ class CameraMjpegStream(CameraView):
 
     @asyncio.coroutine
     def handle(self, request, camera):
+        """Serve camera stream, possibly with interval."""
         if request.query.get('interval'):
             """Compose camera stream from stills."""
             interval = float(request.query.get('interval'))
