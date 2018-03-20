@@ -186,6 +186,6 @@ yeelight_set_mode:
     entity_id:
       description: Name of the light entity.
       example: 'light.yeelight'
-    scene:
+    mode:
       description: Operation mode. Valid values are 'last', 'normal', 'rgb', 'hsv', 'color_flow', 'moonlight'.
       example: 'moonlight'
