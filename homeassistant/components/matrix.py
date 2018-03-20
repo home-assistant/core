@@ -107,7 +107,7 @@ class MatrixBot(object):
         self._client.start_listener_thread()
 
     def _join_rooms(self):
-        """ Join the rooms that we listen for commands in. """
+        """Join the rooms that we listen for commands in."""
         from matrix_client.client import MatrixRequestError
 
         def room_message_cb(room, event):
