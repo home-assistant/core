@@ -104,10 +104,6 @@ YEELIGHT_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-SERVICE_SCHEMA_SET_MODE = YEELIGHT_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_MODE): cv.string
-})
-
 
 # Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
 # pylint: disable=invalid-sequence-index
@@ -132,6 +128,8 @@ def _cmd(func):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Yeelight bulbs."""
+    from yeelight.enums import PowerMode
+
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
@@ -174,9 +172,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if service.service == SERVICE_SET_MODE:
                 target_device.set_mode(**params)
 
+    service_schema_set_mode = YEELIGHT_SERVICE_SCHEMA.extend({
+        vol.Required(ATTR_MODE):
+            vol.In([mode.name.lower() for mode in PowerMode])
+    })
     hass.services.register(
         DOMAIN, SERVICE_SET_MODE, service_handler,
-        schema=SERVICE_SCHEMA_SET_MODE)
+        schema=service_schema_set_mode)
 
 
 class YeelightLight(Light):
