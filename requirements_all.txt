@@ -752,7 +752,7 @@ pyhik==0.1.8
 pyhiveapi==0.2.11
 
 # homeassistant.components.homematic
-pyhomematic==0.1.39
+pyhomematic==0.1.40
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==2.1.0
