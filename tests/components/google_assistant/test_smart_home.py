@@ -21,7 +21,7 @@ async def test_sync_message(hass):
     light = DemoLight(
         None, 'Demo Light',
         state=False,
-        rgb=[237, 224, 33]
+        hs_color=(180, 75),
     )
     light.hass = hass
     light.entity_id = 'light.demo_light'
@@ -88,7 +88,7 @@ async def test_query_message(hass):
     light = DemoLight(
         None, 'Demo Light',
         state=False,
-        rgb=[237, 224, 33]
+        hs_color=(180, 75),
     )
     light.hass = hass
     light.entity_id = 'light.demo_light'
@@ -97,7 +97,7 @@ async def test_query_message(hass):
     light2 = DemoLight(
         None, 'Another Light',
         state=True,
-        rgb=[237, 224, 33],
+        hs_color=(180, 75),
         ct=400,
         brightness=78,
     )
@@ -137,7 +137,7 @@ async def test_query_message(hass):
                     'online': True,
                     'brightness': 30,
                     'color': {
-                        'spectrumRGB': 15589409,
+                        'spectrumRGB': 4194303,
                         'temperature': 2500,
                     }
                 },
@@ -197,7 +197,7 @@ async def test_execute(hass):
                     "online": True,
                     'brightness': 20,
                     'color': {
-                        'spectrumRGB': 15589409,
+                        'spectrumRGB': 16773155,
                         'temperature': 2631,
                     },
                 }

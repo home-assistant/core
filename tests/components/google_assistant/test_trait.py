@@ -361,12 +361,10 @@ async def test_color_spectrum_light(hass):
     """Test ColorSpectrum trait support for light domain."""
     assert not trait.ColorSpectrumTrait.supported(light.DOMAIN, 0)
     assert trait.ColorSpectrumTrait.supported(light.DOMAIN,
-                                              light.SUPPORT_RGB_COLOR)
-    assert trait.ColorSpectrumTrait.supported(light.DOMAIN,
-                                              light.SUPPORT_XY_COLOR)
+                                              light.SUPPORT_COLOR)
 
     trt = trait.ColorSpectrumTrait(State('light.bla', STATE_ON, {
-        light.ATTR_RGB_COLOR: [255, 10, 10]
+        light.ATTR_HS_COLOR: (0, 94),
     }))
 
     assert trt.sync_attributes() == {
@@ -375,7 +373,7 @@ async def test_color_spectrum_light(hass):
 
     assert trt.query_attributes() == {
         'color': {
-            'spectrumRGB': 16714250
+            'spectrumRGB': 16715535
         }
     }
 
@@ -399,7 +397,7 @@ async def test_color_spectrum_light(hass):
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'light.bla',
-        light.ATTR_RGB_COLOR: [16, 16, 255]
+        light.ATTR_HS_COLOR: (240, 93.725),
     }
 
 
