@@ -100,14 +100,14 @@ class VasttrafikDepartureSensor(Entity):
             return
 
         for departure in self._departureboard:
-            line = departure.get('sname', None)
+            line = departure.get('sname')
             if not self._lines or line in self._lines:
                 params = {
-                    ATTR_ACCESSIBILITY: departure.get('accessibility', None),
+                    ATTR_ACCESSIBILITY: departure.get('accessibility'),
                     ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-                    ATTR_DIRECTION: departure.get('direction', None),
-                    ATTR_LINE: departure.get('sname', None),
-                    ATTR_TRACK: departure.get('track', None),
+                    ATTR_DIRECTION: departure.get('direction'),
+                    ATTR_LINE: departure.get('sname'),
+                    ATTR_TRACK: departure.get('track'),
                     }
         return {k: v for k, v in params.items() if v}
 
@@ -121,7 +121,7 @@ class VasttrafikDepartureSensor(Entity):
                 self._heading['name'] if self._heading else 'ANY')
             return
         for departure in self._departureboard:
-            line = departure.get('sname', None)
+            line = departure.get('sname')
             if not self._lines or line in self._lines:
                 if 'rtTime' in self._departureboard[0]:
                     return self._departureboard[0]['rtTime']
