@@ -92,6 +92,8 @@ class DeconzSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this sensor."""
+        if self._sensor.sensor_unit.lower() == 'lux':
+            return 'lx'
         return self._sensor.sensor_unit
 
     @property
