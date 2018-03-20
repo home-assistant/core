@@ -24,23 +24,6 @@ def watchdog_mock():
         yield
 
 
-class ObserverMock():
-    """Mock class for the observer object."""
-
-    def __init__(self):
-        """Initialize Telnet object."""
-        pass
-
-    def schedule(self, event_handler, path, recursive):
-        pass
-
-    def start(self):
-        pass
-
-    def stop(self):
-        pass
-
-
 class TestFolderWatcher(unittest.TestCase):
     """Test the file_watcher component."""
 
