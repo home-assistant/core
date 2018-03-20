@@ -73,14 +73,25 @@ class TibberSensor(Entity):
             return
 
         def _find_current_price():
+            state = None
+            max_price = None
+            min_price = None
             for key, price_total in self._tibber_home.price_total.items():
                 price_time = dt_util.as_utc(dt_util.parse_datetime(key))
+                price_total = round(price_total, 3)
                 time_diff = (now - price_time).total_seconds()/60
                 if time_diff >= 0 and time_diff < 60:
-                    self._state = round(price_total, 3)
+                    state = price_total
                     self._last_updated = key
-                    return True
-            return False
+                if now.date() == price_time.date():
+                    if max_price is None or price_total > max_price:
+                        max_price = price_total
+                    if min_price is None or price_total < min_price:
+                        min_price = price_total
+                self._state = state
+                self._device_state_attributes['max_price'] = max_price
+                self._device_state_attributes['min_price'] = min_price
+            return state is not None
 
         if _find_current_price():
             return
