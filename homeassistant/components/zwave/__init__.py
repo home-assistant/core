@@ -442,9 +442,16 @@ def setup(hass, config):
             if value.index != param:
                 continue
             if value.type in [const.TYPE_LIST, const.TYPE_BOOL]:
-                value.data = selection
-                _LOGGER.info("Setting config list parameter %s on Node %s "
-                             "with selection %s", param, node_id,
+                value.data = str(selection)
+                _LOGGER.info("Setting config parameter %s on Node %s "
+                             "with list/bool selection %s", param, node_id,
+                             str(selection))
+                return
+            if value.type == const.TYPE_BUTTON:
+                network.manager.pressButton(value.value_id)
+                network.manager.releaseButton(value.value_id)
+                _LOGGER.info("Setting config parameter %s on Node %s "
+                             "with button selection %s", param, node_id,
                              selection)
                 return
             value.data = int(selection)
