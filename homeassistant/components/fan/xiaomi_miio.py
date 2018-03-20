@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/fan.xiaomi_miio/
 """
 import asyncio
+from enum import Enum
 from functools import partial
 import logging
 
@@ -442,8 +443,6 @@ class XiaomiGenericDevice(FanEntity):
 
     @staticmethod
     def _extract_value_from_attribute(state, attribute):
-        from enum import Enum
-
         value = getattr(state, attribute)
         if isinstance(value, Enum):
             return value.value
@@ -534,16 +533,19 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
         if self._model == MODEL_AIRPURIFIER_PRO:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_PRO
-            self._state_attrs.update({attribute: None for attribute in
-                                      AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO})
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO
+            self._speed_list = OPERATION_MODES_AIRPURIFIER_PRO
         elif self._model == MODEL_AIRPURIFIER_V3:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_V3
-            self._state_attrs.update({attribute: None for attribute in
-                                      AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3})
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3
+            self._speed_list = OPERATION_MODES_AIRPURIFIER_V3
         else:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER
-            self._state_attrs.update({attribute: None for attribute in
-                                      AVAILABLE_ATTRIBUTES_AIRPURIFIER})
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER
+            self._speed_list = OPERATION_MODES_AIRPURIFIER
+
+        self._state_attrs.update(
+            {attribute: None for attribute in self._available_attributes})
 
     async def async_update(self):
         """Fetch state from the device."""
@@ -561,22 +563,9 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
             self._available = True
             self._state = state.is_on
-
-            if self._model == MODEL_AIRPURIFIER_PRO:
-                self._state_attrs.update(
-                    {key: self._extract_value_from_attribute(state, value)
-                     for key, value in
-                     AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO.items()})
-            elif self._model == MODEL_AIRPURIFIER_V3:
-                self._state_attrs.update(
-                    {key: self._extract_value_from_attribute(state, value)
-                     for key, value in
-                     AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3.items()})
-            else:
-                self._state_attrs.update(
-                    {key: self._extract_value_from_attribute(state, value)
-                     for key, value in
-                     AVAILABLE_ATTRIBUTES_AIRPURIFIER.items()})
+            self._state_attrs.update(
+                {key: self._extract_value_from_attribute(state, value) for
+                 key, value in self._available_attributes.items()})
 
         except DeviceException as ex:
             self._available = False
@@ -585,12 +574,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        if self._model == MODEL_AIRPURIFIER_PRO:
-            return OPERATION_MODES_AIRPURIFIER_PRO
-        elif self._model == MODEL_AIRPURIFIER_V3:
-            return OPERATION_MODES_AIRPURIFIER_V3
-
-        return OPERATION_MODES_AIRPURIFIER
+        return self.speed_list
 
     @property
     def speed(self):
@@ -722,16 +706,22 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 
     def __init__(self, name, device, model, unique_id):
         """Initialize the plug switch."""
+        from miio.airpurifier import OperationMode
+
         super().__init__(name, device, model, unique_id)
 
         if self._model == MODEL_AIRHUMIDIFIER_CA:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER_CA
-            self._state_attrs.update({attribute: None for attribute in
-                                      AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA})
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA
+            self._speed_list = [mode.name for mode in OperationMode if
+                                mode.name != 'Auto']
         else:
             self._device_features = FEATURE_FLAGS_AIRHUMIDIFIER
-            self._state_attrs.update({attribute: None for attribute in
-                                      AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER})
+            self._available_attributes = AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER
+            self._speed_list = [mode.name for mode in OperationMode]
+
+        self._state_attrs.update(
+            {attribute: None for attribute in self._available_attributes})
 
     async def async_update(self):
         """Fetch state from the device."""
@@ -743,23 +733,14 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
             return
 
         try:
-            state = await self.hass.async_add_job(
-                self._device.status)
+            state = await self.hass.async_add_job(self._device.status)
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
             self._state = state.is_on
-
-            if self._model == MODEL_AIRHUMIDIFIER_CA:
-                self._state_attrs.update(
-                    {key: self._extract_value_from_attribute(state, value)
-                     for key, value in
-                     AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER_CA.items()})
-            else:
-                self._state_attrs.update(
-                    {key: self._extract_value_from_attribute(state, value)
-                     for key, value in
-                     AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER.items()})
+            self._state_attrs.update(
+                {key: self._extract_value_from_attribute(state, value) for
+                 key, value in self._available_attributes.items()})
 
         except DeviceException as ex:
             self._available = False
@@ -767,12 +748,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        from miio.airpurifier import OperationMode
-        if self._model == MODEL_AIRHUMIDIFIER_V1:
-            return [mode.name for mode in OperationMode if mode.name != 'Auto']
-
-        # Air Humidifier CA
-        return [mode.name for mode in OperationMode]
+        return self._speed_list
 
     @property
     def speed(self):
