@@ -19,7 +19,7 @@ attrs==17.4.0
 # Adafruit_BBIO==1.0.0
 
 # homeassistant.components.doorbird
-DoorBirdPy==0.1.2
+DoorBirdPy==0.1.3
 
 # homeassistant.components.homekit
 HAP-python==1.1.7
