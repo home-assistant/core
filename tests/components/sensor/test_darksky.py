@@ -1,19 +1,19 @@
 """The tests for the Dark Sky platform."""
-import json
 import re
 import unittest
 from unittest.mock import MagicMock, patch
+from datetime import timedelta
 
-import forecastio
 from requests.exceptions import HTTPError
 import requests_mock
-from datetime import timedelta
+
+import forecastio
 
 from homeassistant.components.sensor import darksky
 from homeassistant.setup import setup_component
 
 from tests.common import (load_fixture, get_test_home_assistant,
-                          assert_setup_component, MockDependency)
+                          MockDependency)
 
 VALID_CONFIG_MINIMAL = {
     'sensor': {
@@ -61,7 +61,8 @@ INVALID_CONFIG_LANG = {
 def load_forecastMock(key, lat, lon,
                       units, lang):  # pylint: disable=invalid-name
     """Mock darksky forecast loading."""
-    return ('')
+    return ''
+
 
 class TestDarkSkySetup(unittest.TestCase):
     """Test the Dark Sky platform."""
@@ -156,4 +157,4 @@ class TestDarkSkySetup(unittest.TestCase):
         assert state is not None
         self.assertEqual(state.state, 'Clear')
         self.assertEqual(state.attributes.get('friendly_name'),
-                          'Dark Sky Summary')
+                         'Dark Sky Summary')
