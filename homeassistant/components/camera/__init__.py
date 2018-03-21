@@ -54,7 +54,7 @@ TOKEN_CHANGE_INTERVAL = timedelta(minutes=5)
 _RND = SystemRandom()
 
 FALLBACK_STREAM_INTERVAL = 1  # seconds
-MIN_STREAM_INTERVAL = 0.5 # seconds
+MIN_STREAM_INTERVAL = 0.5  # seconds
 
 CAMERA_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -428,15 +428,15 @@ class CameraMjpegStream(CameraView):
 
     async def handle(self, request, camera):
         """Serve camera stream, possibly with interval."""
-        if request.query.get('interval'):
+        interval = request.query.get('interval')
+        if interval = None:
+            await camera.handle_async_mjpeg_stream(request)
+            return
+
+        try:
             # Compose camera stream from stills
             interval = float(request.query.get('interval'))
-            if interval < MIN_STREAM_INTERVAL:
-                return web.Response(status=400,
-                                    reason="Interval must be a number \
-                                    with a minumum value of {}"
-                                    .format(MIN_STREAM_INTERVAL))
             await camera.handle_async_still_stream(request, interval)
-        else:
-            # Serve camera stream.
-            await camera.handle_async_mjpeg_stream(request)
+            return
+
+        return web.Response(status=400)
