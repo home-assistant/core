@@ -438,5 +438,7 @@ class CameraMjpegStream(CameraView):
             interval = float(request.query.get('interval'))
             await camera.handle_async_still_stream(request, interval)
             return
+        except (ValueError, HomeAssistantError):
+            return web.Response(status=400)
 
-        return web.Response(status=400)
+        return web.Response(status=500)
