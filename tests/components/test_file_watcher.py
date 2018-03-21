@@ -6,11 +6,16 @@ import os
 import pytest
 
 from homeassistant.components.folder_watcher import (
-    DOMAIN, CONF_FOLDER)
+    DOMAIN, CONF_FOLDER, DEFAULT_PATTERN, create_event_handler)
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
 CWD = os.path.join(os.path.dirname(__file__))
+
+
+def get_fake_event(src_path='test/file.txt', event_type='deleted'):
+    """Generate a Fake watchdog event object with the specified arguments."""
+    return MagicMock(src_path=src_path, event_type=event_type)
 
 
 @pytest.fixture(autouse=True)
@@ -51,3 +56,9 @@ class TestFolderWatcher(unittest.TestCase):
         }
 
         self.assertTrue(setup_component(self.hass, DOMAIN, config))
+
+    def test_event(self):
+        """Check that HASS events are fired correctly on watchdog event."""
+        event_handler = create_event_handler([DEFAULT_PATTERN], self.hass)
+        fake_event = get_fake_event()
+        event_handler.process(fake_event)
