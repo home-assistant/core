@@ -24,7 +24,8 @@ class TestFilterSensor(unittest.TestCase):
 
         ts = dt_util.utcnow()
         for val in raw_values:
-            self.values.append(ha.State('sensor.test_monitored', val, last_updated=ts))
+            self.values.append(ha.State('sensor.test_monitored',
+                val, last_updated=ts))
             ts = ts + timedelta(minutes=1)
 
     def teardown_method(self, method):
@@ -90,7 +91,8 @@ class TestFilterSensor(unittest.TestCase):
                     assert setup_component(self.hass, 'sensor', config)
 
                 for value in self.values:
-                    self.hass.states.set(config['sensor']['entity_id'], value.state)
+                    self.hass.states.set(
+                        config['sensor']['entity_id'], value.state)
                     self.hass.block_till_done()
 
                 state = self.hass.states.get('sensor.test_monitored')
