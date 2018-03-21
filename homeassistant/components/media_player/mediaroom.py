@@ -120,7 +120,7 @@ class MediaroomDevice(MediaPlayerDevice):
         if device_id:
             self._unique_id = device_id
         else:
-            self._unique_id = None 
+            self._unique_id = None
 
     @property
     def should_poll(self):
