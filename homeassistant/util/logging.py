@@ -3,7 +3,7 @@ import asyncio
 import logging
 import threading
 
-from .async import run_coroutine_threadsafe
+from .async_ import run_coroutine_threadsafe
 
 
 class HideSensitiveDataFilter(logging.Filter):

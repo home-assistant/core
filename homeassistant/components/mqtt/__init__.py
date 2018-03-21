@@ -27,7 +27,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers import template, config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util.async import (
+from homeassistant.util.async_ import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE, CONF_USERNAME,
@@ -515,16 +515,20 @@ class MQTT(object):
         This method is a coroutine.
         """
         result = None  # type: int
-        result = await self.hass.async_add_job(
-            self._mqttc.connect, self.broker, self.port, self.keepalive)
+        try:
+            result = await self.hass.async_add_job(
+                self._mqttc.connect, self.broker, self.port, self.keepalive)
+        except OSError as err:
+            _LOGGER.error('Failed to connect due to exception: %s', err)
+            return False
 
         if result != 0:
             import paho.mqtt.client as mqtt
             _LOGGER.error('Failed to connect: %s', mqtt.error_string(result))
-        else:
-            self._mqttc.loop_start()
+            return False
 
-        return not result
+        self._mqttc.loop_start()
+        return True
 
     @callback
     def async_disconnect(self):

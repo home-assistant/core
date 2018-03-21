@@ -29,9 +29,9 @@ SENSOR_TYPES = {
     'ipv4_address': ['IPv4 address', '', 'mdi:server-network'],
     'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
     'last_boot': ['Last boot', '', 'mdi:clock'],
-    'load_15m': ['Load (15m)', '', 'mdi:memory'],
-    'load_1m': ['Load (1m)', '', 'mdi:memory'],
-    'load_5m': ['Load (5m)', '', 'mdi:memory'],
+    'load_15m': ['Load (15m)', ' ', 'mdi:memory'],
+    'load_1m': ['Load (1m)', ' ', 'mdi:memory'],
+    'load_5m': ['Load (5m)', ' ', 'mdi:memory'],
     'memory_free': ['Memory free', 'MiB', 'mdi:memory'],
     'memory_use': ['Memory use', 'MiB', 'mdi:memory'],
     'memory_use_percent': ['Memory use (percent)', '%', 'mdi:memory'],
@@ -42,8 +42,8 @@ SENSOR_TYPES = {
     'process': ['Process', ' ', 'mdi:memory'],
     'processor_use': ['Processor use', '%', 'mdi:memory'],
     'since_last_boot': ['Since last boot', '', 'mdi:clock'],
-    'swap_free': ['Swap free', 'GiB', 'mdi:harddisk'],
-    'swap_use': ['Swap use', 'GiB', 'mdi:harddisk'],
+    'swap_free': ['Swap free', 'MiB', 'mdi:harddisk'],
+    'swap_use': ['Swap use', 'MiB', 'mdi:harddisk'],
     'swap_use_percent': ['Swap use (percent)', '%', 'mdi:harddisk'],
 }
 
@@ -135,9 +135,9 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'swap_use_percent':
             self._state = psutil.swap_memory().percent
         elif self.type == 'swap_use':
-            self._state = round(psutil.swap_memory().used / 1024**3, 1)
+            self._state = round(psutil.swap_memory().used / 1024**2, 1)
         elif self.type == 'swap_free':
-            self._state = round(psutil.swap_memory().free / 1024**3, 1)
+            self._state = round(psutil.swap_memory().free / 1024**2, 1)
         elif self.type == 'processor_use':
             self._state = round(psutil.cpu_percent(interval=None))
         elif self.type == 'process':

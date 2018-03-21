@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['python-telegram-bot==9.0.0']
+REQUIREMENTS = ['python-telegram-bot==10.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -181,7 +181,7 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
             while retry_num < num_retries:
                 req = requests.get(url, **params)
                 if not req.ok:
-                    _LOGGER.warning("Status code %s (retry #%s) loading %s.",
+                    _LOGGER.warning("Status code %s (retry #%s) loading %s",
                                     req.status_code, retry_num + 1, url)
                 else:
                     data = io.BytesIO(req.content)
@@ -189,10 +189,10 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
                         data.seek(0)
                         data.name = url
                         return data
-                    _LOGGER.warning("Empty data (retry #%s) in %s).",
+                    _LOGGER.warning("Empty data (retry #%s) in %s)",
                                     retry_num + 1, url)
                 retry_num += 1
-            _LOGGER.warning("Can't load photo in %s after %s retries.",
+            _LOGGER.warning("Can't load photo in %s after %s retries",
                             url, retry_num)
         elif filepath is not None:
             if hass.config.is_allowed_path(filepath):
@@ -237,13 +237,12 @@ def async_setup(hass, config):
         _LOGGER.exception("Error setting up platform %s", p_type)
         return False
 
+    bot = initialize_bot(p_config)
     notify_service = TelegramNotificationService(
         hass,
-        p_config.get(CONF_API_KEY),
+        bot,
         p_config.get(CONF_ALLOWED_CHAT_IDS),
-        p_config.get(ATTR_PARSER),
-        p_config.get(CONF_PROXY_URL),
-        p_config.get(CONF_PROXY_PARAMS)
+        p_config.get(ATTR_PARSER)
     )
 
     @asyncio.coroutine
@@ -302,15 +301,28 @@ def async_setup(hass, config):
     return True
 
 
+def initialize_bot(p_config):
+    """Initialize telegram bot with proxy support."""
+    from telegram import Bot
+    from telegram.utils.request import Request
+
+    api_key = p_config.get(CONF_API_KEY)
+    proxy_url = p_config.get(CONF_PROXY_URL)
+    proxy_params = p_config.get(CONF_PROXY_PARAMS)
+
+    request = None
+    if proxy_url is not None:
+        request = Request(proxy_url=proxy_url,
+                          urllib3_proxy_kwargs=proxy_params)
+    return Bot(token=api_key, request=request)
+
+
 class TelegramNotificationService:
     """Implement the notification services for the Telegram Bot domain."""
 
-    def __init__(self, hass, api_key, allowed_chat_ids, parser,
-                 proxy_url=None, proxy_params=None):
+    def __init__(self, hass, bot, allowed_chat_ids, parser):
         """Initialize the service."""
-        from telegram import Bot
         from telegram.parsemode import ParseMode
-        from telegram.utils.request import Request
 
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
@@ -318,11 +330,7 @@ class TelegramNotificationService:
         self._parsers = {PARSER_HTML: ParseMode.HTML,
                          PARSER_MD: ParseMode.MARKDOWN}
         self._parse_mode = self._parsers.get(parser)
-        request = None
-        if proxy_url is not None:
-            request = Request(proxy_url=proxy_url,
-                              urllib3_proxy_kwargs=proxy_params)
-        self.bot = Bot(token=api_key, request=request)
+        self.bot = bot
         self.hass = hass
 
     def _get_msg_ids(self, msg_data, chat_id):

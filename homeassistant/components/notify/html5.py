@@ -26,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
 
-REQUIREMENTS = ['pywebpush==1.5.0', 'PyJWT==1.5.3']
+REQUIREMENTS = ['pywebpush==1.6.0', 'PyJWT==1.6.0']
 
 DEPENDENCIES = ['frontend']
 
@@ -404,8 +404,14 @@ class HTML5NotificationService(BaseNotificationService):
             jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
             payload[ATTR_DATA][ATTR_JWT] = jwt_token
 
+            # Only pass the gcm key if we're actually using GCM
+            # If we don't, notifications break on FireFox
+            gcm_key = self._gcm_key \
+                if 'googleapis.com' in info[ATTR_SUBSCRIPTION][ATTR_ENDPOINT] \
+                else None
             response = WebPusher(info[ATTR_SUBSCRIPTION]).send(
-                json.dumps(payload), gcm_key=self._gcm_key, ttl='86400')
+                json.dumps(payload), gcm_key=gcm_key, ttl='86400'
+            )
 
             # pylint: disable=no-member
             if response.status_code == 410:

@@ -21,7 +21,7 @@ Icon
 *.iml
 
 # pytest
-.cache
+.pytest_cache
 
 # GITHUB Proposed Python stuff:
 *.py[cod]

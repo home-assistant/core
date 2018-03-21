@@ -9,9 +9,9 @@ import logging
 from homeassistant.core import callback
 import homeassistant.util.color as color_util
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_XY_COLOR, ATTR_TRANSITION,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
-    SUPPORT_XY_COLOR, SUPPORT_RGB_COLOR, ATTR_RGB_COLOR, Light)
+    SUPPORT_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
@@ -162,6 +162,7 @@ class TradfriLight(Light):
         self._light_control = None
         self._light_data = None
         self._name = None
+        self._hs_color = None
         self._features = SUPPORTED_FEATURES
         self._available = True
 
@@ -223,19 +224,34 @@ class TradfriLight(Light):
             return denormalize_xy(*self._light_data.xy_color)
 
     @property
-    def rgb_color(self):
-        """RGB colour of the light."""
-        if self._light_data.xy_color and self._light_control.can_set_color:
-            dimmer = self._light_data.dimmer
-            xyb = denormalize_xy(*self._light_data.xy_color) + dimmer
-            return color_util.color_xy_brightness_to_RGB(*xyb)
+    def hs_color(self):
+        """HS color of the light."""
+        return self._hs_color
 
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         await self._api(self._light_control.set_state(False))
 
     async def async_turn_on(self, **kwargs):
-        """Instruct the light to turn on."""
+        """
+        Instruct the light to turn on.
+
+        After adding "self._light_data.hexcolor is not None"
+        for ATTR_HS_COLOR, this also supports Philips Hue bulbs.
+        """
+        if ATTR_HS_COLOR in kwargs and self._light_data.hex_color is not None:
+            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+            yield from self._api(
+                self._light.light_control.set_rgb_color(*rgb))
+
+        elif ATTR_COLOR_TEMP in kwargs and \
+                self._light_data.hex_color is not None and \
+                self._temp_supported:
+            kelvin = color_util.color_temperature_mired_to_kelvin(
+                kwargs[ATTR_COLOR_TEMP])
+            yield from self._api(
+                self._light_control.set_kelvin_color(kelvin))
+
         params = {}
         if ATTR_TRANSITION in kwargs:
             params[ATTR_TRANSITION_TIME] = int(kwargs[ATTR_TRANSITION]) * 10
@@ -301,13 +317,13 @@ class TradfriLight(Light):
         self._light_control = light.light_control
         self._light_data = light.light_control.lights[0]
         self._name = light.name
+        self._hs_color = None
         self._features = SUPPORTED_FEATURES
 
         if self._light_control.can_set_mireds:
             self._features |= SUPPORT_COLOR_TEMP
         if self._light_control.can_set_color:
-            self._features |= SUPPORT_XY_COLOR
-            self._features |= SUPPORT_RGB_COLOR
+            self._features |= SUPPORT_COLOR
 
     @callback
     def _observe_update(self, tradfri_device):

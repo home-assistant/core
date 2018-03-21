@@ -59,7 +59,7 @@ class TestMQTTComponent(unittest.TestCase):
         """Helper for recording calls."""
         self.calls.append(args)
 
-    def test_client_stops_on_home_assistant_start(self):
+    def aiohttp_client_stops_on_home_assistant_start(self):
         """Test if client stops on HA stop."""
         self.hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
         self.hass.block_till_done()
@@ -156,7 +156,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         """Helper for recording calls."""
         self.calls.append(args)
 
-    def test_client_starts_on_home_assistant_mqtt_setup(self):
+    def aiohttp_client_starts_on_home_assistant_mqtt_setup(self):
         """Test if client is connected after mqtt init on bootstrap."""
         self.assertEqual(self.hass.data['mqtt']._mqttc.connect.call_count, 1)
 

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "error": {
+            "invalid_object_id": "Nieprawid\u0142owy identyfikator obiektu"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "object_id": "Identyfikator obiektu"
+                },
+                "description": "Prosz\u0119 wprowadzi\u0107 identyfikator obiektu (object_id) dla jednostki testowej.",
+                "title": "Wybierz identyfikator obiektu"
+            },
+            "name": {
+                "data": {
+                    "name": "Nazwa"
+                },
+                "description": "Prosz\u0119 wprowadzi\u0107 nazw\u0119 dla jednostki testowej.",
+                "title": "Nazwa jednostki"
+            }
+        },
+        "title": "Przyk\u0142ad wpisu do konfiguracji"
+    }
+}

@@ -8,8 +8,8 @@ import asyncio
 import logging
 
 from homeassistant.components.telegram_bot import (
+    initialize_bot,
     PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA)
-from homeassistant.const import CONF_API_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,8 +20,9 @@ PLATFORM_SCHEMA = TELEGRAM_PLATFORM_SCHEMA
 def async_setup_platform(hass, config):
     """Set up the Telegram broadcast platform."""
     # Check the API key works
-    import telegram
-    bot = telegram.Bot(config[CONF_API_KEY])
+
+    bot = initialize_bot(config)
+
     bot_config = yield from hass.async_add_job(bot.getMe)
     _LOGGER.debug("Telegram broadcast platform setup with bot %s",
                   bot_config['username'])

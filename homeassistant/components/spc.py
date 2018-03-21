@@ -189,12 +189,7 @@ class SpcWebGateway:
 
     def start_listener(self, async_callback, *args):
         """Start the websocket listener."""
-        try:
-            from asyncio import ensure_future
-        except ImportError:
-            from asyncio import async as ensure_future
-
-        ensure_future(self._ws_listen(async_callback, *args))
+        asyncio.ensure_future(self._ws_listen(async_callback, *args))
 
     def _build_url(self, resource):
         return urljoin(self._api_url, "spc/{}".format(resource))
