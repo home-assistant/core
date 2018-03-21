@@ -137,12 +137,12 @@ class SensorFilter(Entity):
 
             try:
                 for filt in self._filters:
-                    filtered_state = filt.filter_state(temp_state)
+                    filtered_state = filt.filter_state(copy(temp_state))
                     _LOGGER.debug("%s(%s=%s) -> %s", filt.name,
                                   self._entity,
-                                  temp_state,
+                                  temp_state.state,
                                   "skip" if filt.skip_processing else
-                                  filtered_state)
+                                  filtered_state.state)
                     if filt.skip_processing:
                         return
                     temp_state = filtered_state
