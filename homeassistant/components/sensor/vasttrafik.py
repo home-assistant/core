@@ -47,7 +47,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Required(CONF_FROM): cv.string,
         vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
         vol.Optional(CONF_HEADING): cv.string,
-        vol.Optional(CONF_LINES, default=[]): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_LINES, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_NAME): cv.string}]
 })
 
