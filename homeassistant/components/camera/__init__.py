@@ -429,7 +429,7 @@ class CameraMjpegStream(CameraView):
     async def handle(self, request, camera):
         """Serve camera stream, possibly with interval."""
         interval = request.query.get('interval')
-        if interval = None:
+        if interval is None:
             await camera.handle_async_mjpeg_stream(request)
             return
 
