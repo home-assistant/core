@@ -94,8 +94,15 @@ class _GoogleEntity:
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicessync
         """
-        traits = self.traits()
         state = self.state
+
+        # When a state is unavailable, the attributes that describe
+        # capabilities will be stripped. For example, a light entity will miss
+        # the min/max mireds. Therefore they will be excluded from a sync.
+        if state.state == STATE_UNAVAILABLE:
+            return None
+
+        traits = self.traits()
 
         # Found no supported traits for this entity
         if not traits:
