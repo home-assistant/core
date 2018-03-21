@@ -193,47 +193,68 @@ from homeassistant import config_entries
 
 @config_entries.HANDLERS.register(DOMAIN)
 class DeconzFlowHandler(config_entries.ConfigFlowHandler):
-    """Handle a Deconz config flow."""
+    """Handle a deCONZ config flow."""
 
     VERSION = 1
 
     def __init__(self):
-        """Initialize the Deconz flow."""
-        self.host = None
-        self.port = None
+        """Initialize the deCONZ flow."""
+        self.bridges = {}
+        self.deconz_config = {}
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
-        errors = {}
-        print('step init - user input', user_input)
+        from pydeconz.utils import async_discovery
 
         if user_input is not None:
-            self.host = user_input['host']
-            self.port = user_input['port']
+            if CONF_PORT in user_input:
+                self.deconz_config = user_input
+            else:
+                for bridge in self.bridges:
+                    if bridge[CONF_HOST] == user_input[CONF_HOST]:
+                        self.deconz_config = bridge
             return await self.async_step_link()
-        from pydeconz.utils import async_discovery
-        session = aiohttp_client.async_get_clientsession(self.hass)
-        response = await async_discovery(session)
-        print(response)
 
+        session = aiohttp_client.async_get_clientsession(self.hass)
+        self.bridges = await async_discovery(session)
+
+        if len(self.bridges) == 1:
+            self.deconz_config = self.bridges[0]
+            return await self.async_step_link()
+        elif len(self.bridges) > 1:
+            hosts = []
+            for bridge in self.bridges:
+                hosts.append(bridge[CONF_HOST])
+            return self.async_show_form(
+                step_id='init',
+                data_schema=vol.Schema({
+                    vol.Required('host'): vol.In(hosts)
+                })
+            )
 
         return self.async_show_form(
             step_id='init',
             data_schema=vol.Schema({
-                'host': str,
-                'port': int,
-            }),
-            errors=errors
+                vol.Required(CONF_HOST): str,
+                vol.Optional(CONF_PORT, default=80): int,
+            })
         )
 
     async def async_step_link(self, user_input=None):
-        """Attempt to link with the Deconz bridge."""
+        """Attempt to link with the deCONZ bridge."""
+        from pydeconz.utils import async_get_api_key
         errors = {}
 
-        print('step link - user input', user_input)
-
         if user_input is not None:
-            print('step link - user input', user_input)
+            api_key = await async_get_api_key(self.hass.loop, **self.deconz_config)
+            if api_key:
+                self.deconz_config[CONF_API_KEY] = api_key
+                return self.async_create_entry(
+                    title='deCONZ',
+                    data=self.deconz_config
+                )
+            else:
+                errors['base'] = 'no_key'
 
         return self.async_show_form(
             step_id='link',
@@ -243,5 +264,7 @@ class DeconzFlowHandler(config_entries.ConfigFlowHandler):
 
 async def async_setup_entry(hass, entry):
     """Set up a bridge for a config entry."""
-    print('async setup entry')
-
+    result = await async_setup_deconz(hass, None, entry.data)
+    if result:
+        return True
+    return False
