@@ -63,8 +63,6 @@ class HiveSensorEntity(Entity):
         """Return the unit of measurement."""
         if self.device_type == "Hive_OutsideTemperature":
             return TEMP_CELSIUS
-        else:
-            return None
 
     @property
     def icon(self):
