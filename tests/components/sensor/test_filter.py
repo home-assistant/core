@@ -8,7 +8,6 @@ from homeassistant.components.sensor.filter import (
 import homeassistant.util.dt as dt_util
 from homeassistant.setup import setup_component
 import homeassistant.core as ha
-import homeassistant.util.dt as dt_util
 from tests.common import (get_test_home_assistant, assert_setup_component,
                           init_recorder_component)
 
@@ -22,11 +21,11 @@ class TestFilterSensor(unittest.TestCase):
         raw_values = [20, 19, 18, 21, 22, 0]
         self.values = []
 
-        ts = dt_util.utcnow()
+        timestamp = dt_util.utcnow()
         for val in raw_values:
             self.values.append(ha.State('sensor.test_monitored',
-                val, last_updated=ts))
-            ts = ts + timedelta(minutes=1)
+                                        val, last_updated=timestamp))
+            timestamp += timedelta(minutes=1)
 
     def teardown_method(self, method):
         """Stop everything that was started."""
