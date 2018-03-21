@@ -19,7 +19,13 @@ class TestFilterSensor(unittest.TestCase):
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.values = [20, 19, 18, 21, 22, 0]
+        raw_values = [20, 19, 18, 21, 22, 0]
+        self.values = []
+
+        ts = dt_util.utcnow()
+        for val in raw_values:
+            self.values.append(ha.State('sensor.test_monitored', val, last_updated=ts))
+            ts = ts + timedelta(minutes=1)
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -78,15 +84,17 @@ class TestFilterSensor(unittest.TestCase):
 
         with patch('homeassistant.components.history.'
                    'state_changes_during_period', return_value=fake_states):
-            with assert_setup_component(1, 'sensor'):
-                assert setup_component(self.hass, 'sensor', config)
+            with patch('homeassistant.components.history.'
+                       'get_last_state_changes', return_value=fake_states):
+                with assert_setup_component(1, 'sensor'):
+                    assert setup_component(self.hass, 'sensor', config)
 
-            for value in self.values:
-                self.hass.states.set(config['sensor']['entity_id'], value)
-                self.hass.block_till_done()
+                for value in self.values:
+                    self.hass.states.set(config['sensor']['entity_id'], value.state)
+                    self.hass.block_till_done()
 
-            state = self.hass.states.get('sensor.test')
-            self.assertEqual('19.25', state.state)
+                state = self.hass.states.get('sensor.test_monitored')
+                self.assertEqual(19.25, state.state)
 
     def test_outlier(self):
         """Test if outlier filter works."""
@@ -96,7 +104,7 @@ class TestFilterSensor(unittest.TestCase):
                              radius=4.0)
         for state in self.values:
             filtered = filt.filter_state(state)
-        self.assertEqual(22, filtered)
+        self.assertEqual(22, filtered.state)
 
     def test_lowpass(self):
         """Test if lowpass filter works."""
@@ -106,7 +114,7 @@ class TestFilterSensor(unittest.TestCase):
                              time_constant=10)
         for state in self.values:
             filtered = filt.filter_state(state)
-        self.assertEqual(18.05, filtered)
+        self.assertEqual(18.05, filtered.state)
 
     def test_throttle(self):
         """Test if lowpass filter works."""
@@ -118,7 +126,7 @@ class TestFilterSensor(unittest.TestCase):
             new_state = filt.filter_state(state)
             if not filt.skip_processing:
                 filtered.append(new_state)
-        self.assertEqual([20, 21], filtered)
+        self.assertEqual([20, 21], [f.state for f in filtered])
 
     def test_time_sma(self):
         """Test if time_sma filter works."""
@@ -126,9 +134,6 @@ class TestFilterSensor(unittest.TestCase):
                              precision=2,
                              entity=None,
                              type='last')
-        past = dt_util.utcnow() - timedelta(minutes=5)
         for state in self.values:
-            with patch('homeassistant.util.dt.utcnow', return_value=past):
-                filtered = filt.filter_state(state)
-            past += timedelta(minutes=1)
-        self.assertEqual(21.5, filtered)
+            filtered = filt.filter_state(state)
+        self.assertEqual(21.5, filtered.state)
