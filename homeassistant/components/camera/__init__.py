@@ -53,8 +53,8 @@ ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 TOKEN_CHANGE_INTERVAL = timedelta(minutes=5)
 _RND = SystemRandom()
 
-DEFAULT_STREAM_INTERVAL = 0.5
-MIN_STREAM_INTERVAL = 0.05
+FALLBACK_STREAM_INTERVAL = 1  # seconds
+MIN_STREAM_INTERVAL = 0.5 # seconds
 
 CAMERA_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -255,12 +255,15 @@ class Camera(Entity):
         """
         return self.hass.async_add_job(self.camera_image)
 
-    async def handle_async_still_stream(self, request,
-                                        interval=DEFAULT_STREAM_INTERVAL):
+    async def handle_async_still_stream(self, request, interval):
         """Generate an HTTP MJPEG stream from camera images.
 
         This method must be run in the event loop.
         """
+        if interval < MIN_STREAM_INTERVAL:
+            raise HomeAssistantError("Stream interval must be be > {}"
+                                     .format(MIN_STREAM_INTERVAL))
+
         response = web.StreamResponse()
         response.content_type = ('multipart/x-mixed-replace; '
                                  'boundary=--frameboundary')
@@ -303,15 +306,15 @@ class Camera(Entity):
             if response is not None:
                 await response.write_eof()
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(self, request):
         """Serve an HTTP MJPEG stream from the camera.
 
         This method can be overridden by camera plaforms to proxy
         a direct stream from the camera.
         This method must be run in the event loop.
         """
-        yield from self.handle_async_still_stream(request)
+        await self.handle_async_still_stream(request,
+                                             FALLBACK_STREAM_INTERVAL)
 
     @property
     def state(self):
@@ -423,18 +426,17 @@ class CameraMjpegStream(CameraView):
     url = '/api/camera_proxy_stream/{entity_id}'
     name = 'api:camera:stream'
 
-    @asyncio.coroutine
-    def handle(self, request, camera):
+    async def handle(self, request, camera):
         """Serve camera stream, possibly with interval."""
         if request.query.get('interval'):
-            """Compose camera stream from stills."""
+            # Compose camera stream from stills
             interval = float(request.query.get('interval'))
             if interval < MIN_STREAM_INTERVAL:
-                return web.Response(status=403,
+                return web.Response(status=400,
                                     reason="Interval must be a number \
                                     with a minumum value of {}"
                                     .format(MIN_STREAM_INTERVAL))
-            yield from camera.handle_async_still_stream(request, interval)
+            await camera.handle_async_still_stream(request, interval)
         else:
-            """Serve camera stream."""
-            yield from camera.handle_async_mjpeg_stream(request)
+            # Serve camera stream.
+            await camera.handle_async_mjpeg_stream(request)
