@@ -1,22 +1,21 @@
-"""
-Support for Washington Dominion Energy
-website : dominionenergy.com
-
-"""
+""" Support for Washington Dominion Energy."""
 
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """setting the platform in HASS and getting the username
-      and password from the config file"""
+    """Setting the platform in HASS and getting the username
+    and password from the config file
+    """
     add_devices([DominionEnergySensor(config['username'], config['password'])])
 
 
 class DominionEnergySensor(Entity):
     """Washington Dominion Energy Sensor will check the bill
-     if it's update on daily basis """
+    if it's update on daily basis
+    """
+
     from datetime import timedelta
     HOURS_TO_UPDATE = timedelta(hours=24)
     CURRENT_BILL_SELECTOR = "#homepageContent > div:nth-child(3) > div:nth-child(2) > p > span"
@@ -33,10 +32,12 @@ class DominionEnergySensor(Entity):
 
     @property
     def state(self):
+        """Returning the State of DominionEnergy Sensor."""
         return self._state
 
     @Throttle(HOURS_TO_UPDATE)
     def update(self):
+        """Using Selenium to access Dominion website and fetch data"""
         from selenium import webdriver
         driver = webdriver.PhantomJS()
         driver.set_window_size(1120, 550)
