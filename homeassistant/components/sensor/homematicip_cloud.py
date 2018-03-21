@@ -2,7 +2,7 @@
 Support for HomematicIP sensors.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/homematicip/
+https://home-assistant.io/components/homematicip_cloud/
 """
 
 import logging
