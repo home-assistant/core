@@ -1,0 +1,14 @@
+{
+  "tests/components/alexa/test_smart_home.py::test_api_set_color_xy[pyloop]": true,
+  "tests/components/automation/test_state.py::TestAutomationState::test_if_fires_on_entity_change_with_for": true,
+  "tests/components/automation/test_state.py::TestAutomationState::test_if_fires_on_entity_change_with_for_attribute_change": true,
+  "tests/components/automation/test_state.py::TestAutomationState::test_if_fires_on_entity_change_with_for_force_update": true,
+  "tests/components/automation/test_state.py::TestAutomationState::test_if_not_fires_on_entities_change_with_for_after_stop": true,
+  "tests/components/light/test_init.py::TestLight::test_light_process_rgb": true,
+  "tests/components/light/test_init.py::TestLight::test_light_process_xy": true,
+  "tests/components/light/test_zwave.py::test_set_rgb_color": true,
+  "tests/components/light/test_zwave.py::test_set_rgbw_color": true,
+  "tests/components/notify/test_pushbullet.py": true,
+  "tests/helpers/test_translation.py::test_component_translation_file": true,
+  "tests/util/test_async.py::RunThreadsafeTests::test_run_callback_threadsafe": true
+}

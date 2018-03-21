@@ -501,6 +501,10 @@ class Light(ToggleEntity):
                     *data[ATTR_HS_COLOR])
                 data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(
                     *data[ATTR_HS_COLOR])
+                data[ATTR_HS_COLOR] = (
+                    round(data[ATTR_HS_COLOR][0], 3),
+                    round(data[ATTR_HS_COLOR][1], 3),
+                )
 
         return data
 
