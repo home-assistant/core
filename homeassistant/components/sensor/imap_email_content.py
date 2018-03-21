@@ -135,7 +135,8 @@ class EmailContentSensor(Entity):
         self._name = name
         self._allowed_senders = [sender.upper() for sender in allowed_senders]
         self._value_template = value_template
-        self._body_regex = re.compile(body_regex) if body_regex is not None else None
+        self._body_regex = re.compile(body_regex) if body_regex is not None \
+            else None
         self._last_id = None
         self._message = None
         self._state_attributes = None
