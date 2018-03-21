@@ -1,21 +1,16 @@
 """The tests for the cover platform."""
 import asyncio
 
-from homeassistant.setup import setup_component
 from homeassistant.components.cover import (SERVICE_OPEN_COVER,
                                             SERVICE_CLOSE_COVER)
 from homeassistant.components import intent
 import homeassistant.components as comps
-#import homeassistant.util.dt as dt_util
-from tests.common import get_test_home_assistant
-
 from tests.common import async_mock_service
 
 
 @asyncio.coroutine
 def test_open_cover_intent(hass):
-    """Test HassOpenCover intent
-    """
+    """Test HassOpenCover intent."""
     result = yield from comps.cover.async_setup(hass, {})
     assert result
 
@@ -34,10 +29,10 @@ def test_open_cover_intent(hass):
     assert call.service == 'open_cover'
     assert call.data == {'entity_id': 'cover.garage_door'}
 
+
 @asyncio.coroutine
 def test_close_cover_intent(hass):
-    """Test HassCloseCover intent
-    """
+    """Test HassCloseCover intent."""
     result = yield from comps.cover.async_setup(hass, {})
     assert result
 
