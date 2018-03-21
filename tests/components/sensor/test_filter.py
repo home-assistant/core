@@ -94,8 +94,8 @@ class TestFilterSensor(unittest.TestCase):
                         config['sensor']['entity_id'], value.state)
                     self.hass.block_till_done()
 
-                state = self.hass.states.get('sensor.test_monitored')
-                self.assertEqual(19.25, state.state)
+                state = self.hass.states.get('sensor.test')
+                self.assertEqual('19.25', state.state)
 
     def test_outlier(self):
         """Test if outlier filter works."""
