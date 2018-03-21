@@ -118,7 +118,7 @@ def state_changes_during_period(hass, start_time, end_time=None,
     return states_to_json(hass, states, start_time, entity_ids)
 
 
-def get_last_state_changes(hass, number_of_states, entity_id=None):
+def get_last_state_changes(hass, number_of_states=10, entity_id=None):
     """Return the last number_of_states."""
     from homeassistant.components.recorder.models import States
 
