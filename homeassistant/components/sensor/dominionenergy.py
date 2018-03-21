@@ -3,11 +3,9 @@ Support for Washington Dominion Energy
 website : dominionenergy.com
 
 """
-from datetime import timedelta
-from selenium import webdriver
+
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
-
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -15,9 +13,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
       and password from the config file"""
     add_devices([DominionEnergySensor(config['username'], config['password'])])
 
+
 class DominionEnergySensor(Entity):
     """Washington Dominion Energy Sensor will check the bill
      if it's update on daily basis """
+    from datetime import timedelta
     HOURS_TO_UPDATE = timedelta(hours=24)
     CURRENT_BILL_SELECTOR = "#homepageContent > div:nth-child(3) > div:nth-child(2) > p > span"
 
@@ -26,7 +26,6 @@ class DominionEnergySensor(Entity):
         self._state = None
         self._password = password
         self._username = username
-
 
     @property
     def name(self):
@@ -38,7 +37,7 @@ class DominionEnergySensor(Entity):
 
     @Throttle(HOURS_TO_UPDATE)
     def update(self):
-
+        from selenium import webdriver
         driver = webdriver.PhantomJS()
         driver.set_window_size(1120, 550)
         driver.get("https://www.dominionenergy.com/sign-in")
@@ -47,5 +46,4 @@ class DominionEnergySensor(Entity):
         driver.find_element_by_id('SignIn').click()
         driver.implicitly_wait(1)
         state = str(driver.find_element_by_css_selector(self.CURRENT_BILL_SELECTOR).text)
-
         self._state = state
