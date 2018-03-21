@@ -31,14 +31,15 @@ import time
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_HS_COLOR, ATTR_TRANSITION,
     Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION
+    SUPPORT_COLOR, SUPPORT_TRANSITION
 )
 from homeassistant.const import (
     CONF_BRIGHTNESS, CONF_EFFECT, CONF_HOST, CONF_NAME, CONF_PORT, CONF_RGB
 )
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
 
 REQUIREMENTS = ['lw12==0.9.2']
@@ -115,7 +116,7 @@ class LW12WiFi(Light):
         # Setup feature list
         self._supported_features = SUPPORT_BRIGHTNESS
         self._supported_features |= SUPPORT_EFFECT
-        self._supported_features |= SUPPORT_RGB_COLOR
+        self._supported_features |= SUPPORT_COLOR
         self._supported_features |= SUPPORT_TRANSITION
 
     @property
@@ -135,6 +136,11 @@ class LW12WiFi(Light):
         Returns [r, g, b] list with values in range of 0-255.
         """
         return self._rgb_color
+
+    @property
+    def hs_color(self):
+        """Read back the hue-saturation of the light."""
+        return color_util.color_RGB_to_hs(*self._rgb_color)
 
     @property
     def effect(self):
@@ -178,17 +184,10 @@ class LW12WiFi(Light):
             else:
                 # Unknown effect, changing to no selected effect.
                 self._effect = None
-
-        if ATTR_RGB_COLOR in kwargs:
-            rgb = kwargs.get(ATTR_RGB_COLOR)
-            self._rgb_color = rgb
-            self._light.set_color(rgb[0], rgb[1], rgb[2])
-            # Sending UDP messages to quickly after the previous message
-            # the new command is ignored. Adding a short wait time.
-            time.sleep(.25)
-            brightness = int(self._brightness / 255 * 100)
-            self._light.set_light_option(lw12.LW12_LIGHT.BRIGHTNESS,
-                                         brightness)
+        if ATTR_HS_COLOR in kwargs:
+            self._rgb_color = color_util.color_hs_to_RGB(
+                *kwargs.get(ATTR_HS_COLOR))
+            self._light.set_color(*self._rgb_color)
             self._effect = None
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs.get(ATTR_BRIGHTNESS)
