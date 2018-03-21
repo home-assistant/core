@@ -54,6 +54,7 @@ class DemoLight(Light):
         self._white = white
         self._effect_list = effect_list
         self._effect = effect
+        self._available = True
 
     @property
     def should_poll(self) -> bool:
@@ -75,7 +76,7 @@ class DemoLight(Light):
         """Return availability."""
         # This demo light is always available, but well-behaving components
         # should implement this to inform Home Assistant accordingly.
-        return True
+        return self._available
 
     @property
     def brightness(self) -> int:
