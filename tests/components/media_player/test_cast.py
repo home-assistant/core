@@ -117,11 +117,13 @@ def test_stop_discovery_called_on_stop(hass):
     """Test pychromecast.stop_discovery called on shutdown."""
     with patch('pychromecast.start_discovery',
                return_value=(None, 'the-browser')) as start_discovery:
-        yield from async_setup_cast(hass)
+        # start_discovery should be called with empty config
+        yield from async_setup_cast(hass, {})
 
         assert start_discovery.call_count == 1
 
     with patch('pychromecast.stop_discovery') as stop_discovery:
+        # stop discovery should be called on shutdown
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         yield from hass.async_block_till_done()
 
@@ -129,6 +131,7 @@ def test_stop_discovery_called_on_stop(hass):
 
     with patch('pychromecast.start_discovery',
                return_value=(None, 'the-browser')) as start_discovery:
+        # start_discovery should be called again on re-startup
         yield from async_setup_cast(hass)
 
         assert start_discovery.call_count == 1
@@ -143,6 +146,7 @@ async def test_internal_discovery_callback_only_generates_once(hass):
     async_dispatcher_connect(hass, 'cast_discovered', signal)
 
     with patch('pychromecast.dial.get_device_status', return_value=None):
+        # discovering a cast device should call the dispatcher
         discover_cast('the-service', info)
         await hass.async_block_till_done()
         discover = signal.mock_calls[0][1][0]
@@ -150,6 +154,7 @@ async def test_internal_discovery_callback_only_generates_once(hass):
         assert attr.astuple(discover) == attr.astuple(info)
         signal.reset_mock()
 
+        # discovering it a second time shouldn't
         discover_cast('the-service', info)
         await hass.async_block_till_done()
         assert signal.call_count == 0
@@ -174,20 +179,21 @@ async def test_internal_discovery_callback_fill_out(hass):
         discover_cast('the-service', info)
         await hass.async_block_till_done()
 
+        # when called with incomplete info, it should use HTTP to get missing
         discover = signal.mock_calls[0][1][0]
         # attr's __eq__ somehow breaks here, use tuples instead
         assert attr.astuple(discover) == attr.astuple(full_info)
 
 
 async def test_create_cast_device_without_uuid(hass):
-    """Test create a cast device without a UUID."""
+    """Test create a cast device with no UUId should still create an entity."""
     info = get_fake_chromecast_info(uuid=None)
     cast_device = cast._async_create_cast_device(hass, info)
     assert cast_device is not None
 
 
 async def test_create_cast_device_with_uuid(hass):
-    """Test create cast devices with UUID."""
+    """Test create cast devices with UUID creates entities."""
     added_casts = hass.data[cast.ADDED_CAST_DEVICES_KEY] = set()
     info = get_fake_chromecast_info()
 
@@ -205,6 +211,7 @@ async def test_normal_chromecast_not_starting_discovery(hass):
     # pylint: disable=no-member
     with patch('homeassistant.components.media_player.cast.'
                '_setup_internal_discovery') as setup_discovery:
+        # normal (non-group) chromecast shouldn't start discovery.
         add_devices = await async_setup_cast(hass, {'host': 'host1'})
         await hass.async_block_till_done()
         assert add_devices.call_count == 1
@@ -223,6 +230,7 @@ async def test_normal_chromecast_not_starting_discovery(hass):
         assert add_devices.call_count == 1
         assert setup_discovery.call_count == 0
 
+        # group should start discovery.
         hass.data[cast.ADDED_CAST_DEVICES_KEY] = set()
         add_devices = await async_setup_cast(
             hass, discovery_info={'host': 'host1', 'port': 42})
@@ -261,16 +269,15 @@ async def test_replay_past_chromecasts(hass):
     assert add_dev2.call_count == 1
 
 
-async def test_entity_state(hass: HomeAssistantType):
-    """Test various entity state callbacks."""
+async def test_entity_media_states(hass: HomeAssistantType):
+    """Test various entity media states."""
     info = get_fake_chromecast_info()
     full_info = attr.evolve(info, model_name='google home',
                             friendly_name='Speaker', uuid=FakeUUID)
 
     with patch('pychromecast.dial.get_device_status',
                return_value=full_info):
-        chromecast, entity = await async_setup_media_player_cast(hass,
-                                                                 full_info)
+        chromecast, entity = await async_setup_media_player_cast(hass, info)
 
     state = hass.states.get('media_player.speaker')
     assert state is not None
