@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_EVENT_HOME, default=DEFAULT_EVENT_HOME): cv.string,
     vol.Optional(CONF_EVENT_NIGHT, default=DEFAULT_EVENT_NIGHT): cv.string,
     vol.Optional(CONF_EVENT_DISARM, default=DEFAULT_EVENT_DISARM): cv.string,
-    vol.Optional(CONF_OPTIMISTIC, default=True): cv.boolean,
+    vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
 })
 
 SERVICE_PUSH_ALARM_STATE = "ifttt_push_alarm_state"
