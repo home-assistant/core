@@ -287,8 +287,8 @@ class CastDevice(MediaPlayerDevice):
         self._cast_info = cast_info  # type: ChromecastInfo
         self._chromecast = None  # type: Optional[pychromecast.Chromecast]
         self._cast_status = None
-        self._media_status = None
-        self._media_status_received = None
+        self.media_status = None
+        self.media_status_received = None
         self._available = False  # type: bool
         self._status_listener = None  # type: Optional[CastStatusListener]
 
@@ -344,7 +344,7 @@ class CastDevice(MediaPlayerDevice):
         # this code anyway.
         self._available = True
         self._cast_status = chromecast.status
-        self._media_status = chromecast.media_controller.status
+        self.media_status = chromecast.media_controller.status
         _LOGGER.debug("Connection successful!")
         self.async_schedule_update_ha_state()
 
@@ -360,8 +360,8 @@ class CastDevice(MediaPlayerDevice):
         # Invalidate some attributes
         self._chromecast = None
         self._cast_status = None
-        self._media_status = None
-        self._media_status_received = None
+        self.media_status = None
+        self.media_status_received = None
         self._status_listener.invalidate()
         self._status_listener = None
 
@@ -388,8 +388,8 @@ class CastDevice(MediaPlayerDevice):
 
     def new_media_status(self, media_status):
         """Handle updates of the media status."""
-        self._media_status = media_status
-        self._media_status_received = dt_util.utcnow()
+        self.media_status = media_status
+        self.media_status_received = dt_util.utcnow()
         self.schedule_update_ha_state()
 
     def new_connection_status(self, connection_status):
@@ -477,13 +477,13 @@ class CastDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the player."""
-        if self._media_status is None:
+        if self.media_status is None:
             return None
-        elif self._media_status.player_is_playing:
+        elif self.media_status.player_is_playing:
             return STATE_PLAYING
-        elif self._media_status.player_is_paused:
+        elif self.media_status.player_is_paused:
             return STATE_PAUSED
-        elif self._media_status.player_is_idle:
+        elif self.media_status.player_is_idle:
             return STATE_IDLE
         elif self._chromecast is not None and self._chromecast.is_idle:
             return STATE_OFF
@@ -507,75 +507,75 @@ class CastDevice(MediaPlayerDevice):
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
-        return self._media_status.content_id if self._media_status else None
+        return self.media_status.content_id if self.media_status else None
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        if self._media_status is None:
+        if self.media_status is None:
             return None
-        elif self._media_status.media_is_tvshow:
+        elif self.media_status.media_is_tvshow:
             return MEDIA_TYPE_TVSHOW
-        elif self._media_status.media_is_movie:
+        elif self.media_status.media_is_movie:
             return MEDIA_TYPE_VIDEO
-        elif self._media_status.media_is_musictrack:
+        elif self.media_status.media_is_musictrack:
             return MEDIA_TYPE_MUSIC
         return None
 
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        return self._media_status.duration if self._media_status else None
+        return self.media_status.duration if self.media_status else None
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if self._media_status is None:
+        if self.media_status is None:
             return None
 
-        images = self._media_status.images
+        images = self.media_status.images
 
         return images[0].url if images and images[0].url else None
 
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self._media_status.title if self._media_status else None
+        return self.media_status.title if self.media_status else None
 
     @property
     def media_artist(self):
         """Artist of current playing media (Music track only)."""
-        return self._media_status.artist if self._media_status else None
+        return self.media_status.artist if self.media_status else None
 
     @property
     def media_album(self):
         """Album of current playing media (Music track only)."""
-        return self._media_status.album_name if self._media_status else None
+        return self.media_status.album_name if self.media_status else None
 
     @property
     def media_album_artist(self):
         """Album artist of current playing media (Music track only)."""
-        return self._media_status.album_artist if self._media_status else None
+        return self.media_status.album_artist if self.media_status else None
 
     @property
     def media_track(self):
         """Track number of current playing media (Music track only)."""
-        return self._media_status.track if self._media_status else None
+        return self.media_status.track if self.media_status else None
 
     @property
     def media_series_title(self):
         """Return the title of the series of current playing media."""
-        return self._media_status.series_title if self._media_status else None
+        return self.media_status.series_title if self.media_status else None
 
     @property
     def media_season(self):
         """Season of current playing media (TV Show only)."""
-        return self._media_status.season if self._media_status else None
+        return self.media_status.season if self.media_status else None
 
     @property
     def media_episode(self):
         """Episode of current playing media (TV Show only)."""
-        return self._media_status.episode if self._media_status else None
+        return self.media_status.episode if self.media_status else None
 
     @property
     def app_id(self):
@@ -595,13 +595,13 @@ class CastDevice(MediaPlayerDevice):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        if self._media_status is None or \
-                not (self._media_status.player_is_playing or
-                     self._media_status.player_is_paused or
-                     self._media_status.player_is_idle):
+        if self.media_status is None or \
+                not (self.media_status.player_is_playing or
+                     self.media_status.player_is_paused or
+                     self.media_status.player_is_idle):
             return None
 
-        return self._media_status.current_time
+        return self.media_status.current_time
 
     @property
     def media_position_updated_at(self):
@@ -609,7 +609,7 @@ class CastDevice(MediaPlayerDevice):
 
         Returns value from homeassistant.util.dt.utcnow().
         """
-        return self._media_status_received
+        return self.media_status_received
 
     @property
     def unique_id(self) -> Optional[str]:
