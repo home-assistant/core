@@ -28,11 +28,10 @@ REQUIREMENTS = ['pymediaroom==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM = "mediaroom"
 DEFAULT_NAME = 'Mediaroom STB'
 DEFAULT_TIMEOUT = 9
 DATA_MEDIAROOM = "mediaroom_known_stb"
-SIGNAL_STB_NOTIFY = 'stb_discovered'
+SIGNAL_STB_NOTIFY = 'mediaroom_stb_discovered'
 SUPPORT_MEDIAROOM = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF \
     | SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | SUPPORT_PLAY_MEDIA \
     | SUPPORT_STOP | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK \
@@ -56,17 +55,12 @@ async def async_setup_platform(hass, config, async_add_devices,
         known_hosts = hass.data[DATA_MEDIAROOM] = []
     host = config.get(CONF_HOST, None)
     if host:
-        async_add_devices(
-            [
-                MediaroomDevice(
-                    host=host,
-                    device_id=None,
-                    optimistic=config.get(CONF_OPTIMISTIC),
-                    timeout=config.get(CONF_TIMEOUT),
-                )
-            ]
-        )
+        async_add_devices([MediaroomDevice(host=host,
+                                           device_id=None,
+                                           optimistic=config[CONF_OPTIMISTIC],
+                                           timeout=config[CONF_TIMEOUT])])
         hass.data[DATA_MEDIAROOM].append(host)
+
     _LOGGER.debug("Trying to discover Mediaroom STB")
 
     def callback_notify(notify):
@@ -121,7 +115,8 @@ class MediaroomDevice(MediaPlayerDevice):
         self._channel = None
         self._optimistic = optimistic
         self._state = STATE_PLAYING if optimistic else STATE_STANDBY
-        self._name = '{} {}'.format(PLATFORM, device_id)
+        self._name = 'Mediaroom {}'.format(device_id)
+        self._available = True
         if device_id:
             self._unique_id = device_id
         else:
@@ -132,35 +127,41 @@ class MediaroomDevice(MediaPlayerDevice):
         """No polling needed."""
         return False
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
+
     async def async_added_to_hass(self):
         """Retrieve latest state."""
-        def notify_received(notify):
+        async def async_notify_received(notify):
             """Process STB state from NOTIFY message."""
             self.set_state(self.stb.notify_callback(notify))
             _LOGGER.debug("STB(%s) is [%s]", self.host, self._state)
             self.async_schedule_update_ha_state()
 
         async_dispatcher_connect(self.hass, SIGNAL_STB_NOTIFY,
-                                 notify_received)
+                                 async_notify_received)
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play media."""
         from pymediaroom import PyMediaroomError
-        try:
-            _LOGGER.debug("STB(%s) Play media: %s (%s)", self.stb.stb_ip,
-                          media_id, media_type)
-            if media_type != MEDIA_TYPE_CHANNEL:
-                _LOGGER.error('invalid media type')
-                return
-            if not media_id.isdigit():
-                _LOGGER.error("media_id must be a channel number")
-                return
 
+        _LOGGER.debug("STB(%s) Play media: %s (%s)", self.stb.stb_ip,
+                      media_id, media_type)
+        if media_type != MEDIA_TYPE_CHANNEL:
+            _LOGGER.error('invalid media type')
+            return
+        if not media_id.isdigit():
+            _LOGGER.error("media_id must be a channel number")
+            return
+
+        try:
             await self.stb.send_cmd(int(media_id))
             if self._optimistic:
                 self._state = STATE_PLAYING
         except PyMediaroomError:
-            self._state = STATE_UNAVAILABLE
+            self._available = False
         self.async_schedule_update_ha_state()
 
     @property
@@ -196,13 +197,14 @@ class MediaroomDevice(MediaPlayerDevice):
     async def async_turn_on(self):
         """Turn on the receiver."""
         from pymediaroom import PyMediaroomError
-        if self._optimistic:
-            return
 
         try:
             self.set_state(await self.stb.turn_on())
         except PyMediaroomError:
-            self._state = STATE_UNAVAILABLE
+            self._available = False
+
+        if self._optimistic:
+            self._state = STATE_PLAYING
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self):
@@ -214,7 +216,10 @@ class MediaroomDevice(MediaPlayerDevice):
         try:
             self.set_state(await self.stb.turn_off())
         except PyMediaroomError:
-            self._state = STATE_UNAVAILABLE
+            self._available = False
+
+        if self._optimistic:
+            self._state = STATE_STANDBY
         self.async_schedule_update_ha_state()
 
     async def async_media_play(self):
@@ -226,7 +231,7 @@ class MediaroomDevice(MediaPlayerDevice):
             if self._optimistic:
                 self._state = STATE_PLAYING
         except PyMediaroomError:
-            self._state = STATE_UNAVAILABLE
+            self._available = False
         self.async_schedule_update_ha_state()
 
     async def async_media_pause(self):
@@ -237,7 +242,7 @@ class MediaroomDevice(MediaPlayerDevice):
             if self._optimistic:
                 self._state = STATE_PAUSED
         except PyMediaroomError:
-            self._state = STATE_UNAVAILABLE
+            self._available = False
         self.async_schedule_update_ha_state()
 
     async def async_media_stop(self):
@@ -248,7 +253,7 @@ class MediaroomDevice(MediaPlayerDevice):
             if self._optimistic:
                 self._state = STATE_PAUSED
         except PyMediaroomError:
-            self._state = STATE_UNAVAILABLE
+            self._available = False
         self.async_schedule_update_ha_state()
 
     async def async_media_previous_track(self):
@@ -259,7 +264,7 @@ class MediaroomDevice(MediaPlayerDevice):
             if self._optimistic:
                 self._state = STATE_PLAYING
         except PyMediaroomError:
-            self._state = STATE_UNAVAILABLE
+            self._available = False
         self.async_schedule_update_ha_state()
 
     async def async_media_next_track(self):
@@ -270,7 +275,7 @@ class MediaroomDevice(MediaPlayerDevice):
             if self._optimistic:
                 self._state = STATE_PLAYING
         except PyMediaroomError:
-            self._state = STATE_UNAVAILABLE
+            self._available = False
         self.async_schedule_update_ha_state()
 
     async def async_volume_up(self):
@@ -279,7 +284,7 @@ class MediaroomDevice(MediaPlayerDevice):
         try:
             await self.stb.send_cmd('VolUp')
         except PyMediaroomError:
-            self._state = STATE_UNAVAILABLE
+            self._available = False
             self.async_schedule_update_ha_state()
 
     async def async_volume_down(self):
@@ -288,7 +293,7 @@ class MediaroomDevice(MediaPlayerDevice):
         try:
             await self.stb.send_cmd('VolDown')
         except PyMediaroomError:
-            self._state = STATE_UNAVAILABLE
+            self._available = False
             self.async_schedule_update_ha_state()
 
     async def async_mute_volume(self, mute):
@@ -297,5 +302,5 @@ class MediaroomDevice(MediaPlayerDevice):
         try:
             await self.stb.send_cmd('Mute')
         except PyMediaroomError:
-            self._state = STATE_UNAVAILABLE
+            self._available = False
             self.async_schedule_update_ha_state()
