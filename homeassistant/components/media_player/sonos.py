@@ -194,13 +194,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             master = [device for device in hass.data[DATA_SONOS].devices
                       if device.entity_id == service.data[ATTR_MASTER]]
             if master:
-                master[0].join(devices)
+                with hass.data[DATA_SONOS].topology_lock:
+                    master[0].join(devices)
+            return
+
+        if service.service == SERVICE_UNJOIN:
+            with hass.data[DATA_SONOS].topology_lock:
+                for device in devices:
+                    device.unjoin()
             return
 
         for device in devices:
-            if service.service == SERVICE_UNJOIN:
-                device.unjoin()
-            elif service.service == SERVICE_SNAPSHOT:
+            if service.service == SERVICE_SNAPSHOT:
                 device.snapshot(service.data[ATTR_WITH_GROUP])
             elif service.service == SERVICE_RESTORE:
                 device.restore(service.data[ATTR_WITH_GROUP])
@@ -799,7 +804,9 @@ class SonosDevice(MediaPlayerDevice):
                 src = fav.pop()
                 uri = src.reference.get_uri()
                 if _is_radio_uri(uri):
-                    self.soco.play_uri(uri, title=source)
+                    # SoCo 0.14 fails to XML escape the title parameter
+                    from xml.sax.saxutils import escape
+                    self.soco.play_uri(uri, title=escape(source))
                 else:
                     self.soco.clear_queue()
                     self.soco.add_to_queue(src.reference)
@@ -893,16 +900,19 @@ class SonosDevice(MediaPlayerDevice):
     def join(self, slaves):
         """Form a group with other players."""
         if self._coordinator:
-            self.soco.unjoin()
+            self.unjoin()
 
         for slave in slaves:
             if slave.unique_id != self.unique_id:
                 slave.soco.join(self.soco)
+                # pylint: disable=protected-access
+                slave._coordinator = self
 
     @soco_error()
     def unjoin(self):
         """Unjoin the player from a group."""
         self.soco.unjoin()
+        self._coordinator = None
 
     @soco_error()
     def snapshot(self, with_group=True):
