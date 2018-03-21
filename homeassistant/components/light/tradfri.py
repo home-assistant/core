@@ -219,9 +219,7 @@ class TradfriLight(Light):
         await self._api(self._light_control.set_state(False))
 
     async def async_turn_on(self, **kwargs):
-        """
-        Instruct the light to turn on.
-        """
+        """Instruct the light to turn on."""
         params = {}
         if ATTR_TRANSITION in kwargs:
             params[ATTR_TRANSITION_TIME] = int(kwargs[ATTR_TRANSITION]) * 10
