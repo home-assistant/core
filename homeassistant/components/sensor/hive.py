@@ -15,6 +15,7 @@ FRIENDLY_NAMES = {'Hub_OnlineStatus': 'Hub Status',
 DEVICETYPE_ICONS = {'Hub_OnlineStatus': 'mdi:switch',
                     'Hive_OutsideTemperature': 'mdi:thermometer'}
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Hive sensor devices."""
     if discovery_info is None:

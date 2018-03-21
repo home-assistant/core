@@ -77,7 +77,7 @@ class HiveClimateEntity(ClimateDevice):
 
     @property
     def device_state_attributes(self):
-        """Show Device Attributes"""
+        """Show Device Attributes."""
         return self.attributes
 
     @property
