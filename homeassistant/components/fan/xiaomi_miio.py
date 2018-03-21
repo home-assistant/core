@@ -576,7 +576,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return self.speed_list
+        return self._speed_list
 
     @property
     def speed(self):
