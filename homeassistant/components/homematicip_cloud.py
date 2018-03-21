@@ -7,6 +7,7 @@ https://home-assistant.io/components/homematicip_cloud/
 
 import logging
 from socket import timeout
+
 import voluptuous as vol
 
 from homeassistant.core import callback
