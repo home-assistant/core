@@ -139,6 +139,7 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_PRO = {
 }
 
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
+    # Common set isn't used here. It's a very basic version of the device.
     ATTR_AIR_QUALITY_INDEX: 'aqi',
     ATTR_MODE: 'mode',
     ATTR_LED: 'led',
@@ -161,6 +162,7 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
     ATTR_SLEEP_LEARN_COUNT: 'sleep_mode_learn_count',
     ATTR_EXTRA_FEATURES: 'extra_features',
     ATTR_AUTO_DETECT: 'auto_detect',
+    ATTR_USE_TIME: 'use_time',
     ATTR_BUTTON_PRESSED: 'button_pressed',
 }
 
