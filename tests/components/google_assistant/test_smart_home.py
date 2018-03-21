@@ -259,3 +259,30 @@ def test_serialize_input_boolean():
         'type': 'action.devices.types.SWITCH',
         'willReportState': False,
     }
+
+
+async def test_unavailable_state_doesnt_sync(hass):
+    """Test that an unavailable entity does not sync over."""
+    light = DemoLight(
+        None, 'Demo Light',
+        state=False,
+    )
+    light.hass = hass
+    light.entity_id = 'light.demo_light'
+    light._available = False
+    await light.async_update_ha_state()
+
+    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
+        "requestId": REQ_ID,
+        "inputs": [{
+            "intent": "action.devices.SYNC"
+        }]
+    })
+
+    assert result == {
+        'requestId': REQ_ID,
+        'payload': {
+            'agentUserId': 'test-agent',
+            'devices': []
+        }
+    }
