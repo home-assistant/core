@@ -182,7 +182,7 @@ class LW12WiFi(Light):
             if self._effect.replace(' ', '_').upper() in lw12.LW12_EFFECT:
                 kwargs['effect'] = self._effect
             else:
-                # Unknown effect, changing to no selected effect.
+                # Unknown effect: changing to no selected effect.
                 self._effect = None
         if ATTR_HS_COLOR in kwargs:
             self._rgb_color = color_util.color_hs_to_RGB(
