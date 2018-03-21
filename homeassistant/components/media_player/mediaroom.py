@@ -77,7 +77,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         )
         async_add_devices([new_stb])
 
-    if not config.get(CONF_OPTIMISTIC):
+    if not config[CONF_OPTIMISTIC]:
         from pymediaroom import install_mediaroom_protocol
 
         await install_mediaroom_protocol(responses_callback=callback_notify)
@@ -120,7 +120,7 @@ class MediaroomDevice(MediaPlayerDevice):
         if device_id:
             self._unique_id = device_id
         else:
-            self._unique_id = self.stb.device_id
+            self._unique_id = None 
 
     @property
     def should_poll(self):
