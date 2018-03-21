@@ -197,29 +197,23 @@ class MediaroomDevice(MediaPlayerDevice):
     async def async_turn_on(self):
         """Turn on the receiver."""
         from pymediaroom import PyMediaroomError
-
         try:
             self.set_state(await self.stb.turn_on())
+            if self._optimistic:
+                self._state = STATE_PLAYING
         except PyMediaroomError:
             self._available = False
-
-        if self._optimistic:
-            self._state = STATE_PLAYING
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self):
         """Turn off the receiver."""
         from pymediaroom import PyMediaroomError
-        if self._optimistic:
-            return
-
         try:
             self.set_state(await self.stb.turn_off())
+            if self._optimistic:
+                self._state = STATE_STANDBY
         except PyMediaroomError:
             self._available = False
-
-        if self._optimistic:
-            self._state = STATE_STANDBY
         self.async_schedule_update_ha_state()
 
     async def async_media_play(self):
@@ -285,7 +279,7 @@ class MediaroomDevice(MediaPlayerDevice):
             await self.stb.send_cmd('VolUp')
         except PyMediaroomError:
             self._available = False
-            self.async_schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     async def async_volume_down(self):
         """Send volume up command."""
@@ -294,7 +288,7 @@ class MediaroomDevice(MediaPlayerDevice):
             await self.stb.send_cmd('VolDown')
         except PyMediaroomError:
             self._available = False
-            self.async_schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     async def async_mute_volume(self, mute):
         """Send mute command."""
@@ -303,4 +297,4 @@ class MediaroomDevice(MediaPlayerDevice):
             await self.stb.send_cmd('Mute')
         except PyMediaroomError:
             self._available = False
-            self.async_schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
