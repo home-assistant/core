@@ -5,9 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/homematicip_cloud/
 """
 
-import asyncio
 import logging
-
 from socket import timeout
 import voluptuous as vol
 
@@ -117,8 +115,7 @@ class HomematicipGenericDevice(Entity):
         self._home = home
         self._device = device
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, EVENT_DEVICE_CHANGED, self._device_changed)
