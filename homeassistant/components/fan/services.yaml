@@ -190,3 +190,17 @@ xiaomi_miio_set_target_humidity:
     humidity:
       description: Target humidity. Allowed values are 30, 40, 50, 60, 70 and 80.
       example: 50
+
+xiaomi_miio_set_dry_on:
+  description: Turn the dry mode on.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
+
+xiaomi_miio_set_dry_off:
+  description: Turn the dry mode off.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
