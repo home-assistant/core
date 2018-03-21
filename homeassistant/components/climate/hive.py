@@ -190,4 +190,3 @@ class HiveClimateEntity(ClimateDevice):
 
         self.session.core.update_data(self.node_id)
         self.attributes = self.session.attributes.state_attributes(node)
-
