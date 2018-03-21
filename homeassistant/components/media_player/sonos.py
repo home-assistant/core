@@ -798,7 +798,9 @@ class SonosDevice(MediaPlayerDevice):
                 src = fav.pop()
                 uri = src.reference.get_uri()
                 if _is_radio_uri(uri):
-                    self.soco.play_uri(uri, title=source)
+                    # SoCo 0.14 fails to XML escape the title parameter
+                    from xml.sax.saxutils import escape
+                    self.soco.play_uri(uri, title=escape(source))
                 else:
                     self.soco.clear_queue()
                     self.soco.add_to_queue(src.reference)
