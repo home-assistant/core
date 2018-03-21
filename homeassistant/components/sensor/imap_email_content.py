@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.email/
 import logging
 import datetime
 import email
+import re
 from collections import deque
 
 import voluptuous as vol
@@ -22,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SERVER = 'server'
 CONF_SENDERS = 'senders'
+CONF_BODY_REGEX = 'body_regex'
 
 ATTR_FROM = 'from'
 ATTR_BODY = 'body'
@@ -36,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SERVER): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_BODY_REGEX): cv.string,
 })
 
 
@@ -50,7 +53,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         value_template.hass = hass
     sensor = EmailContentSensor(
         hass, reader, config.get(CONF_NAME) or config.get(CONF_USERNAME),
-        config.get(CONF_SENDERS), value_template)
+        config.get(CONF_SENDERS), value_template,
+        config.get(CONF_BODY_REGEX))
 
     if sensor.connected:
         add_devices([sensor], True)
@@ -124,13 +128,14 @@ class EmailContentSensor(Entity):
     """Representation of an EMail sensor."""
 
     def __init__(self, hass, email_reader, name, allowed_senders,
-                 value_template):
+                 value_template, body_regex):
         """Initialize the sensor."""
         self.hass = hass
         self._email_reader = email_reader
         self._name = name
         self._allowed_senders = [sender.upper() for sender in allowed_senders]
         self._value_template = value_template
+        self._body_regex = re.compile(body_regex) if body_regex is not None else None
         self._last_id = None
         self._message = None
         self._state_attributes = None
@@ -232,6 +237,15 @@ class EmailContentSensor(Entity):
                     EmailContentSensor.get_msg_subject(email_message),
                 ATTR_DATE:
                     email_message['Date'],
-                ATTR_BODY:
-                    EmailContentSensor.get_msg_text(email_message)
             }
+
+            if self._body_regex is not None:
+                parsed_body = self._body_regex.search(
+                    EmailContentSensor.get_msg_text(email_message))
+                if parsed_body is not None:
+                    for attr in parsed_body.groupdict().keys():
+                        self._state_attributes[attr] = parsed_body.\
+                            group(attr)
+            else:
+                self._state_attributes[ATTR_BODY] = EmailContentSensor.\
+                    get_msg_text(email_message)
