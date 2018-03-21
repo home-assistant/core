@@ -230,7 +230,7 @@ class TradfriLight(Light):
             if brightness == 255:
                 brightness = 254
 
-        if ATTR_HS_COLOR in kwargs and self._light_data.hex_color is not None:
+        if ATTR_HS_COLOR in kwargs:
             params[ATTR_BRIGHTNESS] = brightness
             await self._api(
                 self._light_control.set_hsb(*kwargs[ATTR_HS_COLOR], **params))
