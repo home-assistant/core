@@ -7,7 +7,6 @@ https://home-assistant.io/components/light.tradfri/
 import logging
 
 from homeassistant.core import callback
-import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
@@ -25,16 +24,6 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
 IKEA = 'IKEA of Sweden'
 TRADFRI_LIGHT_MANAGER = 'Tradfri Light Manager'
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
-
-
-def normalize_xy(argx, argy, brightness=None):
-    """Normalise XY to Tradfri scaling."""
-    return (int(argx*65535+0.56), int(argy*65535+0.56))
-
-
-def denormalize_xy(argx, argy, brightness=None):
-    """Denormalise XY from Tradfri scaling."""
-    return (argx/65535-0.56, argy/65535-0.56)
 
 
 async def async_setup_platform(hass, config,
@@ -218,15 +207,12 @@ class TradfriLight(Light):
         return self._light_data.color_temp
 
     @property
-    def xy_color(self):
-        """XY colour of the light."""
-        if self._light_data.xy_color and self._light_control.can_set_color:
-            return denormalize_xy(*self._light_data.xy_color)
-
-    @property
     def hs_color(self):
         """HS color of the light."""
-        return self._hs_color
+        hsbxy = self._light_data.hsb_xy_color
+        hue = hsbxy[0]
+        sat = hsbxy[1]
+        return hue, sat
 
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
@@ -235,43 +221,19 @@ class TradfriLight(Light):
     async def async_turn_on(self, **kwargs):
         """
         Instruct the light to turn on.
-
-        After adding "self._light_data.hexcolor is not None"
-        for ATTR_HS_COLOR, this also supports Philips Hue bulbs.
         """
-        if ATTR_HS_COLOR in kwargs and self._light_data.hex_color is not None:
-            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-            yield from self._api(
-                self._light.light_control.set_rgb_color(*rgb))
-
-        elif ATTR_COLOR_TEMP in kwargs and \
-                self._light_data.hex_color is not None and \
-                self._temp_supported:
-            kelvin = color_util.color_temperature_mired_to_kelvin(
-                kwargs[ATTR_COLOR_TEMP])
-            yield from self._api(
-                self._light_control.set_kelvin_color(kelvin))
-
         params = {}
         if ATTR_TRANSITION in kwargs:
             params[ATTR_TRANSITION_TIME] = int(kwargs[ATTR_TRANSITION]) * 10
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
-        if ATTR_XY_COLOR in kwargs:
-            if brightness is not None:
-                params.pop(ATTR_TRANSITION_TIME, None)
+        if ATTR_HS_COLOR in kwargs and self._light_data.hex_color is not None:
+            params[ATTR_BRIGHTNESS] = brightness
             await self._api(
-                self._light_control.set_xy_color(
-                    *normalize_xy(*kwargs[ATTR_XY_COLOR]), **params))
-        elif ATTR_RGB_COLOR in kwargs:
-            if brightness is not None:
-                params.pop(ATTR_TRANSITION_TIME, None)
-            argxy = color_util.color_RGB_to_xy(*kwargs[ATTR_RGB_COLOR])
-            await self._api(
-                self._light_control.set_xy_color(*normalize_xy(argxy[0],
-                                                               argxy[1]),
-                                                 **params))
+                self._light_control.set_hsb(*kwargs[ATTR_HS_COLOR], **params))
+            return
+
         elif ATTR_COLOR_TEMP in kwargs:
             if brightness is not None:
                 params.pop(ATTR_TRANSITION_TIME, None)
@@ -317,7 +279,6 @@ class TradfriLight(Light):
         self._light_control = light.light_control
         self._light_data = light.light_control.lights[0]
         self._name = light.name
-        self._hs_color = None
         self._features = SUPPORTED_FEATURES
 
         if self._light_control.can_set_mireds:
