@@ -2,9 +2,10 @@
 # pylint: disable=protected-access
 import logging
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 import pytest
+from httplib2 import ServerNotFoundError
 
 import homeassistant.components.calendar as calendar_base
 import homeassistant.components.calendar.google as calendar
@@ -42,16 +43,16 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
     def test_all_day_event(self, mock_next_event):
         """Test that we can create an event trigger on device."""
-        week_from_today = dt_util.dt.date.today() \
-            + dt_util.dt.timedelta(days=7)
+        week_from_today = dt_util.dt.date.today() + dt_util.dt.timedelta(
+            days=7)
         event = {
             'summary': 'Test All Day Event',
             'start': {
                 'date': week_from_today.isoformat()
             },
             'end': {
-                'date': (week_from_today + dt_util.dt.timedelta(days=1))
-                .isoformat()
+                'date': (week_from_today + dt_util.dt.timedelta(
+                    days=1)).isoformat()
             },
             'location': 'Test Cases',
             'description': 'We\'re just testing that all day events get setup '
@@ -105,16 +106,14 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
     def test_future_event(self, mock_next_event):
         """Test that we can create an event trigger on device."""
-        one_hour_from_now = dt_util.now() \
-            + dt_util.dt.timedelta(minutes=30)
+        one_hour_from_now = dt_util.now() + dt_util.dt.timedelta(minutes=30)
         event = {
             'start': {
                 'dateTime': one_hour_from_now.isoformat()
             },
             'end': {
                 'dateTime': (one_hour_from_now
-                             + dt_util.dt.timedelta(minutes=60))
-                .isoformat()
+                             + dt_util.dt.timedelta(minutes=60)).isoformat()
             },
             'summary': 'Test Event in 30 minutes',
             'reminders': {'useDefault': True},
@@ -157,8 +156,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'offset_reached': False,
             'start_time': one_hour_from_now.strftime(DATE_STR_FORMAT),
             'end_time':
-                (one_hour_from_now + dt_util.dt.timedelta(minutes=60))
-                .strftime(DATE_STR_FORMAT),
+                (one_hour_from_now + dt_util.dt.timedelta(
+                    minutes=60)).strftime(DATE_STR_FORMAT),
             'location': '',
             'description': ''
         })
@@ -166,16 +165,14 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
     def test_in_progress_event(self, mock_next_event):
         """Test that we can create an event trigger on device."""
-        middle_of_event = dt_util.now() \
-            - dt_util.dt.timedelta(minutes=30)
+        middle_of_event = dt_util.now() - dt_util.dt.timedelta(minutes=30)
         event = {
             'start': {
                 'dateTime': middle_of_event.isoformat()
             },
             'end': {
-                'dateTime': (middle_of_event + dt_util.dt
-                             .timedelta(minutes=60))
-                .isoformat()
+                'dateTime': (middle_of_event + dt_util.dt.timedelta(
+                    minutes=60)).isoformat()
             },
             'summary': 'Test Event in Progress',
             'reminders': {'useDefault': True},
@@ -219,8 +216,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'offset_reached': False,
             'start_time': middle_of_event.strftime(DATE_STR_FORMAT),
             'end_time':
-                (middle_of_event + dt_util.dt.timedelta(minutes=60))
-                .strftime(DATE_STR_FORMAT),
+                (middle_of_event + dt_util.dt.timedelta(minutes=60)).strftime(
+                    DATE_STR_FORMAT),
             'location': '',
             'description': ''
         })
@@ -228,17 +225,15 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
     def test_offset_in_progress_event(self, mock_next_event):
         """Test that we can create an event trigger on device."""
-        middle_of_event = dt_util.now() \
-            + dt_util.dt.timedelta(minutes=14)
+        middle_of_event = dt_util.now() + dt_util.dt.timedelta(minutes=14)
         event_summary = 'Test Event in Progress'
         event = {
             'start': {
                 'dateTime': middle_of_event.isoformat()
             },
             'end': {
-                'dateTime': (middle_of_event + dt_util.dt
-                             .timedelta(minutes=60))
-                .isoformat()
+                'dateTime': (middle_of_event + dt_util.dt.timedelta(
+                    minutes=60)).isoformat()
             },
             'summary': '{} !!-15'.format(event_summary),
             'reminders': {'useDefault': True},
@@ -281,9 +276,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'all_day': False,
             'offset_reached': True,
             'start_time': middle_of_event.strftime(DATE_STR_FORMAT),
-            'end_time':
-                (middle_of_event + dt_util.dt.timedelta(minutes=60))
-                .strftime(DATE_STR_FORMAT),
+            'end_time': (middle_of_event + dt_util.dt.timedelta(
+                minutes=60)).strftime(DATE_STR_FORMAT),
             'location': '',
             'description': ''
         })
@@ -292,8 +286,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
     def test_all_day_offset_in_progress_event(self, mock_next_event):
         """Test that we can create an event trigger on device."""
-        tomorrow = dt_util.dt.date.today() \
-            + dt_util.dt.timedelta(days=1)
+        tomorrow = dt_util.dt.date.today() + dt_util.dt.timedelta(days=1)
 
         event_summary = 'Test All Day Event Offset In Progress'
         event = {
@@ -302,8 +295,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 'date': tomorrow.isoformat()
             },
             'end': {
-                'date': (tomorrow + dt_util.dt.timedelta(days=1))
-                .isoformat()
+                'date': (tomorrow + dt_util.dt.timedelta(days=1)).isoformat()
             },
             'location': 'Test Cases',
             'description': 'We\'re just testing that all day events get setup '
@@ -358,8 +350,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
     def test_all_day_offset_event(self, mock_next_event):
         """Test that we can create an event trigger on device."""
-        tomorrow = dt_util.dt.date.today() \
-            + dt_util.dt.timedelta(days=2)
+        tomorrow = dt_util.dt.date.today() + dt_util.dt.timedelta(days=2)
 
         offset_hours = (1 + dt_util.now().hour)
         event_summary = 'Test All Day Event Offset'
@@ -369,8 +360,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 'date': tomorrow.isoformat()
             },
             'end': {
-                'date': (tomorrow + dt_util.dt.timedelta(days=1))
-                .isoformat()
+                'date': (tomorrow + dt_util.dt.timedelta(days=1)).isoformat()
             },
             'location': 'Test Cases',
             'description': 'We\'re just testing that all day events get setup '
@@ -421,3 +411,14 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'location': event['location'],
             'description': event['description']
         })
+
+    def test_update_false(self):
+        """Test that the update returns False upon Error."""
+        mock_service = Mock()
+        mock_service.get = Mock(side_effect=ServerNotFoundError("unit test"))
+
+        cal = calendar.GoogleCalendarEventDevice(self.hass, mock_service, None,
+                                                 {'name': "test"})
+        result = cal.data.update()
+
+        self.assertFalse(result)
