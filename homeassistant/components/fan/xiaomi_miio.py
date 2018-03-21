@@ -160,8 +160,6 @@ AVAILABLE_ATTRIBUTES_AIRPURIFIER_V3 = {
     ATTR_SLEEP_TIME: 'sleep_time',
     ATTR_SLEEP_LEARN_COUNT: 'sleep_mode_learn_count',
     ATTR_EXTRA_FEATURES: 'extra_features',
-    ATTR_AUTO_DETECT: 'auto_detect',
-    ATTR_BUTTON_PRESSED: 'button_pressed',
 }
 
 AVAILABLE_ATTRIBUTES_AIRHUMIDIFIER = {
