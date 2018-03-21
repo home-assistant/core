@@ -5,7 +5,6 @@ from homeassistant.helpers.entity import Entity
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-
     """Setting the platform in HASS and getting the username and password."""
     add_devices([DominionEnergySensor(config['username'], config['password'])])
 
