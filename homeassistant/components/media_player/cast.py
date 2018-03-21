@@ -286,7 +286,7 @@ class CastDevice(MediaPlayerDevice):
         """Initialize the cast device."""
         self._cast_info = cast_info  # type: ChromecastInfo
         self._chromecast = None  # type: Optional[pychromecast.Chromecast]
-        self._cast_status = None
+        self.cast_status = None
         self.media_status = None
         self.media_status_received = None
         self._available = False  # type: bool
@@ -343,7 +343,7 @@ class CastDevice(MediaPlayerDevice):
         # attempt. If the initial connection failed, we would never reach
         # this code anyway.
         self._available = True
-        self._cast_status = chromecast.status
+        self.cast_status = chromecast.status
         self.media_status = chromecast.media_controller.status
         _LOGGER.debug("Connection successful!")
         self.async_schedule_update_ha_state()
@@ -359,7 +359,7 @@ class CastDevice(MediaPlayerDevice):
         self._chromecast.disconnect(blocking=False)
         # Invalidate some attributes
         self._chromecast = None
-        self._cast_status = None
+        self.cast_status = None
         self.media_status = None
         self.media_status_received = None
         self._status_listener.invalidate()
@@ -383,7 +383,7 @@ class CastDevice(MediaPlayerDevice):
     # ========== Callbacks ==========
     def new_cast_status(self, cast_status):
         """Handle updates of the cast status."""
-        self._cast_status = cast_status
+        self.cast_status = cast_status
         self.schedule_update_ha_state()
 
     def new_media_status(self, media_status):
@@ -497,12 +497,12 @@ class CastDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self._cast_status.volume_level if self._cast_status else None
+        return self.cast_status.volume_level if self.cast_status else None
 
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        return self._cast_status.volume_muted if self._cast_status else None
+        return self.cast_status.volume_muted if self.cast_status else None
 
     @property
     def media_content_id(self):
