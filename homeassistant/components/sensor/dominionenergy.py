@@ -1,24 +1,22 @@
-""" Support for Washington Dominion Energy."""
+"""Support for Washington Dominion Energy."""
 
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setting the platform in HASS and getting the username
-    and password from the config file
-    """
+
+    """Setting the platform in HASS and getting the username and password."""
     add_devices([DominionEnergySensor(config['username'], config['password'])])
 
 
 class DominionEnergySensor(Entity):
-    """Washington Dominion Energy Sensor will check the bill
-    if it's update on daily basis
-    """
+    """Washington Dominion Energy Sensor will check the bill on daily basis."""
 
     from datetime import timedelta
     HOURS_TO_UPDATE = timedelta(hours=24)
-    CURRENT_BILL_SELECTOR = "#homepageContent > div:nth-child(3) > div:nth-child(2) > p > span"
+    CURRENT_BILL_SELECTOR = str("#homepageContent > div:nth-child(3) >"
+    +" div:nth-child(2) > p > span")
 
     def __init__(self, username, password):
         """Initialize the sensor."""
@@ -28,6 +26,7 @@ class DominionEnergySensor(Entity):
 
     @property
     def name(self):
+        """Name of the Sensor: DominionEnergy Sensor."""
         return "Dominion Energy"
 
     @property
@@ -37,7 +36,7 @@ class DominionEnergySensor(Entity):
 
     @Throttle(HOURS_TO_UPDATE)
     def update(self):
-        """Using Selenium to access Dominion website and fetch data"""
+        """Using Selenium to access Dominion website and fetch data."""
         from selenium import webdriver
         driver = webdriver.PhantomJS()
         driver.set_window_size(1120, 550)
@@ -46,5 +45,6 @@ class DominionEnergySensor(Entity):
         driver.find_element_by_id('password').send_keys(self._password)
         driver.find_element_by_id('SignIn').click()
         driver.implicitly_wait(1)
-        state = str(driver.find_element_by_css_selector(self.CURRENT_BILL_SELECTOR).text)
+        state = str(driver.find_element_by_css_selector(
+            self.CURRENT_BILL_SELECTOR).text)
         self._state = state
