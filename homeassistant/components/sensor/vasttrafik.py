@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Required(CONF_FROM): cv.string,
         vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): cv.positive_int,
         vol.Optional(CONF_HEADING): cv.string,
-        vol.Optional(CONF_LINES, default=[]): cv.ensure_list_csv,
+        vol.Optional(CONF_LINES, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_NAME): cv.string}]
 })
 
@@ -109,7 +109,7 @@ class VasttrafikDepartureSensor(Entity):
                     ATTR_LINE: departure.get('sname'),
                     ATTR_TRACK: departure.get('track'),
                     }
-        return {k: v for k, v in params.items() if v}
+                return {k: v for k, v in params.items() if v}
 
     @property
     def state(self):
