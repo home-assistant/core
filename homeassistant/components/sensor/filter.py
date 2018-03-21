@@ -151,7 +151,7 @@ class SensorFilter(Entity):
                               self._state)
                 return
 
-            self._state = temp_state
+            self._state = temp_state.state
 
             if self._icon is None:
                 self._icon = new_state.attributes.get(
