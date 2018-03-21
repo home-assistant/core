@@ -15,8 +15,8 @@ class DominionEnergySensor(Entity):
 
     from datetime import timedelta
     HOURS_TO_UPDATE = timedelta(hours=24)
-    CURRENT_BILL_SELECTOR = str("#homepageContent > div:nth-child(3) >"
-    +" div:nth-child(2) > p > span")
+    CURRENT_BILL_SELECTOR = str("#homepageContent > div:nth-child(3) >" +
+                                " div:nth-child(2) > p > span")
 
     def __init__(self, username, password):
         """Initialize the sensor."""
