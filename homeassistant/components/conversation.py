@@ -111,6 +111,12 @@ async def async_setup(hass, config):
         'Toggle [the] [a] [an] {name}[s]',
         '[the] [a] [an] {name}[s] toggle',
     ])
+    async_register(hass, intent.INTENT_OPEN_COVER, [
+        'Open [the] [a] [an] {name}[s]'
+    ])
+    async_register(hass, intent.INTENT_CLOSE_COVER, [
+        'Close [the] [a] [an] {name}[s]',
+    ])
 
     return True
 

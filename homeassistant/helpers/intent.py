@@ -16,6 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 INTENT_TURN_OFF = 'HassTurnOff'
 INTENT_TURN_ON = 'HassTurnOn'
 INTENT_TOGGLE = 'HassToggle'
+INTENT_OPEN_COVER = 'HassOpenCover'
+INTENT_CLOSE_COVER = 'HassCloseCover'
 
 SLOT_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
