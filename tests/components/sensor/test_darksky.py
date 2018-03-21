@@ -40,8 +40,11 @@ VALID_CONFIG_LANG_DE = {
         'platform': 'darksky',
         'api_key': 'foo',
         'forecast': [1, 2],
+        'units': 'us',
         'lang': 'de',
-        'monitored_conditions': ['summary', 'icon', 'temperature_max'],
+        'monitored_conditions': ['summary', 'icon', 'temperature_max',
+                                 'minutely_summary', 'hourly_summary',
+                                 'daily_summary', 'humidity', ],
         'update_interval': timedelta(seconds=120),
     }
 }
