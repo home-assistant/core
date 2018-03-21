@@ -7,11 +7,10 @@ https://home-assistant.io/components/light.tradfri/
 import logging
 
 from homeassistant.core import callback
-import homeassistant.util.color as color_util
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_XY_COLOR, ATTR_TRANSITION,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
-    SUPPORT_XY_COLOR, SUPPORT_RGB_COLOR, ATTR_RGB_COLOR, Light)
+    SUPPORT_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
@@ -25,16 +24,6 @@ PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
 IKEA = 'IKEA of Sweden'
 TRADFRI_LIGHT_MANAGER = 'Tradfri Light Manager'
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
-
-
-def normalize_xy(argx, argy, brightness=None):
-    """Normalise XY to Tradfri scaling."""
-    return (int(argx*65535+0.56), int(argy*65535+0.56))
-
-
-def denormalize_xy(argx, argy, brightness=None):
-    """Denormalise XY from Tradfri scaling."""
-    return (argx/65535-0.56, argy/65535-0.56)
 
 
 async def async_setup_platform(hass, config,
@@ -162,6 +151,7 @@ class TradfriLight(Light):
         self._light_control = None
         self._light_data = None
         self._name = None
+        self._hs_color = None
         self._features = SUPPORTED_FEATURES
         self._available = True
 
@@ -217,45 +207,33 @@ class TradfriLight(Light):
         return self._light_data.color_temp
 
     @property
-    def xy_color(self):
-        """XY colour of the light."""
-        if self._light_data.xy_color and self._light_control.can_set_color:
-            return denormalize_xy(*self._light_data.xy_color)
-
-    @property
-    def rgb_color(self):
-        """RGB colour of the light."""
-        if self._light_data.xy_color and self._light_control.can_set_color:
-            dimmer = self._light_data.dimmer
-            xyb = denormalize_xy(*self._light_data.xy_color) + dimmer
-            return color_util.color_xy_brightness_to_RGB(*xyb)
+    def hs_color(self):
+        """HS color of the light."""
+        hsbxy = self._light_data.hsb_xy_color
+        hue = hsbxy[0]
+        sat = hsbxy[1]
+        return hue, sat
 
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         await self._api(self._light_control.set_state(False))
 
     async def async_turn_on(self, **kwargs):
-        """Instruct the light to turn on."""
+        """
+        Instruct the light to turn on.
+        """
         params = {}
         if ATTR_TRANSITION in kwargs:
             params[ATTR_TRANSITION_TIME] = int(kwargs[ATTR_TRANSITION]) * 10
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
-        if ATTR_XY_COLOR in kwargs:
-            if brightness is not None:
-                params.pop(ATTR_TRANSITION_TIME, None)
+        if ATTR_HS_COLOR in kwargs and self._light_data.hex_color is not None:
+            params[ATTR_BRIGHTNESS] = brightness
             await self._api(
-                self._light_control.set_xy_color(
-                    *normalize_xy(*kwargs[ATTR_XY_COLOR]), **params))
-        elif ATTR_RGB_COLOR in kwargs:
-            if brightness is not None:
-                params.pop(ATTR_TRANSITION_TIME, None)
-            argxy = color_util.color_RGB_to_xy(*kwargs[ATTR_RGB_COLOR])
-            await self._api(
-                self._light_control.set_xy_color(*normalize_xy(argxy[0],
-                                                               argxy[1]),
-                                                 **params))
+                self._light_control.set_hsb(*kwargs[ATTR_HS_COLOR], **params))
+            return
+
         elif ATTR_COLOR_TEMP in kwargs:
             if brightness is not None:
                 params.pop(ATTR_TRANSITION_TIME, None)
@@ -306,8 +284,7 @@ class TradfriLight(Light):
         if self._light_control.can_set_mireds:
             self._features |= SUPPORT_COLOR_TEMP
         if self._light_control.can_set_color:
-            self._features |= SUPPORT_XY_COLOR
-            self._features |= SUPPORT_RGB_COLOR
+            self._features |= SUPPORT_COLOR
 
     @callback
     def _observe_update(self, tradfri_device):
