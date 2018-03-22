@@ -266,7 +266,6 @@ async def test_unavailable_state_doesnt_sync(hass):
     light = DemoLight(
         None, 'Demo Light',
         state=False,
-        hs_color=(180, 75),
     )
     light.hass = hass
     light.entity_id = 'light.demo_light'
