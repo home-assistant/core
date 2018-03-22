@@ -261,8 +261,8 @@ class Camera(Entity):
         This method must be run in the event loop.
         """
         if interval < MIN_STREAM_INTERVAL:
-            raise HomeAssistantError("Stream interval must be be > {}"
-                                     .format(MIN_STREAM_INTERVAL))
+            raise ValueError("Stream interval must be be > {}"
+                             .format(MIN_STREAM_INTERVAL))
 
         response = web.StreamResponse()
         response.content_type = ('multipart/x-mixed-replace; '
@@ -438,7 +438,5 @@ class CameraMjpegStream(CameraView):
             interval = float(request.query.get('interval'))
             await camera.handle_async_still_stream(request, interval)
             return
-        except (ValueError, HomeAssistantError):
+        except ValueError:
             return web.Response(status=400)
-
-        return web.Response(status=500)
