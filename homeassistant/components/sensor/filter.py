@@ -355,7 +355,7 @@ class BandPassFilter(Filter):
     """
 
     def __init__(self, window_size, precision, entity,
-                 lower_bound=math.inf, upper_bound=-math.inf):
+                 lower_bound, upper_bound):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
         self._lower_bound = lower_bound
@@ -363,7 +363,7 @@ class BandPassFilter(Filter):
         self._stats_internal = Counter()
 
     def _filter_state(self, new_state):
-        """Implement the outlier filter."""
+        """Implement the band-pass filter."""
         new_state = float(new_state)
 
         if new_state > self._upper_bound:
