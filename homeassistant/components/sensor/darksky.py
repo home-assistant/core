@@ -27,8 +27,10 @@ CONF_ATTRIBUTION = "Powered by Dark Sky"
 CONF_UNITS = 'units'
 CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_FORECAST = 'forecast'
+CONF_LANGUAGE = 'language'
 
 DEFAULT_NAME = 'Dark Sky'
+DEFAULT_LANGUAGE = "en"
 
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
@@ -133,6 +135,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.time_period, cv.positive_timedelta)),
     vol.Optional(CONF_FORECAST):
         vol.All(cv.ensure_list, [vol.Range(min=1, max=7)]),
+    vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(
+        ['ar', 'az', 'be', 'bg', 'bs', 'ca', 'cs', 'da', 'de', 'el', 'en',
+         'es', 'et', 'fi', 'fr', 'hr', 'hu', 'id', 'is', 'it', 'ja', 'ka',
+         'kw', 'nb', 'nl', 'pl', 'pt', 'ro', 'ru', 'sk', 'sl', 'sr', 'sv',
+         'tet', 'tr', 'uk', 'x-pig-latin', 'zh', 'zh-tw']),
 })
 
 
@@ -153,6 +160,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         latitude=latitude,
         longitude=longitude,
         units=units,
+        language=config.get(CONF_LANGUAGE),
         interval=config.get(CONF_UPDATE_INTERVAL))
     forecast_data.update()
     forecast_data.update_currently()
@@ -332,12 +340,14 @@ def convert_to_camel(data):
 class DarkSkyData(object):
     """Get the latest data from Darksky."""
 
-    def __init__(self, api_key, latitude, longitude, units, interval):
+    def __init__(self, api_key, latitude, longitude, units, language,
+                 interval):
         """Initialize the data object."""
         self._api_key = api_key
         self.latitude = latitude
         self.longitude = longitude
         self.units = units
+        self.language = language
 
         self.data = None
         self.unit_system = None
@@ -359,7 +369,8 @@ class DarkSkyData(object):
 
         try:
             self.data = forecastio.load_forecast(
-                self._api_key, self.latitude, self.longitude, units=self.units)
+                self._api_key, self.latitude, self.longitude, units=self.units,
+                lang=self.language)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
             _LOGGER.error("Unable to connect to Dark Sky. %s", error)
             self.data = None
