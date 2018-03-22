@@ -272,9 +272,9 @@ class OutlierFilter(Filter):
             else:
                 diff = abs(new_state - statistics.median(self.states))
             if (diff > self._radius):
-    
+
                 self._stats_internal['erasures'] += 1
-    
+
                 _LOGGER.debug("Outlier nr. %s in %s: %s",
                               self._stats_internal['erasures'],
                               self._entity, new_state)
