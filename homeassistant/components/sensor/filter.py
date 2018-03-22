@@ -8,6 +8,7 @@ import logging
 import statistics
 from collections import deque, Counter
 from numbers import Number
+import math
 
 import voluptuous as vol
 
@@ -21,7 +22,6 @@ from homeassistant.util.decorator import Registry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.util.dt as dt_util
-import math
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -266,7 +266,7 @@ class OutlierFilter(Filter):
         new_state = float(new_state)
 
         if self.states:
-            if self._manual_median == NO_MANUAL_MEDIAN:
+            if self._manual_median != NO_MANUAL_MEDIAN:
                 diff = abs(new_state - self._manual_median)
             else:
                 diff = abs(new_state - statistics.median(self.states))
