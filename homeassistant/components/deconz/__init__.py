@@ -8,6 +8,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.discovery import SERVICE_DECONZ
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
@@ -188,9 +189,6 @@ async def async_request_configuration(hass, config, deconz_config):
     )
 
 
-from homeassistant import config_entries
-
-
 @config_entries.HANDLERS.register(DOMAIN)
 class DeconzFlowHandler(config_entries.ConfigFlowHandler):
     """Handle a deCONZ config flow."""
@@ -199,12 +197,17 @@ class DeconzFlowHandler(config_entries.ConfigFlowHandler):
 
     def __init__(self):
         """Initialize the deCONZ flow."""
-        self.bridges = {}
+        self.bridges = []
         self.deconz_config = {}
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         from pydeconz.utils import async_discovery
+
+        if DOMAIN in self.hass.data:
+            return self.async_abort(
+                reason='one_instance_only'
+            )
 
         if user_input is not None:
             for bridge in self.bridges:
@@ -232,7 +235,6 @@ class DeconzFlowHandler(config_entries.ConfigFlowHandler):
             return self.async_abort(
                 reason='no_bridges'
             )
-        )
 
     async def async_step_link(self, user_input=None):
         """Attempt to link with the deCONZ bridge."""
@@ -262,3 +264,14 @@ async def async_setup_entry(hass, entry):
     if result:
         return True
     return False
+
+
+async def async_unload_entry(hass, entry):
+    """Unload an entry."""
+    deconz = hass.data[DOMAIN]
+    entity_ids = hass.data[DATA_DECONZ_ID]
+    for entity_id in entity_ids.keys():
+        hass.states.async_remove(entity_id)
+    deconz.close()
+    del hass.data[DOMAIN]
+    return True

@@ -18,7 +18,8 @@
             "no_key": "Couldn't get an API key"
         },
         "abort": {
-            "no_bridges": "No deCONZ bridges discovered"
+            "no_bridges": "No deCONZ bridges discovered",
+            "one_instance_only": "Component only supports one deCONZ instance"
         }
     }
 }
