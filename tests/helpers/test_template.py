@@ -402,12 +402,12 @@ class TestHelpersTemplate(unittest.TestCase):
         self.hass.states.set('test.object', 'available', {'mode': 'on'})
         tpl = template.Template("""
 {% if state_attr("test.object", "mode") == on %}yes{% else %}no{% endif %}
-                    """, self.hass)
+                """, self.hass)
         self.assertEqual('yes', tpl.render())
 
         tpl = template.Template("""
 {{ state_attr("test.noobject", "mode") == None }}
-                    """, self.hass)
+                """, self.hass)
         self.assertEqual('True', tpl.render())
 
     def test_states_function(self):
