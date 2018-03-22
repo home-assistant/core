@@ -131,6 +131,22 @@ class TestFilterSensor(unittest.TestCase):
             filtered = filt.filter_state(state)
         self.assertEqual(18.05, filtered.state)
 
+    def test_bandpass(self):
+        """Test if bandpass filter works."""
+        lower = 10
+        upper = 20
+        filt = LowPassFilter(entity=None,
+                             lower_bound=lower,
+                             upper_bound=upper)
+        for state in self.values:
+            filtered = filt.filter_state(state)
+            if state < lower:
+                self.assertEqual(lower, filtered)
+            elif state > upper:
+                self.assertEqual(upper, filtered)
+            else:
+                self.assertEqual(state, filtered)
+
     def test_throttle(self):
         """Test if lowpass filter works."""
         filt = ThrottleFilter(window_size=3,
