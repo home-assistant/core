@@ -186,7 +186,7 @@ class SensorFilter(Entity):
             for state in history_list:
                 filter_sensor_state_listener(
                     self._entity, prev_state, state, False)
-                prev_state = state.state
+                prev_state = state
 
         async_track_state_change(
             self.hass, self._entity, filter_sensor_state_listener)
