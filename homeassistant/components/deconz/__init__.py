@@ -18,7 +18,7 @@ from homeassistant.helpers import discovery, aiohttp_client
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==32']
+REQUIREMENTS = ['pydeconz==33']
 
 _LOGGER = logging.getLogger(__name__)
 
