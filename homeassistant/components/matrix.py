@@ -6,7 +6,6 @@ https://home-assistant.io/components/matrix/
 """
 import logging
 import os
-from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -32,7 +31,7 @@ DOMAIN = 'matrix'
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_HOMESERVER): cv.url,
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_USERNAME): cv.matches_regex("@[^:]*:.*"),
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_LISTENING_ROOMS, default=[]): vol.All(cv.ensure_list,
                                                             [cv.string]),
@@ -90,11 +89,8 @@ class MatrixBot(object):
 
         self._homeserver = homeserver
         self._verify_tls = verify_ssl
-        self._username = username
+        self._mx_id = username
         self._password = password
-
-        self._mx_id = "{user}@{homeserver}".format(
-            user=username, homeserver=urlparse(homeserver).netloc)
 
         self._listening_rooms = listening_rooms
         self._commands = set(commands)
@@ -217,7 +213,7 @@ class MatrixBot(object):
         return MatrixClient(
             base_url=self._homeserver,
             token=self._auth_tokens[self._mx_id],
-            user_id=self._username,
+            user_id=self._mx_id,
             valid_cert_check=self._verify_tls)
 
     def _login_by_password(self):
@@ -228,7 +224,7 @@ class MatrixBot(object):
             base_url=self._homeserver,
             valid_cert_check=self._verify_tls)
 
-        _client.login_with_password(self._username, self._password)
+        _client.login_with_password(self._mx_id, self._password)
 
         self._store_auth_token(_client.token)
 

@@ -96,6 +96,24 @@ def isdevice(value):
         raise vol.Invalid('No device at {} found'.format(value))
 
 
+def matches_regex(regex):
+    """Validate that the value is a string that matches a regex."""
+    if isinstance(regex, str):
+        regex = re.compile(regex)
+
+    def validator(value: Any) -> str:
+        """Validate that value matches the given regex."""
+        if not isinstance(value, str):
+            raise vol.Invalid('not a string value: {}'.format(value))
+
+        if not regex.match(value):
+            raise vol.Invalid('value {} does not match regular expression {}'
+                              .format(regex.pattern, value))
+
+        return value
+    return validator
+
+
 def isfile(value: Any) -> str:
     """Validate that the value is an existing file."""
     if value is None:
