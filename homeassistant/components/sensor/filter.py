@@ -258,7 +258,6 @@ class OutlierFilter(Filter):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
         self._radius = radius
-        self._manual_median_enabled = (median == NO_MANUAL_MEDIAN)
         self._manual_median = median
         self._stats_internal = Counter()
 
@@ -266,12 +265,12 @@ class OutlierFilter(Filter):
         """Implement the outlier filter."""
         new_state = float(new_state)
 
-        if(self.states):
-            if (self._manual_median_enabled):
+        if self.states:
+            if self._manual_median == NO_MANUAL_MEDIAN:
                 diff = abs(new_state - self._manual_median)
             else:
                 diff = abs(new_state - statistics.median(self.states))
-            if (diff > self._radius):
+            if diff > self._radius:
 
                 self._stats_internal['erasures'] += 1
 
