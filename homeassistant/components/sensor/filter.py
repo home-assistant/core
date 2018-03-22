@@ -21,6 +21,7 @@ from homeassistant.util.decorator import Registry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.util.dt as dt_util
+import math
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ CONF_FILTER_NAME = 'filter'
 CONF_FILTER_WINDOW_SIZE = 'window_size'
 CONF_FILTER_PRECISION = 'precision'
 CONF_FILTER_RADIUS = 'radius'
+CONF_FILTER_MEDIAN = 'median'
 CONF_FILTER_TIME_CONSTANT = 'time_constant'
 CONF_TIME_SMA_TYPE = 'type'
 
@@ -44,6 +46,7 @@ DEFAULT_WINDOW_SIZE = 1
 DEFAULT_PRECISION = 2
 DEFAULT_FILTER_RADIUS = 2.0
 DEFAULT_FILTER_TIME_CONSTANT = 10
+NO_MANUAL_MEDIAN = math.inf
 
 NAME_TEMPLATE = "{} filter"
 ICON = 'mdi:chart-line-variant'
@@ -60,6 +63,8 @@ FILTER_OUTLIER_SCHEMA = FILTER_SCHEMA.extend({
                  default=DEFAULT_WINDOW_SIZE): vol.Coerce(int),
     vol.Optional(CONF_FILTER_RADIUS,
                  default=DEFAULT_FILTER_RADIUS): vol.Coerce(float),
+    vol.Optional(CONF_FILTER_MEDIAN,
+                 default=NO_MANUAL_MEDIAN): vol.Coerce(float),
 })
 
 FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
@@ -244,21 +249,29 @@ class OutlierFilter(Filter):
 
     Args:
         radius (float): band radius
+        median (float): band center
+            (defaults to NO_MANUAL_MEDIAN for automatic computation)
     """
 
-    def __init__(self, window_size, precision, entity, radius):
+    def __init__(self, window_size, precision, entity, radius,
+                 median=NO_MANUAL_MEDIAN):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
         self._radius = radius
+        self._manual_median_enabled = (median == NO_MANUAL_MEDIAN)
+        self._manual_median = median
         self._stats_internal = Counter()
 
     def _filter_state(self, new_state):
         """Implement the outlier filter."""
         new_state = float(new_state)
 
-        if (self.states and
-                abs(new_state - statistics.median(self.states))
-                > self._radius):
+        diff = 0
+        if (self._manual_median_enabled):
+            diff = abs(new_state - self._manual_median)
+        elif (self.states):
+            diff = abs(new_state - statistics.median(self.states))
+        if (diff > self._radius):
 
             self._stats_internal['erasures'] += 1
 
