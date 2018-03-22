@@ -4,6 +4,7 @@ import logging
 from typing import Optional  # NOQA
 from os import path
 
+from homeassistant import config_entries
 from homeassistant.loader import get_component, bind_hass
 from homeassistant.util.json import load_json
 
@@ -89,7 +90,7 @@ async def async_get_component_resources(hass, language):
     translation_cache = hass.data[TRANSLATION_STRING_CACHE][language]
 
     # Get the set of components
-    components = hass.config.components
+    components = hass.config.components | set(config_entries.FLOWS)
 
     # Calculate the missing components
     missing_components = components - set(translation_cache)
