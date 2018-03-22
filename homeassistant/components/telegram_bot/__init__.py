@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['python-telegram-bot==10.0.1']
+REQUIREMENTS = ['python-telegram-bot==10.0.1', 'emoji==0.4.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -459,8 +459,11 @@ class TelegramNotificationService:
 
     def send_message(self, message="", target=None, **kwargs):
         """Send a message to one or multiple pre-allowed chat IDs."""
+        from emoji import emojize
+
         title = kwargs.get(ATTR_TITLE)
         text = '{}\n{}'.format(title, message) if title else message
+        text = emojize(text, use_aliases=True)
         params = self._get_msg_kwargs(kwargs)
         for chat_id in self._get_target_chat_ids(target):
             _LOGGER.debug("Send message in chat ID %s with params: %s",
@@ -485,6 +488,8 @@ class TelegramNotificationService:
 
     def edit_message(self, type_edit, chat_id=None, **kwargs):
         """Edit a previously sent message."""
+        from emoji import emojize
+
         chat_id = self._get_target_chat_ids(chat_id)[0]
         message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
@@ -494,6 +499,7 @@ class TelegramNotificationService:
             message = kwargs.get(ATTR_MESSAGE)
             title = kwargs.get(ATTR_TITLE)
             text = '{}\n{}'.format(title, message) if title else message
+            text = emojize(text, use_aliases=True)
             _LOGGER.debug("Editing message with ID %s.",
                           message_id or inline_message_id)
             return self._send_msg(self.bot.editMessageText,
@@ -515,7 +521,10 @@ class TelegramNotificationService:
     def answer_callback_query(self, message, callback_query_id,
                               show_alert=False, **kwargs):
         """Answer a callback originated with a press in an inline keyboard."""
+        from emoji import emojize
+
         params = self._get_msg_kwargs(kwargs)
+        message = emojize(message, use_aliases=True)
         _LOGGER.debug("Answer callback query with callback ID %s: %s, "
                       "alert: %s.", callback_query_id, message, show_alert)
         self._send_msg(self.bot.answerCallbackQuery,
