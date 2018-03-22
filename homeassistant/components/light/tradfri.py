@@ -281,15 +281,9 @@ class TradfriLight(Light):
         self._features = SUPPORTED_FEATURES
 
         if 'WS' in light.device_info.model_number:
-            self.can_set_temp = True
-
-        if 'CWS' in light.device_info.model_number:
-            self.can_set_color = True
-
-        if self.can_set_temp:
-            self._features |= SUPPORT_COLOR_TEMP
-        if self.can_set_color:
             self._features |= SUPPORT_COLOR
+        if 'CWS' in light.device_info.model_number:
+            self._features |= SUPPORT_COLOR_TEMP
 
     @callback
     def _observe_update(self, tradfri_device):
