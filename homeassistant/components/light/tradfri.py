@@ -212,7 +212,10 @@ class TradfriLight(Light):
         hsbxy = self._light_data.hsb_xy_color
         hue = hsbxy[0]
         sat = hsbxy[1]
-        return hue, sat
+        if hue is not None and sat is not None:
+            return hue, sat
+        else:
+            return
 
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
