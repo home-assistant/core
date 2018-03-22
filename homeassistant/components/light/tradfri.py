@@ -160,12 +160,12 @@ class TradfriLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        return 250
+        return self._light_control.min_mireds
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        return 454
+        return self._light_control.max_mireds
 
     async def async_added_to_hass(self):
         """Start thread when added to hass."""
@@ -212,7 +212,8 @@ class TradfriLight(Light):
         hsbxy = self._light_data.hsb_xy_color
         hue = hsbxy[0]
         sat = hsbxy[1]
-        if hue is not None and sat is not None:
+        if self._light_control.can_set_color \
+                and hue is not None and sat is not None:
             return hue, sat
         else:
             return
@@ -239,7 +240,7 @@ class TradfriLight(Light):
                 self._light_control.set_hsb(*kwargs[ATTR_HS_COLOR], **params))
             return
 
-        elif ATTR_COLOR_TEMP in kwargs:
+        if ATTR_COLOR_TEMP in kwargs:
             if brightness is not None:
                 params.pop(ATTR_TRANSITION_TIME, None)
             await self._api(
@@ -283,9 +284,9 @@ class TradfriLight(Light):
         self._name = light.name
         self._features = SUPPORTED_FEATURES
 
-        if 'CWS' in light.device_info.model_number:
+        if light.light_control.can_set_color:
             self._features |= SUPPORT_COLOR
-        if 'WS' in light.device_info.model_number:
+        if light.light_control.can_set_temp:
             self._features |= SUPPORT_COLOR_TEMP
 
     @callback
