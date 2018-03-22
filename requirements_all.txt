@@ -1022,7 +1022,7 @@ pytouchline==0.7
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri[async]==5.4.0
+pytradfri[async]==5.4.1
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
