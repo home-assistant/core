@@ -41,7 +41,7 @@ VALID_CONFIG_LANG_DE = {
         'api_key': 'foo',
         'forecast': [1, 2],
         'units': 'us',
-        'lang': 'de',
+        'language': 'de',
         'monitored_conditions': ['summary', 'icon', 'temperature_max',
                                  'minutely_summary', 'hourly_summary',
                                  'daily_summary', 'humidity', ],
@@ -54,7 +54,7 @@ INVALID_CONFIG_LANG = {
         'platform': 'darksky',
         'api_key': 'foo',
         'forecast': [1, 2],
-        'lang': 'yz',
+        'language': 'yz',
         'monitored_conditions': ['summary', 'icon', 'temperature_max'],
         'update_interval': timedelta(seconds=120),
     }

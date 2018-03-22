@@ -27,9 +27,9 @@ CONF_ATTRIBUTION = "Powered by Dark Sky"
 CONF_UNITS = 'units'
 CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_FORECAST = 'forecast'
-CONF_LANG = 'lang'
+CONF_LANGUAGE = 'language'
 
-DEFAULT_LANG = 'en'
+DEFAULT_LANGUAGE = 'en'
 
 DEFAULT_NAME = 'Dark Sky'
 
@@ -122,7 +122,7 @@ CONDITION_PICTURES = {
 }
 
 # Language Supported Codes
-LANG_CODES = [
+LANGUAGE_CODES = [
     'ar', 'az', 'be', 'bg', 'bs', 'ca',
     'cs', 'da', 'de', 'el', 'en', 'es',
     'et', 'fi', 'fr', 'hr', 'hu', 'id',
@@ -138,7 +138,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2']),
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(LANG_CODES),
+    vol.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): vol.In(LANGUAGE_CODES),
     vol.Inclusive(CONF_LATITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
@@ -154,7 +154,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Dark Sky sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    language = config.get(CONF_LANG)
+    language = config.get(CONF_LANGUAGE)
 
     if CONF_UNITS in config:
         units = config[CONF_UNITS]
