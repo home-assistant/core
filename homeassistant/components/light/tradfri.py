@@ -283,9 +283,9 @@ class TradfriLight(Light):
         self._name = light.name
         self._features = SUPPORTED_FEATURES
 
-        if 'WS' in light.device_info.model_number:
-            self._features |= SUPPORT_COLOR
         if 'CWS' in light.device_info.model_number:
+            self._features |= SUPPORT_COLOR
+        if 'WS' in light.device_info.model_number:
             self._features |= SUPPORT_COLOR_TEMP
 
     @callback
