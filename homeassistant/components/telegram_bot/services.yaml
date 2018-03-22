@@ -37,6 +37,9 @@ send_photo:
     file:
       description: Local path to an image.
       example: '/path/to/the/image.png'
+    caption:
+      description: The title of the image.
+      example: 'My image'
     username:
       description: Username for a URL which require HTTP basic authentication.
       example: myuser
@@ -65,9 +68,6 @@ send_sticker:
     file:
       description: Local path to an webp sticker.
       example: '/path/to/the/sticker.webp'
-    caption:
-      description: The title of the sticker.
-      example: 'My sticker'
     username:
       description: Username for a URL which require HTTP basic authentication.
       example: myuser
