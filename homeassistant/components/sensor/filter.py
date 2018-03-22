@@ -266,19 +266,19 @@ class OutlierFilter(Filter):
         """Implement the outlier filter."""
         new_state = float(new_state)
 
-        diff = 0
-        if (self._manual_median_enabled):
-            diff = abs(new_state - self._manual_median)
-        elif (self.states):
-            diff = abs(new_state - statistics.median(self.states))
-        if (diff > self._radius):
-
-            self._stats_internal['erasures'] += 1
-
-            _LOGGER.debug("Outlier nr. %s in %s: %s",
-                          self._stats_internal['erasures'],
-                          self._entity, new_state)
-            return self.states[-1]
+        if(self.states):
+            if (self._manual_median_enabled):
+                diff = abs(new_state - self._manual_median)
+            else:
+                diff = abs(new_state - statistics.median(self.states))
+            if (diff > self._radius):
+    
+                self._stats_internal['erasures'] += 1
+    
+                _LOGGER.debug("Outlier nr. %s in %s: %s",
+                              self._stats_internal['erasures'],
+                              self._entity, new_state)
+                return self.states[-1]
         return new_state
 
 

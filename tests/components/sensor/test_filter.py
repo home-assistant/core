@@ -72,6 +72,17 @@ class TestFilterSensor(unittest.TestCase):
             filtered = filt.filter_state(state)
         self.assertEqual(22, filtered)
 
+    def test_outlier_median(self):
+        """Test if outlier filter with manual median works."""
+        filt = OutlierFilter(window_size=10,
+                             precision=2,
+                             entity=None,
+                             radius=4.0,
+                             median=0)
+        for state in self.values:
+            filtered = filt.filter_state(state)
+        self.assertEqual(0, filtered)
+
     def test_lowpass(self):
         """Test if lowpass filter works."""
         filt = LowPassFilter(window_size=10,
