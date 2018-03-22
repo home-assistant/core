@@ -43,7 +43,7 @@ def mock_cognito():
 
 
 async def test_google_actions_sync(mock_cognito, cloud_client, aioclient_mock):
-    """Test logging out."""
+    """Test syncing Google Actions."""
     aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL)
     req = await cloud_client.post('/api/cloud/google_actions/sync')
     assert req.status == 200
@@ -51,7 +51,7 @@ async def test_google_actions_sync(mock_cognito, cloud_client, aioclient_mock):
 
 async def test_google_actions_sync_fails(mock_cognito, cloud_client,
                                          aioclient_mock):
-    """Test logging out."""
+    """Test syncing Google Actions gone bad."""
     aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL, status=403)
     req = await cloud_client.post('/api/cloud/google_actions/sync')
     assert req.status == 403
