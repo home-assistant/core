@@ -85,6 +85,8 @@ FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
 
 FILTER_BANDPASS_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_BANDPASS,
+    vol.Optional(CONF_FILTER_WINDOW_SIZE,
+                 default=DEFAULT_WINDOW_SIZE): vol.Coerce(int),
     vol.Optional(CONF_FILTER_LOWER_BOUND,
                  default=DEFAULT_LOWER_BOUND): vol.Coerce(float),
     vol.Optional(CONF_FILTER_UPPER_BOUND,
@@ -352,7 +354,7 @@ class BandPassFilter(Filter):
         lower_bound (float): band lower bound
     """
 
-    def __init__(self, window_size=1, precision=None, entity,
+    def __init__(self, window_size, precision, entity,
                  lower_bound=math.inf, upper_bound=-math.inf):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
