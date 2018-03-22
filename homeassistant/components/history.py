@@ -136,7 +136,7 @@ def get_last_state_changes(hass, number_of_states, entity_id):
         states = execute(
             query.order_by(States.last_updated.desc()).limit(number_of_states))
 
-    return states_to_json(hass, states[::-1],
+    return states_to_json(hass, reversed(states),
                           start_time,
                           entity_ids,
                           include_start_time_state=False)
