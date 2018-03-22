@@ -160,12 +160,12 @@ class TradfriLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        return self._light_control.min_mireds
+        return 250
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        return self._light_control.max_mireds
+        return 454
 
     async def async_added_to_hass(self):
         """Start thread when added to hass."""
@@ -203,7 +203,7 @@ class TradfriLight(Light):
 
     @property
     def color_temp(self):
-        """Return the CT color value in mireds."""
+        """Return the color temp value in mireds."""
         return self._light_data.color_temp
 
     @property
