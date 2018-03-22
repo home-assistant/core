@@ -11,6 +11,7 @@ from numbers import Number
 from functools import partial
 from copy import copy
 from datetime import timedelta
+import math
 
 import voluptuous as vol
 
@@ -28,6 +29,7 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
+FILTER_NAME_BANDPASS = 'bandpass'
 FILTER_NAME_LOWPASS = 'lowpass'
 FILTER_NAME_OUTLIER = 'outlier'
 FILTER_NAME_THROTTLE = 'throttle'
@@ -40,6 +42,8 @@ CONF_FILTER_WINDOW_SIZE = 'window_size'
 CONF_FILTER_PRECISION = 'precision'
 CONF_FILTER_RADIUS = 'radius'
 CONF_FILTER_TIME_CONSTANT = 'time_constant'
+CONF_FILTER_LOWER_BOUND = 'lower_bound'
+CONF_FILTER_UPPER_BOUND = 'upper_bound'
 CONF_TIME_SMA_TYPE = 'type'
 
 TIME_SMA_LAST = 'last'
@@ -51,6 +55,8 @@ DEFAULT_WINDOW_SIZE = 1
 DEFAULT_PRECISION = 2
 DEFAULT_FILTER_RADIUS = 2.0
 DEFAULT_FILTER_TIME_CONSTANT = 10
+DEFAULT_LOWER_BOUND = -math.inf
+DEFAULT_UPPER_BOUND = math.inf
 
 NAME_TEMPLATE = "{} filter"
 ICON = 'mdi:chart-line-variant'
@@ -77,6 +83,14 @@ FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
                  default=DEFAULT_FILTER_TIME_CONSTANT): vol.Coerce(int),
 })
 
+FILTER_BANDPASS_SCHEMA = FILTER_SCHEMA.extend({
+    vol.Required(CONF_FILTER_NAME): FILTER_NAME_BANDPASS,
+    vol.Optional(CONF_FILTER_LOWER_BOUND,
+                 default=DEFAULT_LOWER_BOUND): vol.Coerce(float),
+    vol.Optional(CONF_FILTER_UPPER_BOUND,
+                 default=DEFAULT_UPPER_BOUND): vol.Coerce(float),
+})
+
 FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_SMA,
     vol.Optional(CONF_TIME_SMA_TYPE,
@@ -100,7 +114,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                                         [vol.Any(FILTER_OUTLIER_SCHEMA,
                                                  FILTER_LOWPASS_SCHEMA,
                                                  FILTER_TIME_SMA_SCHEMA,
-                                                 FILTER_THROTTLE_SCHEMA)])
+                                                 FILTER_THROTTLE_SCHEMA,
+                                                 FILTER_BANDPASS_SCHEMA)])
 })
 
 
@@ -322,6 +337,51 @@ class Filter(object):
         filtered.set_precision(self.precision)
         self.states.append(copy(filtered))
         new_state.state = filtered.state
+        return new_state
+
+
+@FILTERS.register(FILTER_NAME_BANDPASS)
+class BandPassFilter(Filter):
+    """Band pass filter.
+
+    Determines if new state is in a band between upper_bound and lower_bound.
+    If not inside, lower or upper bound is returned instead.
+
+    Args:
+        upper_bound (float): band upper bound
+        lower_bound (float): band lower bound
+    """
+
+    def __init__(self, window_size=1, precision=None, entity,
+                 lower_bound=math.inf, upper_bound=-math.inf):
+        """Initialize Filter."""
+        super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
+        self._lower_bound = lower_bound
+        self._upper_bound = upper_bound
+        self._stats_internal = Counter()
+
+    def _filter_state(self, new_state):
+        """Implement the outlier filter."""
+        new_state = float(new_state)
+
+        if new_state > self._upper_bound:
+
+            self._stats_internal['erasures_up'] += 1
+
+            _LOGGER.debug("Upper outlier nr. %s in %s: %s",
+                          self._stats_internal['erasures_up'],
+                          self._entity, new_state)
+            return self._upper_bound
+
+        if new_state < self._lower_bound:
+
+            self._stats_internal['erasures_low'] += 1
+
+            _LOGGER.debug("Lower outlier nr. %s in %s: %s",
+                          self._stats_internal['erasures_low'],
+                          self._entity, new_state)
+            return self._lower_bound
+
         return new_state
 
 
