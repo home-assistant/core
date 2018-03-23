@@ -6,7 +6,6 @@ import os
 import pytest
 
 from homeassistant.components import folder_watcher
-from homeassistant.core import callback
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
@@ -41,13 +40,6 @@ class TestFolderWatcher(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.whitelist_external_dirs = set((CWD))
-
-        @callback
-        def record_event(event):
-            """Record HASS event."""
-            self.events.append(event)
-
-        self.hass.bus.listen(folder_watcher.DOMAIN, record_event)
 
     def teardown_method(self, method):
         """Stop everything that was started."""
