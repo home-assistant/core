@@ -134,7 +134,8 @@ class Light(HomeAccessory):
 
         # Handle Color
         if CHAR_SATURATION in self.chars and CHAR_HUE in self.chars:
-            hue, saturation = new_state.attributes.get(ATTR_HS_COLOR)
+            hue, saturation = new_state.attributes.get(
+                ATTR_HS_COLOR, (None, None))
             if not self._flag[RGB_COLOR] and (
                     hue != self._hue or saturation != self._saturation):
                 self.char_hue.set_value(hue, should_callback=False)
