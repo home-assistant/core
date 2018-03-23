@@ -210,13 +210,11 @@ class TradfriLight(Light):
     def hs_color(self):
         """HS color of the light."""
         hsbxy = self._light_data.hsb_xy_color
-        hue = hsbxy[0]
-        sat = hsbxy[1]
+        hue = hsbxy[0] / (65535 / 360)
+        sat = hsbxy[1] / (65279 / 100)
         if self._light_control.can_set_color \
                 and hue is not None and sat is not None:
             return hue, sat
-        else:
-            return
 
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
@@ -230,17 +228,20 @@ class TradfriLight(Light):
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
+        # Ensure brightness isn't higher than the gateway accepts.
         if brightness is not None:
             if brightness == 255:
                 brightness = 254
 
-        if ATTR_HS_COLOR in kwargs:
+        if ATTR_HS_COLOR in kwargs and self._light_control.can_set_color:
             params[ATTR_BRIGHTNESS] = brightness
+            hue = int(kwargs[ATTR_HS_COLOR][0] * (65535 / 360))
+            sat = int(kwargs[ATTR_HS_COLOR][1] * (65279 / 100))
             await self._api(
-                self._light_control.set_hsb(*kwargs[ATTR_HS_COLOR], **params))
+                self._light_control.set_hsb(hue, sat, **params))
             return
 
-        if ATTR_COLOR_TEMP in kwargs:
+        if ATTR_COLOR_TEMP in kwargs and self._light_control.can_set_temp:
             if brightness is not None:
                 params.pop(ATTR_TRANSITION_TIME, None)
             await self._api(
