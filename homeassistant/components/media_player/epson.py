@@ -14,11 +14,14 @@ import asyncio
 import aiohttp
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, MediaPlayerDevice, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,SUPPORT_SELECT_SOURCE, MEDIA_PLAYER_SCHEMA, DOMAIN
+    PLATFORM_SCHEMA, MediaPlayerDevice, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,SUPPORT_SELECT_SOURCE, MEDIA_PLAYER_SCHEMA, DOMAIN,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK
 )
 
+""" ,SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_STOP"""
+
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.const import (ATTR_ENTITY_ID, CONF_HOST,CONF_NAME,CONF_PORT,CONF_SSL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
+from homeassistant.const import (ATTR_ENTITY_ID, CONF_HOST,CONF_NAME,CONF_PORT,CONF_SSL, STATE_ON, STATE_OFF, STATE_UNKNOWN, STATE_PLAYING)
 
 import homeassistant.util as util
 
@@ -28,14 +31,39 @@ KEY_COMMANDS = {
     "TURN_ON" : [('KEY', '3B')],
     "TURN_OFF": [('KEY', '3B'), ('KEY', '3B')],
     "HDMILINK" : [('jsoncallback', 'HDMILINK?')],
-    "CMODE" : [('jsoncallback', 'CMODE?')]
+    "CMODE" : [('jsoncallback', 'CMODE?')],
+    "CMODE_CINEMA" : [('CMODE', '15')],
+    "CMODE_NATURAL" : [('CMODE', '07')],
+    "CMODE_BRIGHT" : [('CMODE', '0C')],
+    "CMODE_DYNAMIC" : [('CMODE', '06S')],
+    "VOL_UP" : [('KEY', '56')],
+    "VOL_DOWN" : [('KEY', '57')],
+    "MUTE" : [('KEY', '3E')],
+    "HDMI1" : [('KEY', '4D')],
+    "HDMI2" : [('KEY', '40')],
+    "PC" : [('KEY', '44')],
+    "VIDEO" : [('KEY', '46')],
+    "USB" : [('KEY', '85')],
+    "LAN" : [('KEY', '53')],
+    "WFD" : [('KEY', '56')],
+    "PLAY" : [('KEY', 'D1')],
+    "PAUSE" : [('KEY', 'D3')],
+    "STOP" : [('KEY', 'D2')],
+    "BACK" : [('KEY', 'D4')],
+    "FAST" : [('KEY', 'D5')],
 }
 
 DEFAULT_SOURCES = {
-    'hdmi1' : 'HDMI1',
-    'hdmi2' : 'HDMI2',
-    'pc'    : 'PC'
+    'HDMI1' : 'HDMI1',
+    'HDMI2' : 'HDMI2',
+    'PC'    : 'PC',
+    'VIDEO'    : 'VIDEO',
+    'USB'    : 'USB',
+    'LAN'    : 'LAN',
+    'WFD'   : 'WiFi Direct'
 }
+
+INV_SOURCES = {v: k for k, v in DEFAULT_SOURCES.items()}
 
 CMODE_LIST = {
     '15' : 'Cinema',
@@ -44,10 +72,15 @@ CMODE_LIST = {
     '06' : 'Dynamic'
 }
 
+CMODE_LIST_SET = {
+    'cinema': 'CMODE_CINEMA',
+    'natural' : 'CMODE_NATURAL',
+    'bright cinema' : 'CMODE_BRIGHT',
+    'dynamic' : 'CMODE_DYNAMIC'
+}
+
 DATA_EPSON = 'epson'
 DEFAULT_NAME = 'EPSON Projector'
-ATTR_MASTER = 'master'
-# ATTR_CMODE = 'cmode'
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -61,11 +94,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 ATTR_CMODE = 'cmode'
 SUPPORT_CMODE = 33001
 
-SUPPORT_EPSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_CMODE
+SUPPORT_EPSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_CMODE | \
+                SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP | \
+                 SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
+                 # SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP
 
 
 EPSON_SCHEMA =  MEDIA_PLAYER_SCHEMA.extend({
-    vol.Optional(ATTR_MASTER): cv.entity_id,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Optional(ATTR_CMODE): cv.string
 })
 
 # ATTR_TO_PROPERTY = ATTR_TO_PROPERTY.extend(ATTR_CMODE)
@@ -75,32 +112,36 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
-    known_devices = hass.data.get(DATA_EPSON)
-    if known_devices is None:
-        hass.data[DATA_EPSON] = known_devices = set()
+    if DATA_EPSON not in hass.data:
+        hass.data[DATA_EPSON] = []
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     epson = EpsonProjector(hass, name, host, config.get(CONF_PORT), config.get(CONF_SSL), KEY_COMMANDS)
 
     epson.update()
-    known_devices.add(host)
-    async_add_devices([epson])
-    #
-    # @asyncio.coroutine
-    # def async_service_handler(service):
-    #     """Handle for services."""
-    #     entity_ids = service.data.get('entity_id')
-    #     if entity_ids:
-    #         devices = [device for device in hass.data[DATA_EPSON].devices
-    #                    if device.entity_id in entity_ids]
-    #     else:
-    #         devices = hass.data[DATA_EPSON].devices
-    #     for device in devices:
-    #         yield from device.update()
-    # hass.services.async_register(
-    #     DOMAIN, ATTR_CMODE, async_service_handler,
-    #     schema=EPSON_SCHEMA)
+    hass.data[DATA_EPSON].append(epson)
+    async_add_devices([epson], update_before_add=True)
+    # async_add_devices([epson])
+
+    @asyncio.coroutine
+    def async_service_handler(service):
+        """Handle for services."""
+        entity_ids = service.data.get('entity_id')
+        if entity_ids:
+            devices = [device for device in hass.data[DATA_EPSON]
+                       if device.entity_id in entity_ids]
+        else:
+            devices = hass.data[DATA_EPSON]
+        for device in devices:
+            if (service.service == ATTR_CMODE):
+                cmode = service.data.get(ATTR_CMODE).lower()
+                if cmode in CMODE_LIST_SET:
+                    yield from device.select_cmode(cmode)
+            yield from device.update()
+    hass.services.async_register(
+        DOMAIN, ATTR_CMODE, async_service_handler,
+        schema=EPSON_SCHEMA)
     return True
 
 class EpsonProjector(MediaPlayerDevice):
@@ -150,6 +191,8 @@ class EpsonProjector(MediaPlayerDevice):
             else:
                 self._state = STATE_ON
                 self._cmode = CMODE_LIST[response_json['projector']['feature']['reply']]
+                # if self._cmode is not None:
+                #     self._state = STATE_PLAYING
         except (aiohttp.ClientError):
             _LOGGER.error("[%s] Error getting info", DOMAIN)
             self._state = STATE_OFF
@@ -173,10 +216,12 @@ class EpsonProjector(MediaPlayerDevice):
         """Flag media player features that are supported."""
         return SUPPORT_EPSON
 
+    @asyncio.coroutine
     def async_turn_on(self):
         """Turn on epson"""
         return self.sendCommand('TURN_ON')
 
+    @asyncio.coroutine
     def async_turn_off(self):
         """Turn off epson"""
         return self.sendCommand('TURN_OFF')
@@ -188,16 +233,59 @@ class EpsonProjector(MediaPlayerDevice):
 
     @property
     def cmode(self):
-        self._cmode
+        return self._cmode
 
+    @asyncio.coroutine
+    def select_cmode(self, cmode):
+        if cmode in CMODE_LIST_SET:
+            return self.sendCommand(CMODE_LIST_SET[cmode])
 
-    def select_source(self, source):
+    @asyncio.coroutine
+    def async_select_source(self, source):
         """Select input source."""
-        _LOGGER.info('change source')
+        _LOGGER.info("select source")
+        selected_source = INV_SOURCES[source]
+        return self.sendCommand(selected_source)
+
+    @asyncio.coroutine
+    def async_mute_volume(self, mute):
+        """Mute (true) or unmute (false) projector. It also mutes video input!  """
+        return self.sendCommand("MUTE")
+
+    @asyncio.coroutine
+    def async_volume_up(self):
+        """Increase volume."""
+        _LOGGER.info("volume up")
+        return self.sendCommand("VOL_UP")
+
+    @asyncio.coroutine
+    def async_volume_down(self):
+        """Decrease volume."""
+        return self.sendCommand("VOL_DOWN")
+
+    @asyncio.coroutine
+    def async_media_play(self):
+        """Play."""
+        return self.sendCommand("PLAY")
+
+    @asyncio.coroutine
+    def async_media_pause(self):
+        """Play."""
+        return self.sendCommand("PAUSE")
+
+    @asyncio.coroutine
+    def async_media_next_track(self):
+        """Skip to next."""
+        return self.sendCommand("FAST")
+
+    @asyncio.coroutine
+    def async_media_previous_track(self):
+        """Skip to previous."""
+        return self.sendCommand("BACK")
 
     @asyncio.coroutine
     def sendCommand(self, command):
-        _LOGGER.info('haha')
+        _LOGGER.info("COMMAND %s", command)
         params = self.KEY_COMMANDS[command]
         try:
             url = '{url}{type}'.format(url=self._http_url, type='directsend')
