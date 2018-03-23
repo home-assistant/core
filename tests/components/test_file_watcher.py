@@ -1,9 +1,7 @@
 """The tests for the folder_watcher component."""
 import unittest
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import MagicMock
 import os
-
-import pytest
 
 from homeassistant.components import folder_watcher
 from homeassistant.setup import setup_component
@@ -58,11 +56,13 @@ class TestFolderWatcher(unittest.TestCase):
         from watchdog.events import FileModifiedEvent
 
         # cant use setup_component because of the need to retrieve Watcher object
-        w = folder_watcher.Watcher(CWD, folder_watcher.DEFAULT_PATTERN, self.hass)
+        w = folder_watcher.Watcher(CWD,
+                                   folder_watcher.DEFAULT_PATTERN,
+                                   self.hass)
         w.startup(None)
 
         self.hass.bus.fire = MagicMock()
-       
+
         # trigger a fake filesystem event through the Watcher Observer emitter
         (emitter,) = w._observer.emitters
         emitter.queue_event(FileModifiedEvent(FILE))
