@@ -2,14 +2,14 @@
 Support for HomematicIP sensors.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/homematicip/
+https://home-assistant.io/components/sensor.homematicip_cloud/
 """
 
 import logging
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.dispatcher import dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.homematicip_cloud import (
     HomematicipGenericDevice, DOMAIN, EVENT_HOME_CHANGED,
     ATTR_HOME_LABEL, ATTR_HOME_ID, ATTR_LOW_BATTERY, ATTR_RSSI)
@@ -38,41 +38,43 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         HeatingThermostat, TemperatureHumiditySensorWithoutDisplay,
         TemperatureHumiditySensorDisplay)
 
-    _LOGGER.info('Setting up HomeMaticIP accespoint & generic devices')
     homeid = discovery_info['homeid']
     home = hass.data[DOMAIN][homeid]
-    devices = [HomematicipAccesspoint(hass, home)]
-    if home.devices is None:
-        return
+    devices = [HomematicipAccesspoint(home)]
+
     for device in home.devices:
-        devices.append(HomematicipDeviceStatus(hass, home, device))
+        devices.append(HomematicipDeviceStatus(home, device))
         if isinstance(device, HeatingThermostat):
-            devices.append(HomematicipHeatingThermostat(hass, home, device))
+            devices.append(HomematicipHeatingThermostat(home, device))
         if isinstance(device, TemperatureHumiditySensorWithoutDisplay):
-            devices.append(HomematicipSensorThermometer(hass, home, device))
-            devices.append(HomematicipSensorHumidity(hass, home, device))
+            devices.append(HomematicipSensorThermometer(home, device))
+            devices.append(HomematicipSensorHumidity(home, device))
         if isinstance(device, TemperatureHumiditySensorDisplay):
-            devices.append(HomematicipSensorThermometer(hass, home, device))
-            devices.append(HomematicipSensorHumidity(hass, home, device))
-    add_devices(devices)
+            devices.append(HomematicipSensorThermometer(home, device))
+            devices.append(HomematicipSensorHumidity(home, device))
+
+    if home.devices:
+        add_devices(devices)
 
 
 class HomematicipAccesspoint(Entity):
     """Representation of an HomeMaticIP access point."""
 
-    def __init__(self, hass, home):
+    def __init__(self, home):
         """Initialize the access point sensor."""
-        self.hass = hass
         self._home = home
-        dispatcher_connect(
-            self.hass, EVENT_HOME_CHANGED, self._home_changed)
         _LOGGER.debug('Setting up access point %s', home.label)
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass, EVENT_HOME_CHANGED, self._home_changed)
 
     @callback
     def _home_changed(self, deviceid):
         """Handle device state changes."""
         if deviceid is None or deviceid == self._home.id:
-            _LOGGER.debug('Event access point %s', self._home.label)
+            _LOGGER.debug('Event home %s', self._home.label)
             self.async_schedule_update_ha_state()
 
     @property
@@ -109,9 +111,9 @@ class HomematicipAccesspoint(Entity):
 class HomematicipDeviceStatus(HomematicipGenericDevice):
     """Representation of an HomematicIP device status."""
 
-    def __init__(self, hass, home, device, signal=None):
+    def __init__(self, home, device):
         """Initialize the device."""
-        super().__init__(hass, home, device)
+        super().__init__(home, device)
         _LOGGER.debug('Setting up sensor device status: %s', device.label)
 
     @property
@@ -147,9 +149,9 @@ class HomematicipDeviceStatus(HomematicipGenericDevice):
 class HomematicipHeatingThermostat(HomematicipGenericDevice):
     """MomematicIP heating thermostat representation."""
 
-    def __init__(self, hass, home, device):
+    def __init__(self, home, device):
         """"Initialize heating thermostat."""
-        super().__init__(hass, home, device)
+        super().__init__(home, device)
         _LOGGER.debug('Setting up heating thermostat device: %s', device.label)
 
     @property
@@ -185,11 +187,10 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
 class HomematicipSensorHumidity(HomematicipGenericDevice):
     """MomematicIP thermometer device."""
 
-    def __init__(self, hass, home, device):
+    def __init__(self, home, device):
         """"Initialize the thermometer device."""
-        super().__init__(hass, home, device)
-        _LOGGER.debug('Setting up humidity device: %s',
-                      device.label)
+        super().__init__(home, device)
+        _LOGGER.debug('Setting up humidity device: %s', device.label)
 
     @property
     def name(self):
@@ -223,9 +224,9 @@ class HomematicipSensorHumidity(HomematicipGenericDevice):
 class HomematicipSensorThermometer(HomematicipGenericDevice):
     """MomematicIP thermometer device."""
 
-    def __init__(self, hass, home, device):
+    def __init__(self, home, device):
         """"Initialize the thermometer device."""
-        super().__init__(hass, home, device)
+        super().__init__(home, device)
         _LOGGER.debug('Setting up thermometer device: %s', device.label)
 
     @property
