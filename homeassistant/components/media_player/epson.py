@@ -2,7 +2,8 @@
 Support for Epson projector
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/cookbook/python_component_basic_state/
+https://home-assistant.io/
+
 """
 import logging
 from datetime import timedelta
