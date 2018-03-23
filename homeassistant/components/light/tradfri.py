@@ -232,8 +232,8 @@ class TradfriLight(Light):
         if brightness is not None:
             if brightness > 254:
                 brightness = 254
-            elif brightness < 1:
-                brightness = 1
+            elif brightness < 0:
+                brightness = 0
 
         if ATTR_HS_COLOR in kwargs and self._light_control.can_set_color:
             params[ATTR_BRIGHTNESS] = brightness
