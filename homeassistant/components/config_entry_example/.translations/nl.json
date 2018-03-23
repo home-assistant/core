@@ -18,6 +18,7 @@
                 "description": "Voer een naam in voor het testen van de entiteit.",
                 "title": "Naam van de entiteit"
             }
-        }
+        },
+        "title": "Voorbeeld van de config vermelding"
     }
 }
