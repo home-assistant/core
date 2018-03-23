@@ -22,6 +22,7 @@ Icon
 
 # pytest
 .pytest_cache
+.cache
 
 # GITHUB Proposed Python stuff:
 *.py[cod]
