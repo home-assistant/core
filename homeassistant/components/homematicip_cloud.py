@@ -2,13 +2,14 @@
 Support for HomematicIP components.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/homematicip/
+https://home-assistant.io/components/homematicip_cloud/
 """
 
 import logging
 from socket import timeout
 
 import voluptuous as vol
+
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (dispatcher_send,
@@ -49,12 +50,14 @@ ATTR_FIRMWARE_STATE = 'firmware_state'
 ATTR_LOW_BATTERY = 'low_battery'
 ATTR_SABOTAGE = 'sabotage'
 ATTR_RSSI = 'rssi'
+ATTR_TYPE = 'type'
 
 
 def setup(hass, config):
     """Set up the HomematicIP component."""
     # pylint: disable=import-error, no-name-in-module
     from homematicip.home import Home
+
     hass.data.setdefault(DOMAIN, {})
     homes = hass.data[DOMAIN]
     accesspoints = config.get(DOMAIN, [])
@@ -100,19 +103,21 @@ def setup(hass, config):
         _LOGGER.info('HUB name: %s, id: %s', home.label, home.id)
 
         for component in ['sensor']:
-            load_platform(hass, component, DOMAIN,
-                          {'homeid': home.id}, config)
+            load_platform(hass, component, DOMAIN, {'homeid': home.id}, config)
+
     return True
 
 
 class HomematicipGenericDevice(Entity):
     """Representation of an HomematicIP generic device."""
 
-    def __init__(self, hass, home, device, signal=None):
+    def __init__(self, home, device):
         """Initialize the generic device."""
-        self.hass = hass
         self._home = home
         self._device = device
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
         async_dispatcher_connect(
             self.hass, EVENT_DEVICE_CHANGED, self._device_changed)
 
@@ -162,6 +167,7 @@ class HomematicipGenericDevice(Entity):
             ATTR_FIRMWARE_STATE: self._device.updateState.lower(),
             ATTR_LOW_BATTERY: self._device.lowBat,
             ATTR_RSSI: self._device.rssiDeviceValue,
+            ATTR_TYPE: self._device.modelType
         }
 
     @property
