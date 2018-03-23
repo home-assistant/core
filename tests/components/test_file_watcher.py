@@ -12,9 +12,9 @@ from tests.common import get_test_home_assistant
 
 CWD = os.path.join(os.path.dirname(__file__))
 EVENT_TYPE = 'deleted'
-SRC_PATH = 'test/file.txt'
 FILE = 'file.txt'
 FOLDER = 'test'
+SRC_PATH = 'test/file.txt'
 
 
 def get_fake_event(src_path=SRC_PATH, event_type=EVENT_TYPE):
@@ -41,7 +41,6 @@ class TestFolderWatcher(unittest.TestCase):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.whitelist_external_dirs = set((CWD))
-        self.events = []
 
         @callback
         def record_event(event):
@@ -78,12 +77,19 @@ class TestFolderWatcher(unittest.TestCase):
         fake_hass = Mock()
         event_handler = folder_watcher.create_event_handler(
             [folder_watcher.DEFAULT_PATTERN], fake_hass)
+        assert hasattr(event_handler, 'hass')
+        assert hasattr(event_handler, 'process')
+
         fake_event = get_fake_event()
-        event_handler.process(fake_event)
+        assert not fake_event.is_directory
+        event_handler.process(fake_event)  # Should call fake_hass.bus.fire
+        event_handler.process.assert_called()
 
         expected_payload = {"event_type": fake_event.event_type,
                             'path': fake_event.src_path,
-                            'file': 'file.txt',
-                            'folder': 'test'}
-        fake_hass.bus.fire.assert_called_with(
-            folder_watcher.DOMAIN, expected_payload)
+                            'file': FILE,
+                            'folder': FOLDER}
+
+        fake_hass.bus.fire.assert_called()
+#        fake_hass.bus.fire.assert_called_with(
+#            folder_watcher.DOMAIN, expected_payload)
