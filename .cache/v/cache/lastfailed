@@ -1,0 +1,16 @@
+{
+  "tests/components/light/test_hue.py::test_groups[pyloop]": true,
+  "tests/components/light/test_hue.py::test_light_turn_off_service[pyloop]": true,
+  "tests/components/light/test_hue.py::test_light_turn_on_service[pyloop]": true,
+  "tests/components/light/test_hue.py::test_lights[pyloop]": true,
+  "tests/components/light/test_hue.py::test_new_group_discovered[pyloop]": true,
+  "tests/components/light/test_hue.py::test_new_light_discovered[pyloop]": true,
+  "tests/components/light/test_hue.py::test_other_group_update[pyloop]": true,
+  "tests/components/light/test_hue.py::test_other_light_update[pyloop]": true,
+  "tests/components/sensor/test_darksky.py::TestDarkSkySetup::test_setup": true,
+  "tests/components/sensor/test_darksky.py::TestDarkSkySetup::test_setup_bad_api_key": true,
+  "tests/components/sensor/test_foobot.py::test_default_setup[pyloop]": true,
+  "tests/components/sensor/test_foobot.py::test_setup_permanent_error[pyloop]": true,
+  "tests/components/sensor/test_foobot.py::test_setup_temporary_error[pyloop]": true,
+  "tests/components/sensor/test_foobot.py::test_setup_timeout_error[pyloop]": true
+}
