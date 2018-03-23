@@ -249,8 +249,6 @@ class TradfriLight(Light):
             elif temp < self.min_mireds:
                 temp = self.min_mireds
 
-            if brightness is not None:
-                params.pop(ATTR_TRANSITION_TIME, None)
             await self._api(
                 self._light_control.set_color_temp(temp,
                                                    **params))
