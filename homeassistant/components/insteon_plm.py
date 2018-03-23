@@ -127,13 +127,15 @@ class IPDB(object):
         from insteonplm.states.sensor import (VariableSensor,
                                               OnOffSensor,
                                               SmokeCO2Sensor,
-                                              IoLincSensor)
+                                              IoLincSensor,
+                                              LeakSensorDryWet)
 
         self.states = [State(OnOffSwitch_OutletTop, 'switch'),
                        State(OnOffSwitch_OutletBottom, 'switch'),
                        State(OpenClosedRelay, 'switch'),
                        State(OnOffSwitch, 'switch'),
 
+                       State(LeakSensorDryWet, 'binary_sensor'),
                        State(IoLincSensor, 'binary_sensor'),
                        State(SmokeCO2Sensor, 'sensor'),
                        State(OnOffSensor, 'binary_sensor'),
