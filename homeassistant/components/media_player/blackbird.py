@@ -55,6 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
 })
 
+
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Monoprice Blackbird 4k 8x8 HDBaseT Matrix platform."""
@@ -82,37 +83,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     def service_handle(service):
         """Handle for services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
-        _LOGGER.debug(entity_ids)
         source = service.data.get(ATTR_SOURCE)
-        _LOGGER.debug(source)
-        _LOGGER.debug(entity_ids)
         if entity_ids:
-            _LOGGER.debug("1: I'm here")
             devices = [device for device in hass.data[DATA_BLACKBIRD]
                        if device.entity_id in entity_ids]
 
         else:
             devices = hass.data[DATA_BLACKBIRD]
-            _LOGGER.debug("2: I'm here")
 
         for device in devices:
             if service.service == SERVICE_SETALLZONES:
-                _LOGGER.debug("3: I'm here")
-                _LOGGER.debug(device)
-                _LOGGER.debug(source)
                 device.setallzones(source)
 
-    hass.services.register(DOMAIN, SERVICE_SETALLZONES, service_handle, \
-        schema=BLACKBIRD_SETALLZONES_SCHEMA)
-
-    _LOGGER.debug("4: I'm here")
+    hass.services.register(DOMAIN, SERVICE_SETALLZONES, service_handle,
+                           schema=BLACKBIRD_SETALLZONES_SCHEMA)
 
 
 class BlackbirdZone(MediaPlayerDevice):
     """Representation of a Blackbird matrix zone."""
 
     def __init__(self, blackbird, sources, zone_id, zone_name):
-        """initialize new zone."""
+        """Initialize new zone."""
         self._blackbird = blackbird
         # dict source_id -> source name
         self._source_id_name = sources
@@ -128,6 +119,7 @@ class BlackbirdZone(MediaPlayerDevice):
 
     def update(self):
         """Retrieve latest state."""
+        _LOGGER.debug("***Updating Media Player***")
         state = self._blackbird.zone_status(self._zone_id)
         if not state:
             return False
@@ -170,7 +162,8 @@ class BlackbirdZone(MediaPlayerDevice):
         return self._source_names
 
     def setallzones(self, source):
-        """Set all zones to one source"""
+        """Set all zones to one source."""
+        _LOGGER.debug("setting all zones function")
         if source not in self._source_name_id:
             return
         idx = self._source_name_id[source]
