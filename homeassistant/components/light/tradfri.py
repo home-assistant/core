@@ -242,10 +242,16 @@ class TradfriLight(Light):
             return
 
         if ATTR_COLOR_TEMP in kwargs and self._light_control.can_set_temp:
+            temp = kwargs[ATTR_COLOR_TEMP]
+            if temp > self.max_mireds:
+                temp = self.max_mireds
+            elif temp < self.min_mireds:
+                temp = self.min_mireds
+
             if brightness is not None:
                 params.pop(ATTR_TRANSITION_TIME, None)
             await self._api(
-                self._light_control.set_color_temp(kwargs[ATTR_COLOR_TEMP],
+                self._light_control.set_color_temp(temp,
                                                    **params))
 
         if brightness is not None:
