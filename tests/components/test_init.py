@@ -75,7 +75,8 @@ class TestComponentsCore(unittest.TestCase):
         self.assertEqual(1, len(calls))
 
     @patch('homeassistant.core.ServiceRegistry.call')
-    async def test_turn_on_to_not_block_for_domains_without_service(self, mock_call):
+    async def test_turn_on_to_not_block_for_domains_without_service(self,
+                                                                    mock_call):
         """Test if turn_on is blocking domain with no service."""
         async_mock_service(self.hass, 'light', SERVICE_TURN_ON)
 
@@ -215,7 +216,6 @@ async def test_turn_on_intent(hass):
     assert call.domain == 'light'
     assert call.service == 'turn_on'
     assert call.data == {'entity_id': ['light.test_light']}
-
 
 
 async def test_turn_off_intent(hass):
