@@ -223,8 +223,9 @@ class TradfriLight(Light):
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         params = {}
+        transition_time = None
         if ATTR_TRANSITION in kwargs:
-            params[ATTR_TRANSITION_TIME] = int(kwargs[ATTR_TRANSITION]) * 10
+            transition_time = int(kwargs[ATTR_TRANSITION]) * 10
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
@@ -249,11 +250,14 @@ class TradfriLight(Light):
             elif temp < self.min_mireds:
                 temp = self.min_mireds
 
+            if brightness is not None:
+                params[ATTR_TRANSITION_TIME] = transition_time
             await self._api(
                 self._light_control.set_color_temp(temp,
                                                    **params))
 
         if brightness is not None:
+            params[ATTR_TRANSITION_TIME] = transition_time
             await self._api(
                 self._light_control.set_dimmer(brightness,
                                                **params))
