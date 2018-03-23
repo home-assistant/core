@@ -6,7 +6,7 @@
             "no_bridges": "Philips Hue Bridges entdeckt"
         },
         "error": {
-            "linking": "Unbekannte Link-Fehler aufgetreten.",
+            "linking": "Unbekannter Link-Fehler aufgetreten.",
             "register_failed": "Registrieren fehlgeschlagen, bitte versuche es erneut"
         },
         "step": {
