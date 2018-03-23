@@ -227,11 +227,46 @@ async def test_lights(hass, mock_bridge):
     assert lamp_1 is not None
     assert lamp_1.state == 'on'
     assert lamp_1.attributes['brightness'] == 144
-    assert lamp_1.attributes['color_temp'] == 467
+    assert lamp_1.attributes['hs_color'] == (71.896, 83.137)
 
     lamp_2 = hass.states.get('light.hue_lamp_2')
     assert lamp_2 is not None
     assert lamp_2.state == 'off'
+
+
+async def test_lights_color_mode(hass, mock_bridge):
+    """Test that lights only report appropriate color mode."""
+    mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+    await setup_bridge(hass, mock_bridge)
+
+    lamp_1 = hass.states.get('light.hue_lamp_1')
+    assert lamp_1 is not None
+    assert lamp_1.state == 'on'
+    assert lamp_1.attributes['brightness'] == 144
+    assert lamp_1.attributes['hs_color'] == (71.896, 83.137)
+    assert 'color_temp' not in lamp_1.attributes
+
+    new_light1_on = LIGHT_1_ON.copy()
+    new_light1_on['state'] = new_light1_on['state'].copy()
+    new_light1_on['state']['colormode'] = 'ct'
+    mock_bridge.mock_light_responses.append({
+        "1": new_light1_on,
+    })
+    mock_bridge.mock_group_responses.append({})
+
+    # Calling a service will trigger the updates to run
+    await hass.services.async_call('light', 'turn_on', {
+        'entity_id': 'light.hue_lamp_2'
+    }, blocking=True)
+    # 2x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 3
+
+    lamp_1 = hass.states.get('light.hue_lamp_1')
+    assert lamp_1 is not None
+    assert lamp_1.state == 'on'
+    assert lamp_1.attributes['brightness'] == 144
+    assert lamp_1.attributes['color_temp'] == 467
+    assert 'hs_color' not in lamp_1.attributes
 
 
 async def test_groups(hass, mock_bridge):

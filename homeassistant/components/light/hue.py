@@ -226,8 +226,19 @@ class HueLight(Light):
         return self.light.state.get('bri')
 
     @property
+    def _color_mode(self):
+        """Return the hue color mode."""
+        if self.is_group:
+            return self.light.action.get('colormode')
+        return self.light.state.get('colormode')
+
+    @property
     def hs_color(self):
         """Return the hs color value."""
+        # Don't return hue/sat if in color temperature mode
+        if self._color_mode == "ct":
+            return None
+
         if self.is_group:
             return (
                 self.light.action.get('hue') / 65535 * 360,
@@ -241,6 +252,10 @@ class HueLight(Light):
     @property
     def color_temp(self):
         """Return the CT color value."""
+        # Don't return color temperature unless in color temperature mode
+        if self._color_mode != "ct":
+            return None
+
         if self.is_group:
             return self.light.action.get('ct')
         return self.light.state.get('ct')
