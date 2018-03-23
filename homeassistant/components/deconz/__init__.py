@@ -231,10 +231,10 @@ class DeconzFlowHandler(config_entries.ConfigFlowHandler):
                     vol.Required(CONF_HOST): vol.In(hosts)
                 })
             )
-        else:
-            return self.async_abort(
-                reason='no_bridges'
-            )
+
+        return self.async_abort(
+            reason='no_bridges'
+        )
 
     async def async_step_link(self, user_input=None):
         """Attempt to link with the deCONZ bridge."""
@@ -242,7 +242,8 @@ class DeconzFlowHandler(config_entries.ConfigFlowHandler):
         errors = {}
 
         if user_input is not None:
-            api_key = await async_get_api_key(self.hass.loop, **self.deconz_config)
+            api_key = await async_get_api_key(
+                self.hass.loop, **self.deconz_config)
             if api_key:
                 self.deconz_config[CONF_API_KEY] = api_key
                 return self.async_create_entry(
