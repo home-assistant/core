@@ -365,6 +365,7 @@ homematicip==0.8
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
 
 # homeassistant.components.remember_the_milk
+# homeassistant.components.calendar.google
 httplib2==0.10.3
 
 # homeassistant.components.sensor.dht

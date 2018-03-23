@@ -55,6 +55,7 @@ TEST_REQUIREMENTS = (
     'hbmqtt',
     'holidays',
     'home-assistant-frontend',
+    'httplib2',
     'influxdb',
     'libpurecoollink',
     'libsoundtouch',

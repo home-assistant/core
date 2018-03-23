@@ -8,13 +8,13 @@ https://home-assistant.io/components/binary_sensor.google_calendar/
 import logging
 from datetime import timedelta
 
-from httplib2 import ServerNotFoundError
-
 from homeassistant.components.calendar import CalendarEventDevice
 from homeassistant.components.google import (
     CONF_CAL_ID, CONF_ENTITIES, CONF_TRACK, TOKEN_FILE,
     GoogleCalendarService)
 from homeassistant.util import Throttle, dt
+
+REQUIREMENTS = ["httplib2==0.10.3"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +64,8 @@ class GoogleCalendarData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
+        from httplib2 import ServerNotFoundError
+
         try:
             service = self.calendar_service.get()
         except ServerNotFoundError:

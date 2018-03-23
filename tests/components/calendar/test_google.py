@@ -5,7 +5,6 @@ import unittest
 from unittest.mock import patch, Mock
 
 import pytest
-from httplib2 import ServerNotFoundError
 
 import homeassistant.components.calendar as calendar_base
 import homeassistant.components.calendar.google as calendar
@@ -414,6 +413,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
 
     def test_update_false(self):
         """Test that the update returns False upon Error."""
+        from httplib2 import ServerNotFoundError
+
         mock_service = Mock()
         mock_service.get = Mock(side_effect=ServerNotFoundError("unit test"))
 

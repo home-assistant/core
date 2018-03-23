@@ -83,6 +83,10 @@ holidays==0.9.4
 # homeassistant.components.frontend
 home-assistant-frontend==20180316.0
 
+# homeassistant.components.remember_the_milk
+# homeassistant.components.calendar.google
+httplib2==0.10.3
+
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
 influxdb==5.0.0
@@ -201,6 +205,3 @@ warrant==0.6.1
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
-
-# homeassistant.components.calendar.google
-httplib2==0.10.3
