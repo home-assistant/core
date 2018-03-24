@@ -13,7 +13,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from homeassistant.const import (
     ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT, MATCH_ALL,
     STATE_UNKNOWN)
-from homeassistant.core import State
+from homeassistant.core import State, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
 from homeassistant.loader import bind_hass, get_component
@@ -76,9 +76,8 @@ def extract_entities(template, variables=None):
            isinstance(variables[result[1]], str):
             extraction_final.append(variables[result[1]])
 
-    if extraction_final:
-        return list(set(extraction_final))
-    return MATCH_ALL
+    unique_valid = [e for e in set(extraction_final) if valid_entity_id(e)]
+    return unique_valid or MATCH_ALL
 
 
 class Template(object):
