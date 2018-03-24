@@ -232,7 +232,8 @@ class TestScriptHelper(unittest.TestCase):
 
         script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
             {'event': event},
-            {'delay': '{{ delay }}'},
+            {'delay': '{{ invalid_delay }}'},
+            {'delay': {'seconds': 5}},
             {'event': event}]))
 
         with mock.patch.object(script, '_LOGGER') as mock_logger:
@@ -240,17 +241,8 @@ class TestScriptHelper(unittest.TestCase):
             self.hass.block_till_done()
             assert mock_logger.error.called
 
-        assert script_obj.is_running
-        assert script_obj.can_cancel
-        assert script_obj.last_action == event
-        assert len(events) == 1
-
-        future = dt_util.utcnow() + timedelta(seconds=2)
-        fire_time_changed(self.hass, future)
-        self.hass.block_till_done()
-
         assert not script_obj.is_running
-        assert len(events) == 2
+        assert len(events) == 1
 
     def test_cancel_while_delay(self):
         """Test the cancelling while the delay is present."""

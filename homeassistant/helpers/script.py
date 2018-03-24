@@ -107,7 +107,7 @@ class Script():
                 except (TemplateError, vol.Invalid) as ex:
                     _LOGGER.error("Error rendering '%s' delay template: %s",
                                   self.name, ex)
-                    delay = timedelta(seconds=1)
+                    break
 
                 unsub = async_track_point_in_utc_time(
                     self.hass, async_script_delay,
