@@ -276,8 +276,8 @@ class TradfriLight(Light):
             # (It can set temp, but we need to set with hsb)
             if self._light_control.can_set_color:
                 params[ATTR_BRIGHTNESS] = brightness
-                temp_K = color_util.color_temperature_mired_to_kelvin(temp)
-                hs_color = color_util.color_temperature_to_hs(temp_K)
+                temp_k = color_util.color_temperature_mired_to_kelvin(temp)
+                hs_color = color_util.color_temperature_to_hs(temp_k)
                 hue = int(hs_color[0] * (65535 / 360))
                 sat = int(hs_color[1] * (65279 / 100))
                 await self._api(
