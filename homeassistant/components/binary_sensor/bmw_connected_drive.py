@@ -7,8 +7,8 @@ https://home-assistant.io/components/binary_sensor.bmw_connected_drive/
 import asyncio
 import logging
 
-from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 
 DEPENDENCIES = ['bmw_connected_drive']
 

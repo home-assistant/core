@@ -4,8 +4,8 @@ Reads vehicle status from BMW connected drive portal.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bmw_connected_drive/
 """
-import logging
 import asyncio
+import logging
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.helpers.entity import Entity
