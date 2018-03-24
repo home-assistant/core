@@ -70,6 +70,7 @@ homeassistant/components/sensor/gearbest.py @HerrHofrat
 homeassistant/components/sensor/irish_rail_transport.py @ttroy50
 homeassistant/components/sensor/miflora.py @danielhiversen @ChristianKuehnel
 homeassistant/components/sensor/pollen.py @bachya
+homeassistant/components/sensor/qnap.py @colinodell
 homeassistant/components/sensor/sytadin.py @gautric
 homeassistant/components/sensor/sql.py @dgomes
 homeassistant/components/sensor/tibber.py @danielhiversen
