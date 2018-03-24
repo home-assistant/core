@@ -15,6 +15,7 @@ from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
     KEY_API
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +42,8 @@ async def async_setup_platform(hass, config,
     devices = await api(devices_commands)
     lights = [dev for dev in devices if dev.has_light_control]
     if lights:
-        async_add_devices(TradfriLight(light, api, gateway_id) for light in lights)
+        async_add_devices(
+            TradfriLight(light, api, gateway_id) for light in lights)
 
     allow_tradfri_groups = hass.data[KEY_TRADFRI_GROUPS][gateway_id]
     if allow_tradfri_groups:
@@ -49,7 +51,8 @@ async def async_setup_platform(hass, config,
         groups_commands = await api(groups_command)
         groups = await api(groups_commands)
         if groups:
-            async_add_devices(TradfriGroup(group, api, gateway_id) for group in groups)
+            async_add_devices(
+                TradfriGroup(group, api, gateway_id) for group in groups)
 
 
 class TradfriGroup(Light):
@@ -264,9 +267,22 @@ class TradfriLight(Light):
 
             if brightness is None:
                 params[ATTR_TRANSITION_TIME] = transition_time
-            await self._api(
-                self._light_control.set_color_temp(temp,
-                                                   **params))
+            # White Spectrum bulb (can set temp, but cannot set color)
+            if (self._light_control.can_set_temp and
+                    not self._light_control.can_set_color):
+                await self._api(
+                    self._light_control.set_color_temp(temp, **params))
+            # Color White Spsctrum (CWS) bulb
+            # (It can set temp, but we need to set with hsb)
+            if self._light_control.can_set_color:
+                params[ATTR_BRIGHTNESS] = brightness
+                temp_K = color_util.color_temperature_mired_to_kelvin(temp)
+                hs_color = color_util.color_temperature_to_hs(temp_K)
+                hue = int(hs_color[0] * (65535 / 360))
+                sat = int(hs_color[1] * (65279 / 100))
+                await self._api(
+                    self._light_control.set_hsb(hue, sat,
+                                                **params))
 
         if brightness is not None:
             params[ATTR_TRANSITION_TIME] = transition_time
