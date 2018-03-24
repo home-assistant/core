@@ -37,7 +37,7 @@ class BMWLock(LockDevice):
         self._account = account
         self._vehicle = vehicle
         self._attribute = attribute
-        self._name = '{} {}'.format(self._vehicle.modelName, self._attribute)
+        self._name = '{} {}'.format(self._vehicle.name, self._attribute)
         self._sensor_name = sensor_name
         self._state = None
 
@@ -59,7 +59,7 @@ class BMWLock(LockDevice):
         """Return the state attributes of the lock."""
         vehicle_state = self._vehicle.state
         return {
-            'car': self._vehicle.modelName,
+            'car': self._vehicle.name,
             'door_lock_state': vehicle_state.door_lock_state.value
         }
 
@@ -70,7 +70,7 @@ class BMWLock(LockDevice):
 
     def lock(self, **kwargs):
         """Lock the car."""
-        _LOGGER.debug("%s: locking doors", self._vehicle.modelName)
+        _LOGGER.debug("%s: locking doors", self._vehicle.name)
         # Optimistic state set here because it takes some time before the
         # update callback response
         self._state = STATE_LOCKED
@@ -79,7 +79,7 @@ class BMWLock(LockDevice):
 
     def unlock(self, **kwargs):
         """Unlock the car."""
-        _LOGGER.debug("%s: unlocking doors", self._vehicle.modelName)
+        _LOGGER.debug("%s: unlocking doors", self._vehicle.name)
         # Optimistic state set here because it takes some time before the
         # update callback response
         self._state = STATE_UNLOCKED
@@ -88,13 +88,17 @@ class BMWLock(LockDevice):
 
     def update(self):
         """Update state of the lock."""
-        _LOGGER.debug("%s: updating data for %s", self._vehicle.modelName,
+        from bimmer_connected.state import LockState
+
+        _LOGGER.debug("%s: updating data for %s", self._vehicle.name,
                       self._attribute)
         vehicle_state = self._vehicle.state
 
-        # Possible values: LOCKED, SECURED, SELECTIVELOCKED, UNLOCKED
-        self._state = (STATE_LOCKED if vehicle_state.door_lock_state.value
-                       in ('LOCKED', 'SECURED') else STATE_UNLOCKED)
+        # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
+        self._state = STATE_LOCKED \
+            if vehicle_state.door_lock_state \
+            in [LockState.LOCKED, LockState.SECURED] \
+            else STATE_UNLOCKED
 
     def update_callback(self):
         """Schedule a state update."""
