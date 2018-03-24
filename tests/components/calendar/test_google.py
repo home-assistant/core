@@ -11,7 +11,7 @@ import homeassistant.components.calendar.google as calendar
 import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, MockDependency
 
 TEST_PLATFORM = {calendar_base.DOMAIN: {CONF_PLATFORM: 'test'}}
 
@@ -422,12 +422,12 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'description': event['description']
         })
 
-    def test_update_false(self):
+    @MockDependency("httplib2")
+    def test_update_false(self, mock_httplib2):
         """Test that the update returns False upon Error."""
-        from httplib2 import ServerNotFoundError
-
         mock_service = Mock()
-        mock_service.get = Mock(side_effect=ServerNotFoundError("unit test"))
+        mock_service.get = Mock(
+            side_effect=mock_httplib2.ServerNotFoundError("unit test"))
 
         cal = calendar.GoogleCalendarEventDevice(self.hass, mock_service, None,
                                                  {'name': "test"})

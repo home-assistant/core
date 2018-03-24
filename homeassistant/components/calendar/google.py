@@ -14,8 +14,6 @@ from homeassistant.components.google import (
     GoogleCalendarService)
 from homeassistant.util import Throttle, dt
 
-REQUIREMENTS = ["httplib2==0.10.3"]
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_GOOGLE_SEARCH_PARAMS = {
