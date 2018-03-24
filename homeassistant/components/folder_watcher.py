@@ -57,6 +57,7 @@ def create_event_handler(patterns, hass):
 
         def process(self, event):
             """On Watcher event, fire HA event."""
+            _LOGGER.debug("process(%s)", event)
             if not event.is_directory:
                 folder, file_name = os.path.split(event.src_path)
                 self.hass.bus.fire(
@@ -107,3 +108,4 @@ class Watcher():
     def shutdown(self, event):
         """Shutdown the watcher."""
         self._observer.stop()
+        self._observer.join()

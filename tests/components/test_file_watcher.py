@@ -1,9 +1,7 @@
 """The tests for the folder_watcher component."""
 import unittest
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import MagicMock
 import os
-
-import pytest
 
 from homeassistant.components import folder_watcher
 from homeassistant.setup import setup_component
@@ -20,17 +18,6 @@ def get_fake_event(src_path=SRC_PATH, event_type=EVENT_TYPE):
     """Generate a Fake watchdog event object with the specified arguments."""
     return MagicMock(
         src_path=src_path, event_type=event_type, is_directory=False)
-
-
-@pytest.fixture(autouse=True)
-def watchdog_mock():
-    """Mock watchdog module."""
-    with patch.dict('sys.modules', {
-        'watchdog': MagicMock(),
-        'watchdog.observers': MagicMock(),
-        'watchdog.events': MagicMock(),
-    }):
-        yield
 
 
 class TestFolderWatcher(unittest.TestCase):
@@ -66,22 +53,23 @@ class TestFolderWatcher(unittest.TestCase):
 
     def test_event(self):
         """Check that HASS events are fired correctly on watchdog event."""
-        fake_hass = Mock()
-        event_handler = folder_watcher.create_event_handler(
-            [folder_watcher.DEFAULT_PATTERN], fake_hass)
-        assert hasattr(event_handler, 'hass')
-        assert hasattr(event_handler, 'process')
+        from watchdog.events import FileModifiedEvent
 
-        fake_event = get_fake_event()
-        assert not fake_event.is_directory
-        event_handler.process(fake_event)  # Should call fake_hass.bus.fire
-        event_handler.process.assert_called()
+        # cant use setup_component 
+        # because of the need to retrieve Watcher object
+        w = folder_watcher.Watcher(CWD,
+                                   folder_watcher.DEFAULT_PATTERN,
+                                   self.hass)
+        w.startup(None)
 
-        expected_payload = {"event_type": fake_event.event_type,
-                            'path': fake_event.src_path,
-                            'file': FILE,
-                            'folder': FOLDER}
+        self.hass.bus.fire = MagicMock()
 
-        fake_hass.bus.fire.assert_called()
-#        fake_hass.bus.fire.assert_called_with(
-#            folder_watcher.DOMAIN, expected_payload)
+        # trigger a fake filesystem event through the Watcher Observer emitter
+        (emitter,) = w._observer.emitters
+        emitter.queue_event(FileModifiedEvent(FILE))
+
+        # wait for the event to propagate
+        self.hass.block_till_done()
+
+        # check if fire was called
+        self.assertTrue(self.hass.bus.fire.called)
