@@ -6,6 +6,7 @@ https://home-assistant.io/components/bmw_connected_drive/
 """
 import datetime
 import logging
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
