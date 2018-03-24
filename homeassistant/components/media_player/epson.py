@@ -262,12 +262,12 @@ class EpsonProjector(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_media_play(self):
-        """Play."""
+        """Play media via Epson."""
         return self.sendCommand("PLAY")
 
     @asyncio.coroutine
     def async_media_pause(self):
-        """Play."""
+        """Pause media via Epson."""
         return self.sendCommand("PAUSE")
 
     @asyncio.coroutine
