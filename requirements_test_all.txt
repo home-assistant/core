@@ -77,6 +77,9 @@ hbmqtt==0.9.1
 # homeassistant.components.binary_sensor.workday
 holidays==0.9.3
 
+# homeassistant.components.folder_watcher
+watchdog==0.8.3
+
 # homeassistant.components.frontend
 home-assistant-frontend==20180228.1
 
