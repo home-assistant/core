@@ -61,5 +61,4 @@ class TestFolderWatcher(unittest.TestCase):
         # Wait for the event to propagate.
         self.hass.block_till_done()
 
-        # Check if fire was called.
         assert self.hass.bus.fire.called
