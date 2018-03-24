@@ -41,7 +41,7 @@ async def async_setup_platform(hass, config,
     devices = await api(devices_commands)
     lights = [dev for dev in devices if dev.has_light_control]
     if lights:
-        async_add_devices(TradfriLight(light, api) for light in lights)
+        async_add_devices(TradfriLight(light, api, gateway_id) for light in lights)
 
     allow_tradfri_groups = hass.data[KEY_TRADFRI_GROUPS][gateway_id]
     if allow_tradfri_groups:
@@ -49,23 +49,29 @@ async def async_setup_platform(hass, config,
         groups_commands = await api(groups_command)
         groups = await api(groups_commands)
         if groups:
-            async_add_devices(TradfriGroup(group, api) for group in groups)
+            async_add_devices(TradfriGroup(group, api, gateway_id) for group in groups)
 
 
 class TradfriGroup(Light):
     """The platform class required by hass."""
 
-    def __init__(self, light, api):
+    def __init__(self, group, api, gateway_id):
         """Initialize a Group."""
         self._api = api
-        self._group = light
-        self._name = light.name
+        self._unique_id = "group-{}-{}".format(gateway_id, group.id)
+        self._group = group
+        self._name = group.name
 
-        self._refresh(light)
+        self._refresh(group)
 
     async def async_added_to_hass(self):
         """Start thread when added to hass."""
         self._async_start_observe()
+
+    @property
+    def unique_id(self):
+        """Return unique ID for this group."""
+        return self._unique_id
 
     @property
     def should_poll(self):
@@ -144,9 +150,10 @@ class TradfriGroup(Light):
 class TradfriLight(Light):
     """The platform class required by Home Assistant."""
 
-    def __init__(self, light, api):
+    def __init__(self, light, api, gateway_id):
         """Initialize a Light."""
         self._api = api
+        self._unique_id = "light-{}-{}".format(gateway_id, light.id)
         self._light = None
         self._light_control = None
         self._light_data = None
@@ -156,6 +163,11 @@ class TradfriLight(Light):
         self._available = True
 
         self._refresh(light)
+
+    @property
+    def unique_id(self):
+        """Return unique ID for light."""
+        return self._unique_id
 
     @property
     def min_mireds(self):
