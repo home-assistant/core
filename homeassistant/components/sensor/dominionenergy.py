@@ -76,4 +76,4 @@ class DominionEnergySensor(Entity):
                 self.CURRENT_BILL_SELECTOR).text)
         except NoSuchElementException:
             _LOGGER.error("Update Dominion Energy Failed."
-                          "check if your password changed")
+                          " check if your password changed")
