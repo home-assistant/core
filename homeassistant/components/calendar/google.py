@@ -70,7 +70,7 @@ class GoogleCalendarData(object):
             service = self.calendar_service.get()
         except ServerNotFoundError:
             _LOGGER.warning("Unable to connect to Google, using cached data")
-            return
+            return False
 
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
         params['timeMin'] = dt.now().isoformat('T')
