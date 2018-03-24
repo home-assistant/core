@@ -55,7 +55,7 @@ class TestFolderWatcher(unittest.TestCase):
         """Check that HASS events are fired correctly on watchdog event."""
         from watchdog.events import FileModifiedEvent
 
-        # cant use setup_component 
+        # cant use setup_component
         # because of the need to retrieve Watcher object
         w = folder_watcher.Watcher(CWD,
                                    folder_watcher.DEFAULT_PATTERN,
