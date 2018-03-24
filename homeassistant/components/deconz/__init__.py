@@ -274,14 +274,3 @@ async def async_setup_entry(hass, entry):
     if result:
         return True
     return False
-
-
-async def async_unload_entry(hass, entry):
-    """Unload an entry."""
-    deconz = hass.data[DOMAIN]
-    entity_ids = hass.data[DATA_DECONZ_ID]
-    for entity_id in entity_ids.keys():
-        hass.states.async_remove(entity_id)
-    deconz.close()
-    del hass.data[DOMAIN]
-    return True
