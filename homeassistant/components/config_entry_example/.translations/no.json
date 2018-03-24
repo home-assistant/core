@@ -1,0 +1,24 @@
+{
+    "config": {
+        "error": {
+            "invalid_object_id": "Ugyldig objekt ID"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "object_id": "Objekt ID"
+                },
+                "description": "Vennligst skriv inn en object_id for testenheten.",
+                "title": "Velg objekt ID"
+            },
+            "name": {
+                "data": {
+                    "name": "Navn"
+                },
+                "description": "Vennligst skriv inn et navn for testenheten.",
+                "title": "Navn p\u00e5 enheten"
+            }
+        },
+        "title": "Konfigureringseksempel"
+    }
+}

@@ -43,7 +43,7 @@ def test_node_event_activated(hass, mock_openzwave):
     node = mock_zwave.MockNode(node_id=11)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave, True)
+        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave)
 
     assert len(mock_receivers) == 1
 
@@ -86,7 +86,7 @@ def test_scene_activated(hass, mock_openzwave):
     node = mock_zwave.MockNode(node_id=11)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave, True)
+        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave)
 
     assert len(mock_receivers) == 1
 
@@ -129,7 +129,7 @@ def test_central_scene_activated(hass, mock_openzwave):
     node = mock_zwave.MockNode(node_id=11)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave, True)
+        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave)
 
     assert len(mock_receivers) == 1
 
@@ -185,7 +185,7 @@ class TestZWaveNodeEntity(unittest.TestCase):
         self.node.manufacturer_name = 'Test Manufacturer'
         self.node.product_name = 'Test Product'
         self.entity = node_entity.ZWaveNodeEntity(self.node,
-                                                  self.zwave_network, True)
+                                                  self.zwave_network)
 
     def test_network_node_changed_from_value(self):
         """Test for network_node_changed."""
@@ -226,8 +226,6 @@ class TestZWaveNodeEntity(unittest.TestCase):
             {'node_id': self.node.node_id,
              'node_name': 'Mock Node',
              'manufacturer_name': 'Test Manufacturer',
-             'old_entity_id': 'zwave.mock_node_567',
-             'new_entity_id': 'zwave.mock_node',
              'product_name': 'Test Product'},
             self.entity.device_state_attributes)
 
@@ -286,8 +284,6 @@ class TestZWaveNodeEntity(unittest.TestCase):
             {'node_id': self.node.node_id,
              'node_name': 'Mock Node',
              'manufacturer_name': 'Test Manufacturer',
-             'old_entity_id': 'zwave.mock_node_567',
-             'new_entity_id': 'zwave.mock_node',
              'product_name': 'Test Product',
              'query_stage': 'Dynamic',
              'is_awake': True,

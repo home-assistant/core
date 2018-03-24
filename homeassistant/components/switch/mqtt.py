@@ -17,7 +17,7 @@ from homeassistant.components.mqtt import (
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
-    CONF_PAYLOAD_ON)
+    CONF_PAYLOAD_ON, CONF_ICON)
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 
@@ -32,6 +32,7 @@ DEFAULT_OPTIMISTIC = False
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
@@ -50,6 +51,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     async_add_devices([MqttSwitch(
         config.get(CONF_NAME),
+        config.get(CONF_ICON),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),
         config.get(CONF_AVAILABILITY_TOPIC),
@@ -67,7 +69,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MqttSwitch(MqttAvailability, SwitchDevice):
     """Representation of a switch that can be toggled using MQTT."""
 
-    def __init__(self, name, state_topic, command_topic, availability_topic,
+    def __init__(self, name, icon,
+                 state_topic, command_topic, availability_topic,
                  qos, retain, payload_on, payload_off, optimistic,
                  payload_available, payload_not_available, value_template):
         """Initialize the MQTT switch."""
@@ -75,6 +78,7 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
                          payload_not_available)
         self._state = False
         self._name = name
+        self._icon = icon
         self._state_topic = state_topic
         self._command_topic = command_topic
         self._qos = qos
@@ -129,6 +133,11 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
     def assumed_state(self):
         """Return true if we do optimistic updates."""
         return self._optimistic
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._icon
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):

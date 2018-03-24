@@ -75,8 +75,7 @@ class EntityComponent(object):
         """
         self.hass.add_job(self.async_setup(config))
 
-    @asyncio.coroutine
-    def async_setup(self, config):
+    async def async_setup(self, config):
         """Set up a full entity component.
 
         Loads the platforms from the config and will listen for supported
@@ -92,14 +91,13 @@ class EntityComponent(object):
             tasks.append(self._async_setup_platform(p_type, p_config))
 
         if tasks:
-            yield from asyncio.wait(tasks, loop=self.hass.loop)
+            await asyncio.wait(tasks, loop=self.hass.loop)
 
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.components.discovery.load_platform()
-        @asyncio.coroutine
-        def component_platform_discovered(platform, info):
+        async def component_platform_discovered(platform, info):
             """Handle the loading of a platform."""
-            yield from self._async_setup_platform(platform, {}, info)
+            await self._async_setup_platform(platform, {}, info)
 
         discovery.async_listen_platform(
             self.hass, self.domain, component_platform_discovered)
@@ -120,11 +118,10 @@ class EntityComponent(object):
         return [entity for entity in self.entities
                 if entity.available and entity.entity_id in entity_ids]
 
-    @asyncio.coroutine
-    def _async_setup_platform(self, platform_type, platform_config,
-                              discovery_info=None):
+    async def _async_setup_platform(self, platform_type, platform_config,
+                                    discovery_info=None):
         """Set up a platform for this component."""
-        platform = yield from async_prepare_setup_platform(
+        platform = await async_prepare_setup_platform(
             self.hass, self.config, self.domain, platform_type)
 
         if platform is None:
@@ -156,7 +153,7 @@ class EntityComponent(object):
         else:
             entity_platform = self._platforms[key]
 
-        yield from entity_platform.async_setup(
+        await entity_platform.async_setup(
             platform, platform_config, discovery_info)
 
     @callback
@@ -177,8 +174,7 @@ class EntityComponent(object):
             visible=False, entity_ids=ids
         )
 
-    @asyncio.coroutine
-    def _async_reset(self):
+    async def _async_reset(self):
         """Remove entities and reset the entity component to initial values.
 
         This method must be run in the event loop.
@@ -187,7 +183,7 @@ class EntityComponent(object):
                  in self._platforms.values()]
 
         if tasks:
-            yield from asyncio.wait(tasks, loop=self.hass.loop)
+            await asyncio.wait(tasks, loop=self.hass.loop)
 
         self._platforms = {
             self.domain: self._platforms[self.domain]
@@ -197,21 +193,19 @@ class EntityComponent(object):
         if self.group_name is not None:
             self.hass.components.group.async_remove(slugify(self.group_name))
 
-    @asyncio.coroutine
-    def async_remove_entity(self, entity_id):
+    async def async_remove_entity(self, entity_id):
         """Remove an entity managed by one of the platforms."""
         for platform in self._platforms.values():
             if entity_id in platform.entities:
-                yield from platform.async_remove_entity(entity_id)
+                await platform.async_remove_entity(entity_id)
 
-    @asyncio.coroutine
-    def async_prepare_reload(self):
+    async def async_prepare_reload(self):
         """Prepare reloading this entity component.
 
         This method must be run in the event loop.
         """
         try:
-            conf = yield from \
+            conf = await \
                 conf_util.async_hass_config_yaml(self.hass)
         except HomeAssistantError as err:
             self.logger.error(err)
@@ -223,5 +217,5 @@ class EntityComponent(object):
         if conf is None:
             return None
 
-        yield from self._async_reset()
+        await self._async_reset()
         return conf

@@ -391,6 +391,7 @@ class _AlexaTemperatureSensor(_AlexaInterface):
 
 @ENTITY_ADAPTERS.register(alert.DOMAIN)
 @ENTITY_ADAPTERS.register(automation.DOMAIN)
+@ENTITY_ADAPTERS.register(group.DOMAIN)
 @ENTITY_ADAPTERS.register(input_boolean.DOMAIN)
 class _GenericCapabilities(_AlexaEntity):
     """A generic, on/off device.
@@ -437,9 +438,7 @@ class _LightCapabilities(_AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & light.SUPPORT_BRIGHTNESS:
             yield _AlexaBrightnessController(self.entity)
-        if supported & light.SUPPORT_RGB_COLOR:
-            yield _AlexaColorController(self.entity)
-        if supported & light.SUPPORT_XY_COLOR:
+        if supported & light.SUPPORT_COLOR:
             yield _AlexaColorController(self.entity)
         if supported & light.SUPPORT_COLOR_TEMP:
             yield _AlexaColorTemperatureController(self.entity)
@@ -519,16 +518,6 @@ class _ScriptCapabilities(_AlexaEntity):
         can_cancel = bool(self.entity.attributes.get('can_cancel'))
         return [_AlexaSceneController(self.entity,
                                       supports_deactivation=can_cancel)]
-
-
-@ENTITY_ADAPTERS.register(group.DOMAIN)
-class _GroupCapabilities(_AlexaEntity):
-    def default_display_categories(self):
-        return [_DisplayCategory.SCENE_TRIGGER]
-
-    def interfaces(self):
-        return [_AlexaSceneController(self.entity,
-                                      supports_deactivation=True)]
 
 
 @ENTITY_ADAPTERS.register(sensor.DOMAIN)
@@ -773,6 +762,8 @@ def extract_entity(funct):
 def async_api_turn_on(hass, config, request, entity):
     """Process a turn on request."""
     domain = entity.domain
+    if entity.domain == group.DOMAIN:
+        domain = ha.DOMAIN
 
     service = SERVICE_TURN_ON
     if entity.domain == cover.DOMAIN:
@@ -849,25 +840,16 @@ def async_api_adjust_brightness(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_set_color(hass, config, request, entity):
     """Process a set color request."""
-    supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES)
     rgb = color_util.color_hsb_to_RGB(
         float(request[API_PAYLOAD]['color']['hue']),
         float(request[API_PAYLOAD]['color']['saturation']),
         float(request[API_PAYLOAD]['color']['brightness'])
     )
 
-    if supported & light.SUPPORT_RGB_COLOR > 0:
-        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
-            ATTR_ENTITY_ID: entity.entity_id,
-            light.ATTR_RGB_COLOR: rgb,
-        }, blocking=False)
-    else:
-        xyz = color_util.color_RGB_to_xy(*rgb)
-        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
-            ATTR_ENTITY_ID: entity.entity_id,
-            light.ATTR_XY_COLOR: (xyz[0], xyz[1]),
-            light.ATTR_BRIGHTNESS: xyz[2],
-        }, blocking=False)
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_RGB_COLOR: rgb,
+    }, blocking=False)
 
     return api_message(request)
 
@@ -928,10 +910,7 @@ def async_api_increase_color_temp(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_activate(hass, config, request, entity):
     """Process an activate request."""
-    if entity.domain == group.DOMAIN:
-        domain = ha.DOMAIN
-    else:
-        domain = entity.domain
+    domain = entity.domain
 
     yield from hass.services.async_call(domain, SERVICE_TURN_ON, {
         ATTR_ENTITY_ID: entity.entity_id
@@ -955,10 +934,7 @@ def async_api_activate(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_deactivate(hass, config, request, entity):
     """Process a deactivate request."""
-    if entity.domain == group.DOMAIN:
-        domain = ha.DOMAIN
-    else:
-        domain = entity.domain
+    domain = entity.domain
 
     yield from hass.services.async_call(domain, SERVICE_TURN_OFF, {
         ATTR_ENTITY_ID: entity.entity_id
@@ -1178,20 +1154,24 @@ def async_api_adjust_volume(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_adjust_volume_step(hass, config, request, entity):
     """Process an adjust volume step request."""
-    volume_step = round(float(request[API_PAYLOAD]['volumeSteps'] / 100), 2)
-
-    current_level = entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
-
-    volume = current_level + volume_step
+    # media_player volume up/down service does not support specifying steps
+    # each component handles it differently e.g. via config.
+    # For now we use the volumeSteps returned to figure out if we
+    # should step up/down
+    volume_step = request[API_PAYLOAD]['volumeSteps']
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
-    yield from hass.services.async_call(
-        entity.domain, media_player.SERVICE_VOLUME_SET,
-        data, blocking=False)
+    if volume_step > 0:
+        yield from hass.services.async_call(
+            entity.domain, media_player.SERVICE_VOLUME_UP,
+            data, blocking=False)
+    elif volume_step < 0:
+        yield from hass.services.async_call(
+            entity.domain, media_player.SERVICE_VOLUME_DOWN,
+            data, blocking=False)
 
     return api_message(request)
 

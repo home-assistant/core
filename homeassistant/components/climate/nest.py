@@ -29,10 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 NEST_MODE_HEAT_COOL = 'heat-cool'
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
-                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_OPERATION_MODE |
-                 SUPPORT_AWAY_MODE | SUPPORT_FAN_MODE)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Nest thermostat."""
@@ -58,6 +54,10 @@ class NestThermostat(ClimateDevice):
         self.device = device
         self._fan_list = [STATE_ON, STATE_AUTO]
 
+        # Set the default supported features
+        self._support_flags = (SUPPORT_TARGET_TEMPERATURE |
+                               SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE)
+
         # Not all nest devices support cooling and heating remove unused
         self._operation_list = [STATE_OFF]
 
@@ -70,11 +70,16 @@ class NestThermostat(ClimateDevice):
 
         if self.device.can_heat and self.device.can_cool:
             self._operation_list.append(STATE_AUTO)
+            self._support_flags = (self._support_flags |
+                                   SUPPORT_TARGET_TEMPERATURE_HIGH |
+                                   SUPPORT_TARGET_TEMPERATURE_LOW)
 
         self._operation_list.append(STATE_ECO)
 
         # feature of device
         self._has_fan = self.device.has_fan
+        if self._has_fan:
+            self._support_flags = (self._support_flags | SUPPORT_FAN_MODE)
 
         # data attributes
         self._away = None
@@ -95,7 +100,7 @@ class NestThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        return self._support_flags
 
     @property
     def unique_id(self):
@@ -162,6 +167,7 @@ class NestThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
+        import nest
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         if self._mode == NEST_MODE_HEAT_COOL:
@@ -170,7 +176,10 @@ class NestThermostat(ClimateDevice):
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
         _LOGGER.debug("Nest set_temperature-output-value=%s", temp)
-        self.device.target = temp
+        try:
+            self.device.target = temp
+        except nest.nest.APIError:
+            _LOGGER.error("An error occured while setting the temperature")
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
@@ -205,11 +214,14 @@ class NestThermostat(ClimateDevice):
     @property
     def fan_list(self):
         """List of available fan modes."""
-        return self._fan_list
+        if self._has_fan:
+            return self._fan_list
+        return None
 
     def set_fan_mode(self, fan_mode):
         """Turn fan on/off."""
-        self.device.fan = fan_mode.lower()
+        if self._has_fan:
+            self.device.fan = fan_mode.lower()
 
     @property
     def min_temp(self):

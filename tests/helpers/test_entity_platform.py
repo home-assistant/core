@@ -15,37 +15,11 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     get_test_home_assistant, MockPlatform, fire_time_changed, mock_registry,
-    MockEntity)
+    MockEntity, MockEntityPlatform)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
 PLATFORM = 'test_platform'
-
-
-class MockEntityPlatform(entity_platform.EntityPlatform):
-    """Mock class with some mock defaults."""
-
-    def __init__(
-        self, hass,
-        logger=None,
-        domain=DOMAIN,
-        platform_name=PLATFORM,
-        scan_interval=timedelta(seconds=15),
-        parallel_updates=0,
-        entity_namespace=None,
-        async_entities_added_callback=lambda: None
-    ):
-        """Initialize a mock entity platform."""
-        super().__init__(
-            hass=hass,
-            logger=logger,
-            domain=domain,
-            platform_name=platform_name,
-            scan_interval=scan_interval,
-            parallel_updates=parallel_updates,
-            entity_namespace=entity_namespace,
-            async_entities_added_callback=async_entities_added_callback,
-        )
 
 
 class TestHelpersEntityPlatform(unittest.TestCase):
@@ -510,3 +484,30 @@ def test_registry_respect_entity_disabled(hass):
     yield from platform.async_add_entities([entity])
     assert entity.entity_id is None
     assert hass.states.async_entity_ids() == []
+
+
+async def test_entity_registry_updates(hass):
+    """Test that updates on the entity registry update platform entities."""
+    registry = mock_registry(hass, {
+        'test_domain.world': entity_registry.RegistryEntry(
+            entity_id='test_domain.world',
+            unique_id='1234',
+            # Using component.async_add_entities is equal to platform "domain"
+            platform='test_platform',
+            name='before update'
+        )
+    })
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(unique_id='1234')
+    await platform.async_add_entities([entity])
+
+    state = hass.states.get('test_domain.world')
+    assert state is not None
+    assert state.name == 'before update'
+
+    registry.async_update_entity('test_domain.world', name='after update')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('test_domain.world')
+    assert state.name == 'after update'

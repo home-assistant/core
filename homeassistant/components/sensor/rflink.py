@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
             vol.Required(CONF_SENSOR_TYPE): cv.string,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             # deprecated config options
@@ -61,7 +61,7 @@ def devices_from_config(domain_config, hass=None):
     """Parse configuration and add Rflink sensor devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
-        if not config[ATTR_UNIT_OF_MEASUREMENT]:
+        if ATTR_UNIT_OF_MEASUREMENT not in config:
             config[ATTR_UNIT_OF_MEASUREMENT] = lookup_unit_for_sensor_type(
                 config[CONF_SENSOR_TYPE])
         remove_deprecated(config)
