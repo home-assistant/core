@@ -8,6 +8,7 @@ https://home-assistant.io/components/sensor.canary/
 from homeassistant.components.canary import DATA_CANARY
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.icon import icon_for_battery_level
 
 DEPENDENCIES = ['canary']
 
@@ -84,6 +85,9 @@ class CanarySensor(Entity):
     @property
     def icon(self):
         """Icon for the sensor."""
+        if self.state is not None and self._sensor_type[0] == "battery":
+            return icon_for_battery_level(battery_level=self.state)
+
         return self._sensor_type[2]
 
     @property

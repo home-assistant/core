@@ -69,6 +69,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         self.assertEqual("Home Family Room Temperature", sensor.name)
         self.assertEqual("°C", sensor.unit_of_measurement)
         self.assertEqual(21.12, sensor.state)
+        self.assertEqual("mdi:thermometer", sensor.icon)
 
     def test_temperature_sensor_with_none_sensor_value(self):
         """Test temperature sensor with fahrenheit."""
@@ -97,6 +98,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         self.assertEqual("Home Family Room Humidity", sensor.name)
         self.assertEqual("%", sensor.unit_of_measurement)
         self.assertEqual(50.46, sensor.state)
+        self.assertEqual("mdi:water-percent", sensor.icon)
 
     def test_air_quality_sensor_with_very_abnormal_reading(self):
         """Test air quality sensor."""
@@ -112,6 +114,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         self.assertEqual("Home Family Room Air Quality", sensor.name)
         self.assertEqual(None, sensor.unit_of_measurement)
         self.assertEqual(0.4, sensor.state)
+        self.assertEqual("mdi:weather-windy", sensor.icon)
 
         air_quality = sensor.device_state_attributes[ATTR_AIR_QUALITY]
         self.assertEqual(STATE_AIR_QUALITY_VERY_ABNORMAL, air_quality)
@@ -130,6 +133,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         self.assertEqual("Home Family Room Air Quality", sensor.name)
         self.assertEqual(None, sensor.unit_of_measurement)
         self.assertEqual(0.59, sensor.state)
+        self.assertEqual("mdi:weather-windy", sensor.icon)
 
         air_quality = sensor.device_state_attributes[ATTR_AIR_QUALITY]
         self.assertEqual(STATE_AIR_QUALITY_ABNORMAL, air_quality)
@@ -148,6 +152,7 @@ class TestCanarySensorSetup(unittest.TestCase):
         self.assertEqual("Home Family Room Air Quality", sensor.name)
         self.assertEqual(None, sensor.unit_of_measurement)
         self.assertEqual(1.0, sensor.state)
+        self.assertEqual("mdi:weather-windy", sensor.icon)
 
         air_quality = sensor.device_state_attributes[ATTR_AIR_QUALITY]
         self.assertEqual(STATE_AIR_QUALITY_NORMAL, air_quality)
@@ -172,14 +177,15 @@ class TestCanarySensorSetup(unittest.TestCase):
         location = mock_location("Home")
 
         data = Mock()
-        data.get_reading.return_value = 50.4567
+        data.get_reading.return_value = 70.4567
 
         sensor = CanarySensor(data, SENSOR_TYPES[4], location, device)
         sensor.update()
 
         self.assertEqual("Home Family Room Battery", sensor.name)
         self.assertEqual("%", sensor.unit_of_measurement)
-        self.assertEqual(50.46, sensor.state)
+        self.assertEqual(70.46, sensor.state)
+        self.assertEqual("mdi:battery-70", sensor.icon)
 
     def test_wifi_sensor(self):
         """Test battery sensor."""
@@ -195,3 +201,4 @@ class TestCanarySensorSetup(unittest.TestCase):
         self.assertEqual("Home Family Room Wifi", sensor.name)
         self.assertEqual("dBm", sensor.unit_of_measurement)
         self.assertEqual(-57, sensor.state)
+        self.assertEqual("mdi:wifi", sensor.icon)
