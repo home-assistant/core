@@ -153,7 +153,7 @@ class EpsonProjector(MediaPlayerDevice):
         self._port = port
         self._cmode = None
         self._source_list = list(DEFAULT_SOURCES.values())
-        self._KEY_COMMANDS = key_commands
+        self.key_commands = key_commands
         self._encryption = encryption
         self._state = STATE_UNKNOWN
         http_protocol = 'https' if self._encryption else 'http'
@@ -223,12 +223,12 @@ class EpsonProjector(MediaPlayerDevice):
     @asyncio.coroutine
     def async_turn_on(self):
         """Turn on epson."""
-        return self.sendCommand('TURN_ON')
+        return self.send_command('TURN_ON')
 
     @asyncio.coroutine
     def async_turn_off(self):
         """Turn off epson."""
-        return self.sendCommand('TURN_OFF')
+        return self.send_command('TURN_OFF')
 
     @property
     def source_list(self):
@@ -244,56 +244,56 @@ class EpsonProjector(MediaPlayerDevice):
     def select_cmode(self, cmode):
         """Set color mode in Epson."""
         if cmode in CMODE_LIST_SET:
-            return self.sendCommand(CMODE_LIST_SET[cmode])
+            return self.send_command(CMODE_LIST_SET[cmode])
 
     @asyncio.coroutine
     def async_select_source(self, source):
         """Select input source."""
         _LOGGER.debug("select source")
         selected_source = INV_SOURCES[source]
-        return self.sendCommand(selected_source)
+        return self.send_command(selected_source)
 
     @asyncio.coroutine
     def async_mute_volume(self, mute):
         """Mute (true) or unmute (false) sound and video input."""
-        return self.sendCommand("MUTE")
+        return self.send_command("MUTE")
 
     @asyncio.coroutine
     def async_volume_up(self):
         """Increase volume."""
         _LOGGER.debug("volume up")
-        return self.sendCommand("VOL_UP")
+        return self.send_command("VOL_UP")
 
     @asyncio.coroutine
     def async_volume_down(self):
         """Decrease volume."""
-        return self.sendCommand("VOL_DOWN")
+        return self.send_command("VOL_DOWN")
 
     @asyncio.coroutine
     def async_media_play(self):
         """Play media via Epson."""
-        return self.sendCommand("PLAY")
+        return self.send_command("PLAY")
 
     @asyncio.coroutine
     def async_media_pause(self):
         """Pause media via Epson."""
-        return self.sendCommand("PAUSE")
+        return self.send_command("PAUSE")
 
     @asyncio.coroutine
     def async_media_next_track(self):
         """Skip to next."""
-        return self.sendCommand("FAST")
+        return self.send_command("FAST")
 
     @asyncio.coroutine
     def async_media_previous_track(self):
         """Skip to previous."""
-        return self.sendCommand("BACK")
+        return self.send_command("BACK")
 
     @asyncio.coroutine
-    def sendCommand(self, command):
+    def send_command(self, command):
         """Send command to Epson."""
         _LOGGER.debug("COMMAND %s", command)
-        params = self._KEY_COMMANDS[command]
+        params = self.key_commands[command]
         try:
             url = '{url}{type}'.format(url=self._http_url, type='directsend')
             response = yield from self.websession_action.get(
