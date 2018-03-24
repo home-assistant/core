@@ -21,6 +21,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL, STATE_OFF,
     STATE_ON, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 KEY_COMMANDS = {
     "TURN_ON": [('KEY', '3B')],
@@ -90,6 +91,7 @@ ATTR_CMODE = 'cmode'
 SUPPORT_CMODE = 33001
 ACCEPT_ENCODING = "gzip, deflate"
 ACCEPT_HEADER = "application/json, text/javascript"
+EPSON_ERROR_CODE = 'ERR'
 
 SUPPORT_EPSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE |\
             SUPPORT_CMODE | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP | \
@@ -129,7 +131,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         else:
             devices = hass.data[DATA_EPSON]
         for device in devices:
-            if (service.service == ATTR_CMODE):
+            if service.service == ATTR_CMODE:
                 cmode = service.data.get(ATTR_CMODE).lower()
                 if cmode in CMODE_LIST_SET:
                     yield from device.select_cmode(cmode)
@@ -151,7 +153,7 @@ class EpsonProjector(MediaPlayerDevice):
         self._port = port
         self._cmode = None
         self._source_list = list(DEFAULT_SOURCES.values())
-        self.KEY_COMMANDS = key_commands
+        self._KEY_COMMANDS = key_commands
         self._encryption = encryption
         self._state = STATE_UNKNOWN
         http_protocol = 'https' if self._encryption else 'http'
@@ -168,6 +170,12 @@ class EpsonProjector(MediaPlayerDevice):
             "Accept": ACCEPT_HEADER,
             "Referer": referer
         }
+        self.websession = async_create_clientsession(
+            hass,
+            verify_ssl=self._encryption)
+        self.websession_action = async_create_clientsession(
+            hass,
+            verify_ssl=self._encryption)
 
     @asyncio.coroutine
     def update(self):
@@ -181,16 +189,17 @@ class EpsonProjector(MediaPlayerDevice):
                     params=KEY_COMMANDS['CMODE'],
                     headers=self._headers)
             if response.status != 200:
-                    _LOGGER.warning(
-                        "[%s] Error %d on Epson.", DOMAIN, response.status)
-                    self._state = STATE_OFF
+                _LOGGER.warning(
+                    "[%s] Error %d on Epson.", DOMAIN, response.status)
+                self._state = STATE_OFF
             resp = yield from response.json()
-            if (resp['projector']['feature']['reply'] == 'ERR'):
+            reply_code = resp['projector']['feature']['reply']
+            if reply_code == EPSON_ERROR_CODE:
                 self._state = STATE_OFF
             else:
                 self._state = STATE_ON
-                self._cmode = CMODE_LIST[resp['projector']['feature']['reply']]
-        except (aiohttp.ClientError):
+                self._cmode = CMODE_LIST[reply_code]
+        except aiohttp.ClientError:
             _LOGGER.error("[%s] Error getting info", DOMAIN)
             self._state = STATE_OFF
             return False
@@ -284,7 +293,7 @@ class EpsonProjector(MediaPlayerDevice):
     def sendCommand(self, command):
         """Send command to Epson."""
         _LOGGER.debug("COMMAND %s", command)
-        params = self.KEY_COMMANDS[command]
+        params = self._KEY_COMMANDS[command]
         try:
             url = '{url}{type}'.format(url=self._http_url, type='directsend')
             response = yield from self.websession_action.get(
