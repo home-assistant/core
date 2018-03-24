@@ -3,7 +3,6 @@
 import logging
 from itertools import islice
 from typing import Optional, Sequence
-from datetime import timedelta
 
 import voluptuous as vol
 
