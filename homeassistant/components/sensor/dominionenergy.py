@@ -29,7 +29,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setting the platform in HASS and getting the username and password."""
-    add_devices([DominionEnergySensor(config[CONF_NAME], config[CONF_USERNAME], config[CONF_PASSWORD])])
+    add_devices([DominionEnergySensor(config[CONF_NAME], 
+        config[CONF_USERNAME], config[CONF_PASSWORD])])
 
 
 class DominionEnergySensor(Entity):
@@ -57,7 +58,6 @@ class DominionEnergySensor(Entity):
         """Returning the State of DominionEnergy Sensor."""
         return self._state
 
-
     @Throttle(HOURS_TO_UPDATE)
     def update(self):
         """Using Selenium to access Dominion website and fetch data."""
@@ -73,6 +73,6 @@ class DominionEnergySensor(Entity):
             driver.implicitly_wait(1)
             self._state = str(driver.find_element_by_css_selector(
                 self.CURRENT_BILL_SELECTOR).text)
-        except NoSuchElementException :
-            _LOGGER.error("Update Dominion Energy Failed. check if your password changed")
-
+        except NoSuchElementException:
+            _LOGGER.error("Update Dominion Energy Failed."
+                "check if your password changed")
