@@ -51,7 +51,7 @@ class BMWConnectedDriveSensor(Entity):
         self._attribute = attribute
         self._state = None
         self._unit_of_measurement = None
-        self._name = '{} {}'.format(self._vehicle.modelName, self._attribute)
+        self._name = '{} {}'.format(self._vehicle.name, self._attribute)
         self._sensor_name = sensor_name
         self._icon = icon
 

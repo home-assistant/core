@@ -45,7 +45,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         self._account = account
         self._vehicle = vehicle
         self._attribute = attribute
-        self._name = '{} {}'.format(self._vehicle.modelName, self._attribute)
+        self._name = '{} {}'.format(self._vehicle.name, self._attribute)
         self._sensor_name = sensor_name
         self._device_class = device_class
         self._state = None
