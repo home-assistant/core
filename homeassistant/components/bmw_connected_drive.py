@@ -18,7 +18,6 @@ REQUIREMENTS = ['bimmer_connected==0.5.0']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'bmw_connected_drive'
-CONF_VALUES = 'values'
 CONF_REGION = 'region'
 
 
