@@ -3,7 +3,7 @@ import json
 
 from unittest.mock import patch, Mock, mock_open
 
-from homeassistant.components.emulated_hue import Config, _LOGGER
+from homeassistant.components.emulated_hue import Config
 
 
 def test_config_google_home_entity_id_to_number():
