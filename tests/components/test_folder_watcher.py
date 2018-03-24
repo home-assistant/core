@@ -62,4 +62,12 @@ class TestFolderWatcher(unittest.TestCase):
         self.hass.block_till_done()
 
         # Check if fire was called.
-        self.assertTrue(self.hass.bus.fire.called)
+        self.hass.bus.fire.assert_called()
+
+        expected_event = {'event_type': 'modified',
+                          'path': FILE,
+                          'file': FILE,
+                          'folder': ''}
+
+        self.hass.bus.fire.assert_called_with(
+            'folder_watcher', expected_event)
