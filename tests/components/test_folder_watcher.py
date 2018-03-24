@@ -8,16 +8,7 @@ from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
 CWD = os.path.join(os.path.dirname(__file__))
-EVENT_TYPE = 'deleted'
 FILE = 'file.txt'
-FOLDER = 'test'
-SRC_PATH = 'test/file.txt'
-
-
-def get_fake_event(src_path=SRC_PATH, event_type=EVENT_TYPE):
-    """Generate a Fake watchdog event object with the specified arguments."""
-    return MagicMock(
-        src_path=src_path, event_type=event_type, is_directory=False)
 
 
 class TestFolderWatcher(unittest.TestCase):
@@ -55,8 +46,7 @@ class TestFolderWatcher(unittest.TestCase):
         """Check that HASS events are fired correctly on watchdog event."""
         from watchdog.events import FileModifiedEvent
 
-        # cant use setup_component
-        # because of the need to retrieve Watcher object
+        # Cant use setup_component as need to retrieve Watcher object.
         w = folder_watcher.Watcher(CWD,
                                    folder_watcher.DEFAULT_PATTERN,
                                    self.hass)
@@ -64,12 +54,12 @@ class TestFolderWatcher(unittest.TestCase):
 
         self.hass.bus.fire = MagicMock()
 
-        # trigger a fake filesystem event through the Watcher Observer emitter
+        # Trigger a fake filesystem event through the Watcher Observer emitter.
         (emitter,) = w._observer.emitters
         emitter.queue_event(FileModifiedEvent(FILE))
 
-        # wait for the event to propagate
+        # Wait for the event to propagate.
         self.hass.block_till_done()
 
-        # check if fire was called
+        # Check if fire was called.
         self.assertTrue(self.hass.bus.fire.called)
