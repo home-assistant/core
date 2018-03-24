@@ -5,8 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dominion_energy/
 """
 
-import voluptuous as vol
 import logging
+import voluptuous as vol
+
 
 from homeassistant.util import Throttle
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -29,8 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setting the platform in HASS and getting the username and password."""
-    add_devices([DominionEnergySensor(config[CONF_NAME], 
-        config[CONF_USERNAME], config[CONF_PASSWORD])])
+    add_devices([DominionEnergySensor(config[CONF_NAME], config[CONF_USERNAME],
+                                      config[CONF_PASSWORD])])
 
 
 class DominionEnergySensor(Entity):
@@ -75,4 +76,4 @@ class DominionEnergySensor(Entity):
                 self.CURRENT_BILL_SELECTOR).text)
         except NoSuchElementException:
             _LOGGER.error("Update Dominion Energy Failed."
-                "check if your password changed")
+                          "check if your password changed")
