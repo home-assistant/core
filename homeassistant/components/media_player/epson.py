@@ -20,8 +20,8 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL, STATE_OFF,
     STATE_ON, STATE_UNKNOWN)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+import homeassistant.helpers.config_validation as cv
 
 KEY_COMMANDS = {
     "TURN_ON": [('KEY', '3B')],
