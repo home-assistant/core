@@ -8,7 +8,7 @@ https://home-assistant.io/components/sensor.fints/
 from collections import namedtuple
 from datetime import timedelta
 import logging
-from typing import Tuple, List
+from typing import List
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
