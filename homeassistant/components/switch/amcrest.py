@@ -47,12 +47,7 @@ class AmcrestSwitch(ToggleEntity):
         self._camera = camera
         self._name = SWITCHES[setting][0]
         self._icon = SWITCHES[setting][1]
-        self._state = STATE_UNKNOWN
-
-    @property
-    def should_poll(self):
-        """Poll for status regularly."""
-        return True
+        self._state = None
 
     @property
     def name(self):
