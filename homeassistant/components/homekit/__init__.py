@@ -119,7 +119,7 @@ def get_accessory(hass, state, aid, config):
         return TYPES['Thermostat'](hass, state.entity_id,
                                    state.name, support_auto, aid=aid)
 
-    elif state.domain == 'light':
+    elif state.domain == 'light' or state.domain 'group.light':
         return TYPES['Light'](hass, state.entity_id, state.name, aid=aid)
 
     elif state.domain == 'switch' or state.domain == 'remote' \
