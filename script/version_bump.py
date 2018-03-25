@@ -15,6 +15,7 @@ def format_patch(patch_parts):
 
 
 def bump_version(cur_major, cur_minor, cur_patch, bump_type):
+    """Return a new version given a current version and action."""
     patch_parts = re.match(PARSE_PATCH, cur_patch).groupdict()
     patch_parts['patch'] = int(patch_parts['patch'])
     if patch_parts['prerelversion'] is not None:
@@ -75,8 +76,8 @@ def bump_version(cur_major, cur_minor, cur_patch, bump_type):
 
 def write_version(major, minor, patch):
     """Update Home Assistant constant file with new version."""
-    with open('homeassistant/const.py') as fp:
-        content = fp.read()
+    with open('homeassistant/const.py') as fil:
+        content = fil.read()
 
     content = re.sub('MAJOR_VERSION = .*\n',
                      'MAJOR_VERSION = {}\n'.format(major),
@@ -88,11 +89,12 @@ def write_version(major, minor, patch):
                      "PATCH_VERSION = '{}'\n".format(patch),
                      content)
 
-    with open('homeassistant/const.py', 'wt') as fp:
-        content = fp.write(content)
+    with open('homeassistant/const.py', 'wt') as fil:
+        content = fil.write(content)
 
 
 def main():
+    """Execute script."""
     parser = argparse.ArgumentParser(
         description="Bump version of Home Assistant")
     parser.add_argument(
@@ -106,6 +108,7 @@ def main():
 
 
 def test_bump_version():
+    """Make sure it all works."""
     assert bump_version(0, 56, '0', 'beta') == \
         (0, 56, '1.beta0')
     assert bump_version(0, 56, '0.beta3', 'beta') == \
