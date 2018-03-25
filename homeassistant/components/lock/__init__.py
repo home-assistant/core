@@ -82,7 +82,7 @@ def unlock(hass, entity_id=None, code=None):
 
 
 @bind_hass
-def open(hass, entity_id=None, code=None):
+def open_lock(hass, entity_id=None, code=None):
     """Open all or specified locks."""
     data = {}
     if code:

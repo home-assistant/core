@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 from homeassistant.components.lock import LockDevice, SUPPORT_OPEN
-from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED, STATE_OPEN)
+from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
 
 
 # pylint: disable=unused-argument
@@ -54,7 +54,7 @@ class DemoLock(LockDevice):
 
     def open(self, **kwargs):
         """Open the door latch."""
-        self._state = STATE_OPEN
+        self._state = STATE_UNLOCKED
         self.schedule_update_ha_state()
 
     @property
