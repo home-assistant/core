@@ -73,11 +73,13 @@ def extract_entities(template, variables=None):
             extraction_final.append(result[0])
 
         if variables and result[1] in variables and \
-           isinstance(variables[result[1]], str):
+           isinstance(variables[result[1]], str) and \
+           valid_entity_id(variables[result[1]]):
             extraction_final.append(variables[result[1]])
 
-    unique_valid = [e for e in set(extraction_final) if valid_entity_id(e)]
-    return unique_valid or MATCH_ALL
+    if extraction_final:
+        return list(set(extraction_final))
+    return MATCH_ALL
 
 
 class Template(object):
