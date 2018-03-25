@@ -13,7 +13,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['wirelesstagpy']
+REQUIREMENTS = ['wirelesstagpy==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ ATTR_TAG_POWER_CONSUMPTION = 'power_consumption'
 
 
 NOTIFICATION_ID = 'wirelesstag_notification'
-NOTIFICATION_TITLE = 'Wireless Sensor Tag Setup'
+NOTIFICATION_TITLE = "Wireless Sensor Tag Setup"
 
 DOMAIN = 'wirelesstag'
 DEFAULT_ENTITY_NAMESPACE = 'wirelesstag'
