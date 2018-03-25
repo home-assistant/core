@@ -179,11 +179,11 @@ class LockDevice(Entity):
         return self.hass.async_add_job(ft.partial(self.unlock, **kwargs))
 
     def open(self, **kwargs):
-        """Open the lock."""
+        """Open the door latch."""
         raise NotImplementedError()
 
     def async_open(self, **kwargs):
-        """Open the lock.
+        """Open the door latch.
 
         This method must be run in the event loop and returns a coroutine.
         """
