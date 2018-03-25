@@ -121,9 +121,15 @@ class MatrixBot(object):
 
         self._listening_rooms = listening_rooms
 
+        # We have to fetch the aliases for every room to make sure we don't
+        # join it twice by accident. However, fetching aliases is costly,
+        # so we only do it once per room.
+        self._aliases_fetched_for = set()
+
         # word commands are stored dict-of-dict: First dict indexes by room ID
         #  / alias, second dict indexes by the word
         self._word_commands = {}
+
         # regular expression commands are stored as a list of commands per
         # room, i.e., a dict-of-list
         self._expression_commands = {}
@@ -148,6 +154,7 @@ class MatrixBot(object):
 
         # Join rooms in which we listen for commands and start listening
         self._join_rooms()
+
         self._client.start_listener_thread()
 
     def _handle_room_message(self, room_id, room, event):
@@ -186,23 +193,42 @@ class MatrixBot(object):
             }
             self.hass.bus.fire(EVENT_MATRIX_COMMAND, event_data)
 
+    def _join_or_get_room(self, room_id_or_alias):
+        """Join a room or get it, if we are already in the room.
+
+        We can't just always call join_room(), since that seems to crash
+        the client if we're already in the room.
+        """
+        rooms = self._client.get_rooms()
+        if room_id_or_alias in rooms:
+            _LOGGER.debug("Already in room %s", room_id_or_alias)
+            return rooms[room_id_or_alias]
+
+        for room in rooms.values():
+            if room.room_id not in self._aliases_fetched_for:
+                room.update_aliases()
+                self._aliases_fetched_for.add(room.room_id)
+
+            if room_id_or_alias in room.aliases:
+                _LOGGER.debug("Already in room %s (known as %s)",
+                              room.room_id, room_id_or_alias)
+                return room
+
+        room = self._client.join_room(room_id_or_alias)
+        _LOGGER.info("Joined room %s (known as %s)", room.room_id,
+                     room_id_or_alias)
+        return room
+
     def _join_rooms(self):
         """Join the rooms that we listen for commands in."""
         from matrix_client.client import MatrixRequestError
 
-        joined_rooms = self._client.get_rooms()
-
         for room_id in self._listening_rooms:
             try:
-                if room_id in joined_rooms:
-                    room = joined_rooms[room_id]
-                    _LOGGER.debug("Already in room %s", room_id)
-                else:
-                    room = self._client.join_room(room_id)
-                    _LOGGER.debug("Joined room %s", room_id)
-
+                room = self._join_or_get_room(room_id)
                 room.add_listener(partial(self._handle_room_message, room_id),
                                   "m.room.message")
+
             except MatrixRequestError as ex:
                 _LOGGER.error("Could not join room %s: %s", room_id, ex)
 
@@ -301,16 +327,10 @@ class MatrixBot(object):
         """Send the message to the matrix server."""
         from matrix_client.client import MatrixRequestError
 
-        rooms = self._client.get_rooms()
         for target_room in target_rooms:
             try:
-                if target_room in rooms:
-                    room = rooms[target_room]
-                else:
-                    room = self._client.join_room(target_room)
-
+                room = self._join_or_get_room(target_room)
                 _LOGGER.debug(room.send_text(message))
-
             except MatrixRequestError as ex:
                 _LOGGER.error(
                     "Unable to deliver message to room '%s': (%d): %s",
