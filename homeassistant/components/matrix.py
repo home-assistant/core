@@ -6,12 +6,14 @@ https://home-assistant.io/components/matrix/
 """
 import logging
 import os
+from functools import partial
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (ATTR_TARGET, ATTR_MESSAGE)
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_VERIFY_SSL
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
+                                 CONF_VERIFY_SSL, CONF_NAME)
 from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['matrix-client==0.0.6']
@@ -21,22 +23,47 @@ _LOGGER = logging.getLogger(__name__)
 SESSION_FILE = 'matrix.conf'
 
 CONF_HOMESERVER = 'homeserver'
-CONF_LISTENING_ROOMS = 'listening_rooms'
+CONF_ROOMS = 'rooms'
 CONF_COMMANDS = 'commands'
+CONF_WORD = 'word'
+CONF_EXPRESSION = 'expression'
 
 EVENT_MATRIX_COMMAND = 'matrix_command'
 
 DOMAIN = 'matrix'
+
+COMMAND_SCHEMA = vol.All(
+    # Basic Schema
+    vol.Schema({
+        vol.Exclusive(CONF_WORD, 'trigger'): cv.string,
+        vol.Exclusive(CONF_EXPRESSION, 'trigger'): cv.is_regex,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list,
+                                                      [cv.string]),
+    }),
+    # Make sure it's either a word or an expression command
+    cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION),
+    # Check that if it's an expression command, it has a name
+    cv.validate_if(
+        # Premise: If this is an expression command…
+        vol.Schema({
+            vol.Required(CONF_EXPRESSION): cv.is_regex
+        }, extra=vol.ALLOW_EXTRA),
+        # Conclusion: … then it must have a name.
+        vol.Schema({
+            vol.Required(CONF_NAME): cv.string
+        }, extra=vol.ALLOW_EXTRA)
+    )
+)
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_HOMESERVER): cv.url,
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     vol.Required(CONF_USERNAME): cv.matches_regex("@[^:]*:.*"),
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_LISTENING_ROOMS, default=[]): vol.All(cv.ensure_list,
-                                                            [cv.string]),
-    vol.Optional(CONF_COMMANDS, default=[]): vol.All(cv.ensure_list,
-                                                     [cv.string]),
+    vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list,
+                                                  [cv.string]),
+    vol.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA]
 })
 
 SERVICE_SEND_MESSAGE = 'send_message'
@@ -61,7 +88,7 @@ def setup(hass, config):
         config.get(CONF_VERIFY_SSL),
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD),
-        config.get(CONF_LISTENING_ROOMS, []),
+        config.get(CONF_ROOMS, []),
         config.get(CONF_COMMANDS, []))
     hass.data[DOMAIN] = bot
 
@@ -93,7 +120,28 @@ class MatrixBot(object):
         self._password = password
 
         self._listening_rooms = listening_rooms
-        self._commands = set(commands)
+
+        # word commands are stored dict-of-dict: First dict indexes by room ID
+        #  / alias, second dict indexes by the word
+        self._word_commands = {}
+        # regular expression commands are stored as a list of commands per
+        # room, i.e., a dict-of-list
+        self._expression_commands = {}
+
+        for command in commands:
+            if not command.get(CONF_ROOMS):
+                command[CONF_ROOMS] = listening_rooms
+
+            if command.get(CONF_WORD):
+                for room_id in command[CONF_ROOMS]:
+                    if room_id not in self._word_commands:
+                        self._word_commands[room_id] = {}
+                    self._word_commands[room_id][command[CONF_WORD]] = command
+            else:
+                for room_id in command[CONF_ROOMS]:
+                    if room_id not in self._expression_commands:
+                        self._expression_commands[room_id] = []
+                    self._expression_commands[room_id].append(command)
 
         # Login, this will raise a MatrixRequestError if login is unsuccessful
         self._client = self._login()
@@ -102,27 +150,45 @@ class MatrixBot(object):
         self._join_rooms()
         self._client.start_listener_thread()
 
+    def _handle_room_message(self, room_id, room, event):
+        """Handle a message sent to a room."""
+        if event['content']['msgtype'] != 'm.text':
+            return
+
+        if event['sender'] == self._mx_id:
+            return
+
+        if event['content']['body'][0] == "!":
+            # Could trigger a single-word command.
+            pieces = event['content']['body'].split(' ')
+            cmd = pieces[0][1:]
+
+            command = self._word_commands.get(room_id, {}).get(cmd)
+            if command:
+                event_data = {
+                    'command': command.get(CONF_NAME, cmd),
+                    'sender': event['sender'],
+                    'room': room_id,
+                    'args': pieces[1:]
+                }
+                self.hass.bus.fire(EVENT_MATRIX_COMMAND, event_data)
+
+        # After single-word commands, check all regex commands in the room
+        for command in self._expression_commands.get(room_id, []):
+            match = command[CONF_EXPRESSION].match(event['content']['body'])
+            if not match:
+                continue
+            event_data = {
+                'command': command[CONF_NAME],
+                'sender': event['sender'],
+                'room': room_id,
+                'args': match.groupdict()
+            }
+            self.hass.bus.fire(EVENT_MATRIX_COMMAND, event_data)
+
     def _join_rooms(self):
         """Join the rooms that we listen for commands in."""
         from matrix_client.client import MatrixRequestError
-
-        def room_message_cb(room, event):
-            """Handle a message sent to a room."""
-            if (event['content']['msgtype'] == "m.text" and
-                    event['content']['body'][0] == "!"):
-                pieces = event['content']['body'].split(' ')
-                cmd = pieces[0][1:]
-                if cmd not in self._commands:
-                    return
-
-                event_data = {
-                    'command': cmd,
-                    'sender': event['sender'],
-                    'room': room.room_id,
-                    'args': pieces[1:]
-                }
-
-                self.hass.bus.fire(EVENT_MATRIX_COMMAND, event_data)
 
         joined_rooms = self._client.get_rooms()
 
@@ -135,7 +201,8 @@ class MatrixBot(object):
                     room = self._client.join_room(room_id)
                     _LOGGER.debug("Joined room %s", room_id)
 
-                room.add_listener(room_message_cb, "m.room.message")
+                room.add_listener(partial(self._handle_room_message, room_id),
+                                  "m.room.message")
             except MatrixRequestError as ex:
                 _LOGGER.error("Could not join room %s: %s", room_id, ex)
 

@@ -75,6 +75,28 @@ def has_at_least_one_key_value(*items: list) -> Callable:
     return validate
 
 
+def validate_if(premise: Callable, conclusion: Callable) -> Callable:
+    """Validate that if the premise validates the conclusion also validates."""
+    def validate(obj: Dict) -> Dict:
+        """Validate a ValidateIf."""
+        try:
+            premise(obj)
+        except vol.Invalid:
+            # Ex falso quodlibet!
+            return obj
+
+        # The premise has validated, the conclusion must validate, too!
+        try:
+            conclusion(obj)
+        except vol.Invalid:
+            raise vol.Invalid("If {} is valid, so must {} be!".format(
+                str(premise), str(conclusion)))
+
+        return obj
+
+    return validate
+
+
 def boolean(value: Any) -> bool:
     """Validate and coerce a boolean value."""
     if isinstance(value, str):
@@ -112,6 +134,16 @@ def matches_regex(regex):
 
         return value
     return validator
+
+
+def is_regex(value):
+    """Validate that a string is a valid regular expression."""
+    try:
+        r = re.compile(value)
+        return r
+    except Exception:
+        raise vol.Invalid("value {} is not a valid regular expression".format(
+            value))
 
 
 def isfile(value: Any) -> str:
