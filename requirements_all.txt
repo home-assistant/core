@@ -308,6 +308,9 @@ fedexdeliverymanager==1.0.6
 # homeassistant.components.sensor.geo_rss_events
 feedparser==5.2.1
 
+# homeassistant.components.sensor.fints
+fints==0.2.1
+
 # homeassistant.components.sensor.fitbit
 fitbit==0.3.0
 
