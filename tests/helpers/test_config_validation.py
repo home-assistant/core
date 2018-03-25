@@ -568,7 +568,7 @@ def test_socket_timeout():  # pylint: disable=invalid-name
 
 
 def test_matches_regex():
-    """Test regex validator."""
+    """Test matches_regex validator."""
     schema = vol.Schema(cv.matches_regex('.*uiae.*'))
 
     with pytest.raises(vol.Invalid):
@@ -579,3 +579,47 @@ def test_matches_regex():
 
     test_str = "This is a test including uiae."
     assert(schema(test_str) == test_str)
+
+
+def test_is_regex():
+    """Test the is_regex validator."""
+    schema = vol.Schema(cv.is_regex)
+
+    with pytest.raises(vol.Invalid):
+        schema("(")
+
+    with pytest.raises(vol.Invalid):
+        schema({"a dict": "is not a regex"})
+
+    valid_re = ".*"
+    schema(valid_re)
+
+
+def test_validate_if():
+    """Test the validate_if validator."""
+    premise = vol.Schema({
+        vol.Required("premise"): cv.string
+    }, extra=vol.ALLOW_EXTRA)
+    conclusion = vol.Schema({
+        vol.Required("conclusion"): cv.positive_int
+    }, extra=vol.ALLOW_EXTRA)
+
+    schema = vol.Schema(cv.validate_if(premise, conclusion))
+
+    with pytest.raises(vol.Invalid):
+        schema({"premise": "but no conclusion"})
+
+    schema({"conclusion": 5})  # Only a conclusion
+
+    with pytest.raises(vol.Invalid):
+        schema({
+            "premise": "this is a string",
+            "conclusion": "this is not a positive integer"
+        })
+
+    schema({
+        "premise": "this is a string",
+        "conclusion": 42
+    })
+
+    schema({})
