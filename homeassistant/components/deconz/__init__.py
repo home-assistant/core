@@ -166,7 +166,8 @@ async def async_request_configuration(hass, config, deconz_config):
     async def async_configuration_callback(data):
         """Set up actions to do when our configuration callback is called."""
         from pydeconz.utils import async_get_api_key
-        api_key = await async_get_api_key(hass.loop, **deconz_config)
+        websession = async_get_clientsession(hass)
+        api_key = await async_get_api_key(websession, **deconz_config)
         if api_key:
             deconz_config[CONF_API_KEY] = api_key
             result = await async_setup_deconz(hass, config, deconz_config)
@@ -247,8 +248,8 @@ class DeconzFlowHandler(config_entries.ConfigFlowHandler):
         errors = {}
 
         if user_input is not None:
-            api_key = await async_get_api_key(
-                self.hass.loop, **self.deconz_config)
+            session = aiohttp_client.async_get_clientsession(self.hass)
+            api_key = await async_get_api_key(session, **self.deconz_config)
             if api_key:
                 self.deconz_config[CONF_API_KEY] = api_key
                 return self.async_create_entry(
