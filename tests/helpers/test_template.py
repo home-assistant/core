@@ -836,6 +836,12 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
                 "{{ is_state(trigger.entity_id, 'off') }}",
                 {'trigger': {'entity_id': 'input_boolean.switch'}}))
 
+        self.assertEqual(
+            MATCH_ALL,
+            template.extract_entities(
+                "{{ is_state('media_player.' ~ where , 'playing') }}",
+                {'where': 'livingroom'}))
+
 
 @asyncio.coroutine
 def test_state_with_unit(hass):
