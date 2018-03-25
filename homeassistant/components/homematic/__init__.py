@@ -33,6 +33,7 @@ DISCOVER_SENSORS = 'homematic.sensor'
 DISCOVER_BINARY_SENSORS = 'homematic.binary_sensor'
 DISCOVER_COVER = 'homematic.cover'
 DISCOVER_CLIMATE = 'homematic.climate'
+DISCOVER_LOCKS = 'homematic.locks'
 
 ATTR_DISCOVER_DEVICES = 'devices'
 ATTR_PARAM = 'param'
@@ -59,7 +60,7 @@ SERVICE_SET_INSTALL_MODE = 'set_install_mode'
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
         'Switch', 'SwitchPowermeter', 'IOSwitch', 'IPSwitch', 'RFSiren',
-        'IPSwitchPowermeter', 'KeyMatic', 'HMWIOSwitch', 'Rain', 'EcoLogic'],
+        'IPSwitchPowermeter', 'HMWIOSwitch', 'Rain', 'EcoLogic'],
     DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer'],
     DISCOVER_SENSORS: [
         'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion', 'MotionIP',
@@ -78,7 +79,8 @@ HM_DEVICE_TYPES = {
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
         'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
         'WiredSensor', 'PresenceIP'],
-    DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt']
+    DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
+    DISCOVER_LOCKS: ['KeyMatic']
 }
 
 HM_IGNORE_DISCOVERY_NODE = [
@@ -464,7 +466,8 @@ def _system_callback_handler(hass, config, src, *args):
                     ('cover', DISCOVER_COVER),
                     ('binary_sensor', DISCOVER_BINARY_SENSORS),
                     ('sensor', DISCOVER_SENSORS),
-                    ('climate', DISCOVER_CLIMATE)):
+                    ('climate', DISCOVER_CLIMATE),
+                    ('lock', DISCOVER_LOCKS)):
                 # Get all devices of a specific type
                 found_devices = _get_devices(
                     hass, discovery_type, addresses, interface)
