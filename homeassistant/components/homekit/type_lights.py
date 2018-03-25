@@ -71,6 +71,7 @@ class Light(HomeAccessory):
 
         _LOGGER.debug('%s: Set state to %d', self._entity_id, value)
         self._flag[CHAR_ON] = True
+        self.char_on.set_value(value, should_callback=False)
 
         if value == 1:
             self._hass.components.light.turn_on(self._entity_id)
@@ -81,6 +82,7 @@ class Light(HomeAccessory):
         """Set brightness if call came from HomeKit."""
         _LOGGER.debug('%s: Set brightness to %d', self._entity_id, value)
         self._flag[CHAR_BRIGHTNESS] = True
+        self.char_brightness.set_value(value, should_callback=False)
         self._hass.components.light.turn_on(
             self._entity_id, brightness_pct=value)
 
@@ -88,6 +90,7 @@ class Light(HomeAccessory):
         """Set saturation if call came from HomeKit."""
         _LOGGER.debug('%s: Set saturation to %d', self._entity_id, value)
         self._flag[CHAR_SATURATION] = True
+        self.char_saturation.set_value(value, should_callback=False)
         self._saturation = value
         self.set_color()
 
@@ -95,6 +98,7 @@ class Light(HomeAccessory):
         """Set hue if call came from HomeKit."""
         _LOGGER.debug('%s: Set hue to %d', self._entity_id, value)
         self._flag[CHAR_HUE] = True
+        self.char_hue.set_value(value, should_callback=False)
         self._hue = value
         self.set_color()
 

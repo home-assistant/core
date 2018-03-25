@@ -54,6 +54,7 @@ class SecuritySystem(HomeAccessory):
         _LOGGER.debug('%s: Set security state to %d',
                       self._entity_id, value)
         self.flag_target_state = True
+        self.char_target_state.set_value(value, should_callback=False)
         hass_value = HOMEKIT_TO_HASS[value]
         service = STATE_TO_SERVICE[hass_value]
 
