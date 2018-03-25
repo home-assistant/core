@@ -97,6 +97,7 @@ class Thermostat(HomeAccessory):
 
     def set_heat_cool(self, value):
         """Move operation mode to value if call came from HomeKit."""
+        self.char_target_heat_cool.set_value(value, should_callback=False)
         if value in HC_HOMEKIT_TO_HASS:
             _LOGGER.debug('%s: Set heat-cool to %d', self._entity_id, value)
             self.heat_cool_flag_target_state = True
@@ -109,6 +110,7 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug('%s: Set cooling threshold temperature to %.2f',
                       self._entity_id, value)
         self.coolingthresh_flag_target_state = True
+        self.char_cooling_thresh_temp.set_value(value, should_callback=False)
         low = self.char_heating_thresh_temp.value
         self._hass.components.climate.set_temperature(
             entity_id=self._entity_id, target_temp_high=value,
@@ -119,6 +121,7 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug('%s: Set heating threshold temperature to %.2f',
                       self._entity_id, value)
         self.heatingthresh_flag_target_state = True
+        self.char_heating_thresh_temp.set_value(value, should_callback=False)
         # Home assistant always wants to set low and high at the same time
         high = self.char_cooling_thresh_temp.value
         self._hass.components.climate.set_temperature(
@@ -130,6 +133,7 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug('%s: Set target temperature to %.2f',
                       self._entity_id, value)
         self.temperature_flag_target_state = True
+        self.char_target_temp.set_value(value, should_callback=False)
         self._hass.components.climate.set_temperature(
             temperature=value, entity_id=self._entity_id)
 
