@@ -35,7 +35,6 @@ STATE_SABOTAGE = 'Sabotage'
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the HomematicIP sensors devices."""
-
     from homematicip.device import (
         HeatingThermostat, TemperatureHumiditySensorWithoutDisplay,
         TemperatureHumiditySensorDisplay)
