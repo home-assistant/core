@@ -44,7 +44,8 @@ def setup(hass, config):
         from pyarlo import PyArlo
 
         arlo = PyArlo(username, password, preload=False)
-        arlo.session.mount('https://',HTTPAdapter(pool_maxsize=10,pool_block=True)) 
+        arlo.session.mount('https://',
+                HTTPAdapter(pool_maxsize=10, pool_block=True))
         if not arlo.is_connected:
             return False
         hass.data[DATA_ARLO] = arlo
