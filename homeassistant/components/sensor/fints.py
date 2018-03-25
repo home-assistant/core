@@ -69,12 +69,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 account_name = '{} - {}'.format(fints_name, account.iban)
             accounts += [FinTsAccount(credentials, account.iban, account_name)]
             _LOGGER.debug('Creating account %s for bank %s',
-                      account.iban, fints_name)
+                          account.iban, fints_name)
 
     add_devices(accounts, True)
 
 
-def _connect(credentials : BankCredentials):
+def _connect(credentials: BankCredentials):
     """Connect to the bank."""
     from fints.client import FinTS3PinTanClient
     _LOGGER.debug('Connecting to account %s', credentials.login)
