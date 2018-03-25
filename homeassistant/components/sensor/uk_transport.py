@@ -132,7 +132,7 @@ class UkTransportSensor(Entity):
             _LOGGER.warning('Invalid response from API')
         elif 'error' in response.json():
             if 'exceeded' in response.json()['error']:
-                self._state = 'Useage limites exceeded'
+                self._state = 'Usage limits exceeded'
             if 'invalid' in response.json()['error']:
                 self._state = 'Credentials invalid'
         else:

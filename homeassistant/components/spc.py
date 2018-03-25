@@ -151,7 +151,7 @@ def _ws_process_message(message, async_callback, *args):
             "Unsuccessful websocket message delivered, ignoring: %s", message)
     try:
         yield from async_callback(message['data']['sia'], *args)
-    except:    # pylint: disable=bare-except
+    except:  # noqa: E722  # pylint: disable=bare-except
         _LOGGER.exception("Exception in callback, ignoring")
 
 
@@ -189,12 +189,7 @@ class SpcWebGateway:
 
     def start_listener(self, async_callback, *args):
         """Start the websocket listener."""
-        try:
-            from asyncio import ensure_future
-        except ImportError:
-            from asyncio import async as ensure_future
-
-        ensure_future(self._ws_listen(async_callback, *args))
+        asyncio.ensure_future(self._ws_listen(async_callback, *args))
 
     def _build_url(self, resource):
         return urljoin(self._api_url, "spc/{}".format(resource))
@@ -219,7 +214,8 @@ class SpcWebGateway:
         url = self._build_url(resource)
         try:
             _LOGGER.debug("Attempting to retrieve SPC data from %s", url)
-            session = aiohttp.ClientSession()
+            session = \
+                self._hass.helpers.aiohttp_client.async_get_clientsession()
             with async_timeout.timeout(10, loop=self._hass.loop):
                 action = session.get if use_get else session.put
                 response = yield from action(url)

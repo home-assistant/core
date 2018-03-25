@@ -22,7 +22,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discoveryy_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Abode camera devices."""
     import abodepy.helpers.constants as CONST
     import abodepy.helpers.timeline as TIMELINE

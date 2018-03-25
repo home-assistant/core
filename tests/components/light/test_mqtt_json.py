@@ -180,7 +180,7 @@ class TestLightMQTTJSON(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
-        self.assertEqual(255, state.attributes.get(ATTR_SUPPORTED_FEATURES))
+        self.assertEqual(191, state.attributes.get(ATTR_SUPPORTED_FEATURES))
         self.assertIsNone(state.attributes.get('rgb_color'))
         self.assertIsNone(state.attributes.get('brightness'))
         self.assertIsNone(state.attributes.get('color_temp'))
@@ -192,8 +192,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         # Turn on the light, full white
         fire_mqtt_message(self.hass, 'test_light_rgb',
                           '{"state":"ON",'
-                          '"color":{"r":255,"g":255,"b":255,'
-                          '"x":0.123,"y":0.123},'
+                          '"color":{"r":255,"g":255,"b":255},'
                           '"brightness":255,'
                           '"color_temp":155,'
                           '"effect":"colorloop",'
@@ -202,12 +201,12 @@ class TestLightMQTTJSON(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
-        self.assertEqual([255, 255, 255], state.attributes.get('rgb_color'))
+        self.assertEqual((255, 255, 255), state.attributes.get('rgb_color'))
         self.assertEqual(255, state.attributes.get('brightness'))
         self.assertEqual(155, state.attributes.get('color_temp'))
         self.assertEqual('colorloop', state.attributes.get('effect'))
         self.assertEqual(150, state.attributes.get('white_value'))
-        self.assertEqual([0.123, 0.123], state.attributes.get('xy_color'))
+        self.assertEqual((0.32, 0.336), state.attributes.get('xy_color'))
 
         # Turn the light off
         fire_mqtt_message(self.hass, 'test_light_rgb', '{"state":"OFF"}')
@@ -232,7 +231,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.hass.block_till_done()
 
         light_state = self.hass.states.get('light.test')
-        self.assertEqual([125, 125, 125],
+        self.assertEqual((255, 255, 255),
                          light_state.attributes.get('rgb_color'))
 
         fire_mqtt_message(self.hass, 'test_light_rgb',
@@ -241,7 +240,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.hass.block_till_done()
 
         light_state = self.hass.states.get('light.test')
-        self.assertEqual([0.135, 0.135],
+        self.assertEqual((0.141, 0.14),
                          light_state.attributes.get('xy_color'))
 
         fire_mqtt_message(self.hass, 'test_light_rgb',
@@ -293,16 +292,18 @@ class TestLightMQTTJSON(unittest.TestCase):
         light.turn_on(self.hass, 'light.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('test_light_rgb/set', '{"state": "ON"}', 2, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light_rgb/set', '{"state": "ON"}', 2, False)
+        self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
 
         light.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('test_light_rgb/set', '{"state": "OFF"}', 2, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light_rgb/set', '{"state": "OFF"}', 2, False)
+        self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
@@ -312,11 +313,14 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-2][1][0])
-        self.assertEqual(2, self.mock_publish.mock_calls[-2][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
+                         self.mock_publish.async_publish.mock_calls[0][1][0])
+        self.assertEqual(2,
+                         self.mock_publish.async_publish.mock_calls[0][1][2])
+        self.assertEqual(False,
+                         self.mock_publish.async_publish.mock_calls[0][1][3])
         # Get the sent message
-        message_json = json.loads(self.mock_publish.mock_calls[-2][1][1])
+        message_json = json.loads(
+            self.mock_publish.async_publish.mock_calls[0][1][1])
         self.assertEqual(50, message_json["brightness"])
         self.assertEqual(155, message_json["color_temp"])
         self.assertEqual('colorloop', message_json["effect"])
@@ -353,23 +357,30 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-2][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
+                         self.mock_publish.async_publish.mock_calls[0][1][0])
+        self.assertEqual(0,
+                         self.mock_publish.async_publish.mock_calls[0][1][2])
+        self.assertEqual(False,
+                         self.mock_publish.async_publish.mock_calls[0][1][3])
         # Get the sent message
-        message_json = json.loads(self.mock_publish.mock_calls[-2][1][1])
+        message_json = json.loads(
+            self.mock_publish.async_publish.mock_calls[0][1][1])
         self.assertEqual(5, message_json["flash"])
         self.assertEqual("ON", message_json["state"])
 
+        self.mock_publish.async_publish.reset_mock()
         light.turn_on(self.hass, 'light.test', flash="long")
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-2][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
+                         self.mock_publish.async_publish.mock_calls[0][1][0])
+        self.assertEqual(0,
+                         self.mock_publish.async_publish.mock_calls[0][1][2])
+        self.assertEqual(False,
+                         self.mock_publish.async_publish.mock_calls[0][1][3])
         # Get the sent message
-        message_json = json.loads(self.mock_publish.mock_calls[-2][1][1])
+        message_json = json.loads(
+            self.mock_publish.async_publish.mock_calls[0][1][1])
         self.assertEqual(15, message_json["flash"])
         self.assertEqual("ON", message_json["state"])
 
@@ -393,11 +404,14 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-2][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
+                         self.mock_publish.async_publish.mock_calls[0][1][0])
+        self.assertEqual(0,
+                         self.mock_publish.async_publish.mock_calls[0][1][2])
+        self.assertEqual(False,
+                         self.mock_publish.async_publish.mock_calls[0][1][3])
         # Get the sent message
-        message_json = json.loads(self.mock_publish.mock_calls[-2][1][1])
+        message_json = json.loads(
+            self.mock_publish.async_publish.mock_calls[0][1][1])
         self.assertEqual(10, message_json["transition"])
         self.assertEqual("ON", message_json["state"])
 
@@ -406,11 +420,14 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-2][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
+                         self.mock_publish.async_publish.mock_calls[1][1][0])
+        self.assertEqual(0,
+                         self.mock_publish.async_publish.mock_calls[1][1][2])
+        self.assertEqual(False,
+                         self.mock_publish.async_publish.mock_calls[1][1][3])
         # Get the sent message
-        message_json = json.loads(self.mock_publish.mock_calls[-2][1][1])
+        message_json = json.loads(
+            self.mock_publish.async_publish.mock_calls[1][1][1])
         self.assertEqual(10, message_json["transition"])
         self.assertEqual("OFF", message_json["state"])
 
@@ -485,7 +502,7 @@ class TestLightMQTTJSON(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
-        self.assertEqual([255, 255, 255], state.attributes.get('rgb_color'))
+        self.assertEqual((255, 255, 255), state.attributes.get('rgb_color'))
         self.assertEqual(255, state.attributes.get('brightness'))
         self.assertEqual(255, state.attributes.get('white_value'))
 
@@ -498,7 +515,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         # Color should not have changed
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
-        self.assertEqual([255, 255, 255], state.attributes.get('rgb_color'))
+        self.assertEqual((255, 255, 255), state.attributes.get('rgb_color'))
 
         # Bad brightness values
         fire_mqtt_message(self.hass, 'test_light_rgb',

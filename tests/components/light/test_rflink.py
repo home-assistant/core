@@ -254,7 +254,7 @@ def test_signal_repetitions(hass, monkeypatch):
 
     assert protocol.send_command_ack.call_count == 2
 
-    # test if default apply to configured devcies
+    # test if default apply to configured devices
     hass.async_add_job(
         hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
                                  {ATTR_ENTITY_ID: DOMAIN + '.test1'}))

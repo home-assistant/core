@@ -37,12 +37,12 @@ REGISTERS_SCHEMA = vol.Schema({
     vol.Required(CONF_COMMAND_ON): cv.positive_int,
     vol.Required(CONF_COMMAND_OFF): cv.positive_int,
     vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
-    vol.Optional(CONF_VERIFY_REGISTER, default=None):
+    vol.Optional(CONF_VERIFY_REGISTER):
         cv.positive_int,
     vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING):
         vol.In([REGISTER_TYPE_HOLDING, REGISTER_TYPE_INPUT]),
-    vol.Optional(CONF_STATE_ON, default=None): cv.positive_int,
-    vol.Optional(CONF_STATE_OFF, default=None): cv.positive_int,
+    vol.Optional(CONF_STATE_ON): cv.positive_int,
+    vol.Optional(CONF_STATE_OFF): cv.positive_int,
 })
 
 COILS_SCHEMA = vol.Schema({

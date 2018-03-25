@@ -51,8 +51,7 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         mode = self.tesla_device.is_hvac_enabled()
         if mode:
             return OPERATION_LIST[0]  # On
-        else:
-            return OPERATION_LIST[1]  # Off
+        return OPERATION_LIST[1]  # Off
 
     @property
     def operation_list(self):

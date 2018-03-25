@@ -213,6 +213,7 @@ class TadoClimate(ClimateDevice):
         self._target_temp = temperature
         self._control_heating()
 
+    # pylint: disable=arguments-differ
     def set_operation_mode(self, readable_operation_mode):
         """Set new operation mode."""
         operation_mode = CONST_MODE_SMART_SCHEDULE
@@ -294,7 +295,7 @@ class TadoClimate(ClimateDevice):
 
         overlay = False
         overlay_data = None
-        termination = self._current_operation
+        termination = CONST_MODE_SMART_SCHEDULE
         cooling = False
         fan_speed = CONST_MODE_OFF
 

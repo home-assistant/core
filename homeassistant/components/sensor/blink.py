@@ -62,11 +62,6 @@ class BlinkSensor(Entity):
         return self._state
 
     @property
-    def unique_id(self):
-        """Return the unique camera sensor identifier."""
-        return "sensor_{}_{}".format(self._name, self.index)
-
-    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit_of_measurement

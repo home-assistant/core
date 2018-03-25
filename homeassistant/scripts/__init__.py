@@ -9,9 +9,8 @@ from typing import List
 
 from homeassistant.bootstrap import mount_local_lib_path
 from homeassistant.config import get_default_config_dir
-from homeassistant.const import CONSTRAINT_FILE
-from homeassistant.util.package import (
-    install_package, running_under_virtualenv)
+from homeassistant import requirements
+from homeassistant.util.package import install_package
 
 
 def run(args: List) -> int:
@@ -39,17 +38,14 @@ def run(args: List) -> int:
     script = importlib.import_module('homeassistant.scripts.' + args[0])
 
     config_dir = extract_config_dir()
-    deps_dir = mount_local_lib_path(config_dir)
+    mount_local_lib_path(config_dir)
+    pip_kwargs = requirements.pip_kwargs(config_dir)
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
     for req in getattr(script, 'REQUIREMENTS', []):
-        if running_under_virtualenv():
-            returncode = install_package(req, constraints=os.path.join(
-                os.path.dirname(__file__), os.pardir, CONSTRAINT_FILE))
-        else:
-            returncode = install_package(
-                req, target=deps_dir, constraints=os.path.join(
-                    os.path.dirname(__file__), os.pardir, CONSTRAINT_FILE))
+        returncode = install_package(req, **pip_kwargs)
+
         if not returncode:
             print('Aborting script, could not install dependency', req)
             return 1

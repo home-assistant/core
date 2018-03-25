@@ -107,7 +107,7 @@ class TestAlert(unittest.TestCase):
         self.assertEqual(STATE_ON, self.hass.states.get(ENTITY_ID).state)
 
     def test_hidden(self):
-        """Test entity hidding."""
+        """Test entity hiding."""
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
         hidden = self.hass.states.get(ENTITY_ID).attributes.get('hidden')
         self.assertTrue(hidden)

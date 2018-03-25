@@ -79,7 +79,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
             cv.time_period,
-        vol.Optional(CONF_SENSORS, default=None):
+        vol.Optional(CONF_SENSORS):
             vol.All(cv.ensure_list, [vol.In(SENSORS)]),
     })])
 }, extra=vol.ALLOW_EXTRA)

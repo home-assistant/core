@@ -106,8 +106,8 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         alarm_control_panel.alarm_arm_home(self.hass)
         self.hass.block_till_done()
-        self.assertEqual(('alarm/command', 'ARM_HOME', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/command', 'ARM_HOME', 0, False)
 
     def test_arm_home_not_publishes_mqtt_with_invalid_code(self):
         """Test not publishing of MQTT messages with invalid code."""
@@ -139,8 +139,8 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         alarm_control_panel.alarm_arm_away(self.hass)
         self.hass.block_till_done()
-        self.assertEqual(('alarm/command', 'ARM_AWAY', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/command', 'ARM_AWAY', 0, False)
 
     def test_arm_away_not_publishes_mqtt_with_invalid_code(self):
         """Test not publishing of MQTT messages with invalid code."""
@@ -172,8 +172,8 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
         alarm_control_panel.alarm_disarm(self.hass)
         self.hass.block_till_done()
-        self.assertEqual(('alarm/command', 'DISARM', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/command', 'DISARM', 0, False)
 
     def test_disarm_not_publishes_mqtt_with_invalid_code(self):
         """Test not publishing of MQTT messages with invalid code."""

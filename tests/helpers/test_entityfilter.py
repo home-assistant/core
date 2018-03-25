@@ -1,4 +1,4 @@
-"""The tests for the EntityFitler component."""
+"""The tests for the EntityFilter component."""
 from homeassistant.helpers.entityfilter import generate_filter
 
 

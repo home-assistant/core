@@ -50,12 +50,12 @@ SENSOR_TYPES = {
     'text_int_used': ['International text used',
                       MESSAGES, 'mdi:message-alert'],
     'text_int_limit': ['International text limit',
-                       MESSAGES, 'mdi:message-alart'],
-    'text_int_remaining': ['Internaltional remaining',
+                       MESSAGES, 'mdi:message-alert'],
+    'text_int_remaining': ['International remaining',
                            MESSAGES, 'mdi:message-alert'],
     'talk_used': ['Talk used', MINUTES, 'mdi:cellphone'],
     'talk_limit': ['Talk limit', MINUTES, 'mdi:cellphone'],
-    'talt_remaining': ['Talk remaining', MINUTES, 'mdi:cellphone'],
+    'talk_remaining': ['Talk remaining', MINUTES, 'mdi:cellphone'],
     'other_talk_used': ['Other Talk used', MINUTES, 'mdi:cellphone'],
     'other_talk_limit': ['Other Talk limit', MINUTES, 'mdi:cellphone'],
     'other_talk_remaining': ['Other Talk remaining', MINUTES, 'mdi:cellphone'],
@@ -157,13 +157,12 @@ class FidoData(object):
                                  REQUESTS_TIMEOUT, httpsession)
         self.data = {}
 
-    @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from Fido."""
         from pyfido.client import PyFidoError
         try:
-            yield from self.client.fetch_data()
+            await self.client.fetch_data()
         except PyFidoError as exp:
             _LOGGER.error("Error on receive last Fido data: %s", exp)
             return False

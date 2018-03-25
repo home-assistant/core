@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 DOMAIN = 'group'
 
@@ -247,7 +247,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up all groups found definded in the configuration."""
+    """Set up all groups found defined in the configuration."""
     component = hass.data.get(DOMAIN)
 
     if component is None:
@@ -257,11 +257,15 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def reload_service_handler(service):
-        """Remove all groups and load new ones from config."""
+        """Remove all user-defined groups and load new ones from config."""
+        auto = list(filter(lambda e: not e.user_defined, component.entities))
+
         conf = yield from component.async_prepare_reload()
         if conf is None:
             return
         yield from _async_process_config(hass, conf, component)
+
+        yield from component.async_add_entities(auto)
 
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler,
@@ -371,7 +375,6 @@ def async_setup(hass, config):
 @asyncio.coroutine
 def _async_process_config(hass, config, component):
     """Process group configuration."""
-    groups = []
     for object_id, conf in config.get(DOMAIN, {}).items():
         name = conf.get(CONF_NAME, object_id)
         entity_ids = conf.get(CONF_ENTITIES) or []
@@ -381,13 +384,9 @@ def _async_process_config(hass, config, component):
 
         # Don't create tasks and await them all. The order is important as
         # groups get a number based on creation order.
-        group = yield from Group.async_create_group(
+        yield from Group.async_create_group(
             hass, name, entity_ids, icon=icon, view=view,
             control=control, object_id=object_id)
-        groups.append(group)
-
-    if groups:
-        yield from component.async_add_entities(groups)
 
 
 class Group(Entity):
@@ -412,7 +411,7 @@ class Group(Entity):
         self.group_off = None
         self.visible = visible
         self.control = control
-        self._user_defined = user_defined
+        self.user_defined = user_defined
         self._order = order
         self._assumed_state = False
         self._async_unsub_state_changed = None
@@ -502,7 +501,7 @@ class Group(Entity):
             ATTR_ENTITY_ID: self.tracking,
             ATTR_ORDER: self._order,
         }
-        if not self._user_defined:
+        if not self.user_defined:
             data[ATTR_AUTO] = True
         if self.view:
             data[ATTR_VIEW] = True

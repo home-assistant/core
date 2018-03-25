@@ -43,7 +43,7 @@ DEFAULT_TIMEOUT = 10
 DEFAULT_CONFIDENCE = 80
 
 SOURCE_SCHEMA = vol.Schema({
-    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Required(CONF_ENTITY_ID): cv.entity_domain('camera'),
     vol.Optional(CONF_NAME): cv.string,
 })
 

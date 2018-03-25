@@ -140,7 +140,7 @@ class Monitor(threading.Thread):
 
     def run(self):
         """Thread that keeps connection alive."""
-        # pylint: disable=import-error
+        # pylint: disable=import-error, no-name-in-module, no-member
         import pygatt
         from pygatt.backends import Characteristic
         from pygatt.exceptions import (

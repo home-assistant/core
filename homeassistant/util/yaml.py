@@ -13,7 +13,7 @@ except ImportError:
     keyring = None
 
 try:
-    import credstash  # pylint: disable=import-error
+    import credstash  # pylint: disable=import-error, no-member
 except ImportError:
     credstash = None
 
@@ -81,6 +81,14 @@ def dump(_dict: dict) -> str:
     return yaml.safe_dump(
         _dict, default_flow_style=False, allow_unicode=True) \
         .replace(': null\n', ':\n')
+
+
+def save_yaml(path, data):
+    """Save YAML to a file."""
+    # Dump before writing to not truncate the file if dumping fails
+    data = dump(data)
+    with open(path, 'w', encoding='utf-8') as outfile:
+        outfile.write(data)
 
 
 def clear_secret_cache() -> None:
@@ -268,6 +276,7 @@ def _secret_yaml(loader: SafeLineLoader,
     global credstash  # pylint: disable=invalid-name
 
     if credstash:
+        # pylint: disable=no-member
         try:
             pwd = credstash.getSecret(node.value, table=_SECRET_NAMESPACE)
             if pwd:
@@ -279,8 +288,7 @@ def _secret_yaml(loader: SafeLineLoader,
             # Catch if package installed and no config
             credstash = None
 
-    _LOGGER.error("Secret %s not defined", node.value)
-    raise HomeAssistantError(node.value)
+    raise HomeAssistantError("Secret {} not defined".format(node.value))
 
 
 yaml.SafeLoader.add_constructor('!include', _include_yaml)

@@ -78,7 +78,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
 
         for device in self.DEVICES:
 
-            # Test pre data retieval
+            # Test pre data retrieval
             if device.subscription == '555555':
                 self.assertEqual('Vultr {}', device.name)
 

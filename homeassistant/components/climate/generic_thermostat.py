@@ -156,7 +156,7 @@ class GenericThermostat(ClimateDevice):
             # If we have no initial temperature, restore
             if self._target_temp is None:
                 # If we have a previously saved temperature
-                if old_state.attributes[ATTR_TEMPERATURE] is None:
+                if old_state.attributes.get(ATTR_TEMPERATURE) is None:
                     if self.ac_mode:
                         self._target_temp = self.max_temp
                     else:
@@ -166,15 +166,15 @@ class GenericThermostat(ClimateDevice):
                 else:
                     self._target_temp = float(
                         old_state.attributes[ATTR_TEMPERATURE])
-            if old_state.attributes[ATTR_AWAY_MODE] is not None:
+            if old_state.attributes.get(ATTR_AWAY_MODE) is not None:
                 self._is_away = str(
                     old_state.attributes[ATTR_AWAY_MODE]) == STATE_ON
             if (self._initial_operation_mode is None and
                     old_state.attributes[ATTR_OPERATION_MODE] is not None):
                 self._current_operation = \
                     old_state.attributes[ATTR_OPERATION_MODE]
-                if self._current_operation != STATE_OFF:
-                    self._enabled = True
+                self._enabled = self._current_operation != STATE_OFF
+
         else:
             # No previous state, try and restore defaults
             if self._target_temp is None:
@@ -190,11 +190,9 @@ class GenericThermostat(ClimateDevice):
         """Return the current state."""
         if self._is_device_active:
             return self.current_operation
-        else:
-            if self._enabled:
-                return STATE_IDLE
-            else:
-                return STATE_OFF
+        if self._enabled:
+            return STATE_IDLE
+        return STATE_OFF
 
     @property
     def should_poll(self):
@@ -231,7 +229,7 @@ class GenericThermostat(ClimateDevice):
         """List of available operation modes."""
         return self._operation_list
 
-    def set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         if operation_mode == STATE_HEAT:
             self._current_operation = STATE_HEAT
@@ -249,7 +247,7 @@ class GenericThermostat(ClimateDevice):
         else:
             _LOGGER.error("Unrecognized operation mode: %s", operation_mode)
             return
-        # Ensure we updae the current operation after changing the mode
+        # Ensure we update the current operation after changing the mode
         self.schedule_update_ha_state()
 
     @asyncio.coroutine

@@ -70,11 +70,11 @@ class NetgearDeviceScanner(DeviceScanner):
 
         return (device.mac for device in self.last_results)
 
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         try:
-            return next(device.name for device in self.last_results
-                        if device.mac == mac)
+            return next(result.name for result in self.last_results
+                        if result.mac == device)
         except StopIteration:
             return None
 

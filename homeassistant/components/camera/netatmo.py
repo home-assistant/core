@@ -64,10 +64,6 @@ class NetatmoCamera(Camera):
             self._name = home + ' / ' + camera_name
         else:
             self._name = camera_name
-        camera_id = data.camera_data.cameraByName(
-            camera=camera_name, home=home)['id']
-        self._unique_id = "Welcome_camera {0} - {1}".format(
-            self._name, camera_id)
         self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
             camera=camera_name
             )
@@ -114,8 +110,3 @@ class NetatmoCamera(Camera):
         elif self._cameratype == "NACamera":
             return "Welcome"
         return None
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this sensor."""
-        return self._unique_id

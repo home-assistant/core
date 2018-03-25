@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from collections import deque
 import voluptuous as vol
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.const import (
     STATE_OK, STATE_PROBLEM, STATE_UNKNOWN, TEMP_CELSIUS, ATTR_TEMPERATURE,
     CONF_SENSORS, ATTR_UNIT_OF_MEASUREMENT)
@@ -92,7 +93,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 # Flag for enabling/disabling the loading of the history from the database.
-# This feature is turned off right now as it's tests are not 100% stable.
+# This feature is turned off right now as its tests are not 100% stable.
 ENABLE_LOAD_HISTORY = False
 
 
@@ -198,8 +199,8 @@ class Plant(Entity):
             self._brightness_history.add_measurement(self._brightness,
                                                      new_state.last_updated)
         else:
-            raise _LOGGER.error("Unknown reading from sensor %s: %s",
-                                entity_id, value)
+            raise HomeAssistantError(
+                "Unknown reading from sensor {}: {}".format(entity_id, value))
         if ATTR_UNIT_OF_MEASUREMENT in new_state.attributes:
             self._unit_of_measurement[reading] = \
                 new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -336,9 +337,9 @@ class DailyHistory(object):
         self._max_dict = dict()
         self.max = None
 
-    def add_measurement(self, value, timestamp=datetime.now()):
+    def add_measurement(self, value, timestamp=None):
         """Add a new measurement for a certain day."""
-        day = timestamp.date()
+        day = (timestamp or datetime.now()).date()
         if value is None:
             return
         if self._days is None:

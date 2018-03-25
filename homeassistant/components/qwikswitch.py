@@ -171,7 +171,7 @@ def setup(hass, config):
     def qs_callback(item):
         """Typically a button press or update signal."""
         if qsusb is None:  # Shutting down
-            _LOGGER.info("Botton press or updating signal done")
+            _LOGGER.info("Button press or updating signal done")
             return
 
         # If button pressed, fire a hass event

@@ -73,7 +73,7 @@ class TestSeason(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_season_should_be_summer_northern_astonomical(self):
+    def test_season_should_be_summer_northern_astronomical(self):
         """Test that season should be summer."""
         # A known day in summer
         summer_day = datetime(2017, 9, 3, 0, 0)
@@ -91,7 +91,7 @@ class TestSeason(unittest.TestCase):
         self.assertEqual(season.STATE_SUMMER,
                          current_season)
 
-    def test_season_should_be_autumn_northern_astonomical(self):
+    def test_season_should_be_autumn_northern_astronomical(self):
         """Test that season should be autumn."""
         # A known day in autumn
         autumn_day = datetime(2017, 9, 23, 0, 0)
@@ -109,7 +109,7 @@ class TestSeason(unittest.TestCase):
         self.assertEqual(season.STATE_AUTUMN,
                          current_season)
 
-    def test_season_should_be_winter_northern_astonomical(self):
+    def test_season_should_be_winter_northern_astronomical(self):
         """Test that season should be winter."""
         # A known day in winter
         winter_day = datetime(2017, 12, 25, 0, 0)
@@ -127,7 +127,7 @@ class TestSeason(unittest.TestCase):
         self.assertEqual(season.STATE_WINTER,
                          current_season)
 
-    def test_season_should_be_spring_northern_astonomical(self):
+    def test_season_should_be_spring_northern_astronomical(self):
         """Test that season should be spring."""
         # A known day in spring
         spring_day = datetime(2017, 4, 1, 0, 0)
@@ -145,7 +145,7 @@ class TestSeason(unittest.TestCase):
         self.assertEqual(season.STATE_SPRING,
                          current_season)
 
-    def test_season_should_be_winter_southern_astonomical(self):
+    def test_season_should_be_winter_southern_astronomical(self):
         """Test that season should be winter."""
         # A known day in winter
         winter_day = datetime(2017, 9, 3, 0, 0)
@@ -163,7 +163,7 @@ class TestSeason(unittest.TestCase):
         self.assertEqual(season.STATE_WINTER,
                          current_season)
 
-    def test_season_should_be_spring_southern_astonomical(self):
+    def test_season_should_be_spring_southern_astronomical(self):
         """Test that season should be spring."""
         # A known day in spring
         spring_day = datetime(2017, 9, 23, 0, 0)
@@ -181,7 +181,7 @@ class TestSeason(unittest.TestCase):
         self.assertEqual(season.STATE_SPRING,
                          current_season)
 
-    def test_season_should_be_summer_southern_astonomical(self):
+    def test_season_should_be_summer_southern_astronomical(self):
         """Test that season should be summer."""
         # A known day in summer
         summer_day = datetime(2017, 12, 25, 0, 0)
@@ -199,7 +199,7 @@ class TestSeason(unittest.TestCase):
         self.assertEqual(season.STATE_SUMMER,
                          current_season)
 
-    def test_season_should_be_autumn_southern_astonomical(self):
+    def test_season_should_be_autumn_southern_astronomical(self):
         """Test that season should be spring."""
         # A known day in spring
         autumn_day = datetime(2017, 4, 1, 0, 0)

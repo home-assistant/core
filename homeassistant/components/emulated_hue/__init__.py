@@ -4,7 +4,6 @@ Support for local control of entities by emulating the Phillips Hue bridge.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/emulated_hue/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -14,7 +13,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.components.http import REQUIREMENTS  # NOQA
-from homeassistant.components.http import HomeAssistantWSGI
+from homeassistant.components.http import HomeAssistantHTTP
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
@@ -39,6 +38,9 @@ CONF_OFF_MAPS_TO_ON_DOMAINS = 'off_maps_to_on_domains'
 CONF_EXPOSE_BY_DEFAULT = 'expose_by_default'
 CONF_EXPOSED_DOMAINS = 'exposed_domains'
 CONF_TYPE = 'type'
+CONF_ENTITIES = 'entities'
+CONF_ENTITY_NAME = 'name'
+CONF_ENTITY_HIDDEN = 'hidden'
 
 TYPE_ALEXA = 'alexa'
 TYPE_GOOGLE = 'google_home'
@@ -52,6 +54,11 @@ DEFAULT_EXPOSED_DOMAINS = [
 ]
 DEFAULT_TYPE = TYPE_GOOGLE
 
+CONFIG_ENTITY_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ENTITY_NAME): cv.string,
+    vol.Optional(CONF_ENTITY_HIDDEN): cv.boolean
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST_IP): cv.string,
@@ -63,11 +70,14 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
         vol.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
         vol.Optional(CONF_TYPE, default=DEFAULT_TYPE):
-            vol.Any(TYPE_ALEXA, TYPE_GOOGLE)
+            vol.Any(TYPE_ALEXA, TYPE_GOOGLE),
+        vol.Optional(CONF_ENTITIES):
+            vol.Schema({cv.entity_id: CONFIG_ENTITY_SCHEMA})
     })
 }, extra=vol.ALLOW_EXTRA)
 
 ATTR_EMULATED_HUE = 'emulated_hue'
+ATTR_EMULATED_HUE_NAME = 'emulated_hue_name'
 ATTR_EMULATED_HUE_HIDDEN = 'emulated_hue_hidden'
 
 
@@ -75,7 +85,7 @@ def setup(hass, yaml_config):
     """Activate the emulated_hue component."""
     config = Config(hass, yaml_config.get(DOMAIN, {}))
 
-    server = HomeAssistantWSGI(
+    server = HomeAssistantHTTP(
         hass,
         server_host=config.host_ip_addr,
         server_port=config.listen_port,
@@ -100,17 +110,15 @@ def setup(hass, yaml_config):
         config.upnp_bind_multicast, config.advertise_ip,
         config.advertise_port)
 
-    @asyncio.coroutine
-    def stop_emulated_hue_bridge(event):
+    async def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
         upnp_listener.stop()
-        yield from server.stop()
+        await server.stop()
 
-    @asyncio.coroutine
-    def start_emulated_hue_bridge(event):
+    async def start_emulated_hue_bridge(event):
         """Start the emulated hue bridge."""
         upnp_listener.start()
-        yield from server.start()
+        await server.start()
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge)
 
@@ -150,10 +158,6 @@ class Config(object):
                 "Listen port not specified, defaulting to %s",
                 self.listen_port)
 
-        if self.type == TYPE_GOOGLE and self.listen_port != 80:
-            _LOGGER.warning("When targeting Google Home, listening port has "
-                            "to be port 80")
-
         # Get whether or not UPNP binds to multicast address (239.255.255.250)
         # or to the unicast address (host_ip_addr)
         self.upnp_bind_multicast = conf.get(
@@ -182,6 +186,8 @@ class Config(object):
 
         self.advertise_port = conf.get(
             CONF_ADVERTISE_PORT) or self.listen_port
+
+        self.entities = conf.get(CONF_ENTITIES, {})
 
     def entity_id_to_number(self, entity_id):
         """Get a unique number for the entity id."""
@@ -215,6 +221,14 @@ class Config(object):
         assert isinstance(number, str)
         return self.numbers.get(number)
 
+    def get_entity_name(self, entity):
+        """Get the name of an entity."""
+        if entity.entity_id in self.entities and \
+                CONF_ENTITY_NAME in self.entities[entity.entity_id]:
+            return self.entities[entity.entity_id][CONF_ENTITY_NAME]
+
+        return entity.attributes.get(ATTR_EMULATED_HUE_NAME, entity.name)
+
     def is_entity_exposed(self, entity):
         """Determine if an entity should be exposed on the emulated bridge.
 
@@ -227,6 +241,12 @@ class Config(object):
         domain = entity.domain.lower()
         explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
         explicit_hidden = entity.attributes.get(ATTR_EMULATED_HUE_HIDDEN, None)
+
+        if entity.entity_id in self.entities and \
+                CONF_ENTITY_HIDDEN in self.entities[entity.entity_id]:
+            explicit_hidden = \
+                self.entities[entity.entity_id][CONF_ENTITY_HIDDEN]
+
         if explicit_expose is True or explicit_hidden is False:
             expose = True
         elif explicit_expose is False or explicit_hidden is True:

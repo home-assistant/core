@@ -105,7 +105,7 @@ class UnitSystem(object):
             raise TypeError('{} is not a numeric value.'.format(str(length)))
 
         return distance_util.convert(length, from_unit,
-                                     self.length_unit)  # type: float
+                                     self.length_unit)
 
     def as_dict(self) -> dict:
         """Convert the unit system to a dictionary."""

@@ -19,7 +19,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['broadlink==0.5']
+REQUIREMENTS = [
+    'https://github.com/balloob/python-broadlink/archive/'
+    '3580ff2eaccd267846f14246d6ede6e30671f7c6.zip#broadlink==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,7 +131,7 @@ class BroadlinkData(object):
             if retry < 1:
                 _LOGGER.error(error)
                 return
-        except vol.Invalid:
+        except (vol.Invalid, vol.MultipleInvalid):
             pass  # Continue quietly if device returned malformed data
         if retry > 0 and self._auth():
             self._update(retry-1)

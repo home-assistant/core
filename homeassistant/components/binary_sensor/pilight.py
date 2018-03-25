@@ -97,7 +97,7 @@ class PilightBinarySensor(BinarySensorDevice):
     def _handle_code(self, call):
         """Handle received code by the pilight-daemon.
 
-        If the code matches the defined playload
+        If the code matches the defined payload
         of this sensor the sensor state is changed accordingly.
         """
         # Check if received code matches defined playoad
@@ -162,10 +162,10 @@ class PilightTriggerSensor(BinarySensorDevice):
     def _handle_code(self, call):
         """Handle received code by the pilight-daemon.
 
-        If the code matches the defined playload
+        If the code matches the defined payload
         of this sensor the sensor state is changed accordingly.
         """
-        # Check if received code matches defined playoad
+        # Check if received code matches defined payload
         # True if payload is contained in received code dict
         payload_ok = True
         for key in self._payload:

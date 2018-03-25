@@ -29,7 +29,7 @@ REQUIREMENTS = ['pysensibo==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-ALL = 'all'
+ALL = ['all']
 TIMEOUT = 10
 
 SERVICE_ASSUME_STATE = 'sensibo_assume_state'
@@ -240,13 +240,18 @@ class SensiboClimate(ClimateDevice):
     def min_temp(self):
         """Return the minimum temperature."""
         return self._temperatures_list[0] \
-            if len(self._temperatures_list) else super().min_temp()
+            if self._temperatures_list else super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         return self._temperatures_list[-1] \
-            if len(self._temperatures_list) else super().max_temp()
+            if self._temperatures_list else super().max_temp
+
+    @property
+    def unique_id(self):
+        """Return unique ID based on Sensibo ID."""
+        return self._id
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
@@ -273,11 +278,11 @@ class SensiboClimate(ClimateDevice):
                 self._id, 'targetTemperature', temperature, self._ac_states)
 
     @asyncio.coroutine
-    def async_set_fan_mode(self, fan):
+    def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         with async_timeout.timeout(TIMEOUT):
             yield from self._client.async_set_ac_state_property(
-                self._id, 'fanLevel', fan, self._ac_states)
+                self._id, 'fanLevel', fan_mode, self._ac_states)
 
     @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode):

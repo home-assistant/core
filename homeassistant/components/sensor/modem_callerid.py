@@ -18,7 +18,7 @@ REQUIREMENTS = ['basicmodem==0.7']
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Modem CallerID'
-ICON = 'mdi:phone-clasic'
+ICON = 'mdi:phone-classic'
 DEFAULT_DEVICE = '/dev/ttyACM0'
 
 STATE_RING = 'ring'

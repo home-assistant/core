@@ -4,30 +4,27 @@ Support for deCONZ light.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.deconz/
 """
-import asyncio
-
-from homeassistant.components.deconz import DOMAIN as DECONZ_DATA
+from homeassistant.components.deconz import (
+    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, SUPPORT_XY_COLOR, Light)
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
+    SUPPORT_FLASH, SUPPORT_TRANSITION, Light)
 from homeassistant.core import callback
-from homeassistant.util.color import color_RGB_to_xy
+import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['deconz']
 
-ATTR_LIGHT_GROUP = 'LightGroup'
 
-
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the deCONZ light."""
     if discovery_info is None:
         return
 
-    lights = hass.data[DECONZ_DATA].lights
-    groups = hass.data[DECONZ_DATA].groups
+    lights = hass.data[DATA_DECONZ].lights
+    groups = hass.data[DATA_DECONZ].groups
     entities = []
 
     for light in lights.values():
@@ -54,16 +51,15 @@ class DeconzLight(Light):
             self._features |= SUPPORT_COLOR_TEMP
 
         if self._light.xy is not None:
-            self._features |= SUPPORT_RGB_COLOR
-            self._features |= SUPPORT_XY_COLOR
+            self._features |= SUPPORT_COLOR
 
         if self._light.effect is not None:
             self._features |= SUPPORT_EFFECT
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe to lights events."""
         self._light.register_async_callback(self.async_update_callback)
+        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._light.deconz_id
 
     @callback
     def async_update_callback(self, reason):
@@ -101,6 +97,11 @@ class DeconzLight(Light):
         return self._light.name
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this light."""
+        return self._light.uniqueid
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         return self._features
@@ -115,19 +116,15 @@ class DeconzLight(Light):
         """No polling needed."""
         return False
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn on light."""
         data = {'on': True}
 
         if ATTR_COLOR_TEMP in kwargs:
             data['ct'] = kwargs[ATTR_COLOR_TEMP]
 
-        if ATTR_RGB_COLOR in kwargs:
-            xyb = color_RGB_to_xy(
-                *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-            data['xy'] = xyb[0], xyb[1]
-            data['bri'] = xyb[2]
+        if ATTR_HS_COLOR in kwargs:
+            data['xy'] = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
 
         if ATTR_BRIGHTNESS in kwargs:
             data['bri'] = kwargs[ATTR_BRIGHTNESS]
@@ -149,10 +146,9 @@ class DeconzLight(Light):
             else:
                 data['effect'] = 'none'
 
-        yield from self._light.async_set_state(data)
+        await self._light.async_set_state(data)
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn off light."""
         data = {'on': False}
 
@@ -168,4 +164,4 @@ class DeconzLight(Light):
                 data['alert'] = 'lselect'
                 del data['on']
 
-        yield from self._light.async_set_state(data)
+        await self._light.async_set_state(data)

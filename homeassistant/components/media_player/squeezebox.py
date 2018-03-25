@@ -45,7 +45,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 SERVICE_CALL_METHOD = 'squeezebox_call_method'
 
-DATA_SQUEEZEBOX = 'squeexebox'
+DATA_SQUEEZEBOX = 'squeezebox'
+
+KNOWN_SERVERS = 'squeezebox_known_servers'
 
 ATTR_PARAMETERS = 'parameters'
 
@@ -66,6 +68,10 @@ SERVICE_TO_METHOD = {
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the squeezebox platform."""
     import socket
+
+    known_servers = hass.data.get(KNOWN_SERVERS)
+    if known_servers is None:
+        hass.data[KNOWN_SERVERS] = known_servers = set()
 
     if DATA_SQUEEZEBOX not in hass.data:
         hass.data[DATA_SQUEEZEBOX] = []
@@ -92,6 +98,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             "Could not communicate with %s:%d: %s", host, port, error)
         return False
 
+    if ipaddr in known_servers:
+        return
+
+    known_servers.add(ipaddr)
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
     lms = LogitechMediaServer(hass, host, port, username, password)
 
@@ -220,7 +230,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._id
 
     @property
@@ -494,5 +504,5 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         all_params = [command]
         if parameters:
             for parameter in parameters:
-                all_params.append(urllib.parse.quote(parameter, safe=':='))
+                all_params.append(urllib.parse.quote(parameter, safe=':=/?'))
         return self.async_query(*all_params)

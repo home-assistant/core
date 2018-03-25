@@ -135,7 +135,7 @@ class TestTemplateCover(unittest.TestCase):
         entity = self.hass.states.get('cover.test')
         attrs = dict()
         attrs['position'] = 42
-        self.hass.states.async_set(
+        self.hass.states.set(
             entity.entity_id, entity.state,
             attributes=attrs)
         self.hass.block_till_done()
@@ -148,7 +148,7 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.block_till_done()
         entity = self.hass.states.get('cover.test')
         attrs['position'] = 0.0
-        self.hass.states.async_set(
+        self.hass.states.set(
             entity.entity_id, entity.state,
             attributes=attrs)
         self.hass.block_till_done()
@@ -275,7 +275,7 @@ class TestTemplateCover(unittest.TestCase):
         assert self.hass.states.all() == []
 
     def test_template_open_and_close(self):
-        """Test that if open_cover is specified, cose_cover is too."""
+        """Test that if open_cover is specified, close_cover is too."""
         with assert_setup_component(0, 'cover'):
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
