@@ -78,7 +78,7 @@ def has_at_least_one_key_value(*items: list) -> Callable:
 def validate_if(premise: Callable, conclusion: Callable) -> Callable:
     """Validate that if the premise validates the conclusion also validates."""
     def validate(obj: Dict) -> Dict:
-        """Validate a ValidateIf."""
+        """Validate a validate_if."""
         try:
             premise(obj)
         except vol.Invalid:
@@ -89,7 +89,7 @@ def validate_if(premise: Callable, conclusion: Callable) -> Callable:
         try:
             conclusion(obj)
         except vol.Invalid:
-            raise vol.Invalid("If {} is valid, so must {} be!".format(
+            raise vol.Invalid("If {} is valid, so must be {}!".format(
                 str(premise), str(conclusion)))
 
         return obj
