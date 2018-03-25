@@ -197,7 +197,7 @@ class LimitlessLEDGroup(Light):
             self._is_on = (last_state.state == STATE_ON)
             self._brightness = last_state.attributes.get('brightness')
             self._temperature = last_state.attributes.get('color_temp')
-            self._color = last_state.attributes.get('rgb_color')
+            self._color = last_state.attributes.get('hs_color')
 
     @property
     def should_poll(self):
@@ -336,4 +336,4 @@ class LimitlessLEDGroup(Light):
     def limitlessled_color(self):
         """Convert Home Assistant HS list to RGB Color tuple."""
         from limitlessled import Color
-        return Color(color_hs_to_RGB(*tuple(self._color)))
+        return Color(*color_hs_to_RGB(*tuple(self._color)))
