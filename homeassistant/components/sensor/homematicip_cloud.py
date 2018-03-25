@@ -60,10 +60,9 @@ async def async_setup_platform(hass, config, async_add_devices,
 class HomematicipAccesspointStatus(HomematicipGenericDevice):
     """Representation of an HomeMaticIP access point."""
 
-    def __init__(self, home, post='Status'):
+    def __init__(self, home):
         """"Initialize access point device."""
-        self.post = post
-        super().__init__(home, home)
+        super().__init__(home, home, 'Status')
 
     @property
     def icon(self):
