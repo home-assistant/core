@@ -55,9 +55,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
     return
 
+
 class DominionEnergySensor(Entity):
     """Washington Dominion Energy Sensor will check the bill on daily basis."""
-
 
 
     def __init__(self, name, username, password):
