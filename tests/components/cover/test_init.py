@@ -4,7 +4,6 @@ import pytest
 from homeassistant.components.cover import (SERVICE_OPEN_COVER,
                                             SERVICE_CLOSE_COVER)
 from homeassistant.components import intent
-#from homeassistant.helpers.intent import UnknowIntent
 import homeassistant.components as comps
 from tests.common import async_mock_service
 
@@ -49,6 +48,7 @@ async def test_close_cover_intent(hass):
     assert call.domain == 'cover'
     assert call.service == 'close_cover'
     assert call.data == {'entity_id': 'cover.garage_door'}
+
 
 async def test_intent_not_loaded(hass):
     """Test Intents Not Registered intent."""

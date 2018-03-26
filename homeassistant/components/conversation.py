@@ -111,6 +111,7 @@ async def async_setup(hass, config):
         'Toggle [the] [a] [an] {name}[s]',
         '[the] [a] [an] {name}[s] toggle',
     ])
+
     def register_cover_utterances:
         if 'cover' in hass.config.components:
             async_register(hass, intent.INTENT_OPEN_COVER, [
