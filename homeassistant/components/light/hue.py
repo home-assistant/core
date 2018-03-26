@@ -257,8 +257,6 @@ class HueLight(Light):
 
         return color.color_xy_to_hs(*source['xy'])
 
-
-
     @property
     def color_temp(self):
         """Return the CT color value."""
