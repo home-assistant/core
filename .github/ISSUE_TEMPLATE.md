@@ -6,7 +6,7 @@
 - Provide as much details as possible. Paste logs, configuration sample and code into the backticks. Do not delete any text from this template!
 -->
 
-**First Home Assistant release with the issue:**
+**Home Assistant release with the issue:**
 <!--
 - Frontend -> Developer tools -> Info
 - Or use this command: hass --version
