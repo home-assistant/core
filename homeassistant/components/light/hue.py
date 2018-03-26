@@ -244,20 +244,20 @@ class HueLight(Light):
 
         source = self.light.action if self.is_group else self.light.state
 
-        if mode == 'hs':
-            hue = source['hue']
-            sat = source['sat']
-        else:
-            # mode == xy
-            hue = source.get('hue')
-            sat = source.get('sat')
+        hue = source.get('hue')
+        sat = source.get('sat')
 
-            # Sometimes color mode xy will not include valid hue/sat values.
-            # Reported as issue 13434
-            if hue is None or sat is None:
-                hue, sat = color.color_xy_to_hs(*source.get('xy'))
+        # Sometimes the state will not include valid hue/sat values.
+        # Reported as issue 13434
+        if hue is not None and sat is not None:
+            return hue / 65535 * 360, sat / 255 * 100
 
-        return hue / 65535 * 360, sat / 255 * 100
+        if 'xy' not in source:
+            return None
+
+        return color.color_xy_to_hs(*source['xy'])
+
+
 
     @property
     def color_temp(self):

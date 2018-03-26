@@ -679,5 +679,4 @@ def test_hs_color():
         is_group=False,
     )
 
-    hue, sat = color.color_xy_to_hs(0.4, 0.5)
-    assert light.hs_color == (hue / 65535 * 360, sat / 255 * 100)
+    assert light.hs_color == color.color_xy_to_hs(0.4, 0.5)
