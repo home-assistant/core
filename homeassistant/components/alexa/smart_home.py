@@ -1382,7 +1382,7 @@ def api_error_temp_range(request, temp, min_temp, max_temp, unit):
     )
 
 
-def temperature_from_object(temp_obj, to_unit, absolute=True):
+def temperature_from_object(temp_obj, to_unit, interval=False):
     """Get temperature from Temperature object in requested unit."""
     from_unit = TEMP_CELSIUS
     temp = float(temp_obj['value'])
@@ -1391,17 +1391,10 @@ def temperature_from_object(temp_obj, to_unit, absolute=True):
         from_unit = TEMP_FAHRENHEIT
     elif temp_obj['scale'] == 'KELVIN':
         # convert to Celsius if absolute temperature
-        if absolute:
+        if not interval:
             temp -= 273.15
 
-    if not absolute:
-        if from_unit != to_unit:
-            if from_unit == TEMP_FAHRENHEIT:
-                return temp / 1.8
-            return temp * 1.8
-        return temp
-
-    return convert_temperature(temp, from_unit, to_unit)
+    return convert_temperature(temp, from_unit, to_unit, interval)
 
 
 @HANDLERS.register(('Alexa.ThermostatController', 'SetTargetTemperature'))
@@ -1456,7 +1449,7 @@ def async_api_adjust_target_temp(hass, config, request, entity):
     max_temp = entity.attributes[climate.ATTR_MAX_TEMP]
 
     temp_delta = temperature_from_object(
-        request[API_PAYLOAD]['targetSetpointDelta'], unit, absolute=False)
+        request[API_PAYLOAD]['targetSetpointDelta'], unit, interval=True)
     target_temp = float(entity.attributes.get(ATTR_TEMPERATURE)) + temp_delta
 
     if target_temp < min_temp or target_temp > max_temp:
