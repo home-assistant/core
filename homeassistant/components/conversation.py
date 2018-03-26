@@ -118,6 +118,8 @@ async def async_setup(hass, config):
                 'Open [the] [a] [an] {name}[s]'])
             async_register(hass, intent.INTENT_CLOSE_COVER, [
                 'Close [the] [a] [an] {name}[s]'])
+    if 'cover' in hass.config.components:
+        register_cover_utterances()
     hass.bus.async_listen(EVENT_COMPONENT_LOADED, register_cover_utterances())
 
     return True
