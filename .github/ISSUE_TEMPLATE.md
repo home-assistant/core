@@ -1,23 +1,50 @@
-Make sure you are running the latest version of Home Assistant before reporting an issue.
+<!-- READ THIS FIRST:
+- Make sure you are running the latest version of Home Assistant before reporting an issue: https://github.com/home-assistant/home-assistant/releases
+- Do not report issues for components if you are using custom components: files in <config-dir>/custom_components
+- Frontend (user interface of Home Assistant in your browser) related issues have to be reported here: https://github.com/home-assistant/home-assistant-polymer/issues
+- This is for bugs only. Feature and enhancement requests should go in our community forum: https://community.home-assistant.io/c/feature-requests
+- Answer all question as detailed as possible, write the information inside the backticks. Do not delete any text from this template!
+-->
 
-You should only file an issue if you found a bug. Feature and enhancement requests should go in [the Feature Requests section](https://community.home-assistant.io/c/feature-requests) of our community forum:
+**1. Home Assistant version:**
+<!--
+- Frontend -> developer tools -> info
+- Or use this command: hass --version
+-->
+```
 
-**Home Assistant release (`hass --version`):**
+```
+
+**2.a) I run Hass.io or the Docker image**:
+<!--
+- Yes / No
+-->
+```
+
+```
+
+**2.b) ...No, I run an installation with this Python version:**
+<!--
+- Minimum supported version is Python 3.5.3
+- Use this command: python3 --version
+-->
+```
+
+```
+
+**3. Component/platform:**
+<!--
+- Please add the link to the documention at https://www.home-assistant.io/components/ of the component/platform in question.
+-->
 
 
-**Python release (`python3 --version`):**
+**4. Description of problem:**
 
 
-**Component/platform:**
+**5. Expected:**
 
 
-**Description of problem:**
-
-
-**Expected:**
-
-
-**Problem-relevant `configuration.yaml` entries and steps to reproduce:**
+**6. Problem-relevant `configuration.yaml` entries and steps to reproduce:**
 ```yaml
 
 ```
@@ -26,10 +53,10 @@ You should only file an issue if you found a bug. Feature and enhancement reques
 2. 
 3. 
 
-**Traceback (if applicable):**
-```bash
+**7. Traceback (if applicable):**
+```
 
 ```
 
-**Additional info:**
+**8. Additional info:**
 
