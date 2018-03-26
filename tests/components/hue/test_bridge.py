@@ -66,6 +66,7 @@ async def test_only_create_no_username(hass):
 
 async def test_configurator_callback(hass, mock_request):
     """."""
+    hass.data[hue.DOMAIN] = {}
     with patch('aiohue.Bridge.create_user',
                side_effect=aiohue.LinkButtonNotPressed):
         await MockBridge(hass).async_setup()
