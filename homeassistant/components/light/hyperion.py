@@ -215,7 +215,7 @@ class Hyperion(Light):
                 pass
 
             led_color = response['info']['activeLedColor']
-            if not led_color or led_color[0]['RGB value'] == [0, 0, 0]:
+            if not led_color or led_color[0]['RGB Value'] == [0, 0, 0]:
                 # Get the active effect
                 if response['info'].get('activeEffects'):
                     self._rgb_color = [175, 0, 255]
@@ -234,8 +234,7 @@ class Hyperion(Light):
                     self._effect = None
             else:
                 # Get the RGB color
-                self._rgb_color =\
-                    response['info']['activeLedColor'][0]['RGB Value']
+                self._rgb_color = led_color[0]['RGB Value']
                 self._brightness = max(self._rgb_color)
                 self._rgb_mem = [int(round(float(x)*255/self._brightness))
                                  for x in self._rgb_color]
