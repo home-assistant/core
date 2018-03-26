@@ -8,7 +8,6 @@ https://home-assistant.io/components/sensor.fints/
 from collections import namedtuple
 from datetime import timedelta
 import logging
-from typing import List
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -160,9 +159,8 @@ class FinTsAccount(Entity):
     """
 
     def __init__(self, client: FinTsClient, account, name: str) -> None:
-        from fints.models import SEPAAccount
         self._client = client  # type: FinTsClient
-        self._account = account  # type: SEPAAccount
+        self._account = account
         self._name = name  # type: str
         self._balance = None   # type: float
         self._currency = None  # type: str
@@ -220,11 +218,10 @@ class FinTsHoldingsAccount(Entity):
     """
 
     def __init__(self, client: FinTsClient, account, name: str) -> None:
-        from fints.models import Holding, SEPAAccount
         self._client = client  # type: FinTsClient
         self._name = name  # type: str
-        self._account = account  # type: SEPAAccount
-        self._holdings = []  # type: List[Holding]
+        self._account = account
+        self._holdings = []
         self._total = None  # type: float
 
     @property
