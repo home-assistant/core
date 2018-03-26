@@ -16,6 +16,7 @@ from homeassistant.util import slugify
 DEPENDENCIES = ['deconz']
 
 ATTR_CURRENT = 'current'
+ATTR_DAYLIGHT = 'daylight'
 ATTR_EVENT_ID = 'event_id'
 
 
@@ -61,7 +62,8 @@ class DeconzSensor(Entity):
         """
         if reason['state'] or \
            'reachable' in reason['attr'] or \
-           'battery' in reason['attr']:
+           'battery' in reason['attr'] or \
+           'daylight' in reason['attr']:
             self.async_schedule_update_ha_state()
 
     @property
@@ -113,6 +115,8 @@ class DeconzSensor(Entity):
         if self.unit_of_measurement == 'Watts':
             attr[ATTR_CURRENT] = self._sensor.current
             attr[ATTR_VOLTAGE] = self._sensor.voltage
+        if self._sensor.sensor_class == 'daylight':
+            attr[ATTR_DAYLIGHT] = self._sensor.daylight
         return attr
 
 
