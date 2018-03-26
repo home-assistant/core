@@ -168,7 +168,8 @@ class HomematicipGenericDevice(Entity):
         self._home = home
         self._device = device
         self.post = post
-        _LOGGER.info('Setting up %s (%s)', self._name(), self._device.modelType)
+        _LOGGER.info('Setting up %s (%s)', self._name(),
+                     self._device.modelType)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
