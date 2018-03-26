@@ -1,5 +1,5 @@
 """Ban logic for HTTP component."""
-import asyncio
+
 from collections import defaultdict
 from datetime import datetime
 from ipaddress import ip_address
@@ -38,11 +38,10 @@ SCHEMA_IP_BAN_ENTRY = vol.Schema({
 @callback
 def setup_bans(hass, app, login_threshold):
     """Create IP Ban middleware for the app."""
-    @asyncio.coroutine
-    def ban_startup(app):
+    async def ban_startup(app):
         """Initialize bans when app starts up."""
         app.middlewares.append(ban_middleware)
-        app[KEY_BANNED_IPS] = yield from hass.async_add_job(
+        app[KEY_BANNED_IPS] = await hass.async_add_job(
             load_ip_bans_config, hass.config.path(IP_BANS_FILE))
         app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
         app[KEY_LOGIN_THRESHOLD] = login_threshold
@@ -51,12 +50,11 @@ def setup_bans(hass, app, login_threshold):
 
 
 @middleware
-@asyncio.coroutine
-def ban_middleware(request, handler):
+async def ban_middleware(request, handler):
     """IP Ban middleware."""
     if KEY_BANNED_IPS not in request.app:
         _LOGGER.error('IP Ban middleware loaded but banned IPs not loaded')
-        return (yield from handler(request))
+        return await handler(request)
 
     # Verify if IP is not banned
     ip_address_ = request[KEY_REAL_IP]
@@ -67,14 +65,13 @@ def ban_middleware(request, handler):
         raise HTTPForbidden()
 
     try:
-        return (yield from handler(request))
+        return await handler(request)
     except HTTPUnauthorized:
-        yield from process_wrong_login(request)
+        await process_wrong_login(request)
         raise
 
 
-@asyncio.coroutine
-def process_wrong_login(request):
+async def process_wrong_login(request):
     """Process a wrong login attempt."""
     remote_addr = request[KEY_REAL_IP]
 
@@ -98,7 +95,7 @@ def process_wrong_login(request):
         request.app[KEY_BANNED_IPS].append(new_ban)
 
         hass = request.app['hass']
-        yield from hass.async_add_job(
+        await hass.async_add_job(
             update_ip_bans_config, hass.config.path(IP_BANS_FILE), new_ban)
 
         _LOGGER.warning(

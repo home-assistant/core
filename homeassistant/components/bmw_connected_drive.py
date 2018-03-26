@@ -4,30 +4,29 @@ Reads vehicle status from BMW connected drive portal.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/bmw_connected_drive/
 """
-import logging
 import datetime
+import logging
 
 import voluptuous as vol
+
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import discovery
 from homeassistant.helpers.event import track_utc_time_change
-
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD
-)
 
-REQUIREMENTS = ['bimmer_connected==0.4.1']
+REQUIREMENTS = ['bimmer_connected==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'bmw_connected_drive'
-CONF_VALUES = 'values'
-CONF_COUNTRY = 'country'
+CONF_REGION = 'region'
+
 
 ACCOUNT_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_COUNTRY): cv.string,
+    vol.Required(CONF_REGION): vol.Any('north_america', 'china',
+                                       'rest_of_world'),
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -37,7 +36,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-BMW_COMPONENTS = ['device_tracker', 'sensor']
+BMW_COMPONENTS = ['binary_sensor', 'device_tracker', 'lock', 'sensor']
 UPDATE_INTERVAL = 5  # in minutes
 
 
@@ -47,9 +46,9 @@ def setup(hass, config):
     for name, account_config in config[DOMAIN].items():
         username = account_config[CONF_USERNAME]
         password = account_config[CONF_PASSWORD]
-        country = account_config[CONF_COUNTRY]
+        region = account_config[CONF_REGION]
         _LOGGER.debug('Adding new account %s', name)
-        bimmer = BMWConnectedDriveAccount(username, password, country, name)
+        bimmer = BMWConnectedDriveAccount(username, password, region, name)
         accounts.append(bimmer)
 
         # update every UPDATE_INTERVAL minutes, starting now
@@ -75,12 +74,15 @@ def setup(hass, config):
 class BMWConnectedDriveAccount(object):
     """Representation of a BMW vehicle."""
 
-    def __init__(self, username: str, password: str, country: str,
+    def __init__(self, username: str, password: str, region_str: str,
                  name: str) -> None:
         """Constructor."""
         from bimmer_connected.account import ConnectedDriveAccount
+        from bimmer_connected.country_selector import get_region_from_name
 
-        self.account = ConnectedDriveAccount(username, password, country)
+        region = get_region_from_name(region_str)
+
+        self.account = ConnectedDriveAccount(username, password, region)
         self.name = name
         self._update_listeners = []
 

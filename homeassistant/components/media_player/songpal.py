@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-songpal==0.0.6']
+REQUIREMENTS = ['python-songpal==0.0.7']
 
 SUPPORT_SONGPAL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | \
                   SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE | \
@@ -101,7 +101,7 @@ class SongpalDevice(MediaPlayerDevice):
         import songpal
         self._name = name
         self.endpoint = endpoint
-        self.dev = songpal.Protocol(self.endpoint)
+        self.dev = songpal.Device(self.endpoint)
         self._sysinfo = None
 
         self._state = False
@@ -154,7 +154,7 @@ class SongpalDevice(MediaPlayerDevice):
                 _LOGGER.warning("Got %s volume controls, using the first one",
                                 volumes)
 
-            volume = volumes.pop()
+            volume = volumes[0]
             _LOGGER.debug("Current volume: %s", volume)
 
             self._volume_max = volume.maxVolume

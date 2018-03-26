@@ -13,14 +13,14 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from homeassistant.const import (
     ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT, MATCH_ALL,
     STATE_UNKNOWN)
-from homeassistant.core import State
+from homeassistant.core import State, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
 from homeassistant.loader import bind_hass, get_component
 from homeassistant.util import convert
 from homeassistant.util import dt as dt_util
 from homeassistant.util import location as loc_util
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
@@ -73,7 +73,8 @@ def extract_entities(template, variables=None):
             extraction_final.append(result[0])
 
         if variables and result[1] in variables and \
-           isinstance(variables[result[1]], str):
+           isinstance(variables[result[1]], str) and \
+           valid_entity_id(variables[result[1]]):
             extraction_final.append(variables[result[1]])
 
     if extraction_final:

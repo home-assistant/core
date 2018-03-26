@@ -240,13 +240,18 @@ class SensiboClimate(ClimateDevice):
     def min_temp(self):
         """Return the minimum temperature."""
         return self._temperatures_list[0] \
-            if self._temperatures_list else super().min_temp()
+            if self._temperatures_list else super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         return self._temperatures_list[-1] \
-            if self._temperatures_list else super().max_temp()
+            if self._temperatures_list else super().max_temp
+
+    @property
+    def unique_id(self):
+        """Return unique ID based on Sensibo ID."""
+        return self._id
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):

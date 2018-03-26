@@ -10,9 +10,9 @@ import logging
 from homeassistant.core import callback
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
-    SUPPORT_RGB_COLOR, Light)
+    SUPPORT_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
@@ -157,7 +157,7 @@ class TradfriLight(Light):
         self._light_control = None
         self._light_data = None
         self._name = None
-        self._rgb_color = None
+        self._hs_color = None
         self._features = SUPPORTED_FEATURES
         self._temp_supported = False
         self._available = True
@@ -237,9 +237,9 @@ class TradfriLight(Light):
             )
 
     @property
-    def rgb_color(self):
-        """RGB color of the light."""
-        return self._rgb_color
+    def hs_color(self):
+        """HS color of the light."""
+        return self._hs_color
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
@@ -252,12 +252,12 @@ class TradfriLight(Light):
         Instruct the light to turn on.
 
         After adding "self._light_data.hexcolor is not None"
-        for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
+        for ATTR_HS_COLOR, this also supports Philips Hue bulbs.
         """
-        if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
+        if ATTR_HS_COLOR in kwargs and self._light_data.hex_color is not None:
+            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             yield from self._api(
-                self._light.light_control.set_rgb_color(
-                    *kwargs[ATTR_RGB_COLOR]))
+                self._light.light_control.set_rgb_color(*rgb))
 
         elif ATTR_COLOR_TEMP in kwargs and \
                 self._light_data.hex_color is not None and \
@@ -309,17 +309,17 @@ class TradfriLight(Light):
         self._light_control = light.light_control
         self._light_data = light.light_control.lights[0]
         self._name = light.name
-        self._rgb_color = None
+        self._hs_color = None
         self._features = SUPPORTED_FEATURES
 
         if self._light.device_info.manufacturer == IKEA:
             if self._light_control.can_set_kelvin:
                 self._features |= SUPPORT_COLOR_TEMP
             if self._light_control.can_set_color:
-                self._features |= SUPPORT_RGB_COLOR
+                self._features |= SUPPORT_COLOR
         else:
             if self._light_data.hex_color is not None:
-                self._features |= SUPPORT_RGB_COLOR
+                self._features |= SUPPORT_COLOR
 
         self._temp_supported = self._light.device_info.manufacturer \
             in ALLOWED_TEMPERATURES
@@ -328,7 +328,8 @@ class TradfriLight(Light):
     def _observe_update(self, tradfri_device):
         """Receive new state data for this light."""
         self._refresh(tradfri_device)
-        self._rgb_color = color_util.rgb_hex_to_rgb_list(
+        rgb = color_util.rgb_hex_to_rgb_list(
             self._light_data.hex_color_inferred
         )
+        self._hs_color = color_util.color_RGB_to_hs(*rgb)
         self.async_schedule_update_ha_state()

@@ -1,8 +1,11 @@
 """The test for the data filter sensor platform."""
+from datetime import timedelta
 import unittest
+from unittest.mock import patch
 
 from homeassistant.components.sensor.filter import (
-    LowPassFilter, OutlierFilter, ThrottleFilter)
+    LowPassFilter, OutlierFilter, ThrottleFilter, TimeSMAFilter)
+import homeassistant.util.dt as dt_util
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant, assert_setup_component
 
@@ -90,3 +93,16 @@ class TestFilterSensor(unittest.TestCase):
             if not filt.skip_processing:
                 filtered.append(new_state)
         self.assertEqual([20, 21], filtered)
+
+    def test_time_sma(self):
+        """Test if time_sma filter works."""
+        filt = TimeSMAFilter(window_size=timedelta(minutes=2),
+                             precision=2,
+                             entity=None,
+                             type='last')
+        past = dt_util.utcnow() - timedelta(minutes=5)
+        for state in self.values:
+            with patch('homeassistant.util.dt.utcnow', return_value=past):
+                filtered = filt.filter_state(state)
+            past += timedelta(minutes=1)
+        self.assertEqual(21.5, filtered)

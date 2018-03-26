@@ -404,8 +404,14 @@ class HTML5NotificationService(BaseNotificationService):
             jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
             payload[ATTR_DATA][ATTR_JWT] = jwt_token
 
+            # Only pass the gcm key if we're actually using GCM
+            # If we don't, notifications break on FireFox
+            gcm_key = self._gcm_key \
+                if 'googleapis.com' in info[ATTR_SUBSCRIPTION][ATTR_ENDPOINT] \
+                else None
             response = WebPusher(info[ATTR_SUBSCRIPTION]).send(
-                json.dumps(payload), gcm_key=self._gcm_key, ttl='86400')
+                json.dumps(payload), gcm_key=gcm_key, ttl='86400'
+            )
 
             # pylint: disable=no-member
             if response.status_code == 410:
