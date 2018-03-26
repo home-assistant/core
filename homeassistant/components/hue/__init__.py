@@ -21,7 +21,7 @@ from homeassistant.helpers import discovery, aiohttp_client
 from homeassistant import config_entries
 from homeassistant.util.json import save_json
 
-REQUIREMENTS = ['aiohue==1.2.0']
+REQUIREMENTS = ['aiohue==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,7 +145,6 @@ async def async_setup_bridge(
     bridge = HueBridge(host, hass, filename, username, allow_unreachable,
                        allow_hue_groups)
     await bridge.async_setup()
-    hass.data[DOMAIN][host] = bridge
 
 
 def _find_username_from_config(hass, filename):
@@ -208,6 +207,8 @@ class HueBridge(object):
             _LOGGER.exception("Unknown error connecting with Hue bridge at %s",
                               self.host)
             return
+
+        self.hass.data[DOMAIN][self.host] = self
 
         # If we came here and configuring this host, mark as done
         if self.config_request_id:
