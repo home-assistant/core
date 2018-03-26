@@ -409,7 +409,7 @@ class TemplateMethods(object):
         return state_attr is not None and state_attr == value
 
     def state_attr(self, entity_id, name):
-        """Gets a specific attribute from a state."""
+        """Get a specific attribute from a state."""
         state_obj = self._hass.states.get(entity_id)
         if state_obj is not None:
             return state_obj.attributes.get(name)
