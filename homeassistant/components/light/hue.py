@@ -18,6 +18,7 @@ from homeassistant.components.light import (
     FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR, SUPPORT_TRANSITION,
     Light)
+from homeassistant.util import color
 
 DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -235,19 +236,28 @@ class HueLight(Light):
     @property
     def hs_color(self):
         """Return the hs color value."""
-        # Don't return hue/sat if in color temperature mode
-        if self._color_mode == "ct":
-            return None
+        # pylint: disable=redefined-outer-name
+        mode = self._color_mode
 
-        if self.is_group:
-            return (
-                self.light.action.get('hue') / 65535 * 360,
-                self.light.action.get('sat') / 255 * 100,
-            )
-        return (
-            self.light.state.get('hue') / 65535 * 360,
-            self.light.state.get('sat') / 255 * 100,
-        )
+        if mode not in ('hs', 'xy'):
+            return
+
+        source = self.light.action if self.is_group else self.light.state
+
+        if mode == 'hs':
+            hue = source['hue']
+            sat = source['sat']
+        else:
+            # mode == xy
+            hue = source.get('hue')
+            sat = source.get('sat')
+
+            # Sometimes color mode xy will not include valid hue/sat values.
+            # Reported as issue 13434
+            if hue is None or sat is None:
+                hue, sat = color.color_xy_to_hs(*source.get('xy'))
+
+        return hue / 65535 * 360, sat / 255 * 100
 
     @property
     def color_temp(self):

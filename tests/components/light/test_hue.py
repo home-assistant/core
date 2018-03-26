@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant.components import hue
 import homeassistant.components.light.hue as hue_light
+from homeassistant.util import color
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +81,7 @@ LIGHT_1_ON = {
         "ct": 467,
         "alert": "none",
         "effect": "none",
-        "colormode": "xy",
+        "colormode": "hs",
         "reachable": True
     },
     "type": "Extended color light",
@@ -623,3 +624,60 @@ def test_available():
     )
 
     assert light.available is True
+
+
+def test_hs_color():
+    """Test hs_color property."""
+    light = hue_light.HueLight(
+        light=Mock(state={
+            'colormode': 'ct',
+            'hue': 1234,
+            'sat': 123,
+        }),
+        request_bridge_update=None,
+        bridge=Mock(),
+        is_group=False,
+    )
+
+    assert light.hs_color is None
+
+    light = hue_light.HueLight(
+        light=Mock(state={
+            'colormode': 'hs',
+            'hue': 1234,
+            'sat': 123,
+        }),
+        request_bridge_update=None,
+        bridge=Mock(),
+        is_group=False,
+    )
+
+    assert light.hs_color == (1234 / 65535 * 360, 123 / 255 * 100)
+
+    light = hue_light.HueLight(
+        light=Mock(state={
+            'colormode': 'xy',
+            'hue': 1234,
+            'sat': 123,
+        }),
+        request_bridge_update=None,
+        bridge=Mock(),
+        is_group=False,
+    )
+
+    assert light.hs_color == (1234 / 65535 * 360, 123 / 255 * 100)
+
+    light = hue_light.HueLight(
+        light=Mock(state={
+            'colormode': 'xy',
+            'hue': None,
+            'sat': 123,
+            'xy': [0.4, 0.5]
+        }),
+        request_bridge_update=None,
+        bridge=Mock(),
+        is_group=False,
+    )
+
+    hue, sat = color.color_xy_to_hs(0.4, 0.5)
+    assert light.hs_color == (hue / 65535 * 360, sat / 255 * 100)
