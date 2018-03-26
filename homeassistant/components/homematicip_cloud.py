@@ -65,8 +65,6 @@ ATTR_OPERATION_LOCK = 'operation_lock'
 class HomematicipConnector:
     """Manages HomematicIP http and websocket connection."""
 
-    from homematicip.base.base_connection import HmipConnectionError
-
     def __init__(self, config, websession, hass):
         """Initialize HomematicIP cloud connection."""
         from homematicip.async.home import AsyncHome
