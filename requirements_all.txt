@@ -249,6 +249,9 @@ dweepy==0.3.0
 # homeassistant.components.sensor.eliqonline
 eliqonline==1.0.13
 
+# homeassistant.components.telegram_bot
+emoji==0.4.5
+
 # homeassistant.components.enocean
 enocean==0.40
 
