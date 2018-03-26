@@ -23,7 +23,7 @@ def bump_version(cur_major, cur_minor, cur_patch, bump_type):
 
     if bump_type == 'release_patch':
         # Convert 0.67.3 to 0.67.4
-        # Convert 0.67.3.beta5 to 0.67.3
+        # Convert 0.67.3.b5 to 0.67.3
         # Convert 0.67.3.dev0 to 0.67.3
         new_major = cur_major
         new_minor = cur_minor
@@ -35,7 +35,7 @@ def bump_version(cur_major, cur_minor, cur_patch, bump_type):
 
     elif bump_type == 'dev':
         # Convert 0.67.3 to 0.67.4.dev0
-        # Convert 0.67.3.beta5 to 0.67.4.dev0
+        # Convert 0.67.3.b5 to 0.67.4.dev0
         # Convert 0.67.3.dev0 to 0.67.3.dev1
         new_major = cur_major
 
@@ -48,22 +48,22 @@ def bump_version(cur_major, cur_minor, cur_patch, bump_type):
             new_patch = '0.dev0'
 
     elif bump_type == 'beta':
-        # Convert 0.67.5 to 0.67.8.beta0
-        # Convert 0.67.0.dev0 to 0.67.0.beta0
-        # Convert 0.67.5.beta4 to 0.67.5.beta5
+        # Convert 0.67.5 to 0.67.8.b0
+        # Convert 0.67.0.dev0 to 0.67.0.b0
+        # Convert 0.67.5.b4 to 0.67.5.b5
         new_major = cur_major
         new_minor = cur_minor
 
         if patch_parts['prerel'] is None:
             patch_parts['patch'] += 1
-            patch_parts['prerel'] = 'beta'
+            patch_parts['prerel'] = 'b'
             patch_parts['prerelversion'] = 0
 
-        elif patch_parts['prerel'] == 'beta':
+        elif patch_parts['prerel'] == 'b':
             patch_parts['prerelversion'] += 1
 
         elif patch_parts['prerel'] == 'dev':
-            patch_parts['prerel'] = 'beta'
+            patch_parts['prerel'] = 'b'
             patch_parts['prerelversion'] = 0
 
         else:
@@ -110,22 +110,22 @@ def main():
 def test_bump_version():
     """Make sure it all works."""
     assert bump_version(0, 56, '0', 'beta') == \
-        (0, 56, '1.beta0')
-    assert bump_version(0, 56, '0.beta3', 'beta') == \
-        (0, 56, '0.beta4')
+        (0, 56, '1.b0')
+    assert bump_version(0, 56, '0.b3', 'beta') == \
+        (0, 56, '0.b4')
     assert bump_version(0, 56, '0.dev0', 'beta') == \
-        (0, 56, '0.beta0')
+        (0, 56, '0.b0')
 
     assert bump_version(0, 56, '3', 'dev') == \
         (0, 57, '0.dev0')
-    assert bump_version(0, 56, '0.beta3', 'dev') == \
+    assert bump_version(0, 56, '0.b3', 'dev') == \
         (0, 57, '0.dev0')
     assert bump_version(0, 56, '0.dev0', 'dev') == \
         (0, 56, '0.dev1')
 
     assert bump_version(0, 56, '3', 'release_patch') == \
         (0, 56, '4')
-    assert bump_version(0, 56, '3.beta3', 'release_patch') == \
+    assert bump_version(0, 56, '3.b3', 'release_patch') == \
         (0, 56, '3')
     assert bump_version(0, 56, '0.dev0', 'release_patch') == \
         (0, 56, '0')
