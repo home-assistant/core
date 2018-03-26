@@ -81,7 +81,7 @@ LIGHT_1_ON = {
         "ct": 467,
         "alert": "none",
         "effect": "none",
-        "colormode": "hs",
+        "colormode": "xy",
         "reachable": True
     },
     "type": "Extended color light",
