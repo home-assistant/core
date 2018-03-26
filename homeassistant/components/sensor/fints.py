@@ -89,7 +89,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for account in holdings_accounts:
         # if not config[CONF_ACCOUNTS] or account.iban in account_config:
-        # TODO: nicer account name
         if not config[CONF_HOLDINGS] \
                 or account.accountnumber in holdings_config:
             account_name = holdings_config.get(account.accountnumber)
@@ -114,6 +113,7 @@ class FinTsClient(object):
     """
 
     def __init__(self, credentials: BankCredentials, name: str):
+        """Constructor for class FinTsClient."""
         self._credentials = credentials
         self.name = name
 
@@ -138,7 +138,10 @@ class FinTsClient(object):
             try:
                 self.client.get_balance(account)
                 balance_accounts += [account]
-            except IndexError or FinTSDialogError:
+            except IndexError:
+                # account is not a balance account.
+                pass
+            except FinTSDialogError:
                 # account is not a balance account.
                 pass
             try:
@@ -159,6 +162,7 @@ class FinTsAccount(Entity):
     """
 
     def __init__(self, client: FinTsClient, account, name: str) -> None:
+        """Constructor for class FinTsAccount."""
         self._client = client  # type: FinTsClient
         self._account = account
         self._name = name  # type: str
@@ -218,6 +222,7 @@ class FinTsHoldingsAccount(Entity):
     """
 
     def __init__(self, client: FinTsClient, account, name: str) -> None:
+        """Constructor for class FinTsHoldingsAccount."""
         self._client = client  # type: FinTsClient
         self._name = name  # type: str
         self._account = account
