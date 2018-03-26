@@ -1,14 +1,10 @@
 """Tests for deCONZ config flow."""
-import asyncio
-from unittest.mock import Mock, patch
-
-import pydeconz
 import pytest
+
 import voluptuous as vol
 
 import homeassistant.components.deconz as deconz
-
-from tests.common import MockConfigEntry, mock_coro
+import pydeconz
 
 
 async def test_flow_works(hass, aioclient_mock):
@@ -86,5 +82,3 @@ async def test_flow_two_bridges_discovered(hass, aioclient_mock):
 
     result['data_schema']({'host': '1.2.3.4'})
     result['data_schema']({'host': '5.6.7.8'})
-
-
