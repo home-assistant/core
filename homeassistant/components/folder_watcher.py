@@ -1,7 +1,7 @@
 """
 Component for monitoring activity on a folder.
 
-For more details about this platform, please refer to the documentation at
+For more details about this platform, refer to the documentation at
 https://home-assistant.io/components/folder_watcher/
 """
 import os
