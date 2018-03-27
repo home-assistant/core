@@ -955,7 +955,7 @@ python-mpd2==0.5.5
 
 # homeassistant.components.light.mystrom
 # homeassistant.components.switch.mystrom
-python-mystrom==0.3.8
+python-mystrom==0.4.2
 
 # homeassistant.components.nest
 python-nest==3.7.0
