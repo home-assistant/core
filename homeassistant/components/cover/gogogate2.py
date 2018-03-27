@@ -42,8 +42,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         devices = mygogogate2.get_devices()
-        if devices == False:
-            raise ValueError("Username or Password is incorrect or no devices found")
+        if devices is False:
+            raise ValueError(
+                "Username or Password is incorrect or no devices found")
 
         add_devices(MyGogogate2Device(mygogogate2, door) for door in devices)
         return True
