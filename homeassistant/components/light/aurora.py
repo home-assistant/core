@@ -16,7 +16,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_RGB_COLOR,
     SUPPORT_EFFECT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
-    SUPPORT_RGB_COLOR, PLATFORM_SCHEMA, Light)
+    SUPPORT_COLOR, PLATFORM_SCHEMA, Light)
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color as color_util
@@ -26,7 +26,7 @@ from homeassistant.util.color import \
 REQUIREMENTS = ['nanoleaf==0.4.1']
 
 SUPPORT_AURORA = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
-                  SUPPORT_RGB_COLOR)
+                  SUPPORT_COLOR)
 
 _LOGGER = logging.getLogger(__name__)
 
