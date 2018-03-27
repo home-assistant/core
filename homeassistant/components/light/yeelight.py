@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
     ATTR_FLASH, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP, SUPPORT_FLASH,
-    SUPPORT_EFFECT, Light, PLATFORM_SCHEMA)
+    SUPPORT_EFFECT, Light, PLATFORM_SCHEMA, ATTR_ENTITY_ID, DOMAIN)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -30,7 +30,7 @@ DEFAULT_TRANSITION = 350
 CONF_SAVE_ON_CHANGE = 'save_on_change'
 CONF_MODE_MUSIC = 'use_music_mode'
 
-DOMAIN = 'yeelight'
+DATA_KEY = 'light.yeelight'
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
@@ -90,6 +90,13 @@ YEELIGHT_EFFECT_LIST = [
     EFFECT_TWITTER,
     EFFECT_STOP]
 
+SERVICE_SET_MODE = 'yeelight_set_mode'
+ATTR_MODE = 'mode'
+
+YEELIGHT_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
 
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
@@ -106,6 +113,11 @@ def _cmd(func):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Yeelight bulbs."""
+    from yeelight.enums import PowerMode
+
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {}
+
     lights = []
     if discovery_info is not None:
         _LOGGER.debug("Adding autodetected %s", discovery_info['hostname'])
@@ -115,15 +127,43 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                    discovery_info['properties']['mac'])
         device = {'name': name, 'ipaddr': discovery_info['host']}
 
-        lights.append(YeelightLight(device, DEVICE_SCHEMA({})))
+        light = YeelightLight(device, DEVICE_SCHEMA({}))
+        lights.append(light)
+        hass.data[DATA_KEY][name] = light
     else:
         for ipaddr, device_config in config[CONF_DEVICES].items():
-            _LOGGER.debug("Adding configured %s", device_config[CONF_NAME])
+            name = device_config[CONF_NAME]
+            _LOGGER.debug("Adding configured %s", name)
 
-            device = {'name': device_config[CONF_NAME], 'ipaddr': ipaddr}
-            lights.append(YeelightLight(device, device_config))
+            device = {'name': name, 'ipaddr': ipaddr}
+            light = YeelightLight(device, device_config)
+            lights.append(light)
+            hass.data[DATA_KEY][name] = light
 
     add_devices(lights, True)
+
+    def service_handler(service):
+        """Dispatch service calls to target entities."""
+        params = {key: value for key, value in service.data.items()
+                  if key != ATTR_ENTITY_ID}
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        if entity_ids:
+            target_devices = [dev for dev in hass.data[DATA_KEY].values()
+                              if dev.entity_id in entity_ids]
+        else:
+            target_devices = hass.data[DATA_KEY].values()
+
+        for target_device in target_devices:
+            if service.service == SERVICE_SET_MODE:
+                target_device.set_mode(**params)
+
+    service_schema_set_mode = YEELIGHT_SERVICE_SCHEMA.extend({
+        vol.Required(ATTR_MODE):
+            vol.In([mode.name.lower() for mode in PowerMode])
+    })
+    hass.services.register(
+        DOMAIN, SERVICE_SET_MODE, service_handler,
+        schema=service_schema_set_mode)
 
 
 class YeelightLight(Light):
@@ -444,3 +484,11 @@ class YeelightLight(Light):
             self._bulb.turn_off(duration=duration)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to turn the bulb off: %s", ex)
+
+    def set_mode(self, mode: str):
+        """Set a power mode."""
+        import yeelight
+        try:
+            self._bulb.set_power_mode(yeelight.enums.PowerMode[mode.upper()])
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to set the power mode: %s", ex)
