@@ -10,8 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.cover import CoverDevice
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE,
-    CONF_IP_ADDRESS, CONF_API_KEY)
+    CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED, STATE_UNAVAILABLE,
+    CONF_IP_ADDRESS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pygogogate2==0.0.2']
@@ -47,7 +47,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             raise ValueError(
                 "Username or Password is incorrect or no devices found")
 
-        add_devices(MyGogogate2Device(mygogogate2, door, name) for door in devices)
+        add_devices(MyGogogate2Device(
+            mygogogate2, door, name) for door in devices)
         return
 
     except (TypeError, KeyError, NameError, ValueError) as ex:
