@@ -16,6 +16,7 @@ from .const import (
     CHAR_TARGET_HEATING_COOLING, CHAR_CURRENT_TEMPERATURE,
     CHAR_TARGET_TEMPERATURE, CHAR_TEMP_DISPLAY_UNITS,
     CHAR_COOLING_THRESHOLD_TEMPERATURE, CHAR_HEATING_THRESHOLD_TEMPERATURE)
+from .util import temperature_to_homekit, temperature_to_states
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ class Thermostat(HomeAccessory):
         self._hass = hass
         self._entity_id = entity_id
         self._call_timer = None
+        self._unit = TEMP_CELSIUS
 
         self.heat_cool_flag_target_state = False
         self.temperature_flag_target_state = False
@@ -107,33 +109,38 @@ class Thermostat(HomeAccessory):
 
     def set_cooling_threshold(self, value):
         """Set cooling threshold temp to value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set cooling threshold temperature to %.2f',
+        _LOGGER.debug('%s: Set cooling threshold temperature to %.2f°C',
                       self._entity_id, value)
         self.coolingthresh_flag_target_state = True
         self.char_cooling_thresh_temp.set_value(value, should_callback=False)
         low = self.char_heating_thresh_temp.value
+        low = temperature_to_states(low, self._unit)
+        value = temperature_to_states(value, self._unit)
         self._hass.components.climate.set_temperature(
             entity_id=self._entity_id, target_temp_high=value,
             target_temp_low=low)
 
     def set_heating_threshold(self, value):
         """Set heating threshold temp to value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set heating threshold temperature to %.2f',
+        _LOGGER.debug('%s: Set heating threshold temperature to %.2f°C',
                       self._entity_id, value)
         self.heatingthresh_flag_target_state = True
         self.char_heating_thresh_temp.set_value(value, should_callback=False)
         # Home assistant always wants to set low and high at the same time
         high = self.char_cooling_thresh_temp.value
+        high = temperature_to_states(high, self._unit)
+        value = temperature_to_states(value, self._unit)
         self._hass.components.climate.set_temperature(
             entity_id=self._entity_id, target_temp_high=high,
             target_temp_low=value)
 
     def set_target_temperature(self, value):
         """Set target temperature to value if call came from HomeKit."""
-        _LOGGER.debug('%s: Set target temperature to %.2f',
+        _LOGGER.debug('%s: Set target temperature to %.2f°C',
                       self._entity_id, value)
         self.temperature_flag_target_state = True
         self.char_target_temp.set_value(value, should_callback=False)
+        value = temperature_to_states(value, self._unit)
         self._hass.components.climate.set_temperature(
             temperature=value, entity_id=self._entity_id)
 
@@ -142,14 +149,19 @@ class Thermostat(HomeAccessory):
         if new_state is None:
             return
 
+        self._unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT,
+                                              TEMP_CELSIUS)
+
         # Update current temperature
         current_temp = new_state.attributes.get(ATTR_CURRENT_TEMPERATURE)
         if isinstance(current_temp, (int, float)):
+            current_temp = temperature_to_homekit(current_temp, self._unit)
             self.char_current_temp.set_value(current_temp)
 
         # Update target temperature
         target_temp = new_state.attributes.get(ATTR_TEMPERATURE)
         if isinstance(target_temp, (int, float)):
+            target_temp = temperature_to_homekit(target_temp, self._unit)
             if not self.temperature_flag_target_state:
                 self.char_target_temp.set_value(target_temp,
                                                 should_callback=False)
@@ -158,7 +170,9 @@ class Thermostat(HomeAccessory):
         # Update cooling threshold temperature if characteristic exists
         if self.char_cooling_thresh_temp:
             cooling_thresh = new_state.attributes.get(ATTR_TARGET_TEMP_HIGH)
-            if cooling_thresh:
+            if isinstance(cooling_thresh, (int, float)):
+                cooling_thresh = temperature_to_homekit(cooling_thresh,
+                                                        self._unit)
                 if not self.coolingthresh_flag_target_state:
                     self.char_cooling_thresh_temp.set_value(
                         cooling_thresh, should_callback=False)
@@ -167,18 +181,17 @@ class Thermostat(HomeAccessory):
         # Update heating threshold temperature if characteristic exists
         if self.char_heating_thresh_temp:
             heating_thresh = new_state.attributes.get(ATTR_TARGET_TEMP_LOW)
-            if heating_thresh:
+            if isinstance(heating_thresh, (int, float)):
+                heating_thresh = temperature_to_homekit(heating_thresh,
+                                                        self._unit)
                 if not self.heatingthresh_flag_target_state:
                     self.char_heating_thresh_temp.set_value(
                         heating_thresh, should_callback=False)
         self.heatingthresh_flag_target_state = False
 
         # Update display units
-        display_units = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if display_units \
-                and display_units in UNIT_HASS_TO_HOMEKIT:
-            self.char_display_units.set_value(
-                UNIT_HASS_TO_HOMEKIT[display_units])
+        if self._unit and self._unit in UNIT_HASS_TO_HOMEKIT:
+            self.char_display_units.set_value(UNIT_HASS_TO_HOMEKIT[self._unit])
 
         # Update target operation mode
         operation_mode = new_state.attributes.get(ATTR_OPERATION_MODE)
