@@ -7,13 +7,15 @@ from homeassistant.core import callback
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import HOMEKIT_NOTIFY_ID
 from homeassistant.components.homekit.util import (
-    show_setup_message, dismiss_setup_message, ATTR_CODE)
+    show_setup_message, dismiss_setup_message, convert_to_float,
+    temperature_to_homekit, temperature_to_states, ATTR_CODE)
 from homeassistant.components.homekit.util import validate_entity_config \
     as vec
 from homeassistant.components.persistent_notification import (
     SERVICE_CREATE, SERVICE_DISMISS, ATTR_NOTIFICATION_ID)
 from homeassistant.const import (
-    EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA)
+    EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_UNKNOWN)
 
 from tests.common import get_test_home_assistant
 
@@ -81,3 +83,20 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(
             data[ATTR_SERVICE_DATA].get(ATTR_NOTIFICATION_ID, None),
             HOMEKIT_NOTIFY_ID)
+
+    def test_convert_to_float(self):
+        """Test convert_to_float method."""
+        self.assertEqual(convert_to_float(12), 12)
+        self.assertEqual(convert_to_float(12.4), 12.4)
+        self.assertIsNone(convert_to_float(STATE_UNKNOWN))
+        self.assertIsNone(convert_to_float(None))
+
+    def test_temperature_to_homekit(self):
+        """Test temperature conversion from HA to HomeKit."""
+        self.assertEqual(temperature_to_homekit(20.46, TEMP_CELSIUS), 20.5)
+        self.assertEqual(temperature_to_homekit(92.1, TEMP_FAHRENHEIT), 33.4)
+
+    def test_temperature_to_states(self):
+        """Test temperature conversion from HomeKit to HA."""
+        self.assertEqual(temperature_to_states(20, TEMP_CELSIUS), 20.0)
+        self.assertEqual(temperature_to_states(20.2, TEMP_FAHRENHEIT), 68.4)
