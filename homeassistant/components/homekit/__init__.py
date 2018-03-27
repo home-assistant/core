@@ -186,9 +186,6 @@ class HomeKit():
 
         for state in self._hass.states.all():
             self.add_bridge_accessory(state)
-        for entity_id in self._config:
-            _LOGGER.warning('The entity "%s" was not setup when HomeKit '
-                            'was started', entity_id)
         self.bridge.set_broker(self.driver)
 
         if not self.bridge.paired:
