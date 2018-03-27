@@ -12,6 +12,7 @@ from voluptuous import MultipleInvalid
 from homeassistant.core import DOMAIN, HomeAssistantError, Config
 import homeassistant.config as config_util
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_UNIT_SYSTEM, CONF_NAME,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
     CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT)
@@ -234,6 +235,29 @@ class TestConfig(unittest.TestCase):
                 },
             },
         })
+
+    def test_customize_dict_schema(self):
+        """Test basic customize config validation."""
+        values = (
+            {ATTR_FRIENDLY_NAME: None},
+            {ATTR_HIDDEN: '2'},
+            {ATTR_ASSUMED_STATE: '2'},
+        )
+
+        for val in values:
+            print(val)
+            with pytest.raises(MultipleInvalid):
+                config_util.CUSTOMIZE_DICT_SCHEMA(val)
+
+        assert config_util.CUSTOMIZE_DICT_SCHEMA({
+            ATTR_FRIENDLY_NAME: 2,
+            ATTR_HIDDEN: '1',
+            ATTR_ASSUMED_STATE: '0',
+        }) == {
+            ATTR_FRIENDLY_NAME: '2',
+            ATTR_HIDDEN: True,
+            ATTR_ASSUMED_STATE: False
+        }
 
     def test_customize_glob_is_ordered(self):
         """Test that customize_glob preserves order."""
