@@ -106,8 +106,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         for mac in devs_to_track:
             _LOGGER.debug("Checking %s", mac)
             result = mac in devs
-            _LOGGER.debug("Checking %s", result)
-            
+
             if not result:
                 # Could not lookup device name
                 continue
