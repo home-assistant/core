@@ -37,13 +37,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+def aurora():
+    """Return the Nanoleaf module."""
+    import nanoleaf as nanoleaf_module
+    return nanoleaf_module
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Nanoleaf Aurora device."""
-    from nanoleaf import Aurora
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
-    aurora_light = Aurora(host, token)
+    aurora_light = aurora().Aurora(host, token)
     aurora_light.hass_name = name
 
     if aurora_light.on is None:
