@@ -18,8 +18,9 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     MediaPlayerDevice)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL, STATE_OFF,
-    STATE_ON, STATE_UNKNOWN)
+    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL,
+    CONTENT_TYPE_JSON, HTTP_OK, STATE_OFF, STATE_ON)
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -78,9 +79,6 @@ CMODE_LIST_SET = {
 DATA_EPSON = 'epson'
 DEFAULT_NAME = 'EPSON Projector'
 
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -90,9 +88,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 ATTR_CMODE = 'cmode'
 SUPPORT_CMODE = 33001
 ACCEPT_ENCODING = "gzip, deflate"
-ACCEPT_HEADER = "application/json, text/javascript"
+ACCEPT_HEADER = CONTENT_TYPE_JSON
 EPSON_ERROR_CODE = 'ERR'
-
+TIMEOUT = 15
 SUPPORT_EPSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE |\
             SUPPORT_CMODE | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP | \
             SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
@@ -110,21 +108,25 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Epson media player platform."""
     if DATA_EPSON not in hass.data:
         hass.data[DATA_EPSON] = []
-
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
-    epson = EpsonProjector(
-        hass, name, host,
-        config.get(CONF_PORT), config.get(CONF_SSL), KEY_COMMANDS)
 
-    epson.update()
-    hass.data[DATA_EPSON].append(epson)
-    async_add_devices([epson], update_before_add=True)
+    try:
+        epson = EpsonProjector(
+            hass, name, host,
+            config.get(CONF_PORT), config.get(CONF_SSL), KEY_COMMANDS)
+        epson.update()
+    except (aiohttp.client_exceptions.ClientConnectorError,
+            asyncio.TimeoutError):
+        raise PlatformNotReady
+    if epson:
+        hass.data[DATA_EPSON].append(epson)
+        async_add_devices([epson], update_before_add=True)
 
     @asyncio.coroutine
     def async_service_handler(service):
         """Handle for services."""
-        entity_ids = service.data.get('entity_id')
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
         if entity_ids:
             devices = [device for device in hass.data[DATA_EPSON]
                        if device.entity_id in entity_ids]
@@ -155,7 +157,7 @@ class EpsonProjector(MediaPlayerDevice):
         self._source_list = list(DEFAULT_SOURCES.values())
         self.key_commands = key_commands
         self._encryption = encryption
-        self._state = STATE_UNKNOWN
+        self._state = None
         http_protocol = 'https' if self._encryption else 'http'
         self._http_url = '{http_protocol}://{host}:{port}/cgi-bin/'.format(
             http_protocol=http_protocol,
@@ -167,30 +169,30 @@ class EpsonProjector(MediaPlayerDevice):
             port=self._port)
         self._headers = {
             "Accept-Encoding": ACCEPT_ENCODING,
-            "Accept": ACCEPT_HEADER,
+            "Accept": CONTENT_TYPE_JSON,
             "Referer": referer
         }
         self.websession = async_create_clientsession(
             hass,
-            verify_ssl=self._encryption)
+            verify_ssl=False)
         self.websession_action = async_create_clientsession(
             hass,
-            verify_ssl=self._encryption)
+            verify_ssl=False)
 
     @asyncio.coroutine
     def update(self):
         """Update state of device."""
         try:
-            with async_timeout.timeout(10, loop=self._hass.loop):
+            with async_timeout.timeout(TIMEOUT):
                 response = yield from self.websession.get(
                     url='{url}{type}'.format(
                         url=self._http_url,
                         type='json_query'),
                     params=KEY_COMMANDS['CMODE'],
                     headers=self._headers)
-            if response.status != 200:
+            if response.status != HTTP_OK:
                 _LOGGER.warning(
-                    "[%s] Error %d on Epson.", DOMAIN, response.status)
+                    "Error message %d from Epson.", response.status)
                 self._state = STATE_OFF
             resp = yield from response.json()
             reply_code = resp['projector']['feature']['reply']
@@ -199,8 +201,8 @@ class EpsonProjector(MediaPlayerDevice):
             else:
                 self._state = STATE_ON
                 self._cmode = CMODE_LIST[reply_code]
-        except aiohttp.ClientError:
-            _LOGGER.error("[%s] Error getting info", DOMAIN)
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Error getting info")
             self._state = STATE_OFF
             return False
         return True
@@ -295,16 +297,19 @@ class EpsonProjector(MediaPlayerDevice):
         _LOGGER.debug("COMMAND %s", command)
         params = self.key_commands[command]
         try:
-            url = '{url}{type}'.format(url=self._http_url, type='directsend')
-            response = yield from self.websession_action.get(
-                url,
-                params=params,
-                headers=self._headers)
-            if response.status != 200:
+            with async_timeout.timeout(TIMEOUT):
+                url = '{url}{type}'.format(
+                    url=self._http_url,
+                    type='directsend')
+                response = yield from self.websession_action.get(
+                    url,
+                    params=params,
+                    headers=self._headers)
+            if response.status != HTTP_OK:
                 return None
             return True
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("[%s] Error getting info", DOMAIN)
+            _LOGGER.error("Error sending command")
         return None
 
     @property
