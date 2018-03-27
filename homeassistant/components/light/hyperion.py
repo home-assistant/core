@@ -166,11 +166,11 @@ class Hyperion(Light):
                     'priority': self._priority,
                     'effect': {'name': self._effect}
                 }
-                if len(mess)>1:
+                if len(mess) > 1:
                     json_mess['effect']['args'] = {}
-                    for i in range(1,len(mess)):
+                    for i in range(1, len(mess)):
                         arg = mess[i].split('=')
-                        if len(arg)==2:
+                        if len(arg) == 2:
                             json_mess['effect']['args'][arg[0]] = eval(arg[1])
                 self.json_request(json_mess)
                 self._icon = 'mdi:lava-lamp'
