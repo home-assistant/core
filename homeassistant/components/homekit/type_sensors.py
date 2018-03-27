@@ -2,8 +2,7 @@
 import logging
 
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_FAHRENHEIT, TEMP_CELSIUS)
-from homeassistant.util.temperature import fahrenheit_to_celsius
+    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 
 from . import TYPES
 from .accessories import (
@@ -11,31 +10,10 @@ from .accessories import (
 from .const import (
     CATEGORY_SENSOR, SERV_HUMIDITY_SENSOR, SERV_TEMPERATURE_SENSOR,
     CHAR_CURRENT_HUMIDITY, CHAR_CURRENT_TEMPERATURE, PROP_CELSIUS)
+from .util import convert_to_float, temperature_to_homekit
 
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def calc_temperature(state, unit=TEMP_CELSIUS):
-    """Calculate temperature from state and unit.
-
-    Always return temperature as Celsius value.
-    Conversion is handled on the device.
-    """
-    try:
-        value = float(state)
-    except ValueError:
-        return None
-
-    return fahrenheit_to_celsius(value) if unit == TEMP_FAHRENHEIT else value
-
-
-def calc_humidity(state):
-    """Calculate humidity from state."""
-    try:
-        return float(state)
-    except ValueError:
-        return None
 
 
 @TYPES.register('TemperatureSensor')
@@ -63,9 +41,10 @@ class TemperatureSensor(HomeAccessory):
         if new_state is None:
             return
 
-        unit = new_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
-        temperature = calc_temperature(new_state.state, unit)
+        unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
+        temperature = convert_to_float(new_state.state)
         if temperature:
+            temperature = temperature_to_homekit(temperature, unit)
             self.char_temp.set_value(temperature, should_callback=False)
             _LOGGER.debug('%s: Current temperature set to %d°C',
                           self._entity_id, temperature)
@@ -92,8 +71,8 @@ class HumiditySensor(HomeAccessory):
         if new_state is None:
             return
 
-        humidity = calc_humidity(new_state.state)
+        humidity = convert_to_float(new_state.state)
         if humidity:
             self.char_humidity.set_value(humidity, should_callback=False)
-            _LOGGER.debug('%s: Current humidity set to %d%%',
+            _LOGGER.debug('%s: Percent set to %d%%',
                           self._entity_id, humidity)
