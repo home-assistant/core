@@ -22,7 +22,7 @@ DOMAIN = 'doorbird'
 API_URL = '/api/{}'.format(DOMAIN)
 
 CONF_DOORBELL_EVENTS = 'doorbell_events'
-CONF_CUSTOM_URL = 'push_to_host'
+CONF_CUSTOM_URL = 'hass_url_override'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
