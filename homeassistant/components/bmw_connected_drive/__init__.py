@@ -126,7 +126,7 @@ class BMWConnectedDriveAccount(object):
 
         The different types of services are defined in the _SERVICE_MAP.
         """
-        for service in _SERVICE_MAP.keys():
+        for service in _SERVICE_MAP:
             _LOGGER.debug('Registering service %s', service)
             self._hass.services.register(
                 DOMAIN, service,
