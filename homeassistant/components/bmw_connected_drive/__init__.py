@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'bmw_connected_drive'
 CONF_REGION = 'region'
-
+CONF_VIN = 'vin'
 
 ACCOUNT_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
@@ -35,9 +35,21 @@ CONFIG_SCHEMA = vol.Schema({
     },
 }, extra=vol.ALLOW_EXTRA)
 
+SERVICE_SCHEMA = vol.Schema({
+    vol.Required(CONF_VIN): cv.string,
+})
+
 
 BMW_COMPONENTS = ['binary_sensor', 'device_tracker', 'lock', 'sensor']
 UPDATE_INTERVAL = 5  # in minutes
+
+_SERVICE_MAP = {
+    'light_flash': 'trigger_remote_light_flash',
+    'door_lock': 'trigger_remote_door_lock',
+    'door_unlock': 'trigger_remote_door_unlock',
+    'sound_horn': 'trigger_remote_horn',
+    'activate_air_conditioning': 'trigger_remote_air_conditioning',
+}
 
 
 def setup(hass, config):
@@ -48,7 +60,8 @@ def setup(hass, config):
         password = account_config[CONF_PASSWORD]
         region = account_config[CONF_REGION]
         _LOGGER.debug('Adding new account %s', name)
-        bimmer = BMWConnectedDriveAccount(username, password, region, name)
+        bimmer = BMWConnectedDriveAccount(username, password, region, name,
+                                          hass)
         accounts.append(bimmer)
 
         # update every UPDATE_INTERVAL minutes, starting now
@@ -75,16 +88,18 @@ class BMWConnectedDriveAccount(object):
     """Representation of a BMW vehicle."""
 
     def __init__(self, username: str, password: str, region_str: str,
-                 name: str) -> None:
+                 name: str, hass) -> None:
         """Constructor."""
         from bimmer_connected.account import ConnectedDriveAccount
         from bimmer_connected.country_selector import get_region_from_name
 
         region = get_region_from_name(region_str)
 
+        self._hass = hass
         self.account = ConnectedDriveAccount(username, password, region)
         self.name = name
         self._update_listeners = []
+        self._register_services()
 
     def update(self, *_):
         """Update the state of all vehicles.
@@ -105,3 +120,27 @@ class BMWConnectedDriveAccount(object):
     def add_update_listener(self, listener):
         """Add a listener for update notifications."""
         self._update_listeners.append(listener)
+
+    def _register_services(self) -> None:
+        """Register the services for BMW vehicles.
+
+        The different types of services are defined in the _SERVICE_MAP.
+        """
+        for service in _SERVICE_MAP.keys():
+            _LOGGER.debug('Registering service %s', service)
+            self._hass.services.register(
+                DOMAIN, service,
+                self._execute_service,
+                schema=SERVICE_SCHEMA)
+
+    def _execute_service(self, call):
+        """Execute a service for a vehicle."""
+        from bimmer_connected.remote_services import ExecutionState
+        vin = call.data[CONF_VIN]
+        _LOGGER.debug('Triggering Service %s von vehicle %s',
+                      call.service, vin)
+        vehicle = self.account.get_vehicle(vin)
+        function_name = _SERVICE_MAP[call.service]
+        function_call = getattr(vehicle.remote_services, function_name)
+        result = function_call()
+        return result == ExecutionState.EXECUTED
