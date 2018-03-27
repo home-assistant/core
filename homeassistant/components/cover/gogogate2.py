@@ -10,7 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.cover import CoverDevice
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED, CONF_IP_ADDRESS, CONF_API_KEY)
+    CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE,
+    CONF_IP_ADDRESS, CONF_API_KEY)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pygogogate2==0.0.2']
@@ -26,7 +27,7 @@ COVER_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_IP_ADDRESS): cv.string,
-    vol.Optional(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -37,8 +38,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     ip_address = config.get(CONF_IP_ADDRESS)
-    api_key = config.get(CONF_API_KEY)
-    mygogogate2 = pygogogate2(username, password, ip_address, api_key)
+    name = config.get(CONF_NAME)
+    mygogogate2 = pygogogate2(username, password, ip_address)
 
     try:
         devices = mygogogate2.get_devices()
@@ -46,8 +47,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             raise ValueError(
                 "Username or Password is incorrect or no devices found")
 
-        add_devices(MyGogogate2Device(mygogogate2, door) for door in devices)
-        return True
+        add_devices(MyGogogate2Device(mygogogate2, door, name) for door in devices)
+        return
 
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
@@ -57,23 +58,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             ''.format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
-        return False
+        return
 
 
 class MyGogogate2Device(CoverDevice):
     """Representation of a Gogogate2 cover."""
 
-    def __init__(self, mygogogate2, device):
+    def __init__(self, mygogogate2, device, name):
         """Initialize with API object, device id."""
         self.mygogogate2 = mygogogate2
         self.device_id = device['door']
-        self._name = device['name']
-        self._status = STATE_CLOSED
-
-    @property
-    def should_poll(self):
-        """Poll for state."""
-        return True
+        self._name = name or device['name']
+        self._status = device['status']
 
     @property
     def name(self):
@@ -97,4 +93,8 @@ class MyGogogate2Device(CoverDevice):
 
     def update(self):
         """Update status of cover."""
-        self._status = self.mygogogate2.get_status(self.device_id)
+        try:
+            self._status = self.mygogogate2.get_status(self.device_id)
+        except (TypeError, KeyError, NameError, ValueError) as ex:
+            _LOGGER.error("%s", ex)
+            self._status = STATE_UNAVAILABLE
