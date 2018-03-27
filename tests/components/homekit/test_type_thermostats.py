@@ -10,7 +10,7 @@ from homeassistant.components.homekit.type_thermostats import (
     Thermostat, STATE_OFF)
 from homeassistant.const import (
     ATTR_SERVICE, EVENT_CALL_SERVICE, ATTR_SERVICE_DATA,
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
+    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.common import get_test_home_assistant
 
@@ -238,3 +238,42 @@ class TestHomekitThermostats(unittest.TestCase):
             self.events[1].data[ATTR_SERVICE_DATA][ATTR_TARGET_TEMP_HIGH],
             25.0)
         self.assertEqual(acc.char_cooling_thresh_temp.value, 25.0)
+
+    def test_thermostat_fahrenheit(self):
+        """Test if accessory and HA are updated accordingly."""
+        climate = 'climate.test'
+
+        acc = Thermostat(self.hass, climate, 'Climate', True)
+        acc.run()
+
+        self.hass.states.set(climate, STATE_AUTO,
+                             {ATTR_OPERATION_MODE: STATE_AUTO,
+                              ATTR_TARGET_TEMP_HIGH: 75.2,
+                              ATTR_TARGET_TEMP_LOW: 68,
+                              ATTR_TEMPERATURE: 71.6,
+                              ATTR_CURRENT_TEMPERATURE: 73.4,
+                              ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_heating_thresh_temp.value, 20.0)
+        self.assertEqual(acc.char_cooling_thresh_temp.value, 24.0)
+        self.assertEqual(acc.char_current_temp.value, 23.0)
+        self.assertEqual(acc.char_target_temp.value, 22.0)
+        self.assertEqual(acc.char_display_units.value, 1)
+
+        # Set from HomeKit
+        acc.char_cooling_thresh_temp.set_value(23)
+        self.hass.block_till_done()
+        service_data = self.events[-1].data[ATTR_SERVICE_DATA]
+        self.assertEqual(service_data[ATTR_TARGET_TEMP_HIGH], 73.4)
+        self.assertEqual(service_data[ATTR_TARGET_TEMP_LOW], 68)
+
+        acc.char_heating_thresh_temp.set_value(22)
+        self.hass.block_till_done()
+        service_data = self.events[-1].data[ATTR_SERVICE_DATA]
+        self.assertEqual(service_data[ATTR_TARGET_TEMP_HIGH], 73.4)
+        self.assertEqual(service_data[ATTR_TARGET_TEMP_LOW], 71.6)
+
+        acc.char_target_temp.set_value(24.0)
+        self.hass.block_till_done()
+        service_data = self.events[-1].data[ATTR_SERVICE_DATA]
+        self.assertEqual(service_data[ATTR_TEMPERATURE], 75.2)
