@@ -58,7 +58,9 @@ class SecuritySystem(HomeAccessory):
         hass_value = HOMEKIT_TO_HASS[value]
         service = STATE_TO_SERVICE[hass_value]
 
-        params = {ATTR_ENTITY_ID: self._entity_id, ATTR_CODE: self._alarm_code}
+        params = {ATTR_ENTITY_ID: self._entity_id}
+        if self._alarm_code:
+            params[ATTR_CODE] = self._alarm_code
         self._hass.services.call('alarm_control_panel', service, params)
 
     def update_state(self, entity_id=None, old_state=None, new_state=None):
