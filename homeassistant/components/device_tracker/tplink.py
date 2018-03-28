@@ -282,27 +282,11 @@ class TplinkArcherC50DeviceScanner(TplinkDeviceScanner):
         """Get the name of the wireless device."""
         return None
 
-    def _get_auth_tokens(self):
-        """Retrieve auth tokens from the router."""
-        _LOGGER.info("Retrieving auth tokens...")
-        url = 'http://{}/'.format(self.host)
-
-        credentials = '{}:{}'.format(self.username,
-            self.password).encode('utf')
-
-        # Encode the credentials to be sent as a cookie.
-        self.credentials = base64.b64encode(credentials).decode('utf')
-
-        # Create the authorization cookie.
-        cookie = 'Authorization=Basic {}'.format(self.credentials)
-
     def _update_info(self):
         """Ensure the information from the TP-Link router is up to date.
 
         Return boolean if scanning successful.
         """
-        if (self.credentials == '') or (self.token == ''):
-            self._get_auth_tokens()
 
         _LOGGER.info("Loading dhcp clients...")
 
@@ -315,7 +299,7 @@ class TplinkArcherC50DeviceScanner(TplinkDeviceScanner):
 
         payload = '[LAN_HOST_ENTRY#0,0,0,0,0,0#0,0,0,0,0,0]0,4\r\n' + \
             'leaseTimeRemaining\r\nMACAddress\r\nhostName\r\nIPAddress\r\n'
-        
+
         page = requests.post(url, headers={
             COOKIE: cookie,
             REFERER: referer
