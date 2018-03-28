@@ -28,7 +28,7 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?:is_state|is_state_attr|states)"
+    r"(?:(?:states\.|(?:is_state|is_state_attr|state_attr|states)"
     r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
 
@@ -182,6 +182,7 @@ class Template(object):
             'distance': template_methods.distance,
             'is_state': self.hass.states.is_state,
             'is_state_attr': template_methods.is_state_attr,
+            'state_attr': template_methods.state_attr,
             'states': AllStates(self.hass),
         })
 
@@ -405,9 +406,15 @@ class TemplateMethods(object):
 
     def is_state_attr(self, entity_id, name, value):
         """Test if a state is a specific attribute."""
+        state_attr = self.state_attr(entity_id, name)
+        return state_attr is not None and state_attr == value
+
+    def state_attr(self, entity_id, name):
+        """Get a specific attribute from a state."""
         state_obj = self._hass.states.get(entity_id)
-        return state_obj is not None and \
-            state_obj.attributes.get(name) == value
+        if state_obj is not None:
+            return state_obj.attributes.get(name)
+        return None
 
     def _resolve_state(self, entity_id_or_state):
         """Return state or entity_id if given."""
