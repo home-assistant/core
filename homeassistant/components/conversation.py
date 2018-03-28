@@ -14,6 +14,7 @@ from homeassistant.components import http
 from homeassistant.components.http.data_validator import (
     RequestDataValidator)
 from homeassistant.const import EVENT_COMPONENT_LOADED
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import intent
 from homeassistant.loader import bind_hass
@@ -112,15 +113,14 @@ async def async_setup(hass, config):
         '[the] [a] [an] {name}[s] toggle',
     ])
 
-    def register_cover_utterances:
-        if 'cover' in hass.config.components:
+    @callback
+    def register_utterances():
+        if 'cover' in event.data.get(ATTR_COMPONENT):
             async_register(hass, intent.INTENT_OPEN_COVER, [
                 'Open [the] [a] [an] {name}[s]'])
             async_register(hass, intent.INTENT_CLOSE_COVER, [
                 'Close [the] [a] [an] {name}[s]'])
-    if 'cover' in hass.config.components:
-        register_cover_utterances()
-    hass.bus.async_listen(EVENT_COMPONENT_LOADED, register_cover_utterances())
+    hass.bus.async_listen(EVENT_COMPONENT_LOADED, register_utterances)
 
     return True
 

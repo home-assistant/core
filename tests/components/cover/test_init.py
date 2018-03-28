@@ -1,5 +1,4 @@
 """The tests for the cover platform."""
-import pytest
 
 from homeassistant.components.cover import (SERVICE_OPEN_COVER,
                                             SERVICE_CLOSE_COVER)
@@ -48,11 +47,3 @@ async def test_close_cover_intent(hass):
     assert call.domain == 'cover'
     assert call.service == 'close_cover'
     assert call.data == {'entity_id': 'cover.garage_door'}
-
-
-async def test_intent_not_loaded(hass):
-    """Test Intents Not Registered intent."""
-    with pytest.raises(intent.UnknownIntent):
-        await intent.async_handle(
-            hass, 'test', 'HassOpenCover', {'name': {'value': 'garage door'}}
-        )
