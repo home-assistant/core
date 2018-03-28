@@ -38,6 +38,18 @@ KEY_COMMANDS = {
     "CMODE_DYNAMIC": [('CMODE', '06')],
     "CMODE_3DDYNAMIC": [('CMODE', '18')],
     "CMODE_3DCINEMA": [('CMODE', '17')],
+    "CMODE_3DTHX": [('CMODE', '19')],
+    "CMODE_BWCINEMA": [('CMODE', '20')],
+    "CMODE_ARGB": [('CMODE', '21')],
+    "CMODE_DCINEMA": [('CMODE', '22')],
+    "CMODE_THX": [('CMODE', '13')],
+    "CMODE_GAME": [('CMODE', '0D')],
+    "CMODE_STAGE": [('CMODE', '16')],
+    "CMODE_AUTOCOLOR": [('CMODE', 'C1')],
+    "CMODE_XV": [('CMODE', '0B')],
+    "CMODE_THEATRE": [('CMODE', '05')],
+    "CMODE_THEATREBLACK": [('CMODE', '09')],
+    "CMODE_THEATREBLACK2": [('CMODE', '0A')],
     "VOL_UP": [('KEY', '56')],
     "VOL_DOWN": [('KEY', '57')],
     "MUTE": [('KEY', 'D8')],
@@ -91,7 +103,19 @@ CMODE_LIST = {
     '0C': 'Bright Cinema/Living',
     '06': 'Dynamic',
     '17': '3D Cinema',
-    '18': '3D Dynamic'
+    '18': '3D Dynamic',
+    '19': '3D THX',
+    '20': 'B&W Cinema',
+    '21': 'Adobe RGB',
+    '22': 'Digital Cinema',
+    '13': 'THX',
+    '0D': 'Game',
+    '16': 'Stage',
+    'C1': 'AutoColor',
+    '0B': 'x.v. color',
+    '05': 'Theatre',
+    '09': 'Theatre Black 1/HD',
+    '0A': 'Theatre Black 2/Silver Screen'
 }
 
 CMODE_LIST_SET = {
@@ -102,6 +126,18 @@ CMODE_LIST_SET = {
     '3ddynamic': 'CMODE_3DDYNAMIC',
     '3dcinema': 'CMODE_3DCINEMA',
     'auto': 'CMODE_AUTO',
+    '3dthx': 'CMODE_3DTHX',
+    'bwcinema': 'CMODE_BWCINEMA',
+    'adobe rgb': 'CMODE_ARGB',
+    'digital cinema': 'CMODE_DCINEMA',
+    'thx': 'CMODE_THX',
+    'game': 'CMODE_GAME',
+    'stage': 'CMODE_STAGE',
+    'autocolor': 'CMODE_AUTOCOLOR',
+    'xv': 'CMODE_XV',
+    'theatre': 'CMODE_THEATRE',
+    'theatre black': 'CMODE_THEATREBLACK',
+    'theatre black 2': 'CMODE_THEATREBLACK2'
 }
 
 DATA_EPSON = 'epson'
@@ -216,10 +252,10 @@ class EpsonProjector(MediaPlayerDevice):
         if isTurnedOn and isTurnedOn == EPSON_CODES['ON']:
             self._state = STATE_ON
             cmode = yield from self.getProperty('CMODE')
-            if cmode:
+            if cmode and cmode in CMODE_LIST:
                 self._cmode = CMODE_LIST[cmode]
             source = yield from self.getProperty('SOURCE')
-            if source:
+            if source and souce in SOURCE_LIST:
                 self._source = SOURCE_LIST[source]
             volume = yield from self.getProperty('VOLUME')
             if volume:
