@@ -29,10 +29,7 @@ aioautomatic==0.6.3
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
-aiohttp_cors==0.7.0
-
-# homeassistant.components.hue
-aiohue==1.3.0
+aiohttp_cors==0.5.3
 
 # homeassistant.components.notify.apns
 apns2==0.1.1
@@ -66,10 +63,7 @@ haversine==0.4.5
 hbmqtt==0.8
 
 # homeassistant.components.binary_sensor.workday
-holidays==0.9.4
-
-# homeassistant.components.frontend
-home-assistant-frontend==20180326.0
+holidays==0.8.1
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
