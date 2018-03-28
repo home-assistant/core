@@ -321,7 +321,7 @@ def _is_radio_uri(uri):
     """Return whether the URI is a radio stream."""
     radio_schemes = (
         'x-rincon-mp3radio:', 'x-sonosapi-stream:', 'x-sonosapi-radio:',
-        'hls-radio:')
+        'x-sonosapi-hls:', 'hls-radio:')
     return uri.startswith(radio_schemes)
 
 

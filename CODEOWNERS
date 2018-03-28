@@ -43,6 +43,7 @@ homeassistant/components/hassio.py @home-assistant/hassio
 
 # Individual components
 homeassistant/components/alarm_control_panel/egardia.py @jeroenterheerdt
+homeassistant/components/alarm_control_panel/manual_mqtt.py @colinodell
 homeassistant/components/binary_sensor/hikvision.py @mezz64
 homeassistant/components/bmw_connected_drive.py @ChristianKuehnel
 homeassistant/components/camera/yi.py @bachya
@@ -69,6 +70,7 @@ homeassistant/components/sensor/gearbest.py @HerrHofrat
 homeassistant/components/sensor/irish_rail_transport.py @ttroy50
 homeassistant/components/sensor/miflora.py @danielhiversen @ChristianKuehnel
 homeassistant/components/sensor/pollen.py @bachya
+homeassistant/components/sensor/qnap.py @colinodell
 homeassistant/components/sensor/sytadin.py @gautric
 homeassistant/components/sensor/sql.py @dgomes
 homeassistant/components/sensor/tibber.py @danielhiversen

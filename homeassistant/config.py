@@ -13,6 +13,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
@@ -129,13 +130,19 @@ PACKAGES_CONFIG_SCHEMA = vol.Schema({
         {cv.slug: vol.Any(dict, list, None)})  # Only slugs for component names
 })
 
+CUSTOMIZE_DICT_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
+    vol.Optional(ATTR_HIDDEN): cv.boolean,
+    vol.Optional(ATTR_ASSUMED_STATE): cv.boolean,
+}, extra=vol.ALLOW_EXTRA)
+
 CUSTOMIZE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_CUSTOMIZE, default={}):
-        vol.Schema({cv.entity_id: dict}),
+        vol.Schema({cv.entity_id: CUSTOMIZE_DICT_SCHEMA}),
     vol.Optional(CONF_CUSTOMIZE_DOMAIN, default={}):
-        vol.Schema({cv.string: dict}),
+        vol.Schema({cv.string: CUSTOMIZE_DICT_SCHEMA}),
     vol.Optional(CONF_CUSTOMIZE_GLOB, default={}):
-        vol.Schema({cv.string: OrderedDict}),
+        vol.Schema({cv.string: CUSTOMIZE_DICT_SCHEMA}),
 })
 
 CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({

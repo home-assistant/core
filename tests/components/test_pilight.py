@@ -81,7 +81,7 @@ class TestPilight(unittest.TestCase):
 
     @patch('homeassistant.components.pilight._LOGGER.error')
     def test_connection_failed_error(self, mock_error):
-        """Try to connect at 127.0.0.1:5000 with socket error."""
+        """Try to connect at 127.0.0.1:5001 with socket error."""
         with assert_setup_component(4):
             with patch('pilight.pilight.Client',
                        side_effect=socket.error) as mock_client:
@@ -93,7 +93,7 @@ class TestPilight(unittest.TestCase):
 
     @patch('homeassistant.components.pilight._LOGGER.error')
     def test_connection_timeout_error(self, mock_error):
-        """Try to connect at 127.0.0.1:5000 with socket timeout."""
+        """Try to connect at 127.0.0.1:5001 with socket timeout."""
         with assert_setup_component(4):
             with patch('pilight.pilight.Client',
                        side_effect=socket.timeout) as mock_client:
