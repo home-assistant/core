@@ -8,14 +8,12 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
     PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 DEPENDENCIES = ['plum_lightpad']
 
-CONF_USER = 'username'
-CONF_PASSWORD = 'password'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USER): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
 })
 
@@ -71,7 +69,7 @@ class LightpadLogicalLoad(Light):
         return self._brightness
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return self._brightness > 0
 
