@@ -203,8 +203,8 @@ def get_config_value(node, value_index, tries=5):
     return None
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the Z-Wave platform (generic part)."""
     if discovery_info is None or DATA_NETWORK not in hass.data:
         return False
@@ -442,9 +442,16 @@ def setup(hass, config):
             if value.index != param:
                 continue
             if value.type in [const.TYPE_LIST, const.TYPE_BOOL]:
-                value.data = selection
-                _LOGGER.info("Setting config list parameter %s on Node %s "
-                             "with selection %s", param, node_id,
+                value.data = str(selection)
+                _LOGGER.info("Setting config parameter %s on Node %s "
+                             "with list/bool selection %s", param, node_id,
+                             str(selection))
+                return
+            if value.type == const.TYPE_BUTTON:
+                network.manager.pressButton(value.value_id)
+                network.manager.releaseButton(value.value_id)
+                _LOGGER.info("Setting config parameter %s on Node %s "
+                             "with button selection %s", param, node_id,
                              selection)
                 return
             value.data = int(selection)
@@ -504,8 +511,7 @@ def setup(hass, config):
                          "target node:%s, instance=%s", node_id, group,
                          target_node_id, instance)
 
-    @asyncio.coroutine
-    def async_refresh_entity(service):
+    async def async_refresh_entity(service):
         """Refresh values that specific entity depends on."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
         async_dispatcher_send(
@@ -559,8 +565,7 @@ def setup(hass, config):
         network.start()
         hass.bus.fire(const.EVENT_NETWORK_START)
 
-        @asyncio.coroutine
-        def _check_awaked():
+        async def _check_awaked():
             """Wait for Z-wave awaked state (or timeout) and finalize start."""
             _LOGGER.debug(
                 "network state: %d %s", network.state,
@@ -585,7 +590,7 @@ def setup(hass, config):
                         network.state_str)
                     break
                 else:
-                    yield from asyncio.sleep(1, loop=hass.loop)
+                    await asyncio.sleep(1, loop=hass.loop)
 
             hass.async_add_job(_finalize_start)
 
@@ -798,11 +803,10 @@ class ZWaveDeviceEntityValues():
 
         dict_id = id(self)
 
-        @asyncio.coroutine
-        def discover_device(component, device, dict_id):
+        async def discover_device(component, device, dict_id):
             """Put device in a dictionary and call discovery on it."""
             self._hass.data[DATA_DEVICES][dict_id] = device
-            yield from discovery.async_load_platform(
+            await discovery.async_load_platform(
                 self._hass, component, DOMAIN,
                 {const.DISCOVERY_DEVICE: dict_id}, self._zwave_config)
         self._hass.add_job(discover_device, component, device, dict_id)
@@ -844,8 +848,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self.update_properties()
         self.maybe_schedule_update()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Add device to dict."""
         async_dispatcher_connect(
             self.hass,

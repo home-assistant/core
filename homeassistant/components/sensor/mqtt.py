@@ -17,7 +17,7 @@ from homeassistant.components.mqtt import (
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, MqttAvailability)
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
-    CONF_UNIT_OF_MEASUREMENT)
+    CONF_UNIT_OF_MEASUREMENT, CONF_ICON)
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
@@ -36,6 +36,7 @@ DEPENDENCIES = ['mqtt']
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
@@ -59,6 +60,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_UNIT_OF_MEASUREMENT),
         config.get(CONF_FORCE_UPDATE),
         config.get(CONF_EXPIRE_AFTER),
+        config.get(CONF_ICON),
         value_template,
         config.get(CONF_JSON_ATTRS),
         config.get(CONF_AVAILABILITY_TOPIC),
@@ -71,7 +73,7 @@ class MqttSensor(MqttAvailability, Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
-                 force_update, expire_after, value_template,
+                 force_update, expire_after, icon, value_template,
                  json_attributes, availability_topic, payload_available,
                  payload_not_available):
         """Initialize the sensor."""
@@ -85,6 +87,7 @@ class MqttSensor(MqttAvailability, Entity):
         self._force_update = force_update
         self._template = value_template
         self._expire_after = expire_after
+        self._icon = icon
         self._expiration_trigger = None
         self._json_attributes = set(json_attributes)
         self._attributes = None
@@ -170,3 +173,8 @@ class MqttSensor(MqttAvailability, Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._icon

@@ -6,19 +6,16 @@ https://home-assistant.io/components/light.qwikswitch/
 """
 import logging
 
-import homeassistant.components.qwikswitch as qwikswitch
-
-_LOGGER = logging.getLogger(__name__)
-
 DEPENDENCIES = ['qwikswitch']
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the lights from the main Qwikswitch component."""
+    """Add lights from the main Qwikswitch component."""
     if discovery_info is None:
-        _LOGGER.error("Configure Qwikswitch component failed")
+        logging.getLogger(__name__).error(
+            "Configure Qwikswitch Light component failed")
         return False
 
-    add_devices(qwikswitch.QSUSB['light'])
+    add_devices(hass.data['qwikswitch']['light'])
     return True

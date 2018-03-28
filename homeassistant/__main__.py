@@ -335,7 +335,8 @@ def main() -> int:
     """Start Home Assistant."""
     validate_python()
 
-    if os.environ.get('HASS_NO_MONKEY') != '1':
+    monkey_patch_needed = sys.version_info[:3] < (3, 6, 3)
+    if monkey_patch_needed and os.environ.get('HASS_NO_MONKEY') != '1':
         if sys.version_info[:2] >= (3, 6):
             monkey_patch.disable_c_asyncio()
         monkey_patch.patch_weakref_tasks()
