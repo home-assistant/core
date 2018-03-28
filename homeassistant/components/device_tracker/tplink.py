@@ -267,9 +267,9 @@ class TplinkArcherC50DeviceScanner(TplinkDeviceScanner):
         self.credentials = ''
         self.token = ''
         # I had to rewrite due c50 responds with colon mac instead of dash
-        self.parse_macs_c50 = 
-            re.compile('[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:' +
-                       '[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}')
+        self.parse_macs_c50 = re.compile('[0-9A-F]{2}:[0-9A-F]{2}:' +
+                                         '[0-9A-F]{2}:[0-9A-F]{2}:' +
+                                         '[0-9A-F]{2}:[0-9A-F]{2}')
         super(TplinkArcherC50DeviceScanner, self).__init__(config)
 
     def scan_devices(self):
@@ -287,7 +287,7 @@ class TplinkArcherC50DeviceScanner(TplinkDeviceScanner):
         _LOGGER.info("Retrieving auth tokens...")
         url = 'http://{}/'.format(self.host)
 
-        credentials = '{}:{}'.format(self.username, \
+        credentials = '{}:{}'.format(self.username,
             self.password).encode('utf')
 
         # Encode the credentials to be sent as a cookie.
@@ -304,7 +304,7 @@ class TplinkArcherC50DeviceScanner(TplinkDeviceScanner):
         if (self.credentials == '') or (self.token == ''):
             self._get_auth_tokens()
 
-        _LOGGER.info("Loading wireless clients...")
+        _LOGGER.info("Loading dhcp clients...")
 
         mac_results = []
 
@@ -313,9 +313,9 @@ class TplinkArcherC50DeviceScanner(TplinkDeviceScanner):
         referer = 'http://{}/'.format(self.host)
         cookie = 'Authorization=Basic {}'.format(self.credentials)
 
-        payload = '[LAN_HOST_ENTRY#0,0,0,0,0,0#0,0,0,0,0,0]0,4\r\n' +
-                  'leaseTimeRemaining\r\nMACAddress\r\nhostName\r\nIPAddress\r\n'
-
+        payload = '[LAN_HOST_ENTRY#0,0,0,0,0,0#0,0,0,0,0,0]0,4\r\n' + \
+            'leaseTimeRemaining\r\nMACAddress\r\nhostName\r\nIPAddress\r\n'
+        
         page = requests.post(url, headers={
             COOKIE: cookie,
             REFERER: referer
