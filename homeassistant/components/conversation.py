@@ -117,7 +117,6 @@ async def async_setup(hass, config):
     @callback
     def register_utterances(event):
         """Register utterances for intents loaded after startup."""
-        
         if 'cover' in event.data.get(ATTR_COMPONENT):
             async_register(hass, intent.INTENT_OPEN_COVER, [
                 'Open [the] [a] [an] {name}[s]'])
