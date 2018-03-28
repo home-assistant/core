@@ -287,7 +287,6 @@ class TplinkArcherC50DeviceScanner(TplinkDeviceScanner):
 
         Return boolean if scanning successful.
         """
-
         _LOGGER.info("Loading dhcp clients...")
 
         mac_results = []
@@ -312,6 +311,7 @@ class TplinkArcherC50DeviceScanner(TplinkDeviceScanner):
 
         self.last_results = mac_results
         return True
+
 
 class Tplink4DeviceScanner(TplinkDeviceScanner):
     """This class queries an Archer C7 router with TP-Link firmware 150427."""
