@@ -18,6 +18,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import intent
 from homeassistant.loader import bind_hass
+from homeassistant.setup import (ATTR_COMPONENT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,7 +115,7 @@ async def async_setup(hass, config):
     ])
 
     @callback
-    def register_utterances():
+    def register_utterances(event):
         if 'cover' in event.data.get(ATTR_COMPONENT):
             async_register(hass, intent.INTENT_OPEN_COVER, [
                 'Open [the] [a] [an] {name}[s]'])

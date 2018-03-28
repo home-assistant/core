@@ -92,6 +92,7 @@ async def test_register_before_setup(hass):
 async def test_http_processing_intent(hass, test_client):
     """Test processing intent via HTTP API."""
     class TestIntentHandler(intent.IntentHandler):
+        """Test Intent Handler."""
         intent_type = 'OrderBeer'
 
         async def async_handle(self, intent):
