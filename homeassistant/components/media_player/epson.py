@@ -27,14 +27,19 @@ KEY_COMMANDS = {
     "TURN_ON": [('KEY', '3B')],
     "TURN_OFF": [('KEY', '3B'), ('KEY', '3B')],
     "HDMILINK": [('jsoncallback', 'HDMILINK?')],
+    "PWR": [('jsoncallback', 'PWR?')],
+    "SOURCE": [('jsoncallback', 'SOURCE?')],
     "CMODE": [('jsoncallback', 'CMODE?')],
+    "CMODE_AUTO": [('CMODE', '00')],
     "CMODE_CINEMA": [('CMODE', '15')],
     "CMODE_NATURAL": [('CMODE', '07')],
     "CMODE_BRIGHT": [('CMODE', '0C')],
-    "CMODE_DYNAMIC": [('CMODE', '06S')],
+    "CMODE_DYNAMIC": [('CMODE', '06')],
+    "CMODE_3DDYNAMIC": [('CMODE', '18')],
+    "CMODE_3DCINEMA": [('CMODE', '17')],
     "VOL_UP": [('KEY', '56')],
     "VOL_DOWN": [('KEY', '57')],
-    "MUTE": [('KEY', '3E')],
+    "MUTE": [('KEY', 'D8')],
     "HDMI1": [('KEY', '4D')],
     "HDMI2": [('KEY', '40')],
     "PC": [('KEY', '44')],
@@ -59,20 +64,36 @@ DEFAULT_SOURCES = {
     'WFD': 'WiFi Direct'
 }
 
+SOURCE_LIST = {
+    '30': 'HDMI1',
+    '10': 'PC',
+    '40': 'VIDEO',
+    '52': 'USB',
+    '53': 'LAN',
+    '56': 'WDF',
+    'A0': 'HDMI2'
+}
+
 INV_SOURCES = {v: k for k, v in DEFAULT_SOURCES.items()}
 
 CMODE_LIST = {
+    '00': 'Auto',
     '15': 'Cinema',
     '07': 'Natural',
-    '0C': 'Bright Cinema',
-    '06': 'Dynamic'
+    '0C': 'Bright Cinema/Living',
+    '06': 'Dynamic',
+    '17': '3D Cinema',
+    '18': '3D Dynamic'
 }
 
 CMODE_LIST_SET = {
     'cinema': 'CMODE_CINEMA',
     'natural': 'CMODE_NATURAL',
     'bright cinema': 'CMODE_BRIGHT',
-    'dynamic': 'CMODE_DYNAMIC'
+    'dynamic': 'CMODE_DYNAMIC',
+    '3ddynamic': 'CMODE_3DDYNAMIC',
+    '3dcinema': 'CMODE_3DCINEMA',
+    'auto': 'CMODE_AUTO',
 }
 
 DATA_EPSON = 'epson'
@@ -89,6 +110,9 @@ SUPPORT_CMODE = 33001
 ACCEPT_ENCODING = "gzip, deflate"
 ACCEPT_HEADER = CONTENT_TYPE_JSON
 EPSON_ERROR_CODE = 'ERR'
+EPSON_CODES = {
+    'ON': '01'
+}
 TIMEOUT = 15
 SUPPORT_EPSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE |\
             SUPPORT_CMODE | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP | \
@@ -154,6 +178,7 @@ class EpsonProjector(MediaPlayerDevice):
         self._port = port
         self._cmode = None
         self._source_list = list(DEFAULT_SOURCES.values())
+        self._source = None
         self.key_commands = key_commands
         self._encryption = encryption
         self._state = None
@@ -181,25 +206,36 @@ class EpsonProjector(MediaPlayerDevice):
     @asyncio.coroutine
     def update(self):
         """Update state of device."""
+        isTurnedOn = yield from self.getProperty('PWR')
+        if isTurnedOn and isTurnedOn == EPSON_CODES['ON']:
+            self._state = STATE_ON
+            cmode = yield from self.getProperty('CMODE')
+            if cmode:
+                self._cmode = CMODE_LIST[cmode]
+            source = yield from self.getProperty('SOURCE')
+            if source:
+                self._source = SOURCE_LIST[source]
+        else:
+            self._state = STATE_OFF
+
+    @asyncio.coroutine
+    def getProperty(self, command):
+        """Get property state from device."""
         try:
             with async_timeout.timeout(TIMEOUT):
                 response = yield from self.websession.get(
                     url='{url}{type}'.format(
                         url=self._http_url,
                         type='json_query'),
-                    params=KEY_COMMANDS['CMODE'],
+                    params=KEY_COMMANDS[command],
                     headers=self._headers)
-            if response.status != HTTP_OK:
-                _LOGGER.warning(
-                    "Error message %d from Epson.", response.status)
-                self._state = STATE_OFF
-            resp = yield from response.json()
-            reply_code = resp['projector']['feature']['reply']
-            if reply_code == EPSON_ERROR_CODE:
-                self._state = STATE_OFF
-            else:
-                self._state = STATE_ON
-                self._cmode = CMODE_LIST[reply_code]
+                if response.status != HTTP_OK:
+                    _LOGGER.warning(
+                        "Error message %d from Epson.", response.status)
+                    return False
+                resp = yield from response.json()
+                reply_code = resp['projector']['feature']['reply']
+                return reply_code
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error getting info")
             self._state = STATE_OFF
@@ -237,6 +273,11 @@ class EpsonProjector(MediaPlayerDevice):
         return self._source_list
 
     @property
+    def source(self):
+        """Get current input sources."""
+        return self._source
+
+    @property
     def cmode(self):
         """Get CMODE/color mode from Epson."""
         return self._cmode
@@ -256,7 +297,7 @@ class EpsonProjector(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_mute_volume(self, mute):
-        """Mute (true) or unmute (false) sound and video input."""
+        """Mute (true) or unmute (false) sound."""
         return self.send_command("MUTE")
 
     @asyncio.coroutine
