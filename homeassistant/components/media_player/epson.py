@@ -30,6 +30,7 @@ KEY_COMMANDS = {
     "PWR": [('jsoncallback', 'PWR?')],
     "SOURCE": [('jsoncallback', 'SOURCE?')],
     "CMODE": [('jsoncallback', 'CMODE?')],
+    "VOLUME": [('jsoncallback', 'VOL?')],
     "CMODE_AUTO": [('CMODE', '00')],
     "CMODE_CINEMA": [('CMODE', '15')],
     "CMODE_NATURAL": [('CMODE', '07')],
@@ -52,6 +53,13 @@ KEY_COMMANDS = {
     "STOP": [('KEY', 'D2')],
     "BACK": [('KEY', 'D4')],
     "FAST": [('KEY', 'D5')],
+}
+
+TIMEOUT_TIMES = {
+    'TURN_ON': 40,
+    'TURN_OFF': 10,
+    'SOURCE': 5,
+    'ALL': 3
 }
 
 DEFAULT_SOURCES = {
@@ -179,6 +187,7 @@ class EpsonProjector(MediaPlayerDevice):
         self._cmode = None
         self._source_list = list(DEFAULT_SOURCES.values())
         self._source = None
+        self._volume = None
         self.key_commands = key_commands
         self._encryption = encryption
         self._state = None
@@ -199,9 +208,6 @@ class EpsonProjector(MediaPlayerDevice):
         self.websession = async_create_clientsession(
             hass,
             verify_ssl=False)
-        self.websession_action = async_create_clientsession(
-            hass,
-            verify_ssl=False)
 
     @asyncio.coroutine
     def update(self):
@@ -215,6 +221,9 @@ class EpsonProjector(MediaPlayerDevice):
             source = yield from self.getProperty('SOURCE')
             if source:
                 self._source = SOURCE_LIST[source]
+            volume = yield from self.getProperty('VOLUME')
+            if volume:
+                self._volume = volume
         else:
             self._state = STATE_OFF
 
@@ -222,7 +231,11 @@ class EpsonProjector(MediaPlayerDevice):
     def getProperty(self, command):
         """Get property state from device."""
         try:
-            with async_timeout.timeout(TIMEOUT):
+            if command in TIMEOUT_TIMES:
+                timeout = TIMEOUT_TIMES[command]
+            else:
+                timeout = TIMEOUT_TIMES['ALL']
+            with async_timeout.timeout(timeout):
                 response = yield from self.websession.get(
                     url='{url}{type}'.format(
                         url=self._http_url,
@@ -282,6 +295,11 @@ class EpsonProjector(MediaPlayerDevice):
         """Get CMODE/color mode from Epson."""
         return self._cmode
 
+    @property
+    def volume_level(self):
+        """Return the volume level of the media player (0..1)."""
+        return self._volume
+
     @asyncio.coroutine
     def select_cmode(self, cmode):
         """Set color mode in Epson."""
@@ -337,11 +355,15 @@ class EpsonProjector(MediaPlayerDevice):
         _LOGGER.debug("COMMAND %s", command)
         params = self.key_commands[command]
         try:
-            with async_timeout.timeout(TIMEOUT):
+            if command in TIMEOUT_TIMES:
+                timeout = TIMEOUT_TIMES[command]
+            else:
+                timeout = TIMEOUT_TIMES['ALL']
+            with async_timeout.timeout(timeout):
                 url = '{url}{type}'.format(
                     url=self._http_url,
                     type='directsend')
-                response = yield from self.websession_action.get(
+                response = yield from self.websession.get(
                     url,
                     params=params,
                     headers=self._headers)
