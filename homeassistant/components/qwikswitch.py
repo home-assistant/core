@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_URL)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_URL,
+    CONF_SENSORS, CONF_SWITCHES)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import load_platform
@@ -17,7 +18,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyqwikswitch==0.5']
+REQUIREMENTS = ['pyqwikswitch==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,8 +26,6 @@ DOMAIN = 'qwikswitch'
 
 CONF_DIMMER_ADJUST = 'dimmer_adjust'
 CONF_BUTTON_EVENTS = 'button_events'
-CONF_SENSORS = 'sensors'
-CONF_SWITCHES = 'switches'
 CV_DIM_VALUE = vol.All(vol.Coerce(float), vol.Range(min=1, max=3))
 
 CONFIG_SCHEMA = vol.Schema({
