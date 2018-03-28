@@ -27,11 +27,9 @@ def setup(hass, config):
     from plumlightpad import Plum
 
     conf = config[DOMAIN]
-    # print("****************************************************************")
-    # print(conf.get(CONF_USERNAME))
-    # print("****************************************************************")
     plum = Plum(conf.get(CONF_USERNAME), conf.get(CONF_PASSWORD))
     hass.data['plum'] = plum
 
     discovery.load_platform(hass, 'light', DOMAIN, None, conf)
+    discovery.load_platform(hass, 'sensor', DOMAIN, None, conf)
     return True
