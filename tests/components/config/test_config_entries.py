@@ -17,11 +17,11 @@ from tests.common import MockConfigEntry, MockModule, mock_coro_func
 
 
 @pytest.fixture
-def client(hass, test_client):
+def client(hass, aiohttp_client):
     """Fixture that can interact with the config manager API."""
     hass.loop.run_until_complete(async_setup_component(hass, 'http', {}))
     hass.loop.run_until_complete(config_entries.async_setup(hass))
-    yield hass.loop.run_until_complete(test_client(hass.http.app))
+    yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @asyncio.coroutine
@@ -101,9 +101,7 @@ def test_initialize_flow(hass, client):
             schema[vol.Required('password')] = str
 
             return self.async_show_form(
-                title='test-title',
                 step_id='init',
-                description='test-description',
                 data_schema=schema,
                 errors={
                     'username': 'Should be unique.'
@@ -121,8 +119,8 @@ def test_initialize_flow(hass, client):
 
     assert data == {
         'type': 'form',
-        'title': 'test-title',
-        'description': 'test-description',
+        'domain': 'test',
+        'step_id': 'init',
         'data_schema': [
             {
                 'name': 'username',
@@ -157,6 +155,7 @@ def test_abort(hass, client):
     data = yield from resp.json()
     data.pop('flow_id')
     assert data == {
+        'domain': 'test',
         'reason': 'bla',
         'type': 'abort'
     }
@@ -186,6 +185,7 @@ def test_create_account(hass, client):
     data = yield from resp.json()
     data.pop('flow_id')
     assert data == {
+        'domain': 'test',
         'title': 'Test Entry',
         'type': 'create_entry'
     }
@@ -203,7 +203,6 @@ def test_two_step_flow(hass, client):
         @asyncio.coroutine
         def async_step_init(self, user_input=None):
             return self.async_show_form(
-                title='test-title',
                 step_id='account',
                 data_schema=vol.Schema({
                     'user_title': str
@@ -224,8 +223,8 @@ def test_two_step_flow(hass, client):
         flow_id = data.pop('flow_id')
         assert data == {
             'type': 'form',
-            'title': 'test-title',
-            'description': None,
+            'domain': 'test',
+            'step_id': 'account',
             'data_schema': [
                 {
                     'name': 'user_title',
@@ -243,6 +242,7 @@ def test_two_step_flow(hass, client):
         data = yield from resp.json()
         data.pop('flow_id')
         assert data == {
+            'domain': 'test',
             'type': 'create_entry',
             'title': 'user-title',
         }
@@ -262,7 +262,6 @@ def test_get_progress_index(hass, client):
         def async_step_account(self, user_input=None):
             return self.async_show_form(
                 step_id='account',
-                title='Finish setup'
             )
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
@@ -292,9 +291,7 @@ def test_get_progress_flow(hass, client):
             schema[vol.Required('password')] = str
 
             return self.async_show_form(
-                title='test-title',
                 step_id='init',
-                description='test-description',
                 data_schema=schema,
                 errors={
                     'username': 'Should be unique.'

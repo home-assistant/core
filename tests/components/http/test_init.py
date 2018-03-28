@@ -15,12 +15,13 @@ class TestView(http.HomeAssistantView):
         return 'hello'
 
 
-async def test_registering_view_while_running(hass, test_client, unused_port):
+async def test_registering_view_while_running(hass, aiohttp_client,
+                                              aiohttp_unused_port):
     """Test that we can register a view while the server is running."""
     await async_setup_component(
         hass, http.DOMAIN, {
             http.DOMAIN: {
-                http.CONF_SERVER_PORT: unused_port(),
+                http.CONF_SERVER_PORT: aiohttp_unused_port(),
             }
         }
     )
@@ -73,17 +74,16 @@ async def test_api_no_base_url(hass):
     assert hass.config.api.base_url == 'http://127.0.0.1:8123'
 
 
-async def test_not_log_password(hass, unused_port, test_client, caplog):
+async def test_not_log_password(hass, aiohttp_client, caplog):
     """Test access with password doesn't get logged."""
     result = await async_setup_component(hass, 'api', {
         'http': {
-            http.CONF_SERVER_PORT: unused_port(),
             http.CONF_API_PASSWORD: 'some-pass'
         }
     })
     assert result
 
-    client = await test_client(hass.http.app)
+    client = await aiohttp_client(hass.http.app)
 
     resp = await client.get('/api/', params={
         'api_password': 'some-pass'
