@@ -37,7 +37,7 @@ def get_scanner(hass, config):
     """Validate the configuration and return a TP-Link scanner."""
     for cls in [Tplink5DeviceScanner, Tplink4DeviceScanner,
                 Tplink3DeviceScanner, Tplink2DeviceScanner,
-                TplinkDeviceScanner]:
+                TplinkArcherC50DeviceScanner, TplinkDeviceScanner]:
         scanner = cls(config[DOMAIN])
         if scanner.success_init:
             return scanner
@@ -258,6 +258,74 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
         self.stok = ''
         self.sysauth = ''
 
+class TplinkArcherC50DeviceScanner(TplinkDeviceScanner):
+    """This class queries an Archer C7 router with TP-Link firmware 150427."""
+
+    def __init__(self, config):
+        """Initialize the scanner."""
+        self.credentials = ''
+        self.token = ''
+        #had to rewrite due c50 responds with colon mac instead of dash
+        self.parse_macs_c50 = re.compile('[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:' +
+                                     '[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}')
+        super(TplinkArcherC50DeviceScanner, self).__init__(config)
+
+    def scan_devices(self):
+        """Scan for new devices and return a list with found device IDs."""
+        self._update_info()
+        return self.last_results
+
+    # pylint: disable=no-self-use
+    def get_device_name(self, device):
+        """Get the name of the wireless device."""
+        return None
+
+    def _get_auth_tokens(self):
+        """Retrieve auth tokens from the router."""
+        _LOGGER.info("Retrieving auth tokens...")
+        url = 'http://{}/'.format(self.host)
+
+        credentials = '{}:{}'.format(self.username, self.password).encode('utf')
+
+        # Encode the credentials to be sent as a cookie.
+        self.credentials = base64.b64encode(credentials).decode('utf')
+
+        # Create the authorization cookie.
+        cookie = 'Authorization=Basic {}'.format(self.credentials)
+
+        response = requests.get(url, headers={COOKIE: cookie})
+
+    def _update_info(self):
+        """Ensure the information from the TP-Link router is up to date.
+
+        Return boolean if scanning successful.
+        """
+        if (self.credentials == '') or (self.token == ''):
+            self._get_auth_tokens()
+
+        _LOGGER.info("Loading wireless clients...")
+
+        mac_results = []
+
+        #CHECK DHCP CLIENT LIST
+        url = 'http://{}/cgi?5'.format(self.host)
+        referer = 'http://{}/'.format(self.host)
+        cookie = 'Authorization=Basic {}'.format(self.credentials)
+
+        payload = '[LAN_HOST_ENTRY#0,0,0,0,0,0#0,0,0,0,0,0]0,4\r\nleaseTimeRemaining\r\nMACAddress\r\nhostName\r\nIPAddress\r\n'
+
+        page = requests.post(url, headers={
+            COOKIE: cookie,
+            REFERER: referer
+        }, data=payload)
+
+        mac_results.extend(self.parse_macs_c50.findall(page.text))
+
+        if not mac_results:
+            return False
+
+        self.last_results = mac_results
+        return True
 
 class Tplink4DeviceScanner(TplinkDeviceScanner):
     """This class queries an Archer C7 router with TP-Link firmware 150427."""
