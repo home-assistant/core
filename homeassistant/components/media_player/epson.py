@@ -255,7 +255,7 @@ class EpsonProjector(MediaPlayerDevice):
             if cmode and cmode in CMODE_LIST:
                 self._cmode = CMODE_LIST[cmode]
             source = yield from self.get_property('SOURCE')
-            if source and souce in SOURCE_LIST:
+            if source and source in SOURCE_LIST:
                 self._source = SOURCE_LIST[source]
             volume = yield from self.get_property('VOLUME')
             if volume:
