@@ -56,10 +56,10 @@ aiodns==1.1.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
-aiohttp_cors==0.5.3
+aiohttp_cors==0.7.0
 
-# homeassistant.components.sensor.imap
-aioimaplib==0.7.12
+# homeassistant.components.hue
+aiohue==1.3.0
 
 # homeassistant.components.light.lifx
 aiolifx==0.6.0
@@ -109,7 +109,10 @@ batinfo==0.4.2
 beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
-bellows==0.3.4
+bellows==0.5.1
+
+# homeassistant.components.bmw_connected_drive
+bimmer_connected==0.5.0
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -307,7 +310,13 @@ hikvision==0.4
 hipnotify==1.0.8
 
 # homeassistant.components.binary_sensor.workday
-holidays==0.8.1
+holidays==0.9.4
+
+# homeassistant.components.frontend
+home-assistant-frontend==20180326.0
+
+# homeassistant.components.homematicip_cloud
+homematicip==0.8
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
@@ -371,7 +380,10 @@ jsonrpc-async==0.6
 jsonrpc-websocket==0.5
 
 # homeassistant.scripts.keyring
-keyring>=9.3,<10.0
+keyring==12.0.0
+
+# homeassistant.scripts.keyring
+keyrings.alt==3.0
 
 # homeassistant.components.device_tracker.owntracks
 # homeassistant.components.device_tracker.owntracks_http
@@ -585,7 +597,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.8.2
+pychromecast==2.1.0
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -794,7 +806,13 @@ python-pushover==0.3
 python-ripple-api==0.0.2
 
 # homeassistant.components.media_player.roku
-python-roku==3.1.3
+python-roku==3.1.5
+
+# homeassistant.components.sensor.sochain
+python-sochain-api==0.0.2
+
+# homeassistant.components.media_player.songpal
+python-songpal==0.0.7
 
 # homeassistant.components.sensor.synologydsm
 python-synology==0.1.0
@@ -851,7 +869,10 @@ pyvlx==0.1.3
 pywebpush==1.1.0
 
 # homeassistant.components.wemo
-pywemo==0.4.20
+pywemo==0.4.25
+
+# homeassistant.components.camera.xeoma
+pyxeoma==1.4.0
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
@@ -996,7 +1017,7 @@ tikteck==0.4
 todoist-python==7.0.17
 
 # homeassistant.components.alarm_control_panel.totalconnect
-total_connect_client==0.11
+total_connect_client==0.17
 
 # homeassistant.components.sensor.transmission
 # homeassistant.components.switch.transmission
