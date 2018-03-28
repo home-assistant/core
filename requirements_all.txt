@@ -358,7 +358,7 @@ influxdb==4.1.1
 insteonlocal==0.52
 
 # homeassistant.components.insteon_plm
-insteonplm==0.7.5
+insteonplm==0.8.3
 
 # homeassistant.components.verisure
 jsonpath==0.75
