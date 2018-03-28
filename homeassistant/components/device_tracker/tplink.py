@@ -258,6 +258,7 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
         self.stok = ''
         self.sysauth = ''
 
+
 class TplinkArcherC50DeviceScanner(TplinkDeviceScanner):
     """This class queries an Archer C7 router with TP-Link firmware 150427."""
 
@@ -265,9 +266,10 @@ class TplinkArcherC50DeviceScanner(TplinkDeviceScanner):
         """Initialize the scanner."""
         self.credentials = ''
         self.token = ''
-        #had to rewrite due c50 responds with colon mac instead of dash
-        self.parse_macs_c50 = re.compile('[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:' +
-                                     '[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}')
+        # I had to rewrite due c50 responds with colon mac instead of dash
+        self.parse_macs_c50 = 
+            re.compile('[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:' +
+                       '[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}')
         super(TplinkArcherC50DeviceScanner, self).__init__(config)
 
     def scan_devices(self):
@@ -285,15 +287,14 @@ class TplinkArcherC50DeviceScanner(TplinkDeviceScanner):
         _LOGGER.info("Retrieving auth tokens...")
         url = 'http://{}/'.format(self.host)
 
-        credentials = '{}:{}'.format(self.username, self.password).encode('utf')
+        credentials = '{}:{}'.format(self.username, \
+            self.password).encode('utf')
 
         # Encode the credentials to be sent as a cookie.
         self.credentials = base64.b64encode(credentials).decode('utf')
 
         # Create the authorization cookie.
         cookie = 'Authorization=Basic {}'.format(self.credentials)
-
-        response = requests.get(url, headers={COOKIE: cookie})
 
     def _update_info(self):
         """Ensure the information from the TP-Link router is up to date.
@@ -307,12 +308,13 @@ class TplinkArcherC50DeviceScanner(TplinkDeviceScanner):
 
         mac_results = []
 
-        #CHECK DHCP CLIENT LIST
+        # CHECK DHCP CLIENT LIST
         url = 'http://{}/cgi?5'.format(self.host)
         referer = 'http://{}/'.format(self.host)
         cookie = 'Authorization=Basic {}'.format(self.credentials)
 
-        payload = '[LAN_HOST_ENTRY#0,0,0,0,0,0#0,0,0,0,0,0]0,4\r\nleaseTimeRemaining\r\nMACAddress\r\nhostName\r\nIPAddress\r\n'
+        payload = '[LAN_HOST_ENTRY#0,0,0,0,0,0#0,0,0,0,0,0]0,4\r\n' +
+                  'leaseTimeRemaining\r\nMACAddress\r\nhostName\r\nIPAddress\r\n'
 
         page = requests.post(url, headers={
             COOKIE: cookie,
