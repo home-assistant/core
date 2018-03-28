@@ -248,23 +248,23 @@ class EpsonProjector(MediaPlayerDevice):
     @asyncio.coroutine
     def update(self):
         """Update state of device."""
-        isTurnedOn = yield from self.getProperty('PWR')
-        if isTurnedOn and isTurnedOn == EPSON_CODES['ON']:
+        is_turned_on = yield from self.get_property('PWR')
+        if is_turned_on and is_turned_on == EPSON_CODES['ON']:
             self._state = STATE_ON
-            cmode = yield from self.getProperty('CMODE')
+            cmode = yield from self.get_property('CMODE')
             if cmode and cmode in CMODE_LIST:
                 self._cmode = CMODE_LIST[cmode]
-            source = yield from self.getProperty('SOURCE')
+            source = yield from self.get_property('SOURCE')
             if source and souce in SOURCE_LIST:
                 self._source = SOURCE_LIST[source]
-            volume = yield from self.getProperty('VOLUME')
+            volume = yield from self.get_property('VOLUME')
             if volume:
                 self._volume = volume
         else:
             self._state = STATE_OFF
 
     @asyncio.coroutine
-    def getProperty(self, command):
+    def get_property(self, command):
         """Get property state from device."""
         try:
             if command in TIMEOUT_TIMES:
