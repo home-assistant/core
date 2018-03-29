@@ -554,6 +554,8 @@ def merge_packages_config(config, packages, _log_pkg_error=_log_pkg_error):
                 continue
 
             if hasattr(component, 'PLATFORM_SCHEMA'):
+                if not comp_conf:
+                    continue  # Ensure we dont add Falsy items to list
                 config[comp_name] = cv.ensure_list(config.get(comp_name))
                 config[comp_name].extend(cv.ensure_list(comp_conf))
                 continue
@@ -562,6 +564,8 @@ def merge_packages_config(config, packages, _log_pkg_error=_log_pkg_error):
                 merge_type, _ = _identify_config_schema(component)
 
                 if merge_type == 'list':
+                    if not comp_conf:
+                        continue  # Ensure we dont add Falsy items to list
                     config[comp_name] = cv.ensure_list(config.get(comp_name))
                     config[comp_name].extend(cv.ensure_list(comp_conf))
                     continue
