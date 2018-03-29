@@ -6,7 +6,7 @@ pip>=8.0.3
 jinja2>=2.10
 voluptuous==0.11.1
 typing>=3,<4
-aiohttp==3.1.1
+aiohttp==3.0.9
 async_timeout==2.0.1
 astral==1.6
 certifi>=2017.4.17
@@ -74,7 +74,7 @@ aiodns==1.1.1
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.3.0
+aiohue==1.2.0
 
 # homeassistant.components.sensor.imap
 aioimaplib==0.7.13
@@ -137,7 +137,7 @@ beautifulsoup4==4.6.0
 bellows==0.5.1
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.5.0
+bimmer_connected==0.4.1
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -356,7 +356,7 @@ hipnotify==1.0.8
 holidays==0.9.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180326.0
+home-assistant-frontend==20180316.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.8
@@ -430,10 +430,10 @@ jsonrpc-async==0.6
 jsonrpc-websocket==0.6
 
 # homeassistant.scripts.keyring
-keyring==12.0.0
+keyring==11.0.0
 
 # homeassistant.scripts.keyring
-keyrings.alt==3.0
+keyrings.alt==2.3
 
 # homeassistant.components.device_tracker.owntracks
 # homeassistant.components.device_tracker.owntracks_http
@@ -685,7 +685,7 @@ pybbox==0.0.5-alpha
 pychannels==1.0.0
 
 # homeassistant.components.media_player.cast
-pychromecast==2.1.0
+pychromecast==2.0.0
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -804,7 +804,7 @@ pylutron==0.1.0
 pymailgunner==1.4
 
 # homeassistant.components.media_player.mediaroom
-pymediaroom==0.6
+pymediaroom==0.5
 
 # homeassistant.components.media_player.xiaomi_tv
 pymitv==1.0.0
@@ -860,7 +860,7 @@ pyowm==2.8.0
 pypollencom==1.1.1
 
 # homeassistant.components.qwikswitch
-pyqwikswitch==0.5
+pyqwikswitch==0.4
 
 # homeassistant.components.rainbird
 pyrainbird==0.1.3
@@ -948,14 +948,14 @@ python-juicenet==0.0.5
 # homeassistant.components.sensor.xiaomi_miio
 # homeassistant.components.switch.xiaomi_miio
 # homeassistant.components.vacuum.xiaomi_miio
-python-miio==0.3.9
+python-miio==0.3.8
 
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
 
 # homeassistant.components.light.mystrom
 # homeassistant.components.switch.mystrom
-python-mystrom==0.4.2
+python-mystrom==0.3.8
 
 # homeassistant.components.nest
 python-nest==3.7.0
@@ -976,7 +976,7 @@ python-roku==3.1.5
 python-sochain-api==0.0.2
 
 # homeassistant.components.media_player.songpal
-python-songpal==0.0.7
+python-songpal==0.0.6
 
 # homeassistant.components.sensor.synologydsm
 python-synology==0.1.0
@@ -1006,7 +1006,8 @@ python_opendata_transport==0.0.3
 python_openzwave==0.4.3
 
 # homeassistant.components.egardia
-pythonegardia==1.0.39
+# homeassistant.components.alarm_control_panel.egardia
+pythonegardia==1.0.38
 
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3
@@ -1048,13 +1049,13 @@ pywebpush==1.6.0
 pywemo==0.4.25
 
 # homeassistant.components.camera.xeoma
-pyxeoma==1.4.0
+pyxeoma==1.3
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
 
 # homeassistant.components.sensor.qnap
-qnapstats==0.2.5
+qnapstats==0.2.4
 
 # homeassistant.components.switch.rachio
 rachiopy==0.1.2
@@ -1136,7 +1137,7 @@ simplisafe-python==1.0.5
 skybellpy==0.1.1
 
 # homeassistant.components.notify.slack
-slacker==0.9.65
+slacker==0.9.60
 
 # homeassistant.components.notify.xmpp
 sleekxmpp==1.3.2
@@ -1218,7 +1219,7 @@ todoist-python==7.0.17
 toonlib==1.0.2
 
 # homeassistant.components.alarm_control_panel.totalconnect
-total_connect_client==0.17
+total_connect_client==0.16
 
 # homeassistant.components.sensor.transmission
 # homeassistant.components.switch.transmission
@@ -1307,7 +1308,7 @@ yahooweather==0.10
 yeelight==0.4.0
 
 # homeassistant.components.light.yeelightsunflower
-yeelightsunflower==0.0.10
+yeelightsunflower==0.0.8
 
 # homeassistant.components.media_extractor
 youtube_dl==2018.03.10
