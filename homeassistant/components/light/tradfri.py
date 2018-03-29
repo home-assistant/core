@@ -15,6 +15,7 @@ from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
     KEY_API
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +42,8 @@ async def async_setup_platform(hass, config,
     devices = await api(devices_commands)
     lights = [dev for dev in devices if dev.has_light_control]
     if lights:
-        async_add_devices(TradfriLight(light, api) for light in lights)
+        async_add_devices(
+            TradfriLight(light, api, gateway_id) for light in lights)
 
     allow_tradfri_groups = hass.data[KEY_TRADFRI_GROUPS][gateway_id]
     if allow_tradfri_groups:
@@ -49,23 +51,30 @@ async def async_setup_platform(hass, config,
         groups_commands = await api(groups_command)
         groups = await api(groups_commands)
         if groups:
-            async_add_devices(TradfriGroup(group, api) for group in groups)
+            async_add_devices(
+                TradfriGroup(group, api, gateway_id) for group in groups)
 
 
 class TradfriGroup(Light):
     """The platform class required by hass."""
 
-    def __init__(self, light, api):
+    def __init__(self, group, api, gateway_id):
         """Initialize a Group."""
         self._api = api
-        self._group = light
-        self._name = light.name
+        self._unique_id = "group-{}-{}".format(gateway_id, group.id)
+        self._group = group
+        self._name = group.name
 
-        self._refresh(light)
+        self._refresh(group)
 
     async def async_added_to_hass(self):
         """Start thread when added to hass."""
         self._async_start_observe()
+
+    @property
+    def unique_id(self):
+        """Return unique ID for this group."""
+        return self._unique_id
 
     @property
     def should_poll(self):
@@ -144,9 +153,10 @@ class TradfriGroup(Light):
 class TradfriLight(Light):
     """The platform class required by Home Assistant."""
 
-    def __init__(self, light, api):
+    def __init__(self, light, api, gateway_id):
         """Initialize a Light."""
         self._api = api
+        self._unique_id = "light-{}-{}".format(gateway_id, light.id)
         self._light = None
         self._light_control = None
         self._light_data = None
@@ -156,6 +166,11 @@ class TradfriLight(Light):
         self._available = True
 
         self._refresh(light)
+
+    @property
+    def unique_id(self):
+        """Return unique ID for light."""
+        return self._unique_id
 
     @property
     def min_mireds(self):
@@ -243,7 +258,8 @@ class TradfriLight(Light):
                 self._light_control.set_hsb(hue, sat, **params))
             return
 
-        if ATTR_COLOR_TEMP in kwargs and self._light_control.can_set_temp:
+        if ATTR_COLOR_TEMP in kwargs and (self._light_control.can_set_temp or
+                                          self._light_control.can_set_color):
             temp = kwargs[ATTR_COLOR_TEMP]
             if temp > self.max_mireds:
                 temp = self.max_mireds
@@ -252,9 +268,22 @@ class TradfriLight(Light):
 
             if brightness is None:
                 params[ATTR_TRANSITION_TIME] = transition_time
-            await self._api(
-                self._light_control.set_color_temp(temp,
-                                                   **params))
+            # White Spectrum bulb
+            if (self._light_control.can_set_temp and
+                    not self._light_control.can_set_color):
+                await self._api(
+                    self._light_control.set_color_temp(temp, **params))
+            # Color bulb (CWS)
+            # color_temp needs to be set with hue/saturation
+            if self._light_control.can_set_color:
+                params[ATTR_BRIGHTNESS] = brightness
+                temp_k = color_util.color_temperature_mired_to_kelvin(temp)
+                hs_color = color_util.color_temperature_to_hs(temp_k)
+                hue = int(hs_color[0] * (65535 / 360))
+                sat = int(hs_color[1] * (65279 / 100))
+                await self._api(
+                    self._light_control.set_hsb(hue, sat,
+                                                **params))
 
         if brightness is not None:
             params[ATTR_TRANSITION_TIME] = transition_time
