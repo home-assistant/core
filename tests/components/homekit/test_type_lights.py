@@ -57,19 +57,21 @@ class TestHomekitLights(unittest.TestCase):
         self.assertEqual(acc.char_on.value, 0)
 
         # Set from HomeKit
-        acc.char_on.set_value(True)
+        acc.char_on.set_value(1)
         self.hass.block_till_done()
-        self.assertEqual(
-            self.events[0].data[ATTR_DOMAIN], DOMAIN)
-        self.assertEqual(
-            self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
+        self.assertEqual(self.events[0].data[ATTR_DOMAIN], DOMAIN)
+        self.assertEqual(self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
 
-        acc.char_on.set_value(False)
+        self.hass.states.set(entity_id, STATE_ON)
         self.hass.block_till_done()
-        self.assertEqual(
-            self.events[1].data[ATTR_DOMAIN], DOMAIN)
-        self.assertEqual(
-            self.events[1].data[ATTR_SERVICE], SERVICE_TURN_OFF)
+
+        acc.char_on.set_value(0)
+        self.hass.block_till_done()
+        self.assertEqual(self.events[1].data[ATTR_DOMAIN], DOMAIN)
+        self.assertEqual(self.events[1].data[ATTR_SERVICE], SERVICE_TURN_OFF)
+
+        self.hass.states.set(entity_id, STATE_OFF)
+        self.hass.block_till_done()
 
         # Remove entity
         self.hass.states.remove(entity_id)
@@ -95,14 +97,26 @@ class TestHomekitLights(unittest.TestCase):
         acc.char_brightness.set_value(20)
         acc.char_on.set_value(1)
         self.hass.block_till_done()
-        self.assertEqual(
-            self.events[0].data[ATTR_DOMAIN], DOMAIN)
-        self.assertEqual(
-            self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
-        print(self.events[0].data)
+        self.assertEqual(self.events[0].data[ATTR_DOMAIN], DOMAIN)
+        self.assertEqual(self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE_DATA], {
                 ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_PCT: 20})
+
+        acc.char_on.set_value(1)
+        acc.char_brightness.set_value(40)
+        self.hass.block_till_done()
+        self.assertEqual(self.events[1].data[ATTR_DOMAIN], DOMAIN)
+        self.assertEqual(self.events[1].data[ATTR_SERVICE], SERVICE_TURN_ON)
+        self.assertEqual(
+            self.events[1].data[ATTR_SERVICE_DATA], {
+                ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_PCT: 40})
+
+        acc.char_on.set_value(1)
+        acc.char_brightness.set_value(0)
+        self.hass.block_till_done()
+        self.assertEqual(self.events[2].data[ATTR_DOMAIN], DOMAIN)
+        self.assertEqual(self.events[2].data[ATTR_SERVICE], SERVICE_TURN_OFF)
 
     def test_light_rgb_color(self):
         """Test light with rgb_color."""
@@ -123,10 +137,8 @@ class TestHomekitLights(unittest.TestCase):
         acc.char_hue.set_value(145)
         acc.char_saturation.set_value(75)
         self.hass.block_till_done()
-        self.assertEqual(
-            self.events[0].data[ATTR_DOMAIN], DOMAIN)
-        self.assertEqual(
-            self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
+        self.assertEqual(self.events[0].data[ATTR_DOMAIN], DOMAIN)
+        self.assertEqual(self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE_DATA], {
                 ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (145, 75)})
