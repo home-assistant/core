@@ -92,7 +92,7 @@ class QSToggleEntity(object):
         # hass and schedule_update_ha_state is part of Entity/ToggleEntity
         # pylint: disable=no-member
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            self.qsid, lambda _=None: self.async_schedule_update_ha_state)
+            self.qsid, lambda _=None: self.async_schedule_update_ha_state())
 
 
 async def async_setup(hass, config):
@@ -112,9 +112,10 @@ async def async_setup(hass, config):
     sensors = config[DOMAIN]['sensors']
     switches = config[DOMAIN]['switches']
 
-    def callback_value_changed(_qsd, key, _val):
+    def callback_value_changed(_qsd, qsid, _val):
         """Update entity values based on device change."""
-        hass.helpers.dispatcher.async_dispatcher_send(key, None)
+        _LOGGER.debug("Dispatch %s (update from devices)", qsid)
+        hass.helpers.dispatcher.async_dispatcher_send(qsid, None)
 
     session = async_get_clientsession(hass)
     qsusb = QSUsb(url=url, dim_adj=dimmer_adjust, session=session,
@@ -141,10 +142,9 @@ async def async_setup(hass, config):
             continue
 
     # Load platforms
-    for comp_name in _new:
-        if _new[comp_name]:
-            load_platform(
-                hass, comp_name, DOMAIN, {DOMAIN: _new[comp_name]}, config)
+    for comp_name, comp_conf in _new.items():
+        if comp_conf:
+            load_platform(hass, comp_name, DOMAIN, {DOMAIN: comp_conf}, config)
 
     def callback_qs_listen(item):
         """Typically a button press or update signal."""
@@ -155,9 +155,13 @@ async def async_setup(hass, config):
                     'qwikswitch.button.{}'.format(item[QS_ID]), item)
                 return
 
-            if item[QS_ID] not in qsusb.devices:
+            # Private method due to bad __iter__ design in qsusb
+            # qsusb.devices returns a list of tuples
+            if item[QS_ID] not in \
+                    qsusb.devices._data:  # pylint: disable=protected-access
                 # Not a standard device in, component can handle packet
                 # i.e. sensors
+                _LOGGER.debug("Dispatch %s ((%s))", item[QS_ID], item)
                 hass.helpers.dispatcher.async_dispatcher_send(
                     item[QS_ID], item)
 

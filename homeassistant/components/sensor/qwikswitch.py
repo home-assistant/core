@@ -38,7 +38,9 @@ class QSSensor(Entity):
 
     def update_packet(self, packet):
         """Receive update packet from QSUSB."""
+        _LOGGER.debug("Update %s (%s): %s", self.entity_id, self.qsid, packet)
         self._val = packet
+        self.async_schedule_update_ha_state()
 
     @property
     def state(self):
