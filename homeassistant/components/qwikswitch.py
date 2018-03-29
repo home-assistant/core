@@ -87,7 +87,7 @@ class QSToggleEntity(object):
         """Turn the device off."""
         self._qsusb.set_value(self.qsid, 0)
 
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Listen for updates from QSUSb via dispatcher."""
         # hass and schedule_update_ha_state is part of Entity/ToggleEntity
         # pylint: disable=no-member

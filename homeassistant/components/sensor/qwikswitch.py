@@ -60,7 +60,7 @@ class QSSensor(Entity):
         """QS sensors gets packets in update_packet."""
         return False
 
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Listen for updates from QSUSb via dispatcher."""
         # Part of Entity/ToggleEntity
         self.hass.helpers.dispatcher.async_dispatcher_connect(
