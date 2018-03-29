@@ -189,6 +189,16 @@ colorlog==3.1.2
 # homeassistant.components.binary_sensor.concord232
 concord232==0.15
 
+# homeassistant.components.climate.eq3btsmart
+# homeassistant.components.fan.xiaomi_miio
+# homeassistant.components.light.xiaomi_miio
+# homeassistant.components.remote.xiaomi_miio
+# homeassistant.components.sensor.eddystone_temperature
+# homeassistant.components.sensor.xiaomi_miio
+# homeassistant.components.switch.xiaomi_miio
+# homeassistant.components.vacuum.xiaomi_miio
+construct==2.9.41
+
 # homeassistant.scripts.credstash
 # credstash==1.14.0
 
