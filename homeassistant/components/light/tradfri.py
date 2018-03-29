@@ -258,7 +258,8 @@ class TradfriLight(Light):
                 self._light_control.set_hsb(hue, sat, **params))
             return
 
-        if ATTR_COLOR_TEMP in kwargs and self._light_control.can_set_temp:
+        if ATTR_COLOR_TEMP in kwargs and (self._light_control.can_set_temp or
+                                          self._light_control.can_set_color):
             temp = kwargs[ATTR_COLOR_TEMP]
             if temp > self.max_mireds:
                 temp = self.max_mireds
@@ -267,13 +268,13 @@ class TradfriLight(Light):
 
             if brightness is None:
                 params[ATTR_TRANSITION_TIME] = transition_time
-            # White Spectrum bulb (can set temp, but cannot set color)
+            # White Spectrum bulb
             if (self._light_control.can_set_temp and
                     not self._light_control.can_set_color):
                 await self._api(
                     self._light_control.set_color_temp(temp, **params))
-            # Color White Spsctrum (CWS) bulb
-            # (It can set temp, but we need to set with hsb)
+            # Color bulb (CWS)
+            # color_temp needs to be set with hue/saturation
             if self._light_control.can_set_color:
                 params[ATTR_BRIGHTNESS] = brightness
                 temp_k = color_util.color_temperature_mired_to_kelvin(temp)
