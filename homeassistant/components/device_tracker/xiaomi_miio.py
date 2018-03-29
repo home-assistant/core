@@ -1,5 +1,5 @@
 """
-Support for Xiaomi Mi WiFi Repeater 2
+Support for Xiaomi Mi WiFi Repeater 2.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/device_tracker.xiaomi_miio/
