@@ -205,9 +205,9 @@ class FluxLight(Light):
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
-        if hs_color is not None:
+        if hs_color:
             rgb = color_util.color_hs_to_RGB(*hs_color)
-        elif hs_color is None:
+        else:
             rgb = None
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
