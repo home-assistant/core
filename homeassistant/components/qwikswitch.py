@@ -15,7 +15,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyqwikswitch==0.6']
@@ -123,7 +122,7 @@ async def async_setup(hass, config):
 
     # Discover all devices in QSUSB
     if not await qsusb.update_from_devices():
-        raise PlatformNotReady
+        return False
 
     hass.data[DOMAIN] = qsusb
 
