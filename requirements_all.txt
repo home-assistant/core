@@ -95,7 +95,6 @@ alarmdecoder==1.13.2
 alpha_vantage==1.9.0
 
 # homeassistant.components.amcrest
-# homeassistant.components.switch.amcrest
 amcrest==1.2.2
 
 # homeassistant.components.media_player.anthemav
