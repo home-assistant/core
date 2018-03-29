@@ -129,12 +129,8 @@ async def async_setup_platform(hass, config, async_add_devices,
             raise PlatformNotReady
 
     if model in ['chuangmi.plug.v1', 'chuangmi.plug.v3']:
-        if model == MODEL_PLUG_V3:
-            from miio import PlugV3
-            plug = PlugV3(host, token)
-        else:
-            from miio import PlugV1
-            plug = PlugV1(host, token)
+        from miio import ChuangmiPlug
+        plug = ChuangmiPlug(host, token, model=model)
 
         # The device has two switchable channels (mains and a USB port).
         # A switch device per channel will be created.
@@ -144,17 +140,15 @@ async def async_setup_platform(hass, config, async_add_devices,
             devices.append(device)
             hass.data[DATA_KEY][host] = device
 
-    elif model in ['qmi.powerstrip.v1',
-                   'zimi.powerstrip.v2']:
+    elif model in ['qmi.powerstrip.v1', 'zimi.powerstrip.v2']:
         from miio import PowerStrip
         plug = PowerStrip(host, token)
         device = XiaomiPowerStripSwitch(name, plug, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
-    elif model in ['chuangmi.plug.m1',
-                   'chuangmi.plug.v2']:
-        from miio import Plug
-        plug = Plug(host, token)
+    elif model in ['chuangmi.plug.m1', 'chuangmi.plug.v2']:
+        from miio import ChuangmiPlug
+        plug = ChuangmiPlug(host, token, model=model)
         device = XiaomiPlugGenericSwitch(name, plug, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
