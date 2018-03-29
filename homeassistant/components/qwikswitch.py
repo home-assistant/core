@@ -88,10 +88,14 @@ class QSToggleEntity(Entity):
         """Turn the device off."""
         self._qsusb.set_value(self.qsid, 0)
 
+    def _update(self, _packet=None):
+        """Schedule an update - match dispather_send signature."""
+        self.async_schedule_update_ha_state()
+
     async def async_added_to_hass(self):
         """Listen for updates from QSUSb via dispatcher."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            self.qsid, lambda _=None: self.async_schedule_update_ha_state())
+            self.qsid, self._update)
 
 
 async def async_setup(hass, config):
