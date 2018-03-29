@@ -33,8 +33,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_URL, default='http://127.0.0.1:2020'):
             vol.Coerce(str),
         vol.Optional(CONF_DIMMER_ADJUST, default=1): CV_DIM_VALUE,
-        vol.Optional(CONF_BUTTON_EVENTS): cv.ensure_list_csv,
-        vol.Optional(CONF_SENSORS, default=[]): vol.Schema({cv.slug: str}),
+        vol.Optional(CONF_BUTTON_EVENTS, default=[]): cv.ensure_list_csv,
+        vol.Optional(CONF_SENSORS, default={}): vol.Schema({cv.slug: str}),
         vol.Optional(CONF_SWITCHES, default=[]): vol.All(
             cv.ensure_list, [str])
     })}, extra=vol.ALLOW_EXTRA)
@@ -58,7 +58,7 @@ class QSToggleEntity(object):
     def __init__(self, qsid, qsusb):
         """Initialize the ToggleEntity."""
         from pyqwikswitch import (QS_NAME, QSDATA, QS_TYPE, QSType)
-        self._id = qsid
+        self.qsid = qsid
         self._qsusb = qsusb.devices
         dev = qsusb.devices[qsid]
         self._dim = dev[QS_TYPE] == QSType.dimmer
@@ -77,16 +77,23 @@ class QSToggleEntity(object):
     @property
     def is_on(self):
         """Check if device is on (non-zero)."""
-        return self._qsusb[self._id, 1] > 0
+        return self._qsusb[self.qsid, 1] > 0
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         new = kwargs.get(ATTR_BRIGHTNESS, 255)
-        self._qsusb.set_value(self._id, new)
+        self._qsusb.set_value(self.qsid, new)
 
     async def async_turn_off(self, **_):
         """Turn the device off."""
-        self._qsusb.set_value(self._id, 0)
+        self._qsusb.set_value(self.qsid, 0)
+
+    def async_added_to_hass(self):
+        """Listen for updates from QSUSb via dispatcher."""
+        # hass and schedule_update_ha_state is part of Entity/ToggleEntity
+        # pylint: disable=no-member
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            self.qsid, lambda _=None: self.schedule_update_ha_state)
 
 
 async def async_setup(hass, config):
@@ -98,7 +105,7 @@ async def async_setup(hass, config):
     # Add cmd's to in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
     cmd_buttons = set(CMD_BUTTONS)
-    for btn in config[DOMAIN].get(CONF_BUTTON_EVENTS, []):
+    for btn in config[DOMAIN][CONF_BUTTON_EVENTS]:
         cmd_buttons.add(btn)
 
     url = config[DOMAIN][CONF_URL]
@@ -108,7 +115,7 @@ async def async_setup(hass, config):
 
     def callback_value_changed(_qsd, key, _val):
         """Update entity values based on device change."""
-        hass.helpers.dispatcher.async_dispatcher_send(key)
+        hass.helpers.dispatcher.async_dispatcher_send(key, None)
 
     session = async_get_clientsession(hass)
     qsusb = QSUsb(url=url, dim_adj=dimmer_adjust, session=session,

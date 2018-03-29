@@ -16,16 +16,14 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, _, add_devices, discovery_info=None):
     """Add lights from the main Qwikswitch component."""
+    if discovery_info is None:
+        return
+
     qsusb = hass.data[QWIKSWITCH]
-    _LOGGER.info("Setup qwikswitch.sensor %s, %s", qsusb, discovery_info)
-    devs = [QSSensor(name, id)
-            for name, id in discovery_info[QWIKSWITCH].items()]
-
+    _LOGGER.debug("Setup qwikswitch.sensor %s, %s", qsusb, discovery_info)
+    devs = [QSSensor(name, qsid)
+            for name, qsid in discovery_info[QWIKSWITCH].items()]
     add_devices(devs)
-
-    for dev in devs:
-        hass.helpers.dispatcher.async_dispatcher_connect(
-            dev.qsid, dev.update_packet)  # Part of Entity/ToggleEntity
 
 
 class QSSensor(Entity):
@@ -61,3 +59,9 @@ class QSSensor(Entity):
     def poll(self):
         """QS sensors gets packets in update_packet."""
         return False
+
+    def async_added_to_hass(self):
+        """Listen for updates from QSUSb via dispatcher."""
+        # Part of Entity/ToggleEntity
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            self.qsid, self.update_packet)

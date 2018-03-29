@@ -13,17 +13,13 @@ DEPENDENCIES = [QWIKSWITCH]
 
 async def async_setup_platform(hass, _, add_devices, discovery_info=None):
     """Add switches from the main Qwikswitch component."""
+    if discovery_info is None:
+        return
+
     qsusb = hass.data[QWIKSWITCH]
-    devs = [QSSwitch(id, qsusb) for id in discovery_info[QWIKSWITCH]]
-
+    devs = [QSSwitch(qsid, qsusb) for qsid in discovery_info[QWIKSWITCH]]
     add_devices(devs)
-
-    for _id, dev in zip(discovery_info[QWIKSWITCH], devs):
-        hass.helpers.dispatcher.async_dispatcher_connect(
-            _id, dev.schedule_update_ha_state)
 
 
 class QSSwitch(QSToggleEntity, SwitchDevice):
     """Switch based on a Qwikswitch relay module."""
-
-    pass

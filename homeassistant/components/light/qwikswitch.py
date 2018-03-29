@@ -13,14 +13,12 @@ DEPENDENCIES = [QWIKSWITCH]
 
 async def async_setup_platform(hass, _, add_devices, discovery_info=None):
     """Add lights from the main Qwikswitch component."""
+    if discovery_info is None:
+        return
+
     qsusb = hass.data[QWIKSWITCH]
-    devs = [QSLight(id, qsusb) for id in discovery_info[QWIKSWITCH]]
-
+    devs = [QSLight(qsid, qsusb) for qsid in discovery_info[QWIKSWITCH]]
     add_devices(devs)
-
-    for _id, dev in zip(discovery_info[QWIKSWITCH], devs):
-        hass.helpers.dispatcher.async_dispatcher_connect(
-            _id, dev.schedule_update_ha_state)  # Part of Entity/ToggleEntity
 
 
 class QSLight(QSToggleEntity, Light):
@@ -29,7 +27,7 @@ class QSLight(QSToggleEntity, Light):
     @property
     def brightness(self):
         """Return the brightness of this light (0-255)."""
-        return self._qsusb[self._id, 1] if self._dim else None
+        return self._qsusb[self.qsid, 1] if self._dim else None
 
     @property
     def supported_features(self):
