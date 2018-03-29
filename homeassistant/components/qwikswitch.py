@@ -14,6 +14,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.entity import Entity
 from homeassistant.components.light import ATTR_BRIGHTNESS
 import homeassistant.helpers.config_validation as cv
 
@@ -39,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema({
     })}, extra=vol.ALLOW_EXTRA)
 
 
-class QSToggleEntity(object):
+class QSToggleEntity(Entity):
     """Representation of a Qwikswitch Entity.
 
     Implement base QS methods. Modeled around HA ToggleEntity[1] & should only
@@ -89,8 +90,6 @@ class QSToggleEntity(object):
 
     async def async_added_to_hass(self):
         """Listen for updates from QSUSb via dispatcher."""
-        # hass and schedule_update_ha_state is part of Entity/ToggleEntity
-        # pylint: disable=no-member
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             self.qsid, lambda _=None: self.async_schedule_update_ha_state())
 
