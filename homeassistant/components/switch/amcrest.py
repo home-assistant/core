@@ -11,12 +11,11 @@ from homeassistant.components.amcrest import (
     DATA_AMCREST, SWITCHES)
 
 from homeassistant.const import (
-    CONF_NAME, CONF_SWITCHES, STATE_UNKNOWN, STATE_OFF, STATE_ON)
+    CONF_NAME, CONF_SWITCHES, STATE_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
 
 DEPENDENCIES = ['amcrest']
 
-REQUIREMENTS = ['amcrest==1.2.2']
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -70,8 +69,6 @@ class AmcrestSwitch(ToggleEntity):
             self._camera.motion_detection = 'true'
         elif self._setting == 'motion_recording':
             self._camera.motion_recording = 'true'
-        else:
-            _LOGGER.error("Can't turn on unknown setting: %s", self._setting)
 
     def turn_off(self, **kwargs):
         """Turn setting off."""
@@ -79,8 +76,6 @@ class AmcrestSwitch(ToggleEntity):
             self._camera.motion_detection = 'false'
         elif self._setting == 'motion_recording':
             self._camera.motion_recording = 'false'
-        else:
-            _LOGGER.error("Can't turn on unknown setting: %s", self._setting)
 
     def update(self):
         """Update setting state."""
@@ -90,11 +85,6 @@ class AmcrestSwitch(ToggleEntity):
             detection = self._camera.is_motion_detector_on()
         elif self._setting == 'motion_recording':
             detection = self._camera.is_record_on_motion_detection()
-        else:
-            _LOGGER.error("Can't update state for unknown setting: %s",
-                          self._setting)
-            self._state = STATE_UNKNOWN
-            return
 
         self._state = STATE_ON if detection else STATE_OFF
 
