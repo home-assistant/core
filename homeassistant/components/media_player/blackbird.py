@@ -39,8 +39,6 @@ DATA_BLACKBIRD = 'blackbird'
 SERVICE_SETALLZONES = 'blackbird_setallzones'
 ATTR_SOURCE = 'source'
 
-DEFAULT_PORT = '\dev\ttyUSB0'
-
 BLACKBIRD_SETALLZONES_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_SOURCE): cv.string
 })
@@ -54,7 +52,7 @@ SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=8))
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TYPE): vol.In(['serial', 'socket']),
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Optional(CONF_PORT): cv.string,
     vol.Optional(CONF_HOST): cv.string,
     vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
     vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
