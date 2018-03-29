@@ -204,7 +204,7 @@ class FluxLight(Light):
             self._bulb.turnOn()
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
-        
+
         if hs_color is not None:
             rgb = color_util.color_hs_to_RGB(*hs_color)
         elif hs_color is None:
