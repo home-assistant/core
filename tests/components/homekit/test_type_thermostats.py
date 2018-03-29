@@ -1,17 +1,22 @@
 """Test different accessory types: Thermostats."""
 import unittest
+from unittest.mock import patch
 
 from homeassistant.core import callback
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE, ATTR_TEMPERATURE,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, ATTR_OPERATION_MODE,
     ATTR_OPERATION_LIST, STATE_COOL, STATE_HEAT, STATE_AUTO)
-from homeassistant.components.homekit.type_thermostats import Thermostat
 from homeassistant.const import (
     ATTR_SERVICE, EVENT_CALL_SERVICE, ATTR_SERVICE_DATA,
     ATTR_UNIT_OF_MEASUREMENT, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.common import get_test_home_assistant
+
+patch('homeassistant.components.homekit.accessories.debounce',
+      lambda f: lambda *args, **kwargs: f(*args, **kwargs)).start()
+from homeassistant.components.homekit.type_thermostats import (  # noqa: E402
+    Thermostat)
 
 
 class TestHomekitThermostats(unittest.TestCase):

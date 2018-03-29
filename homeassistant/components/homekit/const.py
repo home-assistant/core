@@ -1,5 +1,6 @@
 """Constants used be the HomeKit component."""
 # #### MISC ####
+DEBOUNCE_TIMEOUT = 0.5
 DOMAIN = 'homekit'
 HOMEKIT_FILE = '.homekit.state'
 HOMEKIT_NOTIFY_ID = 4663548

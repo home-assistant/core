@@ -1,8 +1,8 @@
 """Test different accessory types: Lights."""
 import unittest
+from unittest.mock import patch
 
 from homeassistant.core import callback
-from homeassistant.components.homekit.type_lights import Light
 from homeassistant.components.light import (
     DOMAIN, ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP,
     ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR)
@@ -12,6 +12,10 @@ from homeassistant.const import (
     SERVICE_TURN_OFF, STATE_ON, STATE_OFF, STATE_UNKNOWN)
 
 from tests.common import get_test_home_assistant
+
+patch('homeassistant.components.homekit.accessories.debounce',
+      lambda f: lambda *args, **kwargs: f(*args, **kwargs)).start()
+from homeassistant.components.homekit.type_lights import Light  # noqa: E402
 
 
 class TestHomekitLights(unittest.TestCase):
