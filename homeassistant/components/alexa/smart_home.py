@@ -18,8 +18,8 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_UNLOCK, SERVICE_VOLUME_SET, TEMP_FAHRENHEIT, TEMP_CELSIUS,
-    CONF_UNIT_OF_MEASUREMENT, STATE_LOCKED, STATE_UNLOCKED, STATE_ON,
-    STATE_OFF)
+    CONF_UNIT_OF_MEASUREMENT, STATE_LOCKED, STATE_UNLOCKED, STATE_ON)
+
 from .const import CONF_FILTER, CONF_ENTITY_CONFIG
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,11 +42,8 @@ API_THERMOSTAT_MODES = {
     climate.STATE_AUTO: 'AUTO',
     climate.STATE_ECO: 'ECO',
     climate.STATE_IDLE: 'OFF',
-    STATE_ON: 'AUTO',
-    STATE_OFF: 'OFF',
     climate.STATE_FAN_ONLY: 'OFF',
     climate.STATE_DRY: 'OFF',
-    climate.STATE_PERFORMANCE: 'AUTO',
 }
 
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
@@ -430,11 +427,12 @@ class _AlexaThermostatController(_AlexaInterface):
 
     def get_property(self, name):
         if name == 'thermostatMode':
-            mode = API_THERMOSTAT_MODES.get(self.entity.state)
+            ha_mode = self.entity.attributes.get(climate.ATTR_OPERATION_MODE)
+            mode = API_THERMOSTAT_MODES.get(ha_mode)
             if mode is None:
-                _LOGGER.error("%s (%s) has unsupported state '%s'",
+                _LOGGER.error("%s (%s) has unsupported %s value '%s'",
                               self.entity.entity_id, type(self.entity),
-                              self.entity.state)
+                              climate.ATTR_OPERATION_MODE, ha_mode)
                 raise _UnsupportedProperty(name)
             return mode
 
@@ -1403,8 +1401,8 @@ def temperature_from_object(temp_obj, to_unit, interval=False):
 def async_api_set_target_temp(hass, config, request, entity):
     """Process a set target temperature request."""
     unit = entity.attributes[CONF_UNIT_OF_MEASUREMENT]
-    min_temp = entity.attributes[climate.ATTR_MIN_TEMP]
-    max_temp = entity.attributes[climate.ATTR_MAX_TEMP]
+    min_temp = entity.attributes.get(climate.ATTR_MIN_TEMP)
+    max_temp = entity.attributes.get(climate.ATTR_MAX_TEMP)
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id
@@ -1445,8 +1443,8 @@ def async_api_set_target_temp(hass, config, request, entity):
 def async_api_adjust_target_temp(hass, config, request, entity):
     """Process an adjust target temperature request."""
     unit = entity.attributes[CONF_UNIT_OF_MEASUREMENT]
-    min_temp = entity.attributes[climate.ATTR_MIN_TEMP]
-    max_temp = entity.attributes[climate.ATTR_MAX_TEMP]
+    min_temp = entity.attributes.get(climate.ATTR_MIN_TEMP)
+    max_temp = entity.attributes.get(climate.ATTR_MAX_TEMP)
 
     temp_delta = temperature_from_object(
         request[API_PAYLOAD]['targetSetpointDelta'], unit, interval=True)
@@ -1475,11 +1473,14 @@ def async_api_set_thermostat_mode(hass, config, request, entity):
     mode = request[API_PAYLOAD]['thermostatMode']
 
     operation_list = entity.attributes.get(climate.ATTR_OPERATION_LIST)
-    for ha_state, api_mode in API_THERMOSTAT_MODES.items():
-        if mode == api_mode and ha_state in operation_list:
-            mode = ha_state
-            break
-    else:
+    # Work around a pylint false positive due to
+    #  https://github.com/PyCQA/pylint/issues/1830
+    # pylint: disable=stop-iteration-return
+    ha_mode = next(
+        (k for k, v in API_THERMOSTAT_MODES.items() if v == mode),
+        None
+    )
+    if ha_mode not in operation_list:
         msg = 'The requested thermostat mode {} is not supported'.format(mode)
         _LOGGER.info(msg)
         return api_error(
@@ -1491,7 +1492,7 @@ def async_api_set_thermostat_mode(hass, config, request, entity):
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
-        climate.ATTR_OPERATION_MODE: mode,
+        climate.ATTR_OPERATION_MODE: ha_mode,
     }
 
     yield from hass.services.async_call(

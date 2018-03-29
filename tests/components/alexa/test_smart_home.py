@@ -700,6 +700,7 @@ def test_thermostat(hass):
         'climate.test_thermostat',
         'cool',
         {
+            'operation_mode': 'cool',
             'temperature': 70.0,
             'target_temp_high': 80.0,
             'target_temp_low': 60.0,
