@@ -6,7 +6,6 @@ https://home-assistant.io/components/device_tracker.xiaomi_miio/
 """
 import logging
 
-from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
