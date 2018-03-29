@@ -769,6 +769,11 @@ def api_error(request,
     payload['type'] = error_type
     payload['message'] = error_message
 
+    _LOGGER.info("Request %s/%s error %s: %s",
+                 request[API_HEADER]['namespace'],
+                 request[API_HEADER]['name'],
+                 error_type, error_message)
+
     return api_message(
         request, name='ErrorResponse', namespace=namespace, payload=payload)
 
@@ -1182,7 +1187,6 @@ def async_api_select_input(hass, config, request, entity):
     else:
         msg = 'failed to map input {} to a media source on {}'.format(
             media_input, entity.entity_id)
-        _LOGGER.error(msg)
         return api_error(
             request, error_type='INVALID_VALUE', error_message=msg)
 
@@ -1371,7 +1375,6 @@ def api_error_temp_range(request, temp, min_temp, max_temp, unit):
     }
 
     msg = 'The requested temperature {} is out of range'.format(temp)
-    _LOGGER.info(msg)
     return api_error(
         request,
         error_type='TEMPERATURE_VALUE_OUT_OF_RANGE',
@@ -1479,7 +1482,6 @@ async def async_api_set_thermostat_mode(hass, config, request, entity):
     )
     if ha_mode not in operation_list:
         msg = 'The requested thermostat mode {} is not supported'.format(mode)
-        _LOGGER.info(msg)
         return api_error(
             request,
             namespace='Alexa.ThermostatController',
