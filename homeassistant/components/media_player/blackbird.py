@@ -12,10 +12,10 @@ from homeassistant.components.media_player import (
     DOMAIN, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON)
+    ATTR_ENTITY_ID, CONF_NAME, CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyblackbird==0.4']
+REQUIREMENTS = ['pyblackbird==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,11 +32,14 @@ SOURCE_SCHEMA = vol.Schema({
 
 CONF_ZONES = 'zones'
 CONF_SOURCES = 'sources'
+CONF_TYPE = 'type'
 
 DATA_BLACKBIRD = 'blackbird'
 
 SERVICE_SETALLZONES = 'blackbird_setallzones'
 ATTR_SOURCE = 'source'
+
+DEFAULT_PORT = '\dev\ttyUSB0'
 
 BLACKBIRD_SETALLZONES_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_SOURCE): cv.string
@@ -50,7 +53,9 @@ ZONE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=8))
 SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=8))
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORT): cv.string,
+    vol.Required(CONF_TYPE): vol.In(['serial', 'socket']),
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
     vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
     vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
 })
@@ -60,13 +65,35 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Monoprice Blackbird 4k 8x8 HDBaseT Matrix platform."""
     port = config.get(CONF_PORT)
+    host = config.get(CONF_HOST)
+    device_type = config.get(CONF_TYPE)
 
-    from serial import SerialException
+    import socket
     from pyblackbird import get_blackbird
-    try:
-        blackbird = get_blackbird(port)
-    except SerialException:
-        _LOGGER.error("Error connecting to Blackbird controller")
+    from serial import SerialException
+
+    if device_type == 'serial':
+        if port is None:
+            _LOGGER.error("No port configured")
+            return
+        try:
+            blackbird = get_blackbird(port)
+        except SerialException:
+            _LOGGER.error("Error connecting to Blackbird controller")
+            return
+
+    elif device_type == 'socket':
+        try:
+            if host is None:
+                _LOGGER.error("No host configured")
+                return
+            blackbird = get_blackbird(host, False)
+        except socket.timeout:
+            _LOGGER.error("Error connecting to the Blackbird controller")
+            return
+
+    else:
+        _LOGGER.error("Incorrect device type specified")
         return
 
     sources = {source_id: extra[CONF_NAME] for source_id, extra
