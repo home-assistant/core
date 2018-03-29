@@ -20,7 +20,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
 })
 
-REQUIREMENTS = ['python-miio>=0.3.9']
+REQUIREMENTS = ['python-miio==0.3.9']
 
 
 def get_scanner(hass, config):
