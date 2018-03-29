@@ -1397,8 +1397,7 @@ def temperature_from_object(temp_obj, to_unit, interval=False):
 
 @HANDLERS.register(('Alexa.ThermostatController', 'SetTargetTemperature'))
 @extract_entity
-@asyncio.coroutine
-def async_api_set_target_temp(hass, config, request, entity):
+async def async_api_set_target_temp(hass, config, request, entity):
     """Process a set target temperature request."""
     unit = entity.attributes[CONF_UNIT_OF_MEASUREMENT]
     min_temp = entity.attributes.get(climate.ATTR_MIN_TEMP)
@@ -1431,7 +1430,7 @@ def async_api_set_target_temp(hass, config, request, entity):
                 request, temp_high, min_temp, max_temp, unit)
         data[climate.ATTR_TARGET_TEMP_HIGH] = temp_high
 
-    yield from hass.services.async_call(
+    await hass.services.async_call(
         entity.domain, climate.SERVICE_SET_TEMPERATURE, data, blocking=False)
 
     return api_message(request)
@@ -1439,8 +1438,7 @@ def async_api_set_target_temp(hass, config, request, entity):
 
 @HANDLERS.register(('Alexa.ThermostatController', 'AdjustTargetTemperature'))
 @extract_entity
-@asyncio.coroutine
-def async_api_adjust_target_temp(hass, config, request, entity):
+async def async_api_adjust_target_temp(hass, config, request, entity):
     """Process an adjust target temperature request."""
     unit = entity.attributes[CONF_UNIT_OF_MEASUREMENT]
     min_temp = entity.attributes.get(climate.ATTR_MIN_TEMP)
@@ -1459,7 +1457,7 @@ def async_api_adjust_target_temp(hass, config, request, entity):
         ATTR_TEMPERATURE: target_temp,
     }
 
-    yield from hass.services.async_call(
+    await hass.services.async_call(
         entity.domain, climate.SERVICE_SET_TEMPERATURE, data, blocking=False)
 
     return api_message(request)
@@ -1467,8 +1465,7 @@ def async_api_adjust_target_temp(hass, config, request, entity):
 
 @HANDLERS.register(('Alexa.ThermostatController', 'SetThermostatMode'))
 @extract_entity
-@asyncio.coroutine
-def async_api_set_thermostat_mode(hass, config, request, entity):
+async def async_api_set_thermostat_mode(hass, config, request, entity):
     """Process a set thermostat mode request."""
     mode = request[API_PAYLOAD]['thermostatMode']
 
@@ -1495,7 +1492,7 @@ def async_api_set_thermostat_mode(hass, config, request, entity):
         climate.ATTR_OPERATION_MODE: ha_mode,
     }
 
-    yield from hass.services.async_call(
+    await hass.services.async_call(
         entity.domain, climate.SERVICE_SET_OPERATION_MODE, data,
         blocking=False)
 
