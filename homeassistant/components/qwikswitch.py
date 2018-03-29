@@ -92,7 +92,7 @@ class QSToggleEntity(object):
         # hass and schedule_update_ha_state is part of Entity/ToggleEntity
         # pylint: disable=no-member
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            self.qsid, lambda _=None: self.schedule_update_ha_state)
+            self.qsid, lambda _=None: self.async_schedule_update_ha_state)
 
 
 async def async_setup(hass, config):
