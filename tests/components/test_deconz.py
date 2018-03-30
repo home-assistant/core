@@ -8,7 +8,7 @@ import pydeconz
 
 
 async def test_flow_works(hass, aioclient_mock):
-    """Test config flow ."""
+    """Test config flow."""
     aioclient_mock.get(pydeconz.utils.URL_DISCOVER, json=[
         {'id': 'id', 'internalipaddress': '1.2.3.4', 'internalport': '80'}
     ])

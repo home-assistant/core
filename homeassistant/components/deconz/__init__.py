@@ -58,11 +58,6 @@ Unlock your deCONZ gateway to register with Home Assistant.
 
 async def async_setup(hass, config):
     """Set up services and configuration for deCONZ component."""
-    if DOMAIN in hass.data:
-        _LOGGER.error(
-            "Set up failed since one deCONZ instance already exists")
-        return False
-
     result = False
     config_file = await hass.async_add_job(
         load_json, hass.config.path(CONFIG_FILE))
