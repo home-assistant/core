@@ -10,6 +10,7 @@ from datetime import timedelta
 import aiohttp
 import voluptuous as vol
 from requests.exceptions import HTTPError, ConnectTimeout
+from requests.exceptions import ConnectionError as ConnectError
 
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
@@ -93,14 +94,15 @@ def setup(hass, config):
     amcrest_cams = config[DOMAIN]
 
     for device in amcrest_cams:
-        camera = AmcrestCamera(device.get(CONF_HOST),
-                               device.get(CONF_PORT),
-                               device.get(CONF_USERNAME),
-                               device.get(CONF_PASSWORD)).camera
         try:
+            camera = AmcrestCamera(device.get(CONF_HOST),
+                                   device.get(CONF_PORT),
+                                   device.get(CONF_USERNAME),
+                                   device.get(CONF_PASSWORD)).camera
+            # pylint: disable=pointless-statement
             camera.current_time
 
-        except (ConnectTimeout, HTTPError) as ex:
+        except (ConnectError, ConnectTimeout, HTTPError) as ex:
             _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
             hass.components.persistent_notification.create(
                 'Error: {}<br />'
@@ -108,7 +110,7 @@ def setup(hass, config):
                 ''.format(ex),
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
-            return False
+            continue
 
         ffmpeg_arguments = device.get(CONF_FFMPEG_ARGUMENTS)
         name = device.get(CONF_NAME)
