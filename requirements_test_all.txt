@@ -129,6 +129,9 @@ pushbullet.py==0.11.0
 # homeassistant.components.canary
 py-canary==0.4.1
 
+# homeassistant.components.deconz
+pydeconz==35
+
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 

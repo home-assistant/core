@@ -8,16 +8,17 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components.discovery import SERVICE_DECONZ
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, aiohttp_client
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pydeconz==32']
+REQUIREMENTS = ['pydeconz==35']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -160,7 +161,8 @@ async def async_request_configuration(hass, config, deconz_config):
     async def async_configuration_callback(data):
         """Set up actions to do when our configuration callback is called."""
         from pydeconz.utils import async_get_api_key
-        api_key = await async_get_api_key(hass.loop, **deconz_config)
+        websession = async_get_clientsession(hass)
+        api_key = await async_get_api_key(websession, **deconz_config)
         if api_key:
             deconz_config[CONF_API_KEY] = api_key
             result = await async_setup_deconz(hass, config, deconz_config)
@@ -186,3 +188,85 @@ async def async_request_configuration(hass, config, deconz_config):
         entity_picture="/static/images/logo_deconz.jpeg",
         submit_caption="I have unlocked the gateway",
     )
+
+
+@config_entries.HANDLERS.register(DOMAIN)
+class DeconzFlowHandler(config_entries.ConfigFlowHandler):
+    """Handle a deCONZ config flow."""
+
+    VERSION = 1
+
+    def __init__(self):
+        """Initialize the deCONZ flow."""
+        self.bridges = []
+        self.deconz_config = {}
+
+    async def async_step_init(self, user_input=None):
+        """Handle a flow start."""
+        from pydeconz.utils import async_discovery
+
+        if DOMAIN in self.hass.data:
+            return self.async_abort(
+                reason='one_instance_only'
+            )
+
+        if user_input is not None:
+            for bridge in self.bridges:
+                if bridge[CONF_HOST] == user_input[CONF_HOST]:
+                    self.deconz_config = bridge
+                    return await self.async_step_link()
+
+        session = aiohttp_client.async_get_clientsession(self.hass)
+        self.bridges = await async_discovery(session)
+
+        if len(self.bridges) == 1:
+            self.deconz_config = self.bridges[0]
+            return await self.async_step_link()
+        elif len(self.bridges) > 1:
+            hosts = []
+            for bridge in self.bridges:
+                hosts.append(bridge[CONF_HOST])
+            return self.async_show_form(
+                step_id='init',
+                data_schema=vol.Schema({
+                    vol.Required(CONF_HOST): vol.In(hosts)
+                })
+            )
+
+        return self.async_abort(
+            reason='no_bridges'
+        )
+
+    async def async_step_link(self, user_input=None):
+        """Attempt to link with the deCONZ bridge."""
+        from pydeconz.utils import async_get_api_key
+        errors = {}
+
+        if user_input is not None:
+            session = aiohttp_client.async_get_clientsession(self.hass)
+            api_key = await async_get_api_key(session, **self.deconz_config)
+            if api_key:
+                self.deconz_config[CONF_API_KEY] = api_key
+                return self.async_create_entry(
+                    title='deCONZ',
+                    data=self.deconz_config
+                )
+            else:
+                errors['base'] = 'no_key'
+
+        return self.async_show_form(
+            step_id='link',
+            errors=errors,
+        )
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a bridge for a config entry."""
+    if DOMAIN in hass.data:
+        _LOGGER.error(
+            "Config entry failed since one deCONZ instance already exists")
+        return False
+    result = await async_setup_deconz(hass, None, entry.data)
+    if result:
+        return True
+    return False
