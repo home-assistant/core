@@ -49,7 +49,7 @@ def async_setup(hass, config):
     result = yield from _update_freedns(
         hass, session, url, auth_token)
 
-    if not result:
+    if result is False:
         return False
 
     @asyncio.coroutine
@@ -82,7 +82,7 @@ def _update_freedns(hass, session, url, auth_token):
 
             if "has not changed" in body:
                 # IP has not changed.
-                _LOGGER.info("FreeDNS update skipped: IP has not changed.")
+                _LOGGER.debug("FreeDNS update skipped: IP has not changed.")
                 return True
 
             if "ERROR" not in body:
