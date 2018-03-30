@@ -69,6 +69,7 @@ def setup(hass, config: dict):
 
 def setup_account(account_config: dict, hass, name: str) \
         -> 'BMWConnectedDriveAccount':
+    """Set up a new BMWConnectedDriveAccount based on the config."""
     username = account_config[CONF_USERNAME]
     password = account_config[CONF_PASSWORD]
     region = account_config[CONF_REGION]
