@@ -592,6 +592,25 @@ def test_merge(merge_log_err):
     assert config['wake_on_lan'] is None
 
 
+def test_merge_try_falsy(merge_log_err):
+    """Ensure we dont add falsy items like empty OrderedDict() to list."""
+    packages = {
+        'pack_falsy_to_lst': {'automation': OrderedDict()},
+        'pack_list2': {'light': OrderedDict()},
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'automation': {'do': 'something'},
+        'light': {'some': 'light'},
+    }
+    config_util.merge_packages_config(config, packages)
+
+    assert merge_log_err.call_count == 0
+    assert len(config) == 3
+    assert len(config['automation']) == 1
+    assert len(config['light']) == 1
+
+
 def test_merge_new(merge_log_err):
     """Test adding new components to outer scope."""
     packages = {
