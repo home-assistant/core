@@ -134,8 +134,12 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         """Initialize the XiaomiMotionSensor."""
         self._hass = hass
         self._no_motion_since = 0
+        if 'proto' not in device or int(device['proto'][0:1]) == 1:
+            data_key = 'status'
+        else:
+            data_key = 'motion_status'
         XiaomiBinarySensor.__init__(self, device, 'Motion Sensor', xiaomi_hub,
-                                    'status', 'motion')
+                                    data_key, 'motion')
 
     @property
     def device_state_attributes(self):
