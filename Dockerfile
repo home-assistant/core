@@ -26,6 +26,9 @@ RUN virtualization/Docker/setup_docker_prereqs
 COPY requirements_all.txt requirements_all.txt
 # Uninstall enum34 because some dependencies install it but breaks Python 3.4+.
 # See PR #8103 for more info.
+
+HEALTHCHECK --interval=1m --timeout=3s \ CMD curl -f http://localhost:8123/ || exit 1
+
 RUN pip3 install --no-cache-dir -r requirements_all.txt && \
     pip3 install --no-cache-dir mysqlclient psycopg2 uvloop cchardet cython
 
