@@ -402,6 +402,7 @@ omit =
     homeassistant/components/fan/mqtt.py
     homeassistant/components/fan/xiaomi_miio.py
     homeassistant/components/feedreader.py
+    homeassistant/components/folder_watcher.py
     homeassistant/components/foursquare.py
     homeassistant/components/goalfeed.py
     homeassistant/components/ifttt.py
