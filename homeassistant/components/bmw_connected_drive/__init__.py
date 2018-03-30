@@ -68,14 +68,13 @@ def setup(hass, config):
             This must be a member function as we need access to the bimmer
             object here.
             """
-            from bimmer_connected.remote_services import ExecutionState
             vin = call.data[ATTR_VIN]
             _LOGGER.debug('Triggering service %s of vehicle %s',
                           call.service, vin)
             vehicle = bimmer.account.get_vehicle(vin)
             function_name = _SERVICE_MAP[call.service]
             function_call = getattr(vehicle.remote_services, function_name)
-            result = function_call()
+            function_call()
 
         # register the services
         for service in _SERVICE_MAP:
