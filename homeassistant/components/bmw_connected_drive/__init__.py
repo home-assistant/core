@@ -45,8 +45,6 @@ UPDATE_INTERVAL = 5  # in minutes
 
 _SERVICE_MAP = {
     'light_flash': 'trigger_remote_light_flash',
-    'door_lock': 'trigger_remote_door_lock',
-    'door_unlock': 'trigger_remote_door_unlock',
     'sound_horn': 'trigger_remote_horn',
     'activate_air_conditioning': 'trigger_remote_air_conditioning',
 }
