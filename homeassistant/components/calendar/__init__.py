@@ -1,5 +1,5 @@
 """
-Support for Google Calendar event device sensors.
+Support for Calendar event device sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/calendar/
@@ -10,8 +10,6 @@ import re
 
 from aiohttp import web
 
-from homeassistant.components.google import (
-    CONF_OFFSET, CONF_DEVICE_ID, CONF_NAME)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.config_validation import time_period_str
@@ -30,6 +28,19 @@ DEPENDENCIES = ['http']
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+CONF_DEVICE_ID = 'device_id'
+CONF_NAME = 'name'
+CONF_SEARCH = 'search'
+CONF_OFFSET = 'offset'
+CONF_CAL_OFFSET = 'cal_offset'
+CONF_INCLUDE_ALL_DAY_EVENTS = 'include_all_day'
+
+DEFAULT_CONF_TRACK_NEW = True
+DEFAULT_CONF_OFFSET = '!!'
+DEFAULT_CONF_CAL_OFFSET = dt.dt.timedelta()
+DEFAULT_CONF_INCLUDE_ALL_DAY_EVENTS = True
+DEFAULT_CONF_SEARCH = None
+
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
@@ -46,10 +57,6 @@ async def async_setup(hass, config):
 
     await component.async_setup(config)
     return True
-
-
-DEFAULT_CONF_TRACK_NEW = True
-DEFAULT_CONF_OFFSET = '!!'
 
 
 def get_date(date):
@@ -72,6 +79,8 @@ class CalendarEventDevice(Entity):
         self._name = data.get(CONF_NAME)
         self.dev_id = data.get(CONF_DEVICE_ID)
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
+        self._cal_offset = data.get(
+            CONF_CAL_OFFSET, DEFAULT_CONF_CAL_OFFSET)
         self.entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, self.dev_id, hass=hass)
 
@@ -165,7 +174,10 @@ class CalendarEventDevice(Entity):
 
         summary = self.data.event.get('summary', '')
 
-        # check if we have an offset tag in the message
+        # calendar offset time (defaults to 0)
+        offset_time = self._cal_offset
+
+        # check if we have an offset tag in the message of the event
         # time is HH:MM or MM
         reg = '{}([+-]?[0-9]{{0,2}}(:[0-9]{{0,2}})?)'.format(self._offset)
         search = re.search(reg, summary)
@@ -177,11 +189,9 @@ class CalendarEventDevice(Entity):
                 else:
                     time = '0:{}'.format(time)
 
-            offset_time = time_period_str(time)
+            offset_time += time_period_str(time)
             summary = (summary[:search.start()] + summary[search.end():]) \
                 .strip()
-        else:
-            offset_time = dt.dt.timedelta()  # default it
 
         # cleanup the string so we don't have a bunch of double+ spaces
         self._cal_data['message'] = re.sub('  +', '', summary).strip()

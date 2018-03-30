@@ -17,6 +17,8 @@ import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.calendar import (
+    CONF_OFFSET, CONF_SEARCH, CONF_DEVICE_ID, CONF_NAME)
 from homeassistant.setup import setup_component
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
@@ -38,16 +40,11 @@ CONF_CLIENT_SECRET = 'client_secret'
 CONF_TRACK_NEW = 'track_new_calendar'
 
 CONF_CAL_ID = 'cal_id'
-CONF_DEVICE_ID = 'device_id'
-CONF_NAME = 'name'
 CONF_ENTITIES = 'entities'
 CONF_TRACK = 'track'
-CONF_SEARCH = 'search'
-CONF_OFFSET = 'offset'
 CONF_IGNORE_AVAILABILITY = 'ignore_availability'
 
 DEFAULT_CONF_TRACK_NEW = True
-DEFAULT_CONF_OFFSET = '!!'
 
 NOTIFICATION_ID = 'google_calendar_notification'
 NOTIFICATION_TITLE = 'Google Calendar Setup'

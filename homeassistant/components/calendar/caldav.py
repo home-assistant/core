@@ -11,7 +11,10 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
-    PLATFORM_SCHEMA, CalendarEventDevice, get_date)
+    PLATFORM_SCHEMA, CalendarEventDevice, get_date,
+    CONF_DEVICE_ID, CONF_SEARCH, CONF_OFFSET, DEFAULT_CONF_OFFSET,
+    CONF_CAL_OFFSET, DEFAULT_CONF_CAL_OFFSET, CONF_INCLUDE_ALL_DAY_EVENTS,
+    DEFAULT_CONF_INCLUDE_ALL_DAY_EVENTS, DEFAULT_CONF_SEARCH)
 from homeassistant.const import (
     CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
@@ -21,11 +24,11 @@ REQUIREMENTS = ['caldav==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEVICE_ID = 'device_id'
 CONF_CALENDARS = 'calendars'
 CONF_CUSTOM_CALENDARS = 'custom_calendars'
 CONF_CALENDAR = 'calendar'
-CONF_SEARCH = 'search'
+CONF_DAYSFORWARD = 'daysforward'
+DEFAULT_CONF_DAYSFORWARD = 1
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     # pylint: disable=no-value-for-parameter
@@ -42,6 +45,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                 vol.Required(CONF_CALENDAR): cv.string,
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_SEARCH): cv.string,
+                vol.Optional(
+                    CONF_INCLUDE_ALL_DAY_EVENTS,
+                    default=DEFAULT_CONF_INCLUDE_ALL_DAY_EVENTS): cv.boolean,
+                vol.Optional(
+                    CONF_DAYSFORWARD,
+                    default=DEFAULT_CONF_DAYSFORWARD): cv.positive_int,
+                vol.Optional(
+                    CONF_OFFSET,
+                    default=DEFAULT_CONF_OFFSET): cv.string,
+                vol.Optional(
+                    CONF_CAL_OFFSET,
+                    default=DEFAULT_CONF_CAL_OFFSET): cv.time_period
             })
         ]))
 })
@@ -81,18 +96,28 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                 CONF_DEVICE_ID: "{} {}".format(
                     cust_calendar.get(CONF_CALENDAR),
                     cust_calendar.get(CONF_NAME)),
+                CONF_INCLUDE_ALL_DAY_EVENTS: cust_calendar.get(
+                    CONF_INCLUDE_ALL_DAY_EVENTS),
+                CONF_SEARCH: cust_calendar.get(CONF_SEARCH),
+                CONF_DAYSFORWARD: cust_calendar.get(CONF_DAYSFORWARD),
+                CONF_OFFSET: cust_calendar.get(CONF_OFFSET),
+                CONF_CAL_OFFSET: cust_calendar.get(CONF_CAL_OFFSET)
             }
 
             calendar_devices.append(
                 WebDavCalendarEventDevice(
-                    hass, device_data, calendar, True,
-                    cust_calendar.get(CONF_SEARCH)))
+                    hass, device_data, calendar))
 
         # Create a default calendar if there was no custom one
         if not config.get(CONF_CUSTOM_CALENDARS):
             device_data = {
                 CONF_NAME: calendar.name,
                 CONF_DEVICE_ID: calendar.name,
+                CONF_INCLUDE_ALL_DAY_EVENTS: False,
+                CONF_SEARCH: None,
+                CONF_DAYSFORWARD: DEFAULT_CONF_DAYSFORWARD,
+                CONF_OFFSET: DEFAULT_CONF_OFFSET,
+                CONF_CAL_OFFSET: DEFAULT_CONF_CAL_OFFSET
             }
             calendar_devices.append(
                 WebDavCalendarEventDevice(hass, device_data, calendar)
@@ -104,10 +129,9 @@ def setup_platform(hass, config, add_devices, disc_info=None):
 class WebDavCalendarEventDevice(CalendarEventDevice):
     """A device for getting the next Task from a WebDav Calendar."""
 
-    def __init__(self, hass, device_data, calendar, all_day=False,
-                 search=None):
+    def __init__(self, hass, device_data, calendar):
         """Create the WebDav Calendar Event Device."""
-        self.data = WebDavCalendarData(calendar, all_day, search)
+        self.data = WebDavCalendarData(calendar, device_data)
         super().__init__(hass, device_data)
 
     @property
@@ -128,11 +152,26 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
 class WebDavCalendarData(object):
     """Class to utilize the calendar dav client object to get next event."""
 
-    def __init__(self, calendar, include_all_day, search):
+    def __init__(self, calendar, device_data):
         """Set up how we are going to search the WebDav calendar."""
         self.calendar = calendar
-        self.include_all_day = include_all_day
-        self.search = search
+
+        self.search = device_data.get(CONF_SEARCH)
+        if self.search is None:
+            self.search = DEFAULT_CONF_SEARCH
+
+        self.include_all_day = device_data.get(CONF_INCLUDE_ALL_DAY_EVENTS)
+        if self.include_all_day is None:
+            self.include_all_day = DEFAULT_CONF_INCLUDE_ALL_DAY_EVENTS
+
+        self.daysforward = device_data.get(CONF_DAYSFORWARD)
+        if self.daysforward is None:
+            self.daysforward = DEFAULT_CONF_DAYSFORWARD
+
+        self.cal_offset = device_data.get(CONF_CAL_OFFSET)
+        if self.cal_offset is None:
+            self.cal_offset = DEFAULT_CONF_CAL_OFFSET
+
         self.event = None
 
     async def async_get_events(self, hass, start_date, end_date):
@@ -169,7 +208,9 @@ class WebDavCalendarData(object):
         # won't return events that have already started
         results = self.calendar.date_search(
             dt.start_of_local_day(),
-            dt.start_of_local_day() + timedelta(days=1)
+            dt.start_of_local_day() +
+            timedelta(days=self.daysforward) +
+            self.cal_offset
         )
 
         # dtstart can be a date or datetime depending if the event lasts a

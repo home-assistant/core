@@ -8,11 +8,11 @@ https://home-assistant.io/components/binary_sensor.google_calendar/
 import logging
 from datetime import timedelta
 
-from homeassistant.components.calendar import CalendarEventDevice
+from homeassistant.components.calendar import (
+    CONF_SEARCH, CalendarEventDevice)
 from homeassistant.components.google import (
     CONF_CAL_ID, CONF_ENTITIES, CONF_TRACK, TOKEN_FILE,
-    CONF_IGNORE_AVAILABILITY, CONF_SEARCH,
-    GoogleCalendarService)
+    CONF_IGNORE_AVAILABILITY, GoogleCalendarService)
 from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
