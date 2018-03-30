@@ -159,7 +159,7 @@ pywebpush==1.6.0
 restrictedpython==4.0b2
 
 # homeassistant.components.rflink
-rflink==0.0.34
+rflink==0.0.37
 
 # homeassistant.components.ring
 ring_doorbell==0.1.8
