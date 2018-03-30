@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from homeassistant.components.sensor.filter import (
     LowPassFilter, OutlierFilter, ThrottleFilter, TimeSMAFilter,
-    BandPassFilter)
+    RangeFilter)
 import homeassistant.util.dt as dt_util
 from homeassistant.setup import setup_component
 import homeassistant.core as ha
@@ -132,11 +132,11 @@ class TestFilterSensor(unittest.TestCase):
             filtered = filt.filter_state(state)
         self.assertEqual(18.05, filtered.state)
 
-    def test_bandpass(self):
-        """Test if bandpass filter works."""
+    def test_range(self):
+        """Test if range filter works."""
         lower = 10
         upper = 20
-        filt = BandPassFilter(1, None,
+        filt = RangeFilter(1, None,
                               entity=None,
                               lower_bound=lower,
                               upper_bound=upper)
