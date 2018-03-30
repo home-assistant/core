@@ -14,7 +14,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_RGB_COLOR,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR,
     SUPPORT_EFFECT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
     SUPPORT_COLOR, PLATFORM_SCHEMA, Light)
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_NAME
@@ -68,7 +68,7 @@ class AuroraLight(Light):
         self._effects_list = light.effects_list
         self._light = light
         self._name = light.hass_name
-        self._rgb_color = light.rgb
+        self._hs_color = light.hue, light.saturation
         self._state = light.on
 
     @property
@@ -112,9 +112,9 @@ class AuroraLight(Light):
         return self._state
 
     @property
-    def rgb_color(self):
-        """Return the color in RGB."""
-        return self._rgb_color
+    def hs_color(self):
+        """Return the color in HS."""
+        return self._hs_color
 
     @property
     def supported_features(self):
@@ -125,17 +125,14 @@ class AuroraLight(Light):
         """Instruct the light to turn on."""
         self._light.on = True
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        rgb_color = kwargs.get(ATTR_RGB_COLOR)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
         color_temp_mired = kwargs.get(ATTR_COLOR_TEMP)
         effect = kwargs.get(ATTR_EFFECT)
 
-        if rgb_color:
-            self._light.rgb = rgb_color
-            # Aurora API automatically sets scene to 100 brightness
-            # This is to make sure that old brightness values are kept
-            # If brightness is also set in the same call, the value will
-            # be overwritten in a later block
-            self._light.brightness = self._brightness
+        if hs_color:
+            hue, saturation = hs_color
+            self._light.hue = int(hue)
+            self._light.saturation = int(saturation)
 
         if color_temp_mired:
             self._light.color_temperature = mired_to_kelvin(color_temp_mired)
@@ -157,5 +154,5 @@ class AuroraLight(Light):
         self._color_temp = self._light.color_temperature
         self._effect = self._light.effect
         self._effects_list = self._light.effects_list
-        self._rgb_color = self._light.rgb
+        self._hs_color = self._light.hue, self._light.saturation
         self._state = self._light.on
