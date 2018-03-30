@@ -424,7 +424,9 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_now(self, mock_is_safe):
         """Test now method."""
         now = dt_util.now()
-        with patch.dict(template.ENV.globals, {'now': lambda: now}):
+        with patch.dict(
+                template.DEFAULT_TEMPLATE_ENV_GLOBALS,
+                {'now': lambda: now}):
             self.assertEqual(
                 now.isoformat(),
                 template.Template('{{ now().isoformat() }}',
@@ -435,7 +437,9 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_utcnow(self, mock_is_safe):
         """Test utcnow method."""
         now = dt_util.utcnow()
-        with patch.dict(template.ENV.globals, {'utcnow': lambda: now}):
+        with patch.dict(
+                template.DEFAULT_TEMPLATE_ENV_GLOBALS,
+                {'utcnow': lambda: now}):
             self.assertEqual(
                 now.isoformat(),
                 template.Template('{{ utcnow().isoformat() }}',
