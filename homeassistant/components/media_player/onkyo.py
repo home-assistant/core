@@ -64,9 +64,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if config.get(CONF_ZONE2):
                 _LOGGER.debug("Setting up zone 2")
                 hosts.append(OnkyoDevice(eiscp.eISCP(host),
-                             config.get(CONF_SOURCES),
-                             name=config.get(CONF_NAME) + " Zone 2",
-                             zone=2))
+                                         config.get(CONF_SOURCES),
+                                         name=config.get(CONF_NAME) +
+                                         " Zone 2", zone=2))
         except OSError:
             _LOGGER.error("Unable to connect to receiver at %s", host)
     else:
