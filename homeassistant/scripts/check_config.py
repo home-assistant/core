@@ -252,7 +252,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     """
     def sort_dict_key(val):
         """Return the dict key for sorting."""
-        key = str.lower(val[0]) if isinstance(val[0], str) else str(val[0])
+        key = str(val[0]).lower()
         return '0' if key == 'platform' else key
 
     indent_str = indent_count * ' '
