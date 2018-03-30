@@ -67,6 +67,7 @@ TEST_REQUIREMENTS = (
     'prometheus_client',
     'pushbullet.py',
     'py-canary',
+    'pydeconz',
     'pydispatcher',
     'PyJWT',
     'pylitejet',
