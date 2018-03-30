@@ -29,9 +29,6 @@ homeassistant/components/weblink.py @home-assistant/core
 homeassistant/components/websocket_api.py @home-assistant/core
 homeassistant/components/zone.py @home-assistant/core
 
-# To monitor non-pypi additions
-requirements_all.txt @andrey-git
-
 # HomeAssistant developer Teams
 Dockerfile @home-assistant/docker
 virtualization/Docker/* @home-assistant/docker
