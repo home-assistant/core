@@ -50,48 +50,11 @@ _SERVICE_MAP = {
 }
 
 
-def setup(hass, config):
+def setup(hass, config: dict):
     """Set up the BMW connected drive components."""
     accounts = []
     for name, account_config in config[DOMAIN].items():
-        username = account_config[CONF_USERNAME]
-        password = account_config[CONF_PASSWORD]
-        region = account_config[CONF_REGION]
-        _LOGGER.debug('Adding new account %s', name)
-        bimmer = BMWConnectedDriveAccount(username, password, region, name,
-                                          hass)
-        accounts.append(bimmer)
-
-        def execute_service(call):
-            """Execute a service for a vehicle.
-
-            This must be a member function as we need access to the bimmer
-            object here.
-            """
-            vin = call.data[ATTR_VIN]
-            _LOGGER.debug('Triggering service %s of vehicle %s',
-                          call.service, vin)
-            vehicle = bimmer.account.get_vehicle(vin)
-            function_name = _SERVICE_MAP[call.service]
-            function_call = getattr(vehicle.remote_services, function_name)
-            function_call()
-
-        # register the services
-        for service in _SERVICE_MAP:
-            _LOGGER.debug('Registering service %s', service)
-            hass.services.register(
-                DOMAIN, service,
-                execute_service,
-                schema=SERVICE_SCHEMA)
-
-        # update every UPDATE_INTERVAL minutes, starting now
-        # this should even out the load on the servers
-
-        now = datetime.datetime.now()
-        track_utc_time_change(
-            hass, bimmer.update,
-            minute=range(now.minute % UPDATE_INTERVAL, 60, UPDATE_INTERVAL),
-            second=now.second)
+        accounts.append(setup_account(account_config, hass, name))
 
     hass.data[DOMAIN] = accounts
 
@@ -104,18 +67,58 @@ def setup(hass, config):
     return True
 
 
+def setup_account(account_config: dict, hass, name: str) \
+        -> 'BMWConnectedDriveAccount':
+    username = account_config[CONF_USERNAME]
+    password = account_config[CONF_PASSWORD]
+    region = account_config[CONF_REGION]
+    _LOGGER.debug('Adding new account %s', name)
+    bimmer = BMWConnectedDriveAccount(username, password, region, name)
+
+    def execute_service(call):
+        """Execute a service for a vehicle.
+
+        This must be a member function as we need access to the bimmer
+        object here.
+        """
+        vin = call.data[ATTR_VIN]
+        _LOGGER.debug('Triggering service %s of vehicle %s',
+                      call.service, vin)
+        vehicle = bimmer.account.get_vehicle(vin)
+        function_name = _SERVICE_MAP[call.service]
+        function_call = getattr(vehicle.remote_services, function_name)
+        function_call()
+
+    # register the services
+    for service in _SERVICE_MAP:
+        _LOGGER.debug('Registering service %s', service)
+        hass.services.register(
+            DOMAIN, service,
+            execute_service,
+            schema=SERVICE_SCHEMA)
+
+    # update every UPDATE_INTERVAL minutes, starting now
+    # this should even out the load on the servers
+    now = datetime.datetime.now()
+    track_utc_time_change(
+        hass, bimmer.update,
+        minute=range(now.minute % UPDATE_INTERVAL, 60, UPDATE_INTERVAL),
+        second=now.second)
+
+    return bimmer
+
+
 class BMWConnectedDriveAccount(object):
     """Representation of a BMW vehicle."""
 
     def __init__(self, username: str, password: str, region_str: str,
-                 name: str, hass) -> None:
+                 name: str) -> None:
         """Constructor."""
         from bimmer_connected.account import ConnectedDriveAccount
         from bimmer_connected.country_selector import get_region_from_name
 
         region = get_region_from_name(region_str)
 
-        self._hass = hass
         self.account = ConnectedDriveAccount(username, password, region)
         self.name = name
         self._update_listeners = []
