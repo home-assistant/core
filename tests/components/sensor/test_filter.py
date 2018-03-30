@@ -137,9 +137,9 @@ class TestFilterSensor(unittest.TestCase):
         lower = 10
         upper = 20
         filt = RangeFilter(1, None,
-                              entity=None,
-                              lower_bound=lower,
-                              upper_bound=upper)
+                           entity=None,
+                           lower_bound=lower,
+                           upper_bound=upper)
         for state in self.values:
             filtered = filt.filter_state(state)
             if state < lower:
