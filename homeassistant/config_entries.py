@@ -128,6 +128,7 @@ HANDLERS = Registry()
 FLOWS = [
     'config_entry_example',
     'hue',
+    'deconz',
 ]
 
 SOURCE_USER = 'user'
