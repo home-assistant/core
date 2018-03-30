@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
     """Set up the scanner."""
     scanner = GoogleMapsScanner(hass, config, see)
-    return scanner if scanner.success_init else None
+    return scanner.success_init
 
 
 class GoogleMapsScanner(object):
