@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'bmw_connected_drive'
 CONF_REGION = 'region'
-CONF_VIN = 'vin'
+ATTR_VIN = 'vin'
 
 ACCOUNT_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
@@ -36,7 +36,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_VIN): cv.string,
+    vol.Required(ATTR_VIN): cv.string,
 })
 
 
@@ -64,6 +64,29 @@ def setup(hass, config):
                                           hass)
         accounts.append(bimmer)
 
+        def execute_service(call):
+            """Execute a service for a vehicle.
+
+            This must be a member function as we need access to the bimmer
+            object here.
+            """
+            from bimmer_connected.remote_services import ExecutionState
+            vin = call.data[ATTR_VIN]
+            _LOGGER.debug('Triggering service %s of vehicle %s',
+                          call.service, vin)
+            vehicle = bimmer.account.get_vehicle(vin)
+            function_name = _SERVICE_MAP[call.service]
+            function_call = getattr(vehicle.remote_services, function_name)
+            result = function_call()
+
+        # register the services
+        for service in _SERVICE_MAP:
+            _LOGGER.debug('Registering service %s', service)
+            hass.services.register(
+                DOMAIN, service,
+                execute_service,
+                schema=SERVICE_SCHEMA)
+
         # update every UPDATE_INTERVAL minutes, starting now
         # this should even out the load on the servers
 
@@ -84,6 +107,9 @@ def setup(hass, config):
     return True
 
 
+
+
+
 class BMWConnectedDriveAccount(object):
     """Representation of a BMW vehicle."""
 
@@ -99,7 +125,6 @@ class BMWConnectedDriveAccount(object):
         self.account = ConnectedDriveAccount(username, password, region)
         self.name = name
         self._update_listeners = []
-        self._register_services()
 
     def update(self, *_):
         """Update the state of all vehicles.
@@ -120,27 +145,3 @@ class BMWConnectedDriveAccount(object):
     def add_update_listener(self, listener):
         """Add a listener for update notifications."""
         self._update_listeners.append(listener)
-
-    def _register_services(self) -> None:
-        """Register the services for BMW vehicles.
-
-        The different types of services are defined in the _SERVICE_MAP.
-        """
-        for service in _SERVICE_MAP:
-            _LOGGER.debug('Registering service %s', service)
-            self._hass.services.register(
-                DOMAIN, service,
-                self._execute_service,
-                schema=SERVICE_SCHEMA)
-
-    def _execute_service(self, call):
-        """Execute a service for a vehicle."""
-        from bimmer_connected.remote_services import ExecutionState
-        vin = call.data[CONF_VIN]
-        _LOGGER.debug('Triggering Service %s von vehicle %s',
-                      call.service, vin)
-        vehicle = self.account.get_vehicle(vin)
-        function_name = _SERVICE_MAP[call.service]
-        function_call = getattr(vehicle.remote_services, function_name)
-        result = function_call()
-        return result == ExecutionState.EXECUTED
