@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['holidays==0.9.3']
+REQUIREMENTS = ['holidays==0.9.4']
 
 # List of all countries currently supported by holidays
 # There seems to be no way to get the list out at runtime

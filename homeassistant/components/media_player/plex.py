@@ -23,6 +23,8 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.util.json import load_json, save_json
+from homeassistant.util import dt as dt_util
+
 
 REQUIREMENTS = ['plexapi==3.0.6']
 
@@ -38,6 +40,8 @@ CONF_INCLUDE_NON_CLIENTS = 'include_non_clients'
 CONF_USE_EPISODE_ART = 'use_episode_art'
 CONF_USE_CUSTOM_ENTITY_IDS = 'use_custom_entity_ids'
 CONF_SHOW_ALL_CONTROLS = 'show_all_controls'
+CONF_REMOVE_UNAVAILABLE_CLIENTS = 'remove_unavailable_clients'
+CONF_CLIENT_REMOVE_INTERVAL = 'client_remove_interval'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCLUDE_NON_CLIENTS, default=False):
@@ -46,6 +50,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.boolean,
     vol.Optional(CONF_USE_CUSTOM_ENTITY_IDS, default=False):
     cv.boolean,
+    vol.Optional(CONF_REMOVE_UNAVAILABLE_CLIENTS, default=True):
+    cv.boolean,
+    vol.Optional(CONF_CLIENT_REMOVE_INTERVAL, default=timedelta(seconds=600)):
+        vol.All(cv.time_period, cv.positive_timedelta),
 })
 
 PLEX_DATA = "plex"
@@ -184,6 +192,7 @@ def setup_plexserver(
                 else:
                     plex_clients[machine_identifier].refresh(None, session)
 
+        clients_to_remove = []
         for client in plex_clients.values():
             # force devices to idle that do not have a valid session
             if client.session is None:
@@ -191,6 +200,18 @@ def setup_plexserver(
 
             client.set_availability(client.machine_identifier
                                     in available_client_ids)
+
+            if not config.get(CONF_REMOVE_UNAVAILABLE_CLIENTS) \
+                    or client.available:
+                continue
+
+            if (dt_util.utcnow() - client.marked_unavailable) >= \
+                    (config.get(CONF_CLIENT_REMOVE_INTERVAL)):
+                hass.add_job(client.async_remove())
+                clients_to_remove.append(client.machine_identifier)
+
+        while clients_to_remove:
+            del plex_clients[clients_to_remove.pop()]
 
         if new_plex_clients:
             add_devices_callback(new_plex_clients)
@@ -266,6 +287,7 @@ class PlexClient(MediaPlayerDevice):
         self._app_name = ''
         self._device = None
         self._available = False
+        self._marked_unavailable = None
         self._device_protocol_capabilities = None
         self._is_player_active = False
         self._is_player_available = False
@@ -418,6 +440,11 @@ class PlexClient(MediaPlayerDevice):
         """Set the device as available/unavailable noting time."""
         if not available:
             self._clear_media_details()
+            if self._marked_unavailable is None:
+                self._marked_unavailable = dt_util.utcnow()
+        else:
+            self._marked_unavailable = None
+
         self._available = available
 
     def _set_player_state(self):
@@ -505,6 +532,11 @@ class PlexClient(MediaPlayerDevice):
     def device(self):
         """Return the device, if any."""
         return self._device
+
+    @property
+    def marked_unavailable(self):
+        """Return time device was marked unavailable."""
+        return self._marked_unavailable
 
     @property
     def session(self):

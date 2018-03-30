@@ -248,6 +248,11 @@ class SensiboClimate(ClimateDevice):
         return self._temperatures_list[-1] \
             if self._temperatures_list else super().max_temp
 
+    @property
+    def unique_id(self):
+        """Return unique ID based on Sensibo ID."""
+        return self._id
+
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
         """Set new target temperature."""

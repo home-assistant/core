@@ -131,8 +131,8 @@ def _add_player(hass, async_add_devices, host, port=None, name=None):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _init_player)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the Bluesound platforms."""
     if DATA_BLUESOUND not in hass.data:
         hass.data[DATA_BLUESOUND] = []
@@ -149,8 +149,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 hass, async_add_devices, host.get(CONF_HOST),
                 host.get(CONF_PORT), host.get(CONF_NAME))
 
-    @asyncio.coroutine
-    def async_service_handler(service):
+    async def async_service_handler(service):
         """Map services to method of Bluesound devices."""
         method = SERVICE_TO_METHOD.get(service.service)
         if not method:
@@ -166,7 +165,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             target_players = hass.data[DATA_BLUESOUND]
 
         for player in target_players:
-            yield from getattr(player, method['method'])(**params)
+            await getattr(player, method['method'])(**params)
 
     for service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service]['schema']
@@ -211,13 +210,12 @@ class BluesoundPlayer(MediaPlayerDevice):
         except ValueError:
             return -1
 
-    @asyncio.coroutine
-    def force_update_sync_status(
+    async def force_update_sync_status(
             self, on_updated_cb=None, raise_timeout=False):
         """Update the internal status."""
         resp = None
         try:
-            resp = yield from self.send_bluesound_command(
+            resp = await self.send_bluesound_command(
                 'SyncStatus', raise_timeout, raise_timeout)
         except Exception:
             raise
@@ -254,16 +252,15 @@ class BluesoundPlayer(MediaPlayerDevice):
             on_updated_cb()
         return True
 
-    @asyncio.coroutine
-    def _start_poll_command(self):
+    async def _start_poll_command(self):
         """Loop which polls the status of the player."""
         try:
             while True:
-                yield from self.async_update_status()
+                await self.async_update_status()
 
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.info("Node %s is offline, retrying later", self._name)
-            yield from asyncio.sleep(
+            await asyncio.sleep(
                 NODE_OFFLINE_CHECK_TIMEOUT, loop=self._hass.loop)
             self.start_polling()
 
@@ -282,15 +279,14 @@ class BluesoundPlayer(MediaPlayerDevice):
         """Stop the polling task."""
         self._polling_task.cancel()
 
-    @asyncio.coroutine
-    def async_init(self):
+    async def async_init(self, triggered=None):
         """Initialize the player async."""
         try:
             if self._retry_remove is not None:
                 self._retry_remove()
                 self._retry_remove = None
 
-            yield from self.force_update_sync_status(
+            await self.force_update_sync_status(
                 self._init_callback, True)
         except (asyncio.TimeoutError, ClientError):
             _LOGGER.info("Node %s is offline, retrying later", self.host)
@@ -301,20 +297,18 @@ class BluesoundPlayer(MediaPlayerDevice):
                               self.host)
             raise
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update internal status of the entity."""
         if not self._is_online:
             return
 
-        yield from self.async_update_sync_status()
-        yield from self.async_update_presets()
-        yield from self.async_update_captures()
-        yield from self.async_update_services()
+        await self.async_update_sync_status()
+        await self.async_update_presets()
+        await self.async_update_captures()
+        await self.async_update_services()
 
-    @asyncio.coroutine
-    def send_bluesound_command(self, method, raise_timeout=False,
-                               allow_offline=False):
+    async def send_bluesound_command(self, method, raise_timeout=False,
+                                     allow_offline=False):
         """Send command to the player."""
         import xmltodict
 
@@ -330,10 +324,10 @@ class BluesoundPlayer(MediaPlayerDevice):
         try:
             websession = async_get_clientsession(self._hass)
             with async_timeout.timeout(10, loop=self._hass.loop):
-                response = yield from websession.get(url)
+                response = await websession.get(url)
 
             if response.status == 200:
-                result = yield from response.text()
+                result = await response.text()
                 if len(result) < 1:
                     data = None
                 else:
@@ -352,8 +346,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         return data
 
-    @asyncio.coroutine
-    def async_update_status(self):
+    async def async_update_status(self):
         """Use the poll session to always get the status of the player."""
         import xmltodict
         response = None
@@ -372,7 +365,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         try:
 
             with async_timeout.timeout(125, loop=self._hass.loop):
-                response = yield from self._polling_session.get(
+                response = await self._polling_session.get(
                     url,
                     headers={CONNECTION: KEEP_ALIVE})
 
@@ -380,7 +373,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                 _LOGGER.error("Error %s on %s. Trying one more time.",
                               response.status, url)
             else:
-                result = yield from response.text()
+                result = await response.text()
                 self._is_online = True
                 self._last_status_update = dt_util.utcnow()
                 self._status = xmltodict.parse(result)['status'].copy()
@@ -392,8 +385,8 @@ class BluesoundPlayer(MediaPlayerDevice):
                     self._group_name = group_name
                     # the sleep is needed to make sure that the
                     # devices is synced
-                    yield from asyncio.sleep(1, loop=self._hass.loop)
-                    yield from self.async_trigger_sync_on_all()
+                    await asyncio.sleep(1, loop=self._hass.loop)
+                    await self.async_trigger_sync_on_all()
                 elif self.is_grouped:
                     # when player is grouped we need to fetch volume from
                     # sync_status. We will force an update if the player is
@@ -402,7 +395,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     # the device is playing. This would solve alot of
                     # problems. This change will be done when the
                     # communication is moved to a separate library
-                    yield from self.force_update_sync_status()
+                    await self.force_update_sync_status()
 
                 self.async_schedule_update_ha_state()
 
@@ -415,13 +408,12 @@ class BluesoundPlayer(MediaPlayerDevice):
                          self._name)
             raise
 
-    @asyncio.coroutine
-    def async_trigger_sync_on_all(self):
+    async def async_trigger_sync_on_all(self):
         """Trigger sync status update on all devices."""
         _LOGGER.debug("Trigger sync status on all devices")
 
         for player in self._hass.data[DATA_BLUESOUND]:
-            yield from player.force_update_sync_status()
+            await player.force_update_sync_status()
 
     @Throttle(SYNC_STATUS_INTERVAL)
     async def async_update_sync_status(self, on_updated_cb=None,
@@ -788,8 +780,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         """Return true if shuffle is active."""
         return True if self._status.get('shuffle', '0') == '1' else False
 
-    @asyncio.coroutine
-    def async_join(self, master):
+    async def async_join(self, master):
         """Join the player to a group."""
         master_device = [device for device in self.hass.data[DATA_BLUESOUND]
                          if device.entity_id == master]
@@ -798,37 +789,33 @@ class BluesoundPlayer(MediaPlayerDevice):
             _LOGGER.debug("Trying to join player: %s to master: %s",
                           self.host, master_device[0].host)
 
-            yield from master_device[0].async_add_slave(self)
+            await master_device[0].async_add_slave(self)
         else:
             _LOGGER.error("Master not found %s", master_device)
 
-    @asyncio.coroutine
-    def async_unjoin(self):
+    async def async_unjoin(self):
         """Unjoin the player from a group."""
         if self._master is None:
             return
 
         _LOGGER.debug("Trying to unjoin player: %s", self.host)
-        yield from self._master.async_remove_slave(self)
+        await self._master.async_remove_slave(self)
 
-    @asyncio.coroutine
-    def async_add_slave(self, slave_device):
+    async def async_add_slave(self, slave_device):
         """Add slave to master."""
         return self.send_bluesound_command('/AddSlave?slave={}&port={}'
                                            .format(slave_device.host,
                                                    slave_device.port))
 
-    @asyncio.coroutine
-    def async_remove_slave(self, slave_device):
+    async def async_remove_slave(self, slave_device):
         """Remove slave to master."""
         return self.send_bluesound_command('/RemoveSlave?slave={}&port={}'
                                            .format(slave_device.host,
                                                    slave_device.port))
 
-    @asyncio.coroutine
-    def async_increase_timer(self):
+    async def async_increase_timer(self):
         """Increase sleep time on player."""
-        sleep_time = yield from self.send_bluesound_command('/Sleep')
+        sleep_time = await self.send_bluesound_command('/Sleep')
         if sleep_time is None:
             _LOGGER.error('Error while increasing sleep time on player: %s',
                           self.host)
@@ -836,21 +823,18 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         return int(sleep_time.get('sleep', '0'))
 
-    @asyncio.coroutine
-    def async_clear_timer(self):
+    async def async_clear_timer(self):
         """Clear sleep timer on player."""
         sleep = 1
         while sleep > 0:
-            sleep = yield from self.async_increase_timer()
+            sleep = await self.async_increase_timer()
 
-    @asyncio.coroutine
-    def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle):
         """Enable or disable shuffle mode."""
         return self.send_bluesound_command('/Shuffle?state={}'
                                            .format('1' if shuffle else '0'))
 
-    @asyncio.coroutine
-    def async_select_source(self, source):
+    async def async_select_source(self, source):
         """Select input source."""
         if self.is_grouped and not self.is_master:
             return
@@ -874,16 +858,14 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         return self.send_bluesound_command(url)
 
-    @asyncio.coroutine
-    def async_clear_playlist(self):
+    async def async_clear_playlist(self):
         """Clear players playlist."""
         if self.is_grouped and not self.is_master:
             return
 
         return self.send_bluesound_command('Clear')
 
-    @asyncio.coroutine
-    def async_media_next_track(self):
+    async def async_media_next_track(self):
         """Send media_next command to media player."""
         if self.is_grouped and not self.is_master:
             return
@@ -897,8 +879,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         return self.send_bluesound_command(cmd)
 
-    @asyncio.coroutine
-    def async_media_previous_track(self):
+    async def async_media_previous_track(self):
         """Send media_previous command to media player."""
         if self.is_grouped and not self.is_master:
             return
@@ -912,40 +893,35 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         return self.send_bluesound_command(cmd)
 
-    @asyncio.coroutine
-    def async_media_play(self):
+    async def async_media_play(self):
         """Send media_play command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
         return self.send_bluesound_command('Play')
 
-    @asyncio.coroutine
-    def async_media_pause(self):
+    async def async_media_pause(self):
         """Send media_pause command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
         return self.send_bluesound_command('Pause')
 
-    @asyncio.coroutine
-    def async_media_stop(self):
+    async def async_media_stop(self):
         """Send stop command."""
         if self.is_grouped and not self.is_master:
             return
 
         return self.send_bluesound_command('Pause')
 
-    @asyncio.coroutine
-    def async_media_seek(self, position):
+    async def async_media_seek(self, position):
         """Send media_seek command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
         return self.send_bluesound_command('Play?seek=' + str(float(position)))
 
-    @asyncio.coroutine
-    def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(self, media_type, media_id, **kwargs):
         """
         Send the play_media command to the media player.
 
@@ -961,24 +937,21 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         return self.send_bluesound_command(url)
 
-    @asyncio.coroutine
-    def async_volume_up(self):
+    async def async_volume_up(self):
         """Volume up the media player."""
         current_vol = self.volume_level
         if not current_vol or current_vol < 0:
             return
         return self.async_set_volume_level(((current_vol*100)+1)/100)
 
-    @asyncio.coroutine
-    def async_volume_down(self):
+    async def async_volume_down(self):
         """Volume down the media player."""
         current_vol = self.volume_level
         if not current_vol or current_vol < 0:
             return
         return self.async_set_volume_level(((current_vol*100)-1)/100)
 
-    @asyncio.coroutine
-    def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""
         if volume < 0:
             volume = 0
@@ -987,8 +960,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         return self.send_bluesound_command(
             'Volume?level=' + str(float(volume) * 100))
 
-    @asyncio.coroutine
-    def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute):
         """Send mute command to media player."""
         if mute:
             volume = self.volume_level

@@ -16,10 +16,10 @@ import voluptuous as vol
 from homeassistant import util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_NAME, ATTR_COLOR_TEMP,
-    ATTR_EFFECT, ATTR_KELVIN, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_XY_COLOR,
-    DOMAIN, LIGHT_TURN_ON_SCHEMA, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
-    SUPPORT_XY_COLOR, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
+    ATTR_EFFECT, ATTR_HS_COLOR, ATTR_KELVIN, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    ATTR_XY_COLOR, COLOR_GROUP, DOMAIN, LIGHT_TURN_ON_SCHEMA, PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
+    SUPPORT_TRANSITION, VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT, Light,
     preprocess_turn_on_alternatives)
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
@@ -87,11 +87,22 @@ LIFX_EFFECT_SCHEMA = vol.Schema({
 LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
-    ATTR_COLOR_NAME: cv.string,
-    ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
-                            vol.Coerce(tuple)),
-    ATTR_COLOR_TEMP: vol.All(vol.Coerce(int), vol.Range(min=1)),
-    ATTR_KELVIN: vol.All(vol.Coerce(int), vol.Range(min=0)),
+    vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
+    vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP):
+        vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
+                vol.Coerce(tuple)),
+    vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP):
+        vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
+                vol.Coerce(tuple)),
+    vol.Exclusive(ATTR_HS_COLOR, COLOR_GROUP):
+        vol.All(vol.ExactSequence(
+            (vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
+             vol.All(vol.Coerce(float), vol.Range(min=0, max=100)))),
+                vol.Coerce(tuple)),
+    vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP):
+        vol.All(vol.Coerce(int), vol.Range(min=0)),
     ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Range(min=0.05)),
     ATTR_CYCLES: vol.All(vol.Coerce(float), vol.Range(min=1)),
     ATTR_MODE: vol.In(PULSE_MODES),
@@ -168,16 +179,8 @@ def find_hsbk(**kwargs):
 
     preprocess_turn_on_alternatives(kwargs)
 
-    if ATTR_RGB_COLOR in kwargs:
-        hue, saturation, brightness = \
-            color_util.color_RGB_to_hsv(*kwargs[ATTR_RGB_COLOR])
-        hue = int(hue / 360 * 65535)
-        saturation = int(saturation / 100 * 65535)
-        brightness = int(brightness / 100 * 65535)
-        kelvin = 3500
-
-    if ATTR_XY_COLOR in kwargs:
-        hue, saturation = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
+    if ATTR_HS_COLOR in kwargs:
+        hue, saturation = kwargs[ATTR_HS_COLOR]
         hue = int(hue / 360 * 65535)
         saturation = int(saturation / 100 * 65535)
         kelvin = 3500
@@ -585,7 +588,7 @@ class LIFXColor(LIFXLight):
     def supported_features(self):
         """Flag supported features."""
         support = super().supported_features
-        support |= SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR
+        support |= SUPPORT_COLOR
         return support
 
     @property
@@ -598,15 +601,12 @@ class LIFXColor(LIFXLight):
         ]
 
     @property
-    def rgb_color(self):
-        """Return the RGB value."""
-        hue, sat, bri, _ = self.device.color
-
+    def hs_color(self):
+        """Return the hs value."""
+        hue, sat, _, _ = self.device.color
         hue = hue / 65535 * 360
         sat = sat / 65535 * 100
-        bri = bri / 65535 * 100
-
-        return color_util.color_hsv_to_RGB(hue, sat, bri)
+        return (hue, sat)
 
 
 class LIFXStrip(LIFXColor):

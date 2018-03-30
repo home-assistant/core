@@ -545,9 +545,8 @@ def setup_mysensors_platform(
             device_class_copy = device_class[s_type]
         name = get_mysensors_name(gateway, node_id, child_id)
 
-        # python 3.4 cannot unpack inside tuple, but combining tuples works
-        args_copy = device_args + (
-            gateway, node_id, child_id, name, value_type)
+        args_copy = (*device_args, gateway, node_id, child_id, name,
+                     value_type)
         devices[dev_id] = device_class_copy(*args_copy)
         new_devices.append(devices[dev_id])
     if new_devices:

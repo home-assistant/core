@@ -9,12 +9,11 @@ import logging
 from datetime import timedelta
 
 import homeassistant.util as util
-import homeassistant.util.color as color_util
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
-    ATTR_XY_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION, SUPPORT_XY_COLOR)
+    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR, SUPPORT_TRANSITION)
 from homeassistant.loader import get_component
+import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['wemo']
 
@@ -23,8 +22,8 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
-                SUPPORT_TRANSITION | SUPPORT_XY_COLOR)
+SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR |
+                SUPPORT_TRANSITION)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -89,9 +88,10 @@ class WemoLight(Light):
         return self.device.state.get('level', 255)
 
     @property
-    def xy_color(self):
-        """Return the XY color values of this light."""
-        return self.device.state.get('color_xy')
+    def hs_color(self):
+        """Return the hs color values of this light."""
+        xy_color = self.device.state.get('color_xy')
+        return color_util.color_xy_to_hs(*xy_color) if xy_color else None
 
     @property
     def color_temp(self):
@@ -112,17 +112,11 @@ class WemoLight(Light):
         """Turn the light on."""
         transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
 
-        if ATTR_XY_COLOR in kwargs:
-            xycolor = kwargs[ATTR_XY_COLOR]
-        elif ATTR_RGB_COLOR in kwargs:
-            xycolor = color_util.color_RGB_to_xy(
-                *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-            kwargs.setdefault(ATTR_BRIGHTNESS, xycolor[2])
-        else:
-            xycolor = None
+        hs_color = kwargs.get(ATTR_HS_COLOR)
 
-        if xycolor is not None:
-            self.device.set_color(xycolor, transition=transitiontime)
+        if hs_color is not None:
+            xy_color = color_util.color_hs_to_xy(*hs_color)
+            self.device.set_color(xy_color, transition=transitiontime)
 
         if ATTR_COLOR_TEMP in kwargs:
             colortemp = kwargs[ATTR_COLOR_TEMP]

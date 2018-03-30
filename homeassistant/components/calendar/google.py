@@ -62,7 +62,14 @@ class GoogleCalendarData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
-        service = self.calendar_service.get()
+        from httplib2 import ServerNotFoundError
+
+        try:
+            service = self.calendar_service.get()
+        except ServerNotFoundError:
+            _LOGGER.warning("Unable to connect to Google, using cached data")
+            return False
+
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
         params['timeMin'] = dt.now().isoformat('T')
         params['calendarId'] = self.calendar_id

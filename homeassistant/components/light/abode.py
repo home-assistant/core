@@ -8,8 +8,9 @@ import logging
 
 from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, Light)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
+import homeassistant.util.color as color_util
 
 
 DEPENDENCIES = ['abode']
@@ -44,10 +45,12 @@ class AbodeLight(AbodeDevice, Light):
 
     def turn_on(self, **kwargs):
         """Turn on the light."""
-        if (ATTR_RGB_COLOR in kwargs and
+        if (ATTR_HS_COLOR in kwargs and
                 self._device.is_dimmable and self._device.has_color):
-            self._device.set_color(kwargs[ATTR_RGB_COLOR])
-        elif ATTR_BRIGHTNESS in kwargs and self._device.is_dimmable:
+            self._device.set_color(color_util.color_hs_to_RGB(
+                *kwargs[ATTR_HS_COLOR]))
+
+        if ATTR_BRIGHTNESS in kwargs and self._device.is_dimmable:
             self._device.set_level(kwargs[ATTR_BRIGHTNESS])
         else:
             self._device.switch_on()
@@ -68,16 +71,16 @@ class AbodeLight(AbodeDevice, Light):
             return self._device.brightness
 
     @property
-    def rgb_color(self):
+    def hs_color(self):
         """Return the color of the light."""
         if self._device.is_dimmable and self._device.has_color:
-            return self._device.color
+            return color_util.color_RGB_to_hs(*self._device.color)
 
     @property
     def supported_features(self):
         """Flag supported features."""
         if self._device.is_dimmable and self._device.has_color:
-            return SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
         elif self._device.is_dimmable:
             return SUPPORT_BRIGHTNESS
 
