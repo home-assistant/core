@@ -480,6 +480,9 @@ liveboxplaytv==2.0.2
 # homeassistant.components.notify.lametric
 lmnotify==0.0.4
 
+# homeassistant.components.device_tracker.google_maps
+locationsharinglib==0.4.0
+
 # homeassistant.components.sensor.luftdaten
 luftdaten==0.1.3
 
