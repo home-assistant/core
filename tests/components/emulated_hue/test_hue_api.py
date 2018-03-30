@@ -118,7 +118,7 @@ def hass_hue(loop, hass):
 
 
 @pytest.fixture
-def hue_client(loop, hass_hue, test_client):
+def hue_client(loop, hass_hue, aiohttp_client):
     """Create web client for emulated hue api."""
     web_app = hass_hue.http.app
     config = Config(None, {
@@ -135,7 +135,7 @@ def hue_client(loop, hass_hue, test_client):
     HueOneLightStateView(config).register(web_app.router)
     HueOneLightChangeView(config).register(web_app.router)
 
-    return loop.run_until_complete(test_client(web_app))
+    return loop.run_until_complete(aiohttp_client(web_app))
 
 
 @asyncio.coroutine

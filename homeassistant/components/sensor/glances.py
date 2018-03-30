@@ -42,6 +42,9 @@ SENSOR_TYPES = {
     'process_thread': ['Thread', 'Count', 'mdi:memory'],
     'process_sleeping': ['Sleeping', 'Count', 'mdi:memory'],
     'cpu_temp': ['CPU Temp', TEMP_CELSIUS, 'mdi:thermometer'],
+    'docker_active': ['Containers active', '', 'mdi:docker'],
+    'docker_cpu_use': ['Containers CPU used', '%', 'mdi:docker'],
+    'docker_memory_use': ['Containers RAM used', 'MiB', 'mdi:docker'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -155,6 +158,22 @@ class GlancesSensor(Entity):
                     if sensor['label'] == 'CPU':
                         self._state = sensor['value']
                 self._state = None
+            elif self.type == 'docker_active':
+                count = 0
+                for container in value['docker']['containers']:
+                    if container['Status'] == 'running':
+                        count += 1
+                self._state = count
+            elif self.type == 'docker_cpu_use':
+                use = 0.0
+                for container in value['docker']['containers']:
+                    use += container['cpu']['total']
+                self._state = round(use, 1)
+            elif self.type == 'docker_memory_use':
+                use = 0.0
+                for container in value['docker']['containers']:
+                    use += container['memory']['usage']
+                self._state = round(use / 1024**2, 1)
 
 
 class GlancesData(object):

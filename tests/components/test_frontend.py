@@ -12,14 +12,14 @@ from homeassistant.components.frontend import (
 
 
 @pytest.fixture
-def mock_http_client(hass, test_client):
+def mock_http_client(hass, aiohttp_client):
     """Start the Hass HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {}))
-    return hass.loop.run_until_complete(test_client(hass.http.app))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
-def mock_http_client_with_themes(hass, test_client):
+def mock_http_client_with_themes(hass, aiohttp_client):
     """Start the Hass HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {
         DOMAIN: {
@@ -29,11 +29,11 @@ def mock_http_client_with_themes(hass, test_client):
                 }
             }
         }}))
-    return hass.loop.run_until_complete(test_client(hass.http.app))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
-def mock_http_client_with_urls(hass, test_client):
+def mock_http_client_with_urls(hass, aiohttp_client):
     """Start the Hass HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {
         DOMAIN: {
@@ -42,7 +42,7 @@ def mock_http_client_with_urls(hass, test_client):
             CONF_EXTRA_HTML_URL_ES5:
                 ["https://domain.com/my_extra_url_es5.html"]
         }}))
-    return hass.loop.run_until_complete(test_client(hass.http.app))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @asyncio.coroutine
