@@ -22,7 +22,7 @@ attrs==17.4.0
 DoorBirdPy==0.1.3
 
 # homeassistant.components.homekit
-HAP-python==1.1.7
+HAP-python==1.1.8
 
 # homeassistant.components.notify.mastodon
 Mastodon.py==1.2.2
