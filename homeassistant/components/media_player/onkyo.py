@@ -22,6 +22,7 @@ REQUIREMENTS = ['onkyo-eiscp==1.2.4']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SOURCES = 'sources'
+CONF_ZONE2 = 'zone2'
 
 DEFAULT_NAME = 'Onkyo Receiver'
 
@@ -40,6 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES):
         {cv.string: cv.string},
+    vol.Optional(CONF_ZONE2, default=False): cv.boolean,
 })
 
 
@@ -57,6 +59,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 eiscp.eISCP(host), config.get(CONF_SOURCES),
                 name=config.get(CONF_NAME)))
             KNOWN_HOSTS.append(host)
+
+            # Add Zone2 if configured
+            if config.get(CONF_ZONE2):
+                _LOGGER.debug("Setting up zone 2")
+                hosts.append(OnkyoDevice(eiscp.eISCP(host),
+                             config.get(CONF_SOURCES),
+                             name=config.get(CONF_NAME) + " Zone 2",
+                             zone=2))
         except OSError:
             _LOGGER.error("Unable to connect to receiver at %s", host)
     else:
@@ -70,9 +80,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class OnkyoDevice(MediaPlayerDevice):
     """Representation of an Onkyo device."""
 
-    def __init__(self, receiver, sources, name=None):
+    def __init__(self, receiver, sources, name=None, zone=1):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
+        self._zone = zone
         self._muted = False
         self._volume = 0
         self._pwstate = STATE_OFF
@@ -99,7 +110,11 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        status = self.command('system-power query')
+        if self._zone is 1:
+            status = self.command('system-power query')
+        elif self._zone is 2:
+            status = self.command('zone2.power=query')
+
         if not status:
             return
         if status[1] == 'on':
@@ -107,9 +122,16 @@ class OnkyoDevice(MediaPlayerDevice):
         else:
             self._pwstate = STATE_OFF
             return
-        volume_raw = self.command('volume query')
-        mute_raw = self.command('audio-muting query')
-        current_source_raw = self.command('input-selector query')
+
+        if self._zone is 1:
+            volume_raw = self.command('volume query')
+            mute_raw = self.command('audio-muting query')
+            current_source_raw = self.command('input-selector query')
+        elif self._zone is 2:
+            volume_raw = self.command('zone2.volume=query')
+            mute_raw = self.command('zone2.muting=query')
+            current_source_raw = self.command('zone2.selector=query')
+
         if not (volume_raw and mute_raw and current_source_raw):
             return
 
@@ -134,6 +156,11 @@ class OnkyoDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def zone(self):
+        """Return the zone number."""
+        return self._zone
 
     @property
     def state(self):
@@ -167,25 +194,44 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        self.command('system-power standby')
+        if self._zone is 1:
+            self.command('system-power standby')
+        elif self._zone is 2:
+            self.command('zone2.power=standby')
 
     def set_volume_level(self, volume):
         """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
-        self.command('volume {}'.format(int(volume*80)))
+        if self._zone is 1:
+            self.command('volume {}'.format(int(volume*80)))
+        elif self._zone is 2:
+            self.command('zone2.volume={}'.format(int(volume*80)))
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
-        if mute:
-            self.command('audio-muting on')
-        else:
-            self.command('audio-muting off')
+        if self._zone is 1:
+            if mute:
+                self.command('audio-muting on')
+            else:
+                self.command('audio-muting off')
+        elif self._zone is 2:
+            if mute:
+                self.command('zone2.muting=on')
+            else:
+                self.command('zone2.muting=off')
 
     def turn_on(self):
         """Turn the media player on."""
-        self.command('system-power on')
+        if self._zone is 1:
+            self.command('system-power on')
+        elif self._zone is 2:
+            self.command('zone2.power=on')
 
     def select_source(self, source):
         """Set the input source."""
         if source in self._source_list:
             source = self._reverse_mapping[source]
-        self.command('input-selector {}'.format(source))
+
+        if self._zone is 1:
+            self.command('input-selector {}'.format(source))
+        elif self._zone is 2:
+            self.command('zone2.selector={}'.format(source))
