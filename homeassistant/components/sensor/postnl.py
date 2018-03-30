@@ -10,7 +10,7 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
+from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL,
                                  ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -19,17 +19,17 @@ import homeassistant.helpers.config_validation as cv
 REQUIREMENTS = ['postnl_api==0.3']
 
 _LOGGER = logging.getLogger(__name__)
-CONF_UPDATE_INTERVAL = 'update_interval'
 DEFAULT_NAME = 'postnl'
 ICON = 'mdi:package-variant-closed'
 ATTRIBUTION = 'Information provided by PostNL'
+SCAN_INTERVAL = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=1800)):
-    vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+    cv.time_period,
 })
 
 # pylint: disable=unused-argument
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     name = config.get(CONF_NAME)
-    update_interval = config.get(CONF_UPDATE_INTERVAL)
+    update_interval = config.get(CONF_SCAN_INTERVAL)
 
     from postnl_api import PostNL_API
 
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     except Exception:
         _LOGGER.exception("Can't connect to the PostNL webservice")
-        return False
+        return
 
     add_devices([PostNLSensor(api, name, update_interval)], True)
 
@@ -82,11 +82,7 @@ class PostNLSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-
-        if self._state == 1:
-            return 'package'
-
-        return 'packages'
+        return 'package(s)'
 
     def _update(self):
         """Update device state."""
