@@ -402,3 +402,13 @@ songpal_set_sound_setting:
     value:
       description: Value to set.
       example: 'on'
+
+blackbird_setallzones:
+  description: Set all Blackbird zones to one source.
+  fields:
+    entity_id:
+      description: Name of a Blackbird zone. All zones will be changed.
+      example: 'media_player.zone_1'
+    source:
+      description: Name of the source to switch to. Platform dependent.
+      example: 'Source 1'
