@@ -23,10 +23,13 @@ REQUIREMENTS = ['beautifulsoup4==4.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_USE_COOKIES = 'enable_cookies'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_USE_COOKIES, default=False): cv.boolean,
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
 })
 
@@ -48,8 +51,10 @@ class LinksysAPDeviceScanner(DeviceScanner):
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
         self.verify_ssl = config[CONF_VERIFY_SSL]
+        self.use_cookies = config[CONF_USE_COOKIES]
         self.last_results = []
-
+        self.session = requests.Session()
+        
         # Check if the access point is accessible
         response = self._make_request()
         if not response.status_code == 200:
@@ -75,25 +80,39 @@ class LinksysAPDeviceScanner(DeviceScanner):
         """Check for connected devices."""
         from bs4 import BeautifulSoup as BS
 
-        _LOGGER.info("Checking Linksys AP")
+        if self.use_cookies:
+            _LOGGER.info("Obtaining Linksys AP session cookie")
+
+            login = base64.b64encode(bytes(self.username, 'utf8')).decode('ascii')
+            pwd = base64.b64encode(bytes(self.password, 'utf8')).decode('ascii')
+            creds = {'login_name': self.username, 'login_pwd': self.password, 'todo': 'login', 'h_lang': 'en', 'r_id': '', 'this_file': 'login.htm', 'next_file': 'Menu_Status.html'}
+            url = 'https://{}/login.cgi'.format(self.host)
+            self.session = requests.Session()
+            response = self.session.post(url, data=creds, timeout=DEFAULT_TIMEOUT, verify=self.verify_ssl)        
+            _LOGGER.info("The session cookie for Linksys AP is: " + response.cookies.get('session_id'))
+        else:
+            _LOGGER.info("Updating Linksys AP")
 
         self.last_results = []
         for interface in range(INTERFACES):
-            request = self._make_request(interface)
+            request = self._make_request(interface)         
             self.last_results.extend(
                 [x.find_all('td')[1].text
                  for x in BS(request.content, "html.parser")
                  .find_all(class_='section-row')]
             )
-
+        
         return True
 
     def _make_request(self, unit=0):
         # No, the '&&' is not a typo - this is expected by the web interface.
-        login = base64.b64encode(bytes(self.username, 'utf8')).decode('ascii')
-        pwd = base64.b64encode(bytes(self.password, 'utf8')).decode('ascii')
+        cookies = []
+        if not self.use_cookies:
+            login = base64.b64encode(bytes(self.username, 'utf8')).decode('ascii')
+            pwd = base64.b64encode(bytes(self.password, 'utf8')).decode('ascii')
+            cookies = {'LoginName': login, 'LoginPWD': pwd}
+        
         url = 'https://{}/StatusClients.htm&&unit={}&vap=0'.format(
             self.host, unit)
-        return requests.get(
-            url, timeout=DEFAULT_TIMEOUT, verify=self.verify_ssl,
-            cookies={'LoginName': login, 'LoginPWD': pwd})
+        return self.session.get(
+            url, timeout=DEFAULT_TIMEOUT, verify=self.verify_ssl, cookies=cookies)
