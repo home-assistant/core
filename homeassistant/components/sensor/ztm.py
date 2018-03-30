@@ -147,8 +147,8 @@ class ZTMSensor(Entity):
         now = dt_util.now()
         for entry in self._timetable:
             entry_dt = datetime.combine(now.date(),
-                                        dt_util.parse_time(entry['czas']),
-                                        now.tzinfo)
+                                        dt_util.parse_time(entry['czas']))
+            entry_dt = entry_dt.replace(tzinfo=now.tzinfo)
             if entry_dt > now:
                 time_left = int((entry_dt - now).seconds / 60)
                 departures.append(time_left)
