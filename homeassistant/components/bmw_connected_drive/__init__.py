@@ -104,9 +104,6 @@ def setup(hass, config):
     return True
 
 
-
-
-
 class BMWConnectedDriveAccount(object):
     """Representation of a BMW vehicle."""
 
