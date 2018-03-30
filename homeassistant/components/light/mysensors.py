@@ -104,10 +104,14 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
 
     def _turn_on_rgb_and_w(self, hex_template, **kwargs):
         """Turn on RGB or RGBW child device."""
-        rgb = color_util.color_hs_to_RGB(*self._hs)
+        rgb = list(color_util.color_hs_to_RGB(*self._hs))
         white = self._white
         hex_color = self._values.get(self.value_type)
-        new_rgb = color_util.color_hs_to_RGB(*kwargs.get(ATTR_HS_COLOR))
+        hs_color = kwargs.get(ATTR_HS_COLOR)
+        if hs_color is not None:
+            new_rgb = color_util.color_hs_to_RGB(*hs_color)
+        else:
+            new_rgb = None
         new_white = kwargs.get(ATTR_WHITE_VALUE)
 
         if new_rgb is None and new_white is None:

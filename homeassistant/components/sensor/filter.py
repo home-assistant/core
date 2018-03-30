@@ -10,7 +10,7 @@ from collections import deque, Counter
 from numbers import Number
 from functools import partial
 from copy import copy
-import datetime
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -78,7 +78,7 @@ FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_TIME_SMA,
     vol.Optional(CONF_TIME_SMA_TYPE,
                  default=TIME_SMA_LAST): vol.In(
-                     [None, TIME_SMA_LAST]),
+                     [TIME_SMA_LAST]),
 
     vol.Required(CONF_FILTER_WINDOW_SIZE): vol.All(cv.time_period,
                                                    cv.positive_timedelta)
@@ -166,20 +166,38 @@ class SensorFilter(Entity):
 
         if 'recorder' in self.hass.config.components:
             history_list = []
+            largest_window_items = 0
+            largest_window_time = timedelta(0)
+
+            # Determine the largest window_size by type
             for filt in self._filters:
-                if isinstance(filt.window_size, int):
-                    filter_history = await self.hass.async_add_job(partial(
-                        history.get_last_state_changes, self.hass,
-                        filt.window_size, entity_id=self._entity))
-                elif isinstance(filt.window_size, datetime.timedelta):
-                    start = dt_util.utcnow() - filt.window_size
-                    filter_history = await self.hass.async_add_job(partial(
-                        history.state_changes_during_period, self.hass,
-                        start, entity_id=self._entity))
-                for _, states in filter_history.items():
-                    history_list.extend(
-                        [st for st in states if st not in history_list])
+                if isinstance(filt.window_size, int)\
+                        and largest_window_items < filt.window_size:
+                    largest_window_items = filt.window_size
+                elif isinstance(filt.window_size, timedelta)\
+                        and largest_window_time < filt.window_size:
+                    largest_window_time = filt.window_size
+
+            # Retrieve the largest window_size of each type
+            if largest_window_items > 0:
+                filter_history = await self.hass.async_add_job(partial(
+                    history.get_last_state_changes, self.hass,
+                    largest_window_items, entity_id=self._entity))
+                history_list.extend(
+                    [state for state in filter_history[self._entity]])
+            if largest_window_time > timedelta(seconds=0):
+                start = dt_util.utcnow() - largest_window_time
+                filter_history = await self.hass.async_add_job(partial(
+                    history.state_changes_during_period, self.hass,
+                    start, entity_id=self._entity))
+                history_list.extend(
+                    [state for state in filter_history[self._entity]
+                     if state not in history_list])
+
+            # Sort the window states
             history_list = sorted(history_list, key=lambda s: s.last_updated)
+            _LOGGER.debug("Loading from history: %s",
+                          [(s.state, s.last_updated) for s in history_list])
 
             # Replay history through the filter chain
             prev_state = None
