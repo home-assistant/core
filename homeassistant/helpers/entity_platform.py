@@ -5,7 +5,7 @@ from datetime import timedelta
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import callback, valid_entity_id, split_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.util.async import (
+from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 import homeassistant.util.dt as dt_util
 
@@ -311,7 +311,7 @@ class EntityPlatform(object):
                 self.scan_interval)
             return
 
-        with (await self._process_updates):
+        async with self._process_updates:
             tasks = []
             for entity in self.entities.values():
                 if not entity.should_poll:

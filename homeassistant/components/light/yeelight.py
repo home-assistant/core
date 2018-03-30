@@ -5,26 +5,20 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.yeelight/
 """
 import logging
-import colorsys
-from typing import Tuple
 
 import voluptuous as vol
 
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
-    color_temperature_kelvin_to_mired as kelvin_to_mired,
-    color_temperature_to_rgb,
-    color_RGB_to_xy,
-    color_xy_brightness_to_RGB)
+    color_temperature_kelvin_to_mired as kelvin_to_mired)
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
-    ATTR_FLASH, ATTR_XY_COLOR, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_XY_COLOR,
-    SUPPORT_TRANSITION,
-    SUPPORT_COLOR_TEMP, SUPPORT_FLASH, SUPPORT_EFFECT,
-    Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
+    ATTR_FLASH, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP, SUPPORT_FLASH,
+    SUPPORT_EFFECT, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
 REQUIREMENTS = ['yeelight==0.4.0']
 
@@ -53,8 +47,7 @@ SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
                     SUPPORT_FLASH)
 
 SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
-                        SUPPORT_RGB_COLOR |
-                        SUPPORT_XY_COLOR |
+                        SUPPORT_COLOR |
                         SUPPORT_EFFECT |
                         SUPPORT_COLOR_TEMP)
 
@@ -96,14 +89,6 @@ YEELIGHT_EFFECT_LIST = [
     EFFECT_FACEBOOK,
     EFFECT_TWITTER,
     EFFECT_STOP]
-
-
-# Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
-# pylint: disable=invalid-sequence-index
-def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
-    """Convert HSV tuple (degrees, %, %) to RGB (values 0-255)."""
-    red, green, blue = colorsys.hsv_to_rgb(hsv[0]/360, hsv[1]/100, hsv[2]/100)
-    return int(red * 255), int(green * 255), int(blue * 255)
 
 
 def _cmd(func):
@@ -157,8 +142,7 @@ class YeelightLight(Light):
         self._brightness = None
         self._color_temp = None
         self._is_on = None
-        self._rgb = None
-        self._xy = None
+        self._hs = None
 
     @property
     def available(self) -> bool:
@@ -209,38 +193,32 @@ class YeelightLight(Light):
             return kelvin_to_mired(YEELIGHT_RGB_MIN_KELVIN)
         return kelvin_to_mired(YEELIGHT_MIN_KELVIN)
 
-    def _get_rgb_from_properties(self):
+    def _get_hs_from_properties(self):
         rgb = self._properties.get('rgb', None)
         color_mode = self._properties.get('color_mode', None)
         if not rgb or not color_mode:
-            return rgb
+            return None
 
         color_mode = int(color_mode)
         if color_mode == 2:  # color temperature
             temp_in_k = mired_to_kelvin(self._color_temp)
-            return color_temperature_to_rgb(temp_in_k)
+            return color_util.color_temperature_to_hs(temp_in_k)
         if color_mode == 3:  # hsv
             hue = int(self._properties.get('hue'))
             sat = int(self._properties.get('sat'))
-            val = int(self._properties.get('bright'))
-            return hsv_to_rgb((hue, sat, val))
+            return (hue / 360 * 65536, sat / 100 * 255)
 
         rgb = int(rgb)
         blue = rgb & 0xff
         green = (rgb >> 8) & 0xff
         red = (rgb >> 16) & 0xff
 
-        return red, green, blue
+        return color_util.color_RGB_to_hs(red, green, blue)
 
     @property
-    def rgb_color(self) -> tuple:
+    def hs_color(self) -> tuple:
         """Return the color property."""
-        return self._rgb
-
-    @property
-    def xy_color(self) -> tuple:
-        """Return the XY color value."""
-        return self._xy
+        return self._hs
 
     @property
     def _properties(self) -> dict:
@@ -288,13 +266,7 @@ class YeelightLight(Light):
             if temp_in_k:
                 self._color_temp = kelvin_to_mired(int(temp_in_k))
 
-            self._rgb = self._get_rgb_from_properties()
-
-            if self._rgb:
-                xyb = color_RGB_to_xy(*self._rgb)
-                self._xy = (xyb[0], xyb[1])
-            else:
-                self._xy = None
+            self._hs = self._get_hs_from_properties()
 
             self._available = True
         except yeelight.BulbException as ex:
@@ -313,7 +285,7 @@ class YeelightLight(Light):
     @_cmd
     def set_rgb(self, rgb, duration) -> None:
         """Set bulb's color."""
-        if rgb and self.supported_features & SUPPORT_RGB_COLOR:
+        if rgb and self.supported_features & SUPPORT_COLOR:
             _LOGGER.debug("Setting RGB: %s", rgb)
             self._bulb.set_rgb(rgb[0], rgb[1], rgb[2], duration=duration)
 
@@ -349,7 +321,7 @@ class YeelightLight(Light):
                 count = 1
                 duration = transition * 2
 
-            red, green, blue = self.rgb_color
+            red, green, blue = color_util.color_hs_to_RGB(*self._hs)
 
             transitions = list()
             transitions.append(
@@ -419,10 +391,10 @@ class YeelightLight(Light):
         import yeelight
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         colortemp = kwargs.get(ATTR_COLOR_TEMP)
-        rgb = kwargs.get(ATTR_RGB_COLOR)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
+        rgb = color_util.color_hs_to_RGB(*hs_color) if hs_color else None
         flash = kwargs.get(ATTR_FLASH)
         effect = kwargs.get(ATTR_EFFECT)
-        xy_color = kwargs.get(ATTR_XY_COLOR)
 
         duration = int(self.config[CONF_TRANSITION])  # in ms
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
@@ -440,9 +412,6 @@ class YeelightLight(Light):
             except yeelight.BulbException as ex:
                 _LOGGER.error("Unable to turn on music mode,"
                               "consider disabling it: %s", ex)
-        if xy_color and brightness:
-            rgb = color_xy_brightness_to_RGB(xy_color[0], xy_color[1],
-                                             brightness)
 
         try:
             # values checked for none in methods

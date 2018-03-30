@@ -4,7 +4,6 @@ from setuptools import setup, find_packages
 
 import homeassistant.const as hass_const
 
-
 PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'
 PROJECT_LICENSE = 'Apache License 2.0'
@@ -50,16 +49,14 @@ REQUIRES = [
     'jinja2>=2.10',
     'voluptuous==0.11.1',
     'typing>=3,<4',
-    'aiohttp==3.0.6',
-    'async_timeout==2.0.0',
-    'astral==1.5',
+    'aiohttp==3.0.9',
+    'async_timeout==2.0.1',
+    'astral==1.6',
     'certifi>=2017.4.17',
     'attrs==17.4.0',
 ]
 
-MIN_PY_VERSION = '.'.join(map(
-    str,
-    hass_const.REQUIRED_PYTHON_VER))
+MIN_PY_VERSION = '.'.join(map(str, hass_const.REQUIRED_PYTHON_VER))
 
 setup(
     name=PROJECT_PACKAGE_NAME,

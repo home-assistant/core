@@ -4,7 +4,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch, sentinel
 
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 from homeassistant.components import history, recorder
@@ -481,3 +481,15 @@ class TestComponentHistory(unittest.TestCase):
             set_state(therm, 22, attributes={'current_temperature': 21,
                                              'hidden': True})
         return zero, four, states
+
+
+async def test_fetch_period_api(hass, aiohttp_client):
+    """Test the fetch period view for history."""
+    await hass.async_add_job(init_recorder_component, hass)
+    await async_setup_component(hass, 'history', {})
+    await hass.components.recorder.wait_connection_ready()
+    await hass.async_add_job(hass.data[recorder.DATA_INSTANCE].block_till_done)
+    client = await aiohttp_client(hass.http.app)
+    response = await client.get(
+        '/api/history/period/{}'.format(dt_util.utcnow().isoformat()))
+    assert response.status == 200

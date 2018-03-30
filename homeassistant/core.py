@@ -33,7 +33,7 @@ from homeassistant.const import (
 from homeassistant import loader
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, InvalidStateError)
-from homeassistant.util.async import (
+from homeassistant.util.async_ import (
     run_coroutine_threadsafe, run_callback_threadsafe,
     fire_coroutine_threadsafe)
 import homeassistant.util as util
@@ -79,7 +79,7 @@ def callback(func: Callable[..., None]) -> Callable[..., None]:
 
 def is_callback(func: Callable[..., Any]) -> bool:
     """Check if function is safe to be called in the event loop."""
-    return '_hass_callback' in func.__dict__
+    return '_hass_callback' in getattr(func, '__dict__', {})
 
 
 @callback
@@ -117,11 +117,7 @@ class HomeAssistant(object):
         else:
             self.loop = loop or asyncio.get_event_loop()
 
-        executor_opts = {'max_workers': 10}
-        if sys.version_info[:2] >= (3, 5):
-            # It will default set to the number of processors on the machine,
-            # multiplied by 5. That is better for overlap I/O workers.
-            executor_opts['max_workers'] = None
+        executor_opts = {'max_workers': None}
         if sys.version_info[:2] >= (3, 6):
             executor_opts['thread_name_prefix'] = 'SyncWorker'
 
@@ -1064,15 +1060,19 @@ class Config(object):
         """Check if the path is valid for access from outside."""
         assert path is not None
 
-        parent = pathlib.Path(path)
+        thepath = pathlib.Path(path)
         try:
-            parent = parent.resolve()  # pylint: disable=no-member
+            # The file path does not have to exist (it's parent should)
+            if thepath.exists():
+                thepath = thepath.resolve()
+            else:
+                thepath = thepath.parent.resolve()
         except (FileNotFoundError, RuntimeError, PermissionError):
             return False
 
         for whitelisted_path in self.whitelist_external_dirs:
             try:
-                parent.relative_to(whitelisted_path)
+                thepath.relative_to(whitelisted_path)
                 return True
             except ValueError:
                 pass
