@@ -90,6 +90,7 @@ TEST_REQUIREMENTS = (
     'yahoo-finance',
     'pythonwhois',
     'wakeonlan',
+    'watchdog',
     'vultr'
 )
 
