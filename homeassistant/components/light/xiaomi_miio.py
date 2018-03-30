@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'philips.light.candle2']),
 })
 
-REQUIREMENTS = ['python-miio==0.3.9']
+REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
 
 # The light does not accept cct values < 1
 CCT_MIN = 1
