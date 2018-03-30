@@ -14,7 +14,7 @@ from homeassistant.components import http
 from homeassistant.components.http.data_validator import (
     RequestDataValidator)
 from homeassistant.components.cover import (INTENT_OPEN_COVER,
-    INTENT_CLOSE_COVER)
+                                            INTENT_CLOSE_COVER)
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -34,8 +34,8 @@ REGEX_TYPE = type(re.compile(''))
 
 UTTERANCES = {
     'cover': {
-        INTENT_OPEN_COVER: [ 'Open [the] [a] [an] {name}[s]' ],
-        INTENT_CLOSE_COVER: [ 'Close [the] [a] [an] {name}[s]' ]
+        INTENT_OPEN_COVER: ['Open [the] [a] [an] {name}[s]'],
+        INTENT_CLOSE_COVER: ['Close [the] [a] [an] {name}[s]']
     }
 }
 
@@ -126,7 +126,7 @@ async def async_setup(hass, config):
     @callback
     def register_utterances(component):
         if component not in UTTERANCES:
-          return
+            return
         for intent_type, sentences in UTTERANCES[component].items():
             async_register(hass, intent_type, sentences)
 
