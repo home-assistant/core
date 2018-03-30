@@ -12,8 +12,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import rgb_hex_to_rgb_list
 import homeassistant.util.color as color_util
 
-SUPPORT_MYSENSORS = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR |
-                     SUPPORT_WHITE_VALUE)
+SUPPORT_MYSENSORS_RGBW = SUPPORT_COLOR | SUPPORT_WHITE_VALUE
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -63,11 +62,6 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
     def is_on(self):
         """Return true if device is on."""
         return self._state
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_MYSENSORS
 
     def _turn_on_light(self):
         """Turn on light child device."""
@@ -171,6 +165,11 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
 class MySensorsLightDimmer(MySensorsLight):
     """Dimmer child class to MySensorsLight."""
 
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_BRIGHTNESS
+
     def turn_on(self, **kwargs):
         """Turn the device on."""
         self._turn_on_light()
@@ -187,6 +186,14 @@ class MySensorsLightDimmer(MySensorsLight):
 
 class MySensorsLightRGB(MySensorsLight):
     """RGB child class to MySensorsLight."""
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        set_req = self.gateway.const.SetReq
+        if set_req.V_DIMMER in self._values:
+            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+        return SUPPORT_COLOR
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -208,6 +215,14 @@ class MySensorsLightRGBW(MySensorsLightRGB):
     """RGBW child class to MySensorsLightRGB."""
 
     # pylint: disable=too-many-ancestors
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        set_req = self.gateway.const.SetReq
+        if set_req.V_DIMMER in self._values:
+            return SUPPORT_BRIGHTNESS | SUPPORT_MYSENSORS_RGBW
+        return SUPPORT_MYSENSORS_RGBW
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
