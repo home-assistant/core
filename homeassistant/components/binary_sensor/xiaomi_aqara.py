@@ -37,9 +37,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 devices.append(XiaomiNatgasSensor(device, gateway))
             elif model in ['switch', 'sensor_switch',
                            'sensor_switch.aq2', 'sensor_switch.aq3']:
-                devices.append(XiaomiButton(device, 'Switch',
-                    'status' if 'proto' not in device or int(device['proto'][0:1]) == 1
-                            else 'channel_0',
+                if 'proto' not in device or int(device['proto'][0:1]) == 1:
+                    data_key = 'status'
+                else:
+                    data_key = 'channel_0'
+                devices.append(XiaomiButton(device, 'Switch', data_key,
                                             hass, gateway))
             elif model in ['86sw1', 'sensor_86sw1.aq1']:
                 devices.append(XiaomiButton(device, 'Wall Switch', 'channel_0',
