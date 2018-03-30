@@ -13,6 +13,8 @@ from homeassistant import core
 from homeassistant.components import http
 from homeassistant.components.http.data_validator import (
     RequestDataValidator)
+from homeassistant.components.cover import (INTENT_OPEN_COVER,
+    INTENT_CLOSE_COVER)
 from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -29,6 +31,13 @@ DOMAIN = 'conversation'
 
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
 REGEX_TYPE = type(re.compile(''))
+
+UTTERANCES = {
+    'cover': {
+        INTENT_OPEN_COVER: [ 'Open [the] [a] [an] {name}[s]' ],
+        INTENT_CLOSE_COVER: [ 'Close [the] [a] [an] {name}[s]' ]
+    }
+}
 
 SERVICE_PROCESS = 'process'
 
@@ -115,14 +124,21 @@ async def async_setup(hass, config):
     ])
 
     @callback
-    def register_utterances(event):
-        """Register utterances for intents loaded after startup."""
-        if 'cover' in event.data.get(ATTR_COMPONENT):
-            async_register(hass, intent.INTENT_OPEN_COVER, [
-                'Open [the] [a] [an] {name}[s]'])
-            async_register(hass, intent.INTENT_CLOSE_COVER, [
-                'Close [the] [a] [an] {name}[s]'])
-    hass.bus.async_listen(EVENT_COMPONENT_LOADED, register_utterances)
+    def register_utterances(component):
+        if component not in UTTERANCES:
+          return
+        for intent_type, sentences in UTTERANCES[component].items():
+            async_register(hass, intent_type, sentences)
+
+    @callback
+    def component_loaded(event):
+        register_utterances(event.data[ATTR_COMPONENT])
+
+    hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
+
+    # Check already loaded components.
+    for component in hass.config.components:
+        register_utterances(component)
 
     return True
 

@@ -56,6 +56,9 @@ ATTR_CURRENT_TILT_POSITION = 'current_tilt_position'
 ATTR_POSITION = 'position'
 ATTR_TILT_POSITION = 'tilt_position'
 
+INTENT_OPEN_COVER = 'HassOpenCover'
+INTENT_CLOSE_COVER = 'HassCloseCover'
+
 COVER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
@@ -183,10 +186,10 @@ async def async_setup(hass, config):
             DOMAIN, service_name, async_handle_cover_service,
             schema=schema)
     hass.helpers.intent.async_register(intent.ServiceIntentHandler(
-        intent.INTENT_OPEN_COVER, DOMAIN, SERVICE_OPEN_COVER,
+        INTENT_OPEN_COVER, DOMAIN, SERVICE_OPEN_COVER,
         "Opened {}"))
     hass.helpers.intent.async_register(intent.ServiceIntentHandler(
-        intent.INTENT_CLOSE_COVER, DOMAIN, SERVICE_CLOSE_COVER,
+        INTENT_CLOSE_COVER, DOMAIN, SERVICE_CLOSE_COVER,
         "Closed {}"))
 
     return True
