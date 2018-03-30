@@ -35,8 +35,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 devices.append(XiaomiSmokeSensor(device, gateway))
             elif model in ['natgas', 'sensor_natgas']:
                 devices.append(XiaomiNatgasSensor(device, gateway))
-            elif model in ['switch', 'sensor_switch', 'sensor_switch.aq2', 'sensor_switch.aq3']:
-                devices.append(XiaomiButton(device, 'Switch', 'status' if int(device['proto'][0:1]) == 1 else 'channel_0',
+            elif model in ['switch', 'sensor_switch',
+                           'sensor_switch.aq2', 'sensor_switch.aq3']:
+                devices.append(XiaomiButton(device, 'Switch',
+                        'status' if int(device['proto'][0:1]) == 1 else 'channel_0',
                                             hass, gateway))
             elif model in ['86sw1', 'sensor_86sw1.aq1']:
                 devices.append(XiaomiButton(device, 'Wall Switch', 'channel_0',

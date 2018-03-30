@@ -26,7 +26,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in gateway.devices['switch']:
             model = device['model']
             if model == 'plug':
-                devices.append(XiaomiGenericSwitch(device, "Plug", 'status' if int(device['proto'][0:1]) == 1 else 'channel_0',
+                devices.append(XiaomiGenericSwitch(device, "Plug",
+                       'status' if int(device['proto'][0:1]) == 1 else 'channel_0',
                                                    True, gateway))
             elif model in ['ctrl_neutral1', 'ctrl_neutral1.aq1']:
                 devices.append(XiaomiGenericSwitch(device, 'Wall Switch',
