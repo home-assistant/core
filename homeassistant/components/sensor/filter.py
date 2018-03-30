@@ -29,7 +29,7 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-FILTER_NAME_BANDPASS = 'bandpass'
+FILTER_NAME_RANGE = 'range'
 FILTER_NAME_LOWPASS = 'lowpass'
 FILTER_NAME_OUTLIER = 'outlier'
 FILTER_NAME_THROTTLE = 'throttle'
@@ -83,8 +83,8 @@ FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
                  default=DEFAULT_FILTER_TIME_CONSTANT): vol.Coerce(int),
 })
 
-FILTER_BANDPASS_SCHEMA = FILTER_SCHEMA.extend({
-    vol.Required(CONF_FILTER_NAME): FILTER_NAME_BANDPASS,
+FILTER_RANGE_SCHEMA = FILTER_SCHEMA.extend({
+    vol.Required(CONF_FILTER_NAME): FILTER_NAME_RANGE,
     vol.Optional(CONF_FILTER_WINDOW_SIZE,
                  default=DEFAULT_WINDOW_SIZE): vol.Coerce(int),
     vol.Optional(CONF_FILTER_LOWER_BOUND,
@@ -117,7 +117,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                                                  FILTER_LOWPASS_SCHEMA,
                                                  FILTER_TIME_SMA_SCHEMA,
                                                  FILTER_THROTTLE_SCHEMA,
-                                                 FILTER_BANDPASS_SCHEMA)])
+                                                 FILTER_RANGE_SCHEMA)])
 })
 
 
@@ -342,11 +342,11 @@ class Filter(object):
         return new_state
 
 
-@FILTERS.register(FILTER_NAME_BANDPASS)
-class BandPassFilter(Filter):
-    """Band pass filter.
+@FILTERS.register(FILTER_NAME_RANGE)
+class RangeFilter(Filter):
+    """Range filter.
 
-    Determines if new state is in a band between upper_bound and lower_bound.
+    Determines if new state is in the range of upper_bound and lower_bound.
     If not inside, lower or upper bound is returned instead.
 
     Args:
@@ -357,13 +357,13 @@ class BandPassFilter(Filter):
     def __init__(self, window_size, precision, entity,
                  lower_bound, upper_bound):
         """Initialize Filter."""
-        super().__init__(FILTER_NAME_OUTLIER, window_size, precision, entity)
+        super().__init__(FILTER_NAME_RANGE, window_size, precision, entity)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
         self._stats_internal = Counter()
 
     def _filter_state(self, new_state):
-        """Implement the band-pass filter."""
+        """Implement the range filter."""
         new_state = float(new_state)
 
         if new_state > self._upper_bound:
