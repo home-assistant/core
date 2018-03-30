@@ -143,3 +143,23 @@ def test_invalid_data(hass, aioclient_mock):
     for condition in VALID_CONFIG['monitored_conditions']:
         state = hass.states.get('sensor.pws_' + condition)
         assert state.state == STATE_UNKNOWN
+
+
+async def test_entity_id_with_multiple_stations(hass, aioclient_mock):
+    """Test not generating duplicate entity ids with multiple stations."""
+    aioclient_mock.get(URL, text=load_fixture('wunderground-valid.json'))
+
+    config = [
+        VALID_CONFIG,
+        {**VALID_CONFIG, 'entity_namespace': 'hi'}
+    ]
+    await async_setup_component(hass, 'sensor', {'sensor': config})
+    await hass.async_block_till_done()
+
+    state = hass.states.get('sensor.pws_weather')
+    assert state is not None
+    assert state.state == 'Clear'
+
+    state = hass.states.get('sensor.hi_weather')
+    assert state is not None
+    assert state.state == 'Clear'

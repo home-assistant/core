@@ -1,5 +1,4 @@
 """Module to help with parsing and generating configuration files."""
-import asyncio
 from collections import OrderedDict
 # pylint: disable=no-name-in-module
 from distutils.version import LooseVersion  # pylint: disable=import-error
@@ -7,7 +6,6 @@ import logging
 import os
 import re
 import shutil
-import sys
 # pylint: disable=unused-import
 from typing import Any, List, Tuple  # NOQA
 
@@ -15,6 +13,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
@@ -131,13 +130,19 @@ PACKAGES_CONFIG_SCHEMA = vol.Schema({
         {cv.slug: vol.Any(dict, list, None)})  # Only slugs for component names
 })
 
+CUSTOMIZE_DICT_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
+    vol.Optional(ATTR_HIDDEN): cv.boolean,
+    vol.Optional(ATTR_ASSUMED_STATE): cv.boolean,
+}, extra=vol.ALLOW_EXTRA)
+
 CUSTOMIZE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_CUSTOMIZE, default={}):
-        vol.Schema({cv.entity_id: dict}),
+        vol.Schema({cv.entity_id: CUSTOMIZE_DICT_SCHEMA}),
     vol.Optional(CONF_CUSTOMIZE_DOMAIN, default={}):
-        vol.Schema({cv.string: dict}),
+        vol.Schema({cv.string: CUSTOMIZE_DICT_SCHEMA}),
     vol.Optional(CONF_CUSTOMIZE_GLOB, default={}):
-        vol.Schema({cv.string: OrderedDict}),
+        vol.Schema({cv.string: CUSTOMIZE_DICT_SCHEMA}),
 })
 
 CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
@@ -549,6 +554,8 @@ def merge_packages_config(config, packages, _log_pkg_error=_log_pkg_error):
                 continue
 
             if hasattr(component, 'PLATFORM_SCHEMA'):
+                if not comp_conf:
+                    continue  # Ensure we dont add Falsy items to list
                 config[comp_name] = cv.ensure_list(config.get(comp_name))
                 config[comp_name].extend(cv.ensure_list(comp_conf))
                 continue
@@ -557,6 +564,8 @@ def merge_packages_config(config, packages, _log_pkg_error=_log_pkg_error):
                 merge_type, _ = _identify_config_schema(component)
 
                 if merge_type == 'list':
+                    if not comp_conf:
+                        continue  # Ensure we dont add Falsy items to list
                     config[comp_name] = cv.ensure_list(config.get(comp_name))
                     config[comp_name].extend(cv.ensure_list(comp_conf))
                     continue
@@ -665,22 +674,14 @@ async def async_check_ha_config_file(hass):
 
     This method is a coroutine.
     """
-    proc = await asyncio.create_subprocess_exec(
-        sys.executable, '-m', 'homeassistant', '--script',
-        'check_config', '--config', hass.config.config_dir,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.STDOUT, loop=hass.loop)
+    from homeassistant.scripts.check_config import check_ha_config_file
 
-    # Wait for the subprocess exit
-    log, _ = await proc.communicate()
-    exit_code = await proc.wait()
+    res = await hass.async_add_job(
+        check_ha_config_file, hass.config.config_dir)
 
-    # Convert to ASCII
-    log = RE_ASCII.sub('', log.decode())
-
-    if exit_code != 0 or RE_YAML_ERROR.search(log):
-        return log
-    return None
+    if not res.errors:
+        return None
+    return '\n'.join([err.message for err in res.errors])
 
 
 @callback

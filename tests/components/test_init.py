@@ -14,7 +14,7 @@ import homeassistant.components as comps
 import homeassistant.helpers.intent as intent
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant, mock_service, patch_yaml_files, mock_coro,

@@ -27,7 +27,7 @@ AUTH_HEADER = {AUTHORIZATION: 'Bearer {}'.format(ACCESS_TOKEN)}
 
 
 @pytest.fixture
-def assistant_client(loop, hass, test_client):
+def assistant_client(loop, hass, aiohttp_client):
     """Create web client for the Google Assistant API."""
     loop.run_until_complete(
         setup.async_setup_component(hass, 'google_assistant', {
@@ -44,7 +44,7 @@ def assistant_client(loop, hass, test_client):
             }
         }))
 
-    return loop.run_until_complete(test_client(hass.http.app))
+    return loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture

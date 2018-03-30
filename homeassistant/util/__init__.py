@@ -13,7 +13,7 @@ from functools import wraps
 from types import MappingProxyType
 from unicodedata import normalize
 
-from typing import Any, Optional, TypeVar, Callable, Sequence, KeysView, Union
+from typing import Any, Optional, TypeVar, Callable, KeysView, Union, Iterable
 
 from .dt import as_local, utcnow
 
@@ -72,7 +72,7 @@ def convert(value: T, to_type: Callable[[T], U],
 
 
 def ensure_unique_string(preferred_string: str, current_strings:
-                         Union[Sequence[str], KeysView[str]]) -> str:
+                         Union[Iterable[str], KeysView[str]]) -> str:
     """Return a string that is not present in current_strings.
 
     If preferred string exists will append _2, _3, ..
@@ -261,6 +261,16 @@ class Throttle(object):
 
     def __call__(self, method):
         """Caller for the throttle."""
+        # Make sure we return a coroutine if the method is async.
+        if asyncio.iscoroutinefunction(method):
+            async def throttled_value():
+                """Stand-in function for when real func is being throttled."""
+                return None
+        else:
+            def throttled_value():
+                """Stand-in function for when real func is being throttled."""
+                return None
+
         if self.limit_no_throttle is not None:
             method = Throttle(self.limit_no_throttle)(method)
 
@@ -276,16 +286,6 @@ class Throttle(object):
         # be prefixed by '.<locals>.' so we strip that out.
         is_func = (not hasattr(method, '__self__') and
                    '.' not in method.__qualname__.split('.<locals>.')[-1])
-
-        # Make sure we return a coroutine if the method is async.
-        if asyncio.iscoroutinefunction(method):
-            async def throttled_value():
-                """Stand-in function for when real func is being throttled."""
-                return None
-        else:
-            def throttled_value():
-                """Stand-in function for when real func is being throttled."""
-                return None
 
         @wraps(method)
         def wrapper(*args, **kwargs):

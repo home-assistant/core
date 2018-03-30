@@ -9,7 +9,7 @@ from homeassistant.const import ATTR_ENTITY_PICTURE
 import homeassistant.components.camera as camera
 import homeassistant.components.http as http
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant, get_test_instance_port, assert_setup_component)
