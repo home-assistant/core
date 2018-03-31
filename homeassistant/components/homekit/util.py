@@ -36,6 +36,7 @@ def validate_entity_config(values):
 def show_setup_message(bridge, hass):
     """Display persistent notification with setup information."""
     pin = bridge.pincode.decode()
+    _LOGGER.info('Pincode: %s', pin)
     message = 'To setup Home Assistant in the Home App, enter the ' \
               'following code:\n### {}'.format(pin)
     hass.components.persistent_notification.create(
