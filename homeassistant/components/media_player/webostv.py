@@ -343,6 +343,10 @@ class LgWebOSDevice(MediaPlayerDevice):
             self._current_source = source_dict['label']
             self._client.set_input(source_dict['id'])
 
+    def play_media(self, media_type, media_id, **kwargs):
+        """Find app for media and play from url"""
+        self._client.launch_app_with_params("youtube.leanback.v4", contentId=media_id)
+
     def media_play(self):
         """Send play command."""
         self._playing = True
