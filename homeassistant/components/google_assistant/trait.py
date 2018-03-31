@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.util import color as color_util, temperature as temp_util
 
-from .const import ERR_VALUE_OUT_OF_RANGE
+from .const import ERR_VALUE_OUT_OF_RANGE, ERR_NOT_SUPPORTED
 from .helpers import SmartHomeError
 
 PREFIX_TRAITS = 'action.devices.traits.'
@@ -415,8 +415,6 @@ class TemperatureSettingTrait(_Trait):
         """Return temperature point and modes attributes for a sync request."""
         unit = self.state.attributes[ATTR_UNIT_OF_MEASUREMENT]
         modes = []
-        # We do not support "on" as we are unable to know how to restore
-        # the last mode.
         for mode in self.state.attributes.get(climate.ATTR_OPERATION_LIST):
             google_mode = GOOGLE_THERMOSTAT_MODES.get(mode)
             if google_mode is not None and google_mode not in modes:
@@ -516,6 +514,9 @@ class TemperatureSettingTrait(_Trait):
 
         elif command == COMMAND_THERMOSTAT_SET_MODE:
             mode = params['thermostatMode']
+
+            operation_list = self.state.attributes.get(
+                climate.ATTR_OPERATION_LIST)
             # Work around a pylint false positive due to
             #  https://github.com/PyCQA/pylint/issues/1830
             # pylint: disable=stop-iteration-return
@@ -523,6 +524,13 @@ class TemperatureSettingTrait(_Trait):
                 (k for k, v in GOOGLE_THERMOSTAT_MODES.items() if v == mode),
                 None
             )
+            # We do not support "on" as we are unable to know how to restore
+            # the last mode.
+            if operation not in operation_list:
+                raise SmartHomeError(
+                    ERR_NOT_SUPPORTED,
+                    "Thermostat mode {} is not supported".format(mode))
+
             await hass.services.async_call(
                 climate.DOMAIN, climate.SERVICE_SET_OPERATION_MODE, {
                     ATTR_ENTITY_ID: self.state.entity_id,
