@@ -230,6 +230,8 @@ def test_api_get_config(hass, mock_api_client):
     if 'whitelist_external_dirs' in result:
         result['whitelist_external_dirs'] = \
             set(result['whitelist_external_dirs'])
+    if 'template_dirs' in result:
+        result['template_dirs'] = set(result['template_dirs'])
 
     assert hass.config.as_dict() == result
 
