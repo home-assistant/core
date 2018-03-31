@@ -658,7 +658,7 @@ pyCEC==0.4.13
 pyHS100==0.3.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.21.1
+pyRFXtrx==0.22.0
 
 # homeassistant.components.sensor.tibber
 pyTibber==0.4.0
