@@ -507,7 +507,7 @@ async def test_temperature_setting_climate_range(hass):
             climate.ATTR_CURRENT_HUMIDITY: 25,
             climate.ATTR_OPERATION_MODE: climate.STATE_AUTO,
             climate.ATTR_OPERATION_LIST: [
-                climate.STATE_OFF,
+                climate.STATE_IDLE,
                 climate.STATE_COOL,
                 climate.STATE_HEAT,
                 climate.STATE_AUTO,
@@ -557,6 +557,17 @@ async def test_temperature_setting_climate_range(hass):
         climate.ATTR_OPERATION_MODE: climate.STATE_AUTO,
     }
 
+    calls = async_mock_service(
+        hass, climate.DOMAIN, climate.SERVICE_SET_OPERATION_MODE)
+    await trt.execute(hass, trait.COMMAND_THERMOSTAT_SET_MODE, {
+        'thermostatMode': 'off',
+    })
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'climate.bla',
+        climate.ATTR_OPERATION_MODE: climate.STATE_IDLE,
+    }
+
     with pytest.raises(helpers.SmartHomeError) as err:
         await trt.execute(
             hass, trait.COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT, {
@@ -575,7 +586,7 @@ async def test_temperature_setting_climate_setpoint(hass):
         'climate.bla', climate.STATE_AUTO, {
             climate.ATTR_OPERATION_MODE: climate.STATE_COOL,
             climate.ATTR_OPERATION_LIST: [
-                climate.STATE_OFF,
+                climate.STATE_IDLE,
                 climate.STATE_COOL,
             ],
             climate.ATTR_MIN_TEMP: 10,
