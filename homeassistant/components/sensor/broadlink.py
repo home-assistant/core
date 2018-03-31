@@ -108,7 +108,7 @@ class BroadlinkData(object):
         """Initialize the data object."""
         import broadlink
         self.data = None
-        self._device = broadlink.a1((ip_addr, 80), mac_addr)
+        self._device = broadlink.a1((ip_addr, 80), mac_addr, None)
         self._device.timeout = timeout
         self._schema = vol.Schema({
             vol.Optional('temperature'): vol.Range(min=-50, max=150),

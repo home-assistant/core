@@ -166,6 +166,9 @@ boto3==1.4.7
 # homeassistant.scripts.credstash
 botocore==1.7.34
 
+# homeassistant.components.switch.broadlink
+broadlink==0.8.0
+
 # homeassistant.components.sensor.buienradar
 # homeassistant.components.weather.buienradar
 buienradar==0.91
@@ -384,7 +387,6 @@ httplib2==0.10.3
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
 
 # homeassistant.components.sensor.broadlink
-# homeassistant.components.switch.broadlink
 https://github.com/balloob/python-broadlink/archive/3580ff2eaccd267846f14246d6ede6e30671f7c6.zip#broadlink==0.5.1
 
 # homeassistant.components.media_player.spotify
