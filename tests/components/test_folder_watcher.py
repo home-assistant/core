@@ -1,11 +1,11 @@
 """The tests for the folder_watcher component."""
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import Mock
 import os
 
 from homeassistant.components import folder_watcher
 from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, MockDependency
 
 CWD = os.path.join(os.path.dirname(__file__))
 FILE = 'file.txt'
@@ -42,23 +42,30 @@ class TestFolderWatcher(unittest.TestCase):
         self.assertTrue(setup_component(
             self.hass, folder_watcher.DOMAIN, config))
 
-    def test_event(self):
-        """Check that HASS events are fired correctly on watchdog event."""
-        from watchdog.events import FileModifiedEvent
 
-        # Cant use setup_component as need to retrieve Watcher object.
-        w = folder_watcher.Watcher(CWD,
-                                   folder_watcher.DEFAULT_PATTERN,
-                                   self.hass)
-        w.startup(None)
+@MockDependency('watchdog', 'events')
+def test_event(mock_watchdog):
+    """Check that HASS events are fired correctly on watchdog event."""
+    class MockPatternMatchingEventHandler:
+        """Mock base class for the pattern matcher event handler."""
 
-        self.hass.bus.fire = MagicMock()
+        def __init__(self, patterns):
+            pass
 
-        # Trigger a fake filesystem event through the Watcher Observer emitter.
-        (emitter,) = w._observer.emitters
-        emitter.queue_event(FileModifiedEvent(FILE))
-
-        # Wait for the event to propagate.
-        self.hass.block_till_done()
-
-        assert self.hass.bus.fire.called
+    mock_watchdog.events.PatternMatchingEventHandler = \
+        MockPatternMatchingEventHandler
+    hass = Mock()
+    handler = folder_watcher.create_event_handler(['*'], hass)
+    handler.on_created(Mock(
+        is_directory=False,
+        src_path='/hello/world.txt',
+        event_type='created'
+    ))
+    assert hass.bus.fire.called
+    assert hass.bus.fire.mock_calls[0][1][0] == folder_watcher.DOMAIN
+    assert hass.bus.fire.mock_calls[0][1][1] == {
+        'event_type': 'created',
+        'path': '/hello/world.txt',
+        'file': 'world.txt',
+        'folder': '/hello',
+    }
