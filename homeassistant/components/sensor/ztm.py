@@ -23,7 +23,7 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = ("Data provided by Miasto Stołeczne Warszawa "
-                    "http://api.um.warszawa.pl")
+                    "api.um.warszawa.pl")
 ZTM_ENDPOINT = "https://api.um.warszawa.pl/api/action/dbtimetable_get/"
 ZTM_DATA_ID = 'e923fa0e-d96c-43f9-ae6e-60518c9f3238'
 
@@ -34,10 +34,10 @@ ICON = 'mdi:train'
 DEFAULT_NAME = "ZTM"
 SENSOR_NAME_FORMAT = "{} {} departures from {} {}"
 
-CONF_LINE_NUMBER = 'number'
 CONF_LINES = 'lines'
-CONF_BUS_STOP_ID = 'bus_stop_id'
-CONF_BUS_STOP_NUMBER = 'bus_stop_number'
+CONF_LINE_NUMBER = 'number'
+CONF_STOP_ID = 'stop_id'
+CONF_STOP_NUMBER = 'stop_number'
 CONF_ENTRIES = 'entries'
 DEFAULT_ENTRIES = 3
 
@@ -45,8 +45,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_LINES): [{
         vol.Required(CONF_LINE_NUMBER): cv.string,
-        vol.Required(CONF_BUS_STOP_ID): cv.string,
-        vol.Required(CONF_BUS_STOP_NUMBER): cv.string}],
+        vol.Required(CONF_STOP_ID): cv.string,
+        vol.Required(CONF_STOP_NUMBER): cv.string}],
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_ENTRIES, default=DEFAULT_ENTRIES): cv.positive_int,
     })
@@ -57,32 +57,30 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the ZTM platform."""
     websession = async_get_clientsession(hass)
     api_key = config.get(CONF_API_KEY)
-    name = config.get(CONF_NAME)
+    prepend = config.get(CONF_NAME)
     entries = config.get(CONF_ENTRIES)
     lines = []
     for line_config in config.get(CONF_LINES):
         line = line_config.get(CONF_LINE_NUMBER)
-        bus_stop_id = line_config.get(CONF_BUS_STOP_ID)
-        bus_stop_number = line_config.get(CONF_BUS_STOP_NUMBER)
-        sensor_name = SENSOR_NAME_FORMAT.format(name, line, bus_stop_id,
-                                                bus_stop_number)
-        lines.append(ZTMSensor(hass.loop, websession, api_key, line,
-                               bus_stop_id, bus_stop_number, sensor_name,
-                               entries))
+        stop_id = line_config.get(CONF_STOP_ID)
+        stop_number = line_config.get(CONF_STOP_NUMBER)
+        name = SENSOR_NAME_FORMAT.format(prepend, line, stop_id, stop_number)
+        lines.append(ZTMSensor(hass.loop, websession, api_key, line, stop_id,
+                               stop_number, name, entries))
     async_add_devices(lines)
 
 
 class ZTMSensor(Entity):
     """Implementation of a ZTM sensor."""
 
-    def __init__(self, loop, websession, api_key, line, bus_stop_id,
-                 bus_stop_number, name, entries):
+    def __init__(self, loop, websession, api_key, line, stop_id, stop_number,
+                 name, entries):
         """Initialize the sensor."""
         self._loop = loop
         self._websession = websession
         self._line = line
-        self._bus_stop_id = bus_stop_id
-        self._bus_stop_number = bus_stop_number
+        self._stop_id = stop_id
+        self._stop_number = stop_number
         self._name = name
         self._entries = entries
         self._state = STATE_UNKNOWN
@@ -95,8 +93,8 @@ class ZTMSensor(Entity):
         self._params = {
             'id': ZTM_DATA_ID,
             'apikey': api_key,
-            'busstopId': bus_stop_id,
-            'busstopNr': bus_stop_number,
+            'busstopId': stop_id,
+            'busstopNr': stop_number,
             'line': line,
         }
 
@@ -123,7 +121,11 @@ class ZTMSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return extra attributes."""
-        self._attributes[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attribution = CONF_ATTRIBUTION
+        if self._timetable_date:
+            attribution_date = " on {}".format(self._timetable_date)
+            attribution = attribution + attribution_date
+        self._attributes[ATTR_ATTRIBUTION] = attribution
         return self._attributes
 
     @asyncio.coroutine
@@ -139,15 +141,14 @@ class ZTMSensor(Entity):
                 self._timetable = self.map_results(res.get('results', []))
                 self._timetable_date = dt_util.now().date()
                 _LOGGER.info("Downloaded timetable for line:%s stop:%s-%s",
-                             self._line, self._bus_stop_id,
-                             self._bus_stop_number)
+                             self._line, self._stop_id, self._stop_number)
 
         # check if there are trains after actual time
         departures = []
         now = dt_util.now()
         for entry in self._timetable:
-            entry_dt = datetime.combine(now.date(),
-                                        dt_util.parse_time(entry['czas']))
+            entry_time = dt_util.parse_time(entry['czas'])
+            entry_dt = datetime.combine(now.date(), entry_time)
             entry_dt = entry_dt.replace(tzinfo=now.tzinfo)
             if entry_dt > now:
                 time_left = int((entry_dt - now).seconds / 60)

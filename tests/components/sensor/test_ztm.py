@@ -16,16 +16,16 @@ VALID_CONFIG = {
     'sensor': {
         'platform': 'ztm',
         'name': 'tram',
-        'api_key': 'test_api_key',
+        'api_key': 'test',
         'entries': 2,
         'lines': [{
             'number': 24,
-            'bus_stop_id':  5068,
-            'bus_stop_number': '03'
+            'stop_id':  5068,
+            'stop_number': '03'
         }, {
             'number': 23,
-            'bus_stop_id':  5068,
-            'bus_stop_number': '03'
+            'stop_id':  5068,
+            'stop_number': '03'
         }]
     }
 }
@@ -48,11 +48,10 @@ def test_setup_platform(loop, hass):
 def test_ztm_data_parsing(hass, aioclient_mock):
     """Test not generating duplicate entity ids with multiple stations."""
     session = async_get_clientsession(hass)
-    sensor = ZTMSensor(hass.loop, session, 'test_api', 24, 5068, '03', 'tram',
-                       2)
+    sensor = ZTMSensor(hass.loop, session, 'test', 24, 5068, '03', 'tram', 2)
     params = {
         'id': ZTM_DATA_ID,
-        'apikey': 'test_api',
+        'apikey': 'test',
         'busstopId': 5068,
         'busstopNr': '03',
         'line': 24,
