@@ -184,6 +184,9 @@ omit =
     homeassistant/components/netatmo.py
     homeassistant/components/*/netatmo.py
 
+    homeassistant/components/nissan_leaf.py
+    homeassistant/components/*/nissan_leaf.py
+
     homeassistant/components/octoprint.py
     homeassistant/components/*/octoprint.py
 
