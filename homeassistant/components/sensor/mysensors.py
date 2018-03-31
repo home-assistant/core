@@ -81,5 +81,6 @@ class MySensorsSensor(mysensors.MySensorsEntity):
             TEMP_CELSIUS if self.gateway.metric else TEMP_FAHRENHEIT)
         sensor_type = SENSORS.get(set_req(self.value_type).name, [None, None])
         if isinstance(sensor_type, dict):
-            sensor_type = sensor_type.get(pres(self.child_type).name)
+            sensor_type = sensor_type.get(
+                pres(self.child_type).name, [None, None])
         return sensor_type
