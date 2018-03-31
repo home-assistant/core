@@ -191,6 +191,7 @@ class HomeKit():
         if not self.bridge.paired:
             show_setup_message(self.bridge, self._hass)
 
+        _LOGGER.info('Pincode: %s', self.bridge.pincode.decode())
         _LOGGER.debug('Driver start')
         self.driver.start()
 
