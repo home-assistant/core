@@ -54,6 +54,9 @@ TravisPy==0.3.5
 # homeassistant.components.notify.twitter
 TwitterAPI==2.5.0
 
+# homeassistant.components.sensor.waze_travel_time
+WazeRouteCalculator==0.5
+
 # homeassistant.components.notify.yessssms
 YesssSMS==0.1.1b3
 
