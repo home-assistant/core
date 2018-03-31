@@ -495,9 +495,6 @@ matrix-client==0.0.6
 # homeassistant.components.maxcube
 maxcube-api==0.1.0
 
-# homeassistant.components.mercedesme
-mercedesmejsonpy==0.1.2
-
 # homeassistant.components.notify.message_bird
 messagebird==1.2.0
 
