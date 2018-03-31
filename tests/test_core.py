@@ -789,6 +789,7 @@ class TestConfig(unittest.TestCase):
             'components': set(),
             'config_dir': '/tmp/ha-config',
             'whitelist_external_dirs': set(),
+            'template_dirs': set(),
             'version': __version__,
         }
 
@@ -799,9 +800,7 @@ class TestConfig(unittest.TestCase):
         with TemporaryDirectory() as tmp_dir:
             # The created dir is in /tmp. This is a symlink on OS X
             # causing this test to fail unless we resolve path first.
-            self.config.whitelist_external_dirs = set((
-                os.path.realpath(tmp_dir),
-            ))
+            self.config.whitelist_external_dirs = {os.path.realpath(tmp_dir)}
 
             test_file = os.path.join(tmp_dir, "test.jpg")
             with open(test_file, "w") as tmp_file:
@@ -814,7 +813,7 @@ class TestConfig(unittest.TestCase):
             for path in valid:
                 assert self.config.is_allowed_path(path)
 
-            self.config.whitelist_external_dirs = set(('/home', '/var'))
+            self.config.whitelist_external_dirs = {'/home', '/var'}
 
             unvalid = [
                 "/hass/config/secure",

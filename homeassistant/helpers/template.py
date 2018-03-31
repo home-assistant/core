@@ -8,7 +8,7 @@ from datetime import datetime
 from threading import Lock
 
 import jinja2
-from jinja2 import contextfilter, FileSystemLoader
+from jinja2 import contextfilter, FileSystemLoader, ChoiceLoader
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from homeassistant.const import (
@@ -33,6 +33,7 @@ _RE_GET_ENTITIES = re.compile(
     r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
 
+TEMPLATE_ENV = 'template_env'
 CACHE_LOCK = Lock()
 
 
@@ -541,7 +542,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         return isinstance(obj, AllStates) or super().is_safe_callable(obj)
 
 
-DEFAULT_TEMPLATE_ENV_FILTERS = {
+TEMPLATE_ENV_FILTERS = {
     'round': forgiving_round,
     'multiply': multiply,
     'log': logarithm,
@@ -554,7 +555,7 @@ DEFAULT_TEMPLATE_ENV_FILTERS = {
     'random': random_every_time
 }
 
-DEFAULT_TEMPLATE_ENV_GLOBALS = {
+TEMPLATE_ENV_GLOBALS = {
     'log': logarithm,
     'float': forgiving_float,
     'now': dt_util.now,
@@ -565,27 +566,31 @@ DEFAULT_TEMPLATE_ENV_GLOBALS = {
 }
 
 DEFAULT_TEMPLATE_ENVIRONMENT = TemplateEnvironment()
-DEFAULT_TEMPLATE_ENVIRONMENT.filters.update(DEFAULT_TEMPLATE_ENV_FILTERS)
-DEFAULT_TEMPLATE_ENVIRONMENT.globals.update(DEFAULT_TEMPLATE_ENV_GLOBALS)
+DEFAULT_TEMPLATE_ENVIRONMENT.filters.update(TEMPLATE_ENV_FILTERS)
+DEFAULT_TEMPLATE_ENVIRONMENT.globals.update(TEMPLATE_ENV_GLOBALS)
 
 
-def _initialise_template_environment(hass):
-    loader = FileSystemLoader(hass.config.config_dir)
-    template_environment = TemplateEnvironment(loader=loader)
-    template_environment.filters.update(DEFAULT_TEMPLATE_ENV_FILTERS)
-    template_environment.globals.update(DEFAULT_TEMPLATE_ENV_GLOBALS)
+def _initialize_template_environment(hass):
+    loaders = [
+        FileSystemLoader(search_path)
+        for search_path in hass.config.template_dirs
+    ]
+    template_environment = TemplateEnvironment(loader=ChoiceLoader(loaders))
+    template_environment.filters.update(TEMPLATE_ENV_FILTERS)
+    template_environment.globals.update(TEMPLATE_ENV_GLOBALS)
     return template_environment
 
 
 def _get_template_environment(hass):
-    if hass is None:
+    if hass is None or not hass.config.template_dirs:
         return DEFAULT_TEMPLATE_ENVIRONMENT
-    if 'template_env' in hass.data:
-        return hass.data['template_env']
+
+    if TEMPLATE_ENV in hass.data:
+        return hass.data[TEMPLATE_ENV]
     else:
         CACHE_LOCK.acquire()
-        if 'template_env' not in hass.data:
-            hass.data['template_env'] = _initialise_template_environment(hass)
+        if TEMPLATE_ENV not in hass.data:
+            hass.data[TEMPLATE_ENV] = _initialize_template_environment(hass)
         CACHE_LOCK.release()
 
-    return hass.data['template_env']
+    return hass.data[TEMPLATE_ENV]
