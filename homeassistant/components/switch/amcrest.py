@@ -7,21 +7,19 @@ https://home-assistant.io/components/switch.amcrest/
 import asyncio
 import logging
 
-from homeassistant.components.amcrest import (
-    DATA_AMCREST, SWITCHES)
-
+from homeassistant.components.amcrest import DATA_AMCREST, SWITCHES
 from homeassistant.const import (
     CONF_NAME, CONF_SWITCHES, STATE_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
 
-DEPENDENCIES = ['amcrest']
-
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['amcrest']
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the IP camera switch platform."""
+    """Set up the IP Amcrest camera switch platform."""
     if discovery_info is None:
         return
 
@@ -38,10 +36,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class AmcrestSwitch(ToggleEntity):
-    """An abstract class for an IP camera setting."""
+    """Representation of an Amcrest IP camera switch."""
 
     def __init__(self, setting, camera):
-        """Initialize the switch."""
+        """Initialize the Amcrest switch."""
         self._setting = setting
         self._camera = camera
         self._name = SWITCHES[setting][0]
