@@ -123,13 +123,13 @@ class SmartPlugSwitch(SwitchDevice):
                         pass
                 else:
                     self._emeter_params[ATTR_CURRENT_POWER_W] \
-                        = "{:.2f}".format(emeter_readings["power_mw"])
+                        = float("{:.2f/}".format(emeter_readings["power_mw"]))/1000
                     self._emeter_params[ATTR_TOTAL_ENERGY_KWH] \
-                        = "{:.3f}".format(emeter_readings["total_wh"])
+                        = float("{:.3f}".format(emeter_readings["total_wh"]))/1000
                     self._emeter_params[ATTR_VOLTAGE] \
-                        = "{:.1f}".format(emeter_readings["voltage_mv"])
+                        = float("{:.1f}".format(emeter_readings["voltage_mv"]))/1000
                     self._emeter_params[ATTR_CURRENT_A] \
-                        = "{:.2f}".format(emeter_readings["current_ma"])
+                        = float("{:.2f}".format(emeter_readings["current_ma"]))/1000
 
         except (SmartDeviceException, OSError) as ex:
             _LOGGER.warning("Could not read state for %s: %s", self.name, ex)
