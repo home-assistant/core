@@ -19,9 +19,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = [
-    'https://github.com/balloob/python-broadlink/archive/'
-    '3580ff2eaccd267846f14246d6ede6e30671f7c6.zip#broadlink==0.5.1']
+REQUIREMENTS = ['broadlink==0.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
