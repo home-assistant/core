@@ -73,7 +73,8 @@ class MikrotikScanner(DeviceScanner):
                 self.host,
                 self.username,
                 self.password,
-                port=int(self.port)
+                port=int(self.port),
+                encoding='utf-8'
             )
 
             try:

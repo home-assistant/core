@@ -6,13 +6,13 @@ https://home-assistant.io/components/light.mysensors/
 """
 from homeassistant.components import mysensors
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_WHITE_VALUE, DOMAIN,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE, Light)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_WHITE_VALUE, DOMAIN,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import rgb_hex_to_rgb_list
+import homeassistant.util.color as color_util
 
-SUPPORT_MYSENSORS = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR |
-                     SUPPORT_WHITE_VALUE)
+SUPPORT_MYSENSORS_RGBW = SUPPORT_COLOR | SUPPORT_WHITE_VALUE
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -35,7 +35,7 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
         super().__init__(*args)
         self._state = None
         self._brightness = None
-        self._rgb = None
+        self._hs = None
         self._white = None
 
     @property
@@ -44,9 +44,9 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
         return self._brightness
 
     @property
-    def rgb_color(self):
-        """Return the RGB color value [int, int, int]."""
-        return self._rgb
+    def hs_color(self):
+        """Return the hs color value [int, int]."""
+        return self._hs
 
     @property
     def white_value(self):
@@ -62,11 +62,6 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
     def is_on(self):
         """Return true if device is on."""
         return self._state
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_MYSENSORS
 
     def _turn_on_light(self):
         """Turn on light child device."""
@@ -103,10 +98,14 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
 
     def _turn_on_rgb_and_w(self, hex_template, **kwargs):
         """Turn on RGB or RGBW child device."""
-        rgb = self._rgb
+        rgb = list(color_util.color_hs_to_RGB(*self._hs))
         white = self._white
         hex_color = self._values.get(self.value_type)
-        new_rgb = kwargs.get(ATTR_RGB_COLOR)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
+        if hs_color is not None:
+            new_rgb = color_util.color_hs_to_RGB(*hs_color)
+        else:
+            new_rgb = None
         new_white = kwargs.get(ATTR_WHITE_VALUE)
 
         if new_rgb is None and new_white is None:
@@ -126,7 +125,7 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
 
         if self.gateway.optimistic:
             # optimistically assume that light has changed state
-            self._rgb = rgb
+            self._hs = color_util.color_RGB_to_hs(*rgb)
             self._white = white
             self._values[self.value_type] = hex_color
 
@@ -160,11 +159,16 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
         color_list = rgb_hex_to_rgb_list(value)
         if len(color_list) > 3:
             self._white = color_list.pop()
-        self._rgb = color_list
+        self._hs = color_util.color_RGB_to_hs(*color_list)
 
 
 class MySensorsLightDimmer(MySensorsLight):
     """Dimmer child class to MySensorsLight."""
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_BRIGHTNESS
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -182,6 +186,14 @@ class MySensorsLightDimmer(MySensorsLight):
 
 class MySensorsLightRGB(MySensorsLight):
     """RGB child class to MySensorsLight."""
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        set_req = self.gateway.const.SetReq
+        if set_req.V_DIMMER in self._values:
+            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+        return SUPPORT_COLOR
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
@@ -203,6 +215,14 @@ class MySensorsLightRGBW(MySensorsLightRGB):
     """RGBW child class to MySensorsLightRGB."""
 
     # pylint: disable=too-many-ancestors
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        set_req = self.gateway.const.SetReq
+        if set_req.V_DIMMER in self._values:
+            return SUPPORT_BRIGHTNESS | SUPPORT_MYSENSORS_RGBW
+        return SUPPORT_MYSENSORS_RGBW
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

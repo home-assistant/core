@@ -41,9 +41,7 @@ class TestCheckConfig(unittest.TestCase):
         # this ensures we have one.
         try:
             asyncio.get_event_loop()
-        except (RuntimeError, AssertionError):
-            # Py35: RuntimeError
-            # Py34: AssertionError
+        except RuntimeError:
             asyncio.set_event_loop(asyncio.new_event_loop())
 
         # Will allow seeing full diff

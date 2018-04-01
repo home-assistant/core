@@ -37,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-BMW_COMPONENTS = ['device_tracker', 'sensor']
+BMW_COMPONENTS = ['binary_sensor', 'device_tracker', 'lock', 'sensor']
 UPDATE_INTERVAL = 5  # in minutes
 
 

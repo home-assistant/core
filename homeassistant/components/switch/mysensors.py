@@ -73,6 +73,12 @@ class MySensorsSwitch(mysensors.MySensorsEntity, SwitchDevice):
         return self.gateway.optimistic
 
     @property
+    def current_power_w(self):
+        """Return the current power usage in W."""
+        set_req = self.gateway.const.SetReq
+        return self._values.get(set_req.V_WATT)
+
+    @property
     def is_on(self):
         """Return True if switch is on."""
         return self._values.get(self.value_type) == STATE_ON
