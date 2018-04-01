@@ -1,5 +1,5 @@
 """
-Platform for the Garadget cover component.
+Platform for the dGarage cover component.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/dgarage/
@@ -8,11 +8,11 @@ import logging
 import bluetooth
 from bluetooth import BluetoothSocket
 import voluptuous as vol
-import json
 import asyncio
+import json
 from homeassistant.const import (
     STATE_UNKNOWN, STATE_CLOSED, STATE_OPEN, CONF_COVERS,
-    CONF_NAME, CONF_MAC, CONF_PORT, CONF_DEVICE_CLASS)
+    CONF_NAME, CONF_MAC, CONF_PORT, CONF_DEVICE_CLASS, STATE_OPENING)
 from homeassistant.components.cover import (
     CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP,
     PLATFORM_SCHEMA)
@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'dGarage'
 STATE_IN_BETWEEN = "in_between"
-CONF_HOST_MAC = "host_mac"
 
 STATES_MAP = {
     0: STATE_CLOSED,
@@ -35,8 +34,7 @@ COVER_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_MAC): cv.string,
     vol.Required(CONF_PORT): cv.positive_int,
-    vol.Required(CONF_DEVICE_CLASS): cv.string,
-    vol.Required(CONF_HOST_MAC): cv.string
+    vol.Required(CONF_DEVICE_CLASS): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -55,8 +53,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             CONF_NAME: device_config.get(CONF_NAME),
             CONF_MAC: device_config.get(CONF_MAC),
             CONF_PORT: device_config.get(CONF_PORT),
-            CONF_DEVICE_CLASS: device_config.get(CONF_DEVICE_CLASS),
-            CONF_HOST_MAC: device_config.get(CONF_HOST_MAC)
+            CONF_DEVICE_CLASS: device_config.get(CONF_DEVICE_CLASS)
         }
         covers.append(dGarageCover(hass, args))
 
@@ -76,7 +73,6 @@ class dGarageCover(CoverDevice):
         self._port = args[CONF_PORT]
         self._socket = BluetoothSocket(bluetooth.RFCOMM)
         self._device_class = args[CONF_DEVICE_CLASS]
-        self._host_mac = args[CONF_HOST_MAC]
 
     @property
     def device_class(self):
@@ -100,7 +96,7 @@ class dGarageCover(CoverDevice):
         """Return if the cover is closed."""
         if self._state in [STATE_UNKNOWN]:
             return None
-        return self._state == STATE_CLOSED
+        return self._state in [STATE_CLOSED]
 
     # @asyncio.coroutine
     # def async_update(self):
@@ -131,7 +127,7 @@ class dGarageCover(CoverDevice):
     def async_stop_cover(self, **kwargs):
         """Stop the cover."""
         if self._state not in [STATE_IN_BETWEEN]:
-            self._state = STATE_IN_BETWEEN
+            self._state = STATE_OPENING
         try:
             yield from self._send("{c:sto}")
         except bluetooth.BluetoothError as ex:
@@ -149,28 +145,23 @@ class dGarageCover(CoverDevice):
 
     @asyncio.coroutine
     def _update_state(self):
-        self._socket.connect((self._mac, self._port));
-        self._socket.send("{g}")
+        # http://pages.iu.edu/~rwisman/c490/html/pythonandbluetooth.htm
+        yield from self._send("{g}")
 
-        s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-        s.bind((self._host_mac, self._port))
-        s.listen(1)
-        try:
-            # client, clientInfo = s.accept()
-            while 1:
-                data = self._socket.recv(1024)
-                data = data.decode("utf-8")
-                if data:
-                    parsed = json.loads(data)
-                    settings = parsed['ard_settings']
-                    door_state_indicator = settings['doorStateIndicator']
-                    self._state = STATES_MAP[int(door_state_indicator)]
-                break
+        self._socket.bind(("", self._port))
+        self._socket.listen(1)
 
-            self._socket.close()
-            self._socket = BluetoothSocket(bluetooth.RFCOMM)
-        except:
-            self._socket.close()
-            self._socket = BluetoothSocket(bluetooth.RFCOMM)
-            s.close()
+        client_socket, address = self._socket.accept()
+        data = client_socket.recv(1024)
+        # for ch in data:
+        #     if ch == "{":
+        #
+        # https://stackoverflow.com/questions/17667903/python-socket-receive-large-amount-of-data
+        # ?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 
+        parsed = json.loads(data)
+        self._state = parsed['doorStateIndicator']
+
+        client_socket.close()
+        self._socket.close()
+        self._socket = BluetoothSocket(bluetooth.RFCOMM)

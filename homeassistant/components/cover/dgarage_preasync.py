@@ -9,7 +9,6 @@ import bluetooth
 from bluetooth import BluetoothSocket
 import voluptuous as vol
 import json
-import asyncio
 from homeassistant.const import (
     STATE_UNKNOWN, STATE_CLOSED, STATE_OPEN, CONF_COVERS,
     CONF_NAME, CONF_MAC, CONF_PORT, CONF_DEVICE_CLASS)
@@ -44,8 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up dGarage covers."""
 
     covers = []
@@ -60,7 +58,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         }
         covers.append(dGarageCover(hass, args))
 
-    async_add_devices(covers, True)
+    add_devices(covers, True)
 
 
 class dGarageCover(CoverDevice):
@@ -102,42 +100,39 @@ class dGarageCover(CoverDevice):
             return None
         return self._state == STATE_CLOSED
 
-    # @asyncio.coroutine
-    # def async_update(self):
-    #     """Retrieve latest state."""
-    #     self._state = yield from self._update_state()
+    @property
+    def update(self):
+        """Retrieve latest state."""
+        self._update_state()
 
-    @asyncio.coroutine
-    def async_open_cover(self, **kwargs):
+    def open_cover(self, **kwargs):
         """Open the cover."""
         if self._state not in [STATE_OPEN]:
             self._state = STATE_OPEN
         try:
-            yield from self._send("{c:ope}")
+            self._send("{c:ope}")
         except bluetooth.BluetoothError as ex:
             self._do_except(ex)
 
-    @asyncio.coroutine
-    def async_close_cover(self, **kwargs):
+    def close_cover(self, **kwargs):
         """Close the cover."""
         if self._state not in [STATE_CLOSED]:
             self._state = STATE_CLOSED
         try:
-            yield from self._send("{c:clo}")
+            self._send("{c:clo}")
         except bluetooth.BluetoothError as ex:
             self._do_except(ex)
 
-    @asyncio.coroutine
-    def async_stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs):
         """Stop the cover."""
         if self._state not in [STATE_IN_BETWEEN]:
             self._state = STATE_IN_BETWEEN
         try:
-            yield from self._send("{c:sto}")
+            self._send("{c:sto}")
         except bluetooth.BluetoothError as ex:
             self._do_except(ex)
 
-    async def _send(self, message):
+    def _send(self, message):
         self._socket.connect((self._mac, self._port))
         self._socket.send(message)
         self._socket.close()
@@ -147,7 +142,6 @@ class dGarageCover(CoverDevice):
         _LOGGER.error("Unable to connect to dGarage device: %(reason)s",
                       dict(reason=reason))
 
-    @asyncio.coroutine
     def _update_state(self):
         self._socket.connect((self._mac, self._port));
         self._socket.send("{g}")
