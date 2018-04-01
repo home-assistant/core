@@ -129,6 +129,8 @@ class MqttJson(MqttAvailability, Light):
         self._retain = retain
         self._optimistic = optimistic or topic[CONF_STATE_TOPIC] is None
         self._state = False
+        self._rgb = rgb
+        self._xy = xy
         if brightness:
             self._brightness = 255
         else:
@@ -307,20 +309,22 @@ class MqttJson(MqttAvailability, Light):
 
         message = {'state': 'ON'}
 
-        if ATTR_HS_COLOR in kwargs:
+        if ATTR_HS_COLOR in kwargs and (self._rgb or self._xy):
             hs_color = kwargs[ATTR_HS_COLOR]
-            brightness = kwargs.get(
-                ATTR_BRIGHTNESS, self._brightness if self._brightness else 255)
-            rgb = color_util.color_hsv_to_RGB(
-                hs_color[0], hs_color[1], brightness / 255 * 100)
-            xy_color = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
-            message['color'] = {
-                'r': rgb[0],
-                'g': rgb[1],
-                'b': rgb[2],
-                'x': xy_color[0],
-                'y': xy_color[1],
-            }
+            message['color'] = {}
+            if self._rgb:
+                brightness = kwargs.get(
+                    ATTR_BRIGHTNESS,
+                    self._brightness if self._brightness else 255)
+                rgb = color_util.color_hsv_to_RGB(
+                    hs_color[0], hs_color[1], brightness / 255 * 100)
+                message['color']['r'] = rgb[0]
+                message['color']['g'] = rgb[1]
+                message['color']['b'] = rgb[2]
+            if self._xy:
+                xy_color = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
+                message['color']['x'] = xy_color[0]
+                message['color']['y'] = xy_color[1]
 
             if self._optimistic:
                 self._hs = kwargs[ATTR_HS_COLOR]
