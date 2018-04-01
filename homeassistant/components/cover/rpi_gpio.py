@@ -105,9 +105,9 @@ class RPiGPIOCover(CoverDevice):
 
     def _trigger(self):
         """Trigger the cover."""
-        rpi_gpio.write_output(self._relay_pin, self._invert_relay)
+        rpi_gpio.write_output(self._relay_pin, 1 if self._invert_relay else 0)
         sleep(self._relay_time)
-        rpi_gpio.write_output(self._relay_pin, not self._invert_relay)
+        rpi_gpio.write_output(self._relay_pin, 0 if self._invert_relay else 1)
 
     def close_cover(self, **kwargs):
         """Close the cover."""
