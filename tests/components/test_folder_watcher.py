@@ -4,7 +4,7 @@ import os
 
 from homeassistant.components import folder_watcher
 from homeassistant.setup import async_setup_component
-from tests.common import get_test_home_assistant, MockDependency
+from tests.common import MockDependency
 
 
 async def test_invalid_path_setup(hass):
