@@ -22,9 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = [
-    'https://github.com/balloob/python-broadlink/archive/'
-    '3580ff2eaccd267846f14246d6ede6e30671f7c6.zip#broadlink==0.5.1']
+REQUIREMENTS = ['broadlink==0.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +140,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return slots['slot_{}'.format(slot)]
 
     if switch_type in RM_TYPES:
-        broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
+        broadlink_device = broadlink.rm((ip_addr, 80), mac_addr, None)
         hass.services.register(DOMAIN, SERVICE_LEARN + '_' +
                                ip_addr.replace('.', '_'), _learn_command)
         hass.services.register(DOMAIN, SERVICE_SEND + '_' +
@@ -159,14 +157,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 )
             )
     elif switch_type in SP1_TYPES:
-        broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr)
+        broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr, None)
         switches = [BroadlinkSP1Switch(friendly_name, broadlink_device)]
     elif switch_type in SP2_TYPES:
-        broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr)
+        broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr, None)
         switches = [BroadlinkSP2Switch(friendly_name, broadlink_device)]
     elif switch_type in MP1_TYPES:
         switches = []
-        broadlink_device = broadlink.mp1((ip_addr, 80), mac_addr)
+        broadlink_device = broadlink.mp1((ip_addr, 80), mac_addr, None)
         parent_device = BroadlinkMP1Switch(broadlink_device)
         for i in range(1, 5):
             slot = BroadlinkMP1Slot(
