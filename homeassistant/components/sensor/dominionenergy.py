@@ -34,22 +34,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setting the platform in HASS and getting the username and password."""
-    from selenium import webdriver
-    from selenium.common.exceptions import NoSuchElementException
 
-    add_devices([DominionEnergySensor(config[CONF_NAME], config[CONF_USERNAME],
-                                      config[CONF_PASSWORD])])
-    try:
-        driver = webdriver.PhantomJS()
-        driver.set_window_size(1120, 550)
-        driver.get("https://www.dominionenergy.com/sign-in")
-        driver.find_element_by_id('user').send_keys(config[CONF_USERNAME])
-        driver.find_element_by_id('password').send_keys(config[CONF_PASSWORD])
-        driver.find_element_by_id('SignIn').click()
-        driver.implicitly_wait(1)
-        driver.find_element_by_css_selector(
-            CURRENT_BILL_SELECTOR)
-    except NoSuchElementException:
+    sensor = DominionEnergySensor(config[CONF_NAME], config[CONF_USERNAME],
+                                  config[CONF_PASSWORD])
+    sensor.update()
+    if sensor.valid_credentials is True:
+        add_devices([sensor])
+    else:
         _LOGGER.error("Setup DominionEnergy Fail"
                       " check if your username/password changed")
         return
@@ -65,6 +56,7 @@ class DominionEnergySensor(Entity):
         self._password = password
         self._username = username
         self._name = name
+        self.valid_credentials = False
 
     @property
     def name(self):
@@ -91,6 +83,7 @@ class DominionEnergySensor(Entity):
             driver.implicitly_wait(1)
             self._state = str(driver.find_element_by_css_selector(
                 CURRENT_BILL_SELECTOR).text)
+            self.valid_credentials = True
         except NoSuchElementException:
             _LOGGER.error("Update Dominion Energy Failed."
                           " check if your password changed")
