@@ -24,6 +24,9 @@ DoorBirdPy==0.1.3
 # homeassistant.components.homekit
 HAP-python==1.1.7
 
+# homeassistant.components.notify.mastodon
+Mastodon.py==1.2.2
+
 # homeassistant.components.isy994
 PyISY==1.1.0
 
@@ -37,7 +40,7 @@ PyMVGLive==1.1.4
 PyMata==2.14
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.8.3
+PyXiaomiGateway==0.9.0
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
@@ -53,6 +56,9 @@ TravisPy==0.3.5
 
 # homeassistant.components.notify.twitter
 TwitterAPI==2.5.0
+
+# homeassistant.components.sensor.waze_travel_time
+WazeRouteCalculator==0.5
 
 # homeassistant.components.notify.yessssms
 YesssSMS==0.1.1b3
@@ -95,7 +101,7 @@ alarmdecoder==1.13.2
 alpha_vantage==1.9.0
 
 # homeassistant.components.amcrest
-amcrest==1.2.1
+amcrest==1.2.2
 
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.8
@@ -169,6 +175,9 @@ botocore==1.7.34
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
 broadlink==0.8.0
+ 
+# homeassistant.components.device_tracker.bluetooth_tracker
+bt_proximity==0.1.2
 
 # homeassistant.components.sensor.buienradar
 # homeassistant.components.weather.buienradar
@@ -370,7 +379,7 @@ hipnotify==1.0.8
 holidays==0.9.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180330.0
+home-assistant-frontend==20180401.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.8
@@ -494,9 +503,6 @@ matrix-client==0.0.6
 
 # homeassistant.components.maxcube
 maxcube-api==0.1.0
-
-# homeassistant.components.mercedesme
-mercedesmejsonpy==0.1.2
 
 # homeassistant.components.notify.message_bird
 messagebird==1.2.0
@@ -658,7 +664,7 @@ pyCEC==0.4.13
 pyHS100==0.3.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.21.1
+pyRFXtrx==0.22.0
 
 # homeassistant.components.sensor.tibber
 pyTibber==0.4.0
@@ -768,7 +774,7 @@ pyhiveapi==0.2.11
 pyhomematic==0.1.40
 
 # homeassistant.components.sensor.hydroquebec
-pyhydroquebec==2.1.0
+pyhydroquebec==2.2.1
 
 # homeassistant.components.alarm_control_panel.ialarm
 pyialarm==0.2
