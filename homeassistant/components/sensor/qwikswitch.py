@@ -38,7 +38,7 @@ class QSSensor(Entity):
         self.qsid = dat[0]
         self._params = {}
         if dat[1]:
-            self._params['channel'] = dat[1]
+            self._params['channel'] = int(dat[1])
         self.sensor = dat[2]
         self._decode, self.unit = SENSORS[self.sensor]
 
