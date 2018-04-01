@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.dominion_energy/
 
 import logging
 from datetime import timedelta
+
 import voluptuous as vol
 
 from homeassistant.util import Throttle
@@ -14,6 +15,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,9 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if sensor.valid_credentials is True:
         add_devices([sensor])
     else:
-        _LOGGER.error("Setup DominionEnergy Fail"
-                      " check if your username/password changed")
-        return
+        raise PlatformNotReady
     return
 
 

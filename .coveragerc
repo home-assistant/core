@@ -73,6 +73,8 @@ omit =
 
     homeassistant/components/dominos.py
 
+    homeassistant/components/sensor/dominionenergy.py
+
 	homeassistant/components/doorbird.py
 	homeassistant/components/*/doorbird.py
 
