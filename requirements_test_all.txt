@@ -202,8 +202,5 @@ wakeonlan==1.0.0
 # homeassistant.components.cloud
 warrant==0.6.1
 
-# homeassistant.components.folder_watcher
-watchdog==0.8.3
-
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
