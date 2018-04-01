@@ -34,3 +34,9 @@ activate_air_conditioning:
       description: >
         The vehicle identification number (VIN) of the vehicle, 17 characters
       example: WBANXXXXXX1234567
+
+update_state:
+  description: >
+    Fetch the last state of the vehicles of all your accounts from the BMW
+    server. This does *not* trigger an update from the vehicle, it just gets
+    the data from the BMW servers. This service does not require any attributes.

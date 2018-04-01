@@ -43,6 +43,8 @@ SERVICE_SCHEMA = vol.Schema({
 BMW_COMPONENTS = ['binary_sensor', 'device_tracker', 'lock', 'sensor']
 UPDATE_INTERVAL = 5  # in minutes
 
+SERVICE_UPDATE_STATE = 'update_state'
+
 _SERVICE_MAP = {
     'light_flash': 'trigger_remote_light_flash',
     'sound_horn': 'trigger_remote_horn',
@@ -58,8 +60,15 @@ def setup(hass, config: dict):
 
     hass.data[DOMAIN] = accounts
 
-    for account in accounts:
-        account.update()
+    def _update_all(_) -> None:
+        """Update all BMW accounts."""
+        for account_update in hass.data[DOMAIN]:
+            account_update.update()
+
+    # Service to manually trigger updates for all accounts.
+    hass.services.register(DOMAIN, SERVICE_UPDATE_STATE, _update_all)
+
+    _update_all(None)
 
     for component in BMW_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -90,7 +99,7 @@ def setup_account(account_config: dict, hass, name: str) \
         function_call = getattr(vehicle.remote_services, function_name)
         function_call()
 
-    # register the services
+    # register the remote services
     for service in _SERVICE_MAP:
         _LOGGER.debug('Registering service %s', service)
         hass.services.register(
