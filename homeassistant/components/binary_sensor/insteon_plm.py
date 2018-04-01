@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {'openClosedSensor': 'opening',
                 'motionSensor': 'motion',
                 'doorSensor': 'door',
-                'leakSensor': 'moisture'}
+                'wetLeakSensor': 'moisture'}
 
 
 @asyncio.coroutine
@@ -28,13 +28,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     address = discovery_info['address']
     device = plm.devices[address]
     state_key = discovery_info['state_key']
+    name = device.states[state_key].name
+    if name != 'dryLeakSensor':
+        _LOGGER.debug('Adding device %s entity %s to Binary Sensor platform',
+                      device.address.hex, device.states[state_key].name)
 
-    _LOGGER.debug('Adding device %s entity %s to Binary Sensor platform',
-                  device.address.hex, device.states[state_key].name)
+        new_entity = InsteonPLMBinarySensor(device, state_key)
 
-    new_entity = InsteonPLMBinarySensor(device, state_key)
-
-    async_add_devices([new_entity])
+        async_add_devices([new_entity])
 
 
 class InsteonPLMBinarySensor(InsteonPLMEntity, BinarySensorDevice):
@@ -53,5 +54,4 @@ class InsteonPLMBinarySensor(InsteonPLMEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        sensorstate = self._insteon_device_state.value
-        return bool(sensorstate)
+        return bool(self._insteon_device_state.value)

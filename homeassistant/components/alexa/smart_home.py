@@ -438,9 +438,7 @@ class _LightCapabilities(_AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & light.SUPPORT_BRIGHTNESS:
             yield _AlexaBrightnessController(self.entity)
-        if supported & light.SUPPORT_RGB_COLOR:
-            yield _AlexaColorController(self.entity)
-        if supported & light.SUPPORT_XY_COLOR:
+        if supported & light.SUPPORT_COLOR:
             yield _AlexaColorController(self.entity)
         if supported & light.SUPPORT_COLOR_TEMP:
             yield _AlexaColorTemperatureController(self.entity)
@@ -842,25 +840,16 @@ def async_api_adjust_brightness(hass, config, request, entity):
 @asyncio.coroutine
 def async_api_set_color(hass, config, request, entity):
     """Process a set color request."""
-    supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES)
     rgb = color_util.color_hsb_to_RGB(
         float(request[API_PAYLOAD]['color']['hue']),
         float(request[API_PAYLOAD]['color']['saturation']),
         float(request[API_PAYLOAD]['color']['brightness'])
     )
 
-    if supported & light.SUPPORT_RGB_COLOR > 0:
-        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
-            ATTR_ENTITY_ID: entity.entity_id,
-            light.ATTR_RGB_COLOR: rgb,
-        }, blocking=False)
-    else:
-        xyz = color_util.color_RGB_to_xy(*rgb)
-        yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
-            ATTR_ENTITY_ID: entity.entity_id,
-            light.ATTR_XY_COLOR: (xyz[0], xyz[1]),
-            light.ATTR_BRIGHTNESS: xyz[2],
-        }, blocking=False)
+    yield from hass.services.async_call(entity.domain, SERVICE_TURN_ON, {
+        ATTR_ENTITY_ID: entity.entity_id,
+        light.ATTR_RGB_COLOR: rgb,
+    }, blocking=False)
 
     return api_message(request)
 

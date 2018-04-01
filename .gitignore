@@ -21,6 +21,7 @@ Icon
 *.iml
 
 # pytest
+.pytest_cache
 .cache
 
 # GITHUB Proposed Python stuff:

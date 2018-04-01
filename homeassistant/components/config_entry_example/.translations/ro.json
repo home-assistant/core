@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "description": "Introduce\u021bi un obiect_id pentru entitatea testat\u0103.",
+                "title": "Alege\u021bi id-ul obiectului"
+            },
+            "name": {
+                "data": {
+                    "name": "Nume"
+                }
+            }
+        }
+    }
+}

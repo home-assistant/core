@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Alle Philips Hue Bridger er allerede konfigurert",
+            "discover_timeout": "Kunne ikke oppdage Hue Bridger",
+            "no_bridges": "Ingen Philips Hue Bridger oppdaget"
+        },
+        "error": {
+            "linking": "Ukjent koblingsfeil oppstod.",
+            "register_failed": "Registrering feilet, vennligst pr\u00f8v igjen"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Vert"
+                },
+                "title": "Velg Hue Bridge"
+            },
+            "link": {
+                "description": "Trykk p\u00e5 knappen p\u00e5 Bridgen for \u00e5 registrere Philips Hue med Home Assistant. \n\n ![Knappens plassering p\u00e5 Bridgen](/static/images/config_philips_hue.jpg)",
+                "title": "Link Hub"
+            }
+        },
+        "title": "Philips Hue Bridge"
+    }
+}

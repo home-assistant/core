@@ -11,10 +11,10 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
-def mock_api_client(hass, test_client):
+def mock_api_client(hass, aiohttp_client):
     """Start the Hass HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, 'api', {}))
-    return hass.loop.run_until_complete(test_client(hass.http.app))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @asyncio.coroutine
