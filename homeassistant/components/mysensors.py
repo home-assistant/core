@@ -4,7 +4,6 @@ Connect to a MySensors gateway via pymysensors API.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mysensors/
 """
-import asyncio
 from collections import defaultdict
 import logging
 import os
@@ -519,11 +518,12 @@ def get_mysensors_gateway(hass, gateway_id):
     return gateways.get(gateway_id)
 
 
+@callback
 def setup_mysensors_platform(
         hass, domain, discovery_info, device_class, device_args=None,
-        add_devices=None):
+        async_add_devices=None):
     """Set up a MySensors platform."""
-    # Only act if called via MySensors by discovery event.
+    # Only act if called via mysensors by discovery event.
     # Otherwise gateway is not setup.
     if not discovery_info:
         return
@@ -552,8 +552,8 @@ def setup_mysensors_platform(
         new_devices.append(devices[dev_id])
     if new_devices:
         _LOGGER.info("Adding new devices: %s", new_devices)
-        if add_devices is not None:
-            add_devices(new_devices, True)
+        if async_add_devices is not None:
+            async_add_devices(new_devices, True)
     return new_devices
 
 
@@ -596,7 +596,7 @@ class MySensorsDevice(object):
 
         return attr
 
-    def update(self):
+    async def async_update(self):
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
@@ -629,14 +629,13 @@ class MySensorsEntity(MySensorsDevice, Entity):
         return self.value_type in self._values
 
     @callback
-    def _async_update_callback(self):
+    def async_update_callback(self):
         """Update the entity."""
         self.async_schedule_update_ha_state(True)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register update callback."""
         dev_id = id(self.gateway), self.node_id, self.child_id, self.value_type
         async_dispatcher_connect(
             self.hass, SIGNAL_CALLBACK.format(*dev_id),
-            self._async_update_callback)
+            self.async_update_callback)
