@@ -36,7 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setting the platform in HASS and getting the username and password."""
-
     sensor = DominionEnergySensor(config[CONF_NAME], config[CONF_USERNAME],
                                   config[CONF_PASSWORD])
     sensor.update()
