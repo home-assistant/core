@@ -31,9 +31,14 @@ class HueBridge(object):
         self.available = True
         self.api = None
 
+    @property
+    def host(self):
+        """Return the host of this bridge."""
+        return self.config_entry.data['host']
+
     async def async_setup(self, tries=0):
         """Set up a phue bridge based on host parameter."""
-        host = self.config_entry.data['host']
+        host = self.host
 
         try:
             self.api = await get_bridge(
