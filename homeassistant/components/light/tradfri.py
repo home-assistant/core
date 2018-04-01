@@ -77,11 +77,6 @@ class TradfriGroup(Light):
         return self._unique_id
 
     @property
-    def should_poll(self):
-        """No polling needed for tradfri group."""
-        return False
-
-    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORTED_FEATURES
@@ -148,6 +143,10 @@ class TradfriGroup(Light):
         """Receive new state data for this light."""
         self._refresh(tradfri_device)
         self.async_schedule_update_ha_state()
+
+    async def async_update(self):
+        """Fetch new state data for the group."""
+        await self._group.update()
 
 
 class TradfriLight(Light):
