@@ -34,28 +34,31 @@ class QSSensor(Entity):
     def __init__(self, sensor_name, sensor_id):
         """Initialize the sensor."""
         self._name = sensor_name
-        self.qsid = sensor_id
+        dat = sensor_id.split(':')
+        self.qsid = dat[0]
+        self._params = {}
+        if dat[1]:
+            self._params['channel'] = dat[1]
+        self.sensor = dat[2]
+        self._decode, self.unit = SENSORS[self.sensor]
 
     def update_packet(self, packet):
         """Receive update packet from QSUSB."""
         _LOGGER.debug("Update %s (%s): %s", self.entity_id, self.qsid, packet)
-        self._val = packet
-        self.async_schedule_update_ha_state()
+        val = self._decode(packet.get('data'), **self._params)
+        if val:
+            self._val = val
+            self.async_schedule_update_ha_state()
 
     @property
     def state(self):
         """Return the value of the sensor."""
-        return self._val.get('data', 0)
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
         return self._val
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return None
+        return self.unit
 
     @property
     def poll(self):
@@ -67,3 +70,50 @@ class QSSensor(Entity):
         # Part of Entity/ToggleEntity
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             self.qsid, self.update_packet)
+
+
+# byte 0:
+#     4e = imod
+#     46 = Door sensor
+# byte 1: firmware
+# byte 2:  bit values
+#     00/64: Door open / Close
+#     17/xx: All open / Channels 1-4 at 0004 0321
+# byte 3: last change (imod)
+
+
+def decode_qwikcord_ctavg(val):
+    """Extract the qwikcord current measurements from val (CTavg, _)."""
+    if len(val) != 16:
+        return None
+    return int(val[6:12], 16)
+
+
+def decode_qwikcord_ctsum(val):
+    """Extract the qwikcord current measurements from val (_, CTsum)."""
+    if len(val) != 16:
+        return None
+    return int(val[12:], 16)
+
+
+def decode_door(val):
+    """Decode a door sensor."""
+    if len(val) == 6 and val.startswith('46'):
+        return val[-1] == '0'
+    return None
+
+
+def decode_imod(val, channel=0):
+    """Decode an 4 channel imod."""
+    if len(val) == 8 and val.startswith('4e') and channel < 4:
+        _map = ((5, 1), (5, 2), (5, 4), (4, 1))[channel]
+        return (int(val[_map[0]]) & _map[1]) == 0
+    return None
+
+
+SENSORS = {
+    'imod': (decode_imod, None),
+    'door': (decode_door, None),
+    'qwikcord_ctavg': (decode_qwikcord_ctavg, 'A/s'),
+    'qwikcord_ctsum': (decode_qwikcord_ctsum, 'A/s'),
+}
