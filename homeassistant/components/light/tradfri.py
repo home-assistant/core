@@ -146,7 +146,7 @@ class TradfriGroup(Light):
 
     async def async_update(self):
         """Fetch new state data for the group."""
-        await self._group.update()
+        await self._api(self._group.update())
 
 
 class TradfriLight(Light):
