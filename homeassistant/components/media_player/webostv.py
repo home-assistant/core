@@ -345,9 +345,8 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Find app for media_id and initialize with url"""
-
         youtube_id = self.youtube_video_id(media_id)
-        if (youtube_id is not None):
+        if youtube_id is not None:
             app = "youtube.leanback.v4"
             media_id = youtube_id
             self._client.launch_app_with_params(app, contentId=media_id)
@@ -357,10 +356,12 @@ class LgWebOSDevice(MediaPlayerDevice):
     def youtube_video_id(self, value):
         """
         Examples:
+
         - http://youtu.be/SA2iWivDJiE
         - http://www.youtube.com/watch?v=_oPAwA_Udwc&feature=feedu
         - http://www.youtube.com/embed/SA2iWivDJiE
         - http://www.youtube.com/v/SA2iWivDJiE?version=3&amp;hl=en_US
+        
         """
         query = urlparse(value)
         if query.hostname == 'youtu.be':
