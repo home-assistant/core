@@ -189,10 +189,12 @@ class Icloud(DeviceScanner):
             for device in self.api.devices:
                 status = device.status(DEVICESTATUSSET)
                 devicename = slugify(status['name'].replace(' ', '', 99))
-                if devicename not in self.devices:
-                    self.devices[devicename] = device
-                    self._intervals[devicename] = 1
-                    self._overridestates[devicename] = None
+                if devicename in self.devices:
+                    _LOGGER.error('Multiple devices with name: %s', devicename)
+                    continue
+                self.devices[devicename] = device
+                self._intervals[devicename] = 1
+                self._overridestates[devicename] = None
         except PyiCloudNoDevicesException:
             _LOGGER.error('No iCloud Devices found!')
 
@@ -319,14 +321,6 @@ class Icloud(DeviceScanner):
 
     def determine_interval(self, devicename, latitude, longitude, battery):
         """Calculate new interval."""
-        distancefromhome = None
-        zone_state = self.hass.states.get('zone.home')
-        zone_state_lat = zone_state.attributes['latitude']
-        zone_state_long = zone_state.attributes['longitude']
-        distancefromhome = distance(
-            latitude, longitude, zone_state_lat, zone_state_long)
-        distancefromhome = round(distancefromhome / 1000, 1)
-
         currentzone = active_zone(self.hass, latitude, longitude)
 
         if ((currentzone is not None and
@@ -335,22 +329,48 @@ class Icloud(DeviceScanner):
                  self._overridestates.get(devicename) == 'away')):
             return
 
+        zones = (self.hass.states.get(entity_id) for entity_id
+                 in sorted(self.hass.states.entity_ids('zone')))
+
+        distances = []
+        for zone_state in zones:
+            zone_state_lat = zone_state.attributes['latitude']
+            zone_state_long = zone_state.attributes['longitude']
+            zone_distance = distance(
+                latitude, longitude, zone_state_lat, zone_state_long)
+            distances.append(round(zone_distance / 1000, 1))
+
+        if distances:
+            mindistance = min(distances)
+        else:
+            mindistance = None
+
         self._overridestates[devicename] = None
 
         if currentzone is not None:
             self._intervals[devicename] = 30
             return
 
-        if distancefromhome is None:
+        if mindistance is None:
             return
-        if distancefromhome > 25:
-            self._intervals[devicename] = round(distancefromhome / 2, 0)
-        elif distancefromhome > 10:
-            self._intervals[devicename] = 5
-        else:
-            self._intervals[devicename] = 1
-        if battery is not None and battery <= 33 and distancefromhome > 3:
-            self._intervals[devicename] = self._intervals[devicename] * 2
+
+        # Calculate out how long it would take for the device to drive to the
+        # nearest zone at 120 km/h:
+        interval = round(mindistance / 2, 0)
+
+        # Never poll more than once per minute
+        interval = max(interval, 1)
+
+        if interval > 180:
+            # Three hour drive?  This is far enough that they might be flying
+            # home - check every half hour
+            interval = 30
+
+        if battery is not None and battery <= 33 and mindistance > 3:
+            # Low battery - let's check half as often
+            interval = interval * 2
+
+        self._intervals[devicename] = interval
 
     def update_device(self, devicename):
         """Update the device_tracker entity."""

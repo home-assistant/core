@@ -1,0 +1,24 @@
+{
+    "config": {
+        "error": {
+            "invalid_object_id": "Invalid object ID"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "object_id": "Object ID"
+                },
+                "description": "Please enter an object_id for the test entity.",
+                "title": "Pick object id"
+            },
+            "name": {
+                "data": {
+                    "name": "Name"
+                },
+                "description": "Please enter a name for the test entity.",
+                "title": "Name of the entity"
+            }
+        },
+        "title": "Config Entry Example"
+    }
+}

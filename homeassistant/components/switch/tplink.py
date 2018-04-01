@@ -75,7 +75,7 @@ class SmartPlugSwitch(SwitchDevice):
         """Turn the switch on."""
         self.smartplug.turn_on()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.smartplug.turn_off()
 

@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['broadlink==0.5']
+REQUIREMENTS = ['broadlink==0.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,8 +45,8 @@ MP1_TYPES = ['mp1']
 SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES + MP1_TYPES
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Optional(CONF_COMMAND_OFF, default=None): cv.string,
-    vol.Optional(CONF_COMMAND_ON, default=None): cv.string,
+    vol.Optional(CONF_COMMAND_OFF): cv.string,
+    vol.Optional(CONF_COMMAND_ON): cv.string,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
 })
 
@@ -140,11 +140,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return slots['slot_{}'.format(slot)]
 
     if switch_type in RM_TYPES:
-        broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
+        broadlink_device = broadlink.rm((ip_addr, 80), mac_addr, None)
         hass.services.register(DOMAIN, SERVICE_LEARN + '_' +
                                ip_addr.replace('.', '_'), _learn_command)
         hass.services.register(DOMAIN, SERVICE_SEND + '_' +
-                               ip_addr.replace('.', '_'), _send_packet)
+                               ip_addr.replace('.', '_'), _send_packet,
+                               vol.Schema({'packet': cv.ensure_list}))
         switches = []
         for object_id, device_config in devices.items():
             switches.append(
@@ -156,14 +157,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 )
             )
     elif switch_type in SP1_TYPES:
-        broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr)
+        broadlink_device = broadlink.sp1((ip_addr, 80), mac_addr, None)
         switches = [BroadlinkSP1Switch(friendly_name, broadlink_device)]
     elif switch_type in SP2_TYPES:
-        broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr)
+        broadlink_device = broadlink.sp2((ip_addr, 80), mac_addr, None)
         switches = [BroadlinkSP2Switch(friendly_name, broadlink_device)]
     elif switch_type in MP1_TYPES:
         switches = []
-        broadlink_device = broadlink.mp1((ip_addr, 80), mac_addr)
+        broadlink_device = broadlink.mp1((ip_addr, 80), mac_addr, None)
         parent_device = BroadlinkMP1Switch(broadlink_device)
         for i in range(1, 5):
             slot = BroadlinkMP1Slot(

@@ -23,7 +23,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['samsungctl==0.6.0', 'wakeonlan==0.2.2']
+REQUIREMENTS = ['samsungctl[websocket]==0.7.1', 'wakeonlan==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,13 +92,13 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Initialize the Samsung device."""
         from samsungctl import exceptions
         from samsungctl import Remote
-        from wakeonlan import wol
+        import wakeonlan
         # Save a reference to the imported classes
         self._exceptions_class = exceptions
         self._remote_class = Remote
         self._name = name
         self._mac = mac
-        self._wol = wol
+        self._wol = wakeonlan
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode

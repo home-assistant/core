@@ -38,11 +38,6 @@ class WinkScene(WinkDevice, Scene):
         """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['scene'].append(self)
 
-    @property
-    def is_on(self):
-        """Python-wink will always return False."""
-        return self.wink.state()
-
-    def activate(self, **kwargs):
+    def activate(self):
         """Activate the scene."""
         self.wink.activate()

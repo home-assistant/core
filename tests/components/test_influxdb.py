@@ -1,15 +1,10 @@
 """The tests for the InfluxDB component."""
-import unittest
 import datetime
+import unittest
 from unittest import mock
-
-from datetime import timedelta
-from unittest.mock import MagicMock
 
 import influxdb as influx_client
 
-from homeassistant.util import dt as dt_util
-from homeassistant import core as ha
 from homeassistant.setup import setup_component
 import homeassistant.components.influxdb as influxdb
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON, \
@@ -19,6 +14,9 @@ from tests.common import get_test_home_assistant
 
 
 @mock.patch('influxdb.InfluxDBClient')
+@mock.patch(
+    'homeassistant.components.influxdb.InfluxThread.batch_timeout',
+    mock.Mock(return_value=0))
 class TestInfluxDB(unittest.TestCase):
     """Test the InfluxDB component."""
 
@@ -169,6 +167,8 @@ class TestInfluxDB(unittest.TestCase):
                 body[0]['fields']['value'] = out[1]
 
             self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
+
             self.assertEqual(
                 mock_client.return_value.write_points.call_count, 1
             )
@@ -203,6 +203,7 @@ class TestInfluxDB(unittest.TestCase):
                 },
             }]
             self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
             self.assertEqual(
                 mock_client.return_value.write_points.call_count, 1
             )
@@ -212,17 +213,36 @@ class TestInfluxDB(unittest.TestCase):
             )
             mock_client.return_value.write_points.reset_mock()
 
-    def test_event_listener_fail_write(self, mock_client):
-        """Test the event listener for write failures."""
+    def test_event_listener_inf(self, mock_client):
+        """Test the event listener for missing units."""
         self._setup()
 
+        attrs = {'bignumstring':  "9" * 999}
         state = mock.MagicMock(
-            state=1, domain='fake', entity_id='fake.entity-id',
-            object_id='entity', attributes={})
+            state=8, domain='fake', entity_id='fake.entity-id',
+            object_id='entity', attributes=attrs)
         event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
-        mock_client.return_value.write_points.side_effect = \
-            influx_client.exceptions.InfluxDBClientError('foo')
+        body = [{
+            'measurement': 'fake.entity-id',
+            'tags': {
+                'domain': 'fake',
+                'entity_id': 'entity',
+            },
+            'time': 12345,
+            'fields': {
+                'value': 8,
+            },
+        }]
         self.handler_method(event)
+        self.hass.data[influxdb.DOMAIN].block_till_done()
+        self.assertEqual(
+            mock_client.return_value.write_points.call_count, 1
+        )
+        self.assertEqual(
+            mock_client.return_value.write_points.call_args,
+            mock.call(body)
+        )
+        mock_client.return_value.write_points.reset_mock()
 
     def test_event_listener_states(self, mock_client):
         """Test the event listener against ignored states."""
@@ -245,6 +265,7 @@ class TestInfluxDB(unittest.TestCase):
                 },
             }]
             self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
             if state_state == 1:
                 self.assertEqual(
                     mock_client.return_value.write_points.call_count, 1
@@ -278,6 +299,7 @@ class TestInfluxDB(unittest.TestCase):
                 },
             }]
             self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
             if entity_id == 'ok':
                 self.assertEqual(
                     mock_client.return_value.write_points.call_count, 1
@@ -312,6 +334,7 @@ class TestInfluxDB(unittest.TestCase):
                 },
             }]
             self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
             if domain == 'ok':
                 self.assertEqual(
                     mock_client.return_value.write_points.call_count, 1
@@ -356,6 +379,7 @@ class TestInfluxDB(unittest.TestCase):
                 },
             }]
             self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
             if entity_id == 'included':
                 self.assertEqual(
                     mock_client.return_value.write_points.call_count, 1
@@ -401,6 +425,7 @@ class TestInfluxDB(unittest.TestCase):
                 },
             }]
             self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
             if domain == 'fake':
                 self.assertEqual(
                     mock_client.return_value.write_points.call_count, 1
@@ -456,6 +481,7 @@ class TestInfluxDB(unittest.TestCase):
                 body[0]['fields']['value'] = out[1]
 
             self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
             self.assertEqual(
                 mock_client.return_value.write_points.call_count, 1
             )
@@ -498,6 +524,7 @@ class TestInfluxDB(unittest.TestCase):
                 },
             }]
             self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
             if entity_id == 'ok':
                 self.assertEqual(
                     mock_client.return_value.write_points.call_count, 1
@@ -543,6 +570,7 @@ class TestInfluxDB(unittest.TestCase):
             },
         }]
         self.handler_method(event)
+        self.hass.data[influxdb.DOMAIN].block_till_done()
         self.assertEqual(
             mock_client.return_value.write_points.call_count, 1
         )
@@ -588,6 +616,7 @@ class TestInfluxDB(unittest.TestCase):
             },
         }]
         self.handler_method(event)
+        self.hass.data[influxdb.DOMAIN].block_till_done()
         self.assertEqual(
             mock_client.return_value.write_points.call_count, 1
         )
@@ -648,6 +677,7 @@ class TestInfluxDB(unittest.TestCase):
                 },
             }]
             self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
             self.assertEqual(
                 mock_client.return_value.write_points.call_count, 1
             )
@@ -659,7 +689,16 @@ class TestInfluxDB(unittest.TestCase):
 
     def test_scheduled_write(self, mock_client):
         """Test the event listener to retry after write failures."""
-        self._setup(max_retries=1)
+        config = {
+            'influxdb': {
+                'host': 'host',
+                'username': 'user',
+                'password': 'pass',
+                'max_retries': 1
+            }
+        }
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
         state = mock.MagicMock(
             state=1, domain='fake', entity_id='entity.id', object_id='entity',
@@ -668,152 +707,47 @@ class TestInfluxDB(unittest.TestCase):
         mock_client.return_value.write_points.side_effect = \
             IOError('foo')
 
-        start = dt_util.utcnow()
-
-        self.handler_method(event)
+        # Write fails
+        with mock.patch.object(influxdb.time, 'sleep') as mock_sleep:
+            self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
+            assert mock_sleep.called
         json_data = mock_client.return_value.write_points.call_args[0][0]
-        self.assertEqual(mock_client.return_value.write_points.call_count, 1)
-
-        shifted_time = start + (timedelta(seconds=20 + 1))
-        self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
-                           {ha.ATTR_NOW: shifted_time})
-        self.hass.block_till_done()
         self.assertEqual(mock_client.return_value.write_points.call_count, 2)
         mock_client.return_value.write_points.assert_called_with(json_data)
 
-        shifted_time = shifted_time + (timedelta(seconds=20 + 1))
-        self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
-                           {ha.ATTR_NOW: shifted_time})
-        self.hass.block_till_done()
-        self.assertEqual(mock_client.return_value.write_points.call_count, 2)
+        # Write works again
+        mock_client.return_value.write_points.side_effect = None
+        with mock.patch.object(influxdb.time, 'sleep') as mock_sleep:
+            self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
+            assert not mock_sleep.called
+        self.assertEqual(mock_client.return_value.write_points.call_count, 3)
 
+    def test_queue_backlog_full(self, mock_client):
+        """Test the event listener to drop old events."""
+        self._setup()
 
-class TestRetryOnErrorDecorator(unittest.TestCase):
-    """Test the RetryOnError decorator."""
+        state = mock.MagicMock(
+            state=1, domain='fake', entity_id='entity.id', object_id='entity',
+            attributes={})
+        event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
 
-    def setUp(self):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+        monotonic_time = 0
 
-    def tearDown(self):
-        """Clear data."""
-        self.hass.stop()
+        def fast_monotonic():
+            """Monotonic time that ticks fast enough to cause a timeout."""
+            nonlocal monotonic_time
+            monotonic_time += 60
+            return monotonic_time
 
-    def test_no_retry(self):
-        """Test that it does not retry if configured."""
-        mock_method = MagicMock()
-        wrapped = influxdb.RetryOnError(self.hass)(mock_method)
-        wrapped(1, 2, test=3)
-        self.assertEqual(mock_method.call_count, 1)
-        mock_method.assert_called_with(1, 2, test=3)
+        with mock.patch('homeassistant.components.influxdb.time.monotonic',
+                        new=fast_monotonic):
+            self.handler_method(event)
+            self.hass.data[influxdb.DOMAIN].block_till_done()
 
-        mock_method.side_effect = Exception()
-        self.assertRaises(Exception, wrapped, 1, 2, test=3)
-        self.assertEqual(mock_method.call_count, 2)
-        mock_method.assert_called_with(1, 2, test=3)
+            self.assertEqual(
+                mock_client.return_value.write_points.call_count, 0
+            )
 
-    def test_single_retry(self):
-        """Test that retry stops after a single try if configured."""
-        mock_method = MagicMock()
-        retryer = influxdb.RetryOnError(self.hass, retry_limit=1)
-        wrapped = retryer(mock_method)
-        wrapped(1, 2, test=3)
-        self.assertEqual(mock_method.call_count, 1)
-        mock_method.assert_called_with(1, 2, test=3)
-
-        start = dt_util.utcnow()
-        shifted_time = start + (timedelta(seconds=20 + 1))
-        self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
-                           {ha.ATTR_NOW: shifted_time})
-        self.hass.block_till_done()
-        self.assertEqual(mock_method.call_count, 1)
-
-        mock_method.side_effect = Exception()
-        wrapped(1, 2, test=3)
-        self.assertEqual(mock_method.call_count, 2)
-        mock_method.assert_called_with(1, 2, test=3)
-
-        for _ in range(3):
-            start = dt_util.utcnow()
-            shifted_time = start + (timedelta(seconds=20 + 1))
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
-                               {ha.ATTR_NOW: shifted_time})
-            self.hass.block_till_done()
-            self.assertEqual(mock_method.call_count, 3)
-            mock_method.assert_called_with(1, 2, test=3)
-
-    def test_multi_retry(self):
-        """Test that multiple retries work."""
-        mock_method = MagicMock()
-        retryer = influxdb.RetryOnError(self.hass, retry_limit=4)
-        wrapped = retryer(mock_method)
-        mock_method.side_effect = Exception()
-
-        wrapped(1, 2, test=3)
-        self.assertEqual(mock_method.call_count, 1)
-        mock_method.assert_called_with(1, 2, test=3)
-
-        for cnt in range(3):
-            start = dt_util.utcnow()
-            shifted_time = start + (timedelta(seconds=20 + 1))
-            self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
-                               {ha.ATTR_NOW: shifted_time})
-            self.hass.block_till_done()
-            self.assertEqual(mock_method.call_count, cnt + 2)
-            mock_method.assert_called_with(1, 2, test=3)
-
-    def test_max_queue(self):
-        """Test the maximum queue length."""
-        # make a wrapped method
-        mock_method = MagicMock()
-        retryer = influxdb.RetryOnError(
-            self.hass, retry_limit=4, queue_limit=3)
-        wrapped = retryer(mock_method)
-        mock_method.side_effect = Exception()
-
-        # call it once, call fails, queue fills to 1
-        wrapped(1, 2, test=3)
-        self.assertEqual(mock_method.call_count, 1)
-        mock_method.assert_called_with(1, 2, test=3)
-        self.assertEqual(len(wrapped._retry_queue), 1)
-
-        # two more calls that failed. queue is 3
-        wrapped(1, 2, test=3)
-        wrapped(1, 2, test=3)
-        self.assertEqual(mock_method.call_count, 3)
-        self.assertEqual(len(wrapped._retry_queue), 3)
-
-        # another call, queue gets limited to 3
-        wrapped(1, 2, test=3)
-        self.assertEqual(mock_method.call_count, 4)
-        self.assertEqual(len(wrapped._retry_queue), 3)
-
-        # time passes
-        start = dt_util.utcnow()
-        shifted_time = start + (timedelta(seconds=20 + 1))
-        self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
-                           {ha.ATTR_NOW: shifted_time})
-        self.hass.block_till_done()
-
-        # only the three queued calls where repeated
-        self.assertEqual(mock_method.call_count, 7)
-        self.assertEqual(len(wrapped._retry_queue), 3)
-
-        # another call, queue stays limited
-        wrapped(1, 2, test=3)
-        self.assertEqual(mock_method.call_count, 8)
-        self.assertEqual(len(wrapped._retry_queue), 3)
-
-        # disable the side effect
-        mock_method.side_effect = None
-
-        # time passes, all calls should succeed
-        start = dt_util.utcnow()
-        shifted_time = start + (timedelta(seconds=20 + 1))
-        self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
-                           {ha.ATTR_NOW: shifted_time})
-        self.hass.block_till_done()
-
-        # three queued calls succeeded, queue empty.
-        self.assertEqual(mock_method.call_count, 11)
-        self.assertEqual(len(wrapped._retry_queue), 0)
+        mock_client.return_value.write_points.reset_mock()

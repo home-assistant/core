@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SEND_DELAY = 'send_delay'
 
 DEFAULT_HOST = '127.0.0.1'
-DEFAULT_PORT = 5000
+DEFAULT_PORT = 5001
 DEFAULT_SEND_DELAY = 0.0
 DOMAIN = 'pilight'
 

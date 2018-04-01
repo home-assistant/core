@@ -71,13 +71,14 @@ class TestScriptHelper(unittest.TestCase):
         script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA({
             'event': event,
             'event_data_template': {
-                'hello': """
-                    {% if is_world == 'yes' %}
-                        world
-                    {% else %}
-                        not world
-                    {% endif %}
-                """
+                'dict': {
+                   1: '{{ is_world }}',
+                   2: '{{ is_world }}{{ is_world }}',
+                   3: '{{ is_world }}{{ is_world }}{{ is_world }}',
+                },
+                'list': [
+                    '{{ is_world }}', '{{ is_world }}{{ is_world }}'
+                ]
             }
         }))
 
@@ -86,7 +87,14 @@ class TestScriptHelper(unittest.TestCase):
         self.hass.block_till_done()
 
         assert len(calls) == 1
-        assert calls[0].data.get('hello') == 'world'
+        assert calls[0].data == {
+            'dict': {
+                1: 'yes',
+                2: 'yesyes',
+                3: 'yesyesyes',
+            },
+            'list': ['yes', 'yesyes']
+        }
         assert not script_obj.can_cancel
 
     def test_calling_service(self):
@@ -209,6 +217,32 @@ class TestScriptHelper(unittest.TestCase):
 
         assert not script_obj.is_running
         assert len(events) == 2
+
+    def test_delay_invalid_template(self):
+        """Test the delay as a template that fails."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {'delay': '{{ invalid_delay }}'},
+            {'delay': {'seconds': 5}},
+            {'event': event}]))
+
+        with mock.patch.object(script, '_LOGGER') as mock_logger:
+            script_obj.run()
+            self.hass.block_till_done()
+            assert mock_logger.error.called
+
+        assert not script_obj.is_running
+        assert len(events) == 1
 
     def test_cancel_while_delay(self):
         """Test the cancelling while the delay is present."""

@@ -7,7 +7,7 @@ from homeassistant.components.melissa import DATA_MELISSA
 from homeassistant.components.sensor import melissa
 from homeassistant.components.sensor.melissa import MelissaTemperatureSensor, \
     MelissaHumiditySensor
-from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
+from homeassistant.const import TEMP_CELSIUS
 from tests.common import get_test_home_assistant, load_fixture
 
 
@@ -83,7 +83,7 @@ class TestMelissa(unittest.TestCase):
         """Test for faulty update."""
         self.temp._api.status.return_value = {}
         self.temp.update()
-        self.assertEqual(STATE_UNKNOWN, self.temp.state)
+        self.assertEqual(None, self.temp.state)
         self.hum._api.status.return_value = {}
         self.hum.update()
-        self.assertEqual(STATE_UNKNOWN, self.hum.state)
+        self.assertEqual(None, self.hum.state)

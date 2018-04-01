@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyalarmdotcom==0.3.0']
+REQUIREMENTS = ['pyalarmdotcom==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 

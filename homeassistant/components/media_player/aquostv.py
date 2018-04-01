@@ -201,9 +201,9 @@ class SharpAquosTVDevice(MediaPlayerDevice):
         self._remote.volume(int(self._volume * 60) - 2)
 
     @_retry
-    def set_volume_level(self, level):
+    def set_volume_level(self, volume):
         """Set Volume media player."""
-        self._remote.volume(int(level * 60))
+        self._remote.volume(int(volume * 60))
 
     @_retry
     def mute_volume(self, mute):

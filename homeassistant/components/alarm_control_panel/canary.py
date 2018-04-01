@@ -59,8 +59,7 @@ class CanaryAlarm(AlarmControlPanel):
             return STATE_ALARM_ARMED_HOME
         elif mode.name == LOCATION_MODE_NIGHT:
             return STATE_ALARM_ARMED_NIGHT
-        else:
-            return None
+        return None
 
     @property
     def device_state_attributes(self):

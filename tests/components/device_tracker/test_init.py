@@ -10,10 +10,10 @@ import os
 
 from homeassistant.components import zone
 from homeassistant.core import callback, State
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.helpers import discovery
 from homeassistant.loader import get_component
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN,
@@ -151,26 +151,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         with assert_setup_component(1, device_tracker.DOMAIN):
             assert setup_component(self.hass, device_tracker.DOMAIN,
                                    TEST_PLATFORM)
-
-    # pylint: disable=invalid-name
-    def test_adding_unknown_device_to_config(self):
-        """Test the adding of unknown devices to configuration file."""
-        scanner = get_component('device_tracker.test').SCANNER
-        scanner.reset()
-        scanner.come_home('DEV1')
-
-        with assert_setup_component(1, device_tracker.DOMAIN):
-            assert setup_component(self.hass, device_tracker.DOMAIN, {
-                device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}})
-
-        # wait for async calls (macvendor) to finish
-        self.hass.block_till_done()
-
-        config = device_tracker.load_config(self.yaml_devices, self.hass,
-                                            timedelta(seconds=0))
-        assert len(config) == 1
-        assert config[0].dev_id == 'dev1'
-        assert config[0].track
 
     def test_gravatar(self):
         """Test the Gravatar generation."""
@@ -646,61 +626,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         assert len(config) == 4
 
-    def test_config_failure(self):
-        """Test that the device tracker see failures."""
-        with assert_setup_component(0, device_tracker.DOMAIN):
-            setup_component(self.hass, device_tracker.DOMAIN,
-                            {device_tracker.DOMAIN: {
-                                device_tracker.CONF_CONSIDER_HOME: -1}})
-
-    def test_picture_and_icon_on_see_discovery(self):
-        """Test that picture and icon are set in initial see."""
-        tracker = device_tracker.DeviceTracker(
-            self.hass, timedelta(seconds=60), False, {}, [])
-        tracker.see(dev_id=11, picture='pic_url', icon='mdi:icon')
-        self.hass.block_till_done()
-        config = device_tracker.load_config(self.yaml_devices, self.hass,
-                                            timedelta(seconds=0))
-        assert len(config) == 1
-        assert config[0].icon == 'mdi:icon'
-        assert config[0].entity_picture == 'pic_url'
-
-    def test_default_hide_if_away_is_used(self):
-        """Test that default track_new is used."""
-        tracker = device_tracker.DeviceTracker(
-            self.hass, timedelta(seconds=60), False,
-            {device_tracker.CONF_AWAY_HIDE: True}, [])
-        tracker.see(dev_id=12)
-        self.hass.block_till_done()
-        config = device_tracker.load_config(self.yaml_devices, self.hass,
-                                            timedelta(seconds=0))
-        assert len(config) == 1
-        self.assertTrue(config[0].hidden)
-
-    def test_backward_compatibility_for_track_new(self):
-        """Test backward compatibility for track new."""
-        tracker = device_tracker.DeviceTracker(
-            self.hass, timedelta(seconds=60), False,
-            {device_tracker.CONF_TRACK_NEW: True}, [])
-        tracker.see(dev_id=13)
-        self.hass.block_till_done()
-        config = device_tracker.load_config(self.yaml_devices, self.hass,
-                                            timedelta(seconds=0))
-        assert len(config) == 1
-        self.assertFalse(config[0].track)
-
-    def test_old_style_track_new_is_skipped(self):
-        """Test old style config is skipped."""
-        tracker = device_tracker.DeviceTracker(
-            self.hass, timedelta(seconds=60), None,
-            {device_tracker.CONF_TRACK_NEW: False}, [])
-        tracker.see(dev_id=14)
-        self.hass.block_till_done()
-        config = device_tracker.load_config(self.yaml_devices, self.hass,
-                                            timedelta(seconds=0))
-        assert len(config) == 1
-        self.assertFalse(config[0].track)
-
 
 @asyncio.coroutine
 def test_async_added_to_hass(hass):
@@ -742,3 +667,81 @@ def test_bad_platform(hass):
     }
     with assert_setup_component(0, device_tracker.DOMAIN):
         assert (yield from device_tracker.async_setup(hass, config))
+
+
+async def test_adding_unknown_device_to_config(mock_device_tracker_conf, hass):
+    """Test the adding of unknown devices to configuration file."""
+    scanner = get_component('device_tracker.test').SCANNER
+    scanner.reset()
+    scanner.come_home('DEV1')
+
+    await async_setup_component(hass, device_tracker.DOMAIN, {
+            device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}})
+
+    await hass.async_block_till_done()
+
+    assert len(mock_device_tracker_conf) == 1
+    device = mock_device_tracker_conf[0]
+    assert device.dev_id == 'dev1'
+    assert device.track
+
+
+async def test_picture_and_icon_on_see_discovery(mock_device_tracker_conf,
+                                                 hass):
+    """Test that picture and icon are set in initial see."""
+    tracker = device_tracker.DeviceTracker(
+        hass, timedelta(seconds=60), False, {}, [])
+    await tracker.async_see(dev_id=11, picture='pic_url', icon='mdi:icon')
+    await hass.async_block_till_done()
+    assert len(mock_device_tracker_conf) == 1
+    assert mock_device_tracker_conf[0].icon == 'mdi:icon'
+    assert mock_device_tracker_conf[0].entity_picture == 'pic_url'
+
+
+async def test_default_hide_if_away_is_used(mock_device_tracker_conf, hass):
+    """Test that default track_new is used."""
+    tracker = device_tracker.DeviceTracker(
+        hass, timedelta(seconds=60), False,
+        {device_tracker.CONF_AWAY_HIDE: True}, [])
+    await tracker.async_see(dev_id=12)
+    await hass.async_block_till_done()
+    assert len(mock_device_tracker_conf) == 1
+    assert mock_device_tracker_conf[0].away_hide
+
+
+async def test_backward_compatibility_for_track_new(mock_device_tracker_conf,
+                                                    hass):
+    """Test backward compatibility for track new."""
+    tracker = device_tracker.DeviceTracker(
+        hass, timedelta(seconds=60), False,
+        {device_tracker.CONF_TRACK_NEW: True}, [])
+    await tracker.async_see(dev_id=13)
+    await hass.async_block_till_done()
+    assert len(mock_device_tracker_conf) == 1
+    assert mock_device_tracker_conf[0].track is False
+
+
+async def test_old_style_track_new_is_skipped(mock_device_tracker_conf, hass):
+    """Test old style config is skipped."""
+    tracker = device_tracker.DeviceTracker(
+        hass, timedelta(seconds=60), None,
+        {device_tracker.CONF_TRACK_NEW: False}, [])
+    await tracker.async_see(dev_id=14)
+    await hass.async_block_till_done()
+    assert len(mock_device_tracker_conf) == 1
+    assert mock_device_tracker_conf[0].track is False
+
+
+def test_see_schema_allowing_ios_calls():
+    """Test SEE service schema allows extra keys.
+
+    Temp work around because the iOS app sends incorrect data.
+    """
+    device_tracker.SERVICE_SEE_PAYLOAD_SCHEMA({
+        'dev_id': 'Test',
+        "battery": 35,
+        "battery_status": 'Unplugged',
+        "gps": [10.0, 10.0],
+        "gps_accuracy": 300,
+        "hostname": 'beer',
+    })

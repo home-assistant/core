@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-forecastio==1.3.5']
+REQUIREMENTS = ['python-forecastio==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +27,9 @@ CONF_ATTRIBUTION = "Powered by Dark Sky"
 CONF_UNITS = 'units'
 CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_FORECAST = 'forecast'
+CONF_LANGUAGE = 'language'
+
+DEFAULT_LANGUAGE = 'en'
 
 DEFAULT_NAME = 'Dark Sky'
 
@@ -51,7 +54,8 @@ SENSOR_TYPES = {
                     'mdi:weather-pouring',
                     ['currently', 'minutely', 'hourly', 'daily']],
     'precip_intensity': ['Precip Intensity',
-                         'mm', 'in', 'mm', 'mm', 'mm', 'mdi:weather-rainy',
+                         'mm/h', 'in', 'mm/h', 'mm/h', 'mm/h',
+                         'mdi:weather-rainy',
                          ['currently', 'minutely', 'hourly', 'daily']],
     'precip_probability': ['Precip Probability',
                            '%', '%', '%', '%', '%', 'mdi:water-percent',
@@ -97,7 +101,8 @@ SENSOR_TYPES = {
                         '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
                         ['currently', 'hourly', 'daily']],
     'precip_intensity_max': ['Daily Max Precip Intensity',
-                             'mm', 'in', 'mm', 'mm', 'mm', 'mdi:thermometer',
+                             'mm/h', 'in', 'mm/h', 'mm/h', 'mm/h',
+                             'mdi:thermometer',
                              ['currently', 'hourly', 'daily']],
     'uv_index': ['UV Index',
                  UNIT_UV_INDEX, UNIT_UV_INDEX, UNIT_UV_INDEX,
@@ -118,6 +123,16 @@ CONDITION_PICTURES = {
     'partly-cloudy-night': '/static/images/darksky/weather-cloudy.svg',
 }
 
+# Language Supported Codes
+LANGUAGE_CODES = [
+    'ar', 'az', 'be', 'bg', 'bs', 'ca',
+    'cs', 'da', 'de', 'el', 'en', 'es',
+    'et', 'fi', 'fr', 'hr', 'hu', 'id',
+    'is', 'it', 'ja', 'ka', 'kw', 'nb',
+    'nl', 'pl', 'pt', 'ro', 'ru', 'sk',
+    'sl', 'sr', 'sv', 'tet', 'tr', 'uk',
+    'x-pig-latin', 'zh', 'zh-tw',
+]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS):
@@ -125,6 +140,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2']),
+    vol.Optional(CONF_LANGUAGE,
+                 default=DEFAULT_LANGUAGE): vol.In(LANGUAGE_CODES),
     vol.Inclusive(CONF_LATITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
@@ -140,6 +157,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Dark Sky sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+    language = config.get(CONF_LANGUAGE)
 
     if CONF_UNITS in config:
         units = config[CONF_UNITS]
@@ -153,6 +171,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         latitude=latitude,
         longitude=longitude,
         units=units,
+        language=language,
         interval=config.get(CONF_UPDATE_INTERVAL))
     forecast_data.update()
     forecast_data.update_currently()
@@ -332,12 +351,14 @@ def convert_to_camel(data):
 class DarkSkyData(object):
     """Get the latest data from Darksky."""
 
-    def __init__(self, api_key, latitude, longitude, units, interval):
+    def __init__(self, api_key, latitude, longitude, units, language,
+                 interval):
         """Initialize the data object."""
         self._api_key = api_key
         self.latitude = latitude
         self.longitude = longitude
         self.units = units
+        self.language = language
 
         self.data = None
         self.unit_system = None
@@ -359,7 +380,8 @@ class DarkSkyData(object):
 
         try:
             self.data = forecastio.load_forecast(
-                self._api_key, self.latitude, self.longitude, units=self.units)
+                self._api_key, self.latitude, self.longitude, units=self.units,
+                lang=self.language)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
             _LOGGER.error("Unable to connect to Dark Sky. %s", error)
             self.data = None

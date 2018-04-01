@@ -146,3 +146,21 @@ class TestConditionHelper:
                    return_value=dt.now().replace(hour=21)):
             assert not condition.time(after=sixam, before=sixpm)
             assert condition.time(after=sixpm, before=sixam)
+
+    def test_if_numeric_state_not_raise_on_unavailable(self):
+        """Test numeric_state doesn't raise on unavailable/unknown state."""
+        test = condition.from_config({
+            'condition': 'numeric_state',
+            'entity_id': 'sensor.temperature',
+            'below': 42
+        })
+
+        with patch('homeassistant.helpers.condition._LOGGER.warning') \
+                as logwarn:
+            self.hass.states.set('sensor.temperature', 'unavailable')
+            assert not test(self.hass)
+            assert len(logwarn.mock_calls) == 0
+
+            self.hass.states.set('sensor.temperature', 'unknown')
+            assert not test(self.hass)
+            assert len(logwarn.mock_calls) == 0

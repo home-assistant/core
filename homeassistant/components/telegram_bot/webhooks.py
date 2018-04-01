@@ -12,11 +12,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.util import get_real_ip
+from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.components.telegram_bot import (
-    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA)
+    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA,
+    initialize_bot)
 from homeassistant.const import (
-    CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST,
+    EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST,
     HTTP_UNAUTHORIZED, CONF_URL)
 import homeassistant.helpers.config_validation as cv
 
@@ -50,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config):
     """Set up the Telegram webhooks platform."""
     import telegram
-    bot = telegram.Bot(config[CONF_API_KEY])
+    bot = initialize_bot(config)
 
     current_status = yield from hass.async_add_job(bot.getWebhookInfo)
     base_url = config.get(CONF_URL, hass.config.api.base_url)
@@ -110,7 +111,7 @@ class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
     @asyncio.coroutine
     def post(self, request):
         """Accept the POST from telegram."""
-        real_ip = get_real_ip(request)
+        real_ip = request[KEY_REAL_IP]
         if not any(real_ip in net for net in self.trusted_networks):
             _LOGGER.warning("Access denied from %s", real_ip)
             return self.json_message('Access denied', HTTP_UNAUTHORIZED)

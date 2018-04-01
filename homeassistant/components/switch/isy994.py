@@ -33,10 +33,6 @@ def setup_platform(hass, config: ConfigType,
 class ISYSwitchDevice(ISYDevice, SwitchDevice):
     """Representation of an ISY994 switch device."""
 
-    def __init__(self, node) -> None:
-        """Initialize the ISY994 switch device."""
-        super().__init__(node)
-
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 device is in the on state."""

@@ -113,7 +113,7 @@ class DysonPureCoolLinkDevice(FanEntity):
             self._device.set_configuration(
                 fan_mode=FanMode.FAN, fan_speed=fan_speed)
 
-    def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
+    def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
         from libpurecoollink.const import FanSpeed, FanMode
 

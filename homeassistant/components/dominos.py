@@ -140,21 +140,20 @@ class Dominos():
         if self.closest_store is None:
             _LOGGER.warning('Cannot get menu. Store may be closed')
             return []
-        else:
-            menu = self.closest_store.get_menu()
-            product_entries = []
+        menu = self.closest_store.get_menu()
+        product_entries = []
 
-            for product in menu.products:
-                item = {}
-                if isinstance(product.menu_data['Variants'], list):
-                    variants = ', '.join(product.menu_data['Variants'])
-                else:
-                    variants = product.menu_data['Variants']
-                item['name'] = product.name
-                item['variants'] = variants
-                product_entries.append(item)
+        for product in menu.products:
+            item = {}
+            if isinstance(product.menu_data['Variants'], list):
+                variants = ', '.join(product.menu_data['Variants'])
+            else:
+                variants = product.menu_data['Variants']
+            item['name'] = product.name
+            item['variants'] = variants
+            product_entries.append(item)
 
-            return product_entries
+        return product_entries
 
 
 class DominosProductListView(http.HomeAssistantView):
@@ -203,8 +202,7 @@ class DominosOrder(Entity):
         """Return the state either closed, orderable or unorderable."""
         if self.dominos.closest_store is None:
             return 'closed'
-        else:
-            return 'orderable' if self._orderable else 'unorderable'
+        return 'orderable' if self._orderable else 'unorderable'
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

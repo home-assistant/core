@@ -1,4 +1,5 @@
 """Helpers for listening to events."""
+from datetime import timedelta
 import functools as ft
 
 from homeassistant.loader import bind_hass
@@ -7,7 +8,7 @@ from ..core import HomeAssistant, callback
 from ..const import (
     ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 from ..util import dt as dt_util
-from ..util.async import run_callback_threadsafe
+from ..util.async_ import run_callback_threadsafe
 
 # PyLint does not like the use of threaded_listener_factory
 # pylint: disable=invalid-name
@@ -217,6 +218,14 @@ def async_track_point_in_utc_time(hass, action, point_in_time):
 
 track_point_in_utc_time = threaded_listener_factory(
     async_track_point_in_utc_time)
+
+
+@callback
+@bind_hass
+def async_call_later(hass, delay, action):
+    """Add a listener that is called in <delay>."""
+    return async_track_point_in_utc_time(
+        hass, action, dt_util.utcnow() + timedelta(seconds=delay))
 
 
 @callback
