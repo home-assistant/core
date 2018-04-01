@@ -87,7 +87,7 @@ class RPiGPIOCover(CoverDevice):
         self._invert_relay = invert_relay
         rpi_gpio.setup_output(self._relay_pin)
         rpi_gpio.setup_input(self._state_pin, self._state_pull_mode)
-        rpi_gpio.write_output(self._relay_pin, not self._invert_relay)
+        rpi_gpio.write_output(self._relay_pin, 0 if self._invert_relay else 1)
 
     @property
     def name(self):
