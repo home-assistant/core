@@ -13,7 +13,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['py-cpuinfo==3.3.0']
+REQUIREMENTS = ['py-cpuinfo==4.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
