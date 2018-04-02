@@ -123,7 +123,7 @@ class SmartPlugSwitch(SwitchDevice):
                         pass
                 else:
                     self._emeter_params[ATTR_CURRENT_POWER_W] \
-                        = float("{:.2f/}".format(emeter_readings["power_mw"]))/1000
+                        = float("{:.2f}".format(emeter_readings["power_mw"]))/1000
                     self._emeter_params[ATTR_TOTAL_ENERGY_KWH] \
                         = float("{:.3f}".format(emeter_readings["total_wh"]))/1000
                     self._emeter_params[ATTR_VOLTAGE] \
