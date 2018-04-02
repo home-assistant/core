@@ -30,6 +30,8 @@ CONTENT_TYPE_MPEG = 'audio/mpeg'
 SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
+GROUP_NAME_ALL_MAILBOXES = 'all mailboxes'
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -81,7 +83,8 @@ def async_setup(hass, config):
         mailboxes.append(mailbox)
         mailbox_entity = MailboxEntity(hass, mailbox)
         component = EntityComponent(
-            logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+            logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
+            GROUP_NAME_ALL_MAILBOXES)
         yield from component.async_add_entities([mailbox_entity])
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
