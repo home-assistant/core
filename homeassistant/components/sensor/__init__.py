@@ -17,13 +17,15 @@ DOMAIN = 'sensor'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+GROUP_NAME_ALL_SENSORS = 'all sensors'
+
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def async_setup(hass, config):
     """Track states and offer events for sensors."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SENSORS)
 
     await component.async_setup(config)
     return True
