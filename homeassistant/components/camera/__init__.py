@@ -41,6 +41,8 @@ SERVICE_SNAPSHOT = 'snapshot'
 SCAN_INTERVAL = timedelta(seconds=30)
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+GROUP_NAME_ALL_CAMERAS = 'all cameras'
+
 ATTR_FILENAME = 'filename'
 
 STATE_RECORDING = 'recording'
@@ -122,7 +124,8 @@ def async_get_image(hass, entity_id, timeout=10):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the camera component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL,
+                                GROUP_NAME_ALL_CAMERAS)
 
     hass.http.register_view(CameraImageView(component))
     hass.http.register_view(CameraMjpegStream(component))
