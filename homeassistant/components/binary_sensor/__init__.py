@@ -19,6 +19,9 @@ DOMAIN = 'binary_sensor'
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+GROUP_NAME_ALL_BINARY_SENSORS = 'all binary sensors'
+
 DEVICE_CLASSES = [
     'battery',       # On means low, Off means normal
     'cold',          # On means cold, Off means normal
@@ -51,7 +54,8 @@ DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 async def async_setup(hass, config):
     """Track states and offer events for binary sensors."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
+        GROUP_NAME_ALL_BINARY_SENSORS)
 
     await component.async_setup(config)
     return True
