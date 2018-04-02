@@ -517,7 +517,7 @@ def forgiving_float(value):
 
 
 def regex_match(value, find='', ignorecase=False):
-    """Match value using regex"""
+    """Match value using regex."""
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
@@ -525,7 +525,7 @@ def regex_match(value, find='', ignorecase=False):
 
 
 def regex_replace(value='', find='', replace='', ignorecase=False):
-    """Replace using regex"""
+    """Replace using regex."""
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
@@ -534,7 +534,7 @@ def regex_replace(value='', find='', replace='', ignorecase=False):
 
 
 def regex_search(value, find='', ignorecase=False):
-    """Search using regex"""
+    """Search using regex."""
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
@@ -542,7 +542,7 @@ def regex_search(value, find='', ignorecase=False):
 
 
 def regex_findall_index(value, find='', index=0, ignorecase=False):
-    """Find all matches using regex and then pick specific match index"""
+    """Find all matches using regex and then pick specific match index."""
     if not isinstance(value, str):
         value = str(value)
     flags = re.I if ignorecase else 0
