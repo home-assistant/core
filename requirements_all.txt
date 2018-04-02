@@ -961,6 +961,7 @@ python-juicenet==0.0.5
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
+# homeassistant.components.device_tracker.xiaomi_miio
 # homeassistant.components.fan.xiaomi_miio
 # homeassistant.components.light.xiaomi_miio
 # homeassistant.components.remote.xiaomi_miio
