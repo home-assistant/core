@@ -29,7 +29,7 @@ async def async_setup_platform(hass, _, add_devices, discovery_info=None):
 class QSSensor(Entity):
     """Sensor based on a Qwikswitch relay/dimmer module."""
 
-    _val = {}
+    _val = None
 
     def __init__(self, sensor_name, sensor_id):
         """Initialize the sensor."""
@@ -42,10 +42,16 @@ class QSSensor(Entity):
         self.sensor = dat[2]
         self._decode, self.unit = SENSORS[self.sensor]
 
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
     def update_packet(self, packet):
         """Receive update packet from QSUSB."""
-        _LOGGER.debug("Update %s (%s): %s", self.entity_id, self.qsid, packet)
         val = self._decode(packet.get('data'), **self._params)
+        _LOGGER.debug("Update %s (%s) decoded as %s: %s: %s",
+                      self.entity_id, self.qsid, val, self._params, packet)
         if val:
             self._val = val
             self.async_schedule_update_ha_state()
@@ -53,7 +59,7 @@ class QSSensor(Entity):
     @property
     def state(self):
         """Return the value of the sensor."""
-        return self._val
+        return str(self._val)
 
     @property
     def unit_of_measurement(self):
@@ -67,7 +73,6 @@ class QSSensor(Entity):
 
     async def async_added_to_hass(self):
         """Listen for updates from QSUSb via dispatcher."""
-        # Part of Entity/ToggleEntity
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             self.qsid, self.update_packet)
 
@@ -107,7 +112,7 @@ def decode_imod(val, channel=0):
     """Decode an 4 channel imod."""
     if len(val) == 8 and val.startswith('4e') and channel < 4:
         _map = ((5, 1), (5, 2), (5, 4), (4, 1))[channel]
-        return (int(val[_map[0]]) & _map[1]) == 0
+        return (int(val[_map[0]], 16) & _map[1]) == 0
     return None
 
 
