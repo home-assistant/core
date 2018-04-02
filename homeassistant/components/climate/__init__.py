@@ -27,6 +27,8 @@ DOMAIN = 'climate'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SCAN_INTERVAL = timedelta(seconds=60)
 
+GROUP_NAME_ALL_CLIMATES = 'all climates'
+
 SERVICE_SET_AWAY_MODE = 'set_away_mode'
 SERVICE_SET_AUX_HEAT = 'set_aux_heat'
 SERVICE_SET_TEMPERATURE = 'set_temperature'
@@ -239,7 +241,8 @@ def set_swing_mode(hass, swing_mode, entity_id=None):
 
 async def async_setup(hass, config):
     """Set up climate devices."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL,
+                                GROUP_NAME_ALL_CLIMATES)
     await component.async_setup(config)
 
     async def async_away_mode_set_service(service):
