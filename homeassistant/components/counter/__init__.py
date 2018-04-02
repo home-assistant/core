@@ -31,6 +31,8 @@ DOMAIN = 'counter'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+GROUP_NAME_ALL_COUNTERS = 'all counters'
+
 SERVICE_DECREMENT = 'decrement'
 SERVICE_INCREMENT = 'increment'
 SERVICE_RESET = 'reset'
@@ -97,7 +99,8 @@ def async_reset(hass, entity_id):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up a counter."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass,
+                                group_name=GROUP_NAME_ALL_COUNTERS)
 
     entities = []
 
