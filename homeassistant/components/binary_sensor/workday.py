@@ -44,7 +44,7 @@ DEFAULT_NAME = 'Workday Sensor'
 ALLOWED_DAYS = WEEKDAYS + ['holiday']
 CONF_OFFSET = 'days_offset'
 DEFAULT_OFFSET = 0
- 
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COUNTRY): vol.In(ALL_COUNTRIES),
     vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES):
