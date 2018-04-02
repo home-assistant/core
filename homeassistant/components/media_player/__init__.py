@@ -41,6 +41,8 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+GROUP_NAME_ALL_MEDIA_PLAYER = 'all media player'
+
 ENTITY_IMAGE_URL = '/api/media_player_proxy/{0}?token={1}&cache={2}'
 CACHE_IMAGES = 'images'
 CACHE_MAXSIZE = 'maxsize'
@@ -364,7 +366,8 @@ def set_shuffle(hass, shuffle, entity_id=None):
 def async_setup(hass, config):
     """Track states and offer events for media_players."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
+        GROUP_NAME_ALL_MEDIA_PLAYER)
 
     hass.http.register_view(MediaPlayerImageView(component))
 
