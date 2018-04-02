@@ -11,9 +11,9 @@ from homeassistant.components.rflink import (
     CONF_ALIASES, CONF_ALIASSES, CONF_DEVICE_DEFAULTS, CONF_DEVICES,
     CONF_FIRE_EVENT, CONF_GROUP, CONF_GROUP_ALIASES, CONF_GROUP_ALIASSES,
     CONF_NOGROUP_ALIASES, CONF_NOGROUP_ALIASSES, CONF_SIGNAL_REPETITIONS,
-    DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA,
-    DOMAIN, EVENT_KEY_COMMAND, SwitchableRflinkDevice, cv, remove_deprecated,
-    vol)
+    CONF_TOGGLE_MODE, DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP,
+    DEVICE_DEFAULTS_SCHEMA, DOMAIN, EVENT_KEY_COMMAND, SwitchableRflinkDevice,
+    cv, remove_deprecated, vol)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers.deprecation import get_deprecated
@@ -36,6 +36,7 @@ PLATFORM_SCHEMA = vol.Schema({
             vol.Optional(CONF_NOGROUP_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_FIRE_EVENT): cv.boolean,
+            vol.Optional(CONF_TOGGLE_MODE): cv.boolean,
             vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
             vol.Optional(CONF_GROUP, default=True): cv.boolean,
             # deprecated config options

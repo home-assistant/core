@@ -45,6 +45,7 @@ CONF_IGNORE_DEVICES = 'ignore_devices'
 CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_WAIT_FOR_ACK = 'wait_for_ack'
+CONF_TOGGLE_MODE = 'toggle_mode'
 
 DATA_DEVICE_REGISTER = 'rflink_device_register'
 DATA_ENTITY_LOOKUP = 'rflink_entity_lookup'
@@ -247,7 +248,8 @@ class RflinkDevice(Entity):
 
     def __init__(self, device_id, hass, name=None, aliases=None, group=True,
                  group_aliases=None, nogroup_aliases=None, fire_event=False,
-                 signal_repetitions=DEFAULT_SIGNAL_REPETITIONS):
+                 signal_repetitions=DEFAULT_SIGNAL_REPETITIONS,
+                 toggle_mode=False):
         """Initialize the device."""
         self.hass = hass
 
@@ -260,6 +262,7 @@ class RflinkDevice(Entity):
 
         self._should_fire_event = fire_event
         self._signal_repetitions = signal_repetitions
+        self.toggle_mode = toggle_mode
 
     def handle_event(self, event):
         """Handle incoming event for device type."""
@@ -431,7 +434,9 @@ class SwitchableRflinkDevice(RflinkCommand):
         self.cancel_queued_send_commands()
 
         command = event['command']
-        if command in ['on', 'allon']:
+        if self.toggle_mode:
+            self._state = self._state in [STATE_UNKNOWN, False]
+        elif command in ['on', 'allon']:
             self._state = True
         elif command in ['off', 'alloff']:
             self._state = False

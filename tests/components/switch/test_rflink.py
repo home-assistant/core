@@ -310,3 +310,100 @@ def test_not_firing_default(hass, monkeypatch):
     yield from hass.async_block_till_done()
 
     assert not calls, 'an event has been fired'
+
+
+@asyncio.coroutine
+def test_toggle_mode(hass, monkeypatch):
+    """If a switch is in toggle mode, any command will toggle it."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'protocol_0_0': {
+                    'name': 'test',
+                    'toggle_mode': True,
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    assert hass.states.get(DOMAIN + '.test').state == 'off'
+
+    event_callback({
+        'id': 'protocol_0_0',
+        'command': 'on',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get(DOMAIN + '.test').state == 'on'
+
+    event_callback({
+        'id': 'protocol_0_0',
+        'command': 'on',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get(DOMAIN + '.test').state == 'off'
+
+    event_callback({
+        'id': 'protocol_0_0',
+        'command': 'alloff',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get(DOMAIN + '.test').state == 'on'
+
+
+@asyncio.coroutine
+def test_default_no_toggle(hass, monkeypatch):
+    """By default, switches should not toggle."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'protocol_0_0': {
+                    'name': 'test',
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    assert hass.states.get(DOMAIN + '.test').state == 'off'
+
+    event_callback({
+        'id': 'protocol_0_0',
+        'command': 'on',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get(DOMAIN + '.test').state == 'on'
+
+    event_callback({
+        'id': 'protocol_0_0',
+        'command': 'on',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get(DOMAIN + '.test').state == 'on'
+
+    event_callback({
+        'id': 'protocol_0_0',
+        'command': 'alloff',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get(DOMAIN + '.test').state == 'off'
