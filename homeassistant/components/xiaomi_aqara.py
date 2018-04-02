@@ -211,7 +211,6 @@ class XiaomiDevice(Entity):
         self._sid = device['sid']
         self._name = '{}_{}'.format(device_type, self._sid)
         self._type = device_type
-        self._proto = xiaomi_hub.proto
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
         self._device_state_attributes = {}
