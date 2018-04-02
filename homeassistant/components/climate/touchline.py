@@ -176,3 +176,4 @@ class Touchline(ClimateDevice):
             operation_mode = None
 
         return operation_mode
+    
