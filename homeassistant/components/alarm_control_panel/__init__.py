@@ -26,6 +26,8 @@ ATTR_CHANGED_BY = 'changed_by'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+GROUP_NAME_ALL_ALARM_CONTROL_PANEL = 'all alarm control panel'
+
 SERVICE_TO_METHOD = {
     SERVICE_ALARM_DISARM: 'alarm_disarm',
     SERVICE_ALARM_ARM_HOME: 'alarm_arm_home',
@@ -122,7 +124,8 @@ def alarm_arm_custom_bypass(hass, code=None, entity_id=None):
 def async_setup(hass, config):
     """Track states and offer events for sensors."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL,
+        GROUP_NAME_ALL_ALARM_CONTROL_PANEL)
 
     yield from component.async_setup(config)
 
