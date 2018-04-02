@@ -1,5 +1,6 @@
 """
 Support for Tahoma Switch - those are push buttons for garage door etc.
+
 Those buttons are implemented as switchs that are never on. They only
 receive the turn_on action, perform the relay click, and stay in OFF state
 
