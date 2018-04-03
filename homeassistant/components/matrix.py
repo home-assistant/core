@@ -121,6 +121,8 @@ class MatrixBot(object):
 
         self._listening_rooms = listening_rooms
 
+        self._setup_done = False
+
         # We have to fetch the aliases for every room to make sure we don't
         # join it twice by accident. However, fetching aliases is costly,
         # so we only do it once per room.
@@ -149,6 +151,10 @@ class MatrixBot(object):
                         self._expression_commands[room_id] = []
                     self._expression_commands[room_id].append(command)
 
+        hass.add_job(self._setup)
+
+    def _setup(self):
+        """Log in, join rooms etc."""
         # Login, this will raise a MatrixRequestError if login is unsuccessful
         self._client = self._login()
 
@@ -157,6 +163,8 @@ class MatrixBot(object):
 
         self._client.start_listener_thread()
 
+        self._setup_done = True
+
     def _handle_room_message(self, room_id, room, event):
         """Handle a message sent to a room."""
         if event['content']['msgtype'] != 'm.text':
@@ -164,6 +172,8 @@ class MatrixBot(object):
 
         if event['sender'] == self._mx_id:
             return
+
+        _LOGGER.debug("Handling message: %s", event['content']['body'])
 
         if event['content']['body'][0] == "!":
             # Could trigger a single-word command.
@@ -338,5 +348,9 @@ class MatrixBot(object):
 
     def handle_send_message(self, service):
         """Handle the send_message service."""
+        if not self._setup_done:
+            _LOGGER.warning("Could not send message because setup is not done.")
+            return
+
         self._send_message(service.data[ATTR_MESSAGE],
                            service.data[ATTR_TARGET])
