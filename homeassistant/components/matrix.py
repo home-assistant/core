@@ -37,23 +37,12 @@ COMMAND_SCHEMA = vol.All(
     vol.Schema({
         vol.Exclusive(CONF_WORD, 'trigger'): cv.string,
         vol.Exclusive(CONF_EXPRESSION, 'trigger'): cv.is_regex,
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
         vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list,
                                                       [cv.string]),
     }),
     # Make sure it's either a word or an expression command
-    cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION),
-    # Check that if it's an expression command, it has a name
-    cv.validate_if(
-        # Premise: If this is an expression command…
-        vol.Schema({
-            vol.Required(CONF_EXPRESSION): cv.is_regex
-        }, extra=vol.ALLOW_EXTRA),
-        # Conclusion: … then it must have a name.
-        vol.Schema({
-            vol.Required(CONF_NAME): cv.string
-        }, extra=vol.ALLOW_EXTRA)
-    )
+    cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION)
 )
 
 PLATFORM_SCHEMA = vol.Schema({
@@ -121,7 +110,9 @@ class MatrixBot(object):
 
         self._listening_rooms = listening_rooms
 
+        # Logging in is deferred b/c it does I/O
         self._setup_done = False
+        self._client = None
 
         # We have to fetch the aliases for every room to make sure we don't
         # join it twice by accident. However, fetching aliases is costly,
@@ -183,7 +174,7 @@ class MatrixBot(object):
             command = self._word_commands.get(room_id, {}).get(cmd)
             if command:
                 event_data = {
-                    'command': command.get(CONF_NAME, cmd),
+                    'command': command[CONF_NAME],
                     'sender': event['sender'],
                     'room': room_id,
                     'args': pieces[1:]
@@ -349,7 +340,7 @@ class MatrixBot(object):
     def handle_send_message(self, service):
         """Handle the send_message service."""
         if not self._setup_done:
-            _LOGGER.warning("Could not send message because setup is not done.")
+            _LOGGER.warning("Could not send message: setup is not done!")
             return
 
         self._send_message(service.data[ATTR_MESSAGE],
