@@ -61,7 +61,8 @@ class Light(HomeAccessory):
         if CHAR_COLOR_TEMPERATURE in self.chars:
             self.char_color_temperature = serv_light \
                 .get_characteristic(CHAR_COLOR_TEMPERATURE)
-            self.char_color_temperature.setter_callback = self.set_color_temperature
+            self.char_color_temperature.setter_callback = \
+                self.set_color_temperature
             self.char_color_temperature.value = 140
         if CHAR_HUE in self.chars:
             self.char_hue = serv_light.get_characteristic(CHAR_HUE)
@@ -100,7 +101,7 @@ class Light(HomeAccessory):
 
     def set_color_temperature(self, value):
         """Set color temperature if call came from HomeKit."""
-        _LOGGER.debug('%s: Set color temperature to %s', self._entity_id, value)
+        _LOGGER.debug('%s: Set color temp to %s', self._entity_id, value)
         self._flag[CHAR_COLOR_TEMPERATURE] = True
         self.char_color_temperature.set_value(value, should_callback=False)
         self._hass.components.light.turn_on(
@@ -160,7 +161,8 @@ class Light(HomeAccessory):
         # Handle color temperature
         if CHAR_COLOR_TEMPERATURE in self.chars:
             color_temperature = new_state.attributes.get(ATTR_COLOR_TEMP)
-            if not self._flag[CHAR_COLOR_TEMPERATURE] and isinstance(color_temperature, int):
+            if not self._flag[CHAR_COLOR_TEMPERATURE] \
+                    and isinstance(color_temperature, int):
                 self.char_color_temperature.set_value(color_temperature,
                                                       should_callback=False)
             self._flag[CHAR_COLOR_TEMPERATURE] = False
