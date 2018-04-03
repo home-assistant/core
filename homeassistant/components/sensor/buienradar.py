@@ -161,7 +161,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(BrSensor(sensor_type, config.get(CONF_NAME, 'br')))
+        dev.append(BrSensor(sensor_type, config.get(CONF_NAME, 'br'),
+                            coordinates))
     async_add_devices(dev)
 
     data = BrData(hass, coordinates, timeframe, dev)
@@ -172,7 +173,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class BrSensor(Entity):
     """Representation of an Buienradar sensor."""
 
-    def __init__(self, sensor_type, client_name):
+    def __init__(self, sensor_type, client_name, coordinates):
         """Initialize the sensor."""
         from buienradar.buienradar import (PRECIPITATION_FORECAST, CONDITION)
 
@@ -185,6 +186,7 @@ class BrSensor(Entity):
         self._attribution = None
         self._measured = None
         self._stationname = None
+        self._unique_id = self.uuid(coordinates)
 
         # All continuous sensors should be forced to be updated
         self._force_update = self.type != SYMBOL and \
@@ -192,6 +194,20 @@ class BrSensor(Entity):
 
         if self.type.startswith(PRECIPITATION_FORECAST):
             self._timeframe = None
+
+    def uuid(self, coordinates):
+        """Generate a UUID using coordinates, client name and sensor type."""
+        from hashlib import sha1
+        from uuid import UUID
+
+        # The combination of the location, name an sensor type is unique
+        unique_str = "%2.6f%2.6f%s" % (coordinates[CONF_LATITUDE],
+                                       coordinates[CONF_LONGITUDE],
+                                       self.type)
+        _LOGGER.error(unique_str)
+
+        # Create UUID based on the hash of the unique string
+        return str(UUID(sha1(unique_str.encode()).hexdigest()[:32]))
 
     def load_data(self, data):
         """Load the sensor with relevant data."""
@@ -303,6 +319,11 @@ class BrSensor(Entity):
     def attribution(self):
         """Return the attribution."""
         return self._attribution
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def name(self):
