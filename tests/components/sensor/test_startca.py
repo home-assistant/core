@@ -41,7 +41,7 @@ def test_capped_setup(hass, aioclient_mock):
              '<upload>6480700153</upload>'\
              '</grace>'\
              '</usage>'
-    aioclient_mock.get('https://www.start.ca/support/usage/api?key='
+    aioclient_mock.get('https://www.start.ca/account/usage/api?key='
                        'NOTAKEY',
                        text=result)
 
@@ -190,7 +190,7 @@ def test_unlimited_setup(hass, aioclient_mock):
 @asyncio.coroutine
 def test_bad_return_code(hass, aioclient_mock):
     """Test handling a return code that isn't HTTP OK."""
-    aioclient_mock.get('https://www.start.ca/support/usage/api?key='
+    aioclient_mock.get('https://www.start.ca/account/usage/api?key='
                        'NOTAKEY',
                        status=404)
 
@@ -204,7 +204,7 @@ def test_bad_return_code(hass, aioclient_mock):
 @asyncio.coroutine
 def test_bad_json_decode(hass, aioclient_mock):
     """Test decoding invalid json result."""
-    aioclient_mock.get('https://www.start.ca/support/usage/api?key='
+    aioclient_mock.get('https://www.start.ca/account/usage/api?key='
                        'NOTAKEY',
                        text='this is not xml')
 
