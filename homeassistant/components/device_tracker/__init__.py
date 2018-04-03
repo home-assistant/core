@@ -754,8 +754,9 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
             else:
                 host_name = yield from scanner.async_get_device_name(mac)
                 seen.add(mac)
-            
-            extra_attributes = yield from scanner.async_get_extra_attributes(mac)
+
+            extra_attributes = (yield from
+                                scanner.async_get_extra_attributes(mac))
 
             kwargs = {
                 'mac': mac,

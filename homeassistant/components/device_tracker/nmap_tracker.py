@@ -80,6 +80,8 @@ class NmapDeviceScanner(DeviceScanner):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
 
+        _LOGGER.debug("Nmap last results %s", self.last_results)
+
         return [device.mac for device in self.last_results]
 
     def get_device_name(self, device):
@@ -89,6 +91,15 @@ class NmapDeviceScanner(DeviceScanner):
 
         if filter_named:
             return filter_named[0]
+        return None
+
+    def get_extra_attributes(self, device):
+        """Return the IP pf the given device."""
+        filter_ip = [result.ip for result in self.last_results
+                     if result.mac == device]
+
+        if filter_ip:
+            return {'ip': filter_ip[0]}
         return None
 
     def _update_info(self):
