@@ -22,7 +22,7 @@ DEFAULT_GOOGLE_SEARCH_PARAMS = {
     'singleEvents': True,
 }
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
 def setup_platform(hass, config, add_devices, disc_info=None):
@@ -46,15 +46,14 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         """Create the Calendar event device."""
         self.data = GoogleCalendarData(calendar_service, calendar,
                                        data.get('search', None),
-                                       data.get('transparency', None))
+                                       data.get('transparency', False))
         super().__init__(hass, data)
 
 
 class GoogleCalendarData(object):
     """Class to utilize calendar service object to get next event."""
 
-    def __init__(self, calendar_service, calendar_id, search=None,
-                 transparency=True):
+    def __init__(self, calendar_service, calendar_id, search, transparency):
         """Set up how we are going to search the google calendar."""
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
