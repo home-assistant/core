@@ -16,7 +16,7 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  CONF_VERIFY_SSL, CONF_NAME)
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['matrix-client==0.0.6']
+REQUIREMENTS = ['matrix-client==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -146,13 +146,18 @@ class MatrixBot(object):
 
     def _setup(self):
         """Log in, join rooms etc."""
+        def handle_matrix_exception(exception):
+            """Handle exceptions raised inside the Matrix SDK."""
+            _LOGGER.error("Matrix exception:\n %s", str(exception))
+
         # Login, this will raise a MatrixRequestError if login is unsuccessful
         self._client = self._login()
 
         # Join rooms in which we listen for commands and start listening
         self._join_rooms()
 
-        self._client.start_listener_thread()
+        self._client.start_listener_thread(
+            exception_handler=handle_matrix_exception)
 
         self._setup_done = True
 

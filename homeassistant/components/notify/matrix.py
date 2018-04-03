@@ -13,8 +13,6 @@ from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
                                              BaseNotificationService,
                                              ATTR_MESSAGE)
 
-REQUIREMENTS = ['matrix-client==0.0.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEFAULT_ROOM = 'default_room'
