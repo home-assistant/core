@@ -23,19 +23,19 @@ class Light(HomeAccessory):
     Currently supports: state, brightness, rgb_color.
     """
 
-    def __init__(self, hass, entity_id, name, *args, **kwargs):
+    def __init__(self, hass, entity_id, name, **kwargs):
         """Initialize a new Light accessory object."""
-        super().__init__(name, entity_id, CATEGORY_LIGHT, *args, **kwargs)
+        super().__init__(name, entity_id, CATEGORY_LIGHT, **kwargs)
 
-        self._hass = hass
-        self._entity_id = entity_id
+        self.hass = hass
+        self.entity_id = entity_id
         self._flag = {CHAR_ON: False, CHAR_BRIGHTNESS: False,
                       CHAR_HUE: False, CHAR_SATURATION: False,
                       RGB_COLOR: False}
         self._state = 0
 
         self.chars = []
-        self._features = self._hass.states.get(self._entity_id) \
+        self._features = self.hass.states.get(self.entity_id) \
             .attributes.get(ATTR_SUPPORTED_FEATURES)
         if self._features & SUPPORT_BRIGHTNESS:
             self.chars.append(CHAR_BRIGHTNESS)
@@ -70,29 +70,29 @@ class Light(HomeAccessory):
         if self._state == value:
             return
 
-        _LOGGER.debug('%s: Set state to %d', self._entity_id, value)
+        _LOGGER.debug('%s: Set state to %d', self.entity_id, value)
         self._flag[CHAR_ON] = True
         self.char_on.set_value(value, should_callback=False)
 
         if value == 1:
-            self._hass.components.light.turn_on(self._entity_id)
+            self.hass.components.light.turn_on(self.entity_id)
         elif value == 0:
-            self._hass.components.light.turn_off(self._entity_id)
+            self.hass.components.light.turn_off(self.entity_id)
 
     def set_brightness(self, value):
         """Set brightness if call came from HomeKit."""
-        _LOGGER.debug('%s: Set brightness to %d', self._entity_id, value)
+        _LOGGER.debug('%s: Set brightness to %d', self.entity_id, value)
         self._flag[CHAR_BRIGHTNESS] = True
         self.char_brightness.set_value(value, should_callback=False)
         if value != 0:
-            self._hass.components.light.turn_on(
-                self._entity_id, brightness_pct=value)
+            self.hass.components.light.turn_on(
+                self.entity_id, brightness_pct=value)
         else:
-            self._hass.components.light.turn_off(self._entity_id)
+            self.hass.components.light.turn_off(self.entity_id)
 
     def set_saturation(self, value):
         """Set saturation if call came from HomeKit."""
-        _LOGGER.debug('%s: Set saturation to %d', self._entity_id, value)
+        _LOGGER.debug('%s: Set saturation to %d', self.entity_id, value)
         self._flag[CHAR_SATURATION] = True
         self.char_saturation.set_value(value, should_callback=False)
         self._saturation = value
@@ -100,7 +100,7 @@ class Light(HomeAccessory):
 
     def set_hue(self, value):
         """Set hue if call came from HomeKit."""
-        _LOGGER.debug('%s: Set hue to %d', self._entity_id, value)
+        _LOGGER.debug('%s: Set hue to %d', self.entity_id, value)
         self._flag[CHAR_HUE] = True
         self.char_hue.set_value(value, should_callback=False)
         self._hue = value
@@ -112,11 +112,11 @@ class Light(HomeAccessory):
         if self._features & SUPPORT_COLOR and self._flag[CHAR_HUE] and \
                 self._flag[CHAR_SATURATION]:
             color = (self._hue, self._saturation)
-            _LOGGER.debug('%s: Set hs_color to %s', self._entity_id, color)
+            _LOGGER.debug('%s: Set hs_color to %s', self.entity_id, color)
             self._flag.update({
                 CHAR_HUE: False, CHAR_SATURATION: False, RGB_COLOR: True})
-            self._hass.components.light.turn_on(
-                self._entity_id, hs_color=color)
+            self.hass.components.light.turn_on(
+                self.entity_id, hs_color=color)
 
     def update_state(self, entity_id=None, old_state=None, new_state=None):
         """Update light after state change."""
