@@ -132,7 +132,7 @@ def test_unlimited_setup(hass, aioclient_mock):
              '<upload>6480700153</upload>'\
              '</grace>'\
              '</usage>'
-    aioclient_mock.get('https://www.start.ca/support/usage/api?key='
+    aioclient_mock.get('https://www.start.ca/account/usage/api?key='
                        'NOTAKEY',
                        text=result)
 
