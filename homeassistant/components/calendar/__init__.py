@@ -25,6 +25,8 @@ DOMAIN = 'calendar'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+GROUP_NAME_ALL_CALENDARS = 'all calendars'
+
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
@@ -32,7 +34,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 def async_setup(hass, config):
     """Track states and offer events for calendars."""
     component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_CALENDARS)
 
     yield from component.async_setup(config)
     return True

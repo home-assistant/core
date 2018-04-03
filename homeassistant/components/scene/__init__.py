@@ -18,6 +18,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.state import HASS_DOMAIN
 from homeassistant.loader import get_platform
 
+GROUP_NAME_ALL_SCENE = 'all scenes'
+
 DOMAIN = 'scene'
 STATE = 'scening'
 STATES = 'states'
@@ -71,7 +73,8 @@ def activate(hass, entity_id=None):
 async def async_setup(hass, config):
     """Set up the scenes."""
     logger = logging.getLogger(__name__)
-    component = EntityComponent(logger, DOMAIN, hass)
+    component = EntityComponent(logger, DOMAIN, hass,
+                                group_name=GROUP_NAME_ALL_SCENE)
 
     await component.async_setup(config)
 

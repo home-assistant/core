@@ -25,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'timer'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+GROUP_NAME_ALL_TIMERS = 'all timers'
+
 DEFAULT_DURATION = 0
 ATTR_DURATION = 'duration'
 ATTR_REMAINING = 'remaining'
@@ -125,7 +127,8 @@ def async_finish(hass, entity_id):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up a timer."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent(
+        _LOGGER, DOMAIN, hass, group_name=GROUP_NAME_ALL_TIMERS)
 
     entities = []
 
