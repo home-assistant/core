@@ -116,21 +116,26 @@ class GeofencyView(HomeAssistantView):
         return 'beaconUUID' in data and data['name'] in self.mobile_beacons
 
     @staticmethod
-    def _device_name(data):
+    def _beacon_name(name):
         """Return name of device tracker."""
-        if 'beaconUUID' in data:
-            return "{}_{}".format(BEACON_DEV_PREFIX, data['name'])
-        return data['device']
+        return "{}_{}".format(BEACON_DEV_PREFIX, name)
 
     @asyncio.coroutine
     def _set_location(self, hass, data, location_name):
-        """Fire HA event to set location."""
-        device = self._device_name(data)
 
+        """Fire HA event to set location."""
         yield from hass.async_add_job(
-            partial(self.see, dev_id=device,
+            partial(self.see, dev_id=data['device'],
                     gps=(data[ATTR_LATITUDE], data[ATTR_LONGITUDE]),
                     location_name=location_name,
                     attributes=data))
 
-        return "Setting location for {}".format(device)
+        """Also update the beacon if applicable."""
+        if 'beaconUUID' in data:
+            yield from hass.async_add_job(
+                partial(self.see, dev_id=self._beacon_name(data['name']),
+                        gps=(data[ATTR_LATITUDE], data[ATTR_LONGITUDE]),
+                        location_name=location_name,
+                        attributes=data))
+
+        return "Setting location for {}".format(data['device'])
