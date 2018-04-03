@@ -440,6 +440,7 @@ omit =
     homeassistant/components/lock/nello.py
     homeassistant/components/lock/nuki.py
     homeassistant/components/lock/sesame.py
+    homeassistant/components/lock/kiwi.py
     homeassistant/components/media_extractor.py
     homeassistant/components/media_player/anthemav.py
     homeassistant/components/media_player/aquostv.py
