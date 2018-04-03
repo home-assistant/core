@@ -1081,7 +1081,7 @@ class TestZWaveServices(unittest.TestCase):
             index=12,
             command_class=const.COMMAND_CLASS_WAKE_UP,
         )
-        node = MockNode(node_id=14,)
+        node = MockNode(node_id=14)
         node.values = {12: value}
         node.get_values.return_value = node.values
         self.zwave_network.nodes = {14: node}
