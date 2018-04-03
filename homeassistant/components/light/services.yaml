@@ -15,6 +15,9 @@ turn_on:
     color_name:
       description: A human readable color name.
       example: 'red'
+    hs_color:
+      description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      example: '[300, 70]'
     xy_color:
       description: Color for the light in XY-format.
       example: '[0.52, 0.43]'
