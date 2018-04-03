@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_GOOGLE_SEARCH_PARAMS = {
     'orderBy': 'startTime',
-    'maxResults': 1,
+    'maxResults': 2,
     'singleEvents': True,
 }
 
@@ -80,5 +80,5 @@ class GoogleCalendarData(object):
         result = events.list(**params).execute()
 
         items = result.get('items', [])
-        self.event = items[0] if len(items) == 1 else None
+        self.event = items[0] if items else None
         return True
