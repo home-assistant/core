@@ -204,7 +204,6 @@ class BrSensor(Entity):
         unique_str = "%2.6f%2.6f%s" % (coordinates[CONF_LATITUDE],
                                        coordinates[CONF_LONGITUDE],
                                        self.type)
-        _LOGGER.error(unique_str)
 
         # Create UUID based on the hash of the unique string
         return str(UUID(sha1(unique_str.encode()).hexdigest()[:32]))
