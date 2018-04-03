@@ -145,7 +145,7 @@ class StartcaData(object):
         """Get the Start.ca bandwidth data from the web service."""
         import xmltodict
         _LOGGER.debug("Updating Start.ca usage data")
-        url = 'https://www.start.ca/support/usage/api?key=' + \
+        url = 'https://www.start.ca/account/usage/api?key=' + \
               self.api_key
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=self.loop):
             req = await self.websession.get(url)
@@ -155,7 +155,7 @@ class StartcaData(object):
 
         data = await req.text()
         try:
-            xml_data = xmltodict.parse(data)
+            xml_data = xmltodict.parse(data.lstrip())
         except ExpatError:
             return False
 
