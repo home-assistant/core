@@ -52,7 +52,7 @@ class QSSensor(Entity):
         val = self._decode(packet.get('data'), **self._params)
         _LOGGER.debug("Update %s (%s) decoded as %s: %s: %s",
                       self.entity_id, self.qsid, val, self._params, packet)
-        if val:
+        if val is not None:
             self._val = val
             self.async_schedule_update_ha_state()
 

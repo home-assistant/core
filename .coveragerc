@@ -190,8 +190,8 @@ omit =
     homeassistant/components/pilight.py
     homeassistant/components/*/pilight.py
 
-    homeassistant/components/qwikswitch.py
-    homeassistant/components/*/qwikswitch.py
+    homeassistant/components/switch/qwikswitch.py
+    homeassistant/components/light/qwikswitch.py
 
     homeassistant/components/rachio.py
     homeassistant/components/*/rachio.py
