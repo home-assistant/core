@@ -300,8 +300,13 @@ class HueLight(Light):
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_HS_COLOR in kwargs:
-            command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
-            command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
+            if self.is_osram:
+                command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
+                command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 254)
+            else:
+                # Philips bulbs seem don't seem to respond correctly to hue/sat
+                # requests, so we're converting to XY color here.
+                command['xy'] = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
