@@ -128,7 +128,7 @@ class PlexSensor(Entity):
                     season_title += " ({0})".format(sess.show().year)
                 season_episode = "S{0}".format(sess.parentIndex)
                 if sess.index is not None:
-                    season_episode += " · E{1}".format(sess.index)
+                    season_episode += " · E{0}".format(sess.index)
                 episode_title = sess.title
                 now_playing_title = "{0} - {1} - {2}".format(season_title,
                                                              season_episode,
