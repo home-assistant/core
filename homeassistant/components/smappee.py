@@ -264,7 +264,7 @@ class Smappee(object):
         return True
 
     def active_power(self):
-        """Get sum of all instantanious active power values from local hub."""
+        """Get sum of all instantaneous active power values from local hub."""
         if not self.is_local_active:
             return
 
