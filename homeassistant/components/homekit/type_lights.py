@@ -2,8 +2,8 @@
 import logging
 
 from homeassistant.components.light import (
-    ATTR_HS_COLOR, ATTR_COLOR_TEMP, ATTR_BRIGHTNESS,
-    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_BRIGHTNESS)
+    ATTR_HS_COLOR, ATTR_COLOR_TEMP, ATTR_BRIGHTNESS, ATTR_MIN_MIREDS,
+    ATTR_MAX_MIREDS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_BRIGHTNESS)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF
 
 from . import TYPES
@@ -63,7 +63,13 @@ class Light(HomeAccessory):
                 .get_characteristic(CHAR_COLOR_TEMPERATURE)
             self.char_color_temperature.setter_callback = \
                 self.set_color_temperature
-            self.char_color_temperature.value = 140
+            min_mireds = self._hass.states.get(self._entity_id) \
+                .attributes.get(ATTR_MIN_MIREDS, 153)
+            max_mireds = self._hass.states.get(self._entity_id) \
+                .attributes.get(ATTR_MAX_MIREDS, 500)
+            self.char_color_temperature.override_properties({
+                'minValue': min_mireds, 'maxValue': max_mireds})
+            self.char_color_temperature.value = min_mireds
         if CHAR_HUE in self.chars:
             self.char_hue = serv_light.get_characteristic(CHAR_HUE)
             self.char_hue.setter_callback = self.set_hue
@@ -104,8 +110,7 @@ class Light(HomeAccessory):
         _LOGGER.debug('%s: Set color temp to %s', self._entity_id, value)
         self._flag[CHAR_COLOR_TEMPERATURE] = True
         self.char_color_temperature.set_value(value, should_callback=False)
-        self._hass.components.light.turn_on(
-            self._entity_id, color_temp=value)
+        self._hass.components.light.turn_on(self._entity_id, color_temp=value)
 
     def set_saturation(self, value):
         """Set saturation if call came from HomeKit."""

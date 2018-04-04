@@ -125,7 +125,7 @@ class TestHomekitLights(unittest.TestCase):
             ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR_TEMP,
             ATTR_COLOR_TEMP: 190})
         acc = Light(self.hass, entity_id, 'Light', aid=2)
-        self.assertEqual(acc.char_color_temperature.value, 140)
+        self.assertEqual(acc.char_color_temperature.value, 153)
 
         acc.run()
         self.hass.block_till_done()
