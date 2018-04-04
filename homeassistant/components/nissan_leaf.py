@@ -60,9 +60,13 @@ CONF_CLIMATE_INTERVAL = 'update_interval_climate'
 CONF_REGION = 'region'
 CONF_VALID_REGIONS = ['NNA', 'NE', 'NCI', 'NMA', 'NML']
 CONF_FORCE_MILES = 'force_miles'
-DEFAULT_INTERVAL = 30
-DEFAULT_CHARGING_INTERVAL = 15
-DEFAULT_CLIMATE_INTERVAL = 5
+
+MIN_UPDATE_INTERVAL = timedelta(minutes=1)
+DEFAULT_INTERVAL = timedelta(minutes=30)
+DEFAULT_CHARGING_INTERVAL = timedelta(minutes=15)
+DEFAULT_CLIMATE_INTERVAL = timedelta(minutes=5)
+RESTRICTED_BATTERY = 2
+RESTRICTED_INTERVAL = timedelta(hours=12)
 
 CHECK_INTERVAL = 10
 
@@ -72,11 +76,14 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_REGION): vol.In(CONF_VALID_REGIONS),
         vol.Optional(CONF_NCONNECT, default=True): cv.boolean,
-        vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): cv.positive_int,
+        vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): (
+            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))),
         vol.Optional(CONF_CHARGING_INTERVAL,
-                     default=DEFAULT_CHARGING_INTERVAL): cv.positive_int,
+            default=DEFAULT_CHARGING_INTERVAL): (
+                vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))),
         vol.Optional(CONF_CLIMATE_INTERVAL,
-                     default=DEFAULT_CLIMATE_INTERVAL): cv.positive_int,
+            default=DEFAULT_CLIMATE_INTERVAL): (
+                vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))),
         vol.Optional(CONF_FORCE_MILES, default=False): cv.boolean
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -160,17 +167,29 @@ class LeafDataStore:
         result = False
         now = datetime.today()
 
-        base_interval = timedelta(minutes=self.config[DOMAIN][CONF_INTERVAL])
-        climate_interval = timedelta(
-            minutes=self.config[DOMAIN][CONF_CLIMATE_INTERVAL])
-        charging_interval = timedelta(
-            minutes=self.config[DOMAIN][CONF_CHARGING_INTERVAL])
+        base_interval = self.config[DOMAIN][CONF_INTERVAL]
+        climate_interval = self.config[DOMAIN][CONF_CLIMATE_INTERVAL]
+        charging_interval = self.config[DOMAIN][CONF_CHARGING_INTERVAL]
+
+        # The 12V battery is used when communicating with Nissan servers.
+        # The 12V battery is charged from the traction battery when not connected
+        # and when the traction battery has enough charge. To avoid draining the 
+        # 12V battery we shall restrict the update frequency if low battery.
+        # TODO: Find way to limit updates if car left connected for a long time.
 
         if self.last_check is None:
             _LOGGER.debug("Firing Refresh on %s"
                           " as there has not been one yet.",
                           self.leaf.nickname)
             result = True
+        elif (self.last_check is not None and
+              self.data[DATA_CHARGING] is False and 
+              self.data[DATA_BATTERY] > 0 and   #FIXME:  Check if data retrieved
+              self.data[DATA_BATTERY] <= RESTRICTED_BATTERY and
+              self.last_check + RESTRICTED_INTERVAL > now):
+            _LOGGER.info("Refresh frequency restricted due to low battery",
+                         self.leaf.nickname)
+            result = False
         elif self.last_check + base_interval < now:
             _LOGGER.debug("Firing Refresh on %s"
                           " as the interval has passed.",
