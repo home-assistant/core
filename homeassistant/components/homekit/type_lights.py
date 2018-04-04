@@ -146,7 +146,9 @@ class Light(HomeAccessory):
             hue, saturation = new_state.attributes.get(
                 ATTR_HS_COLOR, (None, None))
             if not self._flag[RGB_COLOR] and (
-                    hue != self._hue or saturation != self._saturation):
+                    hue != self._hue or saturation != self._saturation) and \
+                    isinstance(hue, (int, float)) and \
+                    isinstance(saturation, (int, float)):
                 self.char_hue.set_value(hue, should_callback=False)
                 self.char_saturation.set_value(saturation,
                                                should_callback=False)
