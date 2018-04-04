@@ -15,10 +15,12 @@ DEPENDENCIES = ['nissan_leaf']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    devices = []
+    if discovery_info is None:
+        return
 
     _LOGGER.debug("Adding sensors")
 
+    devices = []
     for value in hass.data[leaf_core.DATA_LEAF].values():
         devices.append(LeafPluggedInSensor(value))
 
