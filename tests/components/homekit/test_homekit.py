@@ -129,7 +129,7 @@ class TestHomeKit(unittest.TestCase):
 
     def test_homekit_entity_filter(self):
         """Test the entity filter."""
-        entity_filter = generate_filter(['cover'], ['demo.test'], [], [])
+        entity_filter = generate_filter(['cover'], ['demo.test'], 'hue', [], [], [])
         homekit = HomeKit(self.hass, None, entity_filter, {})
 
         with patch(PATH_HOMEKIT + '.get_accessory') as mock_get_acc:
