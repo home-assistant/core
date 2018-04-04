@@ -7,12 +7,12 @@ from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ATTR_OPERATION_LIST,
     STATE_HEAT, STATE_COOL, STATE_AUTO)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_UNIT_OF_MEASUREMENT, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service
 from .const import (
-    SERV_THERMOSTAT, CHAR_CURRENT_HEATING_COOLING,
+    CATEGORY_THERMOSTAT, SERV_THERMOSTAT, CHAR_CURRENT_HEATING_COOLING,
     CHAR_TARGET_HEATING_COOLING, CHAR_CURRENT_TEMPERATURE,
     CHAR_TARGET_TEMPERATURE, CHAR_TEMP_DISPLAY_UNITS,
     CHAR_COOLING_THRESHOLD_TEMPERATURE, CHAR_HEATING_THRESHOLD_TEMPERATURE)
@@ -20,7 +20,6 @@ from .util import temperature_to_homekit, temperature_to_states
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_OFF = 'off'
 UNIT_HASS_TO_HOMEKIT = {TEMP_CELSIUS: 0, TEMP_FAHRENHEIT: 1}
 UNIT_HOMEKIT_TO_HASS = {c: s for s, c in UNIT_HASS_TO_HOMEKIT.items()}
 HC_HASS_TO_HOMEKIT = {STATE_OFF: 0, STATE_HEAT: 1,
@@ -32,14 +31,13 @@ HC_HOMEKIT_TO_HASS = {c: s for s, c in HC_HASS_TO_HOMEKIT.items()}
 class Thermostat(HomeAccessory):
     """Generate a Thermostat accessory for a climate."""
 
-    def __init__(self, hass, entity_id, display_name,
-                 support_auto, *args, **kwargs):
+    def __init__(self, hass, entity_id, display_name, support_auto, **kwargs):
         """Initialize a Thermostat accessory object."""
-        super().__init__(display_name, entity_id, 'THERMOSTAT',
-                         *args, **kwargs)
+        super().__init__(display_name, entity_id,
+                         CATEGORY_THERMOSTAT, **kwargs)
 
-        self._hass = hass
-        self._entity_id = entity_id
+        self.hass = hass
+        self.entity_id = entity_id
         self._call_timer = None
         self._unit = TEMP_CELSIUS
 
@@ -101,48 +99,48 @@ class Thermostat(HomeAccessory):
         """Move operation mode to value if call came from HomeKit."""
         self.char_target_heat_cool.set_value(value, should_callback=False)
         if value in HC_HOMEKIT_TO_HASS:
-            _LOGGER.debug('%s: Set heat-cool to %d', self._entity_id, value)
+            _LOGGER.debug('%s: Set heat-cool to %d', self.entity_id, value)
             self.heat_cool_flag_target_state = True
             hass_value = HC_HOMEKIT_TO_HASS[value]
-            self._hass.components.climate.set_operation_mode(
-                operation_mode=hass_value, entity_id=self._entity_id)
+            self.hass.components.climate.set_operation_mode(
+                operation_mode=hass_value, entity_id=self.entity_id)
 
     def set_cooling_threshold(self, value):
         """Set cooling threshold temp to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set cooling threshold temperature to %.2f°C',
-                      self._entity_id, value)
+                      self.entity_id, value)
         self.coolingthresh_flag_target_state = True
         self.char_cooling_thresh_temp.set_value(value, should_callback=False)
         low = self.char_heating_thresh_temp.value
         low = temperature_to_states(low, self._unit)
         value = temperature_to_states(value, self._unit)
-        self._hass.components.climate.set_temperature(
-            entity_id=self._entity_id, target_temp_high=value,
+        self.hass.components.climate.set_temperature(
+            entity_id=self.entity_id, target_temp_high=value,
             target_temp_low=low)
 
     def set_heating_threshold(self, value):
         """Set heating threshold temp to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set heating threshold temperature to %.2f°C',
-                      self._entity_id, value)
+                      self.entity_id, value)
         self.heatingthresh_flag_target_state = True
         self.char_heating_thresh_temp.set_value(value, should_callback=False)
         # Home assistant always wants to set low and high at the same time
         high = self.char_cooling_thresh_temp.value
         high = temperature_to_states(high, self._unit)
         value = temperature_to_states(value, self._unit)
-        self._hass.components.climate.set_temperature(
-            entity_id=self._entity_id, target_temp_high=high,
+        self.hass.components.climate.set_temperature(
+            entity_id=self.entity_id, target_temp_high=high,
             target_temp_low=value)
 
     def set_target_temperature(self, value):
         """Set target temperature to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set target temperature to %.2f°C',
-                      self._entity_id, value)
+                      self.entity_id, value)
         self.temperature_flag_target_state = True
         self.char_target_temp.set_value(value, should_callback=False)
         value = temperature_to_states(value, self._unit)
-        self._hass.components.climate.set_temperature(
-            temperature=value, entity_id=self._entity_id)
+        self.hass.components.climate.set_temperature(
+            temperature=value, entity_id=self.entity_id)
 
     def update_state(self, entity_id=None, old_state=None, new_state=None):
         """Update security state after state changed."""
