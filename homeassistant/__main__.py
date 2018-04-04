@@ -21,8 +21,6 @@ from homeassistant.const import (
 
 def attempt_use_uvloop() -> None:
     """Attempt to use uvloop."""
-    import asyncio
-
     try:
         import uvloop
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
@@ -239,10 +237,10 @@ def cmdline() -> List[str]:
     return [arg for arg in sys.argv if arg != '--daemon']
 
 
-def setup_and_run_hass(config_dir: str,
-                       args: argparse.Namespace) -> int:
+async def setup_and_run_hass(config_dir: str,
+                             args: argparse.Namespace) -> int:
     """Set up HASS and run."""
-    from homeassistant import bootstrap
+    from homeassistant import bootstrap, core
 
     # Run a simple daemon runner process on Windows to handle restarts
     if os.name == 'nt' and '--runner' not in sys.argv:
@@ -255,25 +253,24 @@ def setup_and_run_hass(config_dir: str,
                 if exc.returncode != RESTART_EXIT_CODE:
                     sys.exit(exc.returncode)
 
+    hass = core.HomeAssistant()
+
     if args.demo_mode:
         config = {
             'frontend': {},
             'demo': {}
         }  # type: Dict[str, Any]
-        hass = bootstrap.from_config_dict(
-            config, config_dir=config_dir, verbose=args.verbose,
+        bootstrap.async_from_config_dict(
+            config, hass, config_dir=config_dir, verbose=args.verbose,
             skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days,
             log_file=args.log_file, log_no_color=args.log_no_color)
     else:
         config_file = ensure_config_file(config_dir)
         print('Config directory:', config_dir)
-        hass = bootstrap.from_config_file(
-            config_file, verbose=args.verbose, skip_pip=args.skip_pip,
+        await bootstrap.async_from_config_file(
+            config_file, hass, verbose=args.verbose, skip_pip=args.skip_pip,
             log_rotate_days=args.log_rotate_days, log_file=args.log_file,
             log_no_color=args.log_no_color)
-
-    if hass is None:
-        return -1
 
     if args.open_ui:
         # Imported here to avoid importing asyncio before monkey patch
@@ -285,13 +282,9 @@ def setup_and_run_hass(config_dir: str,
                 import webbrowser
                 webbrowser.open(hass.config.api.base_url)  # type: ignore
 
-        run_callback_threadsafe(
-            hass.loop,
-            hass.bus.async_listen_once,
-            EVENT_HOMEASSISTANT_START, open_browser
-        )
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, open_browser)
 
-    return hass.start()
+    return await hass.run()
 
 
 def try_to_restart() -> None:
@@ -365,7 +358,8 @@ def main() -> int:
     if args.pid_file:
         write_pid(args.pid_file)
 
-    exit_code = setup_and_run_hass(config_dir, args)
+    from homeassistant.util import asyncio_run
+    exit_code = asyncio_run(setup_and_run_hass(config_dir, args))
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 

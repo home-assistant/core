@@ -30,6 +30,15 @@ TBL_SLUGIFY = {
 }
 
 
+try:
+    asyncio_run = asyncio.run
+except AttributeError:
+    def asyncio_run(main, *, debug=False):
+        loop = asyncio.new_event_loop()
+        loop.set_debug(debug)
+        return loop.run(main)
+
+
 def sanitize_filename(filename: str) -> str:
     r"""Sanitize a filename by removing .. / and \\."""
     return RE_SANITIZE_FILENAME.sub("", filename)
