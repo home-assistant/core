@@ -92,7 +92,8 @@ class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
     def __init__(self, hass, rest, name, unit_of_measurement,
-                 value_template, json_attrs, force_update, json_template = None):
+                 value_template, json_attrs, force_update,
+                 json_template=None):
         """Initialize the REST sensor."""
         self._hass = hass
         self.rest = rest
@@ -140,8 +141,9 @@ class RestSensor(Entity):
             if value:
                 try:
                     if self._json_template is not None:
-                        attributes = self._json_template.render_with_possible_json_value(
-                            value, {})
+                        attributes = self._json_template \
+                                         .render_with_possible_json_value(
+                                             value, {})
                         json_dict = json.loads(attributes)
                     else:
                         json_dict = json.loads(value)
