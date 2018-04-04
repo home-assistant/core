@@ -37,24 +37,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def aurora():
-    """Return the Nanoleaf module."""
-    import nanoleaf as nanoleaf_module
-    return nanoleaf_module
-
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Nanoleaf Aurora device."""
+    import nanoleaf
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
-    aurora_light = aurora().Aurora(host, token)
+    aurora_light = nanoleaf.Aurora(host, token)
     aurora_light.hass_name = name
 
     if aurora_light.on is None:
         _LOGGER.error("Could not connect to \
         Nanoleaf Aurora: %s on %s", name, host)
-    add_devices([AuroraLight(aurora_light)])
+    add_devices([AuroraLight(aurora_light)], True)
 
 
 class AuroraLight(Light):
@@ -62,14 +57,8 @@ class AuroraLight(Light):
 
     def __init__(self, light):
         """Initialize an Aurora."""
-        self._brightness = light.brightness
-        self._color_temp = light.color_temperature
-        self._effect = light.effect
-        self._effects_list = light.effects_list
         self._light = light
         self._name = light.hass_name
-        self._hs_color = light.hue, light.saturation
-        self._state = light.on
 
     @property
     def brightness(self):
