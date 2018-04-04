@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     _LOGGER.debug("Adding sensors")
 
-    for key, value in hass.data[leaf_core.DATA_LEAF].items():
+    for value in hass.data[leaf_core.DATA_LEAF].values():
         devices.append(LeafPluggedInSensor(value))
 
     add_devices(devices, True)
