@@ -56,7 +56,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=import-error, no-member, broad-except, c-extension-no-member
 async def async_setup(hass, config):
     """Register a port mapping for Home Assistant via UPnP."""
     config = config[DOMAIN]
@@ -73,10 +72,14 @@ async def async_setup(hass, config):
         return False
 
     import pyupnp_async
+    from pyupnp_async.error import UpnpSoapError
 
     service = None
+    resp = await pyupnp_async.msearch_first(search_target=IGD_DEVICE)
+    if not resp:
+        return False
+
     try:
-        resp = await pyupnp_async.msearch_first(search_target=IGD_DEVICE)
         device = await resp.get_device()
         hass.data[UPNP_DEVICE] = device
         for _service in device.services:
@@ -90,8 +93,8 @@ async def async_setup(hass, config):
                                         DOMAIN,
                                         {'unit': unit},
                                         config)
-    except Exception:
-        _LOGGER.exception("Error when attempting to discover an UPnP IGD")
+    except UpnpSoapError as error:
+        _LOGGER.error(error)
         return False
 
     if not service:
@@ -116,7 +119,9 @@ async def async_setup(hass, config):
             await service.add_port_mapping(internal, external, host, 'TCP',
                                            desc='Home Assistant')
             registered.append(external)
-        except Exception:
+            _LOGGER.debug("external %s -> %s @ %s", external, internal, host)
+        except UpnpSoapError as error:
+            _LOGGER.error(error)
             _LOGGER.exception("UPnP failed to configure port mapping for %s",
                               external)
             hass.components.persistent_notification.create(
