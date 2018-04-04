@@ -12,7 +12,8 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService,
     PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_RESOURCE, CONF_METHOD, CONF_NAME, CONF_HEADERS)
+from homeassistant.const import (CONF_RESOURCE, CONF_METHOD, CONF_NAME,
+                                 CONF_HEADERS)
 import homeassistant.helpers.config_validation as cv
 
 CONF_DATA = 'data'
@@ -102,11 +103,14 @@ class RestNotificationService(BaseNotificationService):
             data.update(_data_template_creator(self._data_template))
 
         if self._method == 'POST':
-            response = requests.post(self._resource, headers=self._headers, data=data, timeout=10)
+            response = requests.post(self._resource, headers=self._headers,
+                                     data=data, timeout=10)
         elif self._method == 'POST_JSON':
-            response = requests.post(self._resource, headers=self._headers, json=data, timeout=10)
+            response = requests.post(self._resource, headers=self._headers,
+                                     json=data, timeout=10)
         else:   # default GET
-            response = requests.get(self._resource, headers=self._headers, params=data, timeout=10)
+            response = requests.get(self._resource, headers=self._headers,
+                                    params=data, timeout=10)
 
         if response.status_code not in (200, 201):
             _LOGGER.exception(
