@@ -131,7 +131,8 @@ class TestRestSensor(unittest.TestCase):
         self.name = 'foo'
         self.unit_of_measurement = 'MB'
         self.value_template = template('{{ value_json.key }}')
-        self.json_template = template('{{ value_json[0] }}')
+        self.json_template = template('{{ value_json[0]|tojson }}')
+        self.json_template.hass = self.hass
         self.value_template.hass = self.hass
         self.force_update = False
 

@@ -92,7 +92,7 @@ class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
     def __init__(self, hass, rest, name, unit_of_measurement,
-                 value_template, json_attrs, force_update, json_template):
+                 value_template, json_attrs, force_update, json_template = None):
         """Initialize the REST sensor."""
         self._hass = hass
         self.rest = rest
