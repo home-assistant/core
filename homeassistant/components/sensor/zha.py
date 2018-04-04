@@ -82,6 +82,7 @@ class Sensor(zha.Entity):
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
+
         False if entity pushes its state to HA.
         """
         return False
@@ -202,7 +203,6 @@ class CentraliteBatterySensor(GenericBatterySensor):
     @property
     def state(self):
         """Return the state of the entity."""
-
         if self._state == 'unknown':
             return 'unknown'
 
@@ -254,6 +254,7 @@ class ElectricalMeasurementSensor(Sensor):
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
+
         False if entity pushes its state to HA.
         """
         return True
