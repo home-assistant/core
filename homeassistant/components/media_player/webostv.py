@@ -357,8 +357,8 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def media_next_track(self):
         """Send next track command."""
-        self._client.fast_forward()
+        self._client.channel_up()
 
     def media_previous_track(self):
         """Send the previous track command."""
-        self._client.rewind()
+        self._client.channel_down()
