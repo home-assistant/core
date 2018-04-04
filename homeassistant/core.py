@@ -1039,6 +1039,9 @@ class Config(object):
         # List of allowed external dirs to access
         self.whitelist_external_dirs = set()
 
+        # List of dirs where jinja2 templates are stored
+        self.template_dirs = set()
+
     def distance(self: object, lat: float, lon: float) -> float:
         """Calculate distance from Home Assistant.
 
@@ -1096,6 +1099,7 @@ class Config(object):
             'components': self.components,
             'config_dir': self.config_dir,
             'whitelist_external_dirs': self.whitelist_external_dirs,
+            'template_dirs': self.template_dirs,
             'version': __version__
         }
 

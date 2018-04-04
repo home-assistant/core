@@ -5,10 +5,12 @@ import unittest
 import random
 import math
 from unittest.mock import patch
+from jinja2 import ChoiceLoader, FileSystemLoader
 
 from homeassistant.components import group
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
+from homeassistant.helpers.template import DEFAULT_TEMPLATE_ENVIRONMENT
 from homeassistant.util.unit_system import UnitSystem
 from homeassistant.const import (
     LENGTH_METERS,
@@ -424,7 +426,9 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_now(self, mock_is_safe):
         """Test now method."""
         now = dt_util.now()
-        with patch.dict(template.ENV.globals, {'now': lambda: now}):
+        with patch.dict(
+                template.DEFAULT_TEMPLATE_ENVIRONMENT.globals,
+                {'now': lambda: now}):
             self.assertEqual(
                 now.isoformat(),
                 template.Template('{{ now().isoformat() }}',
@@ -435,7 +439,9 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_utcnow(self, mock_is_safe):
         """Test utcnow method."""
         now = dt_util.utcnow()
-        with patch.dict(template.ENV.globals, {'utcnow': lambda: now}):
+        with patch.dict(
+                template.DEFAULT_TEMPLATE_ENVIRONMENT.globals,
+                {'utcnow': lambda: now}):
             self.assertEqual(
                 now.isoformat(),
                 template.Template('{{ utcnow().isoformat() }}',
@@ -854,6 +860,29 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
             template.extract_entities(
                 "{{ is_state('media_player.' ~ where , 'playing') }}",
                 {'where': 'livingroom'}))
+
+    def test_when_template_dirs_are_defined_then_use_loaders(self):
+        """Test it will create one loader per defined dir in template env."""
+        self.hass.config.template_dirs = {'/tmp', '/another'}
+        env = template._get_template_environment(self.hass)
+        self.assertIsInstance(env.loader, ChoiceLoader)
+        assert len(env.loader.loaders) == 2
+        assert all(isinstance(l, FileSystemLoader) for l in env.loader.loaders)
+        search_paths = [l.searchpath for l in env.loader.loaders]
+        assert ({'/another', '/tmp'} ==
+                {path for sublist in search_paths for path in sublist})
+        self.hass.config.template_dirs = {}
+
+    def test_when_hass_is_not_defined_then_use_default_template_env(self):
+        """Test it will use default template env if hass is not defined."""
+        env = template._get_template_environment(None)
+        self.assertEqual(env, DEFAULT_TEMPLATE_ENVIRONMENT)
+
+    def test_when_template_dirs_not_defined_then_default_template_env(self):
+        """Test it will use default template env if dirs are not defined."""
+        self.hass.config.template_dirs = {}
+        env = template._get_template_environment(self.hass)
+        self.assertEqual(env, DEFAULT_TEMPLATE_ENVIRONMENT)
 
 
 @asyncio.coroutine

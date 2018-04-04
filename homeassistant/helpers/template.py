@@ -1,13 +1,14 @@
 """Template helper methods for rendering strings with Home Assistant data."""
-from datetime import datetime
 import json
 import logging
 import math
 import random
 import re
+from datetime import datetime
+from threading import Lock
 
 import jinja2
-from jinja2 import contextfilter
+from jinja2 import contextfilter, FileSystemLoader, ChoiceLoader
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from homeassistant.const import (
@@ -31,6 +32,9 @@ _RE_GET_ENTITIES = re.compile(
     r"(?:(?:states\.|(?:is_state|is_state_attr|state_attr|states)"
     r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
+
+TEMPLATE_ENV = 'template_env'
+CACHE_LOCK = Lock()
 
 
 @bind_hass
@@ -67,14 +71,14 @@ def extract_entities(template, variables=None):
 
     for result in extraction:
         if result[0] == 'trigger.entity_id' and 'trigger' in variables and \
-           'entity_id' in variables['trigger']:
+                'entity_id' in variables['trigger']:
             extraction_final.append(variables['trigger']['entity_id'])
         elif result[0]:
             extraction_final.append(result[0])
 
         if variables and result[1] in variables and \
-           isinstance(variables[result[1]], str) and \
-           valid_entity_id(variables[result[1]]):
+                isinstance(variables[result[1]], str) and \
+                valid_entity_id(variables[result[1]]):
             extraction_final.append(variables[result[1]])
 
     if extraction_final:
@@ -101,7 +105,8 @@ class Template(object):
             return
 
         try:
-            self._compiled_code = ENV.compile(self.template)
+            template_environment = _get_template_environment(self.hass)
+            self._compiled_code = template_environment.compile(self.template)
         except jinja2.exceptions.TemplateSyntaxError as err:
             raise TemplateError(err)
 
@@ -177,7 +182,7 @@ class Template(object):
 
         template_methods = TemplateMethods(self.hass)
 
-        global_vars = ENV.make_globals({
+        global_vars = _get_template_environment(self.hass).make_globals({
             'closest': template_methods.closest,
             'distance': template_methods.distance,
             'is_state': self.hass.states.is_state,
@@ -187,7 +192,10 @@ class Template(object):
         })
 
         self._compiled = jinja2.Template.from_code(
-            ENV, self._compiled_code, global_vars, None)
+            _get_template_environment(self.hass),
+            self._compiled_code,
+            global_vars,
+            None)
 
         return self._compiled
 
@@ -534,21 +542,55 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         return isinstance(obj, AllStates) or super().is_safe_callable(obj)
 
 
-ENV = TemplateEnvironment()
-ENV.filters['round'] = forgiving_round
-ENV.filters['multiply'] = multiply
-ENV.filters['log'] = logarithm
-ENV.filters['timestamp_custom'] = timestamp_custom
-ENV.filters['timestamp_local'] = timestamp_local
-ENV.filters['timestamp_utc'] = timestamp_utc
-ENV.filters['is_defined'] = fail_when_undefined
-ENV.filters['max'] = max
-ENV.filters['min'] = min
-ENV.filters['random'] = random_every_time
-ENV.globals['log'] = logarithm
-ENV.globals['float'] = forgiving_float
-ENV.globals['now'] = dt_util.now
-ENV.globals['utcnow'] = dt_util.utcnow
-ENV.globals['as_timestamp'] = forgiving_as_timestamp
-ENV.globals['relative_time'] = dt_util.get_age
-ENV.globals['strptime'] = strptime
+TEMPLATE_ENV_FILTERS = {
+    'round': forgiving_round,
+    'multiply': multiply,
+    'log': logarithm,
+    'timestamp_custom': timestamp_custom,
+    'timestamp_local': timestamp_local,
+    'timestamp_utc': timestamp_utc,
+    'is_defined': fail_when_undefined,
+    'max': max,
+    'min': min,
+    'random': random_every_time
+}
+
+TEMPLATE_ENV_GLOBALS = {
+    'log': logarithm,
+    'float': forgiving_float,
+    'now': dt_util.now,
+    'utcnow': dt_util.utcnow,
+    'as_timestamp': forgiving_as_timestamp,
+    'relative_time': dt_util.get_age,
+    'strptime': strptime
+}
+
+DEFAULT_TEMPLATE_ENVIRONMENT = TemplateEnvironment()
+DEFAULT_TEMPLATE_ENVIRONMENT.filters.update(TEMPLATE_ENV_FILTERS)
+DEFAULT_TEMPLATE_ENVIRONMENT.globals.update(TEMPLATE_ENV_GLOBALS)
+
+
+def _initialize_template_environment(hass):
+    loaders = [
+        FileSystemLoader(search_path)
+        for search_path in hass.config.template_dirs
+    ]
+    template_environment = TemplateEnvironment(loader=ChoiceLoader(loaders))
+    template_environment.filters.update(TEMPLATE_ENV_FILTERS)
+    template_environment.globals.update(TEMPLATE_ENV_GLOBALS)
+    return template_environment
+
+
+def _get_template_environment(hass):
+    if hass is None or not hass.config.template_dirs:
+        return DEFAULT_TEMPLATE_ENVIRONMENT
+
+    if TEMPLATE_ENV in hass.data:
+        return hass.data[TEMPLATE_ENV]
+    else:
+        CACHE_LOCK.acquire()
+        if TEMPLATE_ENV not in hass.data:
+            hass.data[TEMPLATE_ENV] = _initialize_template_environment(hass)
+        CACHE_LOCK.release()
+
+    return hass.data[TEMPLATE_ENV]

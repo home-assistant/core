@@ -422,6 +422,7 @@ class TestConfig(unittest.TestCase):
                 CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
                 'time_zone': 'America/New_York',
                 'whitelist_external_dirs': '/tmp',
+                'template_dirs': '/tmp',
             }), self.hass.loop).result()
 
         assert self.hass.config.latitude == 60
@@ -432,6 +433,8 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.time_zone.zone == 'America/New_York'
         assert len(self.hass.config.whitelist_external_dirs) == 2
         assert '/tmp' in self.hass.config.whitelist_external_dirs
+        self.assertIsInstance(self.hass.config.template_dirs, mock.Mock)
+        self.hass.config.template_dirs.update.assert_called_with({'/tmp'})
 
     def test_loading_configuration_temperature_unit(self):
         """Test backward compatibility when loading core config."""
@@ -557,6 +560,24 @@ class TestConfig(unittest.TestCase):
             config_util.async_check_ha_config_file(self.hass),
             self.hass.loop
         ).result() == 'bad'
+
+    def test_template_dirs_is_optional(self):
+        """Test loading config without optional value template_dirs."""
+        self.hass.config = mock.Mock()
+
+        run_coroutine_threadsafe(
+            config_util.async_process_ha_core_config(self.hass, {
+                'latitude': 60,
+                'longitude': 50,
+                'elevation': 25,
+                'name': 'Huis',
+                CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+                'time_zone': 'America/New_York',
+                'whitelist_external_dirs': '/tmp',
+            }), self.hass.loop).result()
+
+        self.assertIsInstance(self.hass.config.template_dirs, mock.Mock)
+        self.hass.config.template_dirs.update.assert_not_called()
 
 
 # pylint: disable=redefined-outer-name
