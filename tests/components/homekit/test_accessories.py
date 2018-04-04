@@ -153,13 +153,13 @@ class TestAccessories(unittest.TestCase):
     def test_home_driver(self):
         """Test HomeDriver class."""
         bridge = HomeBridge(None)
-        ip_adress = '127.0.0.1'
+        ip_address = '127.0.0.1'
         port = 51826
         path = '.homekit.state'
 
         with patch('pyhap.accessory_driver.AccessoryDriver.__init__') \
                 as mock_driver:
-            HomeDriver(bridge, ip_adress, port, path)
+            HomeDriver(bridge, ip_address, port, path)
 
         self.assertEqual(
-            mock_driver.call_args, call(bridge, ip_adress, port, path))
+            mock_driver.call_args, call(bridge, ip_address, port, path))
