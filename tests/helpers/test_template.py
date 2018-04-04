@@ -441,6 +441,59 @@ class TestHelpersTemplate(unittest.TestCase):
                 template.Template('{{ utcnow().isoformat() }}',
                                   self.hass).render())
 
+    def test_regex_match(self):
+        """Test regex_match method."""
+        tpl = template.Template("""
+{{ '123-456-7890' | regex_match('(\d{3})-(\d{3})-(\d{4})') }}
+                """, self.hass)
+        self.assertEqual('True', tpl.render())
+
+        tpl = template.Template("""
+{{ 'home assistant test' | regex_match('Home', True) }}
+                """, self.hass)
+        self.assertEqual('True', tpl.render())
+
+        tpl = template.Template("""
+        {{ 'Another home assistant test' | regex_match('home') }}
+                        """, self.hass)
+        self.assertEqual('False', tpl.render())
+
+    def test_regex_search(self):
+        """Test regex_search method."""
+        tpl = template.Template("""
+{{ '123-456-7890' | regex_search('(\d{3})-(\d{3})-(\d{4})') }}
+                """, self.hass)
+        self.assertEqual('True', tpl.render())
+
+        tpl = template.Template("""
+{{ 'home assistant test' | regex_search('Home', True) }}
+                """, self.hass)
+        self.assertEqual('True', tpl.render())
+
+        tpl = template.Template("""
+        {{ 'Another home assistant test' | regex_search('home') }}
+                        """, self.hass)
+        self.assertEqual('True', tpl.render())
+
+    def test_regex_replace(self):
+        """Test regex_replace method."""
+        tpl = template.Template("""
+{{ 'Hello World' | regex_replace('(Hello\s)',) }}
+                """, self.hass)
+        self.assertEqual('World', tpl.render())
+
+    def test_regex_findall_index(self):
+        """Test regex_findall_index method."""
+        tpl = template.Template("""
+{{ 'Flight from JFK to LHR' | regex_findall_index('([A-Z]{3})', 0) }}
+                """, self.hass)
+        self.assertEqual('JFK', tpl.render())
+
+        tpl = template.Template("""
+{{ 'Flight from JFK to LHR' | regex_findall_index('([A-Z]{3})', 1) }}
+                """, self.hass)
+        self.assertEqual('LHR', tpl.render())
+
     def test_distance_function_with_1_state(self):
         """Test distance function with 1 state."""
         self.hass.states.set('test.object', 'happy', {

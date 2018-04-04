@@ -516,6 +516,39 @@ def forgiving_float(value):
         return value
 
 
+def regex_match(value, find='', ignorecase=False):
+    """Match value using regex."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    return bool(re.match(find, value, flags))
+
+
+def regex_replace(value='', find='', replace='', ignorecase=False):
+    """Replace using regex."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    regex = re.compile(find, flags)
+    return regex.sub(replace, value)
+
+
+def regex_search(value, find='', ignorecase=False):
+    """Search using regex."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    return bool(re.search(find, value, flags))
+
+
+def regex_findall_index(value, find='', index=0, ignorecase=False):
+    """Find all matches using regex and then pick specific match index."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    return re.findall(find, value, flags)[index]
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -545,6 +578,10 @@ ENV.filters['is_defined'] = fail_when_undefined
 ENV.filters['max'] = max
 ENV.filters['min'] = min
 ENV.filters['random'] = random_every_time
+ENV.filters['regex_match'] = regex_match
+ENV.filters['regex_replace'] = regex_replace
+ENV.filters['regex_search'] = regex_search
+ENV.filters['regex_findall_index'] = regex_findall_index
 ENV.globals['log'] = logarithm
 ENV.globals['float'] = forgiving_float
 ENV.globals['now'] = dt_util.now
