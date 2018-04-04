@@ -63,14 +63,11 @@ class WindowCovering(HomeAccessory):
             return
 
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
-        if current_position is None:
-            return
-
-        self.current_position = int(current_position)
-        self.char_current_position.set_value(self.current_position)
-
-        if self.homekit_target is None or \
-                abs(self.current_position - self.homekit_target) < 6:
-            self.char_target_position.set_value(self.current_position)
-            self.char_position_state.set_value(2)
-            self.homekit_target = None
+        if isinstance(current_position, int):
+            self.current_position = current_position
+            self.char_current_position.set_value(self.current_position)
+            if self.homekit_target is None or \
+                    abs(self.current_position - self.homekit_target) < 6:
+                self.char_target_position.set_value(self.current_position)
+                self.char_position_state.set_value(2)
+                self.homekit_target = None
