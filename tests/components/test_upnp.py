@@ -8,8 +8,10 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
 from homeassistant.components.upnp import IP_SERVICE
 
+
 class MockService(MagicMock):
     """Mock upnp IP service."""
+
     async def add_port_mapping(self, *args, **kwargs):
         """Original function."""
         self.mock_add_port_mapping(*args, **kwargs)
@@ -18,8 +20,10 @@ class MockService(MagicMock):
         """Original function."""
         self.mock_delete_port_mapping(*args, **kwargs)
 
+
 class MockDevice(MagicMock):
     """Mock upnp device."""
+
     def find_first_service(self, *args, **kwargs):
         """Original function."""
         self._service = MockService()
@@ -29,14 +33,17 @@ class MockDevice(MagicMock):
         """Access Mock first service."""
         return self._service
 
+
 class MockResp(MagicMock):
     """Mock upnp msearch response."""
+
     async def get_device(self, *args, **kwargs):
         """Original function."""
         device = MockDevice()
         service = {'serviceType': IP_SERVICE}
         device.services = [service]
         return device
+
 
 @pytest.fixture
 def mock_msearch_first(*args, **kwargs):
@@ -48,6 +55,7 @@ def mock_msearch_first(*args, **kwargs):
     with patch('pyupnp_async.msearch_first', new=async_mock_msearch_first):
         yield
 
+
 @pytest.fixture
 def mock_async_exception(*args, **kwargs):
     """Wrapper to async mock function with exception."""
@@ -56,6 +64,7 @@ def mock_async_exception(*args, **kwargs):
 
     with patch('pyupnp_async.msearch_first', new=async_mock_exception):
         yield
+
 
 @pytest.fixture
 def mock_local_ip():
@@ -76,7 +85,9 @@ async def test_setup_fail_if_no_ip(hass):
     assert not result
 
 
-async def test_setup_fail_if_cannot_select_igd(hass, mock_local_ip, mock_async_exception):
+async def test_setup_fail_if_cannot_select_igd(hass,
+                                               mock_local_ip,
+                                               mock_async_exception):
     """Test setup fails if we can't find an UPnP IGD."""
     result = await async_setup_component(hass, 'upnp', {
         'upnp': {}
@@ -102,9 +113,10 @@ async def test_setup_succeeds_if_specify_ip(hass, mock_msearch_first):
         8123, 8123, '192.168.0.10', 'TCP', desc='Home Assistant')
 
 
-async def test_no_config_maps_hass_local_to_remote_port(hass, mock_local_ip, mock_msearch_first):
+async def test_no_config_maps_hass_local_to_remote_port(hass,
+                                                        mock_local_ip,
+                                                        mock_msearch_first):
     """Test by default we map local to remote port."""
-
     result = await async_setup_component(hass, 'upnp', {
         'upnp': {}
     })
@@ -116,7 +128,9 @@ async def test_no_config_maps_hass_local_to_remote_port(hass, mock_local_ip, moc
         8123, 8123, '192.168.0.10', 'TCP', desc='Home Assistant')
 
 
-async def test_map_hass_to_remote_port(hass, mock_local_ip, mock_msearch_first):
+async def test_map_hass_to_remote_port(hass,
+                                       mock_local_ip,
+                                       mock_msearch_first):
     """Test mapping hass to remote port."""
     result = await async_setup_component(hass, 'upnp', {
         'upnp': {
@@ -133,7 +147,9 @@ async def test_map_hass_to_remote_port(hass, mock_local_ip, mock_msearch_first):
         8123, 1000, '192.168.0.10', 'TCP', desc='Home Assistant')
 
 
-async def test_map_internal_to_remote_ports(hass, mock_local_ip, mock_msearch_first):
+async def test_map_internal_to_remote_ports(hass,
+                                            mock_local_ip,
+                                            mock_msearch_first):
     """Test mapping local to remote ports."""
     ports = OrderedDict()
     ports['hass'] = 1000
