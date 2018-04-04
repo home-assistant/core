@@ -11,9 +11,12 @@ nissan_leaf:
   password: "password"
   nissan_connect: false
   region: 'NE'
-  update_interval: 30
-  update_interval_charging: 15
-  update_interval_climate: 5
+  update_interval: 
+    hours: 1
+  update_interval_charging: 
+    minutes: 15
+  update_interval_climate: 
+    minutes: 5
   force_miles: true
 """
 
@@ -158,12 +161,18 @@ class LeafDataStore:
         self.data[DATA_RANGE_AC_OFF] = 0
         self.data[DATA_PLUGGED_IN] = False
         self.last_check = None
+        self.request_in_progress = False
         track_time_interval(
             hass,
             self.refresh_leaf_if_necessary,
             timedelta(seconds=CHECK_INTERVAL))
 
     def refresh_leaf_if_necessary(self, event_time):
+        if self.request_in_progress:
+            _LOGGER.debug("Refresh currently in progress for %s",
+                          self.leaf.nickname)
+            return
+
         result = False
         now = datetime.today()
 
@@ -217,6 +226,7 @@ class LeafDataStore:
         _LOGGER.debug("Updating Nissan Leaf Data")
 
         self.last_check = datetime.today()
+        self.request_in_progress = True
 
         battery_response = self.get_battery()
         _LOGGER.debug("Got battery data for Leaf")
@@ -262,6 +272,7 @@ class LeafDataStore:
             except:
                 _LOGGER.error("Error fetching location info")
 
+        self.request_in_progress = False
         self.signal_components()
 
     def signal_components(self):
@@ -344,8 +355,7 @@ class LeafEntity(Entity):
             'homebridge_model': 'Leaf'
         }
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.log_registration()
         async_dispatcher_connect(
