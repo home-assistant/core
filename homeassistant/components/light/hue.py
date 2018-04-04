@@ -302,9 +302,9 @@ class HueLight(Light):
         if ATTR_HS_COLOR in kwargs:
             if self.is_osram:
                 command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
-                command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 254)
+                command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
             else:
-                # Philips bulbs seem don't seem to respond correctly to hue/sat
+                # Philips bulbs don't seem to respond correctly to hue/sat
                 # requests, so we're converting to XY color here.
                 command['xy'] = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
         elif ATTR_COLOR_TEMP in kwargs:
