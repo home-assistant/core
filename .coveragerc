@@ -175,6 +175,9 @@ omit =
     homeassistant/components/neato.py
     homeassistant/components/*/neato.py
 
+    homeassistant/components/nissan_leaf.py
+    homeassistant/components/*/nissan_leaf.py
+
     homeassistant/components/nest.py
     homeassistant/components/*/nest.py
 
