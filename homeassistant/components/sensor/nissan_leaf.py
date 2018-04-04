@@ -8,7 +8,7 @@ Please refer to the main platform component for configuration details
 import logging
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 from homeassistant.helpers.icon import icon_for_battery_level
-from .. import nissan_leaf as LeafCore
+from .. import nissan_leaf as leaf_core
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     _LOGGER.debug("Adding sensors")
 
-    for key, value in hass.data[LeafCore.DATA_LEAF].items():
+    for key, value in hass.data[leaf_core.DATA_LEAF].items():
         devices.append(LeafBatterySensor(value))
         devices.append(LeafRangeSensor(value, True))
         devices.append(LeafRangeSensor(value, False))
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-class LeafBatterySensor(LeafCore.LeafEntity):
+class LeafBatterySensor(leaf_core.LeafEntity):
     @property
     def name(self):
         return self.car.leaf.nickname + " Charge"
@@ -42,7 +42,7 @@ class LeafBatterySensor(LeafCore.LeafEntity):
 
     @property
     def state(self):
-        return round(self.car.data[LeafCore.DATA_BATTERY], 0)
+        return round(self.car.data[leaf_core.DATA_BATTERY], 0)
 
     @property
     def unit_of_measurement(self):
@@ -50,14 +50,14 @@ class LeafBatterySensor(LeafCore.LeafEntity):
 
     @property
     def icon(self):
-        chargeState = self.car.data[LeafCore.DATA_CHARGING]
+        chargeState = self.car.data[leaf_core.DATA_CHARGING]
         return icon_for_battery_level(
             battery_level=self.state,
             charging=chargeState
         )
 
 
-class LeafRangeSensor(LeafCore.LeafEntity):
+class LeafRangeSensor(leaf_core.LeafEntity):
     def __init__(self, car, ac_on):
         self.ac_on = ac_on
         super().__init__(car)
@@ -79,9 +79,9 @@ class LeafRangeSensor(LeafCore.LeafEntity):
         ret = 0
 
         if self.ac_on is True:
-            ret = self.car.data[LeafCore.DATA_RANGE_AC]
+            ret = self.car.data[leaf_core.DATA_RANGE_AC]
         else:
-            ret = self.car.data[LeafCore.DATA_RANGE_AC_OFF]
+            ret = self.car.data[leaf_core.DATA_RANGE_AC_OFF]
 
         if (self.car.hass.config.units.is_metric is False or
                 self.car.force_miles is True):

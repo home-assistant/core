@@ -7,7 +7,7 @@ Please refer to the main platform component for configuration details
 
 import logging
 
-from .. import nissan_leaf as LeafCore
+from .. import nissan_leaf as leaf_core
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     _LOGGER.debug("Adding sensors")
 
-    for key, value in hass.data[LeafCore.DATA_LEAF].items():
+    for key, value in hass.data[leaf_core.DATA_LEAF].items():
         devices.append(LeafPluggedInSensor(value))
 
     add_devices(devices, True)
@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-class LeafPluggedInSensor(LeafCore.LeafEntity):
+class LeafPluggedInSensor(leaf_core.LeafEntity):
     @property
     def name(self):
         return self.car.leaf.nickname + " Plug Status"
@@ -39,11 +39,11 @@ class LeafPluggedInSensor(LeafCore.LeafEntity):
 
     @property
     def state(self):
-        return self.car.data[LeafCore.DATA_PLUGGED_IN]
+        return self.car.data[leaf_core.DATA_PLUGGED_IN]
 
     @property
     def icon(self):
-        if self.car.data[LeafCore.DATA_PLUGGED_IN]:
+        if self.car.data[leaf_core.DATA_PLUGGED_IN]:
             return 'mdi:power-plug'
         else:
             return 'mdi:power-plug-off'
