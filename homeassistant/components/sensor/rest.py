@@ -83,7 +83,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rest.update()
 
     add_devices([RestSensor(
-        hass, rest, name, unit, value_template, json_attrs, force_update, json_template
+        hass, rest, name, unit, value_template, json_attrs, force_update,
+        json_template
     )], True)
 
 
@@ -139,8 +140,8 @@ class RestSensor(Entity):
             if value:
                 try:
                     if self._json_template is not None:
-                        _LOGGER.warning("RESPONSE FROM WEB: %s", value)
-                        attributes  = self._json_template.render_with_possible_json_value(value, {})
+                        attributes = self._json_template.render_with_possible_json_value(
+                            value, {})
                         json_dict = json.loads(attributes)
                     else:
                         json_dict = json.loads(value)
