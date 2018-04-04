@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ENTITY_ID_FORMAT, Light,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR)
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR)
 from homeassistant.const import (
     CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_ENTITY_ID, CONF_FRIENDLY_NAME, STATE_ON, STATE_OFF,
@@ -183,11 +183,11 @@ class LightTemplate(Light):
     def supported_features(self):
         """Flag supported features."""
         if self._level_script is not None and self._color_script is not None:
-            return SUPPORT_RGB_COLOR | SUPPORT_BRIGHTNESS
+            return SUPPORT_COLOR | SUPPORT_BRIGHTNESS
         elif self._level_script is not None:
             return SUPPORT_BRIGHTNESS
         elif self._color_script is not None:
-            return SUPPORT_RGB_COLOR
+            return SUPPORT_COLOR
         return 0
 
     @property
