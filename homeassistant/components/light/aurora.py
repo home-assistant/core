@@ -57,8 +57,14 @@ class AuroraLight(Light):
 
     def __init__(self, light):
         """Initialize an Aurora."""
+        self._brightness = None
+        self._color_temp = None
+        self._effect = None
+        self._effects_list = None
         self._light = light
         self._name = light.hass_name
+        self._hs_color = None
+        self._state = None
 
     @property
     def brightness(self):
