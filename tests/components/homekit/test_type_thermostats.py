@@ -6,11 +6,10 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE, ATTR_TEMPERATURE,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, ATTR_OPERATION_MODE,
     ATTR_OPERATION_LIST, STATE_COOL, STATE_HEAT, STATE_AUTO)
-from homeassistant.components.homekit.type_thermostats import (
-    Thermostat, STATE_OFF)
+from homeassistant.components.homekit.type_thermostats import Thermostat
 from homeassistant.const import (
     ATTR_SERVICE, EVENT_CALL_SERVICE, ATTR_SERVICE_DATA,
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_UNIT_OF_MEASUREMENT, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.common import get_test_home_assistant
 
