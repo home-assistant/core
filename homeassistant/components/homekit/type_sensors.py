@@ -115,6 +115,6 @@ class BinarySensor(HomeAccessory):
         if new_state is None:
             return
 
-        current_state = (new_state.state == 'on')
-        self.char_detected.set_value(current_state, should_callback=False)
-        _LOGGER.debug('%s: Set to %d', self.entity_id, current_state)
+        detected = (new_state.state == 'on') or (new_state.state == 'home')
+        self.char_detected.set_value(detected, should_callback=False)
+        _LOGGER.debug('%s: Set to %d', self.entity_id, detected)
