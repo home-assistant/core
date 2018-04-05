@@ -20,7 +20,8 @@ TOPIC_MATCHER = re.compile(
     r'(?:(?P<node_id>[a-zA-Z0-9_-]+)/)?(?P<object_id>[a-zA-Z0-9_-]+)/config')
 
 SUPPORTED_COMPONENTS = [
-    'binary_sensor', 'camera', 'cover', 'fan', 'light', 'sensor', 'switch', 'lock']
+    'binary_sensor', 'camera', 'cover', 'fan',
+    'light', 'sensor', 'switch', 'lock']
 
 ALLOWED_PLATFORMS = {
     'binary_sensor': ['mqtt'],
