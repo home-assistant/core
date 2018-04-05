@@ -6,12 +6,12 @@ import unittest
 from unittest.mock import call, patch, Mock
 
 from homeassistant.components.homekit.accessories import (
-    add_preload_service, set_accessory_info, override_properties,
+    add_preload_service, set_accessory_info,
     HomeAccessory, HomeBridge, HomeDriver)
 from homeassistant.components.homekit.const import (
     ACCESSORY_MODEL, ACCESSORY_NAME, BRIDGE_MODEL, BRIDGE_NAME,
-    SERV_ACCESSORY_INFO, SERV_BRIDGING_STATE,
-    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
+    SERV_ACCESSORY_INFO, CHAR_MANUFACTURER, CHAR_MODEL,
+    CHAR_NAME, CHAR_SERIAL_NUMBER)
 
 
 class TestAccessories(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestAccessories(unittest.TestCase):
         acc = Mock()
         serv = add_preload_service(acc, 'AirPurifier')
         self.assertEqual(acc.mock_calls, [call.add_service(serv)])
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             serv.get_characteristic('Name')
 
         # Test with typo in service name
@@ -68,24 +68,6 @@ class TestAccessories(unittest.TestCase):
         self.assertEqual(
             serv.get_characteristic(CHAR_SERIAL_NUMBER).value, '0000')
 
-    def test_override_properties(self):
-        """Test overriding property values."""
-        serv = add_preload_service(Mock(), 'AirPurifier', 'RotationSpeed')
-
-        char_active = serv.get_characteristic('Active')
-        char_rotation_speed = serv.get_characteristic('RotationSpeed')
-
-        self.assertTrue(
-            char_active.properties['ValidValues'].get('State') is None)
-        self.assertEqual(char_rotation_speed.properties['maxValue'], 100)
-
-        override_properties(char_active, valid_values={'State': 'On'})
-        override_properties(char_rotation_speed, properties={'maxValue': 200})
-
-        self.assertFalse(
-            char_active.properties['ValidValues'].get('State') is None)
-        self.assertEqual(char_rotation_speed.properties['maxValue'], 200)
-
     def test_home_accessory(self):
         """Test HomeAccessory class."""
         acc = HomeAccessory()
@@ -110,17 +92,15 @@ class TestAccessories(unittest.TestCase):
         bridge = HomeBridge(None)
         self.assertEqual(bridge.display_name, BRIDGE_NAME)
         self.assertEqual(bridge.category, 2)  # Category.BRIDGE
-        self.assertEqual(len(bridge.services), 2)
+        self.assertEqual(len(bridge.services), 1)
         serv = bridge.services[0]  # SERV_ACCESSORY_INFO
         self.assertEqual(serv.display_name, SERV_ACCESSORY_INFO)
         self.assertEqual(
             serv.get_characteristic(CHAR_MODEL).value, BRIDGE_MODEL)
-        serv = bridge.services[1]  # SERV_BRIDGING_STATE
-        self.assertEqual(serv.display_name, SERV_BRIDGING_STATE)
 
         bridge = HomeBridge('hass', 'test_name', 'test_model')
         self.assertEqual(bridge.display_name, 'test_name')
-        self.assertEqual(len(bridge.services), 2)
+        self.assertEqual(len(bridge.services), 1)
         serv = bridge.services[0]  # SERV_ACCESSORY_INFO
         self.assertEqual(
             serv.get_characteristic(CHAR_MODEL).value, 'test_model')
