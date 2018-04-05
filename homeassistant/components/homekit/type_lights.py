@@ -2,13 +2,14 @@
 import logging
 
 from homeassistant.components.light import (
-    ATTR_HS_COLOR, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, SUPPORT_COLOR)
+    ATTR_HS_COLOR, ATTR_COLOR_TEMP, ATTR_BRIGHTNESS, ATTR_MIN_MIREDS,
+    ATTR_MAX_MIREDS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_BRIGHTNESS)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service
 from .const import (
-    CATEGORY_LIGHT, SERV_LIGHTBULB,
+    CATEGORY_LIGHT, SERV_LIGHTBULB, CHAR_COLOR_TEMPERATURE,
     CHAR_BRIGHTNESS, CHAR_HUE, CHAR_ON, CHAR_SATURATION)
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ RGB_COLOR = 'rgb_color'
 class Light(HomeAccessory):
     """Generate a Light accessory for a light entity.
 
-    Currently supports: state, brightness, rgb_color.
+    Currently supports: state, brightness, color temperature, rgb_color.
     """
 
     def __init__(self, hass, entity_id, name, **kwargs):
@@ -31,7 +32,7 @@ class Light(HomeAccessory):
         self.entity_id = entity_id
         self._flag = {CHAR_ON: False, CHAR_BRIGHTNESS: False,
                       CHAR_HUE: False, CHAR_SATURATION: False,
-                      RGB_COLOR: False}
+                      CHAR_COLOR_TEMPERATURE: False, RGB_COLOR: False}
         self._state = 0
 
         self.chars = []
@@ -39,6 +40,8 @@ class Light(HomeAccessory):
             .attributes.get(ATTR_SUPPORTED_FEATURES)
         if self._features & SUPPORT_BRIGHTNESS:
             self.chars.append(CHAR_BRIGHTNESS)
+        if self._features & SUPPORT_COLOR_TEMP:
+            self.chars.append(CHAR_COLOR_TEMPERATURE)
         if self._features & SUPPORT_COLOR:
             self.chars.append(CHAR_HUE)
             self.chars.append(CHAR_SATURATION)
@@ -55,6 +58,18 @@ class Light(HomeAccessory):
                 .get_characteristic(CHAR_BRIGHTNESS)
             self.char_brightness.setter_callback = self.set_brightness
             self.char_brightness.value = 0
+        if CHAR_COLOR_TEMPERATURE in self.chars:
+            self.char_color_temperature = serv_light \
+                .get_characteristic(CHAR_COLOR_TEMPERATURE)
+            self.char_color_temperature.setter_callback = \
+                self.set_color_temperature
+            min_mireds = self.hass.states.get(self.entity_id) \
+                .attributes.get(ATTR_MIN_MIREDS, 153)
+            max_mireds = self.hass.states.get(self.entity_id) \
+                .attributes.get(ATTR_MAX_MIREDS, 500)
+            self.char_color_temperature.override_properties({
+                'minValue': min_mireds, 'maxValue': max_mireds})
+            self.char_color_temperature.value = min_mireds
         if CHAR_HUE in self.chars:
             self.char_hue = serv_light.get_characteristic(CHAR_HUE)
             self.char_hue.setter_callback = self.set_hue
@@ -89,6 +104,13 @@ class Light(HomeAccessory):
                 self.entity_id, brightness_pct=value)
         else:
             self.hass.components.light.turn_off(self.entity_id)
+
+    def set_color_temperature(self, value):
+        """Set color temperature if call came from HomeKit."""
+        _LOGGER.debug('%s: Set color temp to %s', self.entity_id, value)
+        self._flag[CHAR_COLOR_TEMPERATURE] = True
+        self.char_color_temperature.set_value(value, should_callback=False)
+        self.hass.components.light.turn_on(self.entity_id, color_temp=value)
 
     def set_saturation(self, value):
         """Set saturation if call came from HomeKit."""
@@ -140,6 +162,15 @@ class Light(HomeAccessory):
                     self.char_brightness.set_value(brightness,
                                                    should_callback=False)
             self._flag[CHAR_BRIGHTNESS] = False
+
+        # Handle color temperature
+        if CHAR_COLOR_TEMPERATURE in self.chars:
+            color_temperature = new_state.attributes.get(ATTR_COLOR_TEMP)
+            if not self._flag[CHAR_COLOR_TEMPERATURE] \
+                    and isinstance(color_temperature, int):
+                self.char_color_temperature.set_value(color_temperature,
+                                                      should_callback=False)
+            self._flag[CHAR_COLOR_TEMPERATURE] = False
 
         # Handle Color
         if CHAR_SATURATION in self.chars and CHAR_HUE in self.chars:
