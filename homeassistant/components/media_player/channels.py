@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_CHANNEL, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_VIDEO, SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_STOP,
+    MEDIA_TYPE_MOVIE, SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_PLAY_MEDIA, SUPPORT_SELECT_SOURCE, DOMAIN, PLATFORM_SCHEMA,
     MediaPlayerDevice)
@@ -281,7 +281,7 @@ class ChannelsPlayer(MediaPlayerDevice):
         if media_type == MEDIA_TYPE_CHANNEL:
             response = self.client.play_channel(media_id)
             self.update_state(response)
-        elif media_type in [MEDIA_TYPE_VIDEO, MEDIA_TYPE_EPISODE,
+        elif media_type in [MEDIA_TYPE_MOVIE, MEDIA_TYPE_EPISODE,
                             MEDIA_TYPE_TVSHOW]:
             response = self.client.play_recording(media_id)
             self.update_state(response)
