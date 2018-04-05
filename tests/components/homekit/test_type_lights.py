@@ -4,8 +4,8 @@ import unittest
 from homeassistant.core import callback
 from homeassistant.components.homekit.type_lights import Light
 from homeassistant.components.light import (
-    DOMAIN, ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR)
+    DOMAIN, ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR)
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_SERVICE, ATTR_SERVICE_DATA,
     ATTR_SUPPORTED_FEATURES, EVENT_CALL_SERVICE, SERVICE_TURN_ON,
@@ -117,6 +117,28 @@ class TestHomekitLights(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(self.events[2].data[ATTR_DOMAIN], DOMAIN)
         self.assertEqual(self.events[2].data[ATTR_SERVICE], SERVICE_TURN_OFF)
+
+    def test_light_color_temperature(self):
+        """Test light with color temperature."""
+        entity_id = 'light.demo'
+        self.hass.states.set(entity_id, STATE_ON, {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR_TEMP,
+            ATTR_COLOR_TEMP: 190})
+        acc = Light(self.hass, entity_id, 'Light', aid=2)
+        self.assertEqual(acc.char_color_temperature.value, 153)
+
+        acc.run()
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_color_temperature.value, 190)
+
+        # Set from HomeKit
+        acc.char_color_temperature.set_value(250)
+        self.hass.block_till_done()
+        self.assertEqual(self.events[0].data[ATTR_DOMAIN], DOMAIN)
+        self.assertEqual(self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
+        self.assertEqual(
+            self.events[0].data[ATTR_SERVICE_DATA], {
+                ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 250})
 
     def test_light_rgb_color(self):
         """Test light with rgb_color."""
