@@ -22,31 +22,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     plum = hass.data['plum']
 
-    for lpid, lightpad in plum.get_lightpads().items():
-        print(lightpad)
+    for llid, load in plum.logical_loads.items():
+        print(load)
         add_devices_callback([
-            LightpadPowerMeter(plum, lpid, lightpad)
+            PowerSensor(plum=plum, llid=llid, load=load)
         ])
 
-class LightpadPowerMeter(Entity):
+class PowerSensor(Entity):
     """Representation of a Lightpad power meter Sensor."""
 
-    def __init__(self, plum, lpid, lightpad):
+    def __init__(self, plum, llid, load):
         self._plum = plum
-        self._lpid = lpid
-        self._name = lightpad['name']
+        self._llid = llid
+        self._name = load.name
 
-        metrics = plum.get_lightpad_metrics(self._lpid)
+        plum.add_power_listener(self._llid, self.powerchanged)
+        self._power = load.power
 
-        self._power = metrics['power']
-
-        plum.register_event_listener(lpid, self.__process_event)
-
-    def __process_event(self, event):
-        print(event)
-        if event['type'] == 'power':
-            self._power = event['watts']
-            self.schedule_update_ha_state()
+    def powerchanged(self, power):
+        self._power = power
+        self.schedule_update_ha_state()
 
     @property
     def name(self):

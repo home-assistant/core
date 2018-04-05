@@ -18,13 +18,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Plum Lightpad Light."""
     plum = hass.data['plum']
-    for llid, load in plum.get_logical_loads().items():
+
+    for llid, load in plum.logical_loads.items():
         print(load)
-        add_devices_callback([
+
+        async_add_devices([
             LightpadLogicalLoad(plum, llid, load)
+            # glow ring (color, forced, timeout, glowFade, Intensity, tracksDimmer)
         ])
 
 
@@ -35,23 +38,15 @@ class LightpadLogicalLoad(Light):
         """Initialize the light."""
         self._plum = plum
         self._llid = llid
-        self._name = load['name']
+        self._load = load
+        self._name = load.name
+        self._brightness = load.level
 
-        metrics = plum.get_logical_load_metrics(self._llid)
+        plum.add_load_listener(self._llid, self.dimmerchange)
 
-        print(metrics)
-
-        self._brightness = metrics['level']
-
-        # sign up for events from the lightpad.
-        for lpid, lightpad in load['lightpads'].items():
-            plum.register_event_listener(lpid, self.__process_event)
-
-    def __process_event(self, event):
-        print(event)
-        if event['type'] == 'dimmerchange':
-            self._brightness = event['level']
-            self.schedule_update_ha_state()
+    def dimmerchange(self, level):
+        self._brightness = level
+        self.schedule_update_ha_state()
 
     @property
     def should_poll(self):
@@ -82,10 +77,20 @@ class LightpadLogicalLoad(Light):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            self._plum.set_logical_load_level(self._llid, self._brightness)
+            self._load.brightness(self._brightness)
         else:
-            self._plum.turn_logical_load_on(self._llid)
+            self._load.on()
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        self._plum.turn_logical_load_off(self._llid)
+        self._load.off()
+
+
+# class LightpadGlowRing(Light):
+#     """Represenation of a Plum Lightpad dimmer glow ring."""
+#
+#     def __init__(self, plum, llid, load):
+#         """Initialize the light."""
+#         self._plum = plum
+#         self._llid = llid
+#         self._name = load['name']
