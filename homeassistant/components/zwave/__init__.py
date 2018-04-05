@@ -182,10 +182,8 @@ def nice_print_node(node):
     node_dict['values'] = {value_id: _obj_to_dict(value)
                            for value_id, value in node.values.items()}
 
-    print("\n\n\n")
-    print("FOUND NODE", node.product_name)
-    pprint(node_dict)
-    print("\n\n\n")
+    _LOGGER.info("FOUND NODE %s \n"
+                 "%s", node.product_name, node_dict)
 
 
 def get_config_value(node, value_index, tries=5):
