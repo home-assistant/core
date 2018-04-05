@@ -174,9 +174,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
         for key in devices:
             if self.mode == 'ap':
                 ret_devices[key] = devices[key]
-            else:
-                if devices[key].ip is not None:
-                    ret_devices[key] = devices[key]
+            elif devices[key].ip is not None:
+                ret_devices[key] = devices[key]
         return ret_devices
 
     def _get_wl(self):
