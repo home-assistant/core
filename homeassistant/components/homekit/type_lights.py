@@ -152,4 +152,5 @@ class Light(HomeAccessory):
                 self.char_hue.set_value(hue, should_callback=False)
                 self.char_saturation.set_value(saturation,
                                                should_callback=False)
+                self._hue, self._saturation = (hue, saturation)
             self._flag[RGB_COLOR] = False

@@ -5,8 +5,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
 
 from . import TYPES
-from .accessories import (
-    HomeAccessory, add_preload_service, override_properties)
+from .accessories import HomeAccessory, add_preload_service
 from .const import (
     CATEGORY_SENSOR, SERV_HUMIDITY_SENSOR, SERV_TEMPERATURE_SENSOR,
     CHAR_CURRENT_HUMIDITY, CHAR_CURRENT_TEMPERATURE, PROP_CELSIUS)
@@ -32,7 +31,7 @@ class TemperatureSensor(HomeAccessory):
 
         serv_temp = add_preload_service(self, SERV_TEMPERATURE_SENSOR)
         self.char_temp = serv_temp.get_characteristic(CHAR_CURRENT_TEMPERATURE)
-        override_properties(self.char_temp, PROP_CELSIUS)
+        self.char_temp.override_properties(properties=PROP_CELSIUS)
         self.char_temp.value = 0
         self.unit = None
 

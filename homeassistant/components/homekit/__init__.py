@@ -28,7 +28,7 @@ from .util import (
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==1.1.7']
+REQUIREMENTS = ['HAP-python==1.1.8']
 
 
 CONFIG_SCHEMA = vol.Schema({
