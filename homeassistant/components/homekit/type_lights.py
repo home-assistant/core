@@ -63,9 +63,9 @@ class Light(HomeAccessory):
                 .get_characteristic(CHAR_COLOR_TEMPERATURE)
             self.char_color_temperature.setter_callback = \
                 self.set_color_temperature
-            min_mireds = self._hass.states.get(self._entity_id) \
+            min_mireds = self.hass.states.get(self.entity_id) \
                 .attributes.get(ATTR_MIN_MIREDS, 153)
-            max_mireds = self._hass.states.get(self._entity_id) \
+            max_mireds = self.hass.states.get(self.entity_id) \
                 .attributes.get(ATTR_MAX_MIREDS, 500)
             self.char_color_temperature.override_properties({
                 'minValue': min_mireds, 'maxValue': max_mireds})
@@ -107,10 +107,10 @@ class Light(HomeAccessory):
 
     def set_color_temperature(self, value):
         """Set color temperature if call came from HomeKit."""
-        _LOGGER.debug('%s: Set color temp to %s', self._entity_id, value)
+        _LOGGER.debug('%s: Set color temp to %s', self.entity_id, value)
         self._flag[CHAR_COLOR_TEMPERATURE] = True
         self.char_color_temperature.set_value(value, should_callback=False)
-        self._hass.components.light.turn_on(self._entity_id, color_temp=value)
+        self.hass.components.light.turn_on(self.entity_id, color_temp=value)
 
     def set_saturation(self, value):
         """Set saturation if call came from HomeKit."""
