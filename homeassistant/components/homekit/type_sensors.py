@@ -83,10 +83,11 @@ class BinarySensor(HomeAccessory):
 
     def __init__(self, hass, state, **kwargs):
         """Initialize a BinarySensor accessory object."""
-        super().__init__(state.name, state.entity_id, CATEGORY_SENSOR, **kwargs)
+        entity_id = state.entity_id
+        super().__init__(state.name, entity_id, CATEGORY_SENSOR, **kwargs)
 
         self.hass = hass
-        self.entity_id = state.entity_id
+        self.entity_id = entity_id
 
         service_map = {
             'gas': ('CarbonMonoxideSensor', 'CarbonMonoxideDetected'),
@@ -97,12 +98,16 @@ class BinarySensor(HomeAccessory):
             'moisture': ('LeakSensor', 'LeakDetected'),
             'smoke': ('SmokeSensor', 'SmokeDetected')}
 
-        device_class_key = 'homekit_device_class' if ('homekit_device_class' in state.attributes) else 'device_class'
+        device_class_key = 'homekit_device_class' \
+            if ('homekit_device_class' in state.attributes) \
+            else 'device_class'
         device_class = state.attributes.get(device_class_key)
-        service_characteristic = service_map[device_class] if (device_class in service_map) else service_map['occupancy']
+        service_char = service_map[device_class] \
+            if (device_class in service_map) \
+            else service_map['occupancy']
 
-        service = add_preload_service(self, service_characteristic[0])
-        self.char_detected = service.get_characteristic(service_characteristic[1])
+        service = add_preload_service(self, service_char[0])
+        self.char_detected = service.get_characteristic(service_char[1])
         self.char_detected.value = 0
 
     def update_state(self, entity_id=None, old_state=None, new_state=None):
