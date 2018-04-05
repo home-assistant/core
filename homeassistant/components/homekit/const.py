@@ -47,6 +47,7 @@ SERV_WINDOW_COVERING = 'WindowCovering'
 
 # #### Characteristics ####
 CHAR_BRIGHTNESS = 'Brightness'  # Int | [0, 100]
+CHAR_COLOR_TEMPERATURE = 'ColorTemperature'
 CHAR_COOLING_THRESHOLD_TEMPERATURE = 'CoolingThresholdTemperature'
 CHAR_CURRENT_HEATING_COOLING = 'CurrentHeatingCoolingState'
 CHAR_CURRENT_POSITION = 'CurrentPosition'
