@@ -75,3 +75,41 @@ class HumiditySensor(HomeAccessory):
             self.char_humidity.set_value(humidity)
             _LOGGER.debug('%s: Percent set to %d%%',
                           self.entity_id, humidity)
+
+
+@TYPES.register('BinarySensor')
+class BinarySensor(HomeAccessory):
+    """Generate a BinarySensor accessory as binary sensor."""
+
+    def __init__(self, hass, state, **kwargs):
+        """Initialize a BinarySensor accessory object."""
+        super().__init__(state.name, state.entity_id, CATEGORY_SENSOR, **kwargs)
+
+        self.hass = hass
+        self.entity_id = state.entity_id
+
+        service_map = {
+            'gas': ('CarbonMonoxideSensor', 'CarbonMonoxideDetected'),
+            'co2': ('CarbonDioxideSensor', 'CarbonDioxideDetected'),
+            'occupancy': ('OccupancySensor', 'OccupancyDetected'),
+            'opening': ('ContactSensor', 'ContactSensorState'),
+            'motion': ('MotionSensor', 'MotionDetected'),
+            'moisture': ('LeakSensor', 'LeakDetected'),
+            'smoke': ('SmokeSensor', 'SmokeDetected')}
+
+        device_class_key = 'homekit_device_class' if ('homekit_device_class' in state.attributes) else 'device_class'
+        device_class = state.attributes.get(device_class_key)
+        service_characteristic = service_map[device_class] if (device_class in service_map) else service_map['occupancy']
+
+        service = add_preload_service(self, service_characteristic[0])
+        self.char_detected = service.get_characteristic(service_characteristic[1])
+        self.char_detected.value = 0
+
+    def update_state(self, entity_id=None, old_state=None, new_state=None):
+        """Update accessory after state change."""
+        if new_state is None:
+            return
+
+        current_state = (new_state.state == 'on')
+        self.char_detected.set_value(current_state, should_callback=False)
+        _LOGGER.debug('%s: Set to %d', self.entity_id, current_state)
