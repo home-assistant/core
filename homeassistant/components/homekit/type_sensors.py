@@ -20,9 +20,7 @@ from .const import (
     DEVICE_CLASS_SMOKE, SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED)
 from .util import convert_to_float, temperature_to_homekit
 
-
 _LOGGER = logging.getLogger(__name__)
-
 
 BINARY_SENSOR_SERVICE_MAP = {
     DEVICE_CLASS_CO2: (SERV_CARBON_DIOXIDE_SENSOR,
@@ -43,12 +41,10 @@ class TemperatureSensor(HomeAccessory):
     Sensor entity must return temperature in °C, °F.
     """
 
-    def __init__(self, hass, entity_id, name, **kwargs):
+    def __init__(self, hass, name, entity_id, **kwargs):
         """Initialize a TemperatureSensor accessory object."""
-        super().__init__(name, entity_id, CATEGORY_SENSOR, **kwargs)
-
-        self.hass = hass
-        self.entity_id = entity_id
+        super().__init__(hass, name, entity_id,
+                         category=CATEGORY_SENSOR, **kwargs)
 
         serv_temp = add_preload_service(self, SERV_TEMPERATURE_SENSOR)
         self.char_temp = serv_temp.get_characteristic(CHAR_CURRENT_TEMPERATURE)
@@ -56,11 +52,8 @@ class TemperatureSensor(HomeAccessory):
         self.char_temp.value = 0
         self.unit = None
 
-    def update_state(self, entity_id=None, old_state=None, new_state=None):
+    def update_state(self, new_state):
         """Update temperature after state changed."""
-        if new_state is None:
-            return
-
         unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
         temperature = convert_to_float(new_state.state)
         if temperature:
@@ -74,23 +67,18 @@ class TemperatureSensor(HomeAccessory):
 class HumiditySensor(HomeAccessory):
     """Generate a HumiditySensor accessory as humidity sensor."""
 
-    def __init__(self, hass, entity_id, name, *args, **kwargs):
+    def __init__(self, hass, name, entity_id, **kwargs):
         """Initialize a HumiditySensor accessory object."""
-        super().__init__(name, entity_id, CATEGORY_SENSOR, *args, **kwargs)
-
-        self.hass = hass
-        self.entity_id = entity_id
+        super().__init__(hass, name, entity_id,
+                         category=CATEGORY_SENSOR, **kwargs)
 
         serv_humidity = add_preload_service(self, SERV_HUMIDITY_SENSOR)
         self.char_humidity = serv_humidity \
             .get_characteristic(CHAR_CURRENT_HUMIDITY)
         self.char_humidity.value = 0
 
-    def update_state(self, entity_id=None, old_state=None, new_state=None):
+    def update_state(self, new_state):
         """Update accessory after state change."""
-        if new_state is None:
-            return
-
         humidity = convert_to_float(new_state.state)
         if humidity:
             self.char_humidity.set_value(humidity)
@@ -102,14 +90,12 @@ class HumiditySensor(HomeAccessory):
 class BinarySensor(HomeAccessory):
     """Generate a BinarySensor accessory as binary sensor."""
 
-    def __init__(self, hass, entity_id, name, **kwargs):
+    def __init__(self, hass, name, entity_id, **kwargs):
         """Initialize a BinarySensor accessory object."""
-        super().__init__(name, entity_id, CATEGORY_SENSOR, **kwargs)
+        super().__init__(hass, name, entity_id,
+                         category=CATEGORY_SENSOR, **kwargs)
 
-        self.hass = hass
-        self.entity_id = entity_id
-
-        device_class = hass.states.get(entity_id).attributes \
+        device_class = self.hass.states.get(self.entity_id).attributes \
             .get(ATTR_DEVICE_CLASS)
         service_char = BINARY_SENSOR_SERVICE_MAP[device_class] \
             if device_class in BINARY_SENSOR_SERVICE_MAP \
@@ -119,11 +105,8 @@ class BinarySensor(HomeAccessory):
         self.char_detected = service.get_characteristic(service_char[1])
         self.char_detected.value = 0
 
-    def update_state(self, entity_id=None, old_state=None, new_state=None):
+    def update_state(self, new_state):
         """Update accessory after state change."""
-        if new_state is None:
-            return
-
         state = new_state.state
         detected = (state == STATE_ON) or (state == STATE_HOME)
         self.char_detected.set_value(detected)

@@ -27,12 +27,10 @@ class Lock(HomeAccessory):
     The lock entity must support: unlock and lock.
     """
 
-    def __init__(self, hass, entity_id, name, **kwargs):
+    def __init__(self, hass, name, entity_id, **kwargs):
         """Initialize a Lock accessory object."""
-        super().__init__(name, entity_id, CATEGORY_LOCK, **kwargs)
-
-        self.hass = hass
-        self.entity_id = entity_id
+        super().__init__(hass, name, entity_id,
+                         category=CATEGORY_LOCK, **kwargs)
 
         self.flag_target_state = False
 
@@ -58,11 +56,8 @@ class Lock(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.hass.services.call('lock', service, params)
 
-    def update_state(self, entity_id=None, old_state=None, new_state=None):
+    def update_state(self, new_state):
         """Update lock after state changed."""
-        if new_state is None:
-            return
-
         hass_state = new_state.state
         if hass_state in HASS_TO_HOMEKIT:
             current_lock_state = HASS_TO_HOMEKIT[hass_state]

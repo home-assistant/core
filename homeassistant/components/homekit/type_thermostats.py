@@ -31,16 +31,12 @@ HC_HOMEKIT_TO_HASS = {c: s for s, c in HC_HASS_TO_HOMEKIT.items()}
 class Thermostat(HomeAccessory):
     """Generate a Thermostat accessory for a climate."""
 
-    def __init__(self, hass, entity_id, display_name, support_auto, **kwargs):
+    def __init__(self, hass, name, entity_id, support_auto, **kwargs):
         """Initialize a Thermostat accessory object."""
-        super().__init__(display_name, entity_id,
-                         CATEGORY_THERMOSTAT, **kwargs)
+        super().__init__(hass, name, entity_id,
+                         category=CATEGORY_THERMOSTAT, **kwargs)
 
-        self.hass = hass
-        self.entity_id = entity_id
-        self._call_timer = None
         self._unit = TEMP_CELSIUS
-
         self.heat_cool_flag_target_state = False
         self.temperature_flag_target_state = False
         self.coolingthresh_flag_target_state = False
@@ -141,11 +137,8 @@ class Thermostat(HomeAccessory):
         self.hass.components.climate.set_temperature(
             temperature=value, entity_id=self.entity_id)
 
-    def update_state(self, entity_id=None, old_state=None, new_state=None):
+    def update_state(self, new_state):
         """Update security state after state changed."""
-        if new_state is None:
-            return
-
         self._unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT,
                                               TEMP_CELSIUS)
 

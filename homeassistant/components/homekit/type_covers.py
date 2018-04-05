@@ -9,7 +9,6 @@ from .const import (
     CATEGORY_WINDOW_COVERING, SERV_WINDOW_COVERING,
     CHAR_CURRENT_POSITION, CHAR_TARGET_POSITION, CHAR_POSITION_STATE)
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -20,13 +19,10 @@ class WindowCovering(HomeAccessory):
     The cover entity must support: set_cover_position.
     """
 
-    def __init__(self, hass, entity_id, display_name, **kwargs):
+    def __init__(self, hass, name, entity_id, **kwargs):
         """Initialize a WindowCovering accessory object."""
-        super().__init__(display_name, entity_id,
-                         CATEGORY_WINDOW_COVERING, **kwargs)
-
-        self.hass = hass
-        self.entity_id = entity_id
+        super().__init__(hass, name, entity_id,
+                         category=CATEGORY_WINDOW_COVERING, **kwargs)
 
         self.current_position = None
         self.homekit_target = None
@@ -56,11 +52,8 @@ class WindowCovering(HomeAccessory):
             self.hass.components.cover.set_cover_position(
                 value, self.entity_id)
 
-    def update_state(self, entity_id=None, old_state=None, new_state=None):
+    def update_state(self, new_state):
         """Update cover position after state changed."""
-        if new_state is None:
-            return
-
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
         if isinstance(current_position, int):
             self.current_position = current_position

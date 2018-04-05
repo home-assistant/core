@@ -24,12 +24,11 @@ class Light(HomeAccessory):
     Currently supports: state, brightness, color temperature, rgb_color.
     """
 
-    def __init__(self, hass, entity_id, name, **kwargs):
+    def __init__(self, hass, name, entity_id, **kwargs):
         """Initialize a new Light accessory object."""
-        super().__init__(name, entity_id, CATEGORY_LIGHT, **kwargs)
+        super().__init__(hass, name, entity_id,
+                         category=CATEGORY_LIGHT, **kwargs)
 
-        self.hass = hass
-        self.entity_id = entity_id
         self._flag = {CHAR_ON: False, CHAR_BRIGHTNESS: False,
                       CHAR_HUE: False, CHAR_SATURATION: False,
                       CHAR_COLOR_TEMPERATURE: False, RGB_COLOR: False}
@@ -136,11 +135,8 @@ class Light(HomeAccessory):
             self.hass.components.light.turn_on(
                 self.entity_id, hs_color=color)
 
-    def update_state(self, entity_id=None, old_state=None, new_state=None):
+    def update_state(self, new_state):
         """Update light after state change."""
-        if not new_state:
-            return
-
         # Handle State
         state = new_state.state
         if state in (STATE_ON, STATE_OFF):

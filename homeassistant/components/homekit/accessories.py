@@ -13,8 +13,8 @@ from homeassistant.helpers.event import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DEBOUNCE_TIMEOUT, ACCESSORY_MODEL, ACCESSORY_NAME, BRIDGE_MODEL,
-    BRIDGE_NAME, MANUFACTURER, SERV_ACCESSORY_INFO, CHAR_MANUFACTURER,
+    DEBOUNCE_TIMEOUT, BRIDGE_MODEL, BRIDGE_NAME, MANUFACTURER,
+    SERV_ACCESSORY_INFO, CHAR_MANUFACTURER,
     CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
 from .util import (
     show_setup_message, dismiss_setup_message)
@@ -85,14 +85,13 @@ def set_accessory_info(acc, name, model, manufacturer=MANUFACTURER,
 class HomeAccessory(Accessory):
     """Adapter class for Accessory."""
 
-    # pylint: disable=no-member
-
-    def __init__(self, name=ACCESSORY_NAME, model=ACCESSORY_MODEL,
-                 category='OTHER', **kwargs):
+    def __init__(self, hass, name, entity_id, category='OTHER', **kwargs):
         """Initialize a Accessory object."""
         super().__init__(name, **kwargs)
-        set_accessory_info(self, name, model)
+        set_accessory_info(self, name, model=entity_id)
         self.category = getattr(Category, category, Category.OTHER)
+        self.entity_id = entity_id
+        self.hass = hass
 
     def _set_services(self):
         add_preload_service(self, SERV_ACCESSORY_INFO)
@@ -100,19 +99,32 @@ class HomeAccessory(Accessory):
     def run(self):
         """Method called by accessory after driver is started."""
         state = self.hass.states.get(self.entity_id)
-        self.update_state(new_state=state)
+        self.update_state_callback(new_state=state)
         async_track_state_change(
-            self.hass, self.entity_id, self.update_state)
+            self.hass, self.entity_id, self.update_state_callback)
+
+    def update_state_callback(self, entity_id=None, old_state=None,
+                              new_state=None):
+        """Callback from state change listener."""
+        if new_state is None:
+            return
+        self.update_state(new_state)
+
+    def update_state(self, new_state):
+        """Method called on state change to update HomeKit value.
+
+        Overridden by accessory types.
+        """
+        pass
 
 
 class HomeBridge(Bridge):
     """Adapter class for Bridge."""
 
-    def __init__(self, hass, name=BRIDGE_NAME,
-                 model=BRIDGE_MODEL, **kwargs):
+    def __init__(self, hass, name=BRIDGE_NAME, **kwargs):
         """Initialize a Bridge object."""
         super().__init__(name, **kwargs)
-        set_accessory_info(self, name, model)
+        set_accessory_info(self, name, model=BRIDGE_MODEL)
         self.hass = hass
 
     def _set_services(self):
@@ -130,7 +142,7 @@ class HomeBridge(Bridge):
     def remove_paired_client(self, client_uuid):
         """Override super function to show setup message if unpaired."""
         super().remove_paired_client(client_uuid)
-        show_setup_message(self, self.hass)
+        show_setup_message(self.hass, self)
 
 
 class HomeDriver(AccessoryDriver):

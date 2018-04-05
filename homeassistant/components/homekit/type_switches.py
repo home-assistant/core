@@ -16,14 +16,12 @@ _LOGGER = logging.getLogger(__name__)
 class Switch(HomeAccessory):
     """Generate a Switch accessory."""
 
-    def __init__(self, hass, entity_id, display_name, **kwargs):
+    def __init__(self, hass, name, entity_id, **kwargs):
         """Initialize a Switch accessory object to represent a remote."""
-        super().__init__(display_name, entity_id, CATEGORY_SWITCH, **kwargs)
+        super().__init__(hass, name, entity_id,
+                         category=CATEGORY_SWITCH, **kwargs)
 
-        self.hass = hass
-        self.entity_id = entity_id
-        self._domain = split_entity_id(entity_id)[0]
-
+        self._domain = split_entity_id(self.entity_id)[0]
         self.flag_target_state = False
 
         serv_switch = add_preload_service(self, SERV_SWITCH)
@@ -40,15 +38,11 @@ class Switch(HomeAccessory):
         self.hass.services.call(self._domain, service,
                                 {ATTR_ENTITY_ID: self.entity_id})
 
-    def update_state(self, entity_id=None, old_state=None, new_state=None):
+    def update_state(self, new_state):
         """Update switch state after state changed."""
-        if new_state is None:
-            return
-
         current_state = (new_state.state == STATE_ON)
         if not self.flag_target_state:
             _LOGGER.debug('%s: Set current state to %s',
                           self.entity_id, current_state)
             self.char_on.set_value(current_state)
-
         self.flag_target_state = False

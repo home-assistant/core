@@ -35,7 +35,7 @@ class TestHomekitSecuritySystems(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         acp = 'alarm_control_panel.test'
 
-        acc = SecuritySystem(self.hass, acp, 'SecuritySystem',
+        acc = SecuritySystem(self.hass, 'SecuritySystem', acp,
                              alarm_code='1234', aid=2)
         acc.run()
 
@@ -107,7 +107,7 @@ class TestHomekitSecuritySystems(unittest.TestCase):
         """Test accessory if security_system doesn't require a alarm_code."""
         acp = 'alarm_control_panel.test'
 
-        acc = SecuritySystem(self.hass, acp, 'SecuritySystem',
+        acc = SecuritySystem(self.hass, 'SecuritySystem', acp,
                              alarm_code=None, aid=2)
         acc.run()
 

@@ -48,7 +48,6 @@ class TestGetAccessories(unittest.TestCase):
                           {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
             get_accessory(None, state, 2, {})
 
-    # pylint: disable=invalid-name
     def test_sensor_temperature_fahrenheit(self):
         """Test temperature sensor with Fahrenheit as unit."""
         with patch.dict(TYPES, {'TemperatureSensor': self.mock_type}):
@@ -139,4 +138,10 @@ class TestGetAccessories(unittest.TestCase):
         """Test input_boolean."""
         with patch.dict(TYPES, {'Switch': self.mock_type}):
             state = State('input_boolean.test', 'on')
+            get_accessory(None, state, 2, {})
+
+    def test_lock(self):
+        """Test lock."""
+        with patch.dict(TYPES, {'Lock': self.mock_type}):
+            state = State('lock.test', 'locked')
             get_accessory(None, state, 2, {})

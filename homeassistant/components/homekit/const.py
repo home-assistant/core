@@ -18,8 +18,6 @@ DEFAULT_PORT = 51827
 SERVICE_HOMEKIT_START = 'start'
 
 # #### STRING CONSTANTS ####
-ACCESSORY_MODEL = 'homekit.accessory'
-ACCESSORY_NAME = 'Home Accessory'
 BRIDGE_MODEL = 'homekit.bridge'
 BRIDGE_NAME = 'Home Assistant'
 MANUFACTURER = 'HomeAssistant'
