@@ -75,6 +75,7 @@ TEST_REQUIREMENTS = (
     'pynx584',
     'python-forecastio',
     'pyunifi',
+    'pyupnp-async',
     'pywebpush',
     'restrictedpython',
     'rflink',
