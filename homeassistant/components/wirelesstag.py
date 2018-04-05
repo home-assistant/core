@@ -142,7 +142,7 @@ class WirelessTagPlatform:
     @property
     def binary_event_callback_url(self):
         """Return url for local push notifications(binary event)."""
-        return '{}/api/events/binary_event'.format(
+        return '{}/api/events/tag_binary_event'.format(
             self.hass.config.api.base_url)
 
     def handle_update_tags_event(self, event):
@@ -156,7 +156,7 @@ class WirelessTagPlatform:
 
     def handle_binary_event(self, event):
         """Handle push notifications for binary (on/off) events."""
-        _LOGGER.info("Push notification for nonary event arrived: %s", event)
+        _LOGGER.info("Push notification for binary event arrived: %s", event)
         try:
             tag_id = event.data.get('id')
             event_type = event.data.get('type')
@@ -195,7 +195,7 @@ def setup(hass, config):
 
     # listen to custom event
     hass.bus.listen('update_tags', hass.data[DOMAIN].handle_update_tags_event)
-    hass.bus.listen('binary_event', hass.data[DOMAIN].handle_binary_event)
+    hass.bus.listen('tag_binary_event', hass.data[DOMAIN].handle_binary_event)
 
     return True
 
