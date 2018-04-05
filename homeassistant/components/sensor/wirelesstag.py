@@ -127,8 +127,7 @@ class WirelessTagSensor(WirelessTagBaseSensor):
     @property
     def underscored_name(self):
         """Provide name savvy to be used in entity_id name of self."""
-        result = self.name
-        return result.replace(" ", "_")
+        return self.name.lower().replace(" ", "_")
 
     @property
     def state(self):
