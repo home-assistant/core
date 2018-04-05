@@ -16,7 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FOLDER = 'folder'
 CONF_PATTERNS = 'patterns'
-CONF_WATCHERS = 'watchers'
 DEFAULT_PATTERN = '*'
 DOMAIN = "folder_watcher"
 
