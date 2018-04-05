@@ -8,8 +8,8 @@ from homeassistant.helpers.event import async_track_state_change
 
 from .const import (
     ACCESSORY_MODEL, ACCESSORY_NAME, BRIDGE_MODEL, BRIDGE_NAME,
-    MANUFACTURER, SERV_ACCESSORY_INFO, SERV_BRIDGING_STATE,
-    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
+    MANUFACTURER, SERV_ACCESSORY_INFO, CHAR_MANUFACTURER, CHAR_MODEL,
+    CHAR_NAME, CHAR_SERIAL_NUMBER)
 from .util import (
     show_setup_message, dismiss_setup_message)
 
@@ -37,15 +37,6 @@ def set_accessory_info(acc, name, model, manufacturer=MANUFACTURER,
     service.get_characteristic(CHAR_MODEL).set_value(model)
     service.get_characteristic(CHAR_MANUFACTURER).set_value(manufacturer)
     service.get_characteristic(CHAR_SERIAL_NUMBER).set_value(serial_number)
-
-
-def override_properties(char, properties=None, valid_values=None):
-    """Override characteristic property values and valid values."""
-    if properties:
-        char.properties.update(properties)
-
-    if valid_values:
-        char.properties['ValidValues'].update(valid_values)
 
 
 class HomeAccessory(Accessory):
@@ -83,7 +74,6 @@ class HomeBridge(Bridge):
 
     def _set_services(self):
         add_preload_service(self, SERV_ACCESSORY_INFO)
-        add_preload_service(self, SERV_BRIDGING_STATE)
 
     def setup_message(self):
         """Prevent print of pyhap setup message to terminal."""
