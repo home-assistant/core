@@ -304,8 +304,9 @@ class HueLight(Light):
                 command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
                 command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
             else:
-                # Philips bulbs don't seem to respond correctly to hue/sat
-                # requests, so we're converting to XY color here.
+                # Philips hue bulb models respond differently to hue/sat
+                # requests, so we convert to XY first to ensure a consistent
+                # color.
                 command['xy'] = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
