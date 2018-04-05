@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, PLATFORM_SCHEMA,
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE, PLATFORM_SCHEMA,
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     MediaPlayerDevice)
@@ -480,7 +480,7 @@ class PlexClient(MediaPlayerDevice):
                 self._media_episode = str(self._session.index).zfill(2)
 
         elif self._session_type == 'movie':
-            self._media_content_type = MEDIA_TYPE_VIDEO
+            self._media_content_type = MEDIA_TYPE_MOVIE
             if self._session.year is not None and \
                     self._media_title is not None:
                 self._media_title += ' (' + str(self._session.year) + ')'
@@ -576,7 +576,7 @@ class PlexClient(MediaPlayerDevice):
         elif self._session_type == 'episode':
             return MEDIA_TYPE_TVSHOW
         elif self._session_type == 'movie':
-            return MEDIA_TYPE_VIDEO
+            return MEDIA_TYPE_MOVIE
         elif self._session_type == 'track':
             return MEDIA_TYPE_MUSIC
 
