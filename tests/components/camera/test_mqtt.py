@@ -15,7 +15,7 @@ def test_run_camera_setup(hass, aiohttp_client):
     yield from async_setup_component(hass, 'camera', {
         'camera': {
             'platform': 'mqtt',
-            'topic': topic,
+            'state_topic': topic,
             'name': 'Test Camera',
         }})
 
