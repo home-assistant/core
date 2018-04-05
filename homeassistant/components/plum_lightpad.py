@@ -46,6 +46,7 @@ async def async_setup(hass, config):
 
     discovery.load_platform(hass, 'light', DOMAIN, None, conf)
     discovery.load_platform(hass, 'sensor', DOMAIN, None, conf)
+    discovery.load_platform(hass, 'binary_sensor', DOMAIN, None, conf)
 
     return True
 
@@ -60,6 +61,7 @@ class PlumManager(object):
         self._loads = {}
         self._logical_load_listeners = {}
         self._power_listeners = {}
+        self._motion_listeners = {}
         self.hass = hass
 
     async def discover(self):
@@ -78,6 +80,9 @@ class PlumManager(object):
 
     def add_power_listener(self, lpid, callback):
         self._power_listeners[lpid] = callback  # todo handle multiple
+
+    def add_pir_listener(self, lpid, callback):
+        self._motion_listeners[lpid] = callback  # todo handle multiple
 
     @property
     def lightpads(self):
@@ -103,6 +108,7 @@ class PlumManager(object):
 
         if event['type'] == 'pirSignal':
             print('pirSignal', event['signal'])
+            self._motion_listeners[lpid](event['signal'])
 
 
 class Lightpad(object):
