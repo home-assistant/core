@@ -6,7 +6,7 @@ https://home-assistant.io/components/media_player.denon/
 """
 
 import logging
-from collections import (namedtuple, OrderedDict)
+from collections import namedtuple
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
