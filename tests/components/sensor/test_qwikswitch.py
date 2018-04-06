@@ -60,7 +60,10 @@ async def test_sensor_device(hass, aioclient_mock):
     config = {
         'qwikswitch': {
             'sensors': {
-                's1': '@a00001:0:imod',
+                'name': 's1',
+                'id': '@a00001',
+                'channel': 1,
+                'type': 'imod',
             }
         }
     }
