@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_GOOGLE_SEARCH_PARAMS = {
     'orderBy': 'startTime',
-    'maxResults': 1,
+    'maxResults': 5,
     'singleEvents': True,
 }
 
@@ -45,18 +45,21 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
     def __init__(self, hass, calendar_service, calendar, data):
         """Create the Calendar event device."""
         self.data = GoogleCalendarData(calendar_service, calendar,
-                                       data.get('search', None))
+                                       data.get('search', None),
+                                       data.get('ignore_availablilty', False))
         super().__init__(hass, data)
 
 
 class GoogleCalendarData(object):
     """Class to utilize calendar service object to get next event."""
 
-    def __init__(self, calendar_service, calendar_id, search=None):
+    def __init__(self, calendar_service, calendar_id, search,
+                 ignore_availablilty):
         """Set up how we are going to search the google calendar."""
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
         self.search = search
+        self.ignore_availablilty = ignore_availablilty
         self.event = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -80,5 +83,17 @@ class GoogleCalendarData(object):
         result = events.list(**params).execute()
 
         items = result.get('items', [])
-        self.event = items[0] if len(items) == 1 else None
+
+        new_event = None
+        for item in items:
+            if (not self.ignore_availablilty
+                    and 'transparency' in item.keys()):
+                if item['transparency'] == 'opaque':
+                    new_event = item
+                    break
+            else:
+                new_event = item
+                break
+
+        self.event = new_event
         return True
