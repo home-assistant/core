@@ -57,7 +57,7 @@ class TestHomekitLights(unittest.TestCase):
         self.assertEqual(acc.char_on.value, 0)
 
         # Set from HomeKit
-        acc.char_on.set_value(1)
+        acc.char_on.client_update_value(1)
         self.hass.block_till_done()
         self.assertEqual(self.events[0].data[ATTR_DOMAIN], DOMAIN)
         self.assertEqual(self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
@@ -65,7 +65,7 @@ class TestHomekitLights(unittest.TestCase):
         self.hass.states.set(entity_id, STATE_ON)
         self.hass.block_till_done()
 
-        acc.char_on.set_value(0)
+        acc.char_on.client_update_value(0)
         self.hass.block_till_done()
         self.assertEqual(self.events[1].data[ATTR_DOMAIN], DOMAIN)
         self.assertEqual(self.events[1].data[ATTR_SERVICE], SERVICE_TURN_OFF)
@@ -94,8 +94,8 @@ class TestHomekitLights(unittest.TestCase):
         self.assertEqual(acc.char_brightness.value, 40)
 
         # Set from HomeKit
-        acc.char_brightness.set_value(20)
-        acc.char_on.set_value(1)
+        acc.char_brightness.client_update_value(20)
+        acc.char_on.client_update_value(1)
         self.hass.block_till_done()
         self.assertEqual(self.events[0].data[ATTR_DOMAIN], DOMAIN)
         self.assertEqual(self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
@@ -103,8 +103,8 @@ class TestHomekitLights(unittest.TestCase):
             self.events[0].data[ATTR_SERVICE_DATA], {
                 ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_PCT: 20})
 
-        acc.char_on.set_value(1)
-        acc.char_brightness.set_value(40)
+        acc.char_on.client_update_value(1)
+        acc.char_brightness.client_update_value(40)
         self.hass.block_till_done()
         self.assertEqual(self.events[1].data[ATTR_DOMAIN], DOMAIN)
         self.assertEqual(self.events[1].data[ATTR_SERVICE], SERVICE_TURN_ON)
@@ -112,8 +112,8 @@ class TestHomekitLights(unittest.TestCase):
             self.events[1].data[ATTR_SERVICE_DATA], {
                 ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_PCT: 40})
 
-        acc.char_on.set_value(1)
-        acc.char_brightness.set_value(0)
+        acc.char_on.client_update_value(1)
+        acc.char_brightness.client_update_value(0)
         self.hass.block_till_done()
         self.assertEqual(self.events[2].data[ATTR_DOMAIN], DOMAIN)
         self.assertEqual(self.events[2].data[ATTR_SERVICE], SERVICE_TURN_OFF)
@@ -132,7 +132,7 @@ class TestHomekitLights(unittest.TestCase):
         self.assertEqual(acc.char_color_temperature.value, 190)
 
         # Set from HomeKit
-        acc.char_color_temperature.set_value(250)
+        acc.char_color_temperature.client_update_value(250)
         self.hass.block_till_done()
         self.assertEqual(self.events[0].data[ATTR_DOMAIN], DOMAIN)
         self.assertEqual(self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
@@ -156,8 +156,8 @@ class TestHomekitLights(unittest.TestCase):
         self.assertEqual(acc.char_saturation.value, 90)
 
         # Set from HomeKit
-        acc.char_hue.set_value(145)
-        acc.char_saturation.set_value(75)
+        acc.char_hue.client_update_value(145)
+        acc.char_saturation.client_update_value(75)
         self.hass.block_till_done()
         self.assertEqual(self.events[0].data[ATTR_DOMAIN], DOMAIN)
         self.assertEqual(self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
