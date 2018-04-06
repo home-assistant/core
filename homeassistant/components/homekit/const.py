@@ -55,6 +55,7 @@ SERV_WINDOW_COVERING = 'WindowCovering'
 CHAR_BRIGHTNESS = 'Brightness'  # Int | [0, 100]
 CHAR_CARBON_DIOXIDE_DETECTED = 'CarbonDioxideDetected'
 CHAR_CARBON_MONOXIDE_DETECTED = 'CarbonMonoxideDetected'
+CHAR_COLOR_TEMPERATURE = 'ColorTemperature'
 CHAR_CONTACT_SENSOR_STATE = 'ContactSensorState'
 CHAR_COOLING_THRESHOLD_TEMPERATURE = 'CoolingThresholdTemperature'
 CHAR_CURRENT_HEATING_COOLING = 'CurrentHeatingCoolingState'
