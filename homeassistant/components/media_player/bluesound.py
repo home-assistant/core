@@ -333,6 +333,8 @@ class BluesoundPlayer(MediaPlayerDevice):
                 else:
                     data = xmltodict.parse(result)
             else:
+                if response.status == 595:
+                    raise asyncio.TimeoutError("Response returned 595, timeout")
                 _LOGGER.error("Error %s on %s", response.status, url)
                 return None
 
