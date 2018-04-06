@@ -53,7 +53,7 @@ class AbodeLight(AbodeDevice, Light):
         if ATTR_BRIGHTNESS in kwargs and self._device.is_dimmable:
             # Convert HASS brightness (0-255) to Abode brightness (0-99)
             # If 100 is sent to Abode, response is 99 causing an error
-            self._device.set_level(ceil(kwargs[ATTR_BRIGHTNESS] * 99 / 255))
+            self._device.set_level(ceil(kwargs[ATTR_BRIGHTNESS] * 99 / 255.0))
         else:
             self._device.switch_on()
 
@@ -74,9 +74,8 @@ class AbodeLight(AbodeDevice, Light):
             # Abode returns 100 during device initialization and device refresh
             if brightness == 100:
                 return 255
-            else:
-                # Convert Abode brightness (0-99) to HASS brightness (0-255)
-                return ceil(brightness * 255 / 99)
+            # Convert Abode brightness (0-99) to HASS brightness (0-255)
+            return ceil(brightness * 255 / 99.0)
 
     @property
     def hs_color(self):
