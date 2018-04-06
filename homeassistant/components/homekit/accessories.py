@@ -1,19 +1,62 @@
 """Extend the basic Accessory and Bridge functions."""
+from datetime import timedelta
+from functools import wraps
+from inspect import getmodule
 import logging
 
 from pyhap.accessory import Accessory, Bridge, Category
 from pyhap.accessory_driver import AccessoryDriver
 
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.core import callback
+from homeassistant.helpers.event import (
+    async_track_state_change, track_point_in_utc_time)
+from homeassistant.util import dt as dt_util
 
 from .const import (
-    ACCESSORY_MODEL, ACCESSORY_NAME, BRIDGE_MODEL, BRIDGE_NAME,
-    MANUFACTURER, SERV_ACCESSORY_INFO, CHAR_MANUFACTURER, CHAR_MODEL,
-    CHAR_NAME, CHAR_SERIAL_NUMBER)
+    DEBOUNCE_TIMEOUT, ACCESSORY_MODEL, ACCESSORY_NAME, BRIDGE_MODEL,
+    BRIDGE_NAME, MANUFACTURER, SERV_ACCESSORY_INFO, CHAR_MANUFACTURER,
+    CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
 from .util import (
     show_setup_message, dismiss_setup_message)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def debounce(func):
+    """Decorator function. Debounce callbacks form HomeKit."""
+    @callback
+    def call_later_listener(*args):
+        """Callback listener called from call_later."""
+        # pylint: disable=unsubscriptable-object
+        nonlocal lastargs, remove_listener
+        hass = lastargs['hass']
+        hass.async_add_job(func, *lastargs['args'])
+        lastargs = remove_listener = None
+
+    @wraps(func)
+    def wrapper(*args):
+        """Wrapper starts async timer.
+
+        The accessory must have 'self.hass' and 'self.entity_id' as attributes.
+        """
+        # pylint: disable=not-callable
+        hass = args[0].hass
+        nonlocal lastargs, remove_listener
+        if remove_listener:
+            remove_listener()
+            lastargs = remove_listener = None
+        lastargs = {'hass': hass, 'args': [*args]}
+        remove_listener = track_point_in_utc_time(
+            hass, call_later_listener,
+            dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT))
+        logger.debug('%s: Start %s timeout', args[0].entity_id,
+                     func.__name__.replace('set_', ''))
+
+    remove_listener = None
+    lastargs = None
+    name = getmodule(func).__name__
+    logger = logging.getLogger(name)
+    return wrapper
 
 
 def add_preload_service(acc, service, chars=None):

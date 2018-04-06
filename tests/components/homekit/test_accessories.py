@@ -2,20 +2,66 @@
 
 This includes tests for all mock object types.
 """
+from datetime import datetime, timedelta
 import unittest
 from unittest.mock import call, patch, Mock
 
 from homeassistant.components.homekit.accessories import (
     add_preload_service, set_accessory_info,
-    HomeAccessory, HomeBridge, HomeDriver)
+    debounce, HomeAccessory, HomeBridge, HomeDriver)
 from homeassistant.components.homekit.const import (
     ACCESSORY_MODEL, ACCESSORY_NAME, BRIDGE_MODEL, BRIDGE_NAME,
     SERV_ACCESSORY_INFO, CHAR_MANUFACTURER, CHAR_MODEL,
     CHAR_NAME, CHAR_SERIAL_NUMBER)
+from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
+import homeassistant.util.dt as dt_util
+
+from tests.common import get_test_home_assistant
+
+
+def patch_debounce():
+    """Return patch for debounce method."""
+    return patch('homeassistant.components.homekit.accessories.debounce',
+                 lambda f: lambda *args, **kwargs: f(*args, **kwargs))
 
 
 class TestAccessories(unittest.TestCase):
     """Test pyhap adapter methods."""
+
+    def test_debounce(self):
+        """Test add_timeout decorator function."""
+        def demo_func(*args):
+            nonlocal arguments, counter
+            counter += 1
+            arguments = args
+
+        arguments = None
+        counter = 0
+        hass = get_test_home_assistant()
+        mock = Mock(hass=hass)
+
+        debounce_demo = debounce(demo_func)
+        self.assertEqual(debounce_demo.__name__, 'demo_func')
+        now = datetime(2018, 1, 1, 20, 0, 0, tzinfo=dt_util.UTC)
+
+        with patch('homeassistant.util.dt.utcnow', return_value=now):
+            debounce_demo(mock, 'value')
+        hass.bus.fire(
+            EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
+        hass.block_till_done()
+        assert counter == 1
+        assert len(arguments) == 2
+
+        with patch('homeassistant.util.dt.utcnow', return_value=now):
+            debounce_demo(mock, 'value')
+            debounce_demo(mock, 'value')
+
+        hass.bus.fire(
+            EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
+        hass.block_till_done()
+        assert counter == 2
+
+        hass.stop()
 
     def test_add_preload_service(self):
         """Test add_preload_service without additional characteristics."""
