@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         dev.append(SmappeeSensor(
                             smappee,
                             location_id,
-                            "%s:%s" % (sensor, items.get('id')),
+                            '{}:{}'.format(sensor, items.get('id')),
                             SENSOR_TYPES[sensor]))
 
     if smappee.is_local_active:
@@ -88,7 +88,7 @@ class SmappeeSensor(Entity):
     """Implementation of a Smappee sensor."""
 
     def __init__(self, smappee, location_id, sensor, attributes):
-        """Initialize the sensor."""
+        """Initialize the Smappee sensor."""
         self._smappee = smappee
         self._location_id = location_id
         self._attributes = attributes
@@ -109,9 +109,7 @@ class SmappeeSensor(Entity):
         else:
             location_name = 'Local'
 
-        return "{} {} {}".format(SENSOR_PREFIX,
-                                 location_name,
-                                 self._name)
+        return "{} {} {}".format(SENSOR_PREFIX, location_name, self._name)
 
     @property
     def icon(self):
