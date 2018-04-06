@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.cover import CoverDevice
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED, STATE_UNKNOWN,
-    CONF_IP_ADDRESS, CONF_NAME)
+    CONF_IP_ADDRESS, CONF_NAME, SUPPORT_OPEN, SUPPORT_CLOSE)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pygogogate2==0.0.3']
@@ -97,7 +97,7 @@ class MyGogogate2Device(CoverDevice):
     def available(self):
         """Could the device be accessed during the last update call."""
         return self.available
-    
+
     def close_cover(self, **kwargs):
         """Issue close command to cover."""
         self.mygogogate2.close_device(self.device_id)
