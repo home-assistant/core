@@ -1,4 +1,5 @@
-"""IHC component.
+"""
+Support for IHC devices.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ihc/
@@ -6,18 +7,18 @@ https://home-assistant.io/components/ihc/
 import logging
 import os.path
 import xml.etree.ElementTree
+
 import voluptuous as vol
 
 from homeassistant.components.ihc.const import (
-    ATTR_IHC_ID, ATTR_VALUE, CONF_INFO, CONF_AUTOSETUP,
-    CONF_BINARY_SENSOR, CONF_LIGHT, CONF_SENSOR, CONF_SWITCH,
-    CONF_XPATH, CONF_NODE, CONF_DIMMABLE, CONF_INVERTING,
-    SERVICE_SET_RUNTIME_VALUE_BOOL, SERVICE_SET_RUNTIME_VALUE_INT,
-    SERVICE_SET_RUNTIME_VALUE_FLOAT)
+    ATTR_IHC_ID, ATTR_VALUE, CONF_AUTOSETUP, CONF_BINARY_SENSOR, CONF_DIMMABLE,
+    CONF_INFO, CONF_INVERTING, CONF_LIGHT, CONF_NODE, CONF_SENSOR, CONF_SWITCH,
+    CONF_XPATH, SERVICE_SET_RUNTIME_VALUE_BOOL,
+    SERVICE_SET_RUNTIME_VALUE_FLOAT, SERVICE_SET_RUNTIME_VALUE_INT)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    CONF_URL, CONF_USERNAME, CONF_PASSWORD, CONF_ID, CONF_NAME,
-    CONF_UNIT_OF_MEASUREMENT, CONF_TYPE, TEMP_CELSIUS)
+    CONF_ID, CONF_NAME, CONF_PASSWORD, CONF_TYPE, CONF_UNIT_OF_MEASUREMENT,
+    CONF_URL, CONF_USERNAME, TEMP_CELSIUS)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
@@ -36,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_AUTOSETUP, default=True): cv.boolean,
-        vol.Optional(CONF_INFO, default=True): cv.boolean
+        vol.Optional(CONF_INFO, default=True): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -97,7 +98,7 @@ IHC_PLATFORMS = ('binary_sensor', 'light', 'sensor', 'switch')
 
 
 def setup(hass, config):
-    """Setup the IHC component."""
+    """Set up the IHC component."""
     from ihcsdk.ihccontroller import IHCController
     conf = config[DOMAIN]
     url = conf[CONF_URL]
@@ -106,7 +107,7 @@ def setup(hass, config):
     ihc_controller = IHCController(url, username, password)
 
     if not ihc_controller.authenticate():
-        _LOGGER.error("Unable to authenticate on ihc controller.")
+        _LOGGER.error("Unable to authenticate on IHC controller")
         return False
 
     if (conf[CONF_AUTOSETUP] and
@@ -125,7 +126,7 @@ def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller):
     """Auto setup of IHC products from the ihc project file."""
     project_xml = ihc_controller.get_project()
     if not project_xml:
-        _LOGGER.error("Unable to read project from ihc controller.")
+        _LOGGER.error("Unable to read project from ICH controller")
         return False
     project = xml.etree.ElementTree.fromstring(project_xml)
 
@@ -150,7 +151,7 @@ def autosetup_ihc_products(hass: HomeAssistantType, config, ihc_controller):
 
 
 def get_discovery_info(component_setup, groups):
-    """Get discovery info for specified component."""
+    """Get discovery info for specified IHC component."""
     discovery_data = {}
     for group in groups:
         groupname = group.attrib['name']
@@ -173,7 +174,7 @@ def get_discovery_info(component_setup, groups):
 
 
 def setup_service_functions(hass: HomeAssistantType, ihc_controller):
-    """Setup the ihc service functions."""
+    """Setup the IHC service functions."""
     def set_runtime_value_bool(call):
         """Set a IHC runtime bool value service function."""
         ihc_id = call.data[ATTR_IHC_ID]
