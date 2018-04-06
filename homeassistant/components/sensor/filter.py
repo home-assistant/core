@@ -44,6 +44,9 @@ CONF_TIME_SMA_TYPE = 'type'
 
 TIME_SMA_LAST = 'last'
 
+WINDOW_SIZE_UNIT_NUMBER_EVENTS = 1
+WINDOW_SIZE_UNIT_TIME = 2
+
 DEFAULT_WINDOW_SIZE = 1
 DEFAULT_PRECISION = 2
 DEFAULT_FILTER_RADIUS = 2.0
@@ -282,8 +285,10 @@ class Filter(object):
         """Initialize common attributes."""
         if isinstance(window_size, int):
             self.states = deque(maxlen=window_size)
+            self.window_unit = WINDOW_SIZE_UNIT_NUMBER_EVENTS
         else:
             self.states = deque(maxlen=0)
+            self.window_unit = WINDOW_SIZE_UNIT_TIME
         self.precision = precision
         self._name = name
         self._entity = entity
