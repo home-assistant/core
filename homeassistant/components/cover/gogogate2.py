@@ -118,4 +118,3 @@ class MyGogogate2Device(CoverDevice):
             _LOGGER.error("%s", ex)
             self._status = STATE_UNKNOWN
             self.available = False
- 
