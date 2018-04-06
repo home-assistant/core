@@ -86,7 +86,7 @@ class SHTClient(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data the SHT sensor."""
+        """Get the latest data from the SHT sensor."""
         temperature, humidity = self.adafruit_sht.read_temperature_humidity()
         if math.isnan(temperature) or math.isnan(humidity):
             _LOGGER.warning("Bad sample from sensor SHT31")
