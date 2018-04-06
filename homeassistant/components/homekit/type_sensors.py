@@ -17,12 +17,28 @@ from .const import (
     DEVICE_CLASS_MOTION, SERV_MOTION_SENSOR, CHAR_MOTION_DETECTED,
     DEVICE_CLASS_OCCUPANCY, SERV_OCCUPANCY_SENSOR, CHAR_OCCUPANCY_DETECTED,
     DEVICE_CLASS_OPENING, SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE,
-    DEVICE_CLASS_SMOKE, SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED,
-    ATTR_HOMEKIT_DEVICE_CLASS)
+    DEVICE_CLASS_SMOKE, SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED)
 from .util import convert_to_float, temperature_to_homekit
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+BINARY_SENSOR_SERVICE_MAP = {
+    DEVICE_CLASS_CO2:
+        (SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED),
+    DEVICE_CLASS_GAS:
+        (SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED),
+    DEVICE_CLASS_MOISTURE:
+        (SERV_LEAK_SENSOR, CHAR_LEAK_DETECTED),
+    DEVICE_CLASS_MOTION:
+        (SERV_MOTION_SENSOR, CHAR_MOTION_DETECTED),
+    DEVICE_CLASS_OCCUPANCY:
+        (SERV_OCCUPANCY_SENSOR, CHAR_OCCUPANCY_DETECTED),
+    DEVICE_CLASS_OPENING:
+        (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE),
+    DEVICE_CLASS_SMOKE:
+        (SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED)}
 
 
 @TYPES.register('TemperatureSensor')
@@ -87,24 +103,6 @@ class HumiditySensor(HomeAccessory):
                           self.entity_id, humidity)
 
 
-# Binary sensor service map
-BINARY_SENSOR_SERVICE_MAP = {
-    DEVICE_CLASS_CO2:
-        (SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED),
-    DEVICE_CLASS_GAS:
-        (SERV_CARBON_MONOXIDE_SENSOR, CHAR_CARBON_MONOXIDE_DETECTED),
-    DEVICE_CLASS_MOISTURE:
-        (SERV_LEAK_SENSOR, CHAR_LEAK_DETECTED),
-    DEVICE_CLASS_MOTION:
-        (SERV_MOTION_SENSOR, CHAR_MOTION_DETECTED),
-    DEVICE_CLASS_OCCUPANCY:
-        (SERV_OCCUPANCY_SENSOR, CHAR_OCCUPANCY_DETECTED),
-    DEVICE_CLASS_OPENING:
-        (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE),
-    DEVICE_CLASS_SMOKE:
-        (SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED)}
-
-
 @TYPES.register('BinarySensor')
 class BinarySensor(HomeAccessory):
     """Generate a BinarySensor accessory as binary sensor."""
@@ -116,10 +114,10 @@ class BinarySensor(HomeAccessory):
         self.hass = hass
         self.entity_id = entity_id
 
-        attributes = hass.states.get(entity_id).attributes
-        device_class = attributes.get(ATTR_DEVICE_CLASS)
+        device_class = hass.states.get(entity_id).attributes \
+            .get(ATTR_DEVICE_CLASS)
         service_char = BINARY_SENSOR_SERVICE_MAP[device_class] \
-            if (device_class in BINARY_SENSOR_SERVICE_MAP) \
+            if device_class in BINARY_SENSOR_SERVICE_MAP \
             else BINARY_SENSOR_SERVICE_MAP[DEVICE_CLASS_OCCUPANCY]
 
         service = add_preload_service(self, service_char[0])

@@ -93,6 +93,3 @@ DEVICE_CLASS_MOTION = 'motion'
 DEVICE_CLASS_OCCUPANCY = 'occupancy'
 DEVICE_CLASS_OPENING = 'opening'
 DEVICE_CLASS_SMOKE = 'smoke'
-
-# #### Attributes ####
-ATTR_HOMEKIT_DEVICE_CLASS = 'homekit_device_class'
