@@ -51,7 +51,12 @@ class AbodeLight(AbodeDevice, Light):
                 *kwargs[ATTR_HS_COLOR]))
 
         if ATTR_BRIGHTNESS in kwargs and self._device.is_dimmable:
-            self._device.set_level(kwargs[ATTR_BRIGHTNESS])
+            # Convert HASS brightness (0-255) to Abode brightness (0-100)
+            brightness = int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
+            # If 100 is sent to Abode, 99 is returned causing an error
+            if brightness == 100:
+                brightness = 99
+            self._device.set_level(brightness)
         else:
             self._device.switch_on()
 
@@ -68,7 +73,8 @@ class AbodeLight(AbodeDevice, Light):
     def brightness(self):
         """Return the brightness of the light."""
         if self._device.is_dimmable and self._device.has_brightness:
-            return self._device.brightness
+            # Convert Abode brightness (0-100) to HASS brightness (0-255)
+            return int(self._device.brightness) * 255 / 100
 
     @property
     def hs_color(self):
