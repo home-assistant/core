@@ -261,7 +261,8 @@ class BluesoundPlayer(MediaPlayerDevice):
             while True:
                 await self.async_update_status()
 
-        except (asyncio.TimeoutError, ClientError, BluesoundPlayer.TimeoutException):
+        except (asyncio.TimeoutError, ClientError,
+                BluesoundPlayer.TimeoutException):
             _LOGGER.info("Node %s is offline, retrying later", self._name)
             await asyncio.sleep(
                 NODE_OFFLINE_CHECK_TIMEOUT, loop=self._hass.loop)
@@ -814,14 +815,14 @@ class BluesoundPlayer(MediaPlayerDevice):
     async def async_add_slave(self, slave_device):
         """Add slave to master."""
         return await self.send_bluesound_command('/AddSlave?slave={}&port={}'
-                                           .format(slave_device.host,
-                                                   slave_device.port))
+                                                 .format(slave_device.host,
+                                                         slave_device.port))
 
     async def async_remove_slave(self, slave_device):
         """Remove slave to master."""
-        return await self.send_bluesound_command('/RemoveSlave?slave={}&port={}'
-                                           .format(slave_device.host,
-                                                   slave_device.port))
+        return await self.send_bluesound_command(
+                         '/RemoveSlave?slave={}&port={}'
+                         .format(slave_device.host, slave_device.port))
 
     async def async_increase_timer(self):
         """Increase sleep time on player."""
@@ -841,8 +842,9 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     async def async_set_shuffle(self, shuffle):
         """Enable or disable shuffle mode."""
+        value = '1' if shuffle else '0'
         return await self.send_bluesound_command('/Shuffle?state={}'
-                                           .format('1' if shuffle else '0'))
+                                                 .format(value))
 
     async def async_select_source(self, source):
         """Select input source."""
@@ -929,7 +931,8 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self.is_grouped and not self.is_master:
             return
 
-        return await self.send_bluesound_command('Play?seek=' + str(float(position)))
+        return await self.send_bluesound_command('Play?seek=' +
+                                                 str(float(position)))
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """
