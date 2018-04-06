@@ -46,19 +46,20 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         """Create the Calendar event device."""
         self.data = GoogleCalendarData(calendar_service, calendar,
                                        data.get('search', None),
-                                       data.get('transparency', False))
+                                       data.get('ignore_availablilty', False))
         super().__init__(hass, data)
 
 
 class GoogleCalendarData(object):
     """Class to utilize calendar service object to get next event."""
 
-    def __init__(self, calendar_service, calendar_id, search, transparency):
+    def __init__(self, calendar_service, calendar_id, search,
+                 ignore_availablilty):
         """Set up how we are going to search the google calendar."""
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
         self.search = search
-        self.transparency = transparency
+        self.ignore_availablilty = ignore_availablilty
         self.event = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -85,7 +86,8 @@ class GoogleCalendarData(object):
 
         new_event = None
         for item in items:
-            if self.transparency and 'transparency' in item.keys():
+            if (not self.ignore_availablilty
+                    and 'transparency' in item.keys()):
                 if item['transparency'] == 'opaque':
                     new_event = item
                     break
