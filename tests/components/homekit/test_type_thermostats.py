@@ -151,7 +151,7 @@ class TestHomekitThermostats(unittest.TestCase):
         self.assertEqual(acc.char_display_units.value, 0)
 
         # Set from HomeKit
-        acc.char_target_temp.set_value(19.0)
+        acc.char_target_temp.client_update_value(19.0)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE], 'set_temperature')
@@ -159,7 +159,7 @@ class TestHomekitThermostats(unittest.TestCase):
             self.events[0].data[ATTR_SERVICE_DATA][ATTR_TEMPERATURE], 19.0)
         self.assertEqual(acc.char_target_temp.value, 19.0)
 
-        acc.char_target_heat_cool.set_value(1)
+        acc.char_target_heat_cool.client_update_value(1)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[1].data[ATTR_SERVICE], 'set_operation_mode')
@@ -221,7 +221,7 @@ class TestHomekitThermostats(unittest.TestCase):
         self.assertEqual(acc.char_display_units.value, 0)
 
         # Set from HomeKit
-        acc.char_heating_thresh_temp.set_value(20.0)
+        acc.char_heating_thresh_temp.client_update_value(20.0)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE], 'set_temperature')
@@ -229,7 +229,7 @@ class TestHomekitThermostats(unittest.TestCase):
             self.events[0].data[ATTR_SERVICE_DATA][ATTR_TARGET_TEMP_LOW], 20.0)
         self.assertEqual(acc.char_heating_thresh_temp.value, 20.0)
 
-        acc.char_cooling_thresh_temp.set_value(25.0)
+        acc.char_cooling_thresh_temp.client_update_value(25.0)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[1].data[ATTR_SERVICE], 'set_temperature')
@@ -260,19 +260,19 @@ class TestHomekitThermostats(unittest.TestCase):
         self.assertEqual(acc.char_display_units.value, 1)
 
         # Set from HomeKit
-        acc.char_cooling_thresh_temp.set_value(23)
+        acc.char_cooling_thresh_temp.client_update_value(23)
         self.hass.block_till_done()
         service_data = self.events[-1].data[ATTR_SERVICE_DATA]
         self.assertEqual(service_data[ATTR_TARGET_TEMP_HIGH], 73.4)
         self.assertEqual(service_data[ATTR_TARGET_TEMP_LOW], 68)
 
-        acc.char_heating_thresh_temp.set_value(22)
+        acc.char_heating_thresh_temp.client_update_value(22)
         self.hass.block_till_done()
         service_data = self.events[-1].data[ATTR_SERVICE_DATA]
         self.assertEqual(service_data[ATTR_TARGET_TEMP_HIGH], 73.4)
         self.assertEqual(service_data[ATTR_TARGET_TEMP_LOW], 71.6)
 
-        acc.char_target_temp.set_value(24.0)
+        acc.char_target_temp.client_update_value(24.0)
         self.hass.block_till_done()
         service_data = self.events[-1].data[ATTR_SERVICE_DATA]
         self.assertEqual(service_data[ATTR_TEMPERATURE], 75.2)
