@@ -19,6 +19,12 @@ import homeassistant.util.dt as dt_util
 from tests.common import get_test_home_assistant
 
 
+def patch_debounce():
+    """Return patch for debounce method."""
+    return patch('homeassistant.components.homekit.accessories.debounce',
+                 lambda f: lambda *args, **kwargs: f(*args, **kwargs))
+
+
 class TestAccessories(unittest.TestCase):
     """Test pyhap adapter methods."""
 
