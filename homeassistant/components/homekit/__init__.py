@@ -94,7 +94,8 @@ def get_accessory(hass, state, aid, config):
 
     elif state.domain == 'binary_sensor' or state.domain == 'device_tracker':
         _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'BinarySensor')
-        return TYPES['BinarySensor'](hass, state, aid=aid)
+        return TYPES['BinarySensor'](hass, state.entity_id,
+                                     state.name, state.attributes, aid=aid)
 
     elif state.domain == 'cover':
         # Only add covers that support set_cover_position

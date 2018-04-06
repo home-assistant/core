@@ -44,7 +44,13 @@ SERV_SWITCH = 'Switch'
 SERV_TEMPERATURE_SENSOR = 'TemperatureSensor'
 SERV_THERMOSTAT = 'Thermostat'
 SERV_WINDOW_COVERING = 'WindowCovering'
-
+SERV_CARBON_MONOXIDE_SENSOR = 'CarbonMonoxideSensor'
+SERV_CARBON_DIOXIDE_SENSOR = 'CarbonDioxideSensor'
+SERV_OCCUPANCY_SENSOR = 'OccupancySensor'
+SERV_CONTACT_SENSOR = 'ContactSensor'
+SERV_MOTION_SENSOR = 'MotionSensor'
+SERV_LEAK_SENSOR = 'LeakSensor'
+SERV_SMOKE_SENSOR = 'SmokeSensor'
 
 # #### Characteristics ####
 CHAR_BRIGHTNESS = 'Brightness'  # Int | [0, 100]
@@ -69,6 +75,26 @@ CHAR_TARGET_POSITION = 'TargetPosition'
 CHAR_TARGET_SECURITY_STATE = 'SecuritySystemTargetState'
 CHAR_TARGET_TEMPERATURE = 'TargetTemperature'
 CHAR_TEMP_DISPLAY_UNITS = 'TemperatureDisplayUnits'
+CHAR_CARBON_MONOXIDE_DETECTED = 'CarbonMonoxideDetected'
+CHAR_CARBON_DIOXIDE_DETECTED = 'CarbonDioxideDetected'
+CHAR_OCCUPANCY_DETECTED = 'OccupancyDetected'
+CHAR_CONTACT_SENSOR_STATE = 'ContactSensorState'
+CHAR_MOTION_DETECTED = 'MotionDetected'
+CHAR_LEAK_DETECTED = 'LeakDetected'
+CHAR_SMOKE_DETECTED = 'SmokeDetected'
 
 # #### Properties ####
 PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}
+
+# #### Device Class ####
+DEVICE_CLASS_GAS = 'gas'
+DEVICE_CLASS_CO2 = 'co2'
+DEVICE_CLASS_OCCUPANCY = 'occupancy'
+DEVICE_CLASS_OPENING = 'opening'
+DEVICE_CLASS_MOTION = 'motion'
+DEVICE_CLASS_MOISTURE = 'moisture'
+DEVICE_CLASS_SMOKE = 'smoke'
+
+# #### Attributes ####
+ATTR_DEVICE_CLASS = 'device_class'
+ATTR_HOMEKIT_DEVICE_CLASS = 'homekit_device_class'
