@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.cover import CoverDevice
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED, STATE_UNAVAILABLE,
+    CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED, STATE_UNKNOWN,
     CONF_IP_ADDRESS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
@@ -71,6 +71,7 @@ class MyGogogate2Device(CoverDevice):
         self.device_id = device['door']
         self._name = name or device['name']
         self._status = device['status']
+        self.available = None
 
     @property
     def name(self):
@@ -82,6 +83,21 @@ class MyGogogate2Device(CoverDevice):
         """Return true if cover is closed, else False."""
         return self._status == STATE_CLOSED
 
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'garage'
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OPEN | SUPPORT_CLOSE
+
+    @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self.available
+    
     def close_cover(self, **kwargs):
         """Issue close command to cover."""
         self.mygogogate2.close_device(self.device_id)
@@ -96,6 +112,9 @@ class MyGogogate2Device(CoverDevice):
         """Update status of cover."""
         try:
             self._status = self.mygogogate2.get_status(self.device_id)
+            self.available = True
         except (TypeError, KeyError, NameError, ValueError) as ex:
             _LOGGER.error("%s", ex)
-            self._status = STATE_UNAVAILABLE
+            self._status = STATE_UNKNOWN
+            self.available = False
+ 
