@@ -764,6 +764,9 @@ pyflexit==0.3
 # homeassistant.components.ifttt
 pyfttt==0.3
 
+# homeassistant.components.cover.gogogate2
+pygogogate2==0.0.3
+
 # homeassistant.components.remote.harmony
 pyharmony==1.0.20
 
