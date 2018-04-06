@@ -72,7 +72,7 @@ class MyGogogate2Device(CoverDevice):
         self.device_id = device['door']
         self._name = name or device['name']
         self._status = device['status']
-        self.available = None
+        self._available = None
 
     @property
     def name(self):
@@ -97,7 +97,7 @@ class MyGogogate2Device(CoverDevice):
     @property
     def available(self):
         """Could the device be accessed during the last update call."""
-        return self.available
+        return self._available
 
     def close_cover(self, **kwargs):
         """Issue close command to cover."""
@@ -113,8 +113,8 @@ class MyGogogate2Device(CoverDevice):
         """Update status of cover."""
         try:
             self._status = self.mygogogate2.get_status(self.device_id)
-            self.available = True
+            self._available = True
         except (TypeError, KeyError, NameError, ValueError) as ex:
             _LOGGER.error("%s", ex)
             self._status = STATE_UNKNOWN
-            self.available = False
+            self._available = False
