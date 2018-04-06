@@ -60,6 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
 
+
 class MyGogogate2Device(CoverDevice):
     """Representation of a Gogogate2 cover."""
 
