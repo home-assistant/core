@@ -5,13 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.abode/
 """
 import logging
-
+from math import ceil
 from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
 import homeassistant.util.color as color_util
-from math import ceil
 
 
 DEPENDENCIES = ['abode']
@@ -52,7 +51,7 @@ class AbodeLight(AbodeDevice, Light):
                 *kwargs[ATTR_HS_COLOR]))
 
         if ATTR_BRIGHTNESS in kwargs and self._device.is_dimmable:
-            # Convert HASS brightness (0-255) to Abode brightness (0-100)
+            # Convert HASS brightness (0-255) to Abode brightness (0-99)
             # If 100 is sent to Abode, 99 is returned causing an error
             self._device.set_level(ceil(kwargs[ATTR_BRIGHTNESS] * 99 / 255))
         else:
