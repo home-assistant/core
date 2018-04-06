@@ -51,14 +51,14 @@ class TestHomekitSwitches(unittest.TestCase):
         self.assertEqual(acc.char_on.value, False)
 
         # Set from HomeKit
-        acc.char_on.set_value(True)
+        acc.char_on.client_update_value(True)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[0].data[ATTR_DOMAIN], domain)
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
 
-        acc.char_on.set_value(False)
+        acc.char_on.client_update_value(False)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[1].data[ATTR_DOMAIN], domain)
@@ -76,7 +76,7 @@ class TestHomekitSwitches(unittest.TestCase):
         self.assertEqual(acc.char_on.value, False)
 
         # Set from HomeKit
-        acc.char_on.set_value(True)
+        acc.char_on.client_update_value(True)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[0].data[ATTR_DOMAIN], domain)
@@ -95,7 +95,7 @@ class TestHomekitSwitches(unittest.TestCase):
         self.assertEqual(acc.char_on.value, False)
 
         # Set from HomeKit
-        acc.char_on.set_value(True)
+        acc.char_on.client_update_value(True)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[0].data[ATTR_DOMAIN], domain)

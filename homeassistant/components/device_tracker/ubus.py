@@ -95,7 +95,7 @@ class UbusDeviceScanner(DeviceScanner):
         return self.last_results
 
     def _generate_mac2name(self):
-        """Return empty MAC to name dict. Overriden if DHCP server is set."""
+        """Return empty MAC to name dict. Overridden if DHCP server is set."""
         self.mac2name = dict()
 
     @_refresh_on_access_denied

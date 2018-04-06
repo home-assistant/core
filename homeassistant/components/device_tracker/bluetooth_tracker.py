@@ -17,12 +17,15 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pybluez==0.22']
+REQUIREMENTS = ['pybluez==0.22', 'bt_proximity==0.1.2']
 
 BT_PREFIX = 'BT_'
 
+CONF_REQUEST_RSSI = 'request_rssi'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_TRACK_NEW): cv.boolean
+    vol.Optional(CONF_TRACK_NEW): cv.boolean,
+    vol.Optional(CONF_REQUEST_RSSI): cv.boolean
 })
 
 
@@ -30,11 +33,15 @@ def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Bluetooth Scanner."""
     # pylint: disable=import-error
     import bluetooth
+    from bt_proximity import BluetoothRSSI
 
-    def see_device(device):
+    def see_device(mac, name, rssi=None):
         """Mark a device as seen."""
-        see(mac=BT_PREFIX + device[0], host_name=device[1],
-            source_type=SOURCE_TYPE_BLUETOOTH)
+        attributes = {}
+        if rssi is not None:
+            attributes['rssi'] = rssi
+        see(mac="{}_{}".format(BT_PREFIX, mac), host_name=name,
+            attributes=attributes, source_type=SOURCE_TYPE_BLUETOOTH)
 
     def discover_devices():
         """Discover Bluetooth devices."""
@@ -64,11 +71,13 @@ def setup_scanner(hass, config, see, discovery_info=None):
     if track_new:
         for dev in discover_devices():
             if dev[0] not in devs_to_track and \
-               dev[0] not in devs_donot_track:
+                    dev[0] not in devs_donot_track:
                 devs_to_track.append(dev[0])
-                see_device(dev)
+                see_device(dev[0], dev[1])
 
     interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+
+    request_rssi = config.get(CONF_REQUEST_RSSI, False)
 
     def update_bluetooth(now):
         """Lookup Bluetooth device and update status."""
@@ -76,15 +85,18 @@ def setup_scanner(hass, config, see, discovery_info=None):
             if track_new:
                 for dev in discover_devices():
                     if dev[0] not in devs_to_track and \
-                       dev[0] not in devs_donot_track:
+                            dev[0] not in devs_donot_track:
                         devs_to_track.append(dev[0])
             for mac in devs_to_track:
                 _LOGGER.debug("Scanning %s", mac)
                 result = bluetooth.lookup_name(mac, timeout=5)
-                if not result:
+                rssi = None
+                if request_rssi:
+                    rssi = BluetoothRSSI(mac).request_rssi()
+                if result is None:
                     # Could not lookup device name
                     continue
-                see_device((mac, result))
+                see_device(mac, result, rssi)
         except bluetooth.BluetoothError:
             _LOGGER.exception("Error looking up Bluetooth device")
         track_point_in_utc_time(

@@ -160,7 +160,13 @@ LIGHT_RESPONSE = {
 @pytest.fixture
 def mock_bridge(hass):
     """Mock a Hue bridge."""
-    bridge = Mock(available=True, allow_groups=False, host='1.1.1.1')
+    bridge = Mock(
+        available=True,
+        allow_unreachable=False,
+        allow_groups=False,
+        api=Mock(),
+        spec=hue.HueBridge
+    )
     bridge.mock_requests = []
     # We're using a deque so we can schedule multiple responses
     # and also means that `popleft()` will blow up if we get more updates

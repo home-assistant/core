@@ -8,6 +8,7 @@ https://home-assistant.io/components/sensor.canary/
 from homeassistant.components.canary import DATA_CANARY
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.icon import icon_for_battery_level
 
 DEPENDENCIES = ['canary']
 
@@ -17,9 +18,11 @@ ATTR_AIR_QUALITY = "air_quality"
 # Sensor types are defined like so:
 # sensor type name, unit_of_measurement, icon
 SENSOR_TYPES = [
-    ["temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    ["humidity", "%", "mdi:water-percent"],
-    ["air_quality", None, "mdi:weather-windy"],
+    ["temperature", TEMP_CELSIUS, "mdi:thermometer", ["Canary"]],
+    ["humidity", "%", "mdi:water-percent", ["Canary"]],
+    ["air_quality", None, "mdi:weather-windy", ["Canary"]],
+    ["wifi", "dBm", "mdi:wifi", ["Canary Flex"]],
+    ["battery", "%", "mdi:battery-50", ["Canary Flex"]],
 ]
 
 STATE_AIR_QUALITY_NORMAL = "normal"
@@ -35,9 +38,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for location in data.locations:
         for device in location.devices:
             if device.is_online:
+                device_type = device.device_type
                 for sensor_type in SENSOR_TYPES:
-                    devices.append(CanarySensor(data, sensor_type, location,
-                                                device))
+                    if device_type.get("name") in sensor_type[3]:
+                        devices.append(CanarySensor(data, sensor_type,
+                                                    location, device))
 
     add_devices(devices, True)
 
@@ -80,6 +85,9 @@ class CanarySensor(Entity):
     @property
     def icon(self):
         """Icon for the sensor."""
+        if self.state is not None and self._sensor_type[0] == "battery":
+            return icon_for_battery_level(battery_level=self.state)
+
         return self._sensor_type[2]
 
     @property
@@ -113,6 +121,10 @@ class CanarySensor(Entity):
             canary_sensor_type = SensorType.TEMPERATURE
         elif self._sensor_type[0] == "humidity":
             canary_sensor_type = SensorType.HUMIDITY
+        elif self._sensor_type[0] == "wifi":
+            canary_sensor_type = SensorType.WIFI
+        elif self._sensor_type[0] == "battery":
+            canary_sensor_type = SensorType.BATTERY
 
         value = self._data.get_reading(self._device_id, canary_sensor_type)
 

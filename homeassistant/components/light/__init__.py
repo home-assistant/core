@@ -457,12 +457,14 @@ class Light(ToggleEntity):
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
         # Default to the Philips Hue value that HA has always assumed
-        return 154
+        # https://developers.meethue.com/documentation/core-concepts
+        return 153
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         # Default to the Philips Hue value that HA has always assumed
+        # https://developers.meethue.com/documentation/core-concepts
         return 500
 
     @property

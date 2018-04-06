@@ -62,7 +62,7 @@ class TestHomekitSensors(unittest.TestCase):
         self.assertEqual(acc.char_position_state.value, 2)
 
         # Set from HomeKit
-        acc.char_target_position.set_value(25)
+        acc.char_target_position.client_update_value(25)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE], 'set_cover_position')
@@ -74,7 +74,7 @@ class TestHomekitSensors(unittest.TestCase):
         self.assertEqual(acc.char_position_state.value, 0)
 
         # Set from HomeKit
-        acc.char_target_position.set_value(75)
+        acc.char_target_position.client_update_value(75)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE], 'set_cover_position')
