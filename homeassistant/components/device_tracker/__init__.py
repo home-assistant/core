@@ -662,7 +662,7 @@ class DeviceScanner(object):
 
     def get_extra_attributes(self, device: str) -> dict:
         """Get the extra attributes of a device."""
-        return {}
+        raise NotImplementedError()
 
     def async_get_extra_attributes(self, device: str) -> Any:
         """Get the extra attributes of a device.
@@ -755,8 +755,11 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
                 host_name = yield from scanner.async_get_device_name(mac)
                 seen.add(mac)
 
-            extra_attributes = (yield from
-                                scanner.async_get_extra_attributes(mac))
+            try:
+                extra_attributes = (yield from
+                                    scanner.async_get_extra_attributes(mac))
+            except NotImplementedError:
+                extra_attributes = dict()
 
             kwargs = {
                 'mac': mac,
