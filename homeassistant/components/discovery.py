@@ -6,7 +6,6 @@ Will emit EVENT_PLATFORM_DISCOVERED whenever a new service has been discovered.
 Knows which components handle certain types, will make sure they are
 loaded before the EVENT_PLATFORM_DISCOVERED is fired.
 """
-import asyncio
 import json
 from datetime import timedelta
 import logging
@@ -14,6 +13,7 @@ import os
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==1.2.4']
+REQUIREMENTS = ['netdisco==1.3.0']
 
 DOMAIN = 'discovery'
 
@@ -39,6 +39,11 @@ SERVICE_TELLDUSLIVE = 'tellstick'
 SERVICE_HUE = 'philips_hue'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DAIKIN = 'daikin'
+SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
+
+CONFIG_ENTRY_HANDLERS = {
+    SERVICE_HUE: 'hue',
+}
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
@@ -51,9 +56,9 @@ SERVICE_HANDLERS = {
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
     SERVICE_TELLDUSLIVE: ('tellduslive', None),
-    SERVICE_HUE: ('hue', None),
     SERVICE_DECONZ: ('deconz', None),
     SERVICE_DAIKIN: ('daikin', None),
+    SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
@@ -84,8 +89,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Start a discovery service."""
     from netdisco.discovery import NetworkDiscovery
 
@@ -99,11 +103,24 @@ def async_setup(hass, config):
     # Platforms ignore by config
     ignored_platforms = config[DOMAIN][CONF_IGNORE]
 
-    @asyncio.coroutine
-    def new_service_found(service, info):
+    async def new_service_found(service, info):
         """Handle a new service if one is found."""
         if service in ignored_platforms:
             logger.info("Ignoring service: %s %s", service, info)
+            return
+
+        discovery_hash = json.dumps([service, info], sort_keys=True)
+        if discovery_hash in already_discovered:
+            return
+
+        already_discovered.add(discovery_hash)
+
+        if service in CONFIG_ENTRY_HANDLERS:
+            await hass.config_entries.flow.async_init(
+                CONFIG_ENTRY_HANDLERS[service],
+                source=config_entries.SOURCE_DISCOVERY,
+                data=info
+            )
             return
 
         comp_plat = SERVICE_HANDLERS.get(service)
@@ -113,26 +130,19 @@ def async_setup(hass, config):
             logger.info("Unknown service discovered: %s %s", service, info)
             return
 
-        discovery_hash = json.dumps([service, info], sort_keys=True)
-        if discovery_hash in already_discovered:
-            return
-
-        already_discovered.add(discovery_hash)
-
         logger.info("Found new service: %s %s", service, info)
 
         component, platform = comp_plat
 
         if platform is None:
-            yield from async_discover(hass, service, info, component, config)
+            await async_discover(hass, service, info, component, config)
         else:
-            yield from async_load_platform(
+            await async_load_platform(
                 hass, component, platform, info, config)
 
-    @asyncio.coroutine
-    def scan_devices(now):
+    async def scan_devices(now):
         """Scan for devices."""
-        results = yield from hass.async_add_job(_discover, netdisco)
+        results = await hass.async_add_job(_discover, netdisco)
 
         for result in results:
             hass.async_add_job(new_service_found(*result))

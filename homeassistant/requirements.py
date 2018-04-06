@@ -39,6 +39,6 @@ def pip_kwargs(config_dir):
     kwargs = {
         'constraints': os.path.join(os.path.dirname(__file__), CONSTRAINT_FILE)
     }
-    if not pkg_util.running_under_virtualenv():
+    if not pkg_util.is_virtual_env():
         kwargs['target'] = os.path.join(config_dir, 'deps')
     return kwargs

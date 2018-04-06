@@ -19,8 +19,8 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, SUPPORT_SHUFFLE_SET,
     MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO, MEDIA_TYPE_CHANNEL, MEDIA_TYPE_PLAYLIST,
-    MEDIA_PLAYER_SCHEMA, DOMAIN, SUPPORT_TURN_ON)
+    MEDIA_TYPE_MOVIE, MEDIA_TYPE_VIDEO, MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN, SUPPORT_TURN_ON)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
     CONF_PORT, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
@@ -31,7 +31,7 @@ from homeassistant.helpers import script, config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.util.yaml import dump
 
-REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
+REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,12 +67,14 @@ MEDIA_TYPES = {
     'video': MEDIA_TYPE_VIDEO,
     'set': MEDIA_TYPE_PLAYLIST,
     'musicvideo': MEDIA_TYPE_VIDEO,
-    'movie': MEDIA_TYPE_VIDEO,
+    'movie': MEDIA_TYPE_MOVIE,
     'tvshow': MEDIA_TYPE_TVSHOW,
     'season': MEDIA_TYPE_TVSHOW,
     'episode': MEDIA_TYPE_TVSHOW,
     # Type 'channel' is used for radio or tv streams from pvr
     'channel': MEDIA_TYPE_CHANNEL,
+    # Type 'audio' is used for audio media, that Kodi couldn't scroblle
+    'audio': MEDIA_TYPE_MUSIC,
 }
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -480,7 +482,12 @@ class KodiDevice(MediaPlayerDevice):
 
     @property
     def media_content_type(self):
-        """Content type of current playing media."""
+        """Content type of current playing media.
+
+        If the media type cannot be detected, the player type is used.
+        """
+        if MEDIA_TYPES.get(self._item.get('type')) is None and self._players:
+            return MEDIA_TYPES.get(self._players[0]['type'])
         return MEDIA_TYPES.get(self._item.get('type'))
 
     @property

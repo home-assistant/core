@@ -7,7 +7,6 @@ import sys
 import threading
 from urllib.parse import urlparse
 
-from pip.locations import running_under_virtualenv
 from typing import Optional
 
 import pkg_resources
@@ -15,6 +14,13 @@ import pkg_resources
 _LOGGER = logging.getLogger(__name__)
 
 INSTALL_LOCK = threading.Lock()
+
+
+def is_virtual_env():
+    """Return if we run in a virtual environtment."""
+    # Check supports venv && virtualenv
+    return (getattr(sys, 'base_prefix', sys.prefix) != sys.prefix or
+            hasattr(sys, 'real_prefix'))
 
 
 def install_package(package: str, upgrade: bool = True,
@@ -37,7 +43,7 @@ def install_package(package: str, upgrade: bool = True,
         if constraints is not None:
             args += ['--constraint', constraints]
         if target:
-            assert not running_under_virtualenv()
+            assert not is_virtual_env()
             # This only works if not running in venv
             args += ['--user']
             env['PYTHONUSERBASE'] = os.path.abspath(target)

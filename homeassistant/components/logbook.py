@@ -139,9 +139,12 @@ class LogbookView(HomeAssistantView):
         end_day = start_day + timedelta(days=1)
         hass = request.app['hass']
 
-        events = yield from hass.async_add_job(
-            _get_events, hass, self.config, start_day, end_day)
-        response = yield from hass.async_add_job(self.json, events)
+        def json_events():
+            """Fetch events and generate JSON."""
+            return self.json(list(
+                _get_events(hass, self.config, start_day, end_day)))
+
+        response = yield from hass.async_add_job(json_events)
         return response
 
 
@@ -282,7 +285,7 @@ def _get_events(hass, config, start_day, end_day):
             .filter((Events.time_fired > start_day)
                     & (Events.time_fired < end_day)) \
             .filter((States.last_updated == States.last_changed)
-                    | (States.last_updated.is_(None)))
+                    | (States.state_id.is_(None)))
         events = execute(query)
     return humanify(_exclude_events(events, config))
 

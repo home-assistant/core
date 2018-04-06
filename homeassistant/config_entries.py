@@ -126,7 +126,8 @@ _LOGGER = logging.getLogger(__name__)
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
-    'config_entry_example'
+    'deconz',
+    'hue',
 ]
 
 SOURCE_USER = 'user'
@@ -383,7 +384,7 @@ class FlowManager:
             handler = HANDLERS.get(domain)
 
             if handler is None:
-                raise self.hass.helpers.UnknownHandler
+                raise UnknownHandler
 
             # Make sure requirements and dependencies of component are resolved
             await async_process_deps_reqs(
@@ -441,7 +442,7 @@ class FlowManager:
                 'Handler returned incorrect type: {}'.format(result['type']))
 
         if result['type'] == RESULT_TYPE_FORM:
-            flow.cur_step = (result.pop('step_id'), result['data_schema'])
+            flow.cur_step = (result['step_id'], result['data_schema'])
             return result
 
         # Abort and Success results both finish the flow
@@ -467,6 +468,7 @@ class ConfigFlowHandler:
     # Set by flow manager
     flow_id = None
     hass = None
+    domain = None
     source = SOURCE_USER
     cur_step = None
 
@@ -474,15 +476,13 @@ class ConfigFlowHandler:
     # VERSION
 
     @callback
-    def async_show_form(self, *, title, step_id, description=None,
-                        data_schema=None, errors=None):
+    def async_show_form(self, *, step_id, data_schema=None, errors=None):
         """Return the definition of a form to gather user input."""
         return {
             'type': RESULT_TYPE_FORM,
             'flow_id': self.flow_id,
-            'title': title,
+            'domain': self.domain,
             'step_id': step_id,
-            'description': description,
             'data_schema': data_schema,
             'errors': errors,
         }
@@ -493,6 +493,7 @@ class ConfigFlowHandler:
         return {
             'type': RESULT_TYPE_CREATE_ENTRY,
             'flow_id': self.flow_id,
+            'domain': self.domain,
             'title': title,
             'data': data,
         }
@@ -503,5 +504,6 @@ class ConfigFlowHandler:
         return {
             'type': RESULT_TYPE_ABORT,
             'flow_id': self.flow_id,
+            'domain': self.domain,
             'reason': reason
         }

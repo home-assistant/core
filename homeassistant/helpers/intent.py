@@ -100,7 +100,8 @@ def async_match_state(hass, name, states=None):
     state = _fuzzymatch(name, states, lambda state: state.name)
 
     if state is None:
-        raise IntentHandleError('Unable to find entity {}'.format(name))
+        raise IntentHandleError(
+            'Unable to find an entity called {}'.format(name))
 
     return state
 

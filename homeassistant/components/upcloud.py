@@ -12,7 +12,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL,
-    STATE_ON, STATE_OFF, STATE_PROBLEM, STATE_UNKNOWN)
+    STATE_ON, STATE_OFF, STATE_PROBLEM)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
@@ -116,6 +117,11 @@ class UpCloudServerEntity(Entity):
         self.data = None
 
     @property
+    def unique_id(self) -> str:
+        """Return unique ID for the entity."""
+        return self.uuid
+
+    @property
     def name(self):
         """Return the name of the component."""
         try:
@@ -129,9 +135,10 @@ class UpCloudServerEntity(Entity):
         async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_UPCLOUD, self._update_callback)
 
+    @callback
     def _update_callback(self):
         """Call update method."""
-        self.schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state(True)
 
     @property
     def icon(self):
@@ -142,9 +149,9 @@ class UpCloudServerEntity(Entity):
     def state(self):
         """Return state of the server."""
         try:
-            return STATE_MAP.get(self.data.state, STATE_UNKNOWN)
+            return STATE_MAP.get(self.data.state)
         except AttributeError:
-            return STATE_UNKNOWN
+            return None
 
     @property
     def is_on(self):

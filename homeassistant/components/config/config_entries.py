@@ -163,7 +163,7 @@ class ConfigManagerFlowResourceView(HomeAssistantView):
         hass = request.app['hass']
 
         try:
-            hass.config_entries.async_abort(flow_id)
+            hass.config_entries.flow.async_abort(flow_id)
         except config_entries.UnknownFlow:
             return self.json_message('Invalid flow specified', 404)
 

@@ -36,7 +36,3 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class UpCloudBinarySensor(UpCloudServerEntity, BinarySensorDevice):
     """Representation of an UpCloud server sensor."""
-
-    def __init__(self, upcloud, uuid):
-        """Initialize a new UpCloud sensor."""
-        UpCloudServerEntity.__init__(self, upcloud, uuid)

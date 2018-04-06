@@ -21,17 +21,17 @@ SENSOR_TYPES = {
     'active_power':
         ['Active Power', 'mdi:power-plug', 'local', 'W', 'active_power'],
     'current':
-        ['Current', 'mdi:gauge', 'local', 'Amps', 'current'],
+        ['Current', 'mdi:gauge', 'local', 'A', 'current'],
     'voltage':
         ['Voltage', 'mdi:gauge', 'local', 'V', 'voltage'],
     'active_cosfi':
         ['Power Factor', 'mdi:gauge', 'local', '%', 'active_cosfi'],
     'alwayson_today':
-        ['Always On Today', 'mdi:gauge', 'remote', 'kW', 'alwaysOn'],
+        ['Always On Today', 'mdi:gauge', 'remote', 'kWh', 'alwaysOn'],
     'solar_today':
-        ['Solar Today', 'mdi:white-balance-sunny', 'remote', 'kW', 'solar'],
+        ['Solar Today', 'mdi:white-balance-sunny', 'remote', 'kWh', 'solar'],
     'power_today':
-        ['Power Today', 'mdi:power-plug', 'remote', 'kW', 'consumption'],
+        ['Power Today', 'mdi:power-plug', 'remote', 'kWh', 'consumption'],
     'water_sensor_1':
         ['Water Sensor 1', 'mdi:water', 'water', 'm3', 'value1'],
     'water_sensor_2':
@@ -43,8 +43,7 @@ SENSOR_TYPES = {
         ['Water Sensor Humidity', 'mdi:water-percent', 'water',
          '%', 'humidity'],
     'water_sensor_battery':
-        ['Water Sensor Battery', 'mdi:battery', 'water',
-         '%', 'battery']
+        ['Water Sensor Battery', 'mdi:battery', 'water', '%', 'battery'],
 }
 
 SCAN_INTERVAL = timedelta(seconds=30)

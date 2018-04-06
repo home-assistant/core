@@ -13,14 +13,14 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from homeassistant.const import (
     ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT, MATCH_ALL,
     STATE_UNKNOWN)
-from homeassistant.core import State
+from homeassistant.core import State, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
 from homeassistant.loader import bind_hass, get_component
 from homeassistant.util import convert
 from homeassistant.util import dt as dt_util
 from homeassistant.util import location as loc_util
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
@@ -28,7 +28,7 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?:is_state|is_state_attr|states)"
+    r"(?:(?:states\.|(?:is_state|is_state_attr|state_attr|states)"
     r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
 
@@ -73,7 +73,8 @@ def extract_entities(template, variables=None):
             extraction_final.append(result[0])
 
         if variables and result[1] in variables and \
-           isinstance(variables[result[1]], str):
+           isinstance(variables[result[1]], str) and \
+           valid_entity_id(variables[result[1]]):
             extraction_final.append(variables[result[1]])
 
     if extraction_final:
@@ -181,6 +182,7 @@ class Template(object):
             'distance': template_methods.distance,
             'is_state': self.hass.states.is_state,
             'is_state_attr': template_methods.is_state_attr,
+            'state_attr': template_methods.state_attr,
             'states': AllStates(self.hass),
         })
 
@@ -404,9 +406,15 @@ class TemplateMethods(object):
 
     def is_state_attr(self, entity_id, name, value):
         """Test if a state is a specific attribute."""
+        state_attr = self.state_attr(entity_id, name)
+        return state_attr is not None and state_attr == value
+
+    def state_attr(self, entity_id, name):
+        """Get a specific attribute from a state."""
         state_obj = self._hass.states.get(entity_id)
-        return state_obj is not None and \
-            state_obj.attributes.get(name) == value
+        if state_obj is not None:
+            return state_obj.attributes.get(name)
+        return None
 
     def _resolve_state(self, entity_id_or_state):
         """Return state or entity_id if given."""
@@ -508,6 +516,39 @@ def forgiving_float(value):
         return value
 
 
+def regex_match(value, find='', ignorecase=False):
+    """Match value using regex."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    return bool(re.match(find, value, flags))
+
+
+def regex_replace(value='', find='', replace='', ignorecase=False):
+    """Replace using regex."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    regex = re.compile(find, flags)
+    return regex.sub(replace, value)
+
+
+def regex_search(value, find='', ignorecase=False):
+    """Search using regex."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    return bool(re.search(find, value, flags))
+
+
+def regex_findall_index(value, find='', index=0, ignorecase=False):
+    """Find all matches using regex and then pick specific match index."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    return re.findall(find, value, flags)[index]
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -537,6 +578,10 @@ ENV.filters['is_defined'] = fail_when_undefined
 ENV.filters['max'] = max
 ENV.filters['min'] = min
 ENV.filters['random'] = random_every_time
+ENV.filters['regex_match'] = regex_match
+ENV.filters['regex_replace'] = regex_replace
+ENV.filters['regex_search'] = regex_search
+ENV.filters['regex_findall_index'] = regex_findall_index
 ENV.globals['log'] = logarithm
 ENV.globals['float'] = forgiving_float
 ENV.globals['now'] = dt_util.now
