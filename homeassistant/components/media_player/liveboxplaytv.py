@@ -22,7 +22,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['liveboxplaytv==2.0.2', 'pyteleloisirs==3.3']
+REQUIREMENTS = ['liveboxplaytv==2.0.2', 'pyteleloisirs==3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
