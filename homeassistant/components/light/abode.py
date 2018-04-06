@@ -11,6 +11,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
 import homeassistant.util.color as color_util
+from math import ceil
 
 
 DEPENDENCIES = ['abode']
@@ -52,11 +53,8 @@ class AbodeLight(AbodeDevice, Light):
 
         if ATTR_BRIGHTNESS in kwargs and self._device.is_dimmable:
             # Convert HASS brightness (0-255) to Abode brightness (0-100)
-            brightness = int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
             # If 100 is sent to Abode, 99 is returned causing an error
-            if brightness == 100:
-                brightness = 99
-            self._device.set_level(brightness)
+            self._device.set_level(ceil(kwargs[ATTR_BRIGHTNESS] * 99 / 255))
         else:
             self._device.switch_on()
 
@@ -74,7 +72,8 @@ class AbodeLight(AbodeDevice, Light):
         """Return the brightness of the light."""
         if self._device.is_dimmable and self._device.has_brightness:
             # Convert Abode brightness (0-100) to HASS brightness (0-255)
-            return int(self._device.brightness) * 255 / 100
+            # Abode will return 100 during initialization of Abode
+            return ceil(int(self._device.brightness) * 255 / 100)
 
     @property
     def hs_color(self):
