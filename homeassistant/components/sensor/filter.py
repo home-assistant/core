@@ -174,10 +174,10 @@ class SensorFilter(Entity):
 
             # Determine the largest window_size by type
             for filt in self._filters:
-                if isinstance(filt.window_size, int)\
+                if filt.window_unit == WINDOW_SIZE_UNIT_NUMBER_EVENTS\
                         and largest_window_items < filt.window_size:
                     largest_window_items = filt.window_size
-                elif isinstance(filt.window_size, timedelta)\
+                elif filt.window_unit == WINDOW_SIZE_UNIT_TIME\
                         and largest_window_time < filt.window_size:
                     largest_window_time = filt.window_size
 
