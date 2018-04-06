@@ -36,7 +36,6 @@ class Switch(HomeAccessory):
         _LOGGER.debug('%s: Set switch state to %s',
                       self.entity_id, value)
         self.flag_target_state = True
-        self.char_on.set_value(value, should_callback=False)
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         self.hass.services.call(self._domain, service,
                                 {ATTR_ENTITY_ID: self.entity_id})
@@ -50,6 +49,6 @@ class Switch(HomeAccessory):
         if not self.flag_target_state:
             _LOGGER.debug('%s: Set current state to %s',
                           self.entity_id, current_state)
-            self.char_on.set_value(current_state, should_callback=False)
+            self.char_on.set_value(current_state)
 
         self.flag_target_state = False

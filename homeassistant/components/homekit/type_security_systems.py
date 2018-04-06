@@ -53,7 +53,6 @@ class SecuritySystem(HomeAccessory):
         _LOGGER.debug('%s: Set security state to %d',
                       self.entity_id, value)
         self.flag_target_state = True
-        self.char_target_state.set_value(value, should_callback=False)
         hass_value = HOMEKIT_TO_HASS[value]
         service = STATE_TO_SERVICE[hass_value]
 
@@ -72,13 +71,11 @@ class SecuritySystem(HomeAccessory):
             return
 
         current_security_state = HASS_TO_HOMEKIT[hass_state]
-        self.char_current_state.set_value(current_security_state,
-                                          should_callback=False)
+        self.char_current_state.set_value(current_security_state)
         _LOGGER.debug('%s: Updated current state to %s (%d)',
                       self.entity_id, hass_state, current_security_state)
 
         if not self.flag_target_state:
-            self.char_target_state.set_value(current_security_state,
-                                             should_callback=False)
+            self.char_target_state.set_value(current_security_state)
         if self.char_target_state.value == self.char_current_state.value:
             self.flag_target_state = False

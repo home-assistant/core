@@ -44,7 +44,7 @@ class TemperatureSensor(HomeAccessory):
         temperature = convert_to_float(new_state.state)
         if temperature:
             temperature = temperature_to_homekit(temperature, unit)
-            self.char_temp.set_value(temperature, should_callback=False)
+            self.char_temp.set_value(temperature)
             _LOGGER.debug('%s: Current temperature set to %d°C',
                           self.entity_id, temperature)
 
@@ -72,6 +72,6 @@ class HumiditySensor(HomeAccessory):
 
         humidity = convert_to_float(new_state.state)
         if humidity:
-            self.char_humidity.set_value(humidity, should_callback=False)
+            self.char_humidity.set_value(humidity)
             _LOGGER.debug('%s: Percent set to %d%%',
                           self.entity_id, humidity)
