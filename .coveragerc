@@ -352,6 +352,7 @@ omit =
     homeassistant/components/climate/touchline.py
     homeassistant/components/climate/venstar.py
     homeassistant/components/cover/garadget.py
+    homeassistant/components/cover/gogogate2.py
     homeassistant/components/cover/homematic.py
     homeassistant/components/cover/knx.py
     homeassistant/components/cover/myq.py
