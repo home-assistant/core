@@ -276,7 +276,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch('soco.alarms.Alarm')
     @mock.patch('socket.create_connection', side_effect=socket.error())
-    def test_update_alarm(self, soco_mock, alarm_mock, *args):
+    def test_set_alarm(self, soco_mock, alarm_mock, *args):
         """Ensuring soco methods called for sonos_set_sleep_timer service."""
         sonos.setup_platform(self.hass, {}, add_devices_factory(self.hass), {
             'host': '192.0.2.1'
@@ -293,9 +293,9 @@ class TestSonosMediaPlayer(unittest.TestCase):
                 'include_linked_zones': True,
                 'volume': 0.30,
             }
-            device.update_alarm(alarm_id=2)
+            device.set_alarm(alarm_id=2)
             alarm1.save.assert_not_called()
-            device.update_alarm(alarm_id=1, **attrs)
+            device.set_alarm(alarm_id=1, **attrs)
             self.assertEqual(alarm1.enabled, attrs['enabled'])
             self.assertEqual(alarm1.start_time, attrs['time'])
             self.assertEqual(alarm1.include_linked_zones,

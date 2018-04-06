@@ -16,15 +16,18 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG = {}
 
 
-def test_get_accessory_invalid(caplog):
+def test_get_accessory_invalid_aid(caplog):
     """Test with unsupported component."""
-    assert get_accessory(None, State('test.unsupported', 'on'), 2, None) \
-        is None
-    assert caplog.records[1].levelname == 'WARNING'
+    assert get_accessory(None, State('light.demo', 'on'),
+                         aid=None, config=None) is None
+    assert caplog.records[0].levelname == 'WARNING'
+    assert 'invalid aid' in caplog.records[0].msg
 
-    assert get_accessory(None, State('test.test', 'on'), None, None) \
+
+def test_not_supported():
+    """Test if none is returned if entity isn't supported."""
+    assert get_accessory(None, State('demo.demo', 'on'), aid=2, config=None) \
         is None
-    assert caplog.records[3].levelname == 'WARNING'
 
 
 class TestGetAccessories(unittest.TestCase):
