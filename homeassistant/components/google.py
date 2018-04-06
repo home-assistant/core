@@ -77,7 +77,7 @@ _SINGLE_CALSEARCH_CONFIG = vol.Schema({
     vol.Optional(CONF_TRACK): cv.boolean,
     vol.Optional(CONF_SEARCH): cv.string,
     vol.Optional(CONF_OFFSET): cv.string,
-    vol.Required(CONF_IGNORE_AVAILABILITY, default=True): cv.boolean,
+    vol.Optional(CONF_IGNORE_AVAILABILITY, default=True): cv.boolean,
 })
 
 DEVICE_SCHEMA = vol.Schema({
