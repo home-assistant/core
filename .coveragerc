@@ -406,6 +406,7 @@ omit =
     homeassistant/components/image_processing/seven_segments.py
     homeassistant/components/keyboard_remote.py
     homeassistant/components/keyboard.py
+    homeassistant/components/light/aurora.py
     homeassistant/components/light/avion.py
     homeassistant/components/light/blinksticklight.py
     homeassistant/components/light/blinkt.py
