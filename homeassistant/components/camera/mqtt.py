@@ -12,20 +12,19 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
-from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.const import CONF_NAME
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-
+CONF_TOPIC = 'topic'
 DEFAULT_NAME = 'MQTT Camera'
 
 DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
@@ -38,7 +37,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     async_add_devices([MqttCamera(
         config.get(CONF_NAME),
-        config.get(CONF_STATE_TOPIC)
+        config.get(CONF_TOPIC)
     )])
 
 
