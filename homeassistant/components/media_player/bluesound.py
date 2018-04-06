@@ -202,6 +202,9 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self.port is None:
             self.port = DEFAULT_PORT
 
+    class TimeoutException(Exception):
+        pass
+
     @staticmethod
     def _try_get_index(string, search_string):
         """Get the index."""
@@ -258,7 +261,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             while True:
                 await self.async_update_status()
 
-        except (asyncio.TimeoutError, ClientError):
+        except (asyncio.TimeoutError, ClientError, BluesoundPlayer.TimeoutException):
             _LOGGER.info("Node %s is offline, retrying later", self._name)
             await asyncio.sleep(
                 NODE_OFFLINE_CHECK_TIMEOUT, loop=self._hass.loop)
@@ -321,6 +324,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         _LOGGER.debug("Calling URL: %s", url)
         response = None
+
         try:
             websession = async_get_clientsession(self._hass)
             with async_timeout.timeout(10, loop=self._hass.loop):
@@ -332,9 +336,10 @@ class BluesoundPlayer(MediaPlayerDevice):
                     data = None
                 else:
                     data = xmltodict.parse(result)
+            elif response.status == 595:
+                _LOGGER.info("Status 595 returned, treating as timeout")
+                raise BluesoundPlayer.TimeoutException()
             else:
-                if response.status == 595:
-                    raise asyncio.TimeoutError("Response returned 595, timeout")
                 _LOGGER.error("Error %s on %s", response.status, url)
                 return None
 
@@ -371,10 +376,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     url,
                     headers={CONNECTION: KEEP_ALIVE})
 
-            if response.status != 200:
-                _LOGGER.error("Error %s on %s. Trying one more time.",
-                              response.status, url)
-            else:
+            if response.status == 200:
                 result = await response.text()
                 self._is_online = True
                 self._last_status_update = dt_util.utcnow()
@@ -400,6 +402,12 @@ class BluesoundPlayer(MediaPlayerDevice):
                     await self.force_update_sync_status()
 
                 self.async_schedule_update_ha_state()
+            elif response.status == 595:
+                _LOGGER.info("Status 595 returned, treating as timeout")
+                raise BluesoundPlayer.TimeoutException()
+            else:
+                _LOGGER.error("Error %s on %s. Trying one more time.",
+                              response.status, url)
 
         except (asyncio.TimeoutError, ClientError):
             self._is_online = False
@@ -805,13 +813,13 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     async def async_add_slave(self, slave_device):
         """Add slave to master."""
-        return self.send_bluesound_command('/AddSlave?slave={}&port={}'
+        return await self.send_bluesound_command('/AddSlave?slave={}&port={}'
                                            .format(slave_device.host,
                                                    slave_device.port))
 
     async def async_remove_slave(self, slave_device):
         """Remove slave to master."""
-        return self.send_bluesound_command('/RemoveSlave?slave={}&port={}'
+        return await self.send_bluesound_command('/RemoveSlave?slave={}&port={}'
                                            .format(slave_device.host,
                                                    slave_device.port))
 
@@ -833,7 +841,7 @@ class BluesoundPlayer(MediaPlayerDevice):
 
     async def async_set_shuffle(self, shuffle):
         """Enable or disable shuffle mode."""
-        return self.send_bluesound_command('/Shuffle?state={}'
+        return await self.send_bluesound_command('/Shuffle?state={}'
                                            .format('1' if shuffle else '0'))
 
     async def async_select_source(self, source):
@@ -858,14 +866,14 @@ class BluesoundPlayer(MediaPlayerDevice):
         if 'is_raw_url' in selected_source and selected_source['is_raw_url']:
             url = selected_source['url']
 
-        return self.send_bluesound_command(url)
+        return await self.send_bluesound_command(url)
 
     async def async_clear_playlist(self):
         """Clear players playlist."""
         if self.is_grouped and not self.is_master:
             return
 
-        return self.send_bluesound_command('Clear')
+        return await self.send_bluesound_command('Clear')
 
     async def async_media_next_track(self):
         """Send media_next command to media player."""
@@ -879,7 +887,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                         action['@name'] == 'skip'):
                     cmd = action['@url']
 
-        return self.send_bluesound_command(cmd)
+        return await self.send_bluesound_command(cmd)
 
     async def async_media_previous_track(self):
         """Send media_previous command to media player."""
@@ -893,35 +901,35 @@ class BluesoundPlayer(MediaPlayerDevice):
                         action['@name'] == 'back'):
                     cmd = action['@url']
 
-        return self.send_bluesound_command(cmd)
+        return await self.send_bluesound_command(cmd)
 
     async def async_media_play(self):
         """Send media_play command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
-        return self.send_bluesound_command('Play')
+        return await self.send_bluesound_command('Play')
 
     async def async_media_pause(self):
         """Send media_pause command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
-        return self.send_bluesound_command('Pause')
+        return await self.send_bluesound_command('Pause')
 
     async def async_media_stop(self):
         """Send stop command."""
         if self.is_grouped and not self.is_master:
             return
 
-        return self.send_bluesound_command('Pause')
+        return await self.send_bluesound_command('Pause')
 
     async def async_media_seek(self, position):
         """Send media_seek command to media player."""
         if self.is_grouped and not self.is_master:
             return
 
-        return self.send_bluesound_command('Play?seek=' + str(float(position)))
+        return await self.send_bluesound_command('Play?seek=' + str(float(position)))
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """
@@ -935,9 +943,9 @@ class BluesoundPlayer(MediaPlayerDevice):
         url = 'Play?url={}'.format(media_id)
 
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
-            return self.send_bluesound_command(url)
+            return await self.send_bluesound_command(url)
 
-        return self.send_bluesound_command(url)
+        return await self.send_bluesound_command(url)
 
     async def async_volume_up(self):
         """Volume up the media player."""
@@ -959,7 +967,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             volume = 0
         elif volume > 1:
             volume = 1
-        return self.send_bluesound_command(
+        return await self.send_bluesound_command(
             'Volume?level=' + str(float(volume) * 100))
 
     async def async_mute_volume(self, mute):
@@ -968,7 +976,7 @@ class BluesoundPlayer(MediaPlayerDevice):
             volume = self.volume_level
             if volume > 0:
                 self._lastvol = volume
-            return self.send_bluesound_command('Volume?level=0')
+            return await self.send_bluesound_command('Volume?level=0')
         else:
-            return self.send_bluesound_command(
+            return await self.send_bluesound_command(
                 'Volume?level=' + str(float(self._lastvol) * 100))
