@@ -917,7 +917,7 @@ pystride==0.1.7
 pysyncthru==0.3.1
 
 # homeassistant.components.media_player.liveboxplaytv
-pyteleloisirs==3.3
+pyteleloisirs==3.4
 
 # homeassistant.components.sensor.thinkingcleaner
 # homeassistant.components.switch.thinkingcleaner
