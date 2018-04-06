@@ -202,7 +202,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         if self.port is None:
             self.port = DEFAULT_PORT
 
-    class TimeoutException(Exception):
+    class _TimeoutException(Exception):
         pass
 
     @staticmethod
@@ -262,7 +262,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                 await self.async_update_status()
 
         except (asyncio.TimeoutError, ClientError,
-                BluesoundPlayer.TimeoutException):
+                BluesoundPlayer._TimeoutException):
             _LOGGER.info("Node %s is offline, retrying later", self._name)
             await asyncio.sleep(
                 NODE_OFFLINE_CHECK_TIMEOUT, loop=self._hass.loop)
@@ -339,7 +339,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                     data = xmltodict.parse(result)
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
-                raise BluesoundPlayer.TimeoutException()
+                raise BluesoundPlayer._TimeoutException()
             else:
                 _LOGGER.error("Error %s on %s", response.status, url)
                 return None
@@ -405,7 +405,7 @@ class BluesoundPlayer(MediaPlayerDevice):
                 self.async_schedule_update_ha_state()
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
-                raise BluesoundPlayer.TimeoutException()
+                raise BluesoundPlayer._TimeoutException()
             else:
                 _LOGGER.error("Error %s on %s. Trying one more time.",
                               response.status, url)
