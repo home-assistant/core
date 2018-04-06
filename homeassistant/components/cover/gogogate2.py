@@ -8,10 +8,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import (
+    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED, STATE_UNKNOWN,
-    CONF_IP_ADDRESS, CONF_NAME, SUPPORT_OPEN, SUPPORT_CLOSE)
+    CONF_IP_ADDRESS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pygogogate2==0.0.3']
