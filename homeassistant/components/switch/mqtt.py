@@ -144,6 +144,7 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
         """Return a unique ID."""
         return self._unique_id
 
+    @property
     def icon(self):
         """Return the icon."""
         return self._icon
