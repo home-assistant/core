@@ -9,11 +9,12 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_NAME, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
+from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,41 +42,48 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the available OctoPrint sensors."""
-    octoprint_api = hass.data[DOMAIN]["api"]
     name = config.get(CONF_NAME)
-    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
-    tools = octoprint_api.get_tools()
+    if name in hass.data[DOMAIN]:
+        if "api" in hass.data[DOMAIN][name]:
+            _LOGGER.debug("Getting Octoprint sensor %s", name)
+            octoprint_api = hass.data[DOMAIN][name]["api"]
+            monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+            tools = octoprint_api.get_tools()
 
-    if "Temperatures" in monitored_conditions:
-        if not tools:
-            hass.components.persistent_notification.create(
-                'Your printer appears to be offline.<br />'
-                'If you do not want to have your printer on <br />'
-                ' at all times, and you would like to monitor <br /> '
-                'temperatures, please add <br />'
-                'bed and/or number&#95of&#95tools to your config <br />'
-                'and restart.',
-                title=NOTIFICATION_TITLE,
-                notification_id=NOTIFICATION_ID)
+            if "Temperatures" in monitored_conditions:
+                if not tools:
+                    hass.components.persistent_notification.create(
+                        'Your printer appears to be offline.<br />'
+                        'If you do not want to have your printer on <br />'
+                        ' at all times, and you would like to monitor <br /> '
+                        'temperatures, please add <br />'
+                        'bed and/or number&#95of&#95tools to your config <br />'
+                        'and restart.',
+                        title=NOTIFICATION_TITLE,
+                        notification_id=NOTIFICATION_ID)
 
-    devices = []
-    types = ["actual", "target"]
-    for octo_type in monitored_conditions:
-        if octo_type == "Temperatures":
-            for tool in tools:
-                for temp_type in types:
+            devices = []
+            types = ["actual", "target"]
+            for octo_type in monitored_conditions:
+                if octo_type == "Temperatures":
+                    for tool in tools:
+                        for temp_type in types:
+                            new_sensor = OctoPrintSensor(
+                                octoprint_api, temp_type, temp_type, name,
+                                SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
+                                SENSOR_TYPES[octo_type][1], tool)
+                            devices.append(new_sensor)
+                else:
                     new_sensor = OctoPrintSensor(
-                        octoprint_api, temp_type, temp_type, name,
-                        SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
-                        SENSOR_TYPES[octo_type][1], tool)
+                        octoprint_api, octo_type, SENSOR_TYPES[octo_type][2],
+                        name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
+                        SENSOR_TYPES[octo_type][1])
                     devices.append(new_sensor)
+            add_devices(devices, True)
         else:
-            new_sensor = OctoPrintSensor(
-                octoprint_api, octo_type, SENSOR_TYPES[octo_type][2],
-                name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
-                SENSOR_TYPES[octo_type][1])
-            devices.append(new_sensor)
-    add_devices(devices, True)
+            _LOGGER.error("No Octoprint API exists for %s", name)
+    else:
+        _LOGGER.error("No Octoprint %s exists", name)
 
 
 class OctoPrintSensor(Entity):
@@ -84,12 +92,16 @@ class OctoPrintSensor(Entity):
     def __init__(self, api, condition, sensor_type, sensor_name, unit,
                  endpoint, group, tool=None):
         """Initialize a new OctoPrint sensor."""
-        self.sensor_name = sensor_name
         if tool is None:
             self._name = '{} {}'.format(sensor_name, condition)
+            self.entity_id = ENTITY_ID_FORMAT.format(slugify(self._name))
+            self.friendly_name = condition
         else:
-            self._name = '{} {} {} {}'.format(
-                sensor_name, condition, tool, 'temp')
+            self._name = '{} {} {} {}'.format(sensor_name, condition, tool, 'temp')
+            self.entity_id = ENTITY_ID_FORMAT.format(slugify(self._name))
+            self.friendly_name = '{} {} {}'.format(condition, tool, 'temp')
+
+        self.sensor_name = sensor_name
         self.sensor_type = sensor_type
         self.api = api
         self._state = None
@@ -97,12 +109,15 @@ class OctoPrintSensor(Entity):
         self.api_endpoint = endpoint
         self.api_group = group
         self.api_tool = tool
-        _LOGGER.debug("Created OctoPrint sensor %r", self)
+        _LOGGER.info("Created OctoPrint sensor %r", self)
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        if self.friendly_name:
+            return self.friendly_name.title()
+        else:
+            return self._name
 
     @property
     def state(self):
