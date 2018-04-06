@@ -7,6 +7,7 @@ https://home-assistant.io/components/light.flux_led/
 import logging
 import socket
 import random
+import time
 
 import voluptuous as vol
 
@@ -23,6 +24,10 @@ REQUIREMENTS = ['flux_led==0.21']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_AUTOMATIC_ADD = 'automatic_add'
+
+CONF_DELAY_AFTER_STATE_CHANGE = 'delay_after_state_change'
+DEFAULT_DELAY_AFTER_STATE_CHANGE = False
+
 ATTR_MODE = 'mode'
 
 DOMAIN = 'flux_led'
@@ -87,6 +92,8 @@ DEVICE_SCHEMA = vol.Schema({
         vol.All(cv.string, vol.In([MODE_RGBW, MODE_RGB])),
     vol.Optional(CONF_PROTOCOL):
         vol.All(cv.string, vol.In(['ledenet'])),
+    vol.Optional(CONF_DELAY_AFTER_STATE_CHANGE,
+                 default=DEFAULT_DELAY_AFTER_STATE_CHANGE): cv.boolean,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -106,6 +113,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device['name'] = device_config[CONF_NAME]
         device['ipaddr'] = ipaddr
         device[CONF_PROTOCOL] = device_config.get(CONF_PROTOCOL)
+        device[CONF_DELAY_AFTER_STATE_CHANGE] = device_config.get(CONF_DELAY_AFTER_STATE_CHANGE)
         device[ATTR_MODE] = device_config[ATTR_MODE]
         light = FluxLight(device)
         lights.append(light)
@@ -142,6 +150,7 @@ class FluxLight(Light):
         self._mode = device[ATTR_MODE]
         self._bulb = None
         self._error_reported = False
+        self._delay_after_state_change = device[CONF_DELAY_AFTER_STATE_CHANGE]
 
     def _connect(self):
         """Connect to Flux light."""
@@ -200,8 +209,6 @@ class FluxLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
-        if not self.is_on:
-            self._bulb.turnOn()
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
@@ -230,9 +237,33 @@ class FluxLight(Light):
         elif effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
 
+        if not self.is_on:
+            self._bulb.turnOn()
+            
+        self._delay_for_fade()
+
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
         self._bulb.turnOff()
+        self._delay_for_fade()
+
+    def _delay_for_fade(self):
+        # Some of these bulbs use a fade effect when turning on and off.
+        # The fade time to/from full brightness takes about 1 second, and 
+        # seems to be proportional for a lesser brightness.  
+        # 
+        # If another request comes in too fast after this, it can ruin the fade 
+        # effect,  or result in the actual bulb brightness being too dim (even 
+        # though the register is correct). So, we want to have a short delay 
+        # here based on the current brightness level.
+
+        if self._delay_after_state_change:
+            fade_delay = 1 # second
+            if self._bulb.brightness is not None:
+                 brightness_delay_factor = self._bulb.brightness/255
+            else:
+                 brightness_delay_factor = 1
+            time.sleep(fade_delay * brightness_delay_factor)
 
     def update(self):
         """Synchronize state with bulb."""
