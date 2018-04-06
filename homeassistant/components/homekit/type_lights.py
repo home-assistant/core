@@ -7,7 +7,7 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service
+from .accessories import HomeAccessory, add_preload_service, debounce
 from .const import (
     CATEGORY_LIGHT, SERV_LIGHTBULB, CHAR_COLOR_TEMPERATURE,
     CHAR_BRIGHTNESS, CHAR_HUE, CHAR_ON, CHAR_SATURATION)
@@ -93,6 +93,7 @@ class Light(HomeAccessory):
         elif value == 0:
             self.hass.components.light.turn_off(self.entity_id)
 
+    @debounce
     def set_brightness(self, value):
         """Set brightness if call came from HomeKit."""
         _LOGGER.debug('%s: Set brightness to %d', self.entity_id, value)

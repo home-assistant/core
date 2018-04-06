@@ -2,7 +2,6 @@
 import unittest
 
 from homeassistant.core import callback
-from homeassistant.components.homekit.type_lights import Light
 from homeassistant.components.light import (
     DOMAIN, ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP,
     ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR)
@@ -12,10 +11,25 @@ from homeassistant.const import (
     SERVICE_TURN_OFF, STATE_ON, STATE_OFF, STATE_UNKNOWN)
 
 from tests.common import get_test_home_assistant
+from tests.components.homekit.test_accessories import patch_debounce
 
 
 class TestHomekitLights(unittest.TestCase):
     """Test class for all accessory types regarding lights."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Setup Light class import and debounce patcher."""
+        cls.patcher = patch_debounce()
+        cls.patcher.start()
+        _import = __import__('homeassistant.components.homekit.type_lights',
+                             fromlist=['Light'])
+        cls.light_cls = _import.Light
+
+    @classmethod
+    def tearDownClass(cls):
+        """Stop debounce patcher."""
+        cls.patcher.stop()
 
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -38,7 +52,7 @@ class TestHomekitLights(unittest.TestCase):
         entity_id = 'light.demo'
         self.hass.states.set(entity_id, STATE_ON,
                              {ATTR_SUPPORTED_FEATURES: 0})
-        acc = Light(self.hass, entity_id, 'Light', aid=2)
+        acc = self.light_cls(self.hass, entity_id, 'Light', aid=2)
         self.assertEqual(acc.aid, 2)
         self.assertEqual(acc.category, 5)  # Lightbulb
         self.assertEqual(acc.char_on.value, 0)
@@ -82,7 +96,7 @@ class TestHomekitLights(unittest.TestCase):
         entity_id = 'light.demo'
         self.hass.states.set(entity_id, STATE_ON, {
             ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS: 255})
-        acc = Light(self.hass, entity_id, 'Light', aid=2)
+        acc = self.light_cls(self.hass, entity_id, 'Light', aid=2)
         self.assertEqual(acc.char_brightness.value, 0)
 
         acc.run()
@@ -124,7 +138,7 @@ class TestHomekitLights(unittest.TestCase):
         self.hass.states.set(entity_id, STATE_ON, {
             ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR_TEMP,
             ATTR_COLOR_TEMP: 190})
-        acc = Light(self.hass, entity_id, 'Light', aid=2)
+        acc = self.light_cls(self.hass, entity_id, 'Light', aid=2)
         self.assertEqual(acc.char_color_temperature.value, 153)
 
         acc.run()
@@ -146,7 +160,7 @@ class TestHomekitLights(unittest.TestCase):
         self.hass.states.set(entity_id, STATE_ON, {
             ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR,
             ATTR_HS_COLOR: (260, 90)})
-        acc = Light(self.hass, entity_id, 'Light', aid=2)
+        acc = self.light_cls(self.hass, entity_id, 'Light', aid=2)
         self.assertEqual(acc.char_hue.value, 0)
         self.assertEqual(acc.char_saturation.value, 75)
 

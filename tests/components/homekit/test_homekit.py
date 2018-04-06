@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PORT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 from tests.common import get_test_home_assistant
+from tests.components.homekit.test_accessories import patch_debounce
 
 IP_ADDRESS = '127.0.0.1'
 PATH_HOMEKIT = 'homeassistant.components.homekit'
@@ -21,6 +22,17 @@ PATH_HOMEKIT = 'homeassistant.components.homekit'
 
 class TestHomeKit(unittest.TestCase):
     """Test setup of HomeKit component and HomeKit class."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Setup debounce patcher."""
+        cls.patcher = patch_debounce()
+        cls.patcher.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        """Stop debounce patcher."""
+        cls.patcher.stop()
 
     def setUp(self):
         """Setup things to be run when tests are started."""

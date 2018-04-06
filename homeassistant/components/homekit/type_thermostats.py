@@ -10,7 +10,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service
+from .accessories import HomeAccessory, add_preload_service, debounce
 from .const import (
     CATEGORY_THERMOSTAT, SERV_THERMOSTAT, CHAR_CURRENT_HEATING_COOLING,
     CHAR_TARGET_HEATING_COOLING, CHAR_CURRENT_TEMPERATURE,
@@ -104,6 +104,7 @@ class Thermostat(HomeAccessory):
             self.hass.components.climate.set_operation_mode(
                 operation_mode=hass_value, entity_id=self.entity_id)
 
+    @debounce
     def set_cooling_threshold(self, value):
         """Set cooling threshold temp to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set cooling threshold temperature to %.2f°C',
@@ -116,6 +117,7 @@ class Thermostat(HomeAccessory):
             entity_id=self.entity_id, target_temp_high=value,
             target_temp_low=low)
 
+    @debounce
     def set_heating_threshold(self, value):
         """Set heating threshold temp to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set heating threshold temperature to %.2f°C',
@@ -129,6 +131,7 @@ class Thermostat(HomeAccessory):
             entity_id=self.entity_id, target_temp_high=high,
             target_temp_low=value)
 
+    @debounce
     def set_target_temperature(self, value):
         """Set target temperature to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set target temperature to %.2f°C',
