@@ -14,7 +14,7 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    DOMAIN, PLATFORM_SCHEMA, SwitchDevice)
+    DOMAIN, PLATFORM_SCHEMA, SwitchDevice, ENTITY_ID_FORMAT)
 from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_FRIENDLY_NAME, CONF_HOST, CONF_MAC,
     CONF_SWITCHES, CONF_TIMEOUT, CONF_TYPE)
@@ -150,6 +150,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for object_id, device_config in devices.items():
             switches.append(
                 BroadlinkRMSwitch(
+                    object_id,
                     device_config.get(CONF_FRIENDLY_NAME, object_id),
                     broadlink_device,
                     device_config.get(CONF_COMMAND_ON),
@@ -184,8 +185,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class BroadlinkRMSwitch(SwitchDevice):
     """Representation of an Broadlink switch."""
 
-    def __init__(self, friendly_name, device, command_on, command_off):
+    def __init__(self, name, friendly_name, device, command_on, command_off):
         """Initialize the switch."""
+        self.entity_id = ENTITY_ID_FORMAT.format(name)
         self._name = friendly_name
         self._state = False
         self._command_on = b64decode(command_on) if command_on else None
