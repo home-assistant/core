@@ -29,8 +29,8 @@ def debounce(func):
         """Callback listener called from call_later."""
         # pylint: disable=unsubscriptable-object
         nonlocal lastargs, remove_listener
-        hass = lastargs[0]
-        hass.async_add_job(func, *lastargs[1:])
+        hass = lastargs['hass']
+        hass.async_add_job(func, *lastargs['args'])
         lastargs = remove_listener = None
 
     @wraps(func)
@@ -45,7 +45,7 @@ def debounce(func):
         if remove_listener:
             remove_listener()
             lastargs = remove_listener = None
-        lastargs = (hass, *args)
+        lastargs = {'hass': hass, 'args': [*args]}
         remove_listener = track_point_in_utc_time(
             hass, call_later_listener,
             dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT))
