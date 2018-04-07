@@ -52,7 +52,7 @@ async def test_snips_config_feedback(hass, mqtt_mock):
     assert result
     await hass.async_block_till_done()
 
-    assert len(events) == 1 
+    assert len(events) == 1
     assert events[0].data['domain'] == 'mqtt'
     assert events[0].data['service'] == 'publish'
     topic = events[0].data['service_data']['topic']
