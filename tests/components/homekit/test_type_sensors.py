@@ -1,8 +1,8 @@
 """Test different accessory types: Sensors."""
 import unittest
 
-from homeassistant.components.homekit.const import (PROP_CELSIUS,
-    SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE)
+from homeassistant.components.homekit.const import (
+    PROP_CELSIUS, SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE)
 from homeassistant.components.homekit.type_sensors import (
     TemperatureSensor, HumiditySensor, BinarySensor)
 from homeassistant.const import (
