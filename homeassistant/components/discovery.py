@@ -60,7 +60,6 @@ SERVICE_HANDLERS = {
     SERVICE_DECONZ: ('deconz', None),
     SERVICE_DAIKIN: ('daikin', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
-    SERVICE_HOMEKIT: ('homekit_controller', None),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
@@ -81,13 +80,20 @@ SERVICE_HANDLERS = {
     'songpal': ('media_player', 'songpal'),
 }
 
+OPTIONAL_SERVICE_HANDLERS = {
+    SERVICE_HOMEKIT: ('homekit_controller', None),
+}
+
 CONF_IGNORE = 'ignore'
+CONF_ENABLE = 'enable'
 
 CONFIG_SCHEMA = vol.Schema({
     vol.Required(DOMAIN): vol.Schema({
         vol.Optional(CONF_IGNORE, default=[]):
             vol.All(cv.ensure_list, [
-                vol.In(list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS))])
+                vol.In(list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS))]),
+        vol.Optional(CONF_ENABLE, default=[]):
+            vol.All(cv.ensure_list, [vol.In(OPTIONAL_SERVICE_HANDLERS)])
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -105,6 +111,12 @@ async def async_setup(hass, config):
 
     # Platforms ignore by config
     ignored_platforms = config[DOMAIN][CONF_IGNORE]
+
+    # Optional platforms enabled by config
+    enabled_platforms = config[DOMAIN][CONF_ENABLE]
+
+    for service in enabled_platforms:
+        SERVICE_HANDLERS[service] = OPTIONAL_SERVICE_HANDLERS[service]
 
     async def new_service_found(service, info):
         """Handle a new service if one is found."""
