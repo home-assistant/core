@@ -54,6 +54,7 @@ class VelbusSwitch(SwitchDevice):
         future = self.hass.loop.create_future()
 
         def callback():
+            """Callback when module is loaded."""
             future.set_result(None)
 
         self._module.load(callback)

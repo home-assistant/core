@@ -44,6 +44,7 @@ def async_setup(hass, config):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_velbus)
 
     def callback():
+        """Callback when scan is completed."""
         hass.async_add_job(async_load_platform(hass, 'switch', DOMAIN))
         hass.async_add_job(async_load_platform(hass, 'binary_sensor', DOMAIN))
 
