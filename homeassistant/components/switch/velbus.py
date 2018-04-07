@@ -23,7 +23,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     modules = velbus.get_modules('switch')
     for module in modules:
         for channel in range(1, module.number_of_channels() + 1):
-            async_add_devices([VelbusSwitch(module, channel)], update_before_add=True)
+            switch = VelbusSwitch(module, channel)
+            async_add_devices([switch], update_before_add=True)
     return True
 
 
@@ -48,6 +49,7 @@ class VelbusSwitch(SwitchDevice):
 
     @asyncio.coroutine
     def async_update(self):
+        """Update module status."""
 
         future = self.hass.loop.create_future()
 

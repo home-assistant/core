@@ -15,6 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['velbus']
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up Velbus binary sensors."""
@@ -48,6 +49,7 @@ class VelbusBinarySensor(BinarySensorDevice):
 
     @asyncio.coroutine
     def async_update(self):
+        """Update module status."""
 
         future = self.hass.loop.create_future()
 
