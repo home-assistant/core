@@ -50,10 +50,10 @@ class SigfoxAPI(object):
     """Class for interacting with the SigFox API."""
     def __init__(self, api_login, api_password):
         self._auth = requests.auth.HTTPBasicAuth(api_login, api_password)
-        r = requests.get(API_URL + 'devicetypes', auth=self._auth)
-        if r.status_code != 200:
+        response = requests.get(API_URL + 'devicetypes', auth=self._auth)
+        if response.status_code != 200:
             _LOGGER.warning(
-                "Unable to login to Sigfox API: " + str(r.status_code))
+                "Unable to login to Sigfox API: " + str(response.status_code))
             self._devices = []
             return
         device_types = self.get_device_types()
@@ -62,9 +62,9 @@ class SigfoxAPI(object):
     def get_device_types(self):
         """Get a list of device types."""
         url = API_URL + 'devicetypes'
-        r = requests.get(url, auth=self._auth)
+        response = requests.get(url, auth=self._auth)
         device_types = []
-        for device in json.loads(r.text)['data']:
+        for device in json.loads(response.text)['data']:
             device_types.append(device['id'])
         return device_types
 
@@ -73,8 +73,8 @@ class SigfoxAPI(object):
         devices = []
         for unique_type in device_types:
             url = API_URL + 'devicetypes/' + unique_type + '/devices'
-            r = requests.get(url, auth=self._auth)
-            devices_data = json.loads(r.text)['data']
+            response = requests.get(url, auth=self._auth)
+            devices_data = json.loads(response.text)['data']
             for device in devices_data:
                 devices.append(device['id'])
         return devices
@@ -103,8 +103,8 @@ class SigfoxDevice(Entity):
     def get_last_message(self):
         """Return the last message from a device."""
         url = API_URL + 'devices/' + self._device_id + '/messages?limit=1'
-        r = requests.get(url, auth=self._auth)
-        data = json.loads(r.text)['data'][0]
+        response = requests.get(url, auth=self._auth)
+        data = json.loads(response.text)['data'][0]
         payload = bytes.fromhex(data['data']).decode('utf-8')
         lat = data['rinfos'][0]['lat']
         lng = data['rinfos'][0]['lng']
@@ -114,8 +114,7 @@ class SigfoxDevice(Entity):
                 'lng': lng,
                 'payload': payload,
                 'snr': snr,
-                'time': epoch_to_datetime(epoch_time)
-                }
+                'time': epoch_to_datetime(epoch_time)}
 
     def update(self):
         """Fetch the latest device message."""
