@@ -35,7 +35,7 @@ from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.5']
+REQUIREMENTS = ['sqlalchemy==1.2.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,9 +47,8 @@ ATTR_KEEP_DAYS = 'keep_days'
 ATTR_REPACK = 'repack'
 
 SERVICE_PURGE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_KEEP_DAYS):
-        vol.All(vol.Coerce(int), vol.Range(min=0)),
-    vol.Optional(ATTR_REPACK, default=False): cv.boolean
+    vol.Optional(ATTR_KEEP_DAYS): vol.All(vol.Coerce(int), vol.Range(min=0)),
+    vol.Optional(ATTR_REPACK, default=False): cv.boolean,
 })
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
