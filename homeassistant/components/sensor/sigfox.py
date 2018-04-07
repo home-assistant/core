@@ -53,7 +53,7 @@ class SigfoxAPI(object):
         response = requests.get(API_URL + 'devicetypes', auth=self._auth)
         if response.status_code != 200:
             _LOGGER.warning(
-                "Unable to login to Sigfox API: " + str(response.status_code))
+                "Unable to login to Sigfox API: %s", str(response.status_code))
             self._devices = []
             return
         device_types = self.get_device_types()
