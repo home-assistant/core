@@ -6,8 +6,7 @@ https://home-assistant.io/components/sensor.qwikswitch/
 """
 import logging
 
-from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH, QSEntity
 
 DEPENDENCIES = [QWIKSWITCH]
 
@@ -25,7 +24,7 @@ async def async_setup_platform(hass, _, add_devices, discovery_info=None):
     add_devices(devs)
 
 
-class QSSensor(Entity):
+class QSSensor(QSEntity):
     """Sensor based on a Qwikswitch relay/dimmer module."""
 
     _val = None
@@ -34,19 +33,13 @@ class QSSensor(Entity):
         """Initialize the sensor."""
         from pyqwikswitch import SENSORS
 
-        self._name = sensor['name']
-        self.qsid = sensor['id']
+        super().__init__(sensor['id'], sensor['name'])
         self.channel = sensor['channel']
         self.sensor_type = sensor['type']
 
         self._decode, self.unit = SENSORS[self.sensor_type]
         if isinstance(self.unit, type):
             self.unit = "{}:{}".format(self.sensor_type, self.channel)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     def update_packet(self, packet):
         """Receive update packet from QSUSB."""
@@ -66,13 +59,3 @@ class QSSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self.unit
-
-    @property
-    def poll(self):
-        """QS sensors gets packets in update_packet."""
-        return False
-
-    async def async_added_to_hass(self):
-        """Listen for updates from QSUSb via dispatcher."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            self.qsid, self.update_packet)

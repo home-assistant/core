@@ -46,11 +46,36 @@ CONFIG_SCHEMA = vol.Schema({
     })}, extra=vol.ALLOW_EXTRA)
 
 
-class QSToggleEntity(Entity):
-    """Representation of a Qwikswitch Entity.
+class QSEntity(Entity):
+    """Qwikswitch Entity base."""
 
-    Implement base QS methods. Modeled around HA ToggleEntity[1] & should only
-    be used in a class that extends both QSToggleEntity *and* ToggleEntity.
+    def __init__(self, qsid, name):
+        """Initialize the QSEntity."""
+        self._name = name
+        self.qsid = qsid
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def poll(self):
+        """QS sensors gets packets in update_packet."""
+        return False
+
+    def update_packet(self, packet):
+        """Receive update packet from QSUSB. Match dispather_send signature."""
+        self.async_schedule_update_ha_state()
+
+    async def async_added_to_hass(self):
+        """Listen for updates from QSUSb via dispatcher."""
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            self.qsid, self.update_packet)
+
+
+class QSToggleEntity(QSEntity):
+    """Representation of a Qwikswitch Toggle Entity.
 
     Implemented:
      - QSLight extends QSToggleEntity and Light[2] (ToggleEntity[1])
@@ -63,19 +88,8 @@ class QSToggleEntity(Entity):
 
     def __init__(self, qsid, qsusb):
         """Initialize the ToggleEntity."""
-        self.qsid = qsid
-        self.devices = qsusb.devices
         self.device = qsusb.devices[qsid]
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the light."""
-        return self.device.name
+        super().__init__(qsid, self.device.name)
 
     @property
     def is_on(self):
@@ -85,20 +99,11 @@ class QSToggleEntity(Entity):
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         new = kwargs.get(ATTR_BRIGHTNESS, 255)
-        self.devices.set_value(self.qsid, new)
+        self.hass.data[DOMAIN].devices.set_value(self.qsid, new)
 
     async def async_turn_off(self, **_):
         """Turn the device off."""
-        self.devices.set_value(self.qsid, 0)
-
-    def _update(self, _packet=None):
-        """Schedule an update - match dispather_send signature."""
-        self.async_schedule_update_ha_state()
-
-    async def async_added_to_hass(self):
-        """Listen for updates from QSUSb via dispatcher."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            self.qsid, self._update)
+        self.hass.data[DOMAIN].devices.set_value(self.qsid, 0)
 
 
 async def async_setup(hass, config):
@@ -114,8 +119,8 @@ async def async_setup(hass, config):
 
     url = config[DOMAIN][CONF_URL]
     dimmer_adjust = config[DOMAIN][CONF_DIMMER_ADJUST]
-    sensors = config[DOMAIN]['sensors']
-    switches = config[DOMAIN]['switches']
+    sensors = config[DOMAIN][CONF_SENSORS]
+    switches = config[DOMAIN][CONF_SWITCHES]
 
     def callback_value_changed(_qsd, qsid, _val):
         """Update entity values based on device change."""
