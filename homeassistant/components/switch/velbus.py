@@ -50,7 +50,6 @@ class VelbusSwitch(SwitchDevice):
     @asyncio.coroutine
     def async_update(self):
         """Update module status."""
-
         future = self.hass.loop.create_future()
 
         def callback():
