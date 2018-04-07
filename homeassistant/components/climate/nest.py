@@ -191,7 +191,7 @@ class NestThermostat(ClimateDevice):
             device_mode = STATE_OFF
             _LOGGER.error(
                 "An error occurred while setting device mode. "
-                "Invalid operation mode: %s" % operation_mode)
+                "Invalid operation mode: %s", operation_mode)
         self.device.mode = device_mode
 
     @property
