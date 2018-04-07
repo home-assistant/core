@@ -6,8 +6,8 @@ from homeassistant.core import callback
 from homeassistant.bootstrap import async_setup_component
 from tests.common import (async_fire_mqtt_message, async_mock_intent,
                           async_mock_service)
-import homeassistant.components.mqtt as mqtt
 import homeassistant.components.snips as snips
+
 
 async def test_snips_config(hass, mqtt_mock):
     """Test Snips Config."""
@@ -19,6 +19,7 @@ async def test_snips_config(hass, mqtt_mock):
         },
     })
     assert result
+
 
 async def test_snips_bad_config(hass, mqtt_mock):
     """Test Snips bad config."""
@@ -36,6 +37,7 @@ async def test_snips_config_feedback(hass, mqtt_mock):
     """Test Snips Config."""
     event = 'call_service'
     events = []
+
     @callback
     def record_event(event):
         """Add recorded event to set."""
@@ -58,7 +60,7 @@ async def test_snips_config_feedback(hass, mqtt_mock):
     topic = events[1].data['service_data']['topic']
     assert topic == 'hermes/feedback/sound/toggleOn'
     assert events[1].data['service_data']['qos'] == 1
-    assert events[1].data['service_data']['retain'] == True
+    assert events[1].data['service_data']['retain']
 
 
 async def test_snips_intent(hass, mqtt_mock):
@@ -298,8 +300,7 @@ async def test_snips_intent_low_probability(hass, mqtt_mock, caplog):
     }
     """
 
-    intents = async_mock_intent(hass, 'LightsMaybe')
-
+    async_mock_intent(hass, 'LightsMaybe')
     async_fire_mqtt_message(hass, 'hermes/intent/LightsMaybe',
                             payload)
     await hass.async_block_till_done()
