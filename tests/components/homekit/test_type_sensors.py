@@ -1,7 +1,8 @@
 """Test different accessory types: Sensors."""
 import unittest
 
-from homeassistant.components.homekit.const import PROP_CELSIUS
+from homeassistant.components.homekit.const import (PROP_CELSIUS,
+    SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE)
 from homeassistant.components.homekit.type_sensors import (
     TemperatureSensor, HumiditySensor, BinarySensor)
 from homeassistant.const import (
@@ -76,10 +77,15 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.hass.states.set(entity_id, STATE_UNKNOWN,
                              {ATTR_DEVICE_CLASS: "opening"})
-        self.hass.block_till_done()  # Ensure state.attributes
+        self.hass.block_till_done()
 
         acc = BinarySensor(self.hass, entity_id, 'Window Opening', aid=2)
         acc.run()
+
+        self.assertEqual(acc.get_service(SERV_CONTACT_SENSOR).display_name,
+                         SERV_CONTACT_SENSOR)
+        self.assertEqual(acc.char_detected.display_name,
+                         CHAR_CONTACT_SENSOR_STATE)
 
         self.assertEqual(acc.aid, 2)
         self.assertEqual(acc.category, 10)  # Sensor
