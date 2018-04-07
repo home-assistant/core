@@ -86,9 +86,14 @@ async def async_setup(hass, config):
         for site_id in config[DOMAIN].get(CONF_SITE_IDS):
             payload = json.dumps({'siteId': site_id})
             hass.components.mqtt.async_publish(
-                FEEDBACK_OFF_TOPIC, payload, qos=0, retain=False)
-            hass.components.mqtt.async_publish(
                 FEEDBACK_ON_TOPIC, payload, qos=1, retain=True)
+    else:
+        for site_id in config[DOMAIN].get(CONF_SITE_IDS):
+            payload = json.dumps({'siteId': site_id})
+            hass.components.mqtt.async_publish(
+                FEEDBACK_ON_TOPIC, None, qos=0, retain=False)
+            hass.components.mqtt.async_publish(
+                FEEDBACK_OFF_TOPIC, payload, qos=0, retain=False)
 
     async def message_received(topic, payload, qos):
         """Handle new messages on MQTT."""
@@ -176,8 +181,6 @@ async def async_setup(hass, config):
         for site_id in site_ids:
             payload = json.dumps({'siteId': site_id})
             hass.components.mqtt.async_publish(
-                FEEDBACK_OFF_TOPIC, '', qos=0, retain=False)
-            hass.components.mqtt.async_publish(
                 FEEDBACK_ON_TOPIC, payload, qos=1, retain=True)
 
     async def feedback_off(call):
@@ -188,9 +191,9 @@ async def async_setup(hass, config):
         for site_id in site_ids:
             payload = json.dumps({'siteId': site_id})
             hass.components.mqtt.async_publish(
-                FEEDBACK_ON_TOPIC, '', qos=0, retain=False)
+                FEEDBACK_ON_TOPIC, None, qos=0, retain=False)
             hass.components.mqtt.async_publish(
-                FEEDBACK_OFF_TOPIC, payload, qos=1, retain=True)
+                FEEDBACK_OFF_TOPIC, payload, qos=0, retain=False)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SAY, snips_say,

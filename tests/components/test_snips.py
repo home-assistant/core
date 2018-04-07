@@ -4,9 +4,9 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.bootstrap import async_setup_component
+import homeassistant.components.snips as snips
 from tests.common import (async_fire_mqtt_message, async_mock_intent,
                           async_mock_service)
-import homeassistant.components.snips as snips
 
 
 async def test_snips_config(hass, mqtt_mock):
@@ -52,15 +52,11 @@ async def test_snips_config_feedback(hass, mqtt_mock):
     assert result
     await hass.async_block_till_done()
 
-    assert len(events) == 2
+    assert len(events) == 1 
     assert events[0].data['domain'] == 'mqtt'
     assert events[0].data['service'] == 'publish'
     topic = events[0].data['service_data']['topic']
-    assert topic == 'hermes/feedback/sound/toggleOff'
-    topic = events[1].data['service_data']['topic']
     assert topic == 'hermes/feedback/sound/toggleOn'
-    assert events[1].data['service_data']['qos'] == 1
-    assert events[1].data['service_data']['retain']
 
 
 async def test_snips_intent(hass, mqtt_mock):
@@ -280,7 +276,7 @@ async def test_snips_intent_username(hass, mqtt_mock):
     assert intent.intent_type == 'Lights'
 
 
-async def test_snips_intent_low_probability(hass, mqtt_mock, caplog):
+async def test_snips_low_probability(hass, mqtt_mock, caplog):
     """Test intent via Snips."""
     caplog.set_level(logging.WARNING)
     result = await async_setup_component(hass, "snips", {
@@ -352,7 +348,7 @@ async def test_snips_say_invalid_config(hass, caplog):
     assert 'Invalid service data' in caplog.text
 
 
-async def test_snips_say_action_invalid_config(hass, caplog):
+async def test_snips_say_action_invalid(hass, caplog):
     """Test snips say_action with invalid config."""
     calls = async_mock_service(hass, 'snips', 'say_action',
                                snips.SERVICE_SCHEMA_SAY_ACTION)
