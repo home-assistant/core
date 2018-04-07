@@ -28,6 +28,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class HomeKitLight(HomeKitEntity, Light):
     """Representation of a Homekit light."""
 
+    def __init__(self, *args):
+        super().__init__(*args)
+        self._on = None
+        self._brightness = None
+        self._color_tempeature = None
+        self._hue = None
+        self._saturation = None
+
     def update_characteristics(self, characteristics):
         import homekit
 

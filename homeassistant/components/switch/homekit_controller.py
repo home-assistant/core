@@ -15,6 +15,7 @@ DEPENDENCIES = ['homekit_controller']
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Homekit switch support."""
     if discovery_info is not None:
@@ -24,6 +25,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class HomeKitSwitch(HomeKitEntity, SwitchDevice):
     """Representation of a Homekit switch."""
+    def __init__(self, *args):
+        super().__init__(*args)
+        self._on = None
 
     def update_characteristics(self, characteristics):
         import homekit

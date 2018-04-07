@@ -181,6 +181,9 @@ class HomeKitEntity(Entity):
         """Return the name of the device if any."""
         return self._name
 
+    def update_characteristics(self):
+        raise NotImplementedError
+
 
 # pylint: too-many-function-args
 def setup(hass, config):
