@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.snmp/
 """
 import logging
 from datetime import timedelta
+from struct import unpack
 
 import voluptuous as vol
 
@@ -81,7 +82,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                ObjectType(ObjectIdentity(baseoid))))
 
     if errindication and not accept_errors:
-        _LOGGER.error("Please check the details in the configuration file")
+        _LOGGER.error("Please check the details in the configuration file: %s",
+                      errindication)
         return False
     else:
         data = SnmpData(
@@ -151,6 +153,7 @@ class SnmpData(object):
         from pysnmp.hlapi import (
             getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
             ObjectType, ObjectIdentity)
+
         errindication, errstatus, errindex, restable = next(
             getCmd(SnmpEngine(),
                    CommunityData(self._community, mpModel=self._version),
@@ -168,4 +171,36 @@ class SnmpData(object):
             self.value = self._default_value
         else:
             for resrow in restable:
-                self.value = str(resrow[-1])
+                self.value = self._decode_value(resrow[-1])
+
+    def _decode_value(self, value):
+        """Decode the different results we could get into strings."""
+        from pysnmp.proto.rfc1905 import NoSuchObject
+        from pysnmp.proto.rfc1902 import Opaque
+        from pyasn1.codec.ber import decoder
+
+        _LOGGER.debug("SNMP OID %s received type=%s and data %s",
+                      self._baseoid, type(value), bytes(value))
+        if isinstance(value, NoSuchObject):
+            _LOGGER.error(
+                "SNMP error for OID %s: "
+                "No Such Object currently exists at this OID",
+                self._baseoid)
+            return self._default_value
+
+        if isinstance(value, Opaque):
+            # Float data type is not supported by the pyasn1 library,
+            # so we need to decode this type ourselves based on:
+            # https://tools.ietf.org/html/draft-perkins-opaque-01
+            if bytes(value).startswith(b'\x9f\x78'):
+                return str(unpack("!f", bytes(value)[3:])[0])
+            # Otherwise Opaque types should be asn1 encoded
+            try:
+                decoded_value, _ = decoder.decode(bytes(value))
+                return str(decoded_value)
+            # pylint: disable=broad-except
+            except Exception as decode_exception:
+                _LOGGER.error('SNMP error in decoding opaque type: %s',
+                              str(decode_exception))
+                return self._default_value
+        return str(value)
