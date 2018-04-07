@@ -4,7 +4,6 @@ Support for Snips on-device ASR and NLU.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/snips/
 """
-import asyncio
 import json
 import logging
 from datetime import timedelta
@@ -19,11 +18,18 @@ DEPENDENCIES = ['mqtt']
 
 CONF_INTENTS = 'intents'
 CONF_ACTION = 'action'
+CONF_FEEDBACK = 'feedback_sounds'
+CONF_PROBABILITY = 'probability_threshold'
+CONF_SITE_IDS = 'site_ids'
 
 SERVICE_SAY = 'say'
 SERVICE_SAY_ACTION = 'say_action'
+SERVICE_FEEDBACK_ON = 'feedback_on'
+SERVICE_FEEDBACK_OFF = 'feedback_off'
 
 INTENT_TOPIC = 'hermes/intent/#'
+FEEDBACK_ON_TOPIC = 'hermes/feedback/sound/toggleOn'
+FEEDBACK_OFF_TOPIC = 'hermes/feedback/sound/toggleOff'
 
 ATTR_TEXT = 'text'
 ATTR_SITE_ID = 'site_id'
@@ -34,7 +40,12 @@ ATTR_INTENT_FILTER = 'intent_filter'
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: {}
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_FEEDBACK, default=False): cv.boolean,
+        vol.Optional(CONF_PROBABILITY, default=0): vol.Coerce(float),
+        vol.Optional(CONF_SITE_IDS, default=['default']):
+            vol.All(cv.ensure_list, [cv.string]),
+    }),
 }, extra=vol.ALLOW_EXTRA)
 
 INTENT_SCHEMA = vol.Schema({
@@ -57,7 +68,6 @@ SERVICE_SCHEMA_SAY = vol.Schema({
     vol.Optional(ATTR_SITE_ID, default='default'): str,
     vol.Optional(ATTR_CUSTOM_DATA, default=''): str
 })
-
 SERVICE_SCHEMA_SAY_ACTION = vol.Schema({
     vol.Required(ATTR_TEXT): str,
     vol.Optional(ATTR_SITE_ID, default='default'): str,
@@ -65,13 +75,22 @@ SERVICE_SCHEMA_SAY_ACTION = vol.Schema({
     vol.Optional(ATTR_CAN_BE_ENQUEUED, default=True): cv.boolean,
     vol.Optional(ATTR_INTENT_FILTER): vol.All(cv.ensure_list),
 })
+SERVICE_SCHEMA_FEEDBACK = vol.Schema({
+    vol.Optional(ATTR_SITE_ID, default='default'): str
+})
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Activate Snips component."""
-    @asyncio.coroutine
-    def message_received(topic, payload, qos):
+    if config[DOMAIN].get(CONF_FEEDBACK):
+        for site_id in config[DOMAIN].get(CONF_SITE_IDS):
+            payload = json.dumps({'siteId': site_id})
+            hass.components.mqtt.async_publish(
+                FEEDBACK_OFF_TOPIC, payload, qos=0, retain=False)
+            hass.components.mqtt.async_publish(
+                FEEDBACK_ON_TOPIC, payload, qos=1, retain=True)
+
+    async def message_received(topic, payload, qos):
         """Handle new messages on MQTT."""
         _LOGGER.debug("New intent: %s", payload)
 
@@ -79,6 +98,13 @@ def async_setup(hass, config):
             request = json.loads(payload)
         except TypeError:
             _LOGGER.error('Received invalid JSON: %s', payload)
+            return
+
+        if (request['intent']['probability']
+                < config[DOMAIN].get(CONF_PROBABILITY)):
+            _LOGGER.warning("Intent below probaility threshold %s < %s",
+                            request['intent']['probability'],
+                            config[DOMAIN].get(CONF_PROBABILITY))
             return
 
         try:
@@ -97,7 +123,7 @@ def async_setup(hass, config):
             slots[slot['slotName']] = {'value': resolve_slot_values(slot)}
 
         try:
-            intent_response = yield from intent.async_handle(
+            intent_response = await intent.async_handle(
                 hass, DOMAIN, intent_type, slots, request['input'])
             if 'plain' in intent_response.speech:
                 snips_response = intent_response.speech['plain']['speech']
@@ -115,11 +141,10 @@ def async_setup(hass, config):
             mqtt.async_publish(hass, 'hermes/dialogueManager/endSession',
                                json.dumps(notification))
 
-    yield from hass.components.mqtt.async_subscribe(
+    await hass.components.mqtt.async_subscribe(
         INTENT_TOPIC, message_received)
 
-    @asyncio.coroutine
-    def snips_say(call):
+    async def snips_say(call):
         """Send a Snips notification message."""
         notification = {'siteId': call.data.get(ATTR_SITE_ID, 'default'),
                         'customData': call.data.get(ATTR_CUSTOM_DATA, ''),
@@ -129,8 +154,7 @@ def async_setup(hass, config):
                            json.dumps(notification))
         return
 
-    @asyncio.coroutine
-    def snips_say_action(call):
+    async def snips_say_action(call):
         """Send a Snips action message."""
         notification = {'siteId': call.data.get(ATTR_SITE_ID, 'default'),
                         'customData': call.data.get(ATTR_CUSTOM_DATA, ''),
@@ -144,12 +168,42 @@ def async_setup(hass, config):
                            json.dumps(notification))
         return
 
+    async def feedback_on(call):
+        """Turn feedback sounds on."""
+        site_ids = ([call.data.get(ATTR_SITE_ID)]
+                    if call.data.get(ATTR_SITE_ID)
+                    else config[DOMAIN].get(CONF_SITE_IDS))
+        for site_id in site_ids:
+            payload = json.dumps({'siteId': site_id})
+            hass.components.mqtt.async_publish(
+                FEEDBACK_OFF_TOPIC, '', qos=0, retain=False)
+            hass.components.mqtt.async_publish(
+                FEEDBACK_ON_TOPIC, payload, qos=1, retain=True)
+
+    async def feedback_off(call):
+        """Turn feedback sounds off."""
+        site_ids = ([call.data.get(ATTR_SITE_ID)]
+                    if call.data.get(ATTR_SITE_ID)
+                    else config[DOMAIN].get(CONF_SITE_IDS))
+        for site_id in site_ids:
+            payload = json.dumps({'siteId': site_id})
+            hass.components.mqtt.async_publish(
+                FEEDBACK_ON_TOPIC, '', qos=0, retain=False)
+            hass.components.mqtt.async_publish(
+                FEEDBACK_OFF_TOPIC, payload, qos=1, retain=True)
+
     hass.services.async_register(
         DOMAIN, SERVICE_SAY, snips_say,
         schema=SERVICE_SCHEMA_SAY)
     hass.services.async_register(
         DOMAIN, SERVICE_SAY_ACTION, snips_say_action,
         schema=SERVICE_SCHEMA_SAY_ACTION)
+    hass.services.async_register(
+        DOMAIN, SERVICE_FEEDBACK_ON, feedback_on,
+        schema=SERVICE_SCHEMA_FEEDBACK)
+    hass.services.async_register(
+        DOMAIN, SERVICE_FEEDBACK_OFF, feedback_off,
+        schema=SERVICE_SCHEMA_FEEDBACK)
 
     return True
 
