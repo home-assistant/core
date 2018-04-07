@@ -3,9 +3,9 @@ import unittest
 
 from homeassistant.components.homekit.const import PROP_CELSIUS
 from homeassistant.components.homekit.type_sensors import (
-    TemperatureSensor, HumiditySensor)
+    TemperatureSensor, HumiditySensor, BinarySensor)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_UNIT_OF_MEASUREMENT, ATTR_DEVICE_CLASS, STATE_UNKNOWN, STATE_ON, STATE_OFF, STATE_HOME, STATE_NOT_HOME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.common import get_test_home_assistant
 
@@ -68,3 +68,39 @@ class TestHomekitSensors(unittest.TestCase):
         self.hass.states.set(entity_id, '20', {ATTR_UNIT_OF_MEASUREMENT: "%"})
         self.hass.block_till_done()
         self.assertEqual(acc.char_humidity.value, 20)
+
+    def test_binary(self):
+        """Test if accessory is updated after state change."""
+        entity_id = 'binary_sensor.opening'
+
+        self.hass.states.set(entity_id, STATE_UNKNOWN,
+                             {ATTR_DEVICE_CLASS: "opening"})
+        self.hass.block_till_done()  # Ensure state.attributes
+
+        acc = BinarySensor(self.hass, entity_id, 'Window Opening', aid=2)
+        acc.run()
+
+        self.assertEqual(acc.aid, 2)
+        self.assertEqual(acc.category, 10)  # Sensor
+
+        self.assertEqual(acc.char_detected.value, 0)
+
+        self.hass.states.set(entity_id, STATE_ON,
+                             {ATTR_DEVICE_CLASS: "opening"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_detected.value, 1)
+
+        self.hass.states.set(entity_id, STATE_OFF,
+                             {ATTR_DEVICE_CLASS: "opening"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_detected.value, 0)
+
+        self.hass.states.set(entity_id, STATE_HOME,
+                             {ATTR_DEVICE_CLASS: "opening"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_detected.value, 1)
+
+        self.hass.states.set(entity_id, STATE_NOT_HOME,
+                             {ATTR_DEVICE_CLASS: "opening"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_detected.value, 0)
