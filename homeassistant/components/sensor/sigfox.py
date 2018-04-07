@@ -48,7 +48,9 @@ def epoch_to_datetime(epoch_time):
 
 class SigfoxAPI(object):
     """Class for interacting with the SigFox API."""
+
     def __init__(self, api_login, api_password):
+        """Initialise the API object."""
         self._auth = requests.auth.HTTPBasicAuth(api_login, api_password)
         response = requests.get(API_URL + 'devicetypes', auth=self._auth)
         if response.status_code != 200:
@@ -92,8 +94,9 @@ class SigfoxAPI(object):
 
 class SigfoxDevice(Entity):
     """Class for single sigfox device."""
-    def __init__(self, device_id, auth):
 
+    def __init__(self, device_id, auth):
+        """Initialise the device object."""
         self._device_id = device_id
         self._auth = auth
         self._message_data = {}
