@@ -82,18 +82,20 @@ SERVICE_SCHEMA_FEEDBACK = vol.Schema({
 
 async def async_setup(hass, config):
     """Activate Snips component."""
-    if config[DOMAIN].get(CONF_FEEDBACK):
-        for site_id in config[DOMAIN].get(CONF_SITE_IDS):
-            payload = json.dumps({'siteId': site_id})
-            hass.components.mqtt.async_publish(
-                FEEDBACK_ON_TOPIC, payload, qos=1, retain=True)
-    else:
-        for site_id in config[DOMAIN].get(CONF_SITE_IDS):
+    def set_feedback(site_ids, state):
+        """Set Feedback sound state."""
+        site_ids = (site_ids if site_ids
+                    else config[DOMAIN].get(CONF_SITE_IDS))
+        topic = (FEEDBACK_ON_TOPIC if state
+                 else FEEDBACK_OFF_TOPIC)
+        for site_id in site_ids:
             payload = json.dumps({'siteId': site_id})
             hass.components.mqtt.async_publish(
                 FEEDBACK_ON_TOPIC, None, qos=0, retain=False)
             hass.components.mqtt.async_publish(
-                FEEDBACK_OFF_TOPIC, payload, qos=0, retain=False)
+                topic, payload, qos=1, retain=True)
+
+    set_feedback(None, config[DOMAIN].get(CONF_FEEDBACK))
 
     async def message_received(topic, payload, qos):
         """Handle new messages on MQTT."""
@@ -175,25 +177,11 @@ async def async_setup(hass, config):
 
     async def feedback_on(call):
         """Turn feedback sounds on."""
-        site_ids = ([call.data.get(ATTR_SITE_ID)]
-                    if call.data.get(ATTR_SITE_ID)
-                    else config[DOMAIN].get(CONF_SITE_IDS))
-        for site_id in site_ids:
-            payload = json.dumps({'siteId': site_id})
-            hass.components.mqtt.async_publish(
-                FEEDBACK_ON_TOPIC, payload, qos=1, retain=True)
+        set_feedback(call.data.get(ATTR_SITE_ID), True)
 
     async def feedback_off(call):
         """Turn feedback sounds off."""
-        site_ids = ([call.data.get(ATTR_SITE_ID)]
-                    if call.data.get(ATTR_SITE_ID)
-                    else config[DOMAIN].get(CONF_SITE_IDS))
-        for site_id in site_ids:
-            payload = json.dumps({'siteId': site_id})
-            hass.components.mqtt.async_publish(
-                FEEDBACK_ON_TOPIC, None, qos=0, retain=False)
-            hass.components.mqtt.async_publish(
-                FEEDBACK_OFF_TOPIC, payload, qos=0, retain=False)
+        set_feedback(call.data.get(ATTR_SITE_ID), False)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SAY, snips_say,
