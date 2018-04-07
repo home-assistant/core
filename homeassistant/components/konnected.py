@@ -15,8 +15,11 @@ from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.components.discovery import SERVICE_KONNECTED
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR, HTTP_UNAUTHORIZED)
+    HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR, HTTP_UNAUTHORIZED,
+    CONF_DEVICES, CONF_SENSORS, CONF_SWITCHES, CONF_HOST, CONF_PORT,
+    CONF_ID, CONF_NAME, CONF_TYPE, CONF_PIN, CONF_ZONE, ATTR_STATE)
 from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,27 +32,26 @@ ZONE_TO_PIN = {zone: pin for pin, zone in PIN_TO_ZONE.items()}
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: {
-            'auth_token': str,
-            vol.Optional('home_assistant_url'): str,
-            'devices': [{
-                vol.Required('id', default=''): vol.Coerce(str),
-                'sensors': [{
-                    vol.Exclusive('pin', 's_pin'): vol.Any(*PIN_TO_ZONE),
-                    vol.Exclusive('zone', 's_pin'): vol.Any(*ZONE_TO_PIN),
-                    vol.Required('type', default='motion'):
+        DOMAIN: vol.Schema({
+            vol.Required('auth_token'): config_validation.string,
+            vol.Required(CONF_DEVICES): [{
+                vol.Required(CONF_ID, default=''): config_validation.string,
+                vol.Optional(CONF_SENSORS): [{
+                    vol.Exclusive(CONF_PIN, 's_pin'): vol.Any(*PIN_TO_ZONE),
+                    vol.Exclusive(CONF_ZONE, 's_pin'): vol.Any(*ZONE_TO_PIN),
+                    vol.Required(CONF_TYPE, default='motion'):
                         DEVICE_CLASSES_SCHEMA,
-                    vol.Optional('name'): str,
+                    vol.Optional(CONF_NAME): config_validation.string,
                 }],
-                'actuators': [{
-                    vol.Exclusive('pin', 'a_pin'): vol.Any(*PIN_TO_ZONE),
-                    vol.Exclusive('zone', 'a_pin'): vol.Any(*ZONE_TO_PIN),
-                    vol.Optional('name'): str,
+                vol.Optional(CONF_SWITCHES): [{
+                    vol.Exclusive(CONF_PIN, 'a_pin'): vol.Any(*PIN_TO_ZONE),
+                    vol.Exclusive(CONF_ZONE, 'a_pin'): vol.Any(*ZONE_TO_PIN),
+                    vol.Optional(CONF_NAME): config_validation.string,
                     vol.Required('activation', default='high'):
                         vol.All(vol.Lower, vol.Any('high', 'low'))
                 }],
             }],
-        },
+        }),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -69,7 +71,7 @@ def async_setup(hass, config):
     if cfg is None:
         cfg = {}
 
-    auth_token = cfg.get('auth_token') or 'supersecret'
+    auth_token = cfg.get('auth_token')
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {'auth_token': auth_token}
 
@@ -77,8 +79,8 @@ def async_setup(hass, config):
     def async_device_discovered(service, info):
         """Call when a Konnected device has been discovered."""
         _LOGGER.info("Discovered a new Konnected device: %s", info)
-        host = info.get('host')
-        port = info.get('port')
+        host = info.get(CONF_HOST)
+        port = info.get(CONF_PORT)
 
         device = KonnectedDevice(hass, host, port, cfg)
         device.setup()
@@ -134,9 +136,10 @@ class KonnectedDevice(object):
         device_id = self.device_id
         valid_keys = [device_id, device_id.upper(),
                       device_id[6:], device_id.upper()[6:]]
-        configured_devices = self.user_config['devices']
+        configured_devices = self.user_config[CONF_DEVICES]
         return next((device for device in
-                     configured_devices if device['id'] in valid_keys), None)
+                     configured_devices if device[CONF_ID] in valid_keys),
+                    None)
 
     def save_data(self):
         """Save the device configuration to `hass.data`.
@@ -144,31 +147,32 @@ class KonnectedDevice(object):
         TODO: This can probably be refactored and tidied up.
         """
         sensors = {}
-        for entity in self.config().get('sensors') or []:
-            if 'zone' in entity:
-                pin = ZONE_TO_PIN[entity['zone']]
+        for entity in self.config().get(CONF_SENSORS) or []:
+            if CONF_ZONE in entity:
+                pin = ZONE_TO_PIN[entity[CONF_ZONE]]
             else:
-                pin = entity['pin']
+                pin = entity[CONF_PIN]
 
             sensor_status = next((sensor for sensor in
                                   self.status.get('sensors') if
-                                  sensor.get('pin') == pin), {})
-            if sensor_status.get('state'):
-                initial_state = bool(int(sensor_status.get('state')))
+                                  sensor.get(CONF_PIN) == pin), {})
+            if sensor_status.get(ATTR_STATE):
+                initial_state = bool(int(sensor_status.get(ATTR_STATE)))
             else:
                 initial_state = None
 
             sensors[pin] = {
-                'type': entity['type'],
-                'name': entity.get('name', 'Konnected {} Zone {}'.format(
+                CONF_TYPE: entity[CONF_TYPE],
+                CONF_NAME: entity.get(CONF_NAME, 'Konnected {} Zone {}'.format(
                     self.device_id[6:], PIN_TO_ZONE[pin])),
-                'state': initial_state
+                ATTR_STATE: initial_state
             }
             _LOGGER.info('Set up sensor %s (initial state: %s)',
-                         sensors[pin].get('name'), sensors[pin].get('state'))
+                         sensors[pin].get('name'),
+                         sensors[pin].get(ATTR_STATE))
 
         actuators = {}
-        for entity in self.config().get('actuators') or []:
+        for entity in self.config().get(CONF_SWITCHES) or []:
             if 'zone' in entity:
                 pin = ZONE_TO_PIN[entity['zone']]
             else:
@@ -177,57 +181,58 @@ class KonnectedDevice(object):
             actuator_status = next((actuator for actuator in
                                     self.status.get('actuators') if
                                     actuator.get('pin') == pin), {})
-            if actuator_status.get('state'):
-                initial_state = bool(int(actuator_status.get('state')))
+            if actuator_status.get(ATTR_STATE):
+                initial_state = bool(int(actuator_status.get(ATTR_STATE)))
             else:
                 initial_state = None
 
             actuators[pin] = {
-                'name': entity.get('name', 'Konnected {} Actuator {}'.format(
-                    self.device_id[6:], PIN_TO_ZONE[pin])),
-                'state': initial_state,
+                CONF_NAME: entity.get(
+                    CONF_NAME, 'Konnected {} Actuator {}'.format(
+                        self.device_id[6:], PIN_TO_ZONE[pin])),
+                ATTR_STATE: initial_state,
                 'activation': entity['activation'],
             }
             _LOGGER.info('Set up actuator %s (initial state: %s)',
-                         actuators[pin].get('name'),
-                         actuators[pin].get('state'))
+                         actuators[pin].get(CONF_NAME),
+                         actuators[pin].get(ATTR_STATE))
 
         device_data = {
             'client': self.client,
-            'sensors': sensors,
-            'actuators': actuators,
-            'host': self.host,
-            'port': self.port,
+            CONF_SENSORS: sensors,
+            CONF_SWITCHES: actuators,
+            CONF_HOST: self.host,
+            CONF_PORT: self.port,
         }
 
         if 'devices' not in self.hass.data[DOMAIN]:
-            self.hass.data[DOMAIN]['devices'] = {}
+            self.hass.data[DOMAIN][CONF_DEVICES] = {}
 
         _LOGGER.info('Storing data in hass.data[konnected]: %s', device_data)
-        self.hass.data[DOMAIN]['devices'][self.device_id] = device_data
+        self.hass.data[DOMAIN][CONF_DEVICES][self.device_id] = device_data
 
     @property
     def stored_configuration(self):
         """Return the configuration stored in `hass.data` for this device."""
-        return self.hass.data[DOMAIN]['devices'][self.device_id]
+        return self.hass.data[DOMAIN][CONF_DEVICES][self.device_id]
 
     def sensor_configuration(self):
         """Return the configuration map for syncing sensors."""
         return [{'pin': p} for p in
-                self.stored_configuration['sensors'].keys()]
+                self.stored_configuration[CONF_SENSORS].keys()]
 
     def actuator_configuration(self):
         """Return the configuration map for syncing actuators."""
         return [{'pin': p,
                  'trigger': (0 if data.get('activation') in [0, 'low'] else 1)}
                 for p, data in
-                self.stored_configuration['actuators'].items()]
+                self.stored_configuration[CONF_SWITCHES].items()]
 
     def sync_device(self):
         """Sync the new pin configuration to the Konnected device."""
         desired_sensor_configuration = self.sensor_configuration()
         current_sensor_configuration = [
-            {'pin': s['pin']} for s in self.status.get('sensors')]
+            {'pin': s[CONF_PIN]} for s in self.status.get('sensors')]
         _LOGGER.info('%s: desired sensor config: %s', self.device_id,
                      desired_sensor_configuration)
         _LOGGER.info('%s: current sensor config: %s', self.device_id,
@@ -274,12 +279,12 @@ class KonnectedView(HomeAssistantView):
                 "unauthorized", status_code=HTTP_UNAUTHORIZED)
         pin_num = int(pin_num)
         state = bool(int(state))
-        device = data['devices'].get(device_id)
+        device = data[CONF_DEVICES].get(device_id)
         if device is None:
             return self.json_message('unregistered device',
                                      status_code=HTTP_BAD_REQUEST)
-        pin_data = device['sensors'].get(pin_num) or \
-            device['actuators'].get(pin_num)
+        pin_data = device[CONF_SENSORS].get(pin_num) or \
+            device[CONF_SWITCHES].get(pin_num)
 
         if pin_data is None:
             return self.json_message('unregistered sensor/actuator',

@@ -10,6 +10,7 @@ import logging
 
 from homeassistant.components.konnected import (DOMAIN, PIN_TO_ZONE)
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.const import (CONF_DEVICES, CONF_SWITCHES, ATTR_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,11 +25,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     data = hass.data[DOMAIN]
     device_id = discovery_info['device_id']
-    client = data['devices'][device_id]['client']
-    actuators = [KonnectedSwitch(device_id, pin_num, pin_data, client)
-                 for pin_num, pin_data in
-                 data['devices'][device_id]['actuators'].items()]
-    async_add_devices(actuators, True)
+    client = data[CONF_DEVICES][device_id]['client']
+    switches = [KonnectedSwitch(device_id, pin_num, pin_data, client)
+                for pin_num, pin_data in
+                data[CONF_DEVICES][device_id][CONF_SWITCHES].items()]
+    async_add_devices(switches, True)
 
 
 class KonnectedSwitch(ToggleEntity):
@@ -39,7 +40,7 @@ class KonnectedSwitch(ToggleEntity):
         self._data = data
         self._device_id = device_id
         self._pin_num = pin_num
-        self._state = self._data.get('state')
+        self._state = self._data.get(ATTR_STATE)
         self._name = self._data.get(
             'name', 'Konnected {} Actuator {}'.format(
                 device_id, PIN_TO_ZONE[pin_num]))
@@ -69,7 +70,7 @@ class KonnectedSwitch(ToggleEntity):
 
     def _set_state(self, state):
         self._state = state
-        self._data['state'] = state
+        self._data[ATTR_STATE] = state
         self.schedule_update_ha_state()
         _LOGGER.info('Setting status of %s actuator pin %s to %s',
                      self._device_id, self.name, state)
@@ -78,6 +79,6 @@ class KonnectedSwitch(ToggleEntity):
     def async_set_state(self, state):
         """Update the switch's state."""
         self._state = state
-        self._data['state'] = state
+        self._data[ATTR_STATE] = state
         self.async_schedule_update_ha_state()
         _LOGGER.info('Updating state: %s is %s', self.name, state)
