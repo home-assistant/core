@@ -150,8 +150,7 @@ class HKDevice():
 class HomeKitEntity(Entity):
     """Representation of a Home Assistant HomeKit device."""
 
-    def __init__(self, hass, devinfo):
-        accessory = hass.data[KNOWN_ACCESSORIES][devinfo['serial']]
+    def __init__(self, accessory, devinfo):
         self._name = accessory.model
         self._securecon = accessory.securecon
         self._aid = devinfo['aid']
@@ -159,7 +158,6 @@ class HomeKitEntity(Entity):
         self._address = "homekit-{}-{}".format(devinfo['serial'], self._iid)
         self._features = 0
         self._chars = {}
-        self.update()
 
     def update(self):
         response = self._securecon.get('/accessories')

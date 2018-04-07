@@ -7,7 +7,8 @@ https://home-assistant.io/components/light.homekit_controller/
 import json
 import logging
 
-from homeassistant.components.homekit_controller import HomeKitEntity
+from homeassistant.components.homekit_controller import (
+    HomeKitEntity, KNOWN_ACCESSORIES)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_COLOR_TEMP, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, SUPPORT_COLOR_TEMP, Light)
@@ -20,7 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Homekit lighting."""
     if discovery_info is not None:
-        add_devices([HomeKitLight(hass, discovery_info)])
+        accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+        add_devices([HomeKitLight(accessory, discovery_info)], True)
 
 
 class HomeKitLight(HomeKitEntity, Light):
@@ -53,16 +55,6 @@ class HomeKitLight(HomeKitEntity, Light):
                 self._saturation = characteristic['value']
 
     @property
-    def unique_id(self):
-        """Return the ID of this light."""
-        return self._address
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
     def is_on(self):
         """Return true if device is on."""
         return self._on
@@ -92,11 +84,6 @@ class HomeKitLight(HomeKitEntity, Light):
     def supported_features(self):
         """Flag supported features."""
         return self._features
-
-    @property
-    def assumed_state(self):
-        """We return the actual state."""
-        return False
 
     def turn_on(self, **kwargs):
         """Turn the specified light on."""

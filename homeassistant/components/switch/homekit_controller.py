@@ -7,7 +7,8 @@ https://home-assistant.io/components/switch.homekit_controller/
 import json
 import logging
 
-from homeassistant.components.homekit_controller import HomeKitEntity
+from homeassistant.components.homekit_controller import (HomeKitEntity,
+                                                         KNOWN_ACCESSORIES)
 from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['homekit_controller']
@@ -17,7 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Homekit switch support."""
     if discovery_info is not None:
-        add_devices([HomeKitSwitch(hass, discovery_info)])
+        accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
+        add_devices([HomeKitSwitch(accessory, discovery_info)], True)
 
 
 class HomeKitSwitch(HomeKitEntity, SwitchDevice):
