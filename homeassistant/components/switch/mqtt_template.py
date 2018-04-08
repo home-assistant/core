@@ -104,7 +104,7 @@ class MqttTemplateSwitch(MqttAvailability, SwitchDevice):
             if self._templates[CONF_VALUE_TEMPLATE] is not None:
                 payload = \
                     self._templates[CONF_VALUE_TEMPLATE]\
-                        .async_render_with_possible_json_value(
+                    .async_render_with_possible_json_value(
                         payload)
             if payload == self._payload_on:
                 self._state = True
