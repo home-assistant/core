@@ -187,12 +187,16 @@ class ConfigEntry:
 
             if not isinstance(result, bool):
                 _LOGGER.error('%s.async_config_entry did not return boolean',
-                              self.domain)
+                              component.DOMAIN)
                 result = False
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error setting up entry %s for %s',
-                              self.title, self.domain)
+                              self.title, component.DOMAIN)
             result = False
+
+        # Only store setup result as state if it was for component.
+        if self.domain != component.DOMAIN:
+            return
 
         if result:
             self.state = ENTRY_STATE_LOADED
@@ -335,6 +339,19 @@ class ConfigEntries:
             # Setting up component will also load the entries
             await async_setup_component(
                 self.hass, entry.domain, self._hass_config)
+
+    async def delegate_entry(self, entry, component):
+        """Delegate an entry to a different component.
+
+        TODO this needs a better name.
+        """
+        # Setup Component if not set up yet
+        if component not in self.hass.config.components:
+            await async_setup_component(
+                self.hass, component, self._hass_config)
+
+        await entry.async_setup(
+            self.hass, component=getattr(self.hass.components, component))
 
     @callback
     def _async_schedule_save(self):
