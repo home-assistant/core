@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     # Integrations shouldn't never expose unique_id through configuration
-    # this here is an exception because of automatic MQTT discovery.
+    # this here is an exception because MQTT is a msg transport, not a protocol
     vol.Optional(CONF_UNIQUE_ID): cv.string,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
