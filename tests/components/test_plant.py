@@ -104,10 +104,6 @@ class TestPlant(unittest.TestCase):
         self.assertEqual(STATE_PROBLEM, state.state)
         self.assertEqual(5, state.attributes[plant.READING_MOISTURE])
 
-    @pytest.mark.skipif(plant.ENABLE_LOAD_HISTORY is False,
-                        reason="tests for loading from DB are unstable, thus"
-                               "this feature is turned of until tests become"
-                               "stable")
     def test_load_from_db(self):
         """Test bootstrapping the brightness history from the database.
 
