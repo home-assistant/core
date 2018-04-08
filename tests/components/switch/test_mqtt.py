@@ -242,7 +242,7 @@ class TestSwitchMQTT(unittest.TestCase):
 
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_ON, state.state)
-        
+
     def test_unique_id(self):
         """Test unique id option only creates one switch per unique_id."""
         assert setup_component(self.hass, switch.DOMAIN, {
