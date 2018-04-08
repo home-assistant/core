@@ -104,10 +104,15 @@ class BroadlinkData(object):
 
     def __init__(self, interval, ip_addr, mac_addr, timeout):
         """Initialize the data object."""
-        import broadlink
         self.data = None
-        self._device = broadlink.a1((ip_addr, 80), mac_addr, None)
-        self._device.timeout = timeout
+
+        self.interval=interval
+        self.ip_addr=ip_addr
+        self.mac_addr=mac_addr
+        self.timeout=timeout
+
+        self._connect()
+
         self._schema = vol.Schema({
             vol.Optional('temperature'): vol.Range(min=-50, max=150),
             vol.Optional('humidity'): vol.Range(min=0, max=100),
@@ -119,8 +124,20 @@ class BroadlinkData(object):
         if not self._auth():
             _LOGGER.warning("Failed to connect to device")
 
+    def _connect(self):
+        import broadlink
+        self._device = broadlink.a1((self.ip_addr, 80), self.mac_addr, None)
+        self._device.timeout = self.timeout
+
+
     def _update(self, retry=3):
         try:
+
+            self._connect()
+            if not self._auth():
+                _LOGGER.warning("Failed to connect to device")
+
+
             data = self._device.check_sensors_raw()
             if data is not None:
                 self.data = self._schema(data)
