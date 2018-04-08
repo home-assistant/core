@@ -51,6 +51,7 @@ class EntityPlatform(object):
         # which powers entity_component.add_entities
         if platform is None:
             self.parallel_updates = None
+            return
 
         # Async platforms do all updates in parallel by default
         if hasattr(platform, 'async_setup_platform'):
