@@ -61,11 +61,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
         {
             key: config.get(key) for key in (
-            CONF_PAYLOAD_ON_TEMPLATE,
-            CONF_PAYLOAD_OFF_TEMPLATE,
-            CONF_VALUE_TEMPLATE,
-        )
-            },
+                CONF_PAYLOAD_ON_TEMPLATE,
+                CONF_PAYLOAD_OFF_TEMPLATE,
+                CONF_VALUE_TEMPLATE,
+            )
+        },
     )])
 
 
@@ -102,7 +102,10 @@ class MqttTemplateSwitch(MqttAvailability, SwitchDevice):
         def state_message_received(topic, payload, qos):
             """Handle new MQTT state messages."""
             if self._templates[CONF_VALUE_TEMPLATE] is not None:
-                payload = self._templates[CONF_VALUE_TEMPLATE].async_render_with_possible_json_value(payload)
+                payload = \
+                    self._templates[CONF_VALUE_TEMPLATE]\
+                        .async_render_with_possible_json_value(
+                        payload)
             if payload == self._payload_on:
                 self._state = True
             elif payload == self._payload_off:
@@ -150,8 +153,9 @@ class MqttTemplateSwitch(MqttAvailability, SwitchDevice):
         This method is a coroutine.
         """
         mqtt.async_publish(
-            self.hass, self._command_topic, self._templates[CONF_PAYLOAD_ON_TEMPLATE].async_render(), self._qos,
-            self._retain)
+            self.hass, self._command_topic,
+            self._templates[CONF_PAYLOAD_ON_TEMPLATE].async_render(),
+            self._qos, self._retain)
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = True
@@ -164,8 +168,9 @@ class MqttTemplateSwitch(MqttAvailability, SwitchDevice):
         This method is a coroutine.
         """
         mqtt.async_publish(
-            self.hass, self._command_topic, self._templates[CONF_PAYLOAD_OFF_TEMPLATE].async_render(), self._qos,
-            self._retain)
+            self.hass, self._command_topic,
+            self._templates[CONF_PAYLOAD_OFF_TEMPLATE].async_render(),
+            self._qos, self._retain)
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False

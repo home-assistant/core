@@ -27,8 +27,10 @@ class TestSwitchMQTT(unittest.TestCase):
                 'platform': 'mqtt_template',
                 'name': 'test',
                 'command_topic': 'command-topic',
-                'payload_on_template': "on,{{ states.sensor.duration_1.state }}",
-                'payload_off_template': "off,{{ states.sensor.duration_2.state }}",
+                'payload_on_template':
+                    "on,{{ states.sensor.duration_1.state }}",
+                'payload_off_template':
+                    "off,{{ states.sensor.duration_2.state }}",
                 'qos': '2'
             }
         })
