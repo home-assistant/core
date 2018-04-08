@@ -62,6 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(BroadlinkSensor(name, broadlink_data, variable))
     add_devices(dev, True)
 
+
 class BroadlinkSensor(Entity):
     """Representation of a Broadlink device sensor."""
 
@@ -94,7 +95,8 @@ class BroadlinkSensor(Entity):
         if self._broadlink_data.data is None:
             return
         self._state = self._broadlink_data.data[self._type]
-       
+
+
 class BroadlinkData(object):
     """Representation of a Broadlink data object."""
 
