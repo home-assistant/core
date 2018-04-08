@@ -24,6 +24,7 @@ ACTIVE_NAME = "Energy"
 PRODUCTION_NAME = "Production"
 CONSUMPTION_NAME = "Usage"
 DEVICES_NAME = "Devices"
+DEVICES_NAME_LOWER = DEVICES_NAME.lower()
 
 ACTIVE_TYPE = 'active'
 
@@ -51,7 +52,7 @@ SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
 VALID_SENSORS = ['%s_%s' % (typ, var)
                  for typ in SENSOR_TYPES
                  for var in SENSOR_VARIANTS]
-VALID_SENSORS.append(DEVICES_NAME.lower())
+VALID_SENSORS.append(DEVICES_NAME_LOWER)
 
 CONSUMPTION_ICON = 'mdi:flash'
 PRODUCTION_ICON = 'mdi:white-balance-sunny'
@@ -103,7 +104,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     devices = []
     for sensor in config.get(CONF_MONITORED_CONDITIONS):
-        if sensor != DEVICES_NAME.lower():
+        if sensor != DEVICES_NAME_LOWER:
             config_name, prod = sensor.rsplit('_', 1)
             name = SENSOR_TYPES[config_name].name
             sensor_type = SENSOR_TYPES[config_name].sensor_type
@@ -117,10 +118,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                            is_production, update_call))
         else:
             sense_devices = data.get_discovered_device_data()
-            devices.extend(map(
-                lambda d: SenseDevice(realtime_data_wrapper,
-                                      d['name'], d.get('location', ''),
-                                      d['icon']), sense_devices))
+            devices.extend([SenseDevice(realtime_data_wrapper,
+                                        d['name'], d.get('location', ''),
+                                        d['icon']) for d in sense_devices])
 
     add_devices(devices)
 
@@ -245,12 +245,13 @@ class SenseDevice(Entity):
     def update(self):
         """Get the latest data, update state."""
         payload = self._realtime_data_wrapper.realtime_data
-        device_on = False
-        if 'devices' in payload:
-            for device in payload['devices']:
-                if device['name'] == self._device_name:
-                    self._state = round(device['w'])
-                    device_on = self._state > 0
-
-        if not device_on:
+        if 'devices' not in payload:
             self._state = 0
+            return
+
+        for device in payload['devices']:
+            if device['name'] == self._device_name:
+                self._state = round(device['w'])
+                return
+
+        self._state = 0
