@@ -108,7 +108,7 @@ class OnkyoDevice(MediaPlayerDevice):
         return result
 
     def update(self):
-        """Get the latest details from the device."""
+        """Get the latest state from the device."""
         status = self.command('system-power query')
 
         if not status:
@@ -160,12 +160,12 @@ class OnkyoDevice(MediaPlayerDevice):
 
     @property
     def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
+        """Return boolean indicating mute status."""
         return self._muted
 
     @property
     def supported_features(self):
-        """Flag media player features that are supported."""
+        """Return media player features that are supported."""
         return SUPPORT_ONKYO
 
     @property
@@ -179,7 +179,7 @@ class OnkyoDevice(MediaPlayerDevice):
         return self._source_list
 
     def turn_off(self):
-        """Turn off media player."""
+        """Turn the media player off."""
         self.command('system-power standby')
 
     def set_volume_level(self, volume):
@@ -205,10 +205,10 @@ class OnkyoDevice(MediaPlayerDevice):
 
 
 class OnkyoDeviceZone2(OnkyoDevice):
-    """Representation of an Onkyo devices zone 2."""
+    """Representation of an Onkyo device's zone 2."""
 
     def update(self):
-        """Get the latest details from the device."""
+        """Get the latest state from the device."""
         status = self.command('zone2.power=query')
 
         if not status:
@@ -244,7 +244,7 @@ class OnkyoDeviceZone2(OnkyoDevice):
         self._volume = volume_raw[1] / 80.0
 
     def turn_off(self):
-        """Turn off media player."""
+        """Turn the media player off."""
         self.command('zone2.power=standby')
 
     def set_volume_level(self, volume):
