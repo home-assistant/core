@@ -153,8 +153,12 @@ class Hyperion(Light):
 
         if ATTR_EFFECT in kwargs:
             self._skip_update = True
-            mess = kwargs[ATTR_EFFECT].split('||')
-            self._effect = mess[0]
+            mess = kwargs[ATTR_EFFECT]
+            if isinstance(kwargs[ATTR_EFFECT], dict):
+                self._effect = mess['name']
+                mess.pop('name')
+            else:
+                self._effect = mess[ATTR_EFFECT]
             if self._effect == 'HDMI':
                 self.json_request({'command': 'clearall'})
                 self._icon = 'mdi:video-input-hdmi'
@@ -166,13 +170,10 @@ class Hyperion(Light):
                     'priority': self._priority,
                     'effect': {'name': self._effect}
                 }
-                if len(mess) > 1:
+                if isinstance(mess, dict):
                     json_mess['effect']['args'] = {}
-                    for i in range(1, len(mess)):
-                        arg = mess[i].split('=')
-                        if len(arg) == 2:
-                            json_mess['effect']['args'][arg[0]] =\
-                                json.loads(arg[1])
+                    for key in mess:
+                        json_mess['effect']['args'][key] = mess[key]
                 self.json_request(json_mess)
                 self._icon = 'mdi:lava-lamp'
                 self._rgb_color = [175, 0, 255]
