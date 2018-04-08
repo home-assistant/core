@@ -84,7 +84,8 @@ class HKDevice():
     def get_serial(self, accessory):
         import homekit
         for service in accessory['services']:
-            if homekit.ServicesTypes.get_short(service['type']) != 'accessory-information':
+            if homekit.ServicesTypes.get_short(service['type']) != \
+               'accessory-information':
                 continue
             for characteristic in service['characteristics']:
                 ctype = homekit.CharacteristicsTypes.get_short(
@@ -120,7 +121,7 @@ class HKDevice():
                     discovery.load_platform(self.hass, component, DOMAIN,
                                             service_info, self.config)
 
-    def device_configuration_callback(self, callback_data):
+    def device_config_callback(self, callback_data):
         """Handle initial pairing"""
         import homekit
         pairing_id = str(uuid.uuid4())
@@ -136,10 +137,11 @@ class HKDevice():
             self.configurator.notify_errors(_configurator, error_msg)
 
     def configure(self):
-        description = """Please enter the HomeKit code for your {}""".format(self.model)
+        description = "Please enter the HomeKit code for your {}".format(
+            self.model)
         self.hass.data[DOMAIN+self.hkid] = \
             self.configurator.request_config(self.model,
-                                             self.device_configuration_callback,
+                                             self.device_config_callback,
                                              description=description,
                                              submit_caption="submit",
                                              fields=[{'id': 'code',
