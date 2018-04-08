@@ -314,7 +314,7 @@ class LeafDataStore:
                 await asyncio.sleep(5)
 
             battery_status = await self.hass.async_add_job(
-                    self.leaf.get_status_from_update, request
+                self.leaf.get_status_from_update, request
             )
             if battery_status is not None:
                 break
@@ -323,20 +323,27 @@ class LeafDataStore:
 
     async def async_get_climate(self):
         """Request climate data from Nissan servers."""
+        from pycarwings2 import CarwingsError
         try:
             request = await self.hass.async_add_job(
-                                self.leaf.get_latest_hvac_status()
-                            )
+                self.leaf.get_latest_hvac_status
+            )
             return request
-        except TypeError:
+        except CarwingsError:
+            _LOGGER.error(
+                "An error occurred communicating with the car %s",
+                self.leaf.vin)
             return None
+
 
     async def async_set_climate(self, toggle):
         """Set climate control mode via Nissan servers."""
+        climate_result = None
         if toggle:
+            _LOGGER.info("Requesting climate turn on for %s", self.leaf.vin)
             request = await self.hass.async_add_job(
-                                self.leaf.start_climate_control()
-                )
+                self.leaf.start_climate_control
+            )
             for attempt in range(MAX_RESPONSE_ATTEMPTS):
                 if attempt > 0:
                     _LOGGER.info("Climate data not in yet (%s) (%s)." +
@@ -344,20 +351,17 @@ class LeafDataStore:
                     await asyncio.sleep(5)
 
                 climate_result = await self.hass.async_add_job(
-                                self.leaf.get_start_climate_control_result(
-                                    request)
+                    self.leaf.get_start_climate_control_result, request
                 )
 
                 if climate_result is not None:
-                    _LOGGER.debug(climate_result.__dict__)
                     break
 
-            self.signal_components()
-            return climate_result.is_hvac_running
         else:
+            _LOGGER.info("Requesting climate turn off for %s", self.leaf.vin)
             request = await self.hass.async_add_job(
-                                self.leaf.stop_climate_control()
-                            )
+                self.leaf.stop_climate_control
+            )
 
             for attempt in range(MAX_RESPONSE_ATTEMPTS):
                 if attempt > 0:
@@ -366,20 +370,24 @@ class LeafDataStore:
                     await asyncio.sleep(5)
 
                 climate_result = await self.hass.async_add_job(
-                                self.leaf.get_stop_climate_control_result(
-                                    request)
+                    self.leaf.get_stop_climate_control_result, request
                 )
 
                 if climate_result is not None:
-                    _LOGGER.debug(climate_result.__dict__)
                     break
 
+        if climate_result is not None:
+            _LOGGER.debug("Climate result:")
+            _LOGGER.debug(climate_result.__dict__)
             self.signal_components()
-            return climate_result.is_hvac_running is False
+            return (climate_result.is_hvac_running == toggle)
+
+        _LOGGER.debug("Climate result not returned by Nissan servers")
+        return False
 
     async def async_get_location(self):
         """Get location from Nissan servers."""
-        request = await self.hass.async_add_job(self.leaf.request_location())
+        request = await self.hass.async_add_job(self.leaf.request_location)
         for attempt in range(MAX_RESPONSE_ATTEMPTS):
             if attempt > 0:
                 _LOGGER.debug("Location data in in yet. (%s) (%s). " +
@@ -387,7 +395,7 @@ class LeafDataStore:
                 await asyncio.sleep(5)
 
             location_status = await self.hass.async_add_job(
-                    self.leaf.get_status_from_location(request)
+                self.leaf.get_status_from_location, request
             )
 
             if location_status is not None:
@@ -402,7 +410,7 @@ class LeafDataStore:
         """Request start charging via Nissan servers."""
         # TODO: Check if charging flag needs to be set here so that
         #       the next refresh occurs "quickly".
-        self.hass.async_add_job(self.leaf.start_charging())
+        self.hass.async_add_job(self.leaf.start_charging)
 
 
 class LeafEntity(Entity):
