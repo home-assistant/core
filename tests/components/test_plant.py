@@ -1,7 +1,6 @@
 """Unit tests for platform/plant.py."""
 import asyncio
 import unittest
-import pytest
 from datetime import datetime, timedelta
 
 from homeassistant.const import (ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
@@ -158,6 +157,23 @@ class TestPlant(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get('plant.'+plant_name)
         self.assertEqual(STATE_OK, state.state)
+
+    def test_max_age(self):
+        """Test if the max_age is set"""
+        config = GOOD_CONFIG.copy()
+        config['max_age'] = {'seconds': 0}
+        plant_name = 'some_plant'
+        assert setup_component(self.hass, plant.DOMAIN, {
+            plant.DOMAIN: {
+                plant_name: config
+            }
+        })
+        self.hass.states.set(BRIGHTNESS_ENTITY, 100000,
+                             {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
+        self.hass.block_till_done()
+        state = self.hass.states.get('plant.'+plant_name)
+        self.assertEqual(STATE_PROBLEM, state.state)
+        self.assertIn('brightness old', state.attributes['problem'])
 
 
 class TestDailyHistory(unittest.TestCase):
