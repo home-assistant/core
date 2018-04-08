@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         try:
             blackbird = get_blackbird(port)
         except SerialException:
-            _LOGGER.error("Error connecting to Blackbird controller")
+            _LOGGER.error("Error connecting to the Blackbird controller")
             return
 
     elif device_type == 'socket':
