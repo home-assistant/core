@@ -1,15 +1,13 @@
 """Class to manage the entities for a single platform."""
 import asyncio
-from datetime import timedelta
 
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import callback, valid_entity_id, split_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
-import homeassistant.util.dt as dt_util
 
-from .event import async_track_time_interval, async_track_point_in_time
+from .event import async_track_time_interval, async_call_later
 from .entity_registry import async_get_registry
 
 SLOW_SETUP_WARNING = 10
@@ -144,9 +142,13 @@ class EntityPlatform(object):
             logger.warning(
                 'Platform %s not ready yet. Retrying in %d seconds.',
                 self.platform_name, wait_time)
-            async_track_point_in_time(
-                hass, self._async_setup_platform(async_create_setup_task, tries),
-                dt_util.utcnow() + timedelta(seconds=wait_time))
+
+            async def setup_again(now):
+                """Run setup again."""
+                await self._async_setup_platform(
+                    async_create_setup_task, tries)
+
+            async_call_later(hass, wait_time, setup_again)
             return False
         except asyncio.TimeoutError:
             logger.error(

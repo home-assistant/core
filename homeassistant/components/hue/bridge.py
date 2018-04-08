@@ -77,8 +77,8 @@ class HueBridge(object):
                              host)
             return False
 
-        hass.async_add_job(hass.config_entries.delegate_entry(
-            self.config_entry, component=hass.components.light))
+        hass.async_add_job(hass.config_entries.async_forward_entry(
+            self.config_entry, 'light'))
 
         hass.services.async_register(
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene,

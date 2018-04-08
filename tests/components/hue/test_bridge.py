@@ -18,8 +18,9 @@ async def test_bridge_setup():
         assert await hue_bridge.async_setup() is True
 
     assert hue_bridge.api is api
-    assert len(hass.config_entries.delegate_entry.mock_calls) == 1
-    assert hass.config_entries.delegate_entry.mock_calls[0][1][0] is entry
+    assert len(hass.config_entries.async_forward_entry.mock_calls) == 1
+    assert hass.config_entries.async_forward_entry.mock_calls[0][1] == \
+        (entry, 'light')
 
 
 async def test_bridge_setup_invalid_username():
