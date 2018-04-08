@@ -106,10 +106,10 @@ class BroadlinkData(object):
         """Initialize the data object."""
         self.data = None
 
-        self.interval=interval
-        self.ip_addr=ip_addr
-        self.mac_addr=mac_addr
-        self.timeout=timeout
+        self.interval = interval
+        self.ip_addr = ip_addr
+        self.mac_addr = mac_addr
+        self.timeout = timeout
 
         self._connect()
 
