@@ -7,17 +7,17 @@ The old API should continue to work for the forseeable future.
 Documentation has not been created yet, here is an example configuration block:
 
 nissan_leaf:
-  username: "username"
-  password: "password"
-  nissan_connect: false
-  region: 'NE'
-  update_interval: 
-    hours: 1
-  update_interval_charging: 
-    minutes: 15
-  update_interval_climate: 
-    minutes: 5
-  force_miles: true
+  - username: "username"
+    password: "password"
+    nissan_connect: false
+    region: 'NE'
+    update_interval: 
+      hours: 1
+    update_interval_charging: 
+      minutes: 15
+    update_interval_climate: 
+      minutes: 5
+    force_miles: true
 """
 
 import logging
@@ -75,7 +75,7 @@ RESTRICTED_INTERVAL = timedelta(hours=12)
 MAX_RESPONSE_ATTEMPTS = 22
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_REGION): vol.In(CONF_VALID_REGIONS),
@@ -89,7 +89,7 @@ CONFIG_SCHEMA = vol.Schema({
             default=DEFAULT_CLIMATE_INTERVAL): (
                 vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))),
         vol.Optional(CONF_FORCE_MILES, default=False): cv.boolean
-    })
+    })])
 }, extra=vol.ALLOW_EXTRA)
 
 LEAF_COMPONENTS = [
@@ -157,7 +157,7 @@ def async_setup(hass, config):
     
 
     hass.data[DATA_LEAF] = {}
-    tasks = [async_setup_leaf(config[DOMAIN])]
+    tasks = [async_setup_leaf(car) for car in config[DOMAIN]]
     if tasks:
         yield from asyncio.wait(tasks, loop=hass.loop)
 
@@ -384,8 +384,8 @@ class LeafDataStore:
         self.signal_components()
         return location_status
 
-    async def async_start_charging(self):
-        request = await self.hass.async_add_job(
+    def start_charging(self):
+        request = self.hass.async_add_job(
                              self.leaf.start_charging()
                   )
 
