@@ -7,7 +7,7 @@ from homeassistant.core import split_entity_id
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service
-from .const import SERV_SWITCH, CHAR_ON
+from .const import CATEGORY_SWITCH, SERV_SWITCH, CHAR_ON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,12 +16,12 @@ _LOGGER = logging.getLogger(__name__)
 class Switch(HomeAccessory):
     """Generate a Switch accessory."""
 
-    def __init__(self, hass, entity_id, display_name, *args, **kwargs):
+    def __init__(self, hass, entity_id, display_name, **kwargs):
         """Initialize a Switch accessory object to represent a remote."""
-        super().__init__(display_name, entity_id, 'SWITCH', *args, **kwargs)
+        super().__init__(display_name, entity_id, CATEGORY_SWITCH, **kwargs)
 
-        self._hass = hass
-        self._entity_id = entity_id
+        self.hass = hass
+        self.entity_id = entity_id
         self._domain = split_entity_id(entity_id)[0]
 
         self.flag_target_state = False
@@ -34,11 +34,11 @@ class Switch(HomeAccessory):
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state to %s',
-                      self._entity_id, value)
+                      self.entity_id, value)
         self.flag_target_state = True
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self._hass.services.call(self._domain, service,
-                                 {ATTR_ENTITY_ID: self._entity_id})
+        self.hass.services.call(self._domain, service,
+                                {ATTR_ENTITY_ID: self.entity_id})
 
     def update_state(self, entity_id=None, old_state=None, new_state=None):
         """Update switch state after state changed."""
@@ -48,7 +48,7 @@ class Switch(HomeAccessory):
         current_state = (new_state.state == STATE_ON)
         if not self.flag_target_state:
             _LOGGER.debug('%s: Set current state to %s',
-                          self._entity_id, current_state)
-            self.char_on.set_value(current_state, should_callback=False)
+                          self.entity_id, current_state)
+            self.char_on.set_value(current_state)
 
         self.flag_target_state = False

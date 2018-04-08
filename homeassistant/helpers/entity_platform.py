@@ -20,8 +20,8 @@ PLATFORM_NOT_READY_RETRIES = 10
 class EntityPlatform(object):
     """Manage the entities for a single platform."""
 
-    def __init__(self, *, hass, logger, domain, platform_name, scan_interval,
-                 parallel_updates, entity_namespace,
+    def __init__(self, *, hass, logger, domain, platform_name, platform,
+                 scan_interval, entity_namespace,
                  async_entities_added_callback):
         """Initialize the entity platform.
 
@@ -38,8 +38,8 @@ class EntityPlatform(object):
         self.logger = logger
         self.domain = domain
         self.platform_name = platform_name
+        self.platform = platform
         self.scan_interval = scan_interval
-        self.parallel_updates = None
         self.entity_namespace = entity_namespace
         self.async_entities_added_callback = async_entities_added_callback
         self.entities = {}
@@ -47,13 +47,30 @@ class EntityPlatform(object):
         self._async_unsub_polling = None
         self._process_updates = asyncio.Lock(loop=hass.loop)
 
+        # Platform is None for the EntityComponent "catch-all" EntityPlatform
+        # which powers entity_component.add_entities
+        if platform is None:
+            self.parallel_updates = None
+            return
+
+        # Async platforms do all updates in parallel by default
+        if hasattr(platform, 'async_setup_platform'):
+            default_parallel_updates = 0
+        else:
+            default_parallel_updates = 1
+
+        parallel_updates = getattr(platform, 'PARALLEL_UPDATES',
+                                   default_parallel_updates)
+
         if parallel_updates:
             self.parallel_updates = asyncio.Semaphore(
                 parallel_updates, loop=hass.loop)
+        else:
+            self.parallel_updates = None
 
-    async def async_setup(self, platform, platform_config, discovery_info=None,
-                          tries=0):
+    async def async_setup(self, platform_config, discovery_info=None, tries=0):
         """Setup the platform."""
+        platform = self.platform
         logger = self.logger
         hass = self.hass
         full_name = '{}.{}'.format(self.domain, self.platform_name)
@@ -98,8 +115,7 @@ class EntityPlatform(object):
                 'Platform %s not ready yet. Retrying in %d seconds.',
                 self.platform_name, wait_time)
             async_track_point_in_time(
-                hass, self.async_setup(
-                    platform, platform_config, discovery_info, tries),
+                hass, self.async_setup(platform_config, discovery_info, tries),
                 dt_util.utcnow() + timedelta(seconds=wait_time))
         except asyncio.TimeoutError:
             logger.error(

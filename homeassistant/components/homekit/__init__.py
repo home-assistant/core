@@ -28,7 +28,7 @@ from .util import (
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==1.1.7']
+REQUIREMENTS = ['HAP-python==1.1.9']
 
 
 CONFIG_SCHEMA = vol.Schema({
@@ -73,8 +73,6 @@ async def async_setup(hass, config):
 
 def get_accessory(hass, state, aid, config):
     """Take state and return an accessory object if supported."""
-    _LOGGER.debug('<entity_id=%s aid=%d config=%s>',
-                  state.entity_id, aid, config)
     if not aid:
         _LOGGER.warning('The entitiy "%s" is not supported, since it '
                         'generates an invalid aid, please change it.',
@@ -104,8 +102,7 @@ def get_accessory(hass, state, aid, config):
                                            aid=aid)
 
     elif state.domain == 'alarm_control_panel':
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id,
-                      'SecuritySystem')
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'SecuritySystem')
         return TYPES['SecuritySystem'](hass, state.entity_id, state.name,
                                        alarm_code=config.get(ATTR_CODE),
                                        aid=aid)
@@ -122,6 +119,7 @@ def get_accessory(hass, state, aid, config):
                                    state.name, support_auto, aid=aid)
 
     elif state.domain == 'light':
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Light')
         return TYPES['Light'](hass, state.entity_id, state.name, aid=aid)
 
     elif state.domain == 'switch' or state.domain == 'remote' \
@@ -129,8 +127,6 @@ def get_accessory(hass, state, aid, config):
         _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Switch')
         return TYPES['Switch'](hass, state.entity_id, state.name, aid=aid)
 
-    _LOGGER.warning('The entity "%s" is not supported yet',
-                    state.entity_id)
     return None
 
 
@@ -190,9 +186,6 @@ class HomeKit():
 
         for state in self._hass.states.all():
             self.add_bridge_accessory(state)
-        for entity_id in self._config:
-            _LOGGER.warning('The entity "%s" was not setup when HomeKit '
-                            'was started', entity_id)
         self.bridge.set_broker(self.driver)
 
         if not self.bridge.paired:

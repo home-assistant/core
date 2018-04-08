@@ -7,16 +7,16 @@ https://home-assistant.io/components/binary_sensor.bmw_connected_drive/
 import asyncio
 import logging
 
-from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 
 DEPENDENCIES = ['bmw_connected_drive']
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'all_lids_closed': ['Doors', 'opening'],
-    'all_windows_closed': ['Windows', 'opening'],
+    'lids': ['Doors', 'opening'],
+    'windows': ['Windows', 'opening'],
     'door_lock_state': ['Door lock state', 'safety']
 }
 
@@ -45,7 +45,8 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         self._account = account
         self._vehicle = vehicle
         self._attribute = attribute
-        self._name = sensor_name
+        self._name = '{} {}'.format(self._vehicle.name, self._attribute)
+        self._sensor_name = sensor_name
         self._device_class = device_class
         self._state = None
 
@@ -74,13 +75,13 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         """Return the state attributes of the binary sensor."""
         vehicle_state = self._vehicle.state
         result = {
-            'car': self._vehicle.modelName
+            'car': self._vehicle.name
         }
 
-        if self._attribute == 'all_lids_closed':
+        if self._attribute == 'lids':
             for lid in vehicle_state.lids:
                 result[lid.name] = lid.state.value
-        elif self._attribute == 'all_windows_closed':
+        elif self._attribute == 'windows':
             for window in vehicle_state.windows:
                 result[window.name] = window.state.value
         elif self._attribute == 'door_lock_state':
@@ -90,19 +91,20 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
 
     def update(self):
         """Read new state data from the library."""
+        from bimmer_connected.state import LockState
         vehicle_state = self._vehicle.state
 
         # device class opening: On means open, Off means closed
-        if self._attribute == 'all_lids_closed':
+        if self._attribute == 'lids':
             _LOGGER.debug("Status of lid: %s", vehicle_state.all_lids_closed)
             self._state = not vehicle_state.all_lids_closed
-        if self._attribute == 'all_windows_closed':
+        if self._attribute == 'windows':
             self._state = not vehicle_state.all_windows_closed
         # device class safety: On means unsafe, Off means safe
         if self._attribute == 'door_lock_state':
-            # Possible values: LOCKED, SECURED, SELECTIVELOCKED, UNLOCKED
-            self._state = bool(vehicle_state.door_lock_state.value
-                               in ('SELECTIVELOCKED', 'UNLOCKED'))
+            # Possible values: LOCKED, SECURED, SELECTIVE_LOCKED, UNLOCKED
+            self._state = vehicle_state.door_lock_state not in \
+                          [LockState.LOCKED, LockState.SECURED]
 
     def update_callback(self):
         """Schedule a state update."""

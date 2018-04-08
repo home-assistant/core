@@ -24,6 +24,7 @@ DATA_KEY = 'switch.xiaomi_miio'
 
 CONF_MODEL = 'model'
 MODEL_POWER_STRIP_V2 = 'zimi.powerstrip.v2'
+MODEL_PLUG_V3 = 'chuangmi.plug.v3'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -34,10 +35,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'qmi.powerstrip.v1',
          'zimi.powerstrip.v2',
          'chuangmi.plug.m1',
-         'chuangmi.plug.v2']),
+         'chuangmi.plug.v2',
+         'chuangmi.plug.v3']),
 })
 
-REQUIREMENTS = ['python-miio==0.3.8']
+REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
@@ -51,18 +53,20 @@ ATTR_PRICE = 'price'
 
 SUCCESS = ['ok']
 
-SUPPORT_SET_POWER_MODE = 1
-SUPPORT_SET_WIFI_LED = 2
-SUPPORT_SET_POWER_PRICE = 4
+FEATURE_SET_POWER_MODE = 1
+FEATURE_SET_WIFI_LED = 2
+FEATURE_SET_POWER_PRICE = 4
 
-ADDITIONAL_SUPPORT_FLAGS_GENERIC = 0
+FEATURE_FLAGS_GENERIC = 0
 
-ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V1 = (SUPPORT_SET_POWER_MODE |
-                                           SUPPORT_SET_WIFI_LED |
-                                           SUPPORT_SET_POWER_PRICE)
+FEATURE_FLAGS_POWER_STRIP_V1 = (FEATURE_SET_POWER_MODE |
+                                FEATURE_SET_WIFI_LED |
+                                FEATURE_SET_POWER_PRICE)
 
-ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V2 = (SUPPORT_SET_WIFI_LED |
-                                           SUPPORT_SET_POWER_PRICE)
+FEATURE_FLAGS_POWER_STRIP_V2 = (FEATURE_SET_WIFI_LED |
+                                FEATURE_SET_POWER_PRICE)
+
+FEATURE_FLAGS_PLUG_V3 = (FEATURE_SET_WIFI_LED)
 
 SERVICE_SET_WIFI_LED_ON = 'xiaomi_miio_set_wifi_led_on'
 SERVICE_SET_WIFI_LED_OFF = 'xiaomi_miio_set_wifi_led_off'
@@ -124,29 +128,27 @@ async def async_setup_platform(hass, config, async_add_devices,
         except DeviceException:
             raise PlatformNotReady
 
-    if model in ['chuangmi.plug.v1']:
-        from miio import PlugV1
-        plug = PlugV1(host, token)
+    if model in ['chuangmi.plug.v1', 'chuangmi.plug.v3']:
+        from miio import ChuangmiPlug
+        plug = ChuangmiPlug(host, token, model=model)
 
         # The device has two switchable channels (mains and a USB port).
         # A switch device per channel will be created.
         for channel_usb in [True, False]:
-            device = ChuangMiPlugV1Switch(
+            device = ChuangMiPlugSwitch(
                 name, plug, model, unique_id, channel_usb)
             devices.append(device)
             hass.data[DATA_KEY][host] = device
 
-    elif model in ['qmi.powerstrip.v1',
-                   'zimi.powerstrip.v2']:
+    elif model in ['qmi.powerstrip.v1', 'zimi.powerstrip.v2']:
         from miio import PowerStrip
         plug = PowerStrip(host, token)
         device = XiaomiPowerStripSwitch(name, plug, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
-    elif model in ['chuangmi.plug.m1',
-                   'chuangmi.plug.v2']:
-        from miio import Plug
-        plug = Plug(host, token)
+    elif model in ['chuangmi.plug.m1', 'chuangmi.plug.v2']:
+        from miio import ChuangmiPlug
+        plug = ChuangmiPlug(host, token, model=model)
         device = XiaomiPlugGenericSwitch(name, plug, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
@@ -204,7 +206,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
             ATTR_TEMPERATURE: None,
             ATTR_MODEL: self._model,
         }
-        self._additional_supported_features = ADDITIONAL_SUPPORT_FLAGS_GENERIC
+        self._device_features = FEATURE_FLAGS_GENERIC
         self._skip_update = False
 
     @property
@@ -250,6 +252,10 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
                 partial(func, *args, **kwargs))
 
             _LOGGER.debug("Response received from plug: %s", result)
+
+            # The Chuangmi Plug V3 returns 0 on success on usb_on/usb_off.
+            if func in ['usb_on', 'usb_off'] and result == 0:
+                return True
 
             return result == SUCCESS
         except DeviceException as exc:
@@ -300,7 +306,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
 
     async def async_set_wifi_led_on(self):
         """Turn the wifi led on."""
-        if self._additional_supported_features & SUPPORT_SET_WIFI_LED == 0:
+        if self._device_features & FEATURE_SET_WIFI_LED == 0:
             return
 
         await self._try_command(
@@ -309,7 +315,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
 
     async def async_set_wifi_led_off(self):
         """Turn the wifi led on."""
-        if self._additional_supported_features & SUPPORT_SET_WIFI_LED == 0:
+        if self._device_features & FEATURE_SET_WIFI_LED == 0:
             return
 
         await self._try_command(
@@ -318,7 +324,7 @@ class XiaomiPlugGenericSwitch(SwitchDevice):
 
     async def async_set_power_price(self, price: int):
         """Set the power price."""
-        if self._additional_supported_features & SUPPORT_SET_POWER_PRICE == 0:
+        if self._device_features & FEATURE_SET_POWER_PRICE == 0:
             return
 
         await self._try_command(
@@ -331,26 +337,24 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
 
     def __init__(self, name, plug, model, unique_id):
         """Initialize the plug switch."""
-        XiaomiPlugGenericSwitch.__init__(self, name, plug, model, unique_id)
+        super().__init__(name, plug, model, unique_id)
 
         if self._model == MODEL_POWER_STRIP_V2:
-            self._additional_supported_features = \
-                ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V2
+            self._device_features = FEATURE_FLAGS_POWER_STRIP_V2
         else:
-            self._additional_supported_features = \
-                ADDITIONAL_SUPPORT_FLAGS_POWER_STRIP_V1
+            self._device_features = FEATURE_FLAGS_POWER_STRIP_V1
 
         self._state_attrs.update({
             ATTR_LOAD_POWER: None,
         })
 
-        if self._additional_supported_features & SUPPORT_SET_POWER_MODE == 1:
+        if self._device_features & FEATURE_SET_POWER_MODE == 1:
             self._state_attrs[ATTR_POWER_MODE] = None
 
-        if self._additional_supported_features & SUPPORT_SET_WIFI_LED == 1:
+        if self._device_features & FEATURE_SET_WIFI_LED == 1:
             self._state_attrs[ATTR_WIFI_LED] = None
 
-        if self._additional_supported_features & SUPPORT_SET_POWER_PRICE == 1:
+        if self._device_features & FEATURE_SET_POWER_PRICE == 1:
             self._state_attrs[ATTR_POWER_PRICE] = None
 
     async def async_update(self):
@@ -373,16 +377,16 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
                 ATTR_LOAD_POWER: state.load_power,
             })
 
-            if self._additional_supported_features & \
-                    SUPPORT_SET_POWER_MODE == 1 and state.mode:
+            if self._device_features & FEATURE_SET_POWER_MODE == 1 and \
+                    state.mode:
                 self._state_attrs[ATTR_POWER_MODE] = state.mode.value
 
-            if self._additional_supported_features & \
-                    SUPPORT_SET_WIFI_LED == 1 and state.wifi_led:
+            if self._device_features & FEATURE_SET_WIFI_LED == 1 and \
+                    state.wifi_led:
                 self._state_attrs[ATTR_WIFI_LED] = state.wifi_led
 
-            if self._additional_supported_features & \
-                    SUPPORT_SET_POWER_PRICE == 1 and state.power_price:
+            if self._device_features & FEATURE_SET_POWER_PRICE == 1 and \
+                    state.power_price:
                 self._state_attrs[ATTR_POWER_PRICE] = state.power_price
 
         except DeviceException as ex:
@@ -391,7 +395,7 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
 
     async def async_set_power_mode(self, mode: str):
         """Set the power mode."""
-        if self._additional_supported_features & SUPPORT_SET_POWER_MODE == 0:
+        if self._device_features & FEATURE_SET_POWER_MODE == 0:
             return
 
         from miio.powerstrip import PowerMode
@@ -401,8 +405,8 @@ class XiaomiPowerStripSwitch(XiaomiPlugGenericSwitch):
             self._plug.set_power_mode, PowerMode(mode))
 
 
-class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch):
-    """Representation of a Chuang Mi Plug V1."""
+class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
+    """Representation of a Chuang Mi Plug V1 and V3."""
 
     def __init__(self, name, plug, model, unique_id, channel_usb):
         """Initialize the plug switch."""
@@ -411,8 +415,15 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch):
         if unique_id is not None and channel_usb:
             unique_id = "{}-{}".format(unique_id, 'usb')
 
-        XiaomiPlugGenericSwitch.__init__(self, name, plug, model, unique_id)
+        super().__init__(name, plug, model, unique_id)
         self._channel_usb = channel_usb
+
+        if self._model == MODEL_PLUG_V3:
+            self._device_features = FEATURE_FLAGS_PLUG_V3
+            self._state_attrs.update({
+                ATTR_WIFI_LED: None,
+                ATTR_LOAD_POWER: None,
+            })
 
     async def async_turn_on(self, **kwargs):
         """Turn a channel on."""
@@ -462,6 +473,12 @@ class ChuangMiPlugV1Switch(XiaomiPlugGenericSwitch):
             self._state_attrs.update({
                 ATTR_TEMPERATURE: state.temperature
             })
+
+            if state.wifi_led:
+                self._state_attrs[ATTR_WIFI_LED] = state.wifi_led
+
+            if state.load_power:
+                self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
             self._available = False

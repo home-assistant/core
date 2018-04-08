@@ -71,7 +71,7 @@ class TestHomekitSecuritySystems(unittest.TestCase):
         self.assertEqual(acc.char_current_state.value, 3)
 
         # Set from HomeKit
-        acc.char_target_state.set_value(0)
+        acc.char_target_state.client_update_value(0)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE], 'alarm_arm_home')
@@ -79,7 +79,7 @@ class TestHomekitSecuritySystems(unittest.TestCase):
             self.events[0].data[ATTR_SERVICE_DATA][ATTR_CODE], '1234')
         self.assertEqual(acc.char_target_state.value, 0)
 
-        acc.char_target_state.set_value(1)
+        acc.char_target_state.client_update_value(1)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[1].data[ATTR_SERVICE], 'alarm_arm_away')
@@ -87,7 +87,7 @@ class TestHomekitSecuritySystems(unittest.TestCase):
             self.events[0].data[ATTR_SERVICE_DATA][ATTR_CODE], '1234')
         self.assertEqual(acc.char_target_state.value, 1)
 
-        acc.char_target_state.set_value(2)
+        acc.char_target_state.client_update_value(2)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[2].data[ATTR_SERVICE], 'alarm_arm_night')
@@ -95,10 +95,26 @@ class TestHomekitSecuritySystems(unittest.TestCase):
             self.events[0].data[ATTR_SERVICE_DATA][ATTR_CODE], '1234')
         self.assertEqual(acc.char_target_state.value, 2)
 
-        acc.char_target_state.set_value(3)
+        acc.char_target_state.client_update_value(3)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[3].data[ATTR_SERVICE], 'alarm_disarm')
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE_DATA][ATTR_CODE], '1234')
         self.assertEqual(acc.char_target_state.value, 3)
+
+    def test_no_alarm_code(self):
+        """Test accessory if security_system doesn't require a alarm_code."""
+        acp = 'alarm_control_panel.test'
+
+        acc = SecuritySystem(self.hass, acp, 'SecuritySystem',
+                             alarm_code=None, aid=2)
+        acc.run()
+
+        # Set from HomeKit
+        acc.char_target_state.client_update_value(0)
+        self.hass.block_till_done()
+        self.assertEqual(
+            self.events[0].data[ATTR_SERVICE], 'alarm_arm_home')
+        self.assertNotIn(ATTR_CODE, self.events[0].data[ATTR_SERVICE_DATA])
+        self.assertEqual(acc.char_target_state.value, 0)

@@ -18,6 +18,7 @@ from homeassistant.components.light import (
     FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR, SUPPORT_TRANSITION,
     Light)
+from homeassistant.util import color
 
 DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -226,21 +227,43 @@ class HueLight(Light):
         return self.light.state.get('bri')
 
     @property
+    def _color_mode(self):
+        """Return the hue color mode."""
+        if self.is_group:
+            return self.light.action.get('colormode')
+        return self.light.state.get('colormode')
+
+    @property
     def hs_color(self):
         """Return the hs color value."""
-        if self.is_group:
-            return (
-                self.light.action.get('hue') / 65535 * 360,
-                self.light.action.get('sat') / 255 * 100,
-            )
-        return (
-            self.light.state.get('hue') / 65535 * 360,
-            self.light.state.get('sat') / 255 * 100,
-        )
+        # pylint: disable=redefined-outer-name
+        mode = self._color_mode
+
+        if mode not in ('hs', 'xy'):
+            return
+
+        source = self.light.action if self.is_group else self.light.state
+
+        hue = source.get('hue')
+        sat = source.get('sat')
+
+        # Sometimes the state will not include valid hue/sat values.
+        # Reported as issue 13434
+        if hue is not None and sat is not None:
+            return hue / 65535 * 360, sat / 255 * 100
+
+        if 'xy' not in source:
+            return None
+
+        return color.color_xy_to_hs(*source['xy'])
 
     @property
     def color_temp(self):
         """Return the CT color value."""
+        # Don't return color temperature unless in color temperature mode
+        if self._color_mode != "ct":
+            return None
+
         if self.is_group:
             return self.light.action.get('ct')
         return self.light.state.get('ct')
@@ -277,8 +300,14 @@ class HueLight(Light):
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_HS_COLOR in kwargs:
-            command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
-            command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
+            if self.is_osram:
+                command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
+                command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
+            else:
+                # Philips hue bulb models respond differently to hue/sat
+                # requests, so we convert to XY first to ensure a consistent
+                # color.
+                command['xy'] = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))

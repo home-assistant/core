@@ -1094,20 +1094,18 @@ class TestZWaveServices(unittest.TestCase):
             assert mock_logger.info.mock_calls[0][1][3] == 2345
 
     def test_print_node(self):
-        """Test zwave print_config_parameter service."""
-        node1 = MockNode(node_id=14)
-        node2 = MockNode(node_id=15)
-        self.zwave_network.nodes = {14: node1, 15: node2}
+        """Test zwave print_node_parameter service."""
+        node = MockNode(node_id=14)
 
-        with patch.object(zwave, 'pprint') as mock_pprint:
+        self.zwave_network.nodes = {14: node}
+
+        with self.assertLogs(level='INFO') as mock_logger:
             self.hass.services.call('zwave', 'print_node', {
-                const.ATTR_NODE_ID: 15,
+                const.ATTR_NODE_ID: 14
             })
             self.hass.block_till_done()
 
-            assert mock_pprint.called
-            assert len(mock_pprint.mock_calls) == 1
-            assert mock_pprint.mock_calls[0][1][0]['node_id'] == 15
+            self.assertIn("FOUND NODE ", mock_logger.output[1])
 
     def test_set_wakeup(self):
         """Test zwave set_wakeup service."""

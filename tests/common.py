@@ -370,8 +370,8 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         logger=None,
         domain='test_domain',
         platform_name='test_platform',
+        platform=None,
         scan_interval=timedelta(seconds=15),
-        parallel_updates=0,
         entity_namespace=None,
         async_entities_added_callback=lambda: None
     ):
@@ -381,8 +381,8 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
             logger=logger,
             domain=domain,
             platform_name=platform_name,
+            platform=platform,
             scan_interval=scan_interval,
-            parallel_updates=parallel_updates,
             entity_namespace=entity_namespace,
             async_entities_added_callback=async_entities_added_callback,
         )

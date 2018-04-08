@@ -17,7 +17,7 @@
                 "title": "Wybierz mostek Hue"
             },
             "link": {
-                "description": "Naci\u015bnij przycisk na mostku, aby zarejestrowa\u0107 Philips Hue z Home Assistant. ",
+                "description": "Naci\u015bnij przycisk na mostku, aby zarejestrowa\u0107 Philips Hue z Home Assistant.",
                 "title": "Hub Link"
             }
         },

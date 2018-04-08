@@ -8,6 +8,7 @@ import asyncio
 import logging
 import json
 from datetime import timedelta
+from typing import Optional
 
 import voluptuous as vol
 
@@ -17,7 +18,7 @@ from homeassistant.components.mqtt import (
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, MqttAvailability)
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
-    CONF_UNIT_OF_MEASUREMENT)
+    CONF_UNIT_OF_MEASUREMENT, CONF_ICON)
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
@@ -28,6 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_EXPIRE_AFTER = 'expire_after'
 CONF_JSON_ATTRS = 'json_attributes'
+CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Sensor'
 DEFAULT_FORCE_UPDATE = False
@@ -36,9 +38,13 @@ DEPENDENCIES = ['mqtt']
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    # Integrations shouldn't never expose unique_id through configuration
+    # this here is an exception because MQTT is a msg transport, not a protocol
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -59,8 +65,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_UNIT_OF_MEASUREMENT),
         config.get(CONF_FORCE_UPDATE),
         config.get(CONF_EXPIRE_AFTER),
+        config.get(CONF_ICON),
         value_template,
         config.get(CONF_JSON_ATTRS),
+        config.get(CONF_UNIQUE_ID),
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
@@ -71,8 +79,9 @@ class MqttSensor(MqttAvailability, Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
-                 force_update, expire_after, value_template,
-                 json_attributes, availability_topic, payload_available,
+                 force_update, expire_after, icon, value_template,
+                 json_attributes, unique_id: Optional[str],
+                 availability_topic, payload_available,
                  payload_not_available):
         """Initialize the sensor."""
         super().__init__(availability_topic, qos, payload_available,
@@ -85,8 +94,10 @@ class MqttSensor(MqttAvailability, Entity):
         self._force_update = force_update
         self._template = value_template
         self._expire_after = expire_after
+        self._icon = icon
         self._expiration_trigger = None
         self._json_attributes = set(json_attributes)
+        self._unique_id = unique_id
         self._attributes = None
 
     @asyncio.coroutine
@@ -170,3 +181,13 @@ class MqttSensor(MqttAvailability, Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._attributes
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def icon(self):
+        """Return the icon."""
+        return self._icon

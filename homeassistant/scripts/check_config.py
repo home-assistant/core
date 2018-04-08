@@ -252,7 +252,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     """
     def sort_dict_key(val):
         """Return the dict key for sorting."""
-        key = str.lower(val[0])
+        key = str(val[0]).lower()
         return '0' if key == 'platform' else key
 
     indent_str = indent_count * ' '
@@ -261,10 +261,10 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     if isinstance(layer, Dict):
         for key, value in sorted(layer.items(), key=sort_dict_key):
             if isinstance(value, (dict, list)):
-                print(indent_str, key + ':', line_info(value, **kwargs))
+                print(indent_str, str(key) + ':', line_info(value, **kwargs))
                 dump_dict(value, indent_count + 2)
             else:
-                print(indent_str, key + ':', value)
+                print(indent_str, str(key) + ':', value)
             indent_str = indent_count * ' '
     if isinstance(layer, Sequence):
         for i in layer:

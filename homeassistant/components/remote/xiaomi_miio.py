@@ -22,7 +22,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['python-miio==0.3.8']
+REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -138,7 +138,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         while (utcnow() - start_time) < timedelta(seconds=timeout):
             message = yield from hass.async_add_job(
                 device.read, slot)
-            _LOGGER.debug("Message recieved from device: '%s'", message)
+            _LOGGER.debug("Message received from device: '%s'", message)
 
             if 'code' in message and message['code']:
                 log_msg = "Received command is: {}".format(message['code'])

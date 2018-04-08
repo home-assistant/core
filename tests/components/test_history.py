@@ -131,6 +131,39 @@ class TestComponentHistory(unittest.TestCase):
 
         self.assertEqual(states, hist[entity_id])
 
+    def test_get_last_state_changes(self):
+        """Test number of state changes."""
+        self.init_recorder()
+        entity_id = 'sensor.test'
+
+        def set_state(state):
+            """Set the state."""
+            self.hass.states.set(entity_id, state)
+            self.wait_recording_done()
+            return self.hass.states.get(entity_id)
+
+        start = dt_util.utcnow() - timedelta(minutes=2)
+        point = start + timedelta(minutes=1)
+        point2 = point + timedelta(minutes=1)
+
+        with patch('homeassistant.components.recorder.dt_util.utcnow',
+                   return_value=start):
+            set_state('1')
+
+        states = []
+        with patch('homeassistant.components.recorder.dt_util.utcnow',
+                   return_value=point):
+            states.append(set_state('2'))
+
+        with patch('homeassistant.components.recorder.dt_util.utcnow',
+                   return_value=point2):
+            states.append(set_state('3'))
+
+        hist = history.get_last_state_changes(
+            self.hass, 2, entity_id)
+
+        self.assertEqual(states, hist[entity_id])
+
     def test_get_significant_states(self):
         """Test that only significant states are returned.
 

@@ -1,5 +1,6 @@
 """Constants used be the HomeKit component."""
 # #### MISC ####
+DEBOUNCE_TIMEOUT = 0.5
 DOMAIN = 'homekit'
 HOMEKIT_FILE = '.homekit.state'
 HOMEKIT_NOTIFY_ID = 4663548
@@ -24,13 +25,16 @@ BRIDGE_NAME = 'Home Assistant'
 MANUFACTURER = 'HomeAssistant'
 
 # #### Categories ####
+CATEGORY_ALARM_SYSTEM = 'ALARM_SYSTEM'
 CATEGORY_LIGHT = 'LIGHTBULB'
 CATEGORY_SENSOR = 'SENSOR'
+CATEGORY_SWITCH = 'SWITCH'
+CATEGORY_THERMOSTAT = 'THERMOSTAT'
+CATEGORY_WINDOW_COVERING = 'WINDOW_COVERING'
 
 
 # #### Services ####
 SERV_ACCESSORY_INFO = 'AccessoryInformation'
-SERV_BRIDGING_STATE = 'BridgingState'
 SERV_HUMIDITY_SENSOR = 'HumiditySensor'
 # CurrentRelativeHumidity | StatusActive, StatusFault, StatusTampered,
 # StatusLowBattery, Name
@@ -43,9 +47,8 @@ SERV_WINDOW_COVERING = 'WindowCovering'
 
 
 # #### Characteristics ####
-CHAR_ACC_IDENTIFIER = 'AccessoryIdentifier'
 CHAR_BRIGHTNESS = 'Brightness'  # Int | [0, 100]
-CHAR_CATEGORY = 'Category'
+CHAR_COLOR_TEMPERATURE = 'ColorTemperature'
 CHAR_COOLING_THRESHOLD_TEMPERATURE = 'CoolingThresholdTemperature'
 CHAR_CURRENT_HEATING_COOLING = 'CurrentHeatingCoolingState'
 CHAR_CURRENT_POSITION = 'CurrentPosition'
@@ -54,13 +57,11 @@ CHAR_CURRENT_SECURITY_STATE = 'SecuritySystemCurrentState'
 CHAR_CURRENT_TEMPERATURE = 'CurrentTemperature'
 CHAR_HEATING_THRESHOLD_TEMPERATURE = 'HeatingThresholdTemperature'
 CHAR_HUE = 'Hue'  # arcdegress | [0, 360]
-CHAR_LINK_QUALITY = 'LinkQuality'
 CHAR_MANUFACTURER = 'Manufacturer'
 CHAR_MODEL = 'Model'
 CHAR_NAME = 'Name'
 CHAR_ON = 'On'  # boolean
 CHAR_POSITION_STATE = 'PositionState'
-CHAR_REACHABLE = 'Reachable'
 CHAR_SATURATION = 'Saturation'  # percent
 CHAR_SERIAL_NUMBER = 'SerialNumber'
 CHAR_TARGET_HEATING_COOLING = 'TargetHeatingCoolingState'
