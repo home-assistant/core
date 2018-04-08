@@ -56,6 +56,11 @@ class QSSensor(QSEntity):
         return str(self._val)
 
     @property
+    def unique_id(self):
+        """Return a unique identifier for this sensor."""
+        return "qs{}:{}".format(self.qsid, self.channel)
+
+    @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self.unit
