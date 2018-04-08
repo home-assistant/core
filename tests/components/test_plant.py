@@ -159,7 +159,7 @@ class TestPlant(unittest.TestCase):
         self.assertEqual(STATE_OK, state.state)
 
     def test_max_age(self):
-        """Test if the max_age is set"""
+        """Test if the max_age is set."""
         config = GOOD_CONFIG.copy()
         config['max_age'] = {'seconds': 0}
         plant_name = 'some_plant'
