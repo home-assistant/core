@@ -49,7 +49,8 @@ CONF_MIN_CONDUCTIVITY = 'min_' + READING_CONDUCTIVITY
 CONF_MAX_CONDUCTIVITY = 'max_' + READING_CONDUCTIVITY
 CONF_MIN_BRIGHTNESS = 'min_' + READING_BRIGHTNESS
 CONF_MAX_BRIGHTNESS = 'max_' + READING_BRIGHTNESS
-CONF_CHECK_DAYS = 'check_days'
+CONF_CHECK_INTERVAL = 'check_interval'
+CONF_MAX_AGE = 'max_age'
 
 CONF_SENSOR_BATTERY_LEVEL = READING_BATTERY
 CONF_SENSOR_MOISTURE = READING_MOISTURE
@@ -76,7 +77,16 @@ PLANT_SCHEMA = vol.Schema({
     vol.Optional(CONF_MAX_CONDUCTIVITY): cv.positive_int,
     vol.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
     vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
-    vol.Optional(CONF_CHECK_DAYS): cv.positive_int,
+    # check minimum brightness over the last 3 days
+    # Rationale: The plant should be fine if it's not bright enough for
+    # 3 days.
+    vol.Optional(CONF_CHECK_INTERVAL,
+                 default=timedelta(days=3)): cv.time_period,
+    # Set state to PROBLEM if sensor data is older than one day.
+    # Rationale: The plant will survive for a day even if the values aren't
+    # perfect.
+    vol.Optional(CONF_MAX_AGE,
+                 default=timedelta(days=1)): cv.time_period,
 })
 
 DOMAIN = 'plant'
@@ -163,10 +173,14 @@ class Plant(Entity):
         self._brightness = None
         self._problems = PROBLEM_NONE
 
-        self._conf_check_days = 3  # default check interval: 3 days
-        if CONF_CHECK_DAYS in self._config:
-            self._conf_check_days = self._config[CONF_CHECK_DAYS]
+        self._conf_check_days = self._config[CONF_CHECK_INTERVAL]
         self._brightness_history = DailyHistory(self._conf_check_days)
+        self._max_age_timedelta = self._config[CONF_MAX_AGE]
+        self._max_age_map = dict()
+
+        now = datetime.now()
+        for reading in self._readingmap:
+            self._max_age_map[reading] = now
 
     @callback
     def state_changed(self, entity_id, _, new_state):
@@ -177,10 +191,11 @@ class Plant(Entity):
         value = new_state.state
         _LOGGER.debug("Received callback from %s with value %s",
                       entity_id, value)
-        if value == STATE_UNKNOWN:
+        if value == STATE_UNKNOWN or not value:
             return
 
         reading = self._sensormap[entity_id]
+        self._max_age_map[reading] = datetime.now()
         if reading == READING_MOISTURE:
             self._moisture = int(float(value))
         elif reading == READING_BATTERY:
@@ -199,11 +214,12 @@ class Plant(Entity):
         if ATTR_UNIT_OF_MEASUREMENT in new_state.attributes:
             self._unit_of_measurement[reading] = \
                 new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        self._update_state()
+        self.update()
 
-    def _update_state(self):
+    def update(self):
         """Update the state of the class based sensor data."""
         result = []
+        max_age = datetime.now() - self._max_age_timedelta
         for sensor_name in self._sensormap.values():
             params = self.READINGS[sensor_name]
             value = getattr(self, '_{}'.format(sensor_name))
@@ -214,7 +230,8 @@ class Plant(Entity):
                 else:
                     result.append(self._check_min(sensor_name, value, params))
                 result.append(self._check_max(sensor_name, value, params))
-
+            if self._max_age_map[sensor_name] < max_age:
+                result.append('{} old'.format(sensor_name))
         result = [r for r in result if r is not None]
 
         if result:
@@ -255,7 +272,7 @@ class Plant(Entity):
         This only needs to be done once during startup.
         """
         from homeassistant.components.recorder.models import States
-        start_date = datetime.now() - timedelta(days=self._conf_check_days)
+        start_date = datetime.now() - self._conf_check_days
         entity_id = self._readingmap.get(READING_BRIGHTNESS)
         if entity_id is None:
             _LOGGER.debug("not reading the history from the database as "
@@ -284,8 +301,12 @@ class Plant(Entity):
 
     @property
     def should_poll(self):
-        """No polling needed."""
-        return False
+        """Polling needed to check for outdated measurements.
+
+        The measurements are updated as they arrive from the sensors. But for
+        the maximum age we need to poll the sensor.
+        """
+        return True
 
     @property
     def name(self):
