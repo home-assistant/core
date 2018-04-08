@@ -12,6 +12,7 @@ import requests
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,10 +21,12 @@ SCAN_INTERVAL = datetime.timedelta(seconds=30)
 API_URL = 'https://backend.sigfox.com/api/'
 CONF_API_LOGIN = 'api_login'
 CONF_API_PASSWORD = 'api_password'
+DEFAULT_NAME = 'sigfox'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_LOGIN): cv.string,
     vol.Required(CONF_API_PASSWORD): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -31,13 +34,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the sigfox sensor."""
     api_login = config[CONF_API_LOGIN]
     api_password = config[CONF_API_PASSWORD]
-    sigfox = SigfoxAPI(api_login, api_password)
+    name = config[CONF_NAME]
+    try:
+        sigfox = SigfoxAPI(api_login, api_password)
+    except:
+        _LOGGER.error("Sigfox component not setup")
+        return False
     auth = sigfox.auth
     devices = sigfox.devices
 
     sensors = []
     for device in devices:
-        sensors.append(SigfoxDevice(device, auth))
+        sensors.append(SigfoxDevice(device, auth, name))
     add_devices(sensors, True)
 
 
@@ -52,19 +60,29 @@ class SigfoxAPI(object):
     def __init__(self, api_login, api_password):
         """Initialise the API object."""
         self._auth = requests.auth.HTTPBasicAuth(api_login, api_password)
-        response = requests.get(API_URL + 'devicetypes', auth=self._auth)
+        if self.check_credentials():
+            device_types = self.get_device_types()
+            self._devices = self.get_devices(device_types)
+
+    def check_credentials(self):
+        """"Check API credentials are valid."""
+        url = '{}{}'.format(API_URL, 'devicetypes')
+        response = requests.get(url, auth=self._auth, timeout=10)
         if response.status_code != 200:
-            _LOGGER.warning(
-                "Unable to login to Sigfox API: %s", str(response.status_code))
-            self._devices = []
-            return
-        device_types = self.get_device_types()
-        self._devices = self.get_devices(device_types)
+            if response.status_code == 401:
+                _LOGGER.error(
+                    "Invalid credentials for Sigfox API")
+            else:
+                _LOGGER.error(
+                    "Unable to login to Sigfox API, error code %s", str(
+                        response.status_code))
+            raise Exception()
+        return True
 
     def get_device_types(self):
         """Get a list of device types."""
-        url = API_URL + 'devicetypes'
-        response = requests.get(url, auth=self._auth)
+        url = '{}{}'.format(API_URL, 'devicetypes')
+        response = requests.get(url, auth=self._auth, timeout=10)
         device_types = []
         for device in json.loads(response.text)['data']:
             device_types.append(device['id'])
@@ -74,8 +92,9 @@ class SigfoxAPI(object):
         """Get the device_id of each device registered."""
         devices = []
         for unique_type in device_types:
-            url = API_URL + 'devicetypes/' + unique_type + '/devices'
-            response = requests.get(url, auth=self._auth)
+            url = '{}{}{}{}'.format(
+                API_URL, 'devicetypes/', unique_type, '/devices')
+            response = requests.get(url, auth=self._auth, timeout=10)
             devices_data = json.loads(response.text)['data']
             for device in devices_data:
                 devices.append(device['id'])
@@ -95,18 +114,19 @@ class SigfoxAPI(object):
 class SigfoxDevice(Entity):
     """Class for single sigfox device."""
 
-    def __init__(self, device_id, auth):
+    def __init__(self, device_id, auth, name):
         """Initialise the device object."""
         self._device_id = device_id
         self._auth = auth
         self._message_data = {}
-        self._name = 'sigfox_' + device_id
+        self._name = '{}{}{}'.format(name, '_', device_id)
         self._state = None
 
     def get_last_message(self):
         """Return the last message from a device."""
-        url = API_URL + 'devices/' + self._device_id + '/messages?limit=1'
-        response = requests.get(url, auth=self._auth)
+        url = '{}{}{}{}'.format(
+            API_URL, 'devices/', self._device_id, '/messages?limit=1')
+        response = requests.get(url, auth=self._auth, timeout=10)
         data = json.loads(response.text)['data'][0]
         payload = bytes.fromhex(data['data']).decode('utf-8')
         lat = data['rinfos'][0]['lat']
