@@ -6,6 +6,7 @@ https://home-assistant.io/components/upnp/
 """
 from ipaddress import ip_address
 import logging
+import asyncio
 
 import voluptuous as vol
 
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['api']
 DOMAIN = 'upnp'
 
-UPNP_DEVICE = 'upnp_device'
+DATA_UPNP = 'upnp_device'
 
 CONF_LOCAL_IP = 'local_ip'
 CONF_ENABLE_PORT_MAPPING = 'port_mapping'
@@ -81,7 +82,7 @@ async def async_setup(hass, config):
 
     try:
         device = await resp.get_device()
-        hass.data[UPNP_DEVICE] = device
+        hass.data[DATA_UPNP] = device
         for _service in device.services:
             if _service['serviceType'] == PPP_SERVICE:
                 service = device.find_first_service(PPP_SERVICE)
@@ -135,8 +136,9 @@ async def async_setup(hass, config):
 
     async def deregister_port(event):
         """De-register the UPnP port mapping."""
-        for external in registered:
-            await service.delete_port_mapping(external, 'TCP')
+        tasks = [service.delete_port_mapping(external, 'TCP')
+                 for external in registered]
+        await asyncio.wait(tasks)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
 

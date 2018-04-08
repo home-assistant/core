@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.upnp/
 """
 import logging
 
-from homeassistant.components.upnp import UPNP_DEVICE, UNITS, CIC_SERVICE
+from homeassistant.components.upnp import DATA_UPNP, UNITS, CIC_SERVICE
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ SENSOR_TYPES = {
 
 async def async_setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the IGD sensors."""
-    device = hass.data[UPNP_DEVICE]
+    device = hass.data[DATA_UPNP]
     service = device.find_first_service(CIC_SERVICE)
     unit = discovery_info['unit']
     add_devices([
