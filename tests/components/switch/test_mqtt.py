@@ -250,11 +250,13 @@ class TestSwitchMQTT(unittest.TestCase):
                 'platform': 'mqtt',
                 'name': 'Test 1',
                 'state_topic': 'test-topic',
+                'command_topic': 'command-topic',
                 'unique_id': 'TOTALLY_UNIQUE'
             }, {
                 'platform': 'mqtt',
                 'name': 'Test 2',
                 'state_topic': 'test-topic',
+                'command_topic': 'command-topic',
                 'unique_id': 'TOTALLY_UNIQUE'
             }]
         })
