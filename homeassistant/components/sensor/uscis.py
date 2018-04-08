@@ -42,6 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class UscisSensor(Entity):
     """USCIS Sensor will check case status on daily basis."""
+
     HOURS_TO_UPDATE = timedelta(hours=24)
 
     CURRENT_STATUS = "current_status"
