@@ -36,7 +36,7 @@ CONF_TYPE = 'type'
 
 DATA_BLACKBIRD = 'blackbird'
 
-SERVICE_SETALLZONES = 'blackbird_setallzones'
+SERVICE_SETALLZONES = 'blackbird_set_all_zones'
 ATTR_SOURCE = 'source'
 
 BLACKBIRD_SETALLZONES_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
@@ -118,7 +118,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         for device in devices:
             if service.service == SERVICE_SETALLZONES:
-                device.setallzones(source)
+                device.set_all_zones(source)
 
     hass.services.register(DOMAIN, SERVICE_SETALLZONES, service_handle,
                            schema=BLACKBIRD_SETALLZONES_SCHEMA)
@@ -144,7 +144,6 @@ class BlackbirdZone(MediaPlayerDevice):
 
     def update(self):
         """Retrieve latest state."""
-        _LOGGER.debug("***Updating Media Player***")
         state = self._blackbird.zone_status(self._zone_id)
         if not state:
             return False
@@ -186,9 +185,9 @@ class BlackbirdZone(MediaPlayerDevice):
         """List of available input sources."""
         return self._source_names
 
-    def setallzones(self, source):
+    def set_all_zones(self, source):
         """Set all zones to one source."""
-        _LOGGER.debug("setting all zones function")
+        _LOGGER.debug("Setting all zones")
         if source not in self._source_name_id:
             return
         idx = self._source_name_id[source]
