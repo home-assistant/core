@@ -76,7 +76,8 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
     def __init__(self, name, icon,
                  state_topic, command_topic, availability_topic,
                  qos, retain, payload_on, payload_off, optimistic,
-                 payload_available, payload_not_available, unique_id: Optional[str], value_template):
+                 payload_available, payload_not_available,
+                 unique_id: Optional[str], value_template):
         """Initialize the MQTT switch."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
