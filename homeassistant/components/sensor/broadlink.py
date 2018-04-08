@@ -94,7 +94,7 @@ class BroadlinkSensor(Entity):
         if self._broadlink_data.data is None:
             return
         self._state = self._broadlink_data.data[self._type]
-        
+       
 class BroadlinkData(object):
     """Representation of a Broadlink data object."""
 
