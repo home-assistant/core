@@ -73,6 +73,7 @@ TEST_REQUIREMENTS = (
     'pylitejet',
     'pymonoprice',
     'pynx584',
+    'pyqwikswitch',
     'python-forecastio',
     'pyunifi',
     'pywebpush',
