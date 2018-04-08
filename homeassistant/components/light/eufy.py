@@ -10,7 +10,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR_TEMP, SUPPORT_COLOR, Light)
 
-import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
 from homeassistant.util.color import (
@@ -23,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 EUFY_MAX_KELVIN = 6500
 EUFY_MIN_KELVIN = 2700
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Eufy bulbs."""
@@ -53,7 +53,7 @@ class EufyLight(Light):
     def update(self):
         self._bulb.update()
         self._brightness = self._bulb.brightness
-        self._temp = self._bulb.temperature        
+        self._temp = self._bulb.temperature
         if self._bulb.colors:
             self._hs = color_util.color_RGB_to_hsv(self._bulb.colors)
         else:
@@ -67,7 +67,7 @@ class EufyLight(Light):
 
     @property
     def name(self):
-        """Return the name of the device if any."""        
+        """Return the name of the device if any."""
         return self._name
 
     @property
@@ -114,7 +114,7 @@ class EufyLight(Light):
         colortemp = kwargs.get(ATTR_COLOR_TEMP)
         hs = kwargs.get(ATTR_HS_COLOR)
 
-        if brightness is not None:            
+        if brightness is not None:
             brightness = int(brightness * 100 / 255)
         else:
             brightness = max(1, self._brightness)

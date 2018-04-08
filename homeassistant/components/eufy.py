@@ -45,6 +45,7 @@ EUFY_DISPATCH = {
     'T1211': 'switch'
 }
 
+
 def setup(hass, config):
     """Set up Eufy devices."""
     # pylint: disable=import-error
@@ -61,7 +62,7 @@ def setup(hass, config):
                                     config)
 
     for address, access_token, type, name in \
-        config[DOMAIN][CONF_DEVICES].items():
+     config[DOMAIN][CONF_DEVICES].items():
         if type not in EUFY_DISPATCH:
             continue
         device = {}

@@ -8,11 +8,10 @@ import logging
 
 from homeassistant.components.switch import SwitchDevice
 
-import homeassistant.helpers.config_validation as cv
-
 REQUIREMENTS = ['lakeside==0.4']
 
 _LOGGER = logging.getLogger(__name__)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Eufy switches."""
@@ -45,7 +44,7 @@ class EufySwitch(SwitchDevice):
 
     @property
     def name(self):
-        """Return the name of the device if any."""        
+        """Return the name of the device if any."""
         return self._name
 
     @property
