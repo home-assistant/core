@@ -37,8 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config[CONF_NAME]
     try:
         sigfox = SigfoxAPI(api_login, api_password)
-    except:
-        _LOGGER.error("Sigfox component not setup")
+    except ValueError:
         return False
     auth = sigfox.auth
     devices = sigfox.devices
@@ -76,7 +75,7 @@ class SigfoxAPI(object):
                 _LOGGER.error(
                     "Unable to login to Sigfox API, error code %s", str(
                         response.status_code))
-            raise Exception()
+            raise ValueError('Sigfox component not setup')
         return True
 
     def get_device_types(self):
