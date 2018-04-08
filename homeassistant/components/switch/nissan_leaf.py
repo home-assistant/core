@@ -87,7 +87,7 @@ class LeafChargeSwitch(LeafEntity, ToggleEntity):
         return self.car.data[DATA_CHARGING] is True
 
     def turn_on(self, **kwargs):
-        if await self.car.async_start_charging():
+        if self.car.start_charging():
             self.car.data[DATA_CHARGING] = True
 
         self._update_callback()
