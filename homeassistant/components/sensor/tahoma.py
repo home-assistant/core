@@ -6,8 +6,8 @@ https://home-assistant.io/components/sensor.tahoma/
 """
 
 import logging
+import math
 from datetime import timedelta
-
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.tahoma import (
     DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
@@ -16,7 +16,15 @@ DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=600)
+
+ELECTRICAL_SENSOR_TYPES = {
+    'io:TotalElectricalEnergyConsumptionIOSystemSensor': 'Total',
+    'io:HeatingElectricalEnergyConsumptionSensor': 'Heating',
+    'io:DHWElectricalEnergyConsumptionSensor': 'Hot water',
+    'io:PlugsElectricalEnergyConsumptionSensor': 'Electrical plugs',
+    'io:OtherElectricalEnergyConsumptionSensor': 'Other',
+}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -35,6 +43,9 @@ class TahomaSensor(TahomaDevice, Entity):
         """Initialize the sensor."""
         self.current_value = None
         super().__init__(tahoma_device, controller)
+        elec_sensor_type = ELECTRICAL_SENSOR_TYPES.get(self.tahoma_device.type)
+        if elec_sensor_type is not None:
+            self._name = elec_sensor_type+' ('+self.name+')'
 
     @property
     def state(self):
@@ -50,6 +61,8 @@ class TahomaSensor(TahomaDevice, Entity):
             return 'lux'
         elif self.tahoma_device.type == 'Humidity Sensor':
             return '%'
+        elif ELECTRICAL_SENSOR_TYPES.get(self.tahoma_device.type) is not None:
+            return 'kWh'
 
     def update(self):
         """Update the state."""
@@ -57,3 +70,6 @@ class TahomaSensor(TahomaDevice, Entity):
         if self.tahoma_device.type == 'io:LightIOSystemSensor':
             self.current_value = self.tahoma_device.active_states[
                 'core:LuminanceState']
+        elif ELECTRICAL_SENSOR_TYPES.get(self.tahoma_device.type) is not None:
+            self.current_value = math.floor(self.tahoma_device.active_states[
+                'core:ElectricEnergyConsumptionState'] / 1000)
