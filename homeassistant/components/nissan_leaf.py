@@ -32,9 +32,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+    async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util.dt import utcnow
 
 # Currently waiting on the lib author to review a PR
 # So using my fork for now.
@@ -64,14 +65,14 @@ CONF_REGION = 'region'
 CONF_VALID_REGIONS = ['NNA', 'NE', 'NCI', 'NMA', 'NML']
 CONF_FORCE_MILES = 'force_miles'
 
-MIN_UPDATE_INTERVAL = timedelta(minutes=1)
+MIN_UPDATE_INTERVAL = timedelta(minutes=2)
 DEFAULT_INTERVAL = timedelta(minutes=30)
 DEFAULT_CHARGING_INTERVAL = timedelta(minutes=15)
 DEFAULT_CLIMATE_INTERVAL = timedelta(minutes=5)
 RESTRICTED_BATTERY = 2
 RESTRICTED_INTERVAL = timedelta(hours=12)
 
-CHECK_INTERVAL = 10
+MAX_RESPONSE_ATTEMPTS = 22
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -98,59 +99,78 @@ LEAF_COMPONENTS = [
 SIGNAL_UPDATE_LEAF = 'nissan_leaf_update'
 
 
-def setup(hass, config):
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
+@asyncio.coroutine
+def async_setup(hass, config):
+    """Setup the nissan leaf component."""
 
     import pycarwings2
 
-    _LOGGER.debug("Logging into You+Nissan...")
+    async def async_setup_leaf(car_config):
+        """Setup a leaf car."""
+        _LOGGER.debug("Logging into You+Nissan...")
+    
+        username = car_config[CONF_USERNAME]
+        password = car_config[CONF_PASSWORD]
+        region = car_config[CONF_REGION]
+        leaf = None
 
-    try:
-        s = pycarwings2.Session(
-            username, password, config[DOMAIN][CONF_REGION])
-        _LOGGER.debug("Fetching Leaf Data")
-        leaf = s.get_leaf()
-    except(RuntimeError, urllib.error.HTTPError):
-        _LOGGER.error(
-            "Unable to connect to Nissan Connect with username and password")
-        return False
-    except KeyError:
-        _LOGGER.error(
-            "Unable to fetch car details..."
-            " do you actually have a Leaf connected to your account?")
-        return False
-    except:
-        _LOGGER.error(
-            "An unknown error occurred while connecting to Nissan: %s",
-            sys.exc_info()[0])
+        async def leaf_login():
+            nonlocal leaf
+            s = pycarwings2.Session(username, password, region)
+            leaf = s.get_leaf()
 
-    _LOGGER.info("Successfully logged in and fetched Leaf info")
-    _LOGGER.info(
-        "WARNING: This may poll your Leaf too often, and drain the 12V."
-        " If you drain your car's 12V it won't start"
-        " as the drive train battery won't connect"
-        " Don't set the intervals too low.")
+        try:
+            # TODO: Does this need to be made async it takes 10+ seconds to respond...
+            await hass.async_add_job(leaf_login)
+        except(RuntimeError, urllib.error.HTTPError):
+            _LOGGER.error(
+                "Unable to connect to Nissan Connect with username and password")
+            return False
+        except KeyError:
+            _LOGGER.error(
+                "Unable to fetch car details..."
+                " do you actually have a Leaf connected to your account?")
+            return False
+        except:
+            _LOGGER.error(
+                "An unknown error occurred while connecting to Nissan: %s",
+                sys.exc_info()[0])
+            return False
+    
+        _LOGGER.info("Successfully logged in and fetched Leaf info")
+        _LOGGER.info(
+            "WARNING: This may poll your Leaf too often, and drain the 12V"
+            " battery.  If you drain your cars 12V battery it WILL NOT START"
+            " as the drive train battery won't connect."
+            " Don't set the intervals too low.")
+    
+        data_store = LeafDataStore(leaf, hass, car_config)
+        #FIXME: Make work for multiple leafs in a HA configuration #FIXED?
+        hass.data[DATA_LEAF][leaf.vin] = data_store
+        await hass.async_add_job(data_store.async_update_data, None)
+
+        for component in LEAF_COMPONENTS:
+            if (component != 'device_tracker' or
+                    car_config[CONF_NCONNECT] is True):
+                _LOGGER.debug("Loading platform component=%s, DOMAIN=%s", component, DOMAIN)
+                load_platform(hass, component, DOMAIN, {}, car_config)
+    
 
     hass.data[DATA_LEAF] = {}
-    hass.data[DATA_LEAF][leaf.vin] = LeafDataStore(
-        leaf, hass, config)
-
-    for component in LEAF_COMPONENTS:
-        if (component != 'device_tracker' or
-                config[DOMAIN][CONF_NCONNECT] is True):
-            load_platform(hass, component, DOMAIN, {}, config)
+    tasks = [async_setup_leaf(config[DOMAIN])]
+    if tasks:
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     return True
 
 
 class LeafDataStore:
 
-    def __init__(self, leaf, hass, config):
+    def __init__(self, leaf, hass, car_config):
         self.leaf = leaf
-        self.config = config
-        self.nissan_connect = config[DOMAIN][CONF_NCONNECT]
-        self.force_miles = config[DOMAIN][CONF_FORCE_MILES]
+        self.car_config = car_config
+        self.nissan_connect = car_config[CONF_NCONNECT]
+        self.force_miles = car_config[CONF_FORCE_MILES]
         self.hass = hass
         self.data = {}
         self.data[DATA_CLIMATE] = False
@@ -161,104 +181,101 @@ class LeafDataStore:
         self.data[DATA_RANGE_AC_OFF] = 0
         self.data[DATA_PLUGGED_IN] = False
         self.last_check = None
+        self.last_battery_response = None
         self.request_in_progress = False
-        track_time_interval(
-            hass,
-            self.refresh_leaf_if_necessary,
-            timedelta(seconds=CHECK_INTERVAL))
 
-    def refresh_leaf_if_necessary(self, event_time):
+    @asyncio.coroutine
+    async def async_update_data(self, now):
+        """Update data from nissan leaf."""
+        await self.async_refresh_data()
+        next_interval = self.get_next_interval()
+        _LOGGER.debug("Next interval=%s", next_interval)
+        async_track_point_in_utc_time(
+            self.hass, self.async_update_data, next_interval)
+
+    def get_next_interval(self):
+
+        base_interval = self.car_config[CONF_INTERVAL]
+        climate_interval = self.car_config[CONF_CLIMATE_INTERVAL]
+        charging_interval = self.car_config[CONF_CHARGING_INTERVAL]
+
+        # The 12V battery is used when communicating with Nissan servers.
+        # The 12V battery is charged from the traction battery when not connected
+        # and when the traction battery has enough charge. To avoid draining the 
+        # 12V battery we shall restrict the update frequency if low battery
+        # detected.
+        # TODO: Find way to limit updates if car left connected for a long time.
+        if (self.last_battery_response is not None and
+            self.data[DATA_CHARGING] is False and 
+            self.data[DATA_BATTERY] <= RESTRICTED_BATTERY):
+            _LOGGER.info("Refresh frequency restricted due to low battery",
+                         self.leaf.nickname)
+            interval = RESTRICTED_INTERVAL
+        else:
+            intervals = [base_interval]
+            _LOGGER.debug("Could use base interval=%s", base_interval)
+
+            if self.data[DATA_CHARGING]:
+                intervals.append(charging_interval)
+                _LOGGER.debug("Could use charging interval=%s", charging_interval)
+
+            if self.data[DATA_CLIMATE]:
+                intervals.append(climate_interval)
+                _LOGGER.debug("Could use climate interval=%s", climate_interval)
+
+            interval = min(intervals)
+            _LOGGER.debug("Resulting interval=%s", interval)
+
+        return utcnow() + interval
+
+
+    async def async_refresh_data(self):
+
         if self.request_in_progress:
             _LOGGER.debug("Refresh currently in progress for %s",
                           self.leaf.nickname)
             return
 
-        result = False
-        now = datetime.today()
-
-        base_interval = self.config[DOMAIN][CONF_INTERVAL]
-        climate_interval = self.config[DOMAIN][CONF_CLIMATE_INTERVAL]
-        charging_interval = self.config[DOMAIN][CONF_CHARGING_INTERVAL]
-
-        # The 12V battery is used when communicating with Nissan servers.
-        # The 12V battery is charged from the traction battery when not connected
-        # and when the traction battery has enough charge. To avoid draining the 
-        # 12V battery we shall restrict the update frequency if low battery.
-        # TODO: Find way to limit updates if car left connected for a long time.
-
-        if self.last_check is None:
-            _LOGGER.debug("Firing Refresh on %s"
-                          " as there has not been one yet.",
-                          self.leaf.nickname)
-            result = True
-        elif (self.last_check is not None and
-              self.data[DATA_CHARGING] is False and 
-              self.data[DATA_BATTERY] > 0 and   #FIXME:  Check if data retrieved
-              self.data[DATA_BATTERY] <= RESTRICTED_BATTERY and
-              self.last_check + RESTRICTED_INTERVAL > now):
-            _LOGGER.info("Refresh frequency restricted due to low battery",
-                         self.leaf.nickname)
-            result = False
-        elif self.last_check + base_interval < now:
-            _LOGGER.debug("Firing Refresh on %s"
-                          " as the interval has passed.",
-                          self.leaf.nickname)
-            result = True
-        elif (self.data[DATA_CHARGING] is True and
-              self.last_check + charging_interval < now):
-            _LOGGER.debug("Firing Refresh on %s "
-                          " as it's charging and the charging interval"
-                          " has passed.",
-                          self.leaf.nickname)
-            result = True
-        elif (self.data[DATA_CLIMATE] is True and
-              self.last_check + climate_interval < now):
-            _LOGGER.debug("Firing Refresh on %s"
-                          " as climate control is on and"
-                          " the interval has passed.",
-                          self.leaf.nickname)
-            result = True
-
-        if result is True:
-            self.refresh_data()
-
-    def refresh_data(self):
         _LOGGER.debug("Updating Nissan Leaf Data")
 
         self.last_check = datetime.today()
         self.request_in_progress = True
 
-        battery_response = self.get_battery()
-        _LOGGER.debug("Got battery data for Leaf")
+        battery_response = await self.async_get_battery()
 
-        if battery_response.answer['status'] == 200:
-            if int(battery_response.battery_capacity) > 100:
-                self.data[DATA_BATTERY] = (
-                    battery_response.battery_percent * 0.05
+        if battery_response is not None:
+
+            _LOGGER.debug("Battery Response: ")
+            _LOGGER.debug(battery_response.__dict__)
+
+            if battery_response.answer['status'] == 200:
+                if int(battery_response.battery_capacity) > 100:
+                    self.data[DATA_BATTERY] = (
+                        battery_response.battery_percent * 0.05
+                    )
+                else:
+                    self.data[DATA_BATTERY] = battery_response.battery_percent
+    
+                self.data[DATA_CHARGING] = battery_response.is_charging
+                self.data[DATA_PLUGGED_IN] = battery_response.is_connected
+                self.data[DATA_RANGE_AC] = battery_response.cruising_range_ac_on_km
+                self.data[DATA_RANGE_AC_OFF] = (
+                    battery_response.cruising_range_ac_off_km
                 )
-            else:
-                self.data[DATA_BATTERY] = battery_response.battery_percent
-
-            self.data[DATA_CHARGING] = battery_response.is_charging
-            self.data[DATA_PLUGGED_IN] = battery_response.is_connected
-            self.data[DATA_RANGE_AC] = battery_response.cruising_range_ac_on_km
-            self.data[DATA_RANGE_AC_OFF] = (
-                battery_response.cruising_range_ac_off_km
-            )
-
-        _LOGGER.debug("Battery Response: ")
-        _LOGGER.debug(battery_response.__dict__)
-
-        climate_response = self.get_climate()
-
-        if climate_response is not None:
-            _LOGGER.debug("Got climate data for Leaf")
-            _LOGGER.debug(climate_response.__dict__)
-            self.data[DATA_CLIMATE] = climate_response.is_hvac_running
+                self.signal_components()
+    
+                # Climate response only updated if battery data updated first.
+                climate_response = await self.async_get_climate()
+        
+                if climate_response is not None:
+                    _LOGGER.debug("Got climate data for Leaf.")
+                    _LOGGER.debug(climate_response.__dict__)
+                    self.data[DATA_CLIMATE] = climate_response.is_hvac_running
+                self.last_battery_response = utcnow()
 
         if self.nissan_connect:
             try:
-                location_response = self.get_location()
+                location_response = await self.async_get_location()
 
                 if location_response is None:
                     _LOGGER.debug("Empty Location Response Received")
@@ -276,75 +293,106 @@ class LeafDataStore:
         self.signal_components()
 
     def signal_components(self):
-        dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
+        async_dispatcher_send(self.hass, SIGNAL_UPDATE_LEAF)
 
-    def get_battery(self):
-        request = self.leaf.request_update()
-        battery_status = self.leaf.get_status_from_update(request)
-        while battery_status is None:
-            _LOGGER.debug("Battery data not in yet.")
-            time.sleep(5)
-            battery_status = self.leaf.get_status_from_update(request)
+    async def async_get_battery(self):
+        _LOGGER.info("Requesting battery update, %s", self.leaf.vin)
+        request = await self.hass.async_add_job(self.leaf.request_update)
+        for attempt in range(MAX_RESPONSE_ATTEMPTS):
+            if attempt > 0:
+                _LOGGER.info("Battery data (%s) not in yet (%s). Waiting 5 seconds.",
+                        self.leaf.vin, attempt)
+                await asyncio.sleep(5)
+
+            battery_status = await self.hass.async_add_job(self.leaf.get_status_from_update, request)
+            if battery_status is not None:
+                break
 
         return battery_status
 
-    def get_climate(self):
+    async def async_get_climate(self):
         try:
-            request = self.leaf.get_latest_hvac_status()
+            request = await self.hass.async_add_job(
+                                self.leaf.get_latest_hvac_status()
+                            )
             return request
         except TypeError:
             return None
 
-    def set_climate(self, toggle):
+    async def async_set_climate(self, toggle):
         if toggle:
-            request = self.leaf.start_climate_control()
-            climate_result = self.leaf.get_start_climate_control_result(
-                request)
+            request = await self.hass.async_add_job(
+                                self.leaf.start_climate_control()
+                )
+            for attempt in range(MAX_RESPONSE_ATTEMPTS):
+                if attempt > 0:
+                    _LOGGER.info("Climate data not in yet (%s) (%s)." + 
+                        "Waiting 5 seconds.", self.leaf.vin, attempt)
+                    await asyncio.sleep(5)
 
-            while climate_result is None:
-                _LOGGER.debug("Climate data not in yet.")
-                time.sleep(5)
-                climate_result = self.leaf.get_start_climate_control_result(
-                    request)
+                climate_result = await self.hass.async_add_job(
+                                self.leaf.get_start_climate_control_result(
+                                    request)
+                )
 
-            _LOGGER.debug(climate_result.__dict__)
+                if climate_result is not None:
+                    _LOGGER.debug(climate_result.__dict__)
+                    break
 
             self.signal_components()
-
             return climate_result.is_hvac_running
         else:
-            request = self.leaf.stop_climate_control()
-            climate_result = self.leaf.get_stop_climate_control_result(request)
+            request = await self.hass.async_add_job(
+                                self.leaf.stop_climate_control()
+                            )
 
-            while climate_result is None:
-                _LOGGER.debug("Climate data not in yet.")
-                time.sleep(5)
-                climate_result = self.leaf.get_stop_climate_control_result(
-                    request)
+            for attempt in range(MAX_RESPONSE_ATTEMPTS):
+                if attempt > 0:
+                    _LOGGER.debug("Climate data not in yet. (%s) (%s). " +
+                            "Waiting 5 seconds", self.leaf.vin, attempt)
+                    await asyncio.sleep(5)
 
-            _LOGGER.debug(climate_result.__dict__)
+                climate_result = await self.hass.async_add_job(
+                                self.leaf.get_stop_climate_control_result(
+                                    request)
+                )
+
+                if climate_result is not None:
+                    _LOGGER.debug(climate_result.__dict__)
+                    break
 
             self.signal_components()
-
             return climate_result.is_hvac_running is False
 
-    def get_location(self):
-        request = self.leaf.request_location()
-        location_status = self.leaf.get_status_from_location(request)
+    async def async_get_location(self):
+        request = await self.hass.async_add_job(self.leaf.request_location())
+        for attempt in range(MAX_RESPONSE_ATTEMPTS):
+            if attempt > 0:
+                _LOGGER.debug("Location data in in yet. (%s) (%s). " +
+                        "Waiting 5 seconds", self.leaf.vin, attempt)
+                await asyncio.sleep(5)
 
-        while location_status is None:
-            _LOGGER.debug("Location data not in yet.")
-            time.sleep(5)
-            location_status = self.leaf.get_status_from_location(request)
+            location_status = await self.hass.async_add_job(
+                    self.leaf.get_status_from_location(request)
+            )
 
+            if location_status is not None:
+                _LOGGER.debug(location_status.__dict__)
+                break
+
+        #TODO: Check if self.signal_components() is needed for device tracker
+        self.signal_components()
         return location_status
 
-    def start_charging(self):
-        return self.leaf.start_charging()
+    async def async_start_charging(self):
+        request = await self.hass.async_add_job(
+                             self.leaf.start_charging()
+                  )
 
 
 class LeafEntity(Entity):
     def __init__(self, car):
+        _LOGGER.debug("Creating LeafEntity car=%s", car)
         self.car = car
 
     @property

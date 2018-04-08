@@ -7,7 +7,7 @@ Please refer to the main platform component for configuration details
 
 import logging
 
-from .. import nissan_leaf as leaf_core
+from homeassistant.components.nissan_leaf import DATA_LEAF, LeafEntity, DATA_PLUGGED_IN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,19 +15,17 @@ DEPENDENCIES = ['nissan_leaf']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    if discovery_info is None:
-        return
-
-    _LOGGER.debug("Adding sensors")
+    _LOGGER.debug("binary_sensor setup_platform, discovery_info=%s", discovery_info)
 
     devices = []
-    for value in hass.data[leaf_core.DATA_LEAF].values():
+    for key, value in hass.data[DATA_LEAF].items():
+        _LOGGER.debug("binary_sensor setup_platform, key=%s, value=%s", key, value)
         devices.append(LeafPluggedInSensor(value))
 
     add_devices(devices, True)
 
 
-class LeafPluggedInSensor(leaf_core.LeafEntity):
+class LeafPluggedInSensor(LeafEntity):
     @property
     def name(self):
         return self.car.leaf.nickname + " Plug Status"
@@ -39,11 +37,11 @@ class LeafPluggedInSensor(leaf_core.LeafEntity):
 
     @property
     def state(self):
-        return self.car.data[leaf_core.DATA_PLUGGED_IN]
+        return self.car.data[DATA_PLUGGED_IN]
 
     @property
     def icon(self):
-        if self.car.data[leaf_core.DATA_PLUGGED_IN]:
+        if self.car.data[DATA_PLUGGED_IN]:
             return 'mdi:power-plug'
         else:
             return 'mdi:power-plug-off'
