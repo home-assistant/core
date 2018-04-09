@@ -21,6 +21,7 @@ REQUIREMENTS = ['pyowm==2.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_FORECAST_PRECIPITATION = 'precipitation'
 ATTR_FORECAST_CONDITION = 'condition'
 ATTRIBUTION = 'Data provided by OpenWeatherMap'
 
@@ -144,7 +145,8 @@ class OpenWeatherMapWeather(WeatherEntity):
             data.append({
                 ATTR_FORECAST_TIME: entry.get_reference_time('unix') * 1000,
                 ATTR_FORECAST_TEMP:
-                    entry.get_temperature('celsius').get('temp')
+                    entry.get_temperature('celsius').get('temp'),
+                ATTR_FORECAST_PRECIPITATION: entry.get_rain().get('3h')
             })
             if (len(data) - 1) % MIN_OFFSET_BETWEEN_FORECAST_CONDITIONS == 0:
                 data[len(data) - 1][ATTR_FORECAST_CONDITION] = \
@@ -206,3 +208,4 @@ class WeatherData(object):
             return
 
         self.forecast_data = fcd.get_forecast()
+
