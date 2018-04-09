@@ -1,15 +1,13 @@
 """Class to manage the entities for a single platform."""
 import asyncio
-from datetime import timedelta
 
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import callback, valid_entity_id, split_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
-import homeassistant.util.dt as dt_util
 
-from .event import async_track_time_interval, async_track_point_in_time
+from .event import async_track_time_interval, async_call_later
 from .entity_registry import async_get_registry
 
 SLOW_SETUP_WARNING = 10
@@ -42,6 +40,7 @@ class EntityPlatform(object):
         self.scan_interval = scan_interval
         self.entity_namespace = entity_namespace
         self.async_entities_added_callback = async_entities_added_callback
+        self.config_entry = None
         self.entities = {}
         self._tasks = []
         self._async_unsub_polling = None
@@ -68,9 +67,47 @@ class EntityPlatform(object):
         else:
             self.parallel_updates = None
 
-    async def async_setup(self, platform_config, discovery_info=None, tries=0):
-        """Setup the platform."""
+    async def async_setup(self, platform_config, discovery_info=None):
+        """Setup the platform from a config file."""
         platform = self.platform
+        hass = self.hass
+
+        @callback
+        def async_create_setup_task():
+            """Get task to setup platform."""
+            if getattr(platform, 'async_setup_platform', None):
+                return platform.async_setup_platform(
+                    hass, platform_config,
+                    self._async_schedule_add_entities, discovery_info
+                )
+
+            # This should not be replaced with hass.async_add_job because
+            # we don't want to track this task in case it blocks startup.
+            return hass.loop.run_in_executor(
+                None, platform.setup_platform, hass, platform_config,
+                self._schedule_add_entities, discovery_info
+            )
+        await self._async_setup_platform(async_create_setup_task)
+
+    async def async_setup_entry(self, config_entry):
+        """Setup the platform from a config entry."""
+        # Store it so that we can save config entry ID in entity registry
+        self.config_entry = config_entry
+        platform = self.platform
+
+        @callback
+        def async_create_setup_task():
+            """Get task to setup platform."""
+            return platform.async_setup_entry(
+                self.hass, config_entry, self._async_schedule_add_entities)
+
+        return await self._async_setup_platform(async_create_setup_task)
+
+    async def _async_setup_platform(self, async_create_setup_task, tries=0):
+        """Helper to setup a platform via config file or config entry.
+
+        async_create_setup_task creates a coroutine that sets up platform.
+        """
         logger = self.logger
         hass = self.hass
         full_name = '{}.{}'.format(self.domain, self.platform_name)
@@ -82,18 +119,8 @@ class EntityPlatform(object):
             self.platform_name, SLOW_SETUP_WARNING)
 
         try:
-            if getattr(platform, 'async_setup_platform', None):
-                task = platform.async_setup_platform(
-                    hass, platform_config,
-                    self._async_schedule_add_entities, discovery_info
-                )
-            else:
-                # This should not be replaced with hass.async_add_job because
-                # we don't want to track this task in case it blocks startup.
-                task = hass.loop.run_in_executor(
-                    None, platform.setup_platform, hass, platform_config,
-                    self._schedule_add_entities, discovery_info
-                )
+            task = async_create_setup_task()
+
             await asyncio.wait_for(
                 asyncio.shield(task, loop=hass.loop),
                 SLOW_SETUP_MAX_WAIT, loop=hass.loop)
@@ -108,23 +135,31 @@ class EntityPlatform(object):
                         pending, loop=self.hass.loop)
 
             hass.config.components.add(full_name)
+            return True
         except PlatformNotReady:
             tries += 1
             wait_time = min(tries, 6) * 30
             logger.warning(
                 'Platform %s not ready yet. Retrying in %d seconds.',
                 self.platform_name, wait_time)
-            async_track_point_in_time(
-                hass, self.async_setup(platform_config, discovery_info, tries),
-                dt_util.utcnow() + timedelta(seconds=wait_time))
+
+            async def setup_again(now):
+                """Run setup again."""
+                await self._async_setup_platform(
+                    async_create_setup_task, tries)
+
+            async_call_later(hass, wait_time, setup_again)
+            return False
         except asyncio.TimeoutError:
             logger.error(
                 "Setup of platform %s is taking longer than %s seconds."
                 " Startup will proceed without waiting any longer.",
                 self.platform_name, SLOW_SETUP_MAX_WAIT)
+            return False
         except Exception:  # pylint: disable=broad-except
             logger.exception(
                 "Error while setting up platform %s", self.platform_name)
+            return False
         finally:
             warn_task.cancel()
 
