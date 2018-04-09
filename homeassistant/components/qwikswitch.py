@@ -69,6 +69,7 @@ class QSEntity(Entity):
         """Return a unique identifier for this sensor."""
         return "qs{}".format(self.qsid)
 
+    @callback
     def update_packet(self, packet):
         """Receive update packet from QSUSB. Match dispather_send signature."""
         self.async_schedule_update_ha_state()
