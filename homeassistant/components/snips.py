@@ -97,8 +97,8 @@ async def async_setup(hass, config):
             hass.components.mqtt.async_publish(
                 topic, payload, qos=int(state), retain=state)
 
-    if not config[DOMAIN].get(CONF_FEEDBACK, 'no_conf') == 'no_conf':
-        async_set_feedback(None, config[DOMAIN].get(CONF_FEEDBACK))
+    if CONF_FEEDBACK in config[DOMAIN]:
+        async_set_feedback(None, config[DOMAIN][CONF_FEEDBACK])
 
     async def message_received(topic, payload, qos):
         """Handle new messages on MQTT."""
