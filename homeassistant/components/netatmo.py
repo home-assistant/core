@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 REQUIREMENTS = [
-    'https://github.com/jabesq/netatmo-api-python/archive/'
+    'https://github.com/jabesq/netatmo-api-python/'
     'v0.9.2.1.zip#lnetatmo==0.9.2.1']
 
 _LOGGER = logging.getLogger(__name__)
