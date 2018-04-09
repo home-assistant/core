@@ -11,11 +11,10 @@ import socket
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_EFFECT, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR, SUPPORT_EFFECT, Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, SUPPORT_BRIGHTNESS,
+    SUPPORT_RGB_COLOR, SUPPORT_EFFECT, Light, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ DEFAULT_EFFECT_LIST = ['HDMI', 'Cinema brighten lights', 'Cinema dim lights',
                        'Color traces', 'UDP multicast listener',
                        'UDP listener', 'X-Mas']
 
-SUPPORT_HYPERION = (SUPPORT_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT)
+SUPPORT_HYPERION = (SUPPORT_RGB_COLOR | SUPPORT_BRIGHTNESS | SUPPORT_EFFECT)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -108,9 +107,9 @@ class Hyperion(Light):
         return self._brightness
 
     @property
-    def hs_color(self):
-        """Return last color value set."""
-        return color_util.color_RGB_to_hs(*self._rgb_color)
+    def rgb_color(self):
+        """Return last RGB color value set."""
+        return self._rgb_color
 
     @property
     def is_on(self):
@@ -139,8 +138,8 @@ class Hyperion(Light):
 
     def turn_on(self, **kwargs):
         """Turn the lights on."""
-        if ATTR_HS_COLOR in kwargs:
-            rgb_color = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+        if ATTR_RGB_COLOR in kwargs:
+            rgb_color = kwargs[ATTR_RGB_COLOR]
         elif self._rgb_mem == [0, 0, 0]:
             rgb_color = self._default_color
         else:
@@ -153,12 +152,8 @@ class Hyperion(Light):
 
         if ATTR_EFFECT in kwargs:
             self._skip_update = True
-            mess = kwargs[ATTR_EFFECT]
-            if isinstance(kwargs[ATTR_EFFECT], dict):
-                self._effect = mess['name']
-                mess.pop('name')
-            else:
-                self._effect = mess[ATTR_EFFECT]
+            mess = kwargs[ATTR_EFFECT].split('||')
+            self._effect = mess[0]
             if self._effect == 'HDMI':
                 self.json_request({'command': 'clearall'})
                 self._icon = 'mdi:video-input-hdmi'
@@ -170,10 +165,13 @@ class Hyperion(Light):
                     'priority': self._priority,
                     'effect': {'name': self._effect}
                 }
-                if isinstance(mess, dict):
+                if len(mess) > 1:
                     json_mess['effect']['args'] = {}
-                    for key in mess:
-                        json_mess['effect']['args'][key] = mess[key]
+                    for i in range(1, len(mess)):
+                        arg = mess[i].split('=')
+                        if len(arg) == 2:
+                            json_mess['effect']['args'][arg[0]] =\
+                                json.loads(arg[1])
                 self.json_request(json_mess)
                 self._icon = 'mdi:lava-lamp'
                 self._rgb_color = [175, 0, 255]
@@ -224,10 +222,9 @@ class Hyperion(Light):
             except (KeyError, IndexError):
                 pass
 
-            led_color = response['info']['activeLedColor']
-            if not led_color or led_color[0]['RGB Value'] == [0, 0, 0]:
+            if not response['info']['activeLedColor']:
                 # Get the active effect
-                if response['info'].get('activeEffects'):
+                if response['info']['activeEffects']:
                     self._rgb_color = [175, 0, 255]
                     self._icon = 'mdi:lava-lamp'
                     try:
@@ -244,7 +241,8 @@ class Hyperion(Light):
                     self._effect = None
             else:
                 # Get the RGB color
-                self._rgb_color = led_color[0]['RGB Value']
+                self._rgb_color =\
+                    response['info']['activeLedColor'][0]['RGB Value']
                 self._brightness = max(self._rgb_color)
                 self._rgb_mem = [int(round(float(x)*255/self._brightness))
                                  for x in self._rgb_color]
