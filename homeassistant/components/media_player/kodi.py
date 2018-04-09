@@ -199,7 +199,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     else:
         _LOGGER.info("Ignoring duplicate Kodi %s:%d", host, port)
 
-
     @asyncio.coroutine
     def async_service_handler(service):
         """Map services to methods on MediaPlayerDevice."""
