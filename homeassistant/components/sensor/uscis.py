@@ -18,7 +18,7 @@ from homeassistant.const import CONF_FRIENDLY_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['lxml==3.5.0']
+REQUIREMENTS = ['uscisstatus==0.1']
 
 DEFAULT_NAME = "USCIS"
 
@@ -44,19 +44,6 @@ class UscisSensor(Entity):
     """USCIS Sensor will check case status on daily basis."""
 
     HOURS_TO_UPDATE = timedelta(hours=24)
-
-    CURRENT_STATUS = "current_status"
-    LAST_CASE_UPDATE = "last_update_date"
-    CASE_DATE_PATTERN = r"[(A-Za-z)]*\s[\d]*,\s[\d]*"
-    URL = "https://egov.uscis.gov/casestatus/mycasestatus.do"
-    APP_RECEIPT_NUM = "appReceiptNum"
-    INIT_CASE_SEARCH = "initCaseSearch"
-    CASE_STATUS = "CHECK STATUS"
-    UPDATE_TEXT_XPATH = "/html/body/div[2]/form/div/div[1]" \
-                        "/div/div/div[2]/div[3]/p/text()"
-    USCIS_WEBSITE = "http://egov.uscis.gov/"
-    MISSING_URL_PATTEN = "','|', '"
-    TEXT_FILTER_PATTERN = r"['\[\]]"
 
     def __init__(self, case, name):
         """Initialize the sensor."""
@@ -84,33 +71,14 @@ class UscisSensor(Entity):
     @Throttle(HOURS_TO_UPDATE)
     def update(self):
         """Using Request to access USCIS website and fetch data."""
-        import requests
-        import re
-        from datetime import datetime
-        from lxml import html
-
-        data = {self.APP_RECEIPT_NUM: self._case_id,
-                self.INIT_CASE_SEARCH: self.CASE_STATUS}
-        request = requests.post(self.URL, data=data)
-
-        content = html.fromstring(request.content)
-        text = str(content.xpath(self.UPDATE_TEXT_XPATH))
-        if len(text) > 2:
-            text = str(re.sub("','|', '", 'USCIS website', text))
-            status_message = re.sub(r"['\[\]]", ' ', text)
-            p_search = re.search(self.CASE_DATE_PATTERN, status_message)
-            match = p_search.group(0)
-
-            last_update_date = datetime.strptime(str(match), "%B %d, %Y")
-            last_update_date = last_update_date.strftime('%m/%d/%Y')
-
-            self._attributes = {
-                self.CURRENT_STATUS: status_message,
-                self.LAST_CASE_UPDATE: last_update_date
-            }
-            self._state = last_update_date
-            self.valid_case_id = True
-
-        else:
-            self.valid_case_id = False
-            _LOGGER.error("Invalid Case Id for USCIS")
+        import uscisstatus
+        try:
+            status, date = uscisstatus.get_case_status(self._case_id)
+        except Exception:
+            _LOGGER("Please check you provide valid case id")
+        self._attributes = {
+            self.CURRENT_STATUS: status,
+            self.LAST_CASE_UPDATE: date
+        }
+        self._state = date
+        self.valid_case_id = True
