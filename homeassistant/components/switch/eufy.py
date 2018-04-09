@@ -1,20 +1,22 @@
 """
-Support for Eufy lights
+Support for Eufy switches
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.eufy/
+https://home-assistant.io/components/switch.eufy/
 """
 import logging
 
 from homeassistant.components.switch import SwitchDevice
 
-REQUIREMENTS = ['lakeside==0.4']
+DEPENDENCIES = ['eufy']
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Eufy switches."""
+    if discovery_info is None:
+        return
     add_devices([EufySwitch(discovery_info)], True)
 
 

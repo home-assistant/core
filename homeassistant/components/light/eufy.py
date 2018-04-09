@@ -16,7 +16,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
     color_temperature_kelvin_to_mired as kelvin_to_mired)
 
-REQUIREMENTS = ['lakeside==0.4']
+DEPENDENCIES = ['eufy']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +26,8 @@ EUFY_MIN_KELVIN = 2700
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Eufy bulbs."""
+    if discovery_info is None:
+        return
     add_devices([EufyLight(discovery_info)], True)
 
 

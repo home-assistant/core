@@ -31,8 +31,8 @@ DEVICE_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
+        vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -61,15 +61,14 @@ def setup(hass, config):
             discovery.load_platform(hass, EUFY_DISPATCH[type], DOMAIN, device,
                                     config)
 
-    for address, access_token, type, name in \
-     config[DOMAIN][CONF_DEVICES].items():
+    for x, device_info in config[DOMAIN][CONF_DEVICES].items():
         if type not in EUFY_DISPATCH:
             continue
         device = {}
-        device['address'] = address
-        device['code'] = access_token
-        device['type'] = type
-        device['name'] = name
+        device['address'] = device_info['address']
+        device['code'] = device_info['access_token']
+        device['type'] = device_info['type']
+        device['name'] = device_info['name']
         discovery.load_platform(hass, EUFY_DISPATCH[type], DOMAIN, device,
                                 config)
 

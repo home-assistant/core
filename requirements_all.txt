@@ -455,8 +455,6 @@ keyring==12.0.0
 keyrings.alt==3.0
 
 # homeassistant.components.eufy
-# homeassistant.components.light.eufy
-# homeassistant.components.switch.eufy
 lakeside==0.4
 
 # homeassistant.components.device_tracker.owntracks
