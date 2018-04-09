@@ -1,10 +1,9 @@
 """Test different accessory types: Sensors."""
 import unittest
 
-from homeassistant.components.homekit.const import (
-    PROP_CELSIUS, SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE)
+from homeassistant.components.homekit.const import PROP_CELSIUS
 from homeassistant.components.homekit.type_sensors import (
-    TemperatureSensor, HumiditySensor, BinarySensor)
+    TemperatureSensor, HumiditySensor, BinarySensor, BINARY_SENSOR_SERVICE_MAP)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, ATTR_DEVICE_CLASS, STATE_UNKNOWN, STATE_ON,
     STATE_OFF, STATE_HOME, STATE_NOT_HOME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -71,43 +70,45 @@ class TestHomekitSensors(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(acc.char_humidity.value, 20)
 
-    def test_binary(self):
+    def test_binary_device_classes(self):
         """Test if accessory is updated after state change."""
-        entity_id = 'binary_sensor.opening'
+        entity_id = 'binary_sensor.demo'
 
-        self.hass.states.set(entity_id, STATE_UNKNOWN,
-                             {ATTR_DEVICE_CLASS: "opening"})
-        self.hass.block_till_done()
+        for device_class, (service, char) in BINARY_SENSOR_SERVICE_MAP.items():
+            print(device_class)
+            self.hass.states.set(entity_id, STATE_OFF,
+                                 {ATTR_DEVICE_CLASS: device_class})
+            self.hass.block_till_done()
 
-        acc = BinarySensor(self.hass, entity_id, 'Window Opening', aid=2)
-        acc.run()
+            acc = BinarySensor(self.hass, entity_id, 'Binary Sensor', aid=2)
+            acc.run()
+            self.assertEqual(acc.get_service(service).display_name, service)
+            self.assertEqual(acc.char_detected.display_name, char)
 
-        self.assertEqual(acc.get_service(SERV_CONTACT_SENSOR).display_name,
-                         SERV_CONTACT_SENSOR)
-        self.assertEqual(acc.char_detected.display_name,
-                         CHAR_CONTACT_SENSOR_STATE)
+            self.assertEqual(acc.aid, 2)
+            self.assertEqual(acc.category, 10)  # Sensor
 
-        self.assertEqual(acc.aid, 2)
-        self.assertEqual(acc.category, 10)  # Sensor
+            self.assertEqual(acc.char_detected.value, 0)
 
-        self.assertEqual(acc.char_detected.value, 0)
+            self.hass.states.set(entity_id, STATE_ON,
+                                 {ATTR_DEVICE_CLASS: device_class})
+            self.hass.block_till_done()
+            self.assertEqual(acc.char_detected.value, 1)
 
-        self.hass.states.set(entity_id, STATE_ON,
-                             {ATTR_DEVICE_CLASS: "opening"})
-        self.hass.block_till_done()
-        self.assertEqual(acc.char_detected.value, 1)
+            self.hass.states.set(entity_id, STATE_OFF,
+                                 {ATTR_DEVICE_CLASS: device_class})
+            self.hass.block_till_done()
+            self.assertEqual(acc.char_detected.value, 0)
 
-        self.hass.states.set(entity_id, STATE_OFF,
-                             {ATTR_DEVICE_CLASS: "opening"})
-        self.hass.block_till_done()
-        self.assertEqual(acc.char_detected.value, 0)
+            self.hass.states.set(entity_id, STATE_HOME,
+                                 {ATTR_DEVICE_CLASS: device_class})
+            self.hass.block_till_done()
+            self.assertEqual(acc.char_detected.value, 1)
 
-        self.hass.states.set(entity_id, STATE_HOME,
-                             {ATTR_DEVICE_CLASS: "opening"})
-        self.hass.block_till_done()
-        self.assertEqual(acc.char_detected.value, 1)
+            self.hass.states.set(entity_id, STATE_NOT_HOME,
+                                 {ATTR_DEVICE_CLASS: device_class})
+            self.hass.block_till_done()
+            self.assertEqual(acc.char_detected.value, 0)
 
-        self.hass.states.set(entity_id, STATE_NOT_HOME,
-                             {ATTR_DEVICE_CLASS: "opening"})
-        self.hass.block_till_done()
-        self.assertEqual(acc.char_detected.value, 0)
+            self.hass.states.remove(entity_id)
+            self.hass.block_till_done()
