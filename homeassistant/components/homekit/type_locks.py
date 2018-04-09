@@ -64,22 +64,14 @@ class Lock(HomeAccessory):
             return
 
         hass_state = new_state.state
-        if HASS_TO_HOMEKIT.get(hass_state) is None:
-            _LOGGER.debug('%s: state %s is not supported',
-                          entity_id,
-                          hass_state)
-            return
+        if hass_state in HASS_TO_HOMEKIT:
+            current_lock_state = HASS_TO_HOMEKIT[hass_state]
+            self.char_current_state.set_value(current_lock_state)
+            _LOGGER.debug('%s: Updated current state to %s (%d)',
+                          self.entity_id, hass_state, current_lock_state)
 
-        current_lock_state = HASS_TO_HOMEKIT[hass_state]
-        self.char_current_state.set_value(current_lock_state)
-        _LOGGER.debug('%s: Updated current state to %s (%d)',
-                      self.entity_id, hass_state, current_lock_state)
-
-        # LockTargetState only supports locked and unlocked
-        if hass_state not in (STATE_LOCKED, STATE_UNLOCKED):
-            return
-
-        if not self.flag_target_state:
-            self.char_target_state.set_value(current_lock_state)
-
-        self.flag_target_state = False
+            # LockTargetState only supports locked and unlocked
+            if hass_state in (STATE_LOCKED, STATE_UNLOCKED):
+                if not self.flag_target_state:
+                    self.char_target_state.set_value(current_lock_state)
+                self.flag_target_state = False
