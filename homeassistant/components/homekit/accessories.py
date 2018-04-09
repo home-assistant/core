@@ -106,6 +106,7 @@ class HomeAccessory(Accessory):
     def update_state_callback(self, entity_id=None, old_state=None,
                               new_state=None):
         """Callback from state change listener."""
+        _LOGGER.debug('New_state: %s', new_state)
         if new_state is None:
             return
         self.update_state(new_state)
