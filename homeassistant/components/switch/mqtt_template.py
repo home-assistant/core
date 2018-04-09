@@ -106,9 +106,11 @@ class MqttTemplateSwitch(MqttAvailability, SwitchDevice):
                     self._templates[CONF_VALUE_TEMPLATE]\
                     .async_render_with_possible_json_value(
                         payload)
-            if payload == self._payload_on:
+            if payload ==\
+                    self._templates[CONF_PAYLOAD_ON_TEMPLATE].async_render():
                 self._state = True
-            elif payload == self._payload_off:
+            elif payload == \
+                    self._templates[CONF_PAYLOAD_OFF_TEMPLATE].async_render():
                 self._state = False
 
             self.async_schedule_update_ha_state()
