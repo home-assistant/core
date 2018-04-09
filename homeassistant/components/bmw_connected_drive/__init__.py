@@ -93,6 +93,9 @@ def setup_account(account_config: dict, hass, name: str) \
         """
         vin = call.data[ATTR_VIN]
         vehicle = cd_account.account.get_vehicle(vin)
+        if not vehicle:
+            _LOGGER.error('Could not find a vehicle for VIN "%s"!', vin)
+            return
         function_name = _SERVICE_MAP[call.service]
         function_call = getattr(vehicle.remote_services, function_name)
         function_call()
