@@ -31,10 +31,7 @@ ALEXA_ENTITY_SCHEMA = vol.Schema({
 })
 
 SMART_HOME_SCHEMA = vol.Schema({
-    vol.Optional(
-        CONF_FILTER,
-        default=lambda: entityfilter.generate_filter([], [], [], [])
-    ): entityfilter.FILTER_SCHEMA,
+    vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
     vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA}
 })
 

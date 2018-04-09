@@ -182,7 +182,7 @@ def enabled_push_ids():
     """Return a list of push enabled target push IDs."""
     push_ids = list()
     # pylint: disable=unused-variable
-    for device_name, device in CONFIG_FILE[ATTR_DEVICES].items():
+    for device in CONFIG_FILE[ATTR_DEVICES].values():
         if device.get(ATTR_PUSH_ID) is not None:
             push_ids.append(device.get(ATTR_PUSH_ID))
     return push_ids

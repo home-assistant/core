@@ -67,11 +67,6 @@ COVER_SCHEMA = vol.Schema({
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
 
-COVER_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    COVER_SCHEMA,
-)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
 })
@@ -239,7 +234,9 @@ class CoverTemplate(CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        return self._position
+        if self._position_template or self._position_script:
+            return self._position
+        return None
 
     @property
     def current_cover_tilt_position(self):

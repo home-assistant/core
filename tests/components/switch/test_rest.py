@@ -5,7 +5,7 @@ import aiohttp
 
 import homeassistant.components.switch.rest as rest
 from homeassistant.setup import setup_component
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.helpers.template import Template
 from tests.common import get_test_home_assistant, assert_setup_component
 
@@ -82,6 +82,7 @@ class TestRestSwitchSetup:
                 'platform': 'rest',
                 'name': 'foo',
                 'resource': 'http://localhost',
+                'headers': {'Content-type': 'application/json'},
                 'body_on': 'custom on text',
                 'body_off': 'custom off text',
             }
@@ -99,12 +100,13 @@ class TestRestSwitch:
         self.name = 'foo'
         self.method = 'post'
         self.resource = 'http://localhost/'
+        self.headers = {'Content-type': 'application/json'}
         self.auth = None
         self.body_on = Template('on', self.hass)
         self.body_off = Template('off', self.hass)
         self.switch = rest.RestSwitch(
-            self.name, self.resource, self.method, self.auth, self.body_on,
-            self.body_off, None, 10)
+            self.name, self.resource, self.method, self.headers, self.auth,
+            self.body_on, self.body_off, None, 10)
         self.switch.hass = self.hass
 
     def teardown_method(self):

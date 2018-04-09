@@ -85,7 +85,7 @@ class MerakiView(HomeAssistantView):
                 return self.json_message('Invalid device type',
                                          HTTP_UNPROCESSABLE_ENTITY)
             _LOGGER.debug("Processing %s", data['type'])
-        if len(data["data"]["observations"]) == 0:
+        if not data["data"]["observations"]:
             _LOGGER.debug("No observations found")
             return
         self._handle(request.app['hass'], data)
@@ -107,8 +107,7 @@ class MerakiView(HomeAssistantView):
 
             if lat == "NaN" or lng == "NaN":
                 _LOGGER.debug(
-                    "No coordinates received, skipping location for: " + mac
-                )
+                    "No coordinates received, skipping location for: %s", mac)
                 gps_location = None
                 accuracy = None
             else:

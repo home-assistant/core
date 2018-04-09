@@ -4,22 +4,23 @@ Support for functionality to have conversations with Home Assistant.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/conversation/
 """
-import asyncio
 import logging
 import re
-import warnings
 
 import voluptuous as vol
 
 from homeassistant import core
 from homeassistant.components import http
-from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
+from homeassistant.components.http.data_validator import (
+    RequestDataValidator)
+from homeassistant.components.cover import (INTENT_OPEN_COVER,
+                                            INTENT_CLOSE_COVER)
+from homeassistant.const import EVENT_COMPONENT_LOADED
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import intent
 from homeassistant.loader import bind_hass
-
-REQUIREMENTS = ['fuzzywuzzy==0.16.0']
+from homeassistant.setup import (ATTR_COMPONENT)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,11 +29,15 @@ ATTR_TEXT = 'text'
 DEPENDENCIES = ['http']
 DOMAIN = 'conversation'
 
-INTENT_TURN_OFF = 'HassTurnOff'
-INTENT_TURN_ON = 'HassTurnOn'
-
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
 REGEX_TYPE = type(re.compile(''))
+
+UTTERANCES = {
+    'cover': {
+        INTENT_OPEN_COVER: ['Open [the] [a] [an] {name}[s]'],
+        INTENT_CLOSE_COVER: ['Close [the] [a] [an] {name}[s]']
+    }
+}
 
 SERVICE_PROCESS = 'process'
 
@@ -50,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
 @core.callback
 @bind_hass
 def async_register(hass, intent_type, utterances):
-    """Register an intent.
+    """Register utterances and any custom intents.
 
     Registrations don't require conversations to be loaded. They will become
     active once the conversation component is loaded.
@@ -72,11 +77,8 @@ def async_register(hass, intent_type, utterances):
             conf.append(_create_matcher(utterance))
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Register the process service."""
-    warnings.filterwarnings('ignore', module='fuzzywuzzy')
-
     config = config.get(DOMAIN, {})
     intents = hass.data.get(DOMAIN)
 
@@ -91,49 +93,92 @@ def async_setup(hass, config):
 
         conf.extend(_create_matcher(utterance) for utterance in utterances)
 
-    @asyncio.coroutine
-    def process(service):
+    async def process(service):
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
-        yield from _process(hass, text)
+        try:
+            await _process(hass, text)
+        except intent.IntentHandleError as err:
+            _LOGGER.error('Error processing %s: %s', text, err)
 
     hass.services.async_register(
         DOMAIN, SERVICE_PROCESS, process, schema=SERVICE_PROCESS_SCHEMA)
 
     hass.http.register_view(ConversationProcessView)
 
-    hass.helpers.intent.async_register(TurnOnIntent())
-    hass.helpers.intent.async_register(TurnOffIntent())
-    async_register(hass, INTENT_TURN_ON,
-                   ['Turn {name} on', 'Turn on {name}'])
-    async_register(hass, INTENT_TURN_OFF, [
-        'Turn {name} off', 'Turn off {name}'])
+    # We strip trailing 's' from name because our state matcher will fail
+    # if a letter is not there. By removing 's' we can match singular and
+    # plural names.
+
+    async_register(hass, intent.INTENT_TURN_ON, [
+        'Turn [the] [a] {name}[s] on',
+        'Turn on [the] [a] [an] {name}[s]',
+    ])
+    async_register(hass, intent.INTENT_TURN_OFF, [
+        'Turn [the] [a] [an] {name}[s] off',
+        'Turn off [the] [a] [an] {name}[s]',
+    ])
+    async_register(hass, intent.INTENT_TOGGLE, [
+        'Toggle [the] [a] [an] {name}[s]',
+        '[the] [a] [an] {name}[s] toggle',
+    ])
+
+    @callback
+    def register_utterances(component):
+        """Register utterances for a component."""
+        if component not in UTTERANCES:
+            return
+        for intent_type, sentences in UTTERANCES[component].items():
+            async_register(hass, intent_type, sentences)
+
+    @callback
+    def component_loaded(event):
+        """Handle a new component loaded."""
+        register_utterances(event.data[ATTR_COMPONENT])
+
+    hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
+
+    # Check already loaded components.
+    for component in hass.config.components:
+        register_utterances(component)
 
     return True
 
 
 def _create_matcher(utterance):
     """Create a regex that matches the utterance."""
-    parts = re.split(r'({\w+})', utterance)
+    # Split utterance into parts that are type: NORMAL, GROUP or OPTIONAL
+    # Pattern matches (GROUP|OPTIONAL): Change light to [the color] {name}
+    parts = re.split(r'({\w+}|\[[\w\s]+\] *)', utterance)
+    # Pattern to extract name from GROUP part. Matches {name}
     group_matcher = re.compile(r'{(\w+)}')
+    # Pattern to extract text from OPTIONAL part. Matches [the color]
+    optional_matcher = re.compile(r'\[([\w ]+)\] *')
 
     pattern = ['^']
-
     for part in parts:
-        match = group_matcher.match(part)
+        group_match = group_matcher.match(part)
+        optional_match = optional_matcher.match(part)
 
-        if match is None:
+        # Normal part
+        if group_match is None and optional_match is None:
             pattern.append(part)
             continue
 
-        pattern.append('(?P<{}>{})'.format(match.groups()[0], r'[\w ]+'))
+        # Group part
+        if group_match is not None:
+            pattern.append(
+                r'(?P<{}>[\w ]+?)\s*'.format(group_match.groups()[0]))
+
+        # Optional part
+        elif optional_match is not None:
+            pattern.append(r'(?:{} *)?'.format(optional_match.groups()[0]))
 
     pattern.append('$')
     return re.compile(''.join(pattern), re.I)
 
 
-@asyncio.coroutine
-def _process(hass, text):
+async def _process(hass, text):
     """Process a line of text."""
     intents = hass.data.get(DOMAIN, {})
 
@@ -144,84 +189,11 @@ def _process(hass, text):
             if not match:
                 continue
 
-            response = yield from hass.helpers.intent.async_handle(
+            response = await hass.helpers.intent.async_handle(
                 DOMAIN, intent_type,
                 {key: {'value': value} for key, value
                  in match.groupdict().items()}, text)
             return response
-
-
-@core.callback
-def _match_entity(hass, name):
-    """Match a name to an entity."""
-    from fuzzywuzzy import process as fuzzyExtract
-    entities = {state.entity_id: state.name for state
-                in hass.states.async_all()}
-    entity_id = fuzzyExtract.extractOne(
-        name, entities, score_cutoff=65)[2]
-    return hass.states.get(entity_id) if entity_id else None
-
-
-class TurnOnIntent(intent.IntentHandler):
-    """Handle turning item on intents."""
-
-    intent_type = INTENT_TURN_ON
-    slot_schema = {
-        'name': cv.string,
-    }
-
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
-        """Handle turn on intent."""
-        hass = intent_obj.hass
-        slots = self.async_validate_slots(intent_obj.slots)
-        name = slots['name']['value']
-        entity = _match_entity(hass, name)
-
-        if not entity:
-            _LOGGER.error("Could not find entity id for %s", name)
-            return None
-
-        yield from hass.services.async_call(
-            core.DOMAIN, SERVICE_TURN_ON, {
-                ATTR_ENTITY_ID: entity.entity_id,
-            }, blocking=True)
-
-        response = intent_obj.create_response()
-        response.async_set_speech(
-            'Turned on {}'.format(entity.name))
-        return response
-
-
-class TurnOffIntent(intent.IntentHandler):
-    """Handle turning item off intents."""
-
-    intent_type = INTENT_TURN_OFF
-    slot_schema = {
-        'name': cv.string,
-    }
-
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
-        """Handle turn off intent."""
-        hass = intent_obj.hass
-        slots = self.async_validate_slots(intent_obj.slots)
-        name = slots['name']['value']
-        entity = _match_entity(hass, name)
-
-        if not entity:
-            _LOGGER.error("Could not find entity id for %s", name)
-            return None
-
-        yield from hass.services.async_call(
-            core.DOMAIN, SERVICE_TURN_OFF, {
-                ATTR_ENTITY_ID: entity.entity_id,
-            }, blocking=True)
-
-        response = intent_obj.create_response()
-        response.async_set_speech(
-            'Turned off {}'.format(entity.name))
-        return response
 
 
 class ConversationProcessView(http.HomeAssistantView):
@@ -230,15 +202,18 @@ class ConversationProcessView(http.HomeAssistantView):
     url = '/api/conversation/process'
     name = "api:conversation:process"
 
-    @http.RequestDataValidator(vol.Schema({
+    @RequestDataValidator(vol.Schema({
         vol.Required('text'): str,
     }))
-    @asyncio.coroutine
-    def post(self, request, data):
+    async def post(self, request, data):
         """Send a request for processing."""
         hass = request.app['hass']
 
-        intent_result = yield from _process(hass, data['text'])
+        try:
+            intent_result = await _process(hass, data['text'])
+        except intent.IntentHandleError as err:
+            intent_result = intent.IntentResponse()
+            intent_result.async_set_speech(str(err))
 
         if intent_result is None:
             intent_result = intent.IntentResponse()

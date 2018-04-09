@@ -21,7 +21,7 @@ from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
 from homeassistant.util.color import (
-    color_temperature_to_rgb, color_RGB_to_xy,
+    color_temperature_to_rgb, color_RGB_to_xy_brightness,
     color_temperature_kelvin_to_mired)
 from homeassistant.util.dt import now as dt_now
 
@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_LIGHTS): cv.entity_ids,
     vol.Optional(CONF_NAME, default="Flux"): cv.string,
     vol.Optional(CONF_START_TIME): cv.time,
-    vol.Optional(CONF_STOP_TIME, default=datetime.time(22, 0)): cv.time,
+    vol.Optional(CONF_STOP_TIME): cv.time,
     vol.Optional(CONF_START_CT, default=4000):
         vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
     vol.Optional(CONF_SUNSET_CT, default=3000):
@@ -184,9 +184,7 @@ class FluxSwitch(SwitchDevice):
 
         sunset = get_astral_event_date(self.hass, 'sunset', now.date())
         start_time = self.find_start_time(now)
-        stop_time = now.replace(
-            hour=self._stop_time.hour, minute=self._stop_time.minute,
-            second=0)
+        stop_time = self.find_stop_time(now)
 
         if stop_time <= start_time:
             # stop_time does not happen in the same day as start_time
@@ -236,7 +234,7 @@ class FluxSwitch(SwitchDevice):
             else:
                 temp = self._sunset_colortemp + temp_offset
         rgb = color_temperature_to_rgb(temp)
-        x_val, y_val, b_val = color_RGB_to_xy(*rgb)
+        x_val, y_val, b_val = color_RGB_to_xy_brightness(*rgb)
         brightness = self._brightness if self._brightness else b_val
         if self._disable_brightness_adjust:
             brightness = None
@@ -270,3 +268,13 @@ class FluxSwitch(SwitchDevice):
         else:
             sunrise = get_astral_event_date(self.hass, 'sunrise', now.date())
         return sunrise
+
+    def find_stop_time(self, now):
+        """Return dusk or stop_time if given."""
+        if self._stop_time:
+            dusk = now.replace(
+                hour=self._stop_time.hour, minute=self._stop_time.minute,
+                second=0)
+        else:
+            dusk = get_astral_event_date(self.hass, 'dusk', now.date())
+        return dusk

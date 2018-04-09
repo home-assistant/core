@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['broadlink==0.5']
+REQUIREMENTS = ['broadlink==0.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,7 +106,7 @@ class BroadlinkData(object):
         """Initialize the data object."""
         import broadlink
         self.data = None
-        self._device = broadlink.a1((ip_addr, 80), mac_addr)
+        self._device = broadlink.a1((ip_addr, 80), mac_addr, None)
         self._device.timeout = timeout
         self._schema = vol.Schema({
             vol.Optional('temperature'): vol.Range(min=-50, max=150),
@@ -129,7 +129,7 @@ class BroadlinkData(object):
             if retry < 1:
                 _LOGGER.error(error)
                 return
-        except vol.Invalid:
+        except (vol.Invalid, vol.MultipleInvalid):
             pass  # Continue quietly if device returned malformed data
         if retry > 0 and self._auth():
             self._update(retry-1)

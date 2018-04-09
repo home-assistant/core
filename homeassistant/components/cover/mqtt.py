@@ -65,9 +65,9 @@ TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
                  SUPPORT_SET_TILT_POSITION)
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_COMMAND_TOPIC, default=None): valid_publish_topic,
-    vol.Optional(CONF_POSITION_TOPIC, default=None): valid_publish_topic,
-    vol.Optional(CONF_SET_POSITION_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
+    vol.Optional(CONF_POSITION_TOPIC): valid_publish_topic,
+    vol.Optional(CONF_SET_POSITION_TEMPLATE): cv.template,
     vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -78,8 +78,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
     vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    vol.Optional(CONF_TILT_COMMAND_TOPIC, default=None): valid_publish_topic,
-    vol.Optional(CONF_TILT_STATUS_TOPIC, default=None): valid_subscribe_topic,
+    vol.Optional(CONF_TILT_COMMAND_TOPIC): valid_publish_topic,
+    vol.Optional(CONF_TILT_STATUS_TOPIC): valid_subscribe_topic,
     vol.Optional(CONF_TILT_CLOSED_POSITION,
                  default=DEFAULT_TILT_CLOSED_POSITION): int,
     vol.Optional(CONF_TILT_OPEN_POSITION,

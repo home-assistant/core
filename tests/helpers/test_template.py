@@ -397,6 +397,19 @@ class TestHelpersTemplate(unittest.TestCase):
                 """, self.hass)
         self.assertEqual('False', tpl.render())
 
+    def test_state_attr(self):
+        """Test state_attr method."""
+        self.hass.states.set('test.object', 'available', {'mode': 'on'})
+        tpl = template.Template("""
+{% if state_attr("test.object", "mode") == "on" %}yes{% else %}no{% endif %}
+                """, self.hass)
+        self.assertEqual('yes', tpl.render())
+
+        tpl = template.Template("""
+{{ state_attr("test.noobject", "mode") == None }}
+                """, self.hass)
+        self.assertEqual('True', tpl.render())
+
     def test_states_function(self):
         """Test using states as a function."""
         self.hass.states.set('test.object', 'available')
@@ -427,6 +440,59 @@ class TestHelpersTemplate(unittest.TestCase):
                 now.isoformat(),
                 template.Template('{{ utcnow().isoformat() }}',
                                   self.hass).render())
+
+    def test_regex_match(self):
+        """Test regex_match method."""
+        tpl = template.Template("""
+{{ '123-456-7890' | regex_match('(\d{3})-(\d{3})-(\d{4})') }}
+                """, self.hass)
+        self.assertEqual('True', tpl.render())
+
+        tpl = template.Template("""
+{{ 'home assistant test' | regex_match('Home', True) }}
+                """, self.hass)
+        self.assertEqual('True', tpl.render())
+
+        tpl = template.Template("""
+        {{ 'Another home assistant test' | regex_match('home') }}
+                        """, self.hass)
+        self.assertEqual('False', tpl.render())
+
+    def test_regex_search(self):
+        """Test regex_search method."""
+        tpl = template.Template("""
+{{ '123-456-7890' | regex_search('(\d{3})-(\d{3})-(\d{4})') }}
+                """, self.hass)
+        self.assertEqual('True', tpl.render())
+
+        tpl = template.Template("""
+{{ 'home assistant test' | regex_search('Home', True) }}
+                """, self.hass)
+        self.assertEqual('True', tpl.render())
+
+        tpl = template.Template("""
+        {{ 'Another home assistant test' | regex_search('home') }}
+                        """, self.hass)
+        self.assertEqual('True', tpl.render())
+
+    def test_regex_replace(self):
+        """Test regex_replace method."""
+        tpl = template.Template("""
+{{ 'Hello World' | regex_replace('(Hello\s)',) }}
+                """, self.hass)
+        self.assertEqual('World', tpl.render())
+
+    def test_regex_findall_index(self):
+        """Test regex_findall_index method."""
+        tpl = template.Template("""
+{{ 'Flight from JFK to LHR' | regex_findall_index('([A-Z]{3})', 0) }}
+                """, self.hass)
+        self.assertEqual('JFK', tpl.render())
+
+        tpl = template.Template("""
+{{ 'Flight from JFK to LHR' | regex_findall_index('([A-Z]{3})', 1) }}
+                """, self.hass)
+        self.assertEqual('LHR', tpl.render())
 
     def test_distance_function_with_1_state(self):
         """Test distance function with 1 state."""
@@ -835,6 +901,12 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
             template.extract_entities(
                 "{{ is_state(trigger.entity_id, 'off') }}",
                 {'trigger': {'entity_id': 'input_boolean.switch'}}))
+
+        self.assertEqual(
+            MATCH_ALL,
+            template.extract_entities(
+                "{{ is_state('media_player.' ~ where , 'playing') }}",
+                {'where': 'livingroom'}))
 
 
 @asyncio.coroutine

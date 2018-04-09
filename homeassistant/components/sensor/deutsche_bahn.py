@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['schiene==0.20']
+REQUIREMENTS = ['schiene==0.22']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,6 +114,6 @@ class SchieneData(object):
                 con.pop('details')
                 delay = con.get('delay', {'delay_departure': 0,
                                           'delay_arrival': 0})
-                # IMHO only delay_departure is useful
                 con['delay'] = delay['delay_departure']
+                con['delay_arrival'] = delay['delay_arrival']
                 con['ontime'] = con.get('ontime', False)

@@ -59,13 +59,13 @@ class DemoFan(FanEntity):
         """Get the list of available speeds."""
         return [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def turn_on(self, speed: str=None) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the entity."""
         if speed is None:
             speed = SPEED_MEDIUM
         self.set_speed(speed)
 
-    def turn_off(self) -> None:
+    def turn_off(self, **kwargs) -> None:
         """Turn off the entity."""
         self.oscillate(False)
         self.set_speed(STATE_OFF)

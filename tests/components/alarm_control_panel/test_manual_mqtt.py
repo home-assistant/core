@@ -1395,53 +1395,60 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         # Component should send disarmed alarm state on startup
         self.hass.block_till_done()
-        self.assertEqual(('alarm/state', STATE_ALARM_DISARMED, 0, True),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/state', STATE_ALARM_DISARMED, 0, True)
+        self.mock_publish.async_publish.reset_mock()
 
         # Arm in home mode
         alarm_control_panel.alarm_arm_home(self.hass)
         self.hass.block_till_done()
-        self.assertEqual(('alarm/state', STATE_ALARM_PENDING, 0, True),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/state', STATE_ALARM_PENDING, 0, True)
+        self.mock_publish.async_publish.reset_mock()
         # Fast-forward a little bit
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
-        self.assertEqual(('alarm/state', STATE_ALARM_ARMED_HOME, 0, True),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/state', STATE_ALARM_ARMED_HOME, 0, True)
+        self.mock_publish.async_publish.reset_mock()
 
         # Arm in away mode
         alarm_control_panel.alarm_arm_away(self.hass)
         self.hass.block_till_done()
-        self.assertEqual(('alarm/state', STATE_ALARM_PENDING, 0, True),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/state', STATE_ALARM_PENDING, 0, True)
+        self.mock_publish.async_publish.reset_mock()
         # Fast-forward a little bit
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
-        self.assertEqual(('alarm/state', STATE_ALARM_ARMED_AWAY, 0, True),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/state', STATE_ALARM_ARMED_AWAY, 0, True)
+        self.mock_publish.async_publish.reset_mock()
 
         # Arm in night mode
         alarm_control_panel.alarm_arm_night(self.hass)
         self.hass.block_till_done()
-        self.assertEqual(('alarm/state', STATE_ALARM_PENDING, 0, True),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/state', STATE_ALARM_PENDING, 0, True)
+        self.mock_publish.async_publish.reset_mock()
         # Fast-forward a little bit
         future = dt_util.utcnow() + timedelta(seconds=1)
         with patch(('homeassistant.components.alarm_control_panel.manual_mqtt.'
                     'dt_util.utcnow'), return_value=future):
             fire_time_changed(self.hass, future)
             self.hass.block_till_done()
-        self.assertEqual(('alarm/state', STATE_ALARM_ARMED_NIGHT, 0, True),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/state', STATE_ALARM_ARMED_NIGHT, 0, True)
+        self.mock_publish.async_publish.reset_mock()
 
         # Disarm
         alarm_control_panel.alarm_disarm(self.hass)
         self.hass.block_till_done()
-        self.assertEqual(('alarm/state', STATE_ALARM_DISARMED, 0, True),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'alarm/state', STATE_ALARM_DISARMED, 0, True)

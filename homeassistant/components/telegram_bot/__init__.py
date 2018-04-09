@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['python-telegram-bot==9.0.0']
+REQUIREMENTS = ['python-telegram-bot==10.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +63,7 @@ DOMAIN = 'telegram_bot'
 
 SERVICE_SEND_MESSAGE = 'send_message'
 SERVICE_SEND_PHOTO = 'send_photo'
+SERVICE_SEND_STICKER = 'send_sticker'
 SERVICE_SEND_VIDEO = 'send_video'
 SERVICE_SEND_DOCUMENT = 'send_document'
 SERVICE_SEND_LOCATION = 'send_location'
@@ -96,6 +97,7 @@ BASE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
     vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+    vol.Optional(CONF_TIMEOUT): vol.Coerce(float),
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend({
@@ -153,6 +155,7 @@ SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema({
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_DOCUMENT: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_LOCATION: SERVICE_SCHEMA_SEND_LOCATION,
@@ -166,10 +169,10 @@ SERVICE_MAP = {
 
 def load_data(hass, url=None, filepath=None, username=None, password=None,
               authentication=None, num_retries=5):
-    """Load photo/document into ByteIO/File container from a source."""
+    """Load data into ByteIO/File container from a source."""
     try:
         if url is not None:
-            # Load photo from URL
+            # Load data from URL
             params = {"timeout": 15}
             if username is not None and password is not None:
                 if authentication == HTTP_DIGEST_AUTHENTICATION:
@@ -180,7 +183,7 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
             while retry_num < num_retries:
                 req = requests.get(url, **params)
                 if not req.ok:
-                    _LOGGER.warning("Status code %s (retry #%s) loading %s.",
+                    _LOGGER.warning("Status code %s (retry #%s) loading %s",
                                     req.status_code, retry_num + 1, url)
                 else:
                     data = io.BytesIO(req.content)
@@ -188,10 +191,10 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
                         data.seek(0)
                         data.name = url
                         return data
-                    _LOGGER.warning("Empty data (retry #%s) in %s).",
+                    _LOGGER.warning("Empty data (retry #%s) in %s)",
                                     retry_num + 1, url)
                 retry_num += 1
-            _LOGGER.warning("Can't load photo in %s after %s retries.",
+            _LOGGER.warning("Can't load data in %s after %s retries",
                             url, retry_num)
         elif filepath is not None:
             if hass.config.is_allowed_path(filepath):
@@ -199,10 +202,10 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
 
             _LOGGER.warning("'%s' are not secure to load data from!", filepath)
         else:
-            _LOGGER.warning("Can't load photo. No photo found in params!")
+            _LOGGER.warning("Can't load data. No data found in params!")
 
     except (OSError, TypeError) as error:
-        _LOGGER.error("Can't load photo into ByteIO: %s", error)
+        _LOGGER.error("Can't load data into ByteIO: %s", error)
 
     return None
 
@@ -236,13 +239,12 @@ def async_setup(hass, config):
         _LOGGER.exception("Error setting up platform %s", p_type)
         return False
 
+    bot = initialize_bot(p_config)
     notify_service = TelegramNotificationService(
         hass,
-        p_config.get(CONF_API_KEY),
+        bot,
         p_config.get(CONF_ALLOWED_CHAT_IDS),
-        p_config.get(ATTR_PARSER),
-        p_config.get(CONF_PROXY_URL),
-        p_config.get(CONF_PROXY_PARAMS)
+        p_config.get(ATTR_PARSER)
     )
 
     @asyncio.coroutine
@@ -274,9 +276,8 @@ def async_setup(hass, config):
         if msgtype == SERVICE_SEND_MESSAGE:
             yield from hass.async_add_job(
                 partial(notify_service.send_message, **kwargs))
-        elif (msgtype == SERVICE_SEND_PHOTO or
-              msgtype == SERVICE_SEND_VIDEO or
-              msgtype == SERVICE_SEND_DOCUMENT):
+        elif msgtype in [SERVICE_SEND_PHOTO, SERVICE_SEND_STICKER,
+                         SERVICE_SEND_VIDEO, SERVICE_SEND_DOCUMENT]:
             yield from hass.async_add_job(
                 partial(notify_service.send_file, msgtype, **kwargs))
         elif msgtype == SERVICE_SEND_LOCATION:
@@ -301,15 +302,28 @@ def async_setup(hass, config):
     return True
 
 
+def initialize_bot(p_config):
+    """Initialize telegram bot with proxy support."""
+    from telegram import Bot
+    from telegram.utils.request import Request
+
+    api_key = p_config.get(CONF_API_KEY)
+    proxy_url = p_config.get(CONF_PROXY_URL)
+    proxy_params = p_config.get(CONF_PROXY_PARAMS)
+
+    request = None
+    if proxy_url is not None:
+        request = Request(proxy_url=proxy_url,
+                          urllib3_proxy_kwargs=proxy_params)
+    return Bot(token=api_key, request=request)
+
+
 class TelegramNotificationService:
     """Implement the notification services for the Telegram Bot domain."""
 
-    def __init__(self, hass, api_key, allowed_chat_ids, parser,
-                 proxy_url=None, proxy_params=None):
+    def __init__(self, hass, bot, allowed_chat_ids, parser):
         """Initialize the service."""
-        from telegram import Bot
         from telegram.parsemode import ParseMode
-        from telegram.utils.request import Request
 
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
@@ -317,11 +331,7 @@ class TelegramNotificationService:
         self._parsers = {PARSER_HTML: ParseMode.HTML,
                          PARSER_MD: ParseMode.MARKDOWN}
         self._parse_mode = self._parsers.get(parser)
-        request = None
-        if proxy_url is not None:
-            request = Request(proxy_url=proxy_url,
-                              urllib3_proxy_kwargs=proxy_params)
-        self.bot = Bot(token=api_key, request=request)
+        self.bot = bot
         self.hass = hass
 
     def _get_msg_ids(self, msg_data, chat_id):
@@ -515,11 +525,12 @@ class TelegramNotificationService:
                        text=message, show_alert=show_alert, **params)
 
     def send_file(self, file_type=SERVICE_SEND_PHOTO, target=None, **kwargs):
-        """Send a photo, video, or document."""
+        """Send a photo, sticker, video, or document."""
         params = self._get_msg_kwargs(kwargs)
         caption = kwargs.get(ATTR_CAPTION)
         func_send = {
             SERVICE_SEND_PHOTO: self.bot.sendPhoto,
+            SERVICE_SEND_STICKER: self.bot.sendSticker,
             SERVICE_SEND_VIDEO: self.bot.sendVideo,
             SERVICE_SEND_DOCUMENT: self.bot.sendDocument
         }.get(file_type)

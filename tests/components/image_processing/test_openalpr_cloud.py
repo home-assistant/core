@@ -149,8 +149,7 @@ class TestOpenAlprCloud(object):
             'secret_key': "sk_abcxyz123456",
             'tasks': "plate",
             'return_image': 0,
-            'country': 'eu',
-            'image_bytes': "aW1hZ2U="
+            'country': 'eu'
         }
 
     def teardown_method(self):

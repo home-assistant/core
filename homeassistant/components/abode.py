@@ -7,6 +7,7 @@ https://home-assistant.io/components/abode/
 import asyncio
 import logging
 from functools import partial
+from requests.exceptions import HTTPError, ConnectTimeout
 
 import voluptuous as vol
 
@@ -17,9 +18,8 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
-from requests.exceptions import HTTPError, ConnectTimeout
 
-REQUIREMENTS = ['abodepy==0.12.2']
+REQUIREMENTS = ['abodepy==0.12.3']
 
 _LOGGER = logging.getLogger(__name__)
 

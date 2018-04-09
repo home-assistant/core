@@ -24,7 +24,7 @@ class TestRequirements:
         self.hass.stop()
 
     @mock.patch('os.path.dirname')
-    @mock.patch('homeassistant.util.package.running_under_virtualenv',
+    @mock.patch('homeassistant.util.package.is_virtual_env',
                 return_value=True)
     @mock.patch('homeassistant.util.package.install_package',
                 return_value=True)
@@ -43,7 +43,7 @@ class TestRequirements:
             constraints=os.path.join('ha_package_path', CONSTRAINT_FILE))
 
     @mock.patch('os.path.dirname')
-    @mock.patch('homeassistant.util.package.running_under_virtualenv',
+    @mock.patch('homeassistant.util.package.is_virtual_env',
                 return_value=False)
     @mock.patch('homeassistant.util.package.install_package',
                 return_value=True)

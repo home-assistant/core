@@ -12,12 +12,13 @@ from voluptuous import MultipleInvalid
 from homeassistant.core import DOMAIN, HomeAssistantError, Config
 import homeassistant.config as config_util
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_UNIT_SYSTEM, CONF_NAME,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
     CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT)
 from homeassistant.util import location as location_util, dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.config.group import (
     CONFIG_PATH as GROUP_CONFIG_PATH)
@@ -27,9 +28,9 @@ from homeassistant.components.config.script import (
     CONFIG_PATH as SCRIPTS_CONFIG_PATH)
 from homeassistant.components.config.customize import (
     CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
+import homeassistant.scripts.check_config as check_config
 
-from tests.common import (
-    get_test_config_dir, get_test_home_assistant, mock_coro)
+from tests.common import get_test_config_dir, get_test_home_assistant
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -158,11 +159,11 @@ class TestConfig(unittest.TestCase):
     def test_load_yaml_config_preserves_key_order(self):
         """Test removal of library."""
         with open(YAML_PATH, 'w') as f:
-            f.write('hello: 0\n')
+            f.write('hello: 2\n')
             f.write('world: 1\n')
 
         self.assertEqual(
-            [('hello', 0), ('world', 1)],
+            [('hello', 2), ('world', 1)],
             list(config_util.load_yaml_config_file(YAML_PATH).items()))
 
     @mock.patch('homeassistant.util.location.detect_location_info',
@@ -235,6 +236,29 @@ class TestConfig(unittest.TestCase):
             },
         })
 
+    def test_customize_dict_schema(self):
+        """Test basic customize config validation."""
+        values = (
+            {ATTR_FRIENDLY_NAME: None},
+            {ATTR_HIDDEN: '2'},
+            {ATTR_ASSUMED_STATE: '2'},
+        )
+
+        for val in values:
+            print(val)
+            with pytest.raises(MultipleInvalid):
+                config_util.CUSTOMIZE_DICT_SCHEMA(val)
+
+        assert config_util.CUSTOMIZE_DICT_SCHEMA({
+            ATTR_FRIENDLY_NAME: 2,
+            ATTR_HIDDEN: '1',
+            ATTR_ASSUMED_STATE: '0',
+        }) == {
+            ATTR_FRIENDLY_NAME: '2',
+            ATTR_HIDDEN: True,
+            ATTR_ASSUMED_STATE: False
+        }
+
     def test_customize_glob_is_ordered(self):
         """Test that customize_glob preserves order."""
         conf = config_util.CORE_CONFIG_SCHEMA(
@@ -254,18 +278,6 @@ class TestConfig(unittest.TestCase):
         self.hass.block_till_done()
 
         return self.hass.states.get('test.test')
-
-    def test_entity_customization_false(self):
-        """Test entity customization through configuration."""
-        config = {CONF_LATITUDE: 50,
-                  CONF_LONGITUDE: 50,
-                  CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: {
-                      'test.test': {'hidden': False}}}
-
-        state = self._compute_state(config)
-
-        assert 'hidden' not in state.attributes
 
     def test_entity_customization(self):
         """Test entity customization through configuration."""
@@ -526,35 +538,25 @@ class TestConfig(unittest.TestCase):
         assert len(self.hass.config.whitelist_external_dirs) == 1
         assert "/test/config/www" in self.hass.config.whitelist_external_dirs
 
-    @mock.patch('asyncio.create_subprocess_exec')
-    def test_check_ha_config_file_correct(self, mock_create):
+    @mock.patch('homeassistant.scripts.check_config.check_ha_config_file')
+    def test_check_ha_config_file_correct(self, mock_check):
         """Check that restart propagates to stop."""
-        process_mock = mock.MagicMock()
-        attrs = {
-            'communicate.return_value': mock_coro((b'output', None)),
-            'wait.return_value': mock_coro(0)}
-        process_mock.configure_mock(**attrs)
-        mock_create.return_value = mock_coro(process_mock)
-
+        mock_check.return_value = check_config.HomeAssistantConfig()
         assert run_coroutine_threadsafe(
-            config_util.async_check_ha_config_file(self.hass), self.hass.loop
+            config_util.async_check_ha_config_file(self.hass),
+            self.hass.loop
         ).result() is None
 
-    @mock.patch('asyncio.create_subprocess_exec')
-    def test_check_ha_config_file_wrong(self, mock_create):
+    @mock.patch('homeassistant.scripts.check_config.check_ha_config_file')
+    def test_check_ha_config_file_wrong(self, mock_check):
         """Check that restart with a bad config doesn't propagate to stop."""
-        process_mock = mock.MagicMock()
-        attrs = {
-            'communicate.return_value':
-                mock_coro(('\033[34mhello'.encode('utf-8'), None)),
-            'wait.return_value': mock_coro(1)}
-        process_mock.configure_mock(**attrs)
-        mock_create.return_value = mock_coro(process_mock)
+        mock_check.return_value = check_config.HomeAssistantConfig()
+        mock_check.return_value.add_error("bad")
 
         assert run_coroutine_threadsafe(
             config_util.async_check_ha_config_file(self.hass),
             self.hass.loop
-        ).result() == 'hello'
+        ).result() == 'bad'
 
 
 # pylint: disable=redefined-outer-name
@@ -588,6 +590,25 @@ def test_merge(merge_log_err):
     assert len(config['input_select']) == 1
     assert len(config['light']) == 3
     assert config['wake_on_lan'] is None
+
+
+def test_merge_try_falsy(merge_log_err):
+    """Ensure we dont add falsy items like empty OrderedDict() to list."""
+    packages = {
+        'pack_falsy_to_lst': {'automation': OrderedDict()},
+        'pack_list2': {'light': OrderedDict()},
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'automation': {'do': 'something'},
+        'light': {'some': 'light'},
+    }
+    config_util.merge_packages_config(config, packages)
+
+    assert merge_log_err.call_count == 0
+    assert len(config) == 3
+    assert len(config['automation']) == 1
+    assert len(config['light']) == 1
 
 
 def test_merge_new(merge_log_err):

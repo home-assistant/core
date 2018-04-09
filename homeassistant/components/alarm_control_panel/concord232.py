@@ -26,7 +26,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'CONCORD232'
 DEFAULT_PORT = 5007
 
-SCAN_INTERVAL = timedelta(seconds=1)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,

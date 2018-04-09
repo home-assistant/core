@@ -208,9 +208,8 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
                     trigger_time) < dt_util.utcnow():
                 if self._disarm_after_trigger:
                     return STATE_ALARM_DISARMED
-                else:
-                    self._state = self._previous_state
-                    return self._state
+                self._state = self._previous_state
+                return self._state
 
         if self._state in SUPPORTED_PENDING_STATES and \
                 self._within_pending_time(self._state):
@@ -223,8 +222,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         """Get the current state."""
         if self.state == STATE_ALARM_PENDING:
             return self._previous_state
-        else:
-            return self._state
+        return self._state
 
     def _pending_time(self, state):
         """Get the pending time."""

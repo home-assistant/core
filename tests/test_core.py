@@ -14,7 +14,7 @@ import pytest
 import homeassistant.core as ha
 from homeassistant.exceptions import (InvalidEntityFormatError,
                                       InvalidStateError)
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
@@ -135,7 +135,7 @@ class TestHomeAssistant(unittest.TestCase):
             """Test Coro."""
             call_count.append('call')
 
-        for i in range(3):
+        for _ in range(3):
             self.hass.add_job(test_coro())
 
         run_coroutine_threadsafe(
@@ -155,7 +155,7 @@ class TestHomeAssistant(unittest.TestCase):
             """Test Coro."""
             call_count.append('call')
 
-        for i in range(2):
+        for _ in range(2):
             self.hass.add_job(test_coro())
 
         @asyncio.coroutine
@@ -185,7 +185,7 @@ class TestHomeAssistant(unittest.TestCase):
             yield from asyncio.sleep(0, loop=self.hass.loop)
             yield from asyncio.sleep(0, loop=self.hass.loop)
 
-        for i in range(2):
+        for _ in range(2):
             self.hass.add_job(test_executor)
 
         run_coroutine_threadsafe(
@@ -210,7 +210,7 @@ class TestHomeAssistant(unittest.TestCase):
             yield from asyncio.sleep(0, loop=self.hass.loop)
             yield from asyncio.sleep(0, loop=self.hass.loop)
 
-        for i in range(2):
+        for _ in range(2):
             self.hass.add_job(test_callback)
 
         run_coroutine_threadsafe(
@@ -809,6 +809,8 @@ class TestConfig(unittest.TestCase):
 
             valid = [
                 test_file,
+                tmp_dir,
+                os.path.join(tmp_dir, 'notfound321')
             ]
             for path in valid:
                 assert self.config.is_allowed_path(path)

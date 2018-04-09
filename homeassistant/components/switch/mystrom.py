@@ -12,7 +12,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_HOST)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-mystrom==0.3.8']
+REQUIREMENTS = ['python-mystrom==0.4.2']
 
 DEFAULT_NAME = 'myStrom Switch'
 
@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return myStrom switch."""
-    from pymystrom import MyStromPlug, exceptions
+    from pymystrom.switch import MyStromPlug, exceptions
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -45,7 +45,7 @@ class MyStromSwitch(SwitchDevice):
 
     def __init__(self, name, resource):
         """Initialize the myStrom switch."""
-        from pymystrom import MyStromPlug
+        from pymystrom.switch import MyStromPlug
 
         self._name = name
         self._resource = resource
