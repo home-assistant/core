@@ -113,6 +113,7 @@ STATE_TYPES = {
     'HB': 'High Battery',
     'RB': 'Battery Needs Replaced',
     'CHRG': 'Battery Charging',
+    'DISCHRG': 'Battery Discharging',
     'BYPASS': 'Bypass Active',
     'CAL': 'Runtime Calibration',
     'OFF': 'Offline',
@@ -120,8 +121,6 @@ STATE_TYPES = {
     'TRIM': 'Trimming Voltage',
     'BOOST': 'Boosting Voltage',
     'FSD': 'Forced Shutdown',
-    'CHRG': 'Charging',
-    'DISCHRG': 'Discharging',
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
