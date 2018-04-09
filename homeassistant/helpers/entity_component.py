@@ -93,6 +93,26 @@ class EntityComponent(object):
         discovery.async_listen_platform(
             self.hass, self.domain, component_platform_discovered)
 
+    async def async_setup_entry(self, config_entry):
+        """Setup a config entry."""
+        platform_type = config_entry.domain
+        platform = await async_prepare_setup_platform(
+            self.hass, self.config, self.domain, platform_type)
+
+        if platform is None:
+            return False
+
+        key = config_entry.entry_id
+
+        if key in self._platforms:
+            raise ValueError('Config entry has already been setup!')
+
+        self._platforms[key] = self._async_init_entity_platform(
+            platform_type, platform
+        )
+
+        return await self._platforms[key].async_setup_entry(config_entry)
+
     @callback
     def async_extract_from_service(self, service, expand_group=True):
         """Extract all known and available entities from a service call.
