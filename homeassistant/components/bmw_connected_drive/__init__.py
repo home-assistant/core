@@ -60,10 +60,10 @@ def setup(hass, config: dict):
 
     hass.data[DOMAIN] = accounts
 
-    def _update_all(_) -> None:
+    def _update_all(call) -> None:
         """Update all BMW accounts."""
-        for account_update in hass.data[DOMAIN]:
-            account_update.update()
+        for cd_account in hass.data[DOMAIN]:
+            cd_account.update()
 
     # Service to manually trigger updates for all accounts.
     hass.services.register(DOMAIN, SERVICE_UPDATE_STATE, _update_all)
@@ -83,25 +83,22 @@ def setup_account(account_config: dict, hass, name: str) \
     password = account_config[CONF_PASSWORD]
     region = account_config[CONF_REGION]
     _LOGGER.debug('Adding new account %s', name)
-    bimmer = BMWConnectedDriveAccount(username, password, region, name)
+    cd_account = BMWConnectedDriveAccount(username, password, region, name)
 
     def execute_service(call):
         """Execute a service for a vehicle.
 
-        This must be a member function as we need access to the bimmer
+        This must be a member function as we need access to the cd_account
         object here.
         """
         vin = call.data[ATTR_VIN]
-        _LOGGER.debug('Triggering service %s of vehicle %s',
-                      call.service, vin)
-        vehicle = bimmer.account.get_vehicle(vin)
+        vehicle = cd_account.account.get_vehicle(vin)
         function_name = _SERVICE_MAP[call.service]
         function_call = getattr(vehicle.remote_services, function_name)
         function_call()
 
     # register the remote services
     for service in _SERVICE_MAP:
-        _LOGGER.debug('Registering service %s', service)
         hass.services.register(
             DOMAIN, service,
             execute_service,
@@ -111,11 +108,11 @@ def setup_account(account_config: dict, hass, name: str) \
     # this should even out the load on the servers
     now = datetime.datetime.now()
     track_utc_time_change(
-        hass, bimmer.update,
+        hass, cd_account.update,
         minute=range(now.minute % UPDATE_INTERVAL, 60, UPDATE_INTERVAL),
         second=now.second)
 
-    return bimmer
+    return cd_account
 
 
 class BMWConnectedDriveAccount(object):
