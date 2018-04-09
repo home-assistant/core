@@ -5,12 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.phicomm/
 """
 
-import json
 import logging
-import os
+
+from datetime import timedelta
+
 import requests
 import voluptuous as vol
-from datetime import timedelta
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -34,7 +34,8 @@ SENSOR_TEMPERATURE = 'temperature'
 SENSOR_HUMIDITY = 'humidity'
 
 DEFAULT_NAME = 'Phicomm'
-DEFAULT_SENSORS = [SENSOR_PM25,SENSOR_HCHO, SENSOR_TEMPERATURE,SENSOR_HUMIDITY]
+DEFAULT_SENSORS = [SENSOR_PM25, SENSOR_HCHO,
+                   SENSOR_TEMPERATURE, SENSOR_HUMIDITY]
 
 SENSOR_MAP = {
     SENSOR_PM25: ('PM2.5', 'μg/m³', 'blur'),
@@ -63,8 +64,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     count = config.get(CONF_DEVICES)
     sensors = config[CONF_SENSORS]
 
-    phicomm = PhicommData(username, password,
-        hass.config.path(TOKEN_FILE + username), count * len(sensors))
+    phicomm = PhicommData(hass.config.path(TOKEN_FILE + username),
+                          username, password, count * len(sensors))
 
     index = 0
     devices = []
@@ -80,7 +81,7 @@ class PhicommSensor(Entity):
 
     def __init__(self, phicomm, name, index, sensor_type):
         """Initialize the Phicomm sensor."""
-        sensor_name,unit,icon = SENSOR_MAP[sensor_type]
+        sensor_name, unit, icon = SENSOR_MAP[sensor_type]
         if index:
             name += str(index + 1)
         self._name = name + ' ' + sensor_name
@@ -130,7 +131,7 @@ class PhicommSensor(Entity):
     @property
     def data(self):
         """Get data with current device index."""
-        devs = self.phicomm.devs;
+        devs = self.phicomm.devs
         if devs and self._index < len(devs):
             return devs[self._index].get('catDev')
         return None
@@ -139,7 +140,7 @@ class PhicommSensor(Entity):
 class PhicommData():
     """Class for handling the data retrieval."""
 
-    def __init__(self, username, password, token_path, update_cycle):
+    def __init__(self, token_path, username, password, update_cycle):
         """Initialize the data object."""
         self._username = username
         self._password = password
@@ -149,10 +150,10 @@ class PhicommData():
         self.devs = None
 
         try:
-            with open(self._token_path) as f:
-                self._token = f.read()
+            with open(self._token_path) as file:
+                self._token = file.read()
                 _LOGGER.debug("Load: %s => %s", self._token_path, self._token)
-        except:
+        except BaseException:
             self._token = None
 
     def update(self):
@@ -166,15 +167,14 @@ class PhicommData():
                     json = self.fetch()
                 self.devs = json['data']['devs']
                 _LOGGER.info("Get data: devs=%s", self.devs)
-            except:
-                import traceback
-                _LOGGER.error("Exception: %s", traceback.format_exc())
+            except BaseException:
+                _LOGGER.error("Exception on update.", )
 
         self._update_times += 1
 
     def fetch(self):
         """Fetch the latest data from Phicomm server."""
-        if self._token == None:
+        if self._token is None:
             import hashlib
             md5 = hashlib.md5()
             md5.update(self._password.encode('utf8'))
@@ -188,8 +188,8 @@ class PhicommData():
             _LOGGER.debug("Get token: %s", json)
             if 'access_token' in json:
                 self._token = json['access_token']
-                with open(self._token_path, 'w') as f:
-                    f.write(self._token)
+                with open(self._token_path, 'w') as file:
+                    file.write(self._token)
             else:
                 return None
         headers = {'User-Agent': USER_AGENT, 'Authorization': self._token}
