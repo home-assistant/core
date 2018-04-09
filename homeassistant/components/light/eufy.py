@@ -13,8 +13,8 @@ from homeassistant.components.light import (
 import homeassistant.util.color as color_util
 
 from homeassistant.util.color import (
-        color_temperature_mired_to_kelvin as mired_to_kelvin,
-        color_temperature_kelvin_to_mired as kelvin_to_mired)
+    color_temperature_mired_to_kelvin as mired_to_kelvin,
+    color_temperature_kelvin_to_mired as kelvin_to_mired)
 
 REQUIREMENTS = ['lakeside==0.4']
 
