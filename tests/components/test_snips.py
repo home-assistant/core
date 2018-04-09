@@ -2,7 +2,6 @@
 import json
 import logging
 
-from homeassistant.core import callback
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.mqtt import MQTT_PUBLISH_SCHEMA
 import homeassistant.components.snips as snips
