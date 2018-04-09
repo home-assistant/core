@@ -100,7 +100,7 @@ class EntityComponent(object):
             self.hass, self.config, self.domain, platform_type)
 
         if platform is None:
-            return
+            return False
 
         key = config_entry.entry_id
 

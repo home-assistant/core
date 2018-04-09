@@ -347,11 +347,19 @@ async def test_setup_entry(hass):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entry = MockConfigEntry(domain='entry_domain')
 
-    await component.async_setup_entry(entry)
+    assert await component.async_setup_entry(entry)
     assert len(mock_setup_entry.mock_calls) == 1
     p_hass, p_entry, p_add_entities = mock_setup_entry.mock_calls[0][1]
     assert p_hass is hass
     assert p_entry is entry
+
+
+async def test_setup_entry_platform_not_exist(hass):
+    """Test setup entry fails if platform doesnt exist."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entry = MockConfigEntry(domain='non_existing')
+
+    assert (await component.async_setup_entry(entry)) is False
 
 
 async def test_setup_entry_fails_duplicate(hass):
@@ -364,7 +372,7 @@ async def test_setup_entry_fails_duplicate(hass):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entry = MockConfigEntry(domain='entry_domain')
 
-    await component.async_setup_entry(entry)
+    assert await component.async_setup_entry(entry)
 
     with pytest.raises(ValueError):
         await component.async_setup_entry(entry)
