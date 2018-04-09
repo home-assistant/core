@@ -75,7 +75,7 @@ class UscisSensor(Entity):
         try:
             status, date = uscisstatus.get_case_status(self._case_id)
         except Exception:
-            _LOGGER("Please check you provide valid case id")
+            _LOGGER("Please Check that you have valid USCIS case id")
         self._attributes = {
             self.CURRENT_STATUS: status,
             self.LAST_CASE_UPDATE: date
