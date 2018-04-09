@@ -45,6 +45,9 @@ class UscisSensor(Entity):
 
     HOURS_TO_UPDATE = timedelta(hours=24)
 
+    CURRENT_STATUS = "current_status"
+    LAST_CASE_UPDATE = "last_update_date"
+
     def __init__(self, case, name):
         """Initialize the sensor."""
         self._state = None
@@ -74,11 +77,13 @@ class UscisSensor(Entity):
         import uscisstatus
         try:
             status, date = uscisstatus.get_case_status(self._case_id)
+            self._attributes = {
+                self.CURRENT_STATUS: status,
+                self.LAST_CASE_UPDATE: date
+            }
+            self._state = date
+            self.valid_case_id = True
+
         except Exception:
             _LOGGER("Please Check that you have valid USCIS case id")
-        self._attributes = {
-            self.CURRENT_STATUS: status,
-            self.LAST_CASE_UPDATE: date
-        }
-        self._state = date
-        self.valid_case_id = True
+            self.valid_case_id = False
