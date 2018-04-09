@@ -187,12 +187,16 @@ class ConfigEntry:
 
             if not isinstance(result, bool):
                 _LOGGER.error('%s.async_config_entry did not return boolean',
-                              self.domain)
+                              component.DOMAIN)
                 result = False
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error setting up entry %s for %s',
-                              self.title, self.domain)
+                              self.title, component.DOMAIN)
             result = False
+
+        # Only store setup result as state if it was not forwarded.
+        if self.domain != component.DOMAIN:
+            return
 
         if result:
             self.state = ENTRY_STATE_LOADED
@@ -321,6 +325,27 @@ class ConfigEntries:
 
         entries = await self.hass.async_add_job(load_json, path)
         self._entries = [ConfigEntry(**entry) for entry in entries]
+
+    async def async_forward_entry(self, entry, component):
+        """Forward the setup of an entry to a different component.
+
+        By default an entry is setup with the component it belongs to. If that
+        component also has related platforms, the component will have to
+        forward the entry to be setup by that component.
+
+        You don't want to await this coroutine if it is called as part of the
+        setup of a component, because it can cause a deadlock.
+        """
+        # Setup Component if not set up yet
+        if component not in self.hass.config.components:
+            result = await async_setup_component(
+                self.hass, component, self._hass_config)
+
+            if not result:
+                return False
+
+        await entry.async_setup(
+            self.hass, component=getattr(self.hass.components, component))
 
     async def _async_add_entry(self, entry):
         """Add an entry."""

@@ -39,18 +39,17 @@ class HueBridge(object):
     async def async_setup(self, tries=0):
         """Set up a phue bridge based on host parameter."""
         host = self.host
+        hass = self.hass
 
         try:
             self.api = await get_bridge(
-                self.hass, host,
-                self.config_entry.data['username']
-            )
+                hass, host, self.config_entry.data['username'])
         except AuthenticationRequired:
             # usernames can become invalid if hub is reset or user removed.
             # We are going to fail the config entry setup and initiate a new
             # linking procedure. When linking succeeds, it will remove the
             # old config entry.
-            self.hass.async_add_job(self.hass.config_entries.flow.async_init(
+            hass.async_add_job(hass.config_entries.flow.async_init(
                 DOMAIN, source='import', data={
                     'host': host,
                 }
@@ -69,7 +68,7 @@ class HueBridge(object):
                     self.config_entry.state = config_entries.ENTRY_STATE_LOADED
 
             # Unhandled edge case: cancel this if we discover bridge on new IP
-            self.hass.helpers.event.async_call_later(retry_delay, retry_setup)
+            hass.helpers.event.async_call_later(retry_delay, retry_setup)
 
             return False
 
@@ -78,11 +77,10 @@ class HueBridge(object):
                              host)
             return False
 
-        self.hass.async_add_job(
-            self.hass.helpers.discovery.async_load_platform(
-                'light', DOMAIN, {'host': host}))
+        hass.async_add_job(hass.config_entries.async_forward_entry(
+            self.config_entry, 'light'))
 
-        self.hass.services.async_register(
+        hass.services.async_register(
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene,
             schema=SCENE_SCHEMA)
 

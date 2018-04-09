@@ -389,3 +389,39 @@ def test_discovery_init_flow(manager):
         assert entry.title == 'hello'
         assert entry.data == data
         assert entry.source == config_entries.SOURCE_DISCOVERY
+
+
+async def test_forward_entry_sets_up_component(hass):
+    """Test we setup the component entry is forwarded to."""
+    entry = MockConfigEntry(domain='original')
+
+    mock_original_setup_entry = MagicMock(return_value=mock_coro(True))
+    loader.set_component(
+        'original',
+        MockModule('original', async_setup_entry=mock_original_setup_entry))
+
+    mock_forwarded_setup_entry = MagicMock(return_value=mock_coro(True))
+    loader.set_component(
+        'forwarded',
+        MockModule('forwarded', async_setup_entry=mock_forwarded_setup_entry))
+
+    await hass.config_entries.async_forward_entry(entry, 'forwarded')
+    assert len(mock_original_setup_entry.mock_calls) == 0
+    assert len(mock_forwarded_setup_entry.mock_calls) == 1
+
+
+async def test_forward_entry_does_not_setup_entry_if_setup_fails(hass):
+    """Test we do not setup entry if component setup fails."""
+    entry = MockConfigEntry(domain='original')
+
+    mock_setup = MagicMock(return_value=mock_coro(False))
+    mock_setup_entry = MagicMock()
+    loader.set_component('forwarded', MockModule(
+        'forwarded',
+        async_setup=mock_setup,
+        async_setup_entry=mock_setup_entry,
+    ))
+
+    await hass.config_entries.async_forward_entry(entry, 'forwarded')
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 0
