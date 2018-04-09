@@ -9,8 +9,6 @@ from datetime import timedelta
 import logging
 from typing import Any, List, Sequence, Callable
 
-import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.setup import async_prepare_setup_platform
@@ -19,7 +17,6 @@ from homeassistant.loader import bind_hass
 from homeassistant.components import group, zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
@@ -633,8 +630,6 @@ def async_load_config(path: str, hass: HomeAssistantType,
         vol.Optional('picture', default=None): vol.Any(None, cv.string),
         vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
             cv.time_period, cv.positive_timedelta),
-        # Old deprecated option
-        vol.Optional('vendor'): cv.string,
     })
     try:
         result = []
@@ -646,6 +641,8 @@ def async_load_config(path: str, hass: HomeAssistantType,
             return []
 
         for dev_id, device in devices.items():
+            # Deprecated option. We just ignore it to avoid breaking change
+            device.pop('vendor', None)
             try:
                 device = dev_schema(device)
                 device['dev_id'] = cv.slugify(dev_id)
