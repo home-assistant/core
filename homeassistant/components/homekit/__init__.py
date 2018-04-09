@@ -77,73 +77,61 @@ def get_accessory(hass, state, aid, config):
         _LOGGER.warning('The entitiy "%s" is not supported, since it '
                         'generates an invalid aid, please change it.',
                         state.entity_id)
-        return None
+        return
 
-    if state.domain == 'sensor':
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if unit == TEMP_CELSIUS or unit == TEMP_FAHRENHEIT:
-            _LOGGER.debug('Add "%s" as "%s"',
-                          state.entity_id, 'TemperatureSensor')
-            return TYPES['TemperatureSensor'](hass, state.name,
-                                              state.entity_id, aid=aid)
-        elif unit == '%':
-            _LOGGER.debug('Add "%s" as %s"',
-                          state.entity_id, 'HumiditySensor')
-            return TYPES['HumiditySensor'](hass, state.name,
-                                           state.entity_id, aid=aid)
+    a_type = None
+    a_kwargs = {'aid': aid}
+
+    if state.domain == 'alarm_control_panel':
+        a_type = 'SecuritySystem'
+        a_kwargs['alarm_code'] = config.get(ATTR_CODE)
 
     elif state.domain == 'binary_sensor' or state.domain == 'device_tracker':
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'BinarySensor')
-        return TYPES['BinarySensor'](hass, state.name, state.entity_id,
-                                     aid=aid)
-
-    elif state.domain == 'cover':
-        # Only add covers that support set_cover_position
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if features & SUPPORT_SET_POSITION:
-            _LOGGER.debug('Add "%s" as "%s"',
-                          state.entity_id, 'WindowCovering')
-            return TYPES['WindowCovering'](hass, state.name, state.entity_id,
-                                           aid=aid)
-
-    elif state.domain == 'alarm_control_panel':
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'SecuritySystem')
-        return TYPES['SecuritySystem'](hass, state.name, state.entity_id,
-                                       alarm_code=config.get(ATTR_CODE),
-                                       aid=aid)
+        a_type = 'BinarySensor'
 
     elif state.domain == 'climate':
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         support_temp_range = SUPPORT_TARGET_TEMPERATURE_LOW | \
             SUPPORT_TARGET_TEMPERATURE_HIGH
         # Check if climate device supports auto mode
-        support_auto = bool(features & support_temp_range)
+        a_type = 'Thermostat'
+        a_kwargs['support_auto'] = bool(features & support_temp_range)
 
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Thermostat')
-        return TYPES['Thermostat'](hass, state.name, state.entity_id,
-                                   support_auto, aid=aid)
+    elif state.domain == 'cover':
+        # Only add covers that support set_cover_position
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if features & SUPPORT_SET_POSITION:
+            a_type = 'WindowCovering'
 
     elif state.domain == 'light':
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Light')
-        return TYPES['Light'](hass, state.name, state.entity_id, aid=aid)
+        a_type = 'Light'
 
     elif state.domain == 'lock':
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Lock')
-        return TYPES['Lock'](hass, state.name, state.entity_id, aid=aid)
+        a_type = 'Lock'
+
+    elif state.domain == 'sensor':
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if unit == TEMP_CELSIUS or unit == TEMP_FAHRENHEIT:
+            a_type = 'TemperatureSensor'
+        elif unit == '%':
+            a_type = 'HumiditySensor'
 
     elif state.domain == 'switch' or state.domain == 'remote' \
             or state.domain == 'input_boolean' or state.domain == 'script':
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Switch')
-        return TYPES['Switch'](hass, state.name, state.entity_id, aid=aid)
+        a_type = 'Switch'
 
-    return None
+    if a_type is None:
+        return
+
+    _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
+    return TYPES[a_type](hass, state.name, state.entity_id, **a_kwargs)
 
 
 def generate_aid(entity_id):
     """Generate accessory aid with zlib adler32."""
     aid = adler32(entity_id.encode('utf-8'))
     if aid == 0 or aid == 1:
-        return None
+        return
     return aid
 
 
