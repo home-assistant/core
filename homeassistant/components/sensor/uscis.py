@@ -37,7 +37,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         _LOGGER.error("Setup USCIS Sensor Fail"
                       " check if your Case ID is Valid")
-    return
 
 
 class UscisSensor(Entity):
@@ -76,14 +75,13 @@ class UscisSensor(Entity):
         """Using Request to access USCIS website and fetch data."""
         import uscisstatus
         try:
-            status, date = uscisstatus.get_case_status(self._case_id)
+            status = uscisstatus.get_case_status(self._case_id)
             self._attributes = {
-                self.CURRENT_STATUS: status,
-                self.LAST_CASE_UPDATE: date
+                self.CURRENT_STATUS: status['status']
             }
-            self._state = date
+            self._state = status['date']
             self.valid_case_id = True
 
-        except Exception:
+        except ValueError:
             _LOGGER("Please Check that you have valid USCIS case id")
             self.valid_case_id = False
