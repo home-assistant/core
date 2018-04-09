@@ -338,8 +338,11 @@ class ConfigEntries:
         """
         # Setup Component if not set up yet
         if component not in self.hass.config.components:
-            await async_setup_component(
+            result = await async_setup_component(
                 self.hass, component, self._hass_config)
+
+            if not result:
+                return False
 
         await entry.async_setup(
             self.hass, component=getattr(self.hass.components, component))

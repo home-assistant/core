@@ -344,7 +344,8 @@ class MockPlatform(object):
 
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
-                 platform_schema=None, async_setup_platform=None):
+                 platform_schema=None, async_setup_platform=None,
+                 async_setup_entry=None):
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
 
@@ -357,6 +358,9 @@ class MockPlatform(object):
 
         if async_setup_platform is not None:
             self.async_setup_platform = async_setup_platform
+
+        if async_setup_entry is not None:
+            self.async_setup_entry = async_setup_entry
 
         if setup_platform is None and async_setup_platform is None:
             self.async_setup_platform = mock_coro_func()
@@ -376,6 +380,14 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         async_entities_added_callback=lambda: None
     ):
         """Initialize a mock entity platform."""
+        if logger is None:
+            logger = logging.getLogger('homeassistant.helpers.entity_platform')
+
+        # Otherwise the constructor will blow up.
+        if (isinstance(platform, Mock) and
+                isinstance(platform.PARALLEL_UPDATES, Mock)):
+            platform.PARALLEL_UPDATES = 0
+
         super().__init__(
             hass=hass,
             logger=logger,
