@@ -103,7 +103,6 @@ class BroadlinkData(object):
     def __init__(self, interval, ip_addr, mac_addr, timeout):
         """Initialize the data object."""
         self.data = None
-        self.interval = interval
         self.ip_addr = ip_addr
         self.mac_addr = mac_addr
         self.timeout = timeout
