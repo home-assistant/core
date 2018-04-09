@@ -68,7 +68,7 @@ class NADtcp(MediaPlayerDevice):
         self._volume = None
         self._source = None
         self._source_list = self.nad_device.available_sources()
-		self._nad_volume_db = None
+        self._nad_volume_db = None
 
     @property
     def name(self):
