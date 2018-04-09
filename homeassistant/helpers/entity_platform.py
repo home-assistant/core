@@ -148,6 +148,7 @@ class EntityPlatform(object):
                 await self._async_setup_platform(
                     async_create_setup_task, tries)
 
+            # TODO cancel this during async_reset
             async_call_later(hass, wait_time, setup_again)
             return False
         except asyncio.TimeoutError:
@@ -315,6 +316,8 @@ class EntityPlatform(object):
 
         This method must be run in the event loop.
         """
+        # TODO cancel the call_later call to setup again.
+
         if not self.entities:
             return
 

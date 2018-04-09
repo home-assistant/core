@@ -203,12 +203,13 @@ class ConfigEntry:
         else:
             self.state = ENTRY_STATE_SETUP_ERROR
 
-    async def async_unload(self, hass):
+    async def async_unload(self, hass, *, component=None):
         """Unload an entry.
 
         Returns if unload is possible and was successful.
         """
-        component = getattr(hass.components, self.domain)
+        if component is None:
+            component = getattr(hass.components, self.domain)
 
         supports_unload = hasattr(component, 'async_unload_entry')
 
@@ -220,13 +221,13 @@ class ConfigEntry:
 
             if not isinstance(result, bool):
                 _LOGGER.error('%s.async_unload_entry did not return boolean',
-                              self.domain)
+                              component.DOMAIN)
                 result = False
 
             return result
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error unloading entry %s for %s',
-                              self.title, self.domain)
+                              self.title, component.DOMAIN)
             self.state = ENTRY_STATE_FAILED_UNLOAD
             return False
 
@@ -326,7 +327,7 @@ class ConfigEntries:
         entries = await self.hass.async_add_job(load_json, path)
         self._entries = [ConfigEntry(**entry) for entry in entries]
 
-    async def async_forward_entry(self, entry, component):
+    async def async_forward_entry_setup(self, entry, component):
         """Forward the setup of an entry to a different component.
 
         By default an entry is setup with the component it belongs to. If that
@@ -345,6 +346,15 @@ class ConfigEntries:
                 return False
 
         await entry.async_setup(
+            self.hass, component=getattr(self.hass.components, component))
+
+    async def async_forward_entry_unload(self, entry, component):
+        """Forward the unloading of an entry to a different component."""
+        # It was never loaded.
+        if component not in self.hass.config.components:
+            return True
+
+        await entry.async_unload(
             self.hass, component=getattr(self.hass.components, component))
 
     async def _async_add_entry(self, entry):
