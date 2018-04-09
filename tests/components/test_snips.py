@@ -33,7 +33,7 @@ async def test_snips_bad_config(hass, mqtt_mock):
     assert not result
 
 
-async def test_snips_config_feedback(hass, mqtt_mock):
+async def test_snips_config_feedback_on(hass, mqtt_mock):
     """Test Snips Config."""
     event = 'call_service'
     events = []
@@ -63,6 +63,58 @@ async def test_snips_config_feedback(hass, mqtt_mock):
     assert topic == 'hermes/feedback/sound/toggleOn'
     assert events[1].data['service_data']['qos'] == 1
     assert events[1].data['service_data']['retain']
+
+
+async def test_snips_config_feedback_off(hass, mqtt_mock):
+    """Test Snips Config."""
+    event = 'call_service'
+    events = []
+
+    @callback
+    def record_event(event):
+        """Add recorded event to set."""
+        events.append(event)
+
+    hass.bus.async_listen(event, record_event)
+    result = await async_setup_component(hass, "snips", {
+        "snips": {
+            "feedback_sounds": False
+        },
+    })
+    assert result
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+    assert events[0].data['domain'] == 'mqtt'
+    assert events[0].data['service'] == 'publish'
+    topic = events[0].data['service_data']['topic']
+    assert topic == 'hermes/feedback/sound/toggleOn'
+    assert events[1].data['domain'] == 'mqtt'
+    assert events[1].data['service'] == 'publish'
+    topic = events[1].data['service_data']['topic']
+    assert topic == 'hermes/feedback/sound/toggleOff'
+    assert events[1].data['service_data']['qos'] == 0
+    assert not events[1].data['service_data']['retain']
+
+
+async def test_snips_config_no_feedback(hass, mqtt_mock):
+    """Test Snips Config."""
+    event = 'call_service'
+    events = []
+
+    @callback
+    def record_event(event):
+        """Add recorded event to set."""
+        events.append(event)
+
+    hass.bus.async_listen(event, record_event)
+    result = await async_setup_component(hass, "snips", {
+        "snips": {},
+    })
+    assert result
+    await hass.async_block_till_done()
+
+    assert len(events) == 0
 
 
 async def test_snips_intent(hass, mqtt_mock):

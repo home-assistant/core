@@ -10,6 +10,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.helpers import intent, config_validation as cv
 import homeassistant.components.mqtt as mqtt
 
@@ -41,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_FEEDBACK, default=False): cv.boolean,
+        vol.Optional(CONF_FEEDBACK): cv.boolean,
         vol.Optional(CONF_PROBABILITY, default=0): vol.Coerce(float),
         vol.Optional(CONF_SITE_IDS, default=['default']):
             vol.All(cv.ensure_list, [cv.string]),
@@ -82,7 +83,8 @@ SERVICE_SCHEMA_FEEDBACK = vol.Schema({
 
 async def async_setup(hass, config):
     """Activate Snips component."""
-    def set_feedback(site_ids, state):
+    @callback
+    def async_set_feedback(site_ids, state):
         """Set Feedback sound state."""
         site_ids = (site_ids if site_ids
                     else config[DOMAIN].get(CONF_SITE_IDS))
@@ -93,9 +95,10 @@ async def async_setup(hass, config):
             hass.components.mqtt.async_publish(
                 FEEDBACK_ON_TOPIC, None, qos=0, retain=False)
             hass.components.mqtt.async_publish(
-                topic, payload, qos=1, retain=True)
+                topic, payload, qos=int(state), retain=state)
 
-    set_feedback(None, config[DOMAIN].get(CONF_FEEDBACK))
+    if not config[DOMAIN].get(CONF_FEEDBACK, 'no_conf') == 'no_conf':
+        async_set_feedback(None, config[DOMAIN].get(CONF_FEEDBACK))
 
     async def message_received(topic, payload, qos):
         """Handle new messages on MQTT."""
@@ -177,11 +180,11 @@ async def async_setup(hass, config):
 
     async def feedback_on(call):
         """Turn feedback sounds on."""
-        set_feedback(call.data.get(ATTR_SITE_ID), True)
+        async_set_feedback(call.data.get(ATTR_SITE_ID), True)
 
     async def feedback_off(call):
         """Turn feedback sounds off."""
-        set_feedback(call.data.get(ATTR_SITE_ID), False)
+        async_set_feedback(call.data.get(ATTR_SITE_ID), False)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SAY, snips_say,
