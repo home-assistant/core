@@ -70,45 +70,54 @@ class TestHomekitSensors(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(acc.char_humidity.value, 20)
 
-    def test_binary_device_classes(self):
+    def test_binary(self):
         """Test if accessory is updated after state change."""
+        entity_id = 'binary_sensor.opening'
+
+        self.hass.states.set(entity_id, STATE_UNKNOWN,
+                             {ATTR_DEVICE_CLASS: "opening"})
+        self.hass.block_till_done()
+
+        acc = BinarySensor(self.hass, entity_id, 'Window Opening', aid=2)
+        acc.run()
+
+        self.assertEqual(acc.aid, 2)
+        self.assertEqual(acc.category, 10)  # Sensor
+
+        self.assertEqual(acc.char_detected.value, 0)
+
+        self.hass.states.set(entity_id, STATE_ON,
+                             {ATTR_DEVICE_CLASS: "opening"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_detected.value, 1)
+
+        self.hass.states.set(entity_id, STATE_OFF,
+                             {ATTR_DEVICE_CLASS: "opening"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_detected.value, 0)
+
+        self.hass.states.set(entity_id, STATE_HOME,
+                             {ATTR_DEVICE_CLASS: "opening"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_detected.value, 1)
+
+        self.hass.states.set(entity_id, STATE_NOT_HOME,
+                             {ATTR_DEVICE_CLASS: "opening"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_detected.value, 0)
+
+        self.hass.states.remove(entity_id)
+        self.hass.block_till_done()
+
+    def test_binary_device_classes(self):
+        """Test if services and characteristics are assigned correctly."""
         entity_id = 'binary_sensor.demo'
 
         for device_class, (service, char) in BINARY_SENSOR_SERVICE_MAP.items():
-            print(device_class)
             self.hass.states.set(entity_id, STATE_OFF,
                                  {ATTR_DEVICE_CLASS: device_class})
             self.hass.block_till_done()
 
             acc = BinarySensor(self.hass, entity_id, 'Binary Sensor', aid=2)
-            acc.run()
             self.assertEqual(acc.get_service(service).display_name, service)
             self.assertEqual(acc.char_detected.display_name, char)
-
-            self.assertEqual(acc.aid, 2)
-            self.assertEqual(acc.category, 10)  # Sensor
-
-            self.assertEqual(acc.char_detected.value, 0)
-
-            self.hass.states.set(entity_id, STATE_ON,
-                                 {ATTR_DEVICE_CLASS: device_class})
-            self.hass.block_till_done()
-            self.assertEqual(acc.char_detected.value, 1)
-
-            self.hass.states.set(entity_id, STATE_OFF,
-                                 {ATTR_DEVICE_CLASS: device_class})
-            self.hass.block_till_done()
-            self.assertEqual(acc.char_detected.value, 0)
-
-            self.hass.states.set(entity_id, STATE_HOME,
-                                 {ATTR_DEVICE_CLASS: device_class})
-            self.hass.block_till_done()
-            self.assertEqual(acc.char_detected.value, 1)
-
-            self.hass.states.set(entity_id, STATE_NOT_HOME,
-                                 {ATTR_DEVICE_CLASS: device_class})
-            self.hass.block_till_done()
-            self.assertEqual(acc.char_detected.value, 0)
-
-            self.hass.states.remove(entity_id)
-            self.hass.block_till_done()
