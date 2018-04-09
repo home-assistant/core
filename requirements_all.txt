@@ -761,6 +761,9 @@ pyfido==2.1.0
 # homeassistant.components.climate.flexit
 pyflexit==0.3
 
+# homeassistant.components.sensor.fronius
+pyfronius==0.2
+
 # homeassistant.components.ifttt
 pyfttt==0.3
 
