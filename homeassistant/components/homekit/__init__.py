@@ -92,6 +92,11 @@ def get_accessory(hass, state, aid, config):
             return TYPES['HumiditySensor'](hass, state.entity_id, state.name,
                                            aid=aid)
 
+    elif state.domain == 'binary_sensor' or state.domain == 'device_tracker':
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'BinarySensor')
+        return TYPES['BinarySensor'](hass, state.entity_id,
+                                     state.name, aid=aid)
+
     elif state.domain == 'cover':
         # Only add covers that support set_cover_position
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
