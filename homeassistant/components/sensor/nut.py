@@ -120,6 +120,8 @@ STATE_TYPES = {
     'TRIM': 'Trimming Voltage',
     'BOOST': 'Boosting Voltage',
     'FSD': 'Forced Shutdown',
+    'CHRG': 'Charging',
+    'DISCHRG': 'Discharging',
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
