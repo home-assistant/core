@@ -194,7 +194,7 @@ class ConfigEntry:
                               self.title, component.DOMAIN)
             result = False
 
-        # Only store setup result as state if it was for component.
+        # Only store setup result as state if it was not forwarded.
         if self.domain != component.DOMAIN:
             return
 
