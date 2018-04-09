@@ -67,15 +67,13 @@ class SecuritySystem(HomeAccessory):
             return
 
         hass_state = new_state.state
-        if hass_state not in HASS_TO_HOMEKIT:
-            return
+        if hass_state in HASS_TO_HOMEKIT:
+            current_security_state = HASS_TO_HOMEKIT[hass_state]
+            self.char_current_state.set_value(current_security_state)
+            _LOGGER.debug('%s: Updated current state to %s (%d)',
+                          self.entity_id, hass_state, current_security_state)
 
-        current_security_state = HASS_TO_HOMEKIT[hass_state]
-        self.char_current_state.set_value(current_security_state)
-        _LOGGER.debug('%s: Updated current state to %s (%d)',
-                      self.entity_id, hass_state, current_security_state)
-
-        if not self.flag_target_state:
-            self.char_target_state.set_value(current_security_state)
-        if self.char_target_state.value == self.char_current_state.value:
-            self.flag_target_state = False
+            if not self.flag_target_state:
+                self.char_target_state.set_value(current_security_state)
+            if self.char_target_state.value == self.char_current_state.value:
+                self.flag_target_state = False
