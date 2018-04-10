@@ -1,4 +1,4 @@
-z"""The tests for the Cast Media player platform."""
+"""The tests for the Cast Media player platform."""
 # pylint: disable=protected-access
 import asyncio
 import datetime as dt
