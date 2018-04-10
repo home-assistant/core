@@ -52,6 +52,7 @@ def setup(hass, config):
     if DOMAIN not in config:
         return False
 
+    connection_failed = 0
     gateways = config[DOMAIN][CONF_GATEWAYS]
     for gateway in gateways:
         host = gateway[CONF_HOST]
@@ -68,7 +69,10 @@ def setup(hass, config):
                 ''.format(ex),
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
-            return False
+            connection_failed += 1
+
+    if connection_failed >= len(gateways):
+        return False
 
     load_platform(hass, 'climate', DOMAIN)
     load_platform(hass, 'binary_sensor', DOMAIN)
