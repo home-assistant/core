@@ -19,7 +19,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['abodepy==0.13.0']
+REQUIREMENTS = ['abodepy==0.13.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +27,7 @@ CONF_ATTRIBUTION = "Data provided by goabode.com"
 CONF_POLLING = 'polling'
 
 DOMAIN = 'abode'
+DEFAULT_CACHEDB = './abodepy_cache.pickle'
 
 NOTIFICATION_ID = 'abode_notification'
 NOTIFICATION_TITLE = 'Abode Security Setup'
@@ -90,9 +91,10 @@ class AbodeSystem(object):
     def __init__(self, username, password, name, polling, exclude, lights):
         """Initialize the system."""
         import abodepy
+        cache = hass.config.path(DEFAULT_CACHEDB)
         self.abode = abodepy.Abode(
             username, password, auto_login=True, get_devices=True,
-            get_automations=True)
+            get_automations=True, cache_path=cache)
         self.name = name
         self.polling = polling
         self.exclude = exclude
