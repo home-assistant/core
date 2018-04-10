@@ -77,7 +77,7 @@ def get_accessory(hass, state, aid, config):
         _LOGGER.warning('The entitiy "%s" is not supported, since it '
                         'generates an invalid aid, please change it.',
                         state.entity_id)
-        return
+        return None
 
     a_type = None
     a_kwargs = {'aid': aid}
@@ -121,7 +121,7 @@ def get_accessory(hass, state, aid, config):
         a_type = 'Switch'
 
     if a_type is None:
-        return
+        return None
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
     return TYPES[a_type](hass, state.name, state.entity_id, **a_kwargs)
@@ -131,7 +131,7 @@ def generate_aid(entity_id):
     """Generate accessory aid with zlib adler32."""
     aid = adler32(entity_id.encode('utf-8'))
     if aid == 0 or aid == 1:
-        return
+        return None
     return aid
 
 
