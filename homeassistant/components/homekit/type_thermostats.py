@@ -5,9 +5,11 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE, ATTR_TEMPERATURE,
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     ATTR_OPERATION_MODE, ATTR_OPERATION_LIST,
-    STATE_HEAT, STATE_COOL, STATE_AUTO)
+    STATE_HEAT, STATE_COOL, STATE_AUTO,
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
+    STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service, debounce
@@ -26,6 +28,9 @@ HC_HASS_TO_HOMEKIT = {STATE_OFF: 0, STATE_HEAT: 1,
                       STATE_COOL: 2, STATE_AUTO: 3}
 HC_HOMEKIT_TO_HASS = {c: s for s, c in HC_HASS_TO_HOMEKIT.items()}
 
+SUPPORT_TEMP_RANGE = SUPPORT_TARGET_TEMPERATURE_LOW | \
+            SUPPORT_TARGET_TEMPERATURE_HIGH
+
 
 @TYPES.register('Thermostat')
 class Thermostat(HomeAccessory):
@@ -37,16 +42,18 @@ class Thermostat(HomeAccessory):
                          category=CATEGORY_THERMOSTAT, **kwargs)
 
         self._unit = TEMP_CELSIUS
-        self._support_auto = config['support_auto']
         self.heat_cool_flag_target_state = False
         self.temperature_flag_target_state = False
         self.coolingthresh_flag_target_state = False
         self.heatingthresh_flag_target_state = False
 
         # Add additional characteristics if auto mode is supported
+        features = self.hass.states.get(self.entity_id) \
+            .attributes.get(ATTR_SUPPORTED_FEATURES)
+        support_auto = bool(features & SUPPORT_TEMP_RANGE)
         extra_chars = [
             CHAR_COOLING_THRESHOLD_TEMPERATURE,
-            CHAR_HEATING_THRESHOLD_TEMPERATURE] if self._support_auto else None
+            CHAR_HEATING_THRESHOLD_TEMPERATURE] if support_auto else None
 
         # Preload the thermostat service
         serv_thermostat = add_preload_service(self, SERV_THERMOSTAT,
@@ -76,7 +83,7 @@ class Thermostat(HomeAccessory):
         self.char_display_units.value = 0
 
         # If the device supports it: high and low temperature characteristics
-        if self._support_auto:
+        if support_auto:
             self.char_cooling_thresh_temp = serv_thermostat. \
                 get_characteristic(CHAR_COOLING_THRESHOLD_TEMPERATURE)
             self.char_cooling_thresh_temp.value = 23.0

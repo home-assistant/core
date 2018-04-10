@@ -99,10 +99,6 @@ class TestGetAccessories(unittest.TestCase):
             state = State('climate.test', 'auto')
             get_accessory(None, state, 2, {})
 
-        # pylint: disable=unsubscriptable-object
-        self.assertEqual(
-            self.mock_type.call_args[0][-1]['support_auto'], False)
-
     def test_light(self):
         """Test light devices."""
         with patch.dict(TYPES, {'Light': self.mock_type}):
@@ -117,10 +113,6 @@ class TestGetAccessories(unittest.TestCase):
                     SUPPORT_TARGET_TEMPERATURE_LOW |
                     SUPPORT_TARGET_TEMPERATURE_HIGH})
             get_accessory(None, state, 2, {})
-
-        # pylint: disable=unsubscriptable-object
-        self.assertEqual(
-            self.mock_type.call_args[0][-1]['support_auto'], True)
 
     def test_switch(self):
         """Test switch."""

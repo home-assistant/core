@@ -8,8 +8,6 @@ from zlib import adler32
 
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.components.cover import SUPPORT_SET_POSITION
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
@@ -86,12 +84,7 @@ def get_accessory(hass, state, aid, config):
         a_type = 'BinarySensor'
 
     elif state.domain == 'climate':
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        support_temp_range = SUPPORT_TARGET_TEMPERATURE_LOW | \
-            SUPPORT_TARGET_TEMPERATURE_HIGH
-        # Check if climate device supports auto mode
         a_type = 'Thermostat'
-        config['support_auto'] = bool(features & support_temp_range)
 
     elif state.domain == 'cover':
         # Only add covers that support set_cover_position
