@@ -85,8 +85,65 @@ class TestHomekitSwitches(unittest.TestCase):
         self.assertEqual(acc.char_on.value, True)
 
     def test_input_boolean_set_state(self):
-        """Test service call for remote as domain."""
+        """Test service call for input_boolean as domain."""
         entity_id = 'input_boolean.test'
+        domain = split_entity_id(entity_id)[0]
+
+        acc = Switch(self.hass, entity_id, 'Switch', aid=2)
+        acc.run()
+
+        self.assertEqual(acc.char_on.value, False)
+
+        # Set from HomeKit
+        acc.char_on.client_update_value(True)
+        self.hass.block_till_done()
+        self.assertEqual(
+            self.events[0].data[ATTR_DOMAIN], domain)
+        self.assertEqual(
+            self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
+        self.assertEqual(acc.char_on.value, True)
+
+    def test_fan_set_state(self):
+        """Test service call for fan as domain."""
+        entity_id = 'fan.test'
+        domain = split_entity_id(entity_id)[0]
+
+        acc = Switch(self.hass, entity_id, 'Switch', aid=2)
+        acc.run()
+
+        self.assertEqual(acc.char_on.value, False)
+
+        # Set from HomeKit
+        acc.char_on.client_update_value(True)
+        self.hass.block_till_done()
+        self.assertEqual(
+            self.events[0].data[ATTR_DOMAIN], domain)
+        self.assertEqual(
+            self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
+        self.assertEqual(acc.char_on.value, True)
+
+    def test_vacuum_set_state(self):
+        """Test service call for vacuum as domain."""
+        entity_id = 'vacuum.test'
+        domain = split_entity_id(entity_id)[0]
+
+        acc = Switch(self.hass, entity_id, 'Switch', aid=2)
+        acc.run()
+
+        self.assertEqual(acc.char_on.value, False)
+
+        # Set from HomeKit
+        acc.char_on.client_update_value(True)
+        self.hass.block_till_done()
+        self.assertEqual(
+            self.events[0].data[ATTR_DOMAIN], domain)
+        self.assertEqual(
+            self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
+        self.assertEqual(acc.char_on.value, True)
+
+    def test_media_player_set_state(self):
+        """Test service call for media_player as domain."""
+        entity_id = 'media_player.test'
         domain = split_entity_id(entity_id)[0]
 
         acc = Switch(self.hass, entity_id, 'Switch', aid=2)

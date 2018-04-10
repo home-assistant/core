@@ -140,3 +140,21 @@ class TestGetAccessories(unittest.TestCase):
         with patch.dict(TYPES, {'Switch': self.mock_type}):
             state = State('input_boolean.test', 'on')
             get_accessory(None, state, 2, {})
+
+    def test_fan(self):
+        """Test fan."""
+        with patch.dict(TYPES, {'Switch': self.mock_type}):
+            state = State('fan.test', 'on')
+            get_accessory(None, state, 2, {})
+
+    def test_vacuum(self):
+        """Test vacuum."""
+        with patch.dict(TYPES, {'Switch': self.mock_type}):
+            state = State('vacuum.test', 'on')
+            get_accessory(None, state, 2, {})
+
+    def test_media_player(self):
+        """Test media_player."""
+        with patch.dict(TYPES, {'Switch': self.mock_type}):
+            state = State('media_player.test', 'on')
+            get_accessory(None, state, 2, {})

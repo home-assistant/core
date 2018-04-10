@@ -130,8 +130,8 @@ def get_accessory(hass, state, aid, config):
     elif state.domain == 'lock':
         return TYPES['Lock'](hass, state.entity_id, state.name, aid=aid)
 
-    elif state.domain == 'switch' or state.domain == 'remote' \
-            or state.domain == 'input_boolean' or state.domain == 'script':
+    elif state.domain in ['switch', 'remote', 'input_boolean', 'script',
+                          'fan', 'vacuum', 'media_player']:
         _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Switch')
         return TYPES['Switch'](hass, state.entity_id, state.name, aid=aid)
 
