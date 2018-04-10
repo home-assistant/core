@@ -91,7 +91,7 @@ class TestGetAccessories(unittest.TestCase):
 
         # pylint: disable=unsubscriptable-object
         self.assertEqual(
-            self.mock_type.call_args[0][-1][ATTR_CODE], '1234')
+            self.mock_type.call_args[0][3][ATTR_CODE], '1234')
 
     def test_climate(self):
         """Test climate devices."""

@@ -77,6 +77,9 @@ def get_accessory(hass, state, aid, config):
                         state.entity_id)
         return None
 
+    a_type = None
+    config = config or {}
+
     if state.domain == 'alarm_control_panel':
         a_type = 'SecuritySystem'
 
@@ -109,11 +112,11 @@ def get_accessory(hass, state, aid, config):
             or state.domain == 'input_boolean' or state.domain == 'script':
         a_type = 'Switch'
 
-    else:
+    if a_type is None:
         return None
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
-    return TYPES[a_type](hass, state.name, state.entity_id, config, aid=aid)
+    return TYPES[a_type](hass, state.name, state.entity_id, config, aid)
 
 
 def generate_aid(entity_id):

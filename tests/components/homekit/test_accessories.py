@@ -91,7 +91,8 @@ class TestAccessories(unittest.TestCase):
     def test_set_accessory_info(self):
         """Test setting the basic accessory information."""
         # Test HomeAccessory
-        acc = HomeAccessory('hass', 'Home Accessory', 'homekit.accessory', {})
+        acc = HomeAccessory('hass', 'Home Accessory', 'homekit.accessory',
+                            {}, aid=2)
         set_accessory_info(acc, 'name', 'model', 'manufacturer', '0000')
 
         serv = acc.get_service(SERV_ACCESSORY_INFO)
@@ -117,7 +118,8 @@ class TestAccessories(unittest.TestCase):
         """Test HomeAccessory class."""
         hass = get_test_home_assistant()
 
-        acc = HomeAccessory(hass, 'Home Accessory', 'homekit.accessory', {})
+        acc = HomeAccessory(hass, 'Home Accessory', 'homekit.accessory',
+                            {}, aid=2)
         self.assertEqual(acc.hass, hass)
         self.assertEqual(acc.display_name, 'Home Accessory')
         self.assertEqual(acc.category, 1)  # Category.OTHER
