@@ -1,4 +1,5 @@
 """Class to hold all lock accessories."""
+# pylint: disable=attribute-defined-outside-init
 import logging
 
 from homeassistant.components.lock import (
@@ -27,11 +28,10 @@ class Lock(HomeAccessory):
     The lock entity must support: unlock and lock.
     """
 
-    def __init__(self, hass, name, entity_id, config, **kwargs):
-        """Initialize a Lock accessory object."""
-        super().__init__(hass, name, entity_id,
-                         category=CATEGORY_LOCK, **kwargs)
+    category = CATEGORY_LOCK
 
+    def init_setup(self, config):
+        """Initialize a Lock accessory object."""
         self.flag_target_state = False
 
         serv_lock_mechanism = add_preload_service(self, SERV_LOCK)

@@ -1,4 +1,5 @@
 """Class to hold all cover accessories."""
+# pylint: disable=attribute-defined-outside-init
 import logging
 
 from homeassistant.components.cover import ATTR_CURRENT_POSITION
@@ -19,11 +20,10 @@ class WindowCovering(HomeAccessory):
     The cover entity must support: set_cover_position.
     """
 
-    def __init__(self, hass, name, entity_id, config, **kwargs):
-        """Initialize a WindowCovering accessory object."""
-        super().__init__(hass, name, entity_id,
-                         category=CATEGORY_WINDOW_COVERING, **kwargs)
+    category = CATEGORY_WINDOW_COVERING
 
+    def init_setup(self, config):
+        """Initialize a WindowCovering accessory object."""
         self.current_position = None
         self.homekit_target = None
 

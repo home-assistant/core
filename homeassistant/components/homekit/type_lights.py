@@ -1,4 +1,5 @@
 """Class to hold all light accessories."""
+# pylint: disable=attribute-defined-outside-init
 import logging
 
 from homeassistant.components.light import (
@@ -24,11 +25,10 @@ class Light(HomeAccessory):
     Currently supports: state, brightness, color temperature, rgb_color.
     """
 
-    def __init__(self, hass, name, entity_id, config, **kwargs):
-        """Initialize a new Light accessory object."""
-        super().__init__(hass, name, entity_id,
-                         category=CATEGORY_LIGHT, **kwargs)
+    category = CATEGORY_LIGHT
 
+    def init_setup(self, config):
+        """Initialize a new Light accessory object."""
         self._flag = {CHAR_ON: False, CHAR_BRIGHTNESS: False,
                       CHAR_HUE: False, CHAR_SATURATION: False,
                       CHAR_COLOR_TEMPERATURE: False, RGB_COLOR: False}

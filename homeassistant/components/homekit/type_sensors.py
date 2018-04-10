@@ -1,4 +1,5 @@
 """Class to hold all sensor accessories."""
+# pylint: disable=attribute-defined-outside-init
 import logging
 
 from homeassistant.const import (
@@ -41,11 +42,10 @@ class TemperatureSensor(HomeAccessory):
     Sensor entity must return temperature in °C, °F.
     """
 
-    def __init__(self, hass, name, entity_id, config, **kwargs):
-        """Initialize a TemperatureSensor accessory object."""
-        super().__init__(hass, name, entity_id,
-                         category=CATEGORY_SENSOR, **kwargs)
+    category = CATEGORY_SENSOR
 
+    def init_setup(self, config):
+        """Initialize a TemperatureSensor accessory object."""
         serv_temp = add_preload_service(self, SERV_TEMPERATURE_SENSOR)
         self.char_temp = serv_temp.get_characteristic(CHAR_CURRENT_TEMPERATURE)
         self.char_temp.override_properties(properties=PROP_CELSIUS)
@@ -67,11 +67,10 @@ class TemperatureSensor(HomeAccessory):
 class HumiditySensor(HomeAccessory):
     """Generate a HumiditySensor accessory as humidity sensor."""
 
-    def __init__(self, hass, name, entity_id, config, **kwargs):
-        """Initialize a HumiditySensor accessory object."""
-        super().__init__(hass, name, entity_id,
-                         category=CATEGORY_SENSOR, **kwargs)
+    category = CATEGORY_SENSOR
 
+    def init_setup(self, config):
+        """Initialize a HumiditySensor accessory object."""
         serv_humidity = add_preload_service(self, SERV_HUMIDITY_SENSOR)
         self.char_humidity = serv_humidity \
             .get_characteristic(CHAR_CURRENT_HUMIDITY)
@@ -90,11 +89,10 @@ class HumiditySensor(HomeAccessory):
 class BinarySensor(HomeAccessory):
     """Generate a BinarySensor accessory as binary sensor."""
 
-    def __init__(self, hass, name, entity_id, config, **kwargs):
-        """Initialize a BinarySensor accessory object."""
-        super().__init__(hass, name, entity_id,
-                         category=CATEGORY_SENSOR, **kwargs)
+    category = CATEGORY_SENSOR
 
+    def init_setup(self, config):
+        """Initialize a BinarySensor accessory object."""
         device_class = self.hass.states.get(self.entity_id).attributes \
             .get(ATTR_DEVICE_CLASS)
         service_char = BINARY_SENSOR_SERVICE_MAP[device_class] \
