@@ -29,15 +29,15 @@ class TestDemoLight(unittest.TestCase):
     def test_state_attributes(self):
         """Test light state attributes."""
         light.turn_on(
-            self.hass, ENTITY_LIGHT, xy_color=(.4, .6), brightness=25)
+            self.hass, ENTITY_LIGHT, xy_color=(.4, .4), brightness=25)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_LIGHT)
         self.assertTrue(light.is_on(self.hass, ENTITY_LIGHT))
-        self.assertEqual((0.378, 0.574), state.attributes.get(
+        self.assertEqual((0.394, 0.408), state.attributes.get(
             light.ATTR_XY_COLOR))
         self.assertEqual(25, state.attributes.get(light.ATTR_BRIGHTNESS))
         self.assertEqual(
-            (207, 255, 0), state.attributes.get(light.ATTR_RGB_COLOR))
+            (255, 234, 164), state.attributes.get(light.ATTR_RGB_COLOR))
         self.assertEqual('rainbow', state.attributes.get(light.ATTR_EFFECT))
         light.turn_on(
             self.hass, ENTITY_LIGHT, rgb_color=(251, 253, 255),
