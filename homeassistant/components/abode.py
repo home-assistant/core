@@ -88,10 +88,10 @@ ABODE_PLATFORMS = [
 class AbodeSystem(object):
     """Abode System class."""
 
-    def __init__(self, username, password, name, polling, exclude, lights):
+    def __init__(self, username, password, cache,
+                 name, polling, exclude, lights):
         """Initialize the system."""
         import abodepy
-        cache = hass.config.path(DEFAULT_CACHEDB)
         self.abode = abodepy.Abode(
             username, password, auto_login=True, get_devices=True,
             get_automations=True, cache_path=cache)
@@ -131,8 +131,9 @@ def setup(hass, config):
     lights = conf.get(CONF_LIGHTS)
 
     try:
+        cache = hass.config.path(DEFAULT_CACHEDB)
         hass.data[DOMAIN] = AbodeSystem(
-            username, password, name, polling, exclude, lights)
+            username, password, cache, name, polling, exclude, lights)
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Abode: %s", str(ex))
 
