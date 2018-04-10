@@ -392,20 +392,20 @@ class CastDevice(MediaPlayerDevice):
         """Handle updates of the media status."""
         # Only use media position for playing/paused,
         # and for normal playback rate
-        if ((media_status is None) or (media_status.current_time is None) or
-            (abs((media_status.playback_rate or 1) - 1) > 0.01) or
-            not (media_status.player_is_playing or
-                 media_status.player_is_paused)):
+        if (media_status is None or
+                abs(media_status.playback_rate - 1) > 0.01 or
+                not (media_status.player_is_playing or
+                     media_status.player_is_paused)):
             self.media_status_position = None
             self.media_status_position_received = None
         else:
             # Avoid unnecessary state attribute updates if player_state and
-            # position stay the same
+            # calculated position stay the same
             now = dt_util.utcnow()
             do_update = \
-                ((self.media_status is None) or
-                 (self.media_status_position is None) or
-                 (self.media_status.player_state != media_status.player_state))
+                (self.media_status is None or
+                 self.media_status_position is None or
+                 self.media_status.player_state != media_status.player_state)
             if not do_update:
                 if media_status.player_is_playing:
                     elapsed = now - self.media_status_position_received
