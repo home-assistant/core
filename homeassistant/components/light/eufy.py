@@ -1,5 +1,5 @@
 """
-Support for Eufy lights
+Support for Eufy lights.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.eufy/
@@ -39,6 +39,10 @@ class EufyLight(Light):
         # pylint: disable=import-error
         import lakeside
 
+        self._temp = None
+        self._brightness = None
+        self._hs = None
+        self._state = None
         self._name = device['name']
         self._address = device['address']
         self._code = device['code']
@@ -53,11 +57,12 @@ class EufyLight(Light):
         self._bulb.connect()
 
     def update(self):
+        """Synchronise state from the bulb."""
         self._bulb.update()
         self._brightness = self._bulb.brightness
         self._temp = self._bulb.temperature
         if self._bulb.colors:
-            self._hs = color_util.color_RGB_to_hsv(self._bulb.colors)
+            self._hs = color_util.color_RGB_to_hsv(*self._bulb.colors)
         else:
             self._hs = None
         self._state = self._bulb.power

@@ -30,7 +30,8 @@ DEVICE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
+        vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list,
+                                                        [DEVICE_SCHEMA]),
         vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
         vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     }),
@@ -55,21 +56,22 @@ def setup(hass, config):
         data = lakeside.get_devices(config[DOMAIN][CONF_USERNAME],
                                     config[DOMAIN][CONF_PASSWORD])
         for device in data:
-            type = device['type']
-            if type not in EUFY_DISPATCH:
+            kind = device['type']
+            if kind not in EUFY_DISPATCH:
                 continue
-            discovery.load_platform(hass, EUFY_DISPATCH[type], DOMAIN, device,
+            discovery.load_platform(hass, EUFY_DISPATCH[kind], DOMAIN, device,
                                     config)
 
-    for x, device_info in config[DOMAIN][CONF_DEVICES].items():
-        if type not in EUFY_DISPATCH:
+    for device_info in config[DOMAIN][CONF_DEVICES]:
+        kind = device_info['type']
+        if kind not in EUFY_DISPATCH:
             continue
         device = {}
         device['address'] = device_info['address']
         device['code'] = device_info['access_token']
         device['type'] = device_info['type']
         device['name'] = device_info['name']
-        discovery.load_platform(hass, EUFY_DISPATCH[type], DOMAIN, device,
+        discovery.load_platform(hass, EUFY_DISPATCH[kind], DOMAIN, device,
                                 config)
 
     return True

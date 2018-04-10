@@ -1,5 +1,5 @@
 """
-Support for Eufy switches
+Support for Eufy switches.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.eufy/
@@ -28,6 +28,7 @@ class EufySwitch(SwitchDevice):
         # pylint: disable=import-error
         import lakeside
 
+        self._state = None
         self._name = device['name']
         self._address = device['address']
         self._code = device['code']
@@ -36,6 +37,7 @@ class EufySwitch(SwitchDevice):
         self._switch.connect()
 
     def update(self):
+        """Synchronise state from the switch."""
         self._switch.update()
         self._state = self._switch.power
 
