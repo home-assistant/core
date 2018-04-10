@@ -670,7 +670,7 @@ pyHS100==0.3.0
 pyRFXtrx==0.22.0
 
 # homeassistant.components.sensor.tibber
-pyTibber==0.4.0
+pyTibber==0.4.1
 
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
