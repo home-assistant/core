@@ -15,7 +15,8 @@ from homeassistant.components.media_player.cast import ChromecastInfo
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
     async_dispatcher_send
-from homeassistant.components.media_player import cast
+from homeassistant.components.media_player import cast, \
+    ATTR_MEDIA_POSITION, ATTR_MEDIA_POSITION_UPDATED_AT
 from homeassistant.setup import async_setup_component
 
 
