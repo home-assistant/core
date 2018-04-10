@@ -66,7 +66,6 @@ class ClicksendNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         data = {"messages": []}
-        
         for recipient in self.recipients:
             data["messages"].append({
                 'source': 'hass.notify',
