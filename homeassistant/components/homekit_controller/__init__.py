@@ -26,9 +26,7 @@ HOMEKIT_ACCESSORY_DISPATCH = {
 }
 
 KNOWN_ACCESSORIES = "{}-accessories".format(DOMAIN)
-
-KNOWN_DEVICES = {}
-DEVICES = []
+KNOWN_DEVICES = "{}-devices".format(DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -183,7 +181,7 @@ class HomeKitEntity(Entity):
         """Return the name of the device if any."""
         return self._name
 
-    def update_characteristics(self):
+    def update_characteristics(self, characteristics):
         raise NotImplementedError
 
 
@@ -201,8 +199,8 @@ def setup(hass, config):
         config_num = int(discovery_info['properties']['c#'])
 
         # Only register a device once, but rescan if the config has changed
-        if hkid in KNOWN_DEVICES:
-            device = KNOWN_DEVICES[hkid]
+        if hkid in hass.data[KNOWN_DEVICES]:
+            device = hass.data[KNOWN_DEVICES][hkid]
             if config_num > device.config_num and \
                device.pairing_info is not None:
                 device.accessory_setup()
@@ -210,9 +208,9 @@ def setup(hass, config):
 
         _LOGGER.debug('Discovered unique device %s', hkid)
         device = HKDevice(hass, host, port, model, hkid, config_num, config)
-        KNOWN_DEVICES[hkid] = device
-        DEVICES.append(device)
+        hass.data[KNOWN_DEVICES][hkid] = device
 
     hass.data[KNOWN_ACCESSORIES] = {}
+    hass.data[KNOWN_DEVICES] = {}
     discovery.listen(hass, SERVICE_HOMEKIT, discovery_dispatch)
     return True

@@ -115,9 +115,6 @@ async def async_setup(hass, config):
     # Optional platforms enabled by config
     enabled_platforms = config[DOMAIN][CONF_ENABLE]
 
-    for service in enabled_platforms:
-        SERVICE_HANDLERS[service] = OPTIONAL_SERVICE_HANDLERS[service]
-
     async def new_service_found(service, info):
         """Handle a new service if one is found."""
         if service in ignored_platforms:
@@ -139,6 +136,9 @@ async def async_setup(hass, config):
             return
 
         comp_plat = SERVICE_HANDLERS.get(service)
+
+        if not comp_plat and service in enabled_platforms:
+            comp_plat = OPTIONAL_SERVICE_HANDLERS[service]
 
         # We do not know how to handle this service.
         if not comp_plat:

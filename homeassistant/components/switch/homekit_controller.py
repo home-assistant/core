@@ -25,6 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class HomeKitSwitch(HomeKitEntity, SwitchDevice):
     """Representation of a Homekit switch."""
+
     def __init__(self, *args):
         super().__init__(*args)
         self._on = None
