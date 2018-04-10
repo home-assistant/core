@@ -36,7 +36,7 @@ class TestHomekitSecuritySystems(unittest.TestCase):
         acp = 'alarm_control_panel.test'
 
         acc = SecuritySystem(self.hass, 'SecuritySystem', acp,
-                             alarm_code='1234', aid=2)
+                             {ATTR_CODE: '1234'}, aid=2)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -108,7 +108,7 @@ class TestHomekitSecuritySystems(unittest.TestCase):
         acp = 'alarm_control_panel.test'
 
         acc = SecuritySystem(self.hass, 'SecuritySystem', acp,
-                             alarm_code=None, aid=2)
+                             {ATTR_CODE: None}, aid=2)
         acc.run()
 
         # Set from HomeKit

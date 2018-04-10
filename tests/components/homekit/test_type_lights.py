@@ -53,7 +53,7 @@ class TestHomekitLights(unittest.TestCase):
 
         self.hass.states.set(entity_id, STATE_ON,
                              {ATTR_SUPPORTED_FEATURES: 0})
-        acc = self.light_cls(self.hass, 'Light', entity_id, aid=2)
+        acc = self.light_cls(self.hass, 'Light', entity_id, None, aid=2)
         self.assertEqual(acc.aid, 2)
         self.assertEqual(acc.category, 5)  # Lightbulb
         self.assertEqual(acc.char_on.value, 0)
@@ -98,7 +98,7 @@ class TestHomekitLights(unittest.TestCase):
 
         self.hass.states.set(entity_id, STATE_ON, {
             ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS: 255})
-        acc = self.light_cls(self.hass, 'Light', entity_id, aid=2)
+        acc = self.light_cls(self.hass, 'Light', entity_id, None, aid=2)
         self.assertEqual(acc.char_brightness.value, 0)
 
         acc.run()
@@ -141,7 +141,7 @@ class TestHomekitLights(unittest.TestCase):
         self.hass.states.set(entity_id, STATE_ON, {
             ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR_TEMP,
             ATTR_COLOR_TEMP: 190})
-        acc = self.light_cls(self.hass, 'Light', entity_id, aid=2)
+        acc = self.light_cls(self.hass, 'Light', entity_id, None, aid=2)
         self.assertEqual(acc.char_color_temperature.value, 153)
 
         acc.run()
@@ -164,7 +164,7 @@ class TestHomekitLights(unittest.TestCase):
         self.hass.states.set(entity_id, STATE_ON, {
             ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR,
             ATTR_HS_COLOR: (260, 90)})
-        acc = self.light_cls(self.hass, 'Light', entity_id, aid=2)
+        acc = self.light_cls(self.hass, 'Light', entity_id, None, aid=2)
         self.assertEqual(acc.char_hue.value, 0)
         self.assertEqual(acc.char_saturation.value, 75)
 

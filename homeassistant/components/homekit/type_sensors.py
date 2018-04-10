@@ -41,7 +41,7 @@ class TemperatureSensor(HomeAccessory):
     Sensor entity must return temperature in °C, °F.
     """
 
-    def __init__(self, hass, name, entity_id, **kwargs):
+    def __init__(self, hass, name, entity_id, config, **kwargs):
         """Initialize a TemperatureSensor accessory object."""
         super().__init__(hass, name, entity_id,
                          category=CATEGORY_SENSOR, **kwargs)
@@ -67,7 +67,7 @@ class TemperatureSensor(HomeAccessory):
 class HumiditySensor(HomeAccessory):
     """Generate a HumiditySensor accessory as humidity sensor."""
 
-    def __init__(self, hass, name, entity_id, **kwargs):
+    def __init__(self, hass, name, entity_id, config, **kwargs):
         """Initialize a HumiditySensor accessory object."""
         super().__init__(hass, name, entity_id,
                          category=CATEGORY_SENSOR, **kwargs)
@@ -90,7 +90,7 @@ class HumiditySensor(HomeAccessory):
 class BinarySensor(HomeAccessory):
     """Generate a BinarySensor accessory as binary sensor."""
 
-    def __init__(self, hass, name, entity_id, **kwargs):
+    def __init__(self, hass, name, entity_id, config, **kwargs):
         """Initialize a BinarySensor accessory object."""
         super().__init__(hass, name, entity_id,
                          category=CATEGORY_SENSOR, **kwargs)

@@ -24,7 +24,7 @@ class Light(HomeAccessory):
     Currently supports: state, brightness, color temperature, rgb_color.
     """
 
-    def __init__(self, hass, name, entity_id, **kwargs):
+    def __init__(self, hass, name, entity_id, config, **kwargs):
         """Initialize a new Light accessory object."""
         super().__init__(hass, name, entity_id,
                          category=CATEGORY_LIGHT, **kwargs)

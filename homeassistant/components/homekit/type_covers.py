@@ -19,7 +19,7 @@ class WindowCovering(HomeAccessory):
     The cover entity must support: set_cover_position.
     """
 
-    def __init__(self, hass, name, entity_id, **kwargs):
+    def __init__(self, hass, name, entity_id, config, **kwargs):
         """Initialize a WindowCovering accessory object."""
         super().__init__(hass, name, entity_id,
                          category=CATEGORY_WINDOW_COVERING, **kwargs)

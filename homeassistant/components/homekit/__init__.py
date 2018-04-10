@@ -12,7 +12,7 @@ from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.components.cover import SUPPORT_SET_POSITION
 from homeassistant.const import (
-    ATTR_CODE, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
@@ -79,12 +79,8 @@ def get_accessory(hass, state, aid, config):
                         state.entity_id)
         return None
 
-    a_type = None
-    a_kwargs = {'aid': aid}
-
     if state.domain == 'alarm_control_panel':
         a_type = 'SecuritySystem'
-        a_kwargs['alarm_code'] = config.get(ATTR_CODE)
 
     elif state.domain == 'binary_sensor' or state.domain == 'device_tracker':
         a_type = 'BinarySensor'
@@ -95,7 +91,7 @@ def get_accessory(hass, state, aid, config):
             SUPPORT_TARGET_TEMPERATURE_HIGH
         # Check if climate device supports auto mode
         a_type = 'Thermostat'
-        a_kwargs['support_auto'] = bool(features & support_temp_range)
+        config['support_auto'] = bool(features & support_temp_range)
 
     elif state.domain == 'cover':
         # Only add covers that support set_cover_position
@@ -120,11 +116,11 @@ def get_accessory(hass, state, aid, config):
             or state.domain == 'input_boolean' or state.domain == 'script':
         a_type = 'Switch'
 
-    if a_type is None:
+    else:
         return None
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
-    return TYPES[a_type](hass, state.name, state.entity_id, **a_kwargs)
+    return TYPES[a_type](hass, state.name, state.entity_id, config, aid=aid)
 
 
 def generate_aid(entity_id):

@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 class Switch(HomeAccessory):
     """Generate a Switch accessory."""
 
-    def __init__(self, hass, name, entity_id, **kwargs):
+    def __init__(self, hass, name, entity_id, config, **kwargs):
         """Initialize a Switch accessory object to represent a remote."""
         super().__init__(hass, name, entity_id,
                          category=CATEGORY_SWITCH, **kwargs)

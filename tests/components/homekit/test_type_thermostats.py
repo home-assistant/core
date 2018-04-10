@@ -52,7 +52,8 @@ class TestHomekitThermostats(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         climate = 'climate.test'
 
-        acc = self.thermostat_cls(self.hass, 'Climate', climate, False, aid=2)
+        acc = self.thermostat_cls(self.hass, 'Climate', climate,
+                                  {'support_auto': False}, aid=2)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -187,7 +188,8 @@ class TestHomekitThermostats(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         climate = 'climate.test'
 
-        acc = self.thermostat_cls(self.hass, 'Climate', climate, True)
+        acc = self.thermostat_cls(self.hass, 'Climate', climate,
+                                  {'support_auto': True}, aid=2)
         acc.run()
 
         self.assertEqual(acc.char_cooling_thresh_temp.value, 23.0)
@@ -257,7 +259,8 @@ class TestHomekitThermostats(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         climate = 'climate.test'
 
-        acc = self.thermostat_cls(self.hass, 'Climate', climate, True)
+        acc = self.thermostat_cls(self.hass, 'Climate', climate,
+                                  {'support_auto': True}, aid=2)
         acc.run()
 
         self.hass.states.set(climate, STATE_AUTO,

@@ -27,12 +27,12 @@ STATE_TO_SERVICE = {STATE_ALARM_DISARMED: 'alarm_disarm',
 class SecuritySystem(HomeAccessory):
     """Generate an SecuritySystem accessory for an alarm control panel."""
 
-    def __init__(self, hass, name, entity_id, alarm_code, **kwargs):
+    def __init__(self, hass, name, entity_id, config, **kwargs):
         """Initialize a SecuritySystem accessory object."""
         super().__init__(hass, name, entity_id,
                          category=CATEGORY_ALARM_SYSTEM, **kwargs)
 
-        self._alarm_code = alarm_code
+        self._alarm_code = config[ATTR_CODE]
         self.flag_target_state = False
 
         serv_alarm = add_preload_service(self, SERV_SECURITY_SYSTEM)

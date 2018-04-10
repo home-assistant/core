@@ -91,7 +91,7 @@ class TestGetAccessories(unittest.TestCase):
 
         # pylint: disable=unsubscriptable-object
         self.assertEqual(
-            self.mock_type.call_args[1]['alarm_code'], '1234')
+            self.mock_type.call_args[0][-1][ATTR_CODE], '1234')
 
     def test_climate(self):
         """Test climate devices."""
@@ -101,7 +101,7 @@ class TestGetAccessories(unittest.TestCase):
 
         # pylint: disable=unsubscriptable-object
         self.assertEqual(
-            self.mock_type.call_args[1]['support_auto'], False)
+            self.mock_type.call_args[0][-1]['support_auto'], False)
 
     def test_light(self):
         """Test light devices."""
@@ -120,7 +120,7 @@ class TestGetAccessories(unittest.TestCase):
 
         # pylint: disable=unsubscriptable-object
         self.assertEqual(
-            self.mock_type.call_args[1]['support_auto'], True)
+            self.mock_type.call_args[0][-1]['support_auto'], True)
 
     def test_switch(self):
         """Test switch."""

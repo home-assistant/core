@@ -31,12 +31,13 @@ HC_HOMEKIT_TO_HASS = {c: s for s, c in HC_HASS_TO_HOMEKIT.items()}
 class Thermostat(HomeAccessory):
     """Generate a Thermostat accessory for a climate."""
 
-    def __init__(self, hass, name, entity_id, support_auto, **kwargs):
+    def __init__(self, hass, name, entity_id, config, **kwargs):
         """Initialize a Thermostat accessory object."""
         super().__init__(hass, name, entity_id,
                          category=CATEGORY_THERMOSTAT, **kwargs)
 
         self._unit = TEMP_CELSIUS
+        self._support_auto = config['support_auto']
         self.heat_cool_flag_target_state = False
         self.temperature_flag_target_state = False
         self.coolingthresh_flag_target_state = False
@@ -45,7 +46,7 @@ class Thermostat(HomeAccessory):
         # Add additional characteristics if auto mode is supported
         extra_chars = [
             CHAR_COOLING_THRESHOLD_TEMPERATURE,
-            CHAR_HEATING_THRESHOLD_TEMPERATURE] if support_auto else None
+            CHAR_HEATING_THRESHOLD_TEMPERATURE] if self._support_auto else None
 
         # Preload the thermostat service
         serv_thermostat = add_preload_service(self, SERV_THERMOSTAT,
@@ -75,7 +76,7 @@ class Thermostat(HomeAccessory):
         self.char_display_units.value = 0
 
         # If the device supports it: high and low temperature characteristics
-        if support_auto:
+        if self._support_auto:
             self.char_cooling_thresh_temp = serv_thermostat. \
                 get_characteristic(CHAR_COOLING_THRESHOLD_TEMPERATURE)
             self.char_cooling_thresh_temp.value = 23.0

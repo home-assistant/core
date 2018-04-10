@@ -27,7 +27,7 @@ class Lock(HomeAccessory):
     The lock entity must support: unlock and lock.
     """
 
-    def __init__(self, hass, name, entity_id, **kwargs):
+    def __init__(self, hass, name, entity_id, config, **kwargs):
         """Initialize a Lock accessory object."""
         super().__init__(hass, name, entity_id,
                          category=CATEGORY_LOCK, **kwargs)
