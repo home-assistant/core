@@ -198,6 +198,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.info("Kodi %s:%d added as '%s'", host, port, name)
     else:
         _LOGGER.info("Ignoring duplicate Kodi %s:%d", host, port)
+        return
 
     @asyncio.coroutine
     def async_service_handler(service):
