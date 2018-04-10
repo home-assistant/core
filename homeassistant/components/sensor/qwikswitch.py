@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.qwikswitch/
 import logging
 
 from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH, QSEntity
+from homeassistant.core import callback
 
 DEPENDENCIES = [QWIKSWITCH]
 
@@ -41,6 +42,7 @@ class QSSensor(QSEntity):
         if isinstance(self.unit, type):
             self.unit = "{}:{}".format(self.sensor_type, self.channel)
 
+    @callback
     def update_packet(self, packet):
         """Receive update packet from QSUSB."""
         val = self._decode(packet.get('data'), channel=self.channel)
@@ -54,6 +56,11 @@ class QSSensor(QSEntity):
     def state(self):
         """Return the value of the sensor."""
         return str(self._val)
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this sensor."""
+        return "qs{}:{}".format(self.qsid, self.channel)
 
     @property
     def unit_of_measurement(self):

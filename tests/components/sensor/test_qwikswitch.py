@@ -1,5 +1,4 @@
 """Test qwikswitch sensors."""
-import asyncio
 import logging
 
 import pytest
@@ -29,7 +28,6 @@ class AiohttpClientMockResponseList(list):
     async def wait_till_empty(self, hass):
         """Wait until empty."""
         while self:
-            await asyncio.sleep(1)
             await hass.async_block_till_done()
         await hass.async_block_till_done()
 
@@ -54,7 +52,6 @@ def aioclient_mock():
         yield mock_session
 
 
-# @asyncio.coroutine
 async def test_sensor_device(hass, aioclient_mock):
     """Test a sensor device."""
     config = {
