@@ -9,8 +9,6 @@ from datetime import timedelta
 import logging
 from typing import Any, List, Sequence, Callable
 
-import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.setup import async_prepare_setup_platform
@@ -19,7 +17,6 @@ from homeassistant.loader import bind_hass
 from homeassistant.components import group, zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
@@ -76,7 +73,6 @@ ATTR_LOCATION_NAME = 'location_name'
 ATTR_MAC = 'mac'
 ATTR_NAME = 'name'
 ATTR_SOURCE_TYPE = 'source_type'
-ATTR_VENDOR = 'vendor'
 ATTR_CONSIDER_HOME = 'consider_home'
 
 SOURCE_TYPE_GPS = 'gps'
@@ -328,14 +324,10 @@ class DeviceTracker(object):
                 self.hass, util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
                 name=GROUP_NAME_ALL_DEVICES, add=[device.entity_id])
 
-        # lookup mac vendor string to be stored in config
-        yield from device.set_vendor_for_mac()
-
         self.hass.bus.async_fire(EVENT_NEW_DEVICE, {
             ATTR_ENTITY_ID: device.entity_id,
             ATTR_HOST_NAME: device.host_name,
             ATTR_MAC: device.mac,
-            ATTR_VENDOR: device.vendor,
         })
 
         # update known_devices.yaml
@@ -413,7 +405,6 @@ class Device(Entity):
     consider_home = None  # type: dt_util.dt.timedelta
     battery = None  # type: int
     attributes = None  # type: dict
-    vendor = None  # type: str
     icon = None  # type: str
 
     # Track if the last update of this device was HOME.
@@ -423,7 +414,7 @@ class Device(Entity):
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
                  track: bool, dev_id: str, mac: str, name: str = None,
                  picture: str = None, gravatar: str = None, icon: str = None,
-                 hide_if_away: bool = False, vendor: str = None) -> None:
+                 hide_if_away: bool = False) -> None:
         """Initialize a device."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
@@ -451,7 +442,6 @@ class Device(Entity):
         self.icon = icon
 
         self.away_hide = hide_if_away
-        self.vendor = vendor
 
         self.source_type = None
 
@@ -568,51 +558,6 @@ class Device(Entity):
             self.last_update_home = True
 
     @asyncio.coroutine
-    def set_vendor_for_mac(self):
-        """Set vendor string using api.macvendors.com."""
-        self.vendor = yield from self.get_vendor_for_mac()
-
-    @asyncio.coroutine
-    def get_vendor_for_mac(self):
-        """Try to find the vendor string for a given MAC address."""
-        if not self.mac:
-            return None
-
-        if '_' in self.mac:
-            _, mac = self.mac.split('_', 1)
-        else:
-            mac = self.mac
-
-        if not len(mac.split(':')) == 6:
-            return 'unknown'
-
-        # We only need the first 3 bytes of the MAC for a lookup
-        # this improves somewhat on privacy
-        oui_bytes = mac.split(':')[0:3]
-        # bytes like 00 get truncates to 0, API needs full bytes
-        oui = '{:02x}:{:02x}:{:02x}'.format(*[int(b, 16) for b in oui_bytes])
-        url = 'http://api.macvendors.com/' + oui
-        try:
-            websession = async_get_clientsession(self.hass)
-
-            with async_timeout.timeout(5, loop=self.hass.loop):
-                resp = yield from websession.get(url)
-            # mac vendor found, response is the string
-            if resp.status == 200:
-                vendor_string = yield from resp.text()
-                return vendor_string
-            # If vendor is not known to the API (404) or there
-            # was a failure during the lookup (500); set vendor
-            # to something other then None to prevent retry
-            # as the value is only relevant when it is to be stored
-            # in the 'known_devices.yaml' file which only happens
-            # the first time the device is seen.
-            return 'unknown'
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            # Same as above
-            return 'unknown'
-
-    @asyncio.coroutine
     def async_added_to_hass(self):
         """Add an entity."""
         state = yield from async_get_last_state(self.hass, self.entity_id)
@@ -685,7 +630,6 @@ def async_load_config(path: str, hass: HomeAssistantType,
         vol.Optional('picture', default=None): vol.Any(None, cv.string),
         vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
             cv.time_period, cv.positive_timedelta),
-        vol.Optional('vendor', default=None): vol.Any(None, cv.string),
     })
     try:
         result = []
@@ -697,6 +641,8 @@ def async_load_config(path: str, hass: HomeAssistantType,
             return []
 
         for dev_id, device in devices.items():
+            # Deprecated option. We just ignore it to avoid breaking change
+            device.pop('vendor', None)
             try:
                 device = dev_schema(device)
                 device['dev_id'] = cv.slugify(dev_id)
@@ -772,7 +718,6 @@ def update_config(path: str, dev_id: str, device: Device):
             'picture': device.config_picture,
             'track': device.track,
             CONF_AWAY_HIDE: device.away_hide,
-            'vendor': device.vendor,
         }}
         out.write('\n')
         out.write(dump(device))
