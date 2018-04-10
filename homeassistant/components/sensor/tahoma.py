@@ -45,7 +45,7 @@ class TahomaSensor(TahomaDevice, Entity):
         super().__init__(tahoma_device, controller)
         elec_sensor_type = ELECTRICAL_SENSOR_TYPES.get(self.tahoma_device.type)
         if elec_sensor_type is not None:
-            self._name = elec_sensor_type+' ('+self.name+')'
+            self._name = '{0} - {1}'.format(elec_sensor_type, self.name)
 
     @property
     def state(self):

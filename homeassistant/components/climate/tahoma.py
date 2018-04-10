@@ -30,7 +30,7 @@ class TahomaClimate(TahomaDevice, ClimateDevice):
         super().__init__(tahoma_device, controller)
         if self.tahoma_device.type == \
            'io:EnergyConsumptionSensorsHeatPumpComponent':
-            self._name = 'Heat pump derogation ('+self.name+')'
+            self._name = 'Heat pump derogation - {0}'.format(self.name)
         self._support_flags = SUPPORT_AWAY_MODE
         self._away = tahoma_device.active_states['core:DerogationOnOffState'] \
             == "off"
