@@ -398,6 +398,7 @@ async def test_entity_media_position(hass: HomeAssistantType):
     with patch('homeassistant.util.dt.utcnow', return_value=now_plus_20):
         entity.new_media_status(media_status)
         await hass.async_block_till_done()
+    state = hass.states.get('media_player.speaker')
     assert ATTR_MEDIA_POSITION not in state.attributes
     assert ATTR_MEDIA_POSITION_UPDATED_AT not in state.attributes
 
