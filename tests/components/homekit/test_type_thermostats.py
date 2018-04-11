@@ -7,8 +7,9 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, ATTR_OPERATION_MODE,
     ATTR_OPERATION_LIST, STATE_COOL, STATE_HEAT, STATE_AUTO)
 from homeassistant.const import (
-    ATTR_SERVICE, EVENT_CALL_SERVICE, ATTR_SERVICE_DATA,
-    ATTR_UNIT_OF_MEASUREMENT, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_SERVICE, ATTR_SERVICE_DATA, ATTR_SUPPORTED_FEATURES,
+    ATTR_UNIT_OF_MEASUREMENT, EVENT_CALL_SERVICE,
+    STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.common import get_test_home_assistant
 from tests.components.homekit.test_accessories import patch_debounce
@@ -52,7 +53,10 @@ class TestHomekitThermostats(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         climate = 'climate.test'
 
-        acc = self.thermostat_cls(self.hass, climate, 'Climate', False, aid=2)
+        self.hass.states.set(climate, STATE_OFF, {ATTR_SUPPORTED_FEATURES: 0})
+        self.hass.block_till_done()
+        acc = self.thermostat_cls(self.hass, 'Climate', climate,
+                                  2, config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -187,7 +191,11 @@ class TestHomekitThermostats(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         climate = 'climate.test'
 
-        acc = self.thermostat_cls(self.hass, climate, 'Climate', True)
+        # support_auto = True
+        self.hass.states.set(climate, STATE_OFF, {ATTR_SUPPORTED_FEATURES: 6})
+        self.hass.block_till_done()
+        acc = self.thermostat_cls(self.hass, 'Climate', climate,
+                                  2, config=None)
         acc.run()
 
         self.assertEqual(acc.char_cooling_thresh_temp.value, 23.0)
@@ -257,7 +265,11 @@ class TestHomekitThermostats(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         climate = 'climate.test'
 
-        acc = self.thermostat_cls(self.hass, climate, 'Climate', True)
+        # support_auto = True
+        self.hass.states.set(climate, STATE_OFF, {ATTR_SUPPORTED_FEATURES: 6})
+        self.hass.block_till_done()
+        acc = self.thermostat_cls(self.hass, 'Climate', climate,
+                                  2, config=None)
         acc.run()
 
         self.hass.states.set(climate, STATE_AUTO,
