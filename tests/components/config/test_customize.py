@@ -9,12 +9,12 @@ from homeassistant.config import DATA_CUSTOMIZE
 
 
 @asyncio.coroutine
-def test_get_entity(hass, test_client):
+def test_get_entity(hass, aiohttp_client):
     """Test getting entity."""
     with patch.object(config, 'SECTIONS', ['customize']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
 
     def mock_read(path):
         """Mock reading data."""
@@ -38,12 +38,12 @@ def test_get_entity(hass, test_client):
 
 
 @asyncio.coroutine
-def test_update_entity(hass, test_client):
+def test_update_entity(hass, aiohttp_client):
     """Test updating entity."""
     with patch.object(config, 'SECTIONS', ['customize']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
 
     orig_data = {
         'hello.beer': {
@@ -89,12 +89,12 @@ def test_update_entity(hass, test_client):
 
 
 @asyncio.coroutine
-def test_update_entity_invalid_key(hass, test_client):
+def test_update_entity_invalid_key(hass, aiohttp_client):
     """Test updating entity."""
     with patch.object(config, 'SECTIONS', ['customize']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
 
     resp = yield from client.post(
         '/api/config/customize/config/not_entity', data=json.dumps({
@@ -105,12 +105,12 @@ def test_update_entity_invalid_key(hass, test_client):
 
 
 @asyncio.coroutine
-def test_update_entity_invalid_json(hass, test_client):
+def test_update_entity_invalid_json(hass, aiohttp_client):
     """Test updating entity."""
     with patch.object(config, 'SECTIONS', ['customize']):
         yield from async_setup_component(hass, 'config', {})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
 
     resp = yield from client.post(
         '/api/config/customize/config/hello.beer', data='not json')

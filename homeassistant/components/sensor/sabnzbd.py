@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 from homeassistant.util.json import load_json, save_json
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pysabnzbd==0.0.3']
+REQUIREMENTS = ['pysabnzbd==1.0.1']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -75,15 +75,14 @@ def setup_sabnzbd(base_url, apikey, name, config,
                        for variable in monitored])
 
 
-@asyncio.coroutine
 @Throttle(MIN_TIME_BETWEEN_UPDATES)
-def async_update_queue(sab_api):
+async def async_update_queue(sab_api):
     """
     Throttled function to update SABnzbd queue.
 
     This ensures that the queue info only gets updated once for all sensors
     """
-    yield from sab_api.refresh_queue()
+    await sab_api.refresh_data()
 
 
 def request_configuration(host, name, hass, config, async_add_devices,

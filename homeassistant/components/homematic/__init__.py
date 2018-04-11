@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.39']
+REQUIREMENTS = ['pyhomematic==0.1.40']
 DOMAIN = 'homematic'
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +33,7 @@ DISCOVER_SENSORS = 'homematic.sensor'
 DISCOVER_BINARY_SENSORS = 'homematic.binary_sensor'
 DISCOVER_COVER = 'homematic.cover'
 DISCOVER_CLIMATE = 'homematic.climate'
+DISCOVER_LOCKS = 'homematic.locks'
 
 ATTR_DISCOVER_DEVICES = 'devices'
 ATTR_PARAM = 'param'
@@ -59,7 +60,7 @@ SERVICE_SET_INSTALL_MODE = 'set_install_mode'
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
         'Switch', 'SwitchPowermeter', 'IOSwitch', 'IPSwitch', 'RFSiren',
-        'IPSwitchPowermeter', 'KeyMatic', 'HMWIOSwitch', 'Rain', 'EcoLogic'],
+        'IPSwitchPowermeter', 'HMWIOSwitch', 'Rain', 'EcoLogic'],
     DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer'],
     DISCOVER_SENSORS: [
         'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion', 'MotionIP',
@@ -68,7 +69,7 @@ HM_DEVICE_TYPES = {
         'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
         'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch',
         'FillingLevel', 'ValveDrive', 'EcoLogic', 'IPThermostatWall',
-        'IPSmoke', 'RFSiren', 'PresenceIP'],
+        'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
@@ -78,13 +79,18 @@ HM_DEVICE_TYPES = {
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
         'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
         'WiredSensor', 'PresenceIP'],
-    DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt']
+    DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
+    DISCOVER_LOCKS: ['KeyMatic']
 }
 
 HM_IGNORE_DISCOVERY_NODE = [
     'ACTUAL_TEMPERATURE',
     'ACTUAL_HUMIDITY'
 ]
+
+HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
+    'ACTUAL_TEMPERATURE': ['IPAreaThermostat'],
+}
 
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
@@ -460,7 +466,8 @@ def _system_callback_handler(hass, config, src, *args):
                     ('cover', DISCOVER_COVER),
                     ('binary_sensor', DISCOVER_BINARY_SENSORS),
                     ('sensor', DISCOVER_SENSORS),
-                    ('climate', DISCOVER_CLIMATE)):
+                    ('climate', DISCOVER_CLIMATE),
+                    ('lock', DISCOVER_LOCKS)):
                 # Get all devices of a specific type
                 found_devices = _get_devices(
                     hass, discovery_type, addresses, interface)
@@ -505,7 +512,8 @@ def _get_devices(hass, discovery_type, keys, interface):
 
         # Generate options for 1...n elements with 1...n parameters
         for param, channels in metadata.items():
-            if param in HM_IGNORE_DISCOVERY_NODE:
+            if param in HM_IGNORE_DISCOVERY_NODE and class_name not in \
+             HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS.get(param, []):
                 continue
 
             # Add devices

@@ -1,0 +1,24 @@
+{
+    "config": {
+        "error": {
+            "invalid_object_id": "\u65e0\u6548\u7684\u5bf9\u8c61 ID"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "object_id": "\u5bf9\u8c61 ID"
+                },
+                "description": "\u8bf7\u4e3a\u6d4b\u8bd5\u8bbe\u5907\u8f93\u5165\u5bf9\u8c61 ID",
+                "title": "\u8bf7\u9009\u62e9\u5bf9\u8c61 ID"
+            },
+            "name": {
+                "data": {
+                    "name": "\u540d\u79f0"
+                },
+                "description": "\u8bf7\u4e3a\u6d4b\u8bd5\u8bbe\u5907\u8f93\u5165\u540d\u79f0",
+                "title": "\u8bbe\u5907\u540d\u79f0"
+            }
+        },
+        "title": "\u6837\u4f8b\u914d\u7f6e\u6761\u76ee"
+    }
+}

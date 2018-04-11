@@ -140,21 +140,20 @@ class StartcaData(object):
         """
         return float(value) * 10 ** -9
 
-    @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def async_update(self):
+    async def async_update(self):
         """Get the Start.ca bandwidth data from the web service."""
         import xmltodict
         _LOGGER.debug("Updating Start.ca usage data")
         url = 'https://www.start.ca/support/usage/api?key=' + \
               self.api_key
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=self.loop):
-            req = yield from self.websession.get(url)
+            req = await self.websession.get(url)
         if req.status != 200:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
 
-        data = yield from req.text()
+        data = await req.text()
         try:
             xml_data = xmltodict.parse(data)
         except ExpatError:

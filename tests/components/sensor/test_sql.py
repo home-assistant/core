@@ -29,7 +29,7 @@ class TestSQLSensor(unittest.TestCase):
                 'db_url': 'sqlite://',
                 'queries': [{
                     'name': 'count_tables',
-                    'query': 'SELECT count(*) value FROM sqlite_master;',
+                    'query': 'SELECT 5 as value',
                     'column': 'value',
                 }]
             }
@@ -38,7 +38,8 @@ class TestSQLSensor(unittest.TestCase):
         assert setup_component(self.hass, 'sensor', config)
 
         state = self.hass.states.get('sensor.count_tables')
-        self.assertEqual(state.state, '0')
+        assert state.state == '5'
+        assert state.attributes['value'] == 5
 
     def test_invalid_query(self):
         """Test the SQL sensor for invalid queries."""
