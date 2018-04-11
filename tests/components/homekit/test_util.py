@@ -58,7 +58,7 @@ class TestUtil(unittest.TestCase):
         """Test show setup message as persistence notification."""
         bridge = HomeBridge(self.hass)
 
-        show_setup_message(bridge, self.hass)
+        show_setup_message(self.hass, bridge)
         self.hass.block_till_done()
 
         data = self.events[0].data

@@ -35,7 +35,7 @@ class TestHomekitSensors(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         window_cover = 'cover.window'
 
-        acc = WindowCovering(self.hass, window_cover, 'Cover', aid=2)
+        acc = WindowCovering(self.hass, 'Cover', window_cover, 2, config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)

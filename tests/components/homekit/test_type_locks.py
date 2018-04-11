@@ -33,7 +33,7 @@ class TestHomekitSensors(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         kitchen_lock = 'lock.kitchen_door'
 
-        acc = Lock(self.hass, kitchen_lock, 'Lock', aid=2)
+        acc = Lock(self.hass, 'Lock', kitchen_lock, 2, config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)

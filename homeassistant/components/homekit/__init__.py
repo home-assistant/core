@@ -8,11 +8,9 @@ from zlib import adler32
 
 import voluptuous as vol
 
-from homeassistant.components.climate import (
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.components.cover import SUPPORT_SET_POSITION
 from homeassistant.const import (
-    ATTR_CODE, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
@@ -79,63 +77,46 @@ def get_accessory(hass, state, aid, config):
                         state.entity_id)
         return None
 
-    if state.domain == 'sensor':
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if unit == TEMP_CELSIUS or unit == TEMP_FAHRENHEIT:
-            _LOGGER.debug('Add "%s" as "%s"',
-                          state.entity_id, 'TemperatureSensor')
-            return TYPES['TemperatureSensor'](hass, state.entity_id,
-                                              state.name, aid=aid)
-        elif unit == '%':
-            _LOGGER.debug('Add "%s" as %s"',
-                          state.entity_id, 'HumiditySensor')
-            return TYPES['HumiditySensor'](hass, state.entity_id, state.name,
-                                           aid=aid)
+    a_type = None
+    config = config or {}
+
+    if state.domain == 'alarm_control_panel':
+        a_type = 'SecuritySystem'
 
     elif state.domain == 'binary_sensor' or state.domain == 'device_tracker':
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'BinarySensor')
-        return TYPES['BinarySensor'](hass, state.entity_id,
-                                     state.name, aid=aid)
+        a_type = 'BinarySensor'
+
+    elif state.domain == 'climate':
+        a_type = 'Thermostat'
 
     elif state.domain == 'cover':
         # Only add covers that support set_cover_position
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if features & SUPPORT_SET_POSITION:
-            _LOGGER.debug('Add "%s" as "%s"',
-                          state.entity_id, 'WindowCovering')
-            return TYPES['WindowCovering'](hass, state.entity_id, state.name,
-                                           aid=aid)
-
-    elif state.domain == 'alarm_control_panel':
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'SecuritySystem')
-        return TYPES['SecuritySystem'](hass, state.entity_id, state.name,
-                                       alarm_code=config.get(ATTR_CODE),
-                                       aid=aid)
-
-    elif state.domain == 'climate':
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        support_temp_range = SUPPORT_TARGET_TEMPERATURE_LOW | \
-            SUPPORT_TARGET_TEMPERATURE_HIGH
-        # Check if climate device supports auto mode
-        support_auto = bool(features & support_temp_range)
-
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Thermostat')
-        return TYPES['Thermostat'](hass, state.entity_id,
-                                   state.name, support_auto, aid=aid)
+            a_type = 'WindowCovering'
 
     elif state.domain == 'light':
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Light')
-        return TYPES['Light'](hass, state.entity_id, state.name, aid=aid)
+        a_type = 'Light'
 
     elif state.domain == 'lock':
-        return TYPES['Lock'](hass, state.entity_id, state.name, aid=aid)
+        a_type = 'Lock'
+
+    elif state.domain == 'sensor':
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if unit == TEMP_CELSIUS or unit == TEMP_FAHRENHEIT:
+            a_type = 'TemperatureSensor'
+        elif unit == '%':
+            a_type = 'HumiditySensor'
 
     elif state.domain == 'switch' or state.domain == 'remote' \
             or state.domain == 'input_boolean' or state.domain == 'script':
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Switch')
-        return TYPES['Switch'](hass, state.entity_id, state.name, aid=aid)
+        a_type = 'Switch'
 
-    return None
+    if a_type is None:
+        return None
+
+    _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
+    return TYPES[a_type](hass, state.name, state.entity_id, aid, config=config)
 
 
 def generate_aid(entity_id):
@@ -151,7 +132,7 @@ class HomeKit():
 
     def __init__(self, hass, port, entity_filter, entity_config):
         """Initialize a HomeKit object."""
-        self._hass = hass
+        self.hass = hass
         self._port = port
         self._filter = entity_filter
         self._config = entity_config
@@ -164,11 +145,11 @@ class HomeKit():
         """Setup bridge and accessory driver."""
         from .accessories import HomeBridge, HomeDriver
 
-        self._hass.bus.async_listen_once(
+        self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, self.stop)
 
-        path = self._hass.config.path(HOMEKIT_FILE)
-        self.bridge = HomeBridge(self._hass)
+        path = self.hass.config.path(HOMEKIT_FILE)
+        self.bridge = HomeBridge(self.hass)
         self.driver = HomeDriver(self.bridge, self._port, get_local_ip(), path)
 
     def add_bridge_accessory(self, state):
@@ -177,7 +158,7 @@ class HomeKit():
             return
         aid = generate_aid(state.entity_id)
         conf = self._config.pop(state.entity_id, {})
-        acc = get_accessory(self._hass, state, aid, conf)
+        acc = get_accessory(self.hass, state, aid, conf)
         if acc is not None:
             self.bridge.add_accessory(acc)
 
@@ -192,12 +173,12 @@ class HomeKit():
             type_covers, type_lights, type_locks, type_security_systems,
             type_sensors, type_switches, type_thermostats)
 
-        for state in self._hass.states.all():
+        for state in self.hass.states.all():
             self.add_bridge_accessory(state)
         self.bridge.set_broker(self.driver)
 
         if not self.bridge.paired:
-            show_setup_message(self.bridge, self._hass)
+            show_setup_message(self.hass, self.bridge)
 
         _LOGGER.debug('Driver start')
         self.driver.start()
