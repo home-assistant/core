@@ -125,9 +125,6 @@ class BroadlinkData(object):
 
     def _update(self, retry=3):
         try:
-            self._connect()
-            if not self._auth():
-                _LOGGER.warning("Failed to connect to device")
             data = self._device.check_sensors_raw()
             if data is not None:
                 self.data = self._schema(data)
@@ -143,6 +140,7 @@ class BroadlinkData(object):
 
     def _auth(self, retry=3):
         try:
+            self._connect()
             auth = self._device.auth()
         except socket.timeout:
             auth = False
