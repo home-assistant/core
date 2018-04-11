@@ -235,3 +235,4 @@ class MaxCubeClimateValve(MaxCubeClimate):
             return 0.0
 
         return position
+
