@@ -117,9 +117,23 @@ class Lightpad(object):
         """Initialize the light."""
         self.lpid = lpid
         self._data = data
+        self._config = data['config']
         self._metrics = metrics
         self._manager = manager
+        self.config_change_listener = None
         manager.plum.register_event_listener(lpid, self.__process_event)
+        print(self._data)
+        print(self._metrics)
+
+    def __process_event(self, event):
+        self._manager.processEvent(self.lpid, event)
+        if event['type'] == 'configchange':
+            self._config = event['changes']
+            if self.config_change_listener is not None:
+                self.config_change_listener()
+
+    def add_config_change_listener(self, listener):
+        self.config_change_listener = listener
 
     @property
     def llid(self):
@@ -129,9 +143,39 @@ class Lightpad(object):
     def name(self):
         return self._data["name"]
 
-    def __process_event(self, event):
-        self._manager.processEvent(self.lpid, event)
+    @property
+    def glowColor(self):
+        return self._config['glowColor']
 
+    @property
+    def glowTimeout(self):
+        return self._config['glowTimeout']
+
+    @property
+    def glowFade(self):
+        return self._config['glowFade']
+
+    @property
+    def glowEnabled(self):
+        return self._config['glowEnabled']
+
+    @property
+    def forceGlow(self):
+        return self._config['forceGlow']
+
+    @property
+    def glowIntensity(self):
+        return self._config['glowIntensity']
+
+    @property
+    def glowTracksDimmer(self):
+        return self._config['glowTracksDimmer']
+
+    def set_config(self, config):
+        self._manager.plum.set_lightpad_config(self.lpid, config)
+
+    def set_glow_color(self, r, g, b, w):
+        self._manager.plum.set_glow_color(lpid=self.lpid, r=r, g=g, b=b, w=w)
 
 class LogicalLoad(object):
     def __init__(self, llid, metrics, data, manager):

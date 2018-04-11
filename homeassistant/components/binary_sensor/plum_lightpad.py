@@ -11,7 +11,7 @@ from homeassistant.components.light import PLATFORM_SCHEMA
 from homeassistant.helpers import event as evt
 from homeassistant.util import dt as dt_util
 from datetime import timedelta
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, STATE_ON, STATE_OFF
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 DEPENDENCIES = ['plum_lightpad']
 
