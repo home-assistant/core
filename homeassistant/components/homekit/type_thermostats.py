@@ -47,16 +47,15 @@ class Thermostat(HomeAccessory):
         self.heatingthresh_flag_target_state = False
 
         # Add additional characteristics if auto mode is supported
+        self.chars = []
         features = self.hass.states.get(self.entity_id) \
             .attributes.get(ATTR_SUPPORTED_FEATURES)
-        support_auto = bool(features & SUPPORT_TEMP_RANGE)
-        extra_chars = [
-            CHAR_COOLING_THRESHOLD_TEMPERATURE,
-            CHAR_HEATING_THRESHOLD_TEMPERATURE] if support_auto else None
+        if features & SUPPORT_TEMP_RANGE:
+            self.chars.extend((CHAR_COOLING_THRESHOLD_TEMPERATURE,
+                               CHAR_HEATING_THRESHOLD_TEMPERATURE))
 
-        # Preload the thermostat service
-        serv_thermostat = add_preload_service(self, SERV_THERMOSTAT,
-                                              extra_chars)
+        serv_thermostat = add_preload_service(
+            self, SERV_THERMOSTAT, self.chars)
 
         # Current and target mode characteristics
         self.char_current_heat_cool = setup_char(
@@ -79,11 +78,11 @@ class Thermostat(HomeAccessory):
         # If the device supports it: high and low temperature characteristics
         self.char_cooling_thresh_temp = None
         self.char_heating_thresh_temp = None
-        if support_auto:
+        if CHAR_COOLING_THRESHOLD_TEMPERATURE in self.chars:
             self.char_cooling_thresh_temp = setup_char(
                 CHAR_COOLING_THRESHOLD_TEMPERATURE, serv_thermostat,
                 value=23.0, callback=self.set_cooling_threshold)
-
+        if CHAR_HEATING_THRESHOLD_TEMPERATURE in self.chars:
             self.char_heating_thresh_temp = setup_char(
                 CHAR_HEATING_THRESHOLD_TEMPERATURE, serv_thermostat,
                 value=19.0, callback=self.set_heating_threshold)
