@@ -156,7 +156,8 @@ class Light(HomeAccessory):
         if CHAR_COLOR_TEMPERATURE in self.chars:
             color_temperature = new_state.attributes.get(ATTR_COLOR_TEMP)
             if not self._flag[CHAR_COLOR_TEMPERATURE] \
-                    and isinstance(color_temperature, int):
+                and isinstance(color_temperature, int) and \
+                    self.char_color_temperature.value != color_temperature:
                 self.char_color_temperature.set_value(color_temperature)
             self._flag[CHAR_COLOR_TEMPERATURE] = False
 
