@@ -77,7 +77,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class OnkyoDevice(MediaPlayerDevice):
     """Representation of an Onkyo device."""
 
-    def __init__(self, receiver, sources, name=None, max_volume=SUPPORTED_MAX_VOLUME):
+    def __init__(self, receiver, sources, name=None,
+                 max_volume=SUPPORTED_MAX_VOLUME):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
         self._muted = False
@@ -178,8 +179,11 @@ class OnkyoDevice(MediaPlayerDevice):
         self.command('system-power standby')
 
     def set_volume_level(self, volume):
-        """Set volume level, input is range 0..1. Onkyo ranges from 1-80.
-        80 is usually far too loud so allow the user to specify the upper range with CONF_MAX_VOLUME"""
+        """
+        Set volume level, input is range 0..1. Onkyo ranges from 1-80.
+        80 is usually far too loud
+        so allow the user to specify the upper range with CONF_MAX_VOLUME
+        """
         self.command('volume {}'.format(int(volume*self._max_volume)))
 
     def mute_volume(self, mute):
