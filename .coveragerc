@@ -425,6 +425,7 @@ omit =
     homeassistant/components/light/lifx.py
     homeassistant/components/light/limitlessled.py
     homeassistant/components/light/mystrom.py
+    homeassistant/components/light/niko_home_control.py
     homeassistant/components/light/osramlightify.py
     homeassistant/components/light/piglow.py
     homeassistant/components/light/rpi_gpio_pwm.py
