@@ -1,5 +1,4 @@
 """Class to hold all alarm control panel accessories."""
-# pylint: disable=attribute-defined-outside-init
 import logging
 
 from homeassistant.const import (
@@ -28,10 +27,9 @@ STATE_TO_SERVICE = {STATE_ALARM_DISARMED: 'alarm_disarm',
 class SecuritySystem(HomeAccessory):
     """Generate an SecuritySystem accessory for an alarm control panel."""
 
-    category = CATEGORY_ALARM_SYSTEM
-
-    def init_setup(self, config):
+    def __init__(self, *args, config):
         """Initialize a SecuritySystem accessory object."""
+        super().__init__(*args, category=CATEGORY_ALARM_SYSTEM)
         self._alarm_code = config[ATTR_CODE]
         self.flag_target_state = False
 

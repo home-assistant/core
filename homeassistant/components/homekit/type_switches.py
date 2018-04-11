@@ -1,5 +1,4 @@
 """Class to hold all switch accessories."""
-# pylint: disable=attribute-defined-outside-init
 import logging
 
 from homeassistant.const import (
@@ -17,10 +16,9 @@ _LOGGER = logging.getLogger(__name__)
 class Switch(HomeAccessory):
     """Generate a Switch accessory."""
 
-    category = CATEGORY_SWITCH
-
-    def init_setup(self, config):
+    def __init__(self, *args, config):
         """Initialize a Switch accessory object to represent a remote."""
+        super().__init__(*args, category=CATEGORY_SWITCH)
         self._domain = split_entity_id(self.entity_id)[0]
         self.flag_target_state = False
 

@@ -19,14 +19,14 @@ CONFIG = {}
 def test_get_accessory_invalid_aid(caplog):
     """Test with unsupported component."""
     assert get_accessory(None, State('light.demo', 'on'),
-                         aid=None, config=None) is None
+                         None, config=None) is None
     assert caplog.records[0].levelname == 'WARNING'
     assert 'invalid aid' in caplog.records[0].msg
 
 
 def test_not_supported():
     """Test if none is returned if entity isn't supported."""
-    assert get_accessory(None, State('demo.demo', 'on'), aid=2, config=None) \
+    assert get_accessory(None, State('demo.demo', 'on'), 2, config=None) \
         is None
 
 
@@ -90,8 +90,9 @@ class TestGetAccessories(unittest.TestCase):
             get_accessory(None, state, 2, config)
 
         # pylint: disable=unsubscriptable-object
+        print(self.mock_type.call_args[1])
         self.assertEqual(
-            self.mock_type.call_args[0][3][ATTR_CODE], '1234')
+            self.mock_type.call_args[1]['config'][ATTR_CODE], '1234')
 
     def test_climate(self):
         """Test climate devices."""

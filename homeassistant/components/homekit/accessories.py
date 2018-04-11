@@ -85,23 +85,13 @@ def set_accessory_info(acc, name, model, manufacturer=MANUFACTURER,
 class HomeAccessory(Accessory):
     """Adapter class for Accessory."""
 
-    category = 'OTHER'
-
-    def __init__(self, hass, name, entity_id, config, aid):
+    def __init__(self, hass, name, entity_id, aid, category):
         """Initialize a Accessory object."""
         super().__init__(name, aid=aid)
         set_accessory_info(self, name, model=entity_id)
-        self.category = getattr(Category, self.category, Category.OTHER)
+        self.category = getattr(Category, category, Category.OTHER)
         self.entity_id = entity_id
         self.hass = hass
-        self.init_setup(config)
-
-    def init_setup(self, config):
-        """Method called from __init__ at instance creation.
-
-        Overridden by accessory types.
-        """
-        pass
 
     def _set_services(self):
         add_preload_service(self, SERV_ACCESSORY_INFO)

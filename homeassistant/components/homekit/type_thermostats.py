@@ -1,5 +1,4 @@
 """Class to hold all thermostat accessories."""
-# pylint: disable=attribute-defined-outside-init
 import logging
 
 from homeassistant.components.climate import (
@@ -37,10 +36,9 @@ SUPPORT_TEMP_RANGE = SUPPORT_TARGET_TEMPERATURE_LOW | \
 class Thermostat(HomeAccessory):
     """Generate a Thermostat accessory for a climate."""
 
-    category = CATEGORY_THERMOSTAT
-
-    def init_setup(self, config):
+    def __init__(self, *args, config):
         """Initialize a Thermostat accessory object."""
+        super().__init__(*args, category=CATEGORY_THERMOSTAT)
         self._unit = TEMP_CELSIUS
         self.heat_cool_flag_target_state = False
         self.temperature_flag_target_state = False

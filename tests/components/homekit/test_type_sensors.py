@@ -27,7 +27,7 @@ class TestHomekitSensors(unittest.TestCase):
         entity_id = 'sensor.temperature'
 
         acc = TemperatureSensor(self.hass, 'Temperature', entity_id,
-                                None, aid=2)
+                                2, config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -55,7 +55,7 @@ class TestHomekitSensors(unittest.TestCase):
         """Test if accessory is updated after state change."""
         entity_id = 'sensor.humidity'
 
-        acc = HumiditySensor(self.hass, 'Humidity', entity_id, None, aid=2)
+        acc = HumiditySensor(self.hass, 'Humidity', entity_id, 2, config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -79,7 +79,8 @@ class TestHomekitSensors(unittest.TestCase):
                              {ATTR_DEVICE_CLASS: "opening"})
         self.hass.block_till_done()
 
-        acc = BinarySensor(self.hass, 'Window Opening', entity_id, None, aid=2)
+        acc = BinarySensor(self.hass, 'Window Opening', entity_id,
+                           2, config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -120,6 +121,6 @@ class TestHomekitSensors(unittest.TestCase):
             self.hass.block_till_done()
 
             acc = BinarySensor(self.hass, 'Binary Sensor', entity_id,
-                               None, aid=2)
+                               2, config=None)
             self.assertEqual(acc.get_service(service).display_name, service)
             self.assertEqual(acc.char_detected.display_name, char)

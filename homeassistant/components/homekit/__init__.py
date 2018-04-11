@@ -116,7 +116,7 @@ def get_accessory(hass, state, aid, config):
         return None
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
-    return TYPES[a_type](hass, state.name, state.entity_id, config, aid)
+    return TYPES[a_type](hass, state.name, state.entity_id, aid, config=config)
 
 
 def generate_aid(entity_id):

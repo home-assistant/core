@@ -55,7 +55,8 @@ class TestHomekitThermostats(unittest.TestCase):
 
         self.hass.states.set(climate, STATE_OFF, {ATTR_SUPPORTED_FEATURES: 0})
         self.hass.block_till_done()
-        acc = self.thermostat_cls(self.hass, 'Climate', climate, None, aid=2)
+        acc = self.thermostat_cls(self.hass, 'Climate', climate,
+                                  2, config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -193,7 +194,8 @@ class TestHomekitThermostats(unittest.TestCase):
         # support_auto = True
         self.hass.states.set(climate, STATE_OFF, {ATTR_SUPPORTED_FEATURES: 6})
         self.hass.block_till_done()
-        acc = self.thermostat_cls(self.hass, 'Climate', climate, None, aid=2)
+        acc = self.thermostat_cls(self.hass, 'Climate', climate,
+                                  2, config=None)
         acc.run()
 
         self.assertEqual(acc.char_cooling_thresh_temp.value, 23.0)
@@ -266,7 +268,8 @@ class TestHomekitThermostats(unittest.TestCase):
         # support_auto = True
         self.hass.states.set(climate, STATE_OFF, {ATTR_SUPPORTED_FEATURES: 6})
         self.hass.block_till_done()
-        acc = self.thermostat_cls(self.hass, 'Climate', climate, None, aid=2)
+        acc = self.thermostat_cls(self.hass, 'Climate', climate,
+                                  2, config=None)
         acc.run()
 
         self.hass.states.set(climate, STATE_AUTO,
