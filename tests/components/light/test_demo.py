@@ -33,7 +33,7 @@ class TestDemoLight(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_LIGHT)
         self.assertTrue(light.is_on(self.hass, ENTITY_LIGHT))
-        self.assertEqual((0.394, 0.408), state.attributes.get(
+        self.assertEqual((0.4, 0.4), state.attributes.get(
             light.ATTR_XY_COLOR))
         self.assertEqual(25, state.attributes.get(light.ATTR_BRIGHTNESS))
         self.assertEqual(
