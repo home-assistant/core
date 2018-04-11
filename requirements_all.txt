@@ -454,6 +454,9 @@ keyring==12.0.0
 # homeassistant.scripts.keyring
 keyrings.alt==3.0
 
+# homeassistant.components.eufy
+lakeside==0.4
+
 # homeassistant.components.device_tracker.owntracks
 # homeassistant.components.device_tracker.owntracks_http
 libnacl==1.6.1
