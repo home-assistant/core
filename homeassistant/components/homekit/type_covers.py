@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.cover import ATTR_CURRENT_POSITION
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service
+from .accessories import HomeAccessory, add_preload_service, setup_char
 from .const import (
     CATEGORY_WINDOW_COVERING, SERV_WINDOW_COVERING,
     CHAR_CURRENT_POSITION, CHAR_TARGET_POSITION, CHAR_POSITION_STATE)
@@ -26,17 +26,13 @@ class WindowCovering(HomeAccessory):
         self.homekit_target = None
 
         serv_cover = add_preload_service(self, SERV_WINDOW_COVERING)
-        self.char_current_position = serv_cover. \
-            get_characteristic(CHAR_CURRENT_POSITION)
-        self.char_target_position = serv_cover. \
-            get_characteristic(CHAR_TARGET_POSITION)
-        self.char_position_state = serv_cover. \
-            get_characteristic(CHAR_POSITION_STATE)
-        self.char_current_position.value = 0
-        self.char_target_position.value = 0
-        self.char_position_state.value = 0
-
-        self.char_target_position.setter_callback = self.move_cover
+        self.char_current_position = setup_char(
+            CHAR_CURRENT_POSITION, serv_cover, value=0)
+        self.char_target_position = setup_char(
+            CHAR_TARGET_POSITION, serv_cover, value=0,
+            callback=self.move_cover)
+        self.char_position_state = setup_char(
+            CHAR_POSITION_STATE, serv_cover, value=0)
 
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""

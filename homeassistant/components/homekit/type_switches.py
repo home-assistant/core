@@ -6,7 +6,7 @@ from homeassistant.const import (
 from homeassistant.core import split_entity_id
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service
+from .accessories import HomeAccessory, add_preload_service, setup_char
 from .const import CATEGORY_SWITCH, SERV_SWITCH, CHAR_ON
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,9 +23,8 @@ class Switch(HomeAccessory):
         self.flag_target_state = False
 
         serv_switch = add_preload_service(self, SERV_SWITCH)
-        self.char_on = serv_switch.get_characteristic(CHAR_ON)
-        self.char_on.value = False
-        self.char_on.setter_callback = self.set_state
+        self.char_on = setup_char(
+            CHAR_ON, serv_switch, value=False, callback=self.set_state)
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""

@@ -6,7 +6,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS, STATE_ON, STATE_HOME)
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service
+from .accessories import HomeAccessory, add_preload_service, setup_char
 from .const import (
     CATEGORY_SENSOR, SERV_HUMIDITY_SENSOR, SERV_TEMPERATURE_SENSOR,
     CHAR_CURRENT_HUMIDITY, CHAR_CURRENT_TEMPERATURE, PROP_CELSIUS,
@@ -45,9 +45,9 @@ class TemperatureSensor(HomeAccessory):
         """Initialize a TemperatureSensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
         serv_temp = add_preload_service(self, SERV_TEMPERATURE_SENSOR)
-        self.char_temp = serv_temp.get_characteristic(CHAR_CURRENT_TEMPERATURE)
-        self.char_temp.override_properties(properties=PROP_CELSIUS)
-        self.char_temp.value = 0
+        self.char_temp = setup_char(
+            CHAR_CURRENT_TEMPERATURE, serv_temp, value=0,
+            properties=PROP_CELSIUS)
         self.unit = None
 
     def update_state(self, new_state):
@@ -69,9 +69,8 @@ class HumiditySensor(HomeAccessory):
         """Initialize a HumiditySensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
         serv_humidity = add_preload_service(self, SERV_HUMIDITY_SENSOR)
-        self.char_humidity = serv_humidity \
-            .get_characteristic(CHAR_CURRENT_HUMIDITY)
-        self.char_humidity.value = 0
+        self.char_humidity = setup_char(
+            CHAR_CURRENT_HUMIDITY, serv_humidity, value=0)
 
     def update_state(self, new_state):
         """Update accessory after state change."""
@@ -96,8 +95,7 @@ class BinarySensor(HomeAccessory):
             else BINARY_SENSOR_SERVICE_MAP[DEVICE_CLASS_OCCUPANCY]
 
         service = add_preload_service(self, service_char[0])
-        self.char_detected = service.get_characteristic(service_char[1])
-        self.char_detected.value = 0
+        self.char_detected = setup_char(service_char[1], service, value=0)
 
     def update_state(self, new_state):
         """Update accessory after state change."""

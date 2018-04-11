@@ -7,7 +7,7 @@ import logging
 from pyhap.accessory import Accessory, Bridge, Category
 from pyhap.accessory_driver import AccessoryDriver
 
-from homeassistant.core import callback
+from homeassistant.core import callback as ha_callback
 from homeassistant.helpers.event import (
     async_track_state_change, track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def debounce(func):
     """Decorator function. Debounce callbacks form HomeKit."""
-    @callback
+    @ha_callback
     def call_later_listener(*args):
         """Callback listener called from call_later."""
         # pylint: disable=unsubscriptable-object
@@ -70,6 +70,18 @@ def add_preload_service(acc, service, chars=None):
             service.add_characteristic(char)
     acc.add_service(service)
     return service
+
+
+def setup_char(char_name, service, value=None, properties=None, callback=None):
+    """Helper function to return fully configured characteristic."""
+    char = service.get_characteristic(char_name)
+    if value:
+        char.value = value
+    if properties:
+        char.override_properties(properties)
+    if callback:
+        char.setter_callback = callback
+    return char
 
 
 def set_accessory_info(acc, name, model, manufacturer=MANUFACTURER,
