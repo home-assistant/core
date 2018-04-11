@@ -104,12 +104,16 @@ class HueBridge(object):
             self._cancel_retry_setup = None
             return True
 
-        # If setup was successful, we set api variable and forwarded entries
-        if self.api is not None:
-            await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, 'light')
+        # If the authentication was wrong.
+        if self.api is None:
+            return True
 
-        return True
+        self.hass.services.async_remove(DOMAIN, SERVICE_HUE_SCENE)
+
+        # If setup was successful, we set api variable, forwarded entry and
+        # register service
+        return await self.hass.config_entries.async_forward_entry_unload(
+            self.config_entry, 'light')
 
     async def hue_activate_scene(self, call, updated=False):
         """Service to call directly into bridge to set scenes."""
