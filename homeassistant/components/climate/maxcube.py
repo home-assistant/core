@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.components.climate import (
     ClimateDevice, STATE_AUTO, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_OPERATION_MODE )
+    SUPPORT_OPERATION_MODE)
 from homeassistant.components.maxcube import MAXCUBE_HANDLE
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 
@@ -113,7 +113,7 @@ class MaxCubeClimate(ClimateDevice):
         """Return the temperature we try to reach."""
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
         return self.map_temperature_max_hass(device.target_temperature)
-    
+
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
         if kwargs.get(ATTR_TEMPERATURE) is None:
@@ -157,7 +157,7 @@ class MaxCubeClimate(ClimateDevice):
             return 0.0
 
         return temperature
-    
+
     @staticmethod
     def map_mode_hass_max(operation_mode):
         """Map Home Assistant Operation Modes to MAX! Operation Modes."""
@@ -201,6 +201,7 @@ class MaxCubeClimate(ClimateDevice):
             operation_mode = None
 
         return operation_mode
+
 
 class MaxCubeClimateValve(MaxCubeClimate):
     """MAX! Cube Valve ClimateDevice."""
