@@ -30,6 +30,7 @@ class HueBridge(object):
         self.allow_groups = allow_groups
         self.available = True
         self.api = None
+        self._cancel_retry_setup = None
 
     @property
     def host(self):
@@ -67,8 +68,8 @@ class HueBridge(object):
                     # This feels hacky, we should find a better way to do this
                     self.config_entry.state = config_entries.ENTRY_STATE_LOADED
 
-            # Unhandled edge case: cancel this if we discover bridge on new IP
-            hass.helpers.event.async_call_later(retry_delay, retry_setup)
+            self._cancel_retry_setup = hass.helpers.event.async_call_later(
+                retry_delay, retry_setup)
 
             return False
 
@@ -83,6 +84,30 @@ class HueBridge(object):
         hass.services.async_register(
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene,
             schema=SCENE_SCHEMA)
+
+        return True
+
+    async def async_reset(self):
+        """Reset this bridge to default state.
+
+        Will cancel any scheduled setup retry and will unload
+        the config entry.
+        """
+        # The bridge can be in 3 states:
+        #  - Setup was successful, self.api is not None
+        #  - Authentication was wrong, self.api is None, not retrying setup.
+        #  - Host was down. self.api is None, we're retrying setup
+
+        # If we have a retry scheduled, we were never setup.
+        if self._cancel_retry_setup is not None:
+            self._cancel_retry_setup()
+            self._cancel_retry_setup = None
+            return True
+
+        # If setup was successful, we set api variable and forwarded entries
+        if self.api is not None:
+            await self.hass.config_entries.async_forward_entry_unload(
+                self.config_entry, 'light')
 
         return True
 

@@ -54,3 +54,45 @@ async def test_bridge_setup_timeout(hass):
     assert len(hass.helpers.event.async_call_later.mock_calls) == 1
     # Assert we are going to wait 2 seconds
     assert hass.helpers.event.async_call_later.mock_calls[0][1][0] == 2
+
+
+async def test_reset_cancels_retry_setup():
+    """Test resetting a bridge will unsubscribe a setup retry."""
+    hass = Mock()
+    entry = Mock()
+    entry.data = {'host': '1.2.3.4', 'username': 'mock-username'}
+    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+
+    with patch.object(bridge, 'get_bridge', side_effect=errors.CannotConnect):
+        assert await hue_bridge.async_setup() is False
+
+    mock_call_later = hass.helpers.event.async_call_later
+
+    assert len(mock_call_later.mock_calls) == 1
+
+    assert await hue_bridge.async_reset()
+
+    assert len(mock_call_later.mock_calls) == 2
+    assert len(mock_call_later.return_value.mock_calls) == 1
+
+
+async def test_reset_if_entry_had_wrong_auth():
+    """Test calling reset when the entry contained wrong auth."""
+    hass = Mock()
+    entry = Mock()
+    entry.data = {'host': '1.2.3.4', 'username': 'mock-username'}
+    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+
+    with patch.object(bridge, 'get_bridge',
+                      side_effect=errors.AuthenticationRequired):
+        assert await hue_bridge.async_setup() is False
+
+    assert len(hass.async_add_job.mock_calls) == 1
+
+    assert await hue_bridge.async_reset()
+
+
+async def test_reset_unloads_entry_if_setup():
+    """."""
+    assert False
+

@@ -135,9 +135,5 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    # TODO Check bridge state, only unload if connected?
-    # TODO cancel reconnect action in hue bridge setup
-
-    await hass.config_entries.async_forward_entry_unload(entry, 'light')
-    hass.data[DOMAIN].pop(entry.data['host'])
-    return True
+    bridge = hass.data[DOMAIN].pop(entry.data['host'])
+    return await bridge.async_reset()
