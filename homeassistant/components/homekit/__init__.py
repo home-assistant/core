@@ -28,7 +28,7 @@ from .util import (
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==1.1.7']
+REQUIREMENTS = ['HAP-python==1.1.9']
 
 
 CONFIG_SCHEMA = vol.Schema({
@@ -92,6 +92,11 @@ def get_accessory(hass, state, aid, config):
             return TYPES['HumiditySensor'](hass, state.entity_id, state.name,
                                            aid=aid)
 
+    elif state.domain == 'binary_sensor' or state.domain == 'device_tracker':
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'BinarySensor')
+        return TYPES['BinarySensor'](hass, state.entity_id,
+                                     state.name, aid=aid)
+
     elif state.domain == 'cover':
         # Only add covers that support set_cover_position
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -102,8 +107,7 @@ def get_accessory(hass, state, aid, config):
                                            aid=aid)
 
     elif state.domain == 'alarm_control_panel':
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id,
-                      'SecuritySystem')
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'SecuritySystem')
         return TYPES['SecuritySystem'](hass, state.entity_id, state.name,
                                        alarm_code=config.get(ATTR_CODE),
                                        aid=aid)
@@ -120,7 +124,11 @@ def get_accessory(hass, state, aid, config):
                                    state.name, support_auto, aid=aid)
 
     elif state.domain == 'light':
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Light')
         return TYPES['Light'](hass, state.entity_id, state.name, aid=aid)
+
+    elif state.domain == 'lock':
+        return TYPES['Lock'](hass, state.entity_id, state.name, aid=aid)
 
     elif state.domain == 'switch' or state.domain == 'remote' \
             or state.domain == 'input_boolean' or state.domain == 'script':
@@ -181,8 +189,8 @@ class HomeKit():
 
         # pylint: disable=unused-variable
         from . import (  # noqa F401
-            type_covers, type_lights, type_security_systems, type_sensors,
-            type_switches, type_thermostats)
+            type_covers, type_lights, type_locks, type_security_systems,
+            type_sensors, type_switches, type_thermostats)
 
         for state in self._hass.states.all():
             self.add_bridge_accessory(state)

@@ -158,10 +158,6 @@ class Config(object):
                 "Listen port not specified, defaulting to %s",
                 self.listen_port)
 
-        if self.type == TYPE_GOOGLE and self.listen_port != 80:
-            _LOGGER.warning("When targeting Google Home, listening port has "
-                            "to be port 80")
-
         # Get whether or not UPNP binds to multicast address (239.255.255.250)
         # or to the unicast address (host_ip_addr)
         self.upnp_bind_multicast = conf.get(

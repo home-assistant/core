@@ -9,7 +9,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.const import (
     ATTR_CODE, ATTR_UNIT_OF_MEASUREMENT, ATTR_SUPPORTED_FEATURES,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_DEVICE_CLASS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +61,19 @@ class TestGetAccessories(unittest.TestCase):
         with patch.dict(TYPES, {'HumiditySensor': self.mock_type}):
             state = State('sensor.humidity', '20',
                           {ATTR_UNIT_OF_MEASUREMENT: '%'})
+            get_accessory(None, state, 2, {})
+
+    def test_binary_sensor(self):
+        """Test binary sensor with opening class."""
+        with patch.dict(TYPES, {'BinarySensor': self.mock_type}):
+            state = State('binary_sensor.opening', 'on',
+                          {ATTR_DEVICE_CLASS: 'opening'})
+            get_accessory(None, state, 2, {})
+
+    def test_device_tracker(self):
+        """Test binary sensor with opening class."""
+        with patch.dict(TYPES, {'BinarySensor': self.mock_type}):
+            state = State('device_tracker.someone', 'not_home', {})
             get_accessory(None, state, 2, {})
 
     def test_cover_set_position(self):

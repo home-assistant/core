@@ -41,6 +41,14 @@ CONTENT = 'content'
 DESCRIPTION = 'description'
 # Calendar Platform: Used in the '_get_date()' method
 DATETIME = 'dateTime'
+# Service Call: When is this task due (in natural language)?
+DUE_DATE_STRING = 'due_date_string'
+# Service Call: The language of DUE_DATE_STRING
+DUE_DATE_LANG = 'due_date_lang'
+# Service Call: The available options of DUE_DATE_LANG
+DUE_DATE_VALID_LANGS = ['en', 'da', 'pl', 'zh', 'ko', 'de',
+                        'pt', 'ja', 'it', 'fr', 'sv', 'ru',
+                        'es', 'nl']
 # Attribute: When is this task due?
 # Service Call: When is this task due?
 DUE_DATE = 'due_date'
@@ -83,7 +91,11 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(PROJECT_NAME, default='inbox'): vol.All(cv.string, vol.Lower),
     vol.Optional(LABELS): cv.ensure_list_csv,
     vol.Optional(PRIORITY): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
-    vol.Optional(DUE_DATE): cv.string,
+
+    vol.Exclusive(DUE_DATE_STRING, 'due_date'): cv.string,
+    vol.Optional(DUE_DATE_LANG):
+        vol.All(cv.string, vol.In(DUE_DATE_VALID_LANGS)),
+    vol.Exclusive(DUE_DATE, 'due_date'): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -185,6 +197,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         if PRIORITY in call.data:
             item.update(priority=call.data[PRIORITY])
+
+        if DUE_DATE_STRING in call.data:
+            item.update(date_string=call.data[DUE_DATE_STRING])
+
+        if DUE_DATE_LANG in call.data:
+            item.update(date_lang=call.data[DUE_DATE_LANG])
 
         if DUE_DATE in call.data:
             due_date = dt.parse_datetime(call.data[DUE_DATE])

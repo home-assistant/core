@@ -16,7 +16,7 @@ from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
 
 REQUIREMENTS = [
-    'bellows==0.5.1',
+    'bellows==0.5.2',
     'zigpy==0.0.3',
     'zigpy-xbee==0.0.2',
 ]

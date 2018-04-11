@@ -49,11 +49,17 @@ GROUP_MIN_API_VERSION = (1, 13, 0)
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Set up the Hue lights."""
-    if discovery_info is None:
-        return
+    """Old way of setting up Hue lights.
 
-    bridge = hass.data[hue.DOMAIN][discovery_info['host']]
+    Can only be called when a user accidentally mentions hue platform in their
+    config. But even in that case it would have been ignored.
+    """
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the Hue lights from a config entry."""
+    bridge = hass.data[hue.DOMAIN][config_entry.data['host']]
     cur_lights = {}
     cur_groups = {}
 
@@ -300,8 +306,14 @@ class HueLight(Light):
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_HS_COLOR in kwargs:
-            command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
-            command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
+            if self.is_osram:
+                command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
+                command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
+            else:
+                # Philips hue bulb models respond differently to hue/sat
+                # requests, so we convert to XY first to ensure a consistent
+                # color.
+                command['xy'] = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))

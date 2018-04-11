@@ -68,50 +68,50 @@ xiaomi_miio_set_buzzer_on:
   description: Turn the buzzer on.
   fields:
     entity_id:
-      description: Name of the air purifier entity.
-      example: 'fan.xiaomi_air_purifier'
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
 
 xiaomi_miio_set_buzzer_off:
   description: Turn the buzzer off.
   fields:
     entity_id:
-      description: Name of the air purifier entity.
-      example: 'fan.xiaomi_air_purifier'
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
 
 xiaomi_miio_set_led_on:
   description: Turn the led on.
   fields:
     entity_id:
-      description: Name of the air purifier entity.
-      example: 'fan.xiaomi_air_purifier'
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
 
 xiaomi_miio_set_led_off:
   description: Turn the led off.
   fields:
     entity_id:
-      description: Name of the air purifier entity.
-      example: 'fan.xiaomi_air_purifier'
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
 
 xiaomi_miio_set_child_lock_on:
   description: Turn the child lock on.
   fields:
     entity_id:
-      description: Name of the air purifier entity.
-      example: 'fan.xiaomi_air_purifier'
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
 
 xiaomi_miio_set_child_lock_off:
   description: Turn the child lock off.
   fields:
     entity_id:
-      description: Name of the air purifier entity.
-      example: 'fan.xiaomi_air_purifier'
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
 
 xiaomi_miio_set_favorite_level:
   description: Set the favorite level.
   fields:
     entity_id:
-      description: Name of the air purifier entity.
-      example: 'fan.xiaomi_air_purifier'
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
     level:
       description: Level, between 0 and 16.
       example: 1
@@ -120,8 +120,87 @@ xiaomi_miio_set_led_brightness:
   description: Set the led brightness.
   fields:
     entity_id:
-      description: Name of the air purifier entity.
-      example: 'fan.xiaomi_air_purifier'
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
     brightness:
       description: Brightness (0 = Bright, 1 = Dim, 2 = Off)
       example: 1
+
+xiaomi_miio_set_auto_detect_on:
+  description: Turn the auto detect on.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
+
+xiaomi_miio_set_auto_detect_off:
+  description: Turn the auto detect off.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
+
+xiaomi_miio_set_learn_mode_on:
+  description: Turn the learn mode on.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
+
+xiaomi_miio_set_learn_mode_off:
+  description: Turn the learn mode off.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
+
+xiaomi_miio_set_volume:
+  description: Set the sound volume.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
+    volume:
+      description: Volume, between 0 and 100.
+      example: 50
+
+xiaomi_miio_reset_filter:
+  description: Reset the filter lifetime and usage.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
+
+xiaomi_miio_set_extra_features:
+  description: Manipulates a storage register which advertises extra features. The Mi Home app evaluates the value. A feature called "turbo mode" is unlocked in the app on value 1.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
+    features:
+      description: Integer, known values are 0 (default) and 1 (turbo mode).
+      example: 1
+
+xiaomi_miio_set_target_humidity:
+  description: Set the target humidity.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
+    humidity:
+      description: Target humidity. Allowed values are 30, 40, 50, 60, 70 and 80.
+      example: 50
+
+xiaomi_miio_set_dry_on:
+  description: Turn the dry mode on.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
+
+xiaomi_miio_set_dry_off:
+  description: Turn the dry mode off.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'

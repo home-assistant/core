@@ -334,7 +334,7 @@ class SetIntentHandler(intent.IntentHandler):
 
 async def async_setup(hass, config):
     """Expose light control via state machine and services."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LIGHTS)
     await component.async_setup(config)
 
@@ -386,6 +386,11 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(SetIntentHandler())
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
 class Profiles:
@@ -457,12 +462,14 @@ class Light(ToggleEntity):
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
         # Default to the Philips Hue value that HA has always assumed
-        return 154
+        # https://developers.meethue.com/documentation/core-concepts
+        return 153
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         # Default to the Philips Hue value that HA has always assumed
+        # https://developers.meethue.com/documentation/core-concepts
         return 500
 
     @property

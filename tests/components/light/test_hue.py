@@ -9,6 +9,7 @@ from aiohue.lights import Lights
 from aiohue.groups import Groups
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import hue
 import homeassistant.components.light.hue as hue_light
 from homeassistant.util import color
@@ -160,7 +161,13 @@ LIGHT_RESPONSE = {
 @pytest.fixture
 def mock_bridge(hass):
     """Mock a Hue bridge."""
-    bridge = Mock(available=True, allow_groups=False, host='1.1.1.1')
+    bridge = Mock(
+        available=True,
+        allow_unreachable=False,
+        allow_groups=False,
+        api=Mock(),
+        spec=hue.HueBridge
+    )
     bridge.mock_requests = []
     # We're using a deque so we can schedule multiple responses
     # and also means that `popleft()` will blow up if we get more updates
@@ -190,9 +197,11 @@ async def setup_bridge(hass, mock_bridge):
     """Load the Hue light platform with the provided bridge."""
     hass.config.components.add(hue.DOMAIN)
     hass.data[hue.DOMAIN] = {'mock-host': mock_bridge}
-    await hass.helpers.discovery.async_load_platform('light', 'hue', {
+    config_entry = config_entries.ConfigEntry(1, hue.DOMAIN, 'Mock Title', {
         'host': 'mock-host'
-    })
+    }, 'test')
+    await hass.config_entries.async_forward_entry(config_entry, 'light')
+    # To flush out the service call to update the group
     await hass.async_block_till_done()
 
 
