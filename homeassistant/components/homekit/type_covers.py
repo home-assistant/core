@@ -4,7 +4,8 @@ import logging
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_SET_COVER_POSITION, STATE_OPEN, STATE_CLOSED)
+    ATTR_ENTITY_ID, SERVICE_SET_COVER_POSITION, STATE_OPEN, STATE_CLOSED, SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER,
+    SERVICE_STOP_COVER)
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service, setup_char
@@ -96,3 +97,56 @@ class WindowCovering(HomeAccessory):
                     abs(current_position - self.homekit_target) < 6:
                 self.char_target_position.set_value(current_position)
                 self.homekit_target = None
+
+
+@TYPES.register('WindowCoveringBasic')
+class WindowCoveringBasic(HomeAccessory):
+    """Generate a Window accessory for a cover entity.
+
+    The cover entity must support:
+        - open_cover
+        - close_cover
+        - stop_cover
+    """
+
+    def __init__(self, *args, config):
+        """Initialize a WindowCovering accessory object."""
+        super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
+        self.homekit_target = None
+
+        serv_cover = add_preload_service(self, SERV_WINDOW_COVERING)
+        self.char_current_position = setup_char(
+            CHAR_CURRENT_POSITION, serv_cover, value=0)
+        self.char_target_position = setup_char(
+            CHAR_TARGET_POSITION, serv_cover, value=0,
+            callback=self.move_cover)
+
+    def move_cover(self, value):
+        """Move cover to value if call came from HomeKit."""
+        _LOGGER.debug('%s: Set position to %d', self.entity_id, value)
+        self.homekit_target = value
+
+        if value > 70:
+            service = SERVICE_OPEN_COVER
+            hk_position = 100
+        elif value < 30:
+            service = SERVICE_CLOSE_COVER
+            hk_position = 0
+        else:
+            service = SERVICE_STOP_COVER
+            hk_position = 50
+
+        params = {ATTR_ENTITY_ID: self.entity_id}
+
+        # Snap the current/target position to the expected final position.
+        self.hass.services.call(DOMAIN, service, params)
+        self.char_current_position.set_value(hk_position)
+        self.char_target_position.set_value(hk_position)
+
+    def update_state(self, new_state):
+        """Update cover position after state changed."""
+        position_mapping = {'open': 100, 'closed': 0}
+        hk_position = position_mapping.get(new_state.state)
+        if hk_position is not None:
+            self.char_current_position.set_value(hk_position)
+            self.char_target_position.set_value(hk_position)

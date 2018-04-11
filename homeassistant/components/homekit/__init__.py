@@ -9,7 +9,7 @@ from zlib import adler32
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION)
+    SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION, SUPPORT_STOP)
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     ATTR_DEVICE_CLASS, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
@@ -99,6 +99,8 @@ def get_accessory(hass, state, aid, config):
         if device_class == 'garage' and \
                 features & (SUPPORT_OPEN | SUPPORT_CLOSE):
             a_type = 'GarageDoorOpener'
+        elif features & (SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP):
+            a_type = 'WindowCoveringBasic'
         elif features & SUPPORT_SET_POSITION:
             a_type = 'WindowCovering'
 
