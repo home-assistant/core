@@ -33,7 +33,7 @@ def validate_entity_config(values):
     return entities
 
 
-def show_setup_message(bridge, hass):
+def show_setup_message(hass, bridge):
     """Display persistent notification with setup information."""
     pin = bridge.pincode.decode()
     _LOGGER.info('Pincode: %s', pin)

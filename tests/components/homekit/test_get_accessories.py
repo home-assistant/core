@@ -19,14 +19,14 @@ CONFIG = {}
 def test_get_accessory_invalid_aid(caplog):
     """Test with unsupported component."""
     assert get_accessory(None, State('light.demo', 'on'),
-                         aid=None, config=None) is None
+                         None, config=None) is None
     assert caplog.records[0].levelname == 'WARNING'
     assert 'invalid aid' in caplog.records[0].msg
 
 
 def test_not_supported():
     """Test if none is returned if entity isn't supported."""
-    assert get_accessory(None, State('demo.demo', 'on'), aid=2, config=None) \
+    assert get_accessory(None, State('demo.demo', 'on'), 2, config=None) \
         is None
 
 
@@ -48,7 +48,6 @@ class TestGetAccessories(unittest.TestCase):
                           {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
             get_accessory(None, state, 2, {})
 
-    # pylint: disable=invalid-name
     def test_sensor_temperature_fahrenheit(self):
         """Test temperature sensor with Fahrenheit as unit."""
         with patch.dict(TYPES, {'TemperatureSensor': self.mock_type}):
@@ -91,18 +90,15 @@ class TestGetAccessories(unittest.TestCase):
             get_accessory(None, state, 2, config)
 
         # pylint: disable=unsubscriptable-object
+        print(self.mock_type.call_args[1])
         self.assertEqual(
-            self.mock_type.call_args[1].get('alarm_code'), '1234')
+            self.mock_type.call_args[1]['config'][ATTR_CODE], '1234')
 
     def test_climate(self):
         """Test climate devices."""
         with patch.dict(TYPES, {'Thermostat': self.mock_type}):
             state = State('climate.test', 'auto')
             get_accessory(None, state, 2, {})
-
-        # pylint: disable=unsubscriptable-object
-        self.assertEqual(
-            self.mock_type.call_args[0][-1], False)  # support_auto
 
     def test_light(self):
         """Test light devices."""
@@ -118,10 +114,6 @@ class TestGetAccessories(unittest.TestCase):
                     SUPPORT_TARGET_TEMPERATURE_LOW |
                     SUPPORT_TARGET_TEMPERATURE_HIGH})
             get_accessory(None, state, 2, {})
-
-        # pylint: disable=unsubscriptable-object
-        self.assertEqual(
-            self.mock_type.call_args[0][-1], True)  # support_auto
 
     def test_switch(self):
         """Test switch."""
@@ -139,4 +131,10 @@ class TestGetAccessories(unittest.TestCase):
         """Test input_boolean."""
         with patch.dict(TYPES, {'Switch': self.mock_type}):
             state = State('input_boolean.test', 'on')
+            get_accessory(None, state, 2, {})
+
+    def test_lock(self):
+        """Test lock."""
+        with patch.dict(TYPES, {'Lock': self.mock_type}):
+            state = State('lock.test', 'locked')
             get_accessory(None, state, 2, {})

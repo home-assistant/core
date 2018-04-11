@@ -7,7 +7,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_CODE)
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service
+from .accessories import HomeAccessory, add_preload_service, setup_char
 from .const import (
     CATEGORY_ALARM_SYSTEM, SERV_SECURITY_SYSTEM,
     CHAR_CURRENT_SECURITY_STATE, CHAR_TARGET_SECURITY_STATE)
@@ -27,26 +27,18 @@ STATE_TO_SERVICE = {STATE_ALARM_DISARMED: 'alarm_disarm',
 class SecuritySystem(HomeAccessory):
     """Generate an SecuritySystem accessory for an alarm control panel."""
 
-    def __init__(self, hass, entity_id, display_name, alarm_code, **kwargs):
+    def __init__(self, *args, config):
         """Initialize a SecuritySystem accessory object."""
-        super().__init__(display_name, entity_id,
-                         CATEGORY_ALARM_SYSTEM, **kwargs)
-
-        self.hass = hass
-        self.entity_id = entity_id
-        self._alarm_code = alarm_code
-
+        super().__init__(*args, category=CATEGORY_ALARM_SYSTEM)
+        self._alarm_code = config[ATTR_CODE]
         self.flag_target_state = False
 
         serv_alarm = add_preload_service(self, SERV_SECURITY_SYSTEM)
-        self.char_current_state = serv_alarm. \
-            get_characteristic(CHAR_CURRENT_SECURITY_STATE)
-        self.char_current_state.value = 3
-        self.char_target_state = serv_alarm. \
-            get_characteristic(CHAR_TARGET_SECURITY_STATE)
-        self.char_target_state.value = 3
-
-        self.char_target_state.setter_callback = self.set_security_state
+        self.char_current_state = setup_char(
+            CHAR_CURRENT_SECURITY_STATE, serv_alarm, value=3)
+        self.char_target_state = setup_char(
+            CHAR_TARGET_SECURITY_STATE, serv_alarm, value=3,
+            callback=self.set_security_state)
 
     def set_security_state(self, value):
         """Move security state to value if call came from HomeKit."""
@@ -61,11 +53,8 @@ class SecuritySystem(HomeAccessory):
             params[ATTR_CODE] = self._alarm_code
         self.hass.services.call('alarm_control_panel', service, params)
 
-    def update_state(self, entity_id=None, old_state=None, new_state=None):
+    def update_state(self, new_state):
         """Update security state after state changed."""
-        if new_state is None:
-            return
-
         hass_state = new_state.state
         if hass_state in HASS_TO_HOMEKIT:
             current_security_state = HASS_TO_HOMEKIT[hass_state]
