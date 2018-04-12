@@ -76,6 +76,7 @@ TEST_REQUIREMENTS = (
     'pyqwikswitch',
     'python-forecastio',
     'pyunifi',
+    'pyupnp-async',
     'pywebpush',
     'restrictedpython',
     'rflink',

@@ -6,38 +6,44 @@ https://home-assistant.io/components/sensor.upnp/
 """
 import logging
 
-from homeassistant.components.upnp import DATA_UPNP, UNITS
+from homeassistant.components.upnp import DATA_UPNP, UNITS, CIC_SERVICE
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+BYTES_RECEIVED = 1
+BYTES_SENT = 2
+PACKETS_RECEIVED = 3
+PACKETS_SENT = 4
+
 # sensor_type: [friendly_name, convert_unit, icon]
 SENSOR_TYPES = {
-    'byte_received': ['received bytes', True, 'mdi:server-network'],
-    'byte_sent': ['sent bytes', True, 'mdi:server-network'],
-    'packets_in': ['packets received', False, 'mdi:server-network'],
-    'packets_out': ['packets sent', False, 'mdi:server-network'],
+    BYTES_RECEIVED: ['received bytes', True, 'mdi:server-network'],
+    BYTES_SENT: ['sent bytes', True, 'mdi:server-network'],
+    PACKETS_RECEIVED: ['packets received', False, 'mdi:server-network'],
+    PACKETS_SENT: ['packets sent', False, 'mdi:server-network'],
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the IGD sensors."""
-    upnp = hass.data[DATA_UPNP]
+    device = hass.data[DATA_UPNP]
+    service = device.find_first_service(CIC_SERVICE)
     unit = discovery_info['unit']
     add_devices([
-        IGDSensor(upnp, t, unit if SENSOR_TYPES[t][1] else None)
+        IGDSensor(service, t, unit if SENSOR_TYPES[t][1] else '#')
         for t in SENSOR_TYPES], True)
 
 
 class IGDSensor(Entity):
     """Representation of a UPnP IGD sensor."""
 
-    def __init__(self, upnp, sensor_type, unit=""):
+    def __init__(self, service, sensor_type, unit=None):
         """Initialize the IGD sensor."""
-        self._upnp = upnp
+        self._service = service
         self.type = sensor_type
         self.unit = unit
-        self.unit_factor = UNITS[unit] if unit is not None else 1
+        self.unit_factor = UNITS[unit] if unit in UNITS else 1
         self._name = 'IGD {}'.format(SENSOR_TYPES[sensor_type][0])
         self._state = None
 
@@ -49,9 +55,9 @@ class IGDSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._state is None:
-            return None
-        return format(self._state / self.unit_factor, '.1f')
+        if self._state:
+            return format(float(self._state) / self.unit_factor, '.1f')
+        return self._state
 
     @property
     def icon(self):
@@ -63,13 +69,13 @@ class IGDSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self.unit
 
-    def update(self):
+    async def async_update(self):
         """Get the latest information from the IGD."""
-        if self.type == "byte_received":
-            self._state = self._upnp.totalbytereceived()
-        elif self.type == "byte_sent":
-            self._state = self._upnp.totalbytesent()
-        elif self.type == "packets_in":
-            self._state = self._upnp.totalpacketreceived()
-        elif self.type == "packets_out":
-            self._state = self._upnp.totalpacketsent()
+        if self.type == BYTES_RECEIVED:
+            self._state = await self._service.get_total_bytes_received()
+        elif self.type == BYTES_SENT:
+            self._state = await self._service.get_total_bytes_sent()
+        elif self.type == PACKETS_RECEIVED:
+            self._state = await self._service.get_total_packets_received()
+        elif self.type == PACKETS_SENT:
+            self._state = await self._service.get_total_packets_sent()
