@@ -18,9 +18,8 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
-from aqualogic.core import AquaLogic
 
-REQUIREMENTS = ["aqualogic==0.4"]
+REQUIREMENTS = ["aqualogic==0.7"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +37,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, base_config):
     """Setup AquaLogic platform."""
-    import aqualogic
     config = base_config.get(DOMAIN)
 
     host = config.get(CONF_HOST)
@@ -75,6 +73,7 @@ class AquaLogicProcessor(threading.Thread):
         self._shutdown = true
 
     def run(self):
+        from aqualogic.core import AquaLogic
         while True:
             try:
                 #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
