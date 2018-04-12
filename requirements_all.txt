@@ -517,9 +517,6 @@ mficlient==0.3.0
 # homeassistant.components.sensor.miflora
 miflora==0.3.0
 
-# homeassistant.components.upnp
-miniupnpc==2.0.2
-
 # homeassistant.components.sensor.mopar
 motorparts==1.0.2
 
@@ -1054,6 +1051,9 @@ pytradfri[async]==5.4.2
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
+
+# homeassistant.components.upnp
+pyupnp-async==0.1.0.1
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
