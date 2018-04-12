@@ -4,6 +4,8 @@ import unittest
 from unittest.mock import patch, Mock
 
 from homeassistant.core import State
+from homeassistant.components.cover import (
+    SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.components.homekit import get_accessory, TYPES
@@ -134,6 +136,15 @@ class TestGetAccessories(unittest.TestCase):
         """Test binary sensor with opening class."""
         with patch.dict(TYPES, {'BinarySensor': self.mock_type}):
             state = State('device_tracker.someone', 'not_home', {})
+            get_accessory(None, state, 2, {})
+
+    def test_garage_door(self):
+        """Test cover with device_class: 'garage' and required features."""
+        with patch.dict(TYPES, {'GarageDoorOpener': self.mock_type}):
+            state = State('cover.garage_door', 'open', {
+                ATTR_DEVICE_CLASS: 'garage',
+                ATTR_SUPPORTED_FEATURES:
+                    SUPPORT_OPEN | SUPPORT_CLOSE})
             get_accessory(None, state, 2, {})
 
     def test_cover_set_position(self):

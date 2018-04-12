@@ -4,9 +4,10 @@ import unittest
 from homeassistant.core import callback
 from homeassistant.components.cover import (
     ATTR_POSITION, ATTR_CURRENT_POSITION)
-from homeassistant.components.homekit.type_covers import WindowCovering
+from homeassistant.components.homekit.type_covers import (
+    GarageDoorOpener, WindowCovering)
 from homeassistant.const import (
-    STATE_UNKNOWN, STATE_OPEN,
+    STATE_CLOSED, STATE_UNAVAILABLE, STATE_UNKNOWN, STATE_OPEN,
     ATTR_SERVICE, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE)
 
 from tests.common import get_test_home_assistant
@@ -30,6 +31,64 @@ class TestHomekitSensors(unittest.TestCase):
     def tearDown(self):
         """Stop down everything that was started."""
         self.hass.stop()
+
+    def test_garage_door_open_close(self):
+        """Test if accessory and HA are updated accordingly."""
+        garage_door = 'cover.garage_door'
+
+        acc = GarageDoorOpener(self.hass, 'Cover', garage_door, 2, config=None)
+        acc.run()
+
+        self.assertEqual(acc.aid, 2)
+        self.assertEqual(acc.category, 4)  # GarageDoorOpener
+
+        self.assertEqual(acc.char_current_state.value, 0)
+        self.assertEqual(acc.char_target_state.value, 0)
+
+        self.hass.states.set(garage_door, STATE_CLOSED)
+        self.hass.block_till_done()
+
+        self.assertEqual(acc.char_current_state.value, 1)
+        self.assertEqual(acc.char_target_state.value, 1)
+
+        self.hass.states.set(garage_door, STATE_OPEN)
+        self.hass.block_till_done()
+
+        self.assertEqual(acc.char_current_state.value, 0)
+        self.assertEqual(acc.char_target_state.value, 0)
+
+        self.hass.states.set(garage_door, STATE_UNAVAILABLE)
+        self.hass.block_till_done()
+
+        self.assertEqual(acc.char_current_state.value, 0)
+        self.assertEqual(acc.char_target_state.value, 0)
+
+        self.hass.states.set(garage_door, STATE_UNKNOWN)
+        self.hass.block_till_done()
+
+        self.assertEqual(acc.char_current_state.value, 0)
+        self.assertEqual(acc.char_target_state.value, 0)
+
+        # Set closed from HomeKit
+        acc.char_target_state.client_update_value(1)
+        self.hass.block_till_done()
+
+        self.assertEqual(acc.char_current_state.value, 2)
+        self.assertEqual(acc.char_target_state.value, 1)
+        self.assertEqual(
+            self.events[0].data[ATTR_SERVICE], 'close_cover')
+
+        self.hass.states.set(garage_door, STATE_CLOSED)
+        self.hass.block_till_done()
+
+        # Set open from HomeKit
+        acc.char_target_state.client_update_value(0)
+        self.hass.block_till_done()
+
+        self.assertEqual(acc.char_current_state.value, 3)
+        self.assertEqual(acc.char_target_state.value, 0)
+        self.assertEqual(
+            self.events[1].data[ATTR_SERVICE], 'open_cover')
 
     def test_window_set_cover_position(self):
         """Test if accessory and HA are updated accordingly."""
