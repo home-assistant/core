@@ -117,9 +117,8 @@ class CarbonDioxideSensor(HomeAccessory):
         """Initialize a CarbonDioxideSensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
 
-        serv_co2 = add_preload_service(self, SERV_CARBON_DIOXIDE_SENSOR,
-                                       [CHAR_CARBON_DIOXIDE_LEVEL,
-                                        CHAR_CARBON_DIOXIDE_PEAK_LEVEL])
+        serv_co2 = add_preload_service(self, SERV_CARBON_DIOXIDE_SENSOR, [
+            CHAR_CARBON_DIOXIDE_LEVEL, CHAR_CARBON_DIOXIDE_PEAK_LEVEL])
         self.char_co2 = setup_char(
             CHAR_CARBON_DIOXIDE_LEVEL, serv_co2, value=0)
         self.char_peak = setup_char(
@@ -130,7 +129,7 @@ class CarbonDioxideSensor(HomeAccessory):
     def update_state(self, new_state):
         """Update accessory after state change."""
         co2 = convert_to_float(new_state.state)
-        if co2:
+        if co2 is not None:
             self.char_co2.set_value(co2)
             if co2 > self.char_peak.value:
                 self.char_peak.set_value(co2)

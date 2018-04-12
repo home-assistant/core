@@ -41,6 +41,7 @@ class TestHomekitSensors(unittest.TestCase):
         self.hass.states.set(entity_id, STATE_UNKNOWN,
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.block_till_done()
+        self.assertEqual(acc.char_temp.value, 0.0)
 
         self.hass.states.set(entity_id, '20',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
@@ -64,11 +65,11 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_humidity.value, 0)
 
-        self.hass.states.set(entity_id, STATE_UNKNOWN,
-                             {ATTR_UNIT_OF_MEASUREMENT: "%"})
+        self.hass.states.set(entity_id, STATE_UNKNOWN)
         self.hass.block_till_done()
+        self.assertEqual(acc.char_humidity.value, 0)
 
-        self.hass.states.set(entity_id, '20', {ATTR_UNIT_OF_MEASUREMENT: "%"})
+        self.hass.states.set(entity_id, '20')
         self.hass.block_till_done()
         self.assertEqual(acc.char_humidity.value, 20)
 
@@ -86,18 +87,17 @@ class TestHomekitSensors(unittest.TestCase):
         self.assertEqual(acc.char_density.value, 0)
         self.assertEqual(acc.char_quality.value, 0)
 
-        self.hass.states.set(entity_id, STATE_UNKNOWN,
-                             {ATTR_UNIT_OF_MEASUREMENT: "μg/m³"})
+        self.hass.states.set(entity_id, STATE_UNKNOWN)
         self.hass.block_till_done()
+        self.assertEqual(acc.char_density.value, 0)
+        self.assertEqual(acc.char_quality.value, 0)
 
-        self.hass.states.set(entity_id, '34',
-                             {ATTR_UNIT_OF_MEASUREMENT: "μg/m³"})
+        self.hass.states.set(entity_id, '34')
         self.hass.block_till_done()
         self.assertEqual(acc.char_density.value, 34)
         self.assertEqual(acc.char_quality.value, 1)
 
-        self.hass.states.set(entity_id, '200',
-                             {ATTR_UNIT_OF_MEASUREMENT: "μg/m³"})
+        self.hass.states.set(entity_id, '200')
         self.hass.block_till_done()
         self.assertEqual(acc.char_density.value, 200)
         self.assertEqual(acc.char_quality.value, 5)
@@ -116,19 +116,19 @@ class TestHomekitSensors(unittest.TestCase):
         self.assertEqual(acc.char_peak.value, 0)
         self.assertEqual(acc.char_detected.value, 0)
 
-        self.hass.states.set(entity_id, STATE_UNKNOWN,
-                             {ATTR_UNIT_OF_MEASUREMENT: "ppm"})
+        self.hass.states.set(entity_id, STATE_UNKNOWN)
         self.hass.block_till_done()
+        self.assertEqual(acc.char_co2.value, 0)
+        self.assertEqual(acc.char_peak.value, 0)
+        self.assertEqual(acc.char_detected.value, 0)
 
-        self.hass.states.set(entity_id, '1100',
-                             {ATTR_UNIT_OF_MEASUREMENT: "ppm"})
+        self.hass.states.set(entity_id, '1100')
         self.hass.block_till_done()
         self.assertEqual(acc.char_co2.value, 1100)
         self.assertEqual(acc.char_peak.value, 1100)
         self.assertEqual(acc.char_detected.value, 1)
 
-        self.hass.states.set(entity_id, '800',
-                             {ATTR_UNIT_OF_MEASUREMENT: "ppm"})
+        self.hass.states.set(entity_id, '800')
         self.hass.block_till_done()
         self.assertEqual(acc.char_co2.value, 800)
         self.assertEqual(acc.char_peak.value, 1100)
@@ -146,12 +146,11 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_light.value, 0.0001)
 
-        self.hass.states.set(entity_id, STATE_UNKNOWN,
-                             {ATTR_UNIT_OF_MEASUREMENT: "lm³"})
+        self.hass.states.set(entity_id, STATE_UNKNOWN)
         self.hass.block_till_done()
+        self.assertEqual(acc.char_light.value, 0.0001)
 
-        self.hass.states.set(entity_id, '300',
-                             {ATTR_UNIT_OF_MEASUREMENT: "lm"})
+        self.hass.states.set(entity_id, '300')
         self.hass.block_till_done()
         self.assertEqual(acc.char_light.value, 300)
 

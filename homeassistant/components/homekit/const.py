@@ -38,9 +38,7 @@ SERV_AIR_QUALITY_SENSOR = 'AirQualitySensor'
 SERV_CARBON_DIOXIDE_SENSOR = 'CarbonDioxideSensor'
 SERV_CARBON_MONOXIDE_SENSOR = 'CarbonMonoxideSensor'
 SERV_CONTACT_SENSOR = 'ContactSensor'
-SERV_HUMIDITY_SENSOR = 'HumiditySensor'
-# CurrentRelativeHumidity | StatusActive, StatusFault, StatusTampered,
-# StatusLowBattery, Name
+SERV_HUMIDITY_SENSOR = 'HumiditySensor'  # CurrentRelativeHumidity
 SERV_LEAK_SENSOR = 'LeakSensor'
 SERV_LIGHT_SENSOR = 'LightSensor'
 SERV_LIGHTBULB = 'Lightbulb'  # On | Brightness, Hue, Saturation, Name
@@ -52,8 +50,7 @@ SERV_SMOKE_SENSOR = 'SmokeSensor'
 SERV_SWITCH = 'Switch'
 SERV_TEMPERATURE_SENSOR = 'TemperatureSensor'
 SERV_THERMOSTAT = 'Thermostat'
-SERV_WINDOW_COVERING = 'WindowCovering'
-# CurrentPosition, TargetPosition, PositionState
+SERV_WINDOW_COVERING = 'WindowCovering'  # CurrentPosition, TargetPosition
 
 
 # #### Characteristics ####
@@ -100,10 +97,12 @@ PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}
 # #### Device Class ####
 DEVICE_CLASS_CO2 = 'co2'
 DEVICE_CLASS_GAS = 'gas'
-DEVICE_CLASS_LUX = 'lux'
+DEVICE_CLASS_HUMIDITY = 'humidity'
+DEVICE_CLASS_LIGHT = 'light'
 DEVICE_CLASS_MOISTURE = 'moisture'
 DEVICE_CLASS_MOTION = 'motion'
 DEVICE_CLASS_OCCUPANCY = 'occupancy'
 DEVICE_CLASS_OPENING = 'opening'
 DEVICE_CLASS_PM25 = 'pm25'
 DEVICE_CLASS_SMOKE = 'smoke'
+DEVICE_CLASS_TEMPERATURE = 'temperature'

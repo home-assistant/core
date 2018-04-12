@@ -20,7 +20,8 @@ from homeassistant.util.decorator import Registry
 from .const import (
     DOMAIN, HOMEKIT_FILE, CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FILTER,
     DEFAULT_PORT, DEFAULT_AUTO_START, SERVICE_HOMEKIT_START,
-    DEVICE_CLASS_PM25, DEVICE_CLASS_CO2, DEVICE_CLASS_LUX)
+    DEVICE_CLASS_CO2, DEVICE_CLASS_LIGHT, DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PM25, DEVICE_CLASS_TEMPERATURE)
 from .util import (
     validate_entity_config, show_setup_message)
 
@@ -104,21 +105,21 @@ def get_accessory(hass, state, aid, config):
 
     elif state.domain == 'sensor':
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if unit == TEMP_CELSIUS or unit == TEMP_FAHRENHEIT:
-            a_type = 'TemperatureSensor'
-        elif unit == '%':
-            a_type = 'HumiditySensor'
-
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
-        if device_class == DEVICE_CLASS_PM25 \
+
+        if device_class == DEVICE_CLASS_TEMPERATURE or unit == TEMP_CELSIUS \
+                or unit == TEMP_FAHRENHEIT:
+            a_type = 'TemperatureSensor'
+        elif device_class == DEVICE_CLASS_HUMIDITY or unit == '%':
+            a_type = 'HumiditySensor'
+        elif device_class == DEVICE_CLASS_PM25 \
                 or DEVICE_CLASS_PM25 in state.entity_id:
             a_type = 'AirQualitySensor'
-
         elif device_class == DEVICE_CLASS_CO2 \
                 or DEVICE_CLASS_CO2 in state.entity_id:
             a_type = 'CarbonDioxideSensor'
-
-        elif device_class == DEVICE_CLASS_LUX or unit == 'lm' or unit == 'lux':
+        elif device_class == DEVICE_CLASS_LIGHT or unit == 'lm' or \
+                unit == 'lux':
             a_type = 'LightSensor'
 
     elif state.domain == 'switch' or state.domain == 'remote' \
