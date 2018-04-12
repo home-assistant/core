@@ -8,7 +8,8 @@ from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import HOMEKIT_NOTIFY_ID
 from homeassistant.components.homekit.util import (
     show_setup_message, dismiss_setup_message, convert_to_float,
-    temperature_to_homekit, temperature_to_states, ATTR_CODE)
+    temperature_to_homekit, temperature_to_states, ATTR_CODE,
+    density_to_air_quality)
 from homeassistant.components.homekit.util import validate_entity_config \
     as vec
 from homeassistant.components.persistent_notification import (
@@ -100,3 +101,10 @@ class TestUtil(unittest.TestCase):
         """Test temperature conversion from HomeKit to HA."""
         self.assertEqual(temperature_to_states(20, TEMP_CELSIUS), 20.0)
         self.assertEqual(temperature_to_states(20.2, TEMP_FAHRENHEIT), 68.4)
+
+    def test_density_to_air_quality(self):
+        """Test map PM2.5 density to HomeKit AirQuality level."""
+        self.assertEqual(density_to_air_quality(0), 1)
+        self.assertEqual(density_to_air_quality(20), 1)
+        self.assertEqual(density_to_air_quality(35.1), 2)
+        self.assertEqual(density_to_air_quality(300), 5)

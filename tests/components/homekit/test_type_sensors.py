@@ -3,7 +3,8 @@ import unittest
 
 from homeassistant.components.homekit.const import PROP_CELSIUS
 from homeassistant.components.homekit.type_sensors import (
-    TemperatureSensor, HumiditySensor, BinarySensor, BINARY_SENSOR_SERVICE_MAP)
+    TemperatureSensor, HumiditySensor, AirQualitySensor, CarbonDioxideSensor,
+    LightSensor, BinarySensor, BINARY_SENSOR_SERVICE_MAP)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, ATTR_DEVICE_CLASS, STATE_UNKNOWN, STATE_ON,
     STATE_OFF, STATE_HOME, STATE_NOT_HOME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -70,6 +71,89 @@ class TestHomekitSensors(unittest.TestCase):
         self.hass.states.set(entity_id, '20', {ATTR_UNIT_OF_MEASUREMENT: "%"})
         self.hass.block_till_done()
         self.assertEqual(acc.char_humidity.value, 20)
+
+    def test_air_quality(self):
+        """Test if accessory is updated after state change."""
+        entity_id = 'sensor.air_quality'
+
+        acc = AirQualitySensor(self.hass, 'Air Quality', entity_id,
+                               2, config=None)
+        acc.run()
+
+        self.assertEqual(acc.aid, 2)
+        self.assertEqual(acc.category, 10)  # Sensor
+
+        self.assertEqual(acc.char_density.value, 0)
+        self.assertEqual(acc.char_quality.value, 0)
+
+        self.hass.states.set(entity_id, STATE_UNKNOWN,
+                             {ATTR_UNIT_OF_MEASUREMENT: "μg/m³"})
+        self.hass.block_till_done()
+
+        self.hass.states.set(entity_id, '34',
+                             {ATTR_UNIT_OF_MEASUREMENT: "μg/m³"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_density.value, 34)
+        self.assertEqual(acc.char_quality.value, 1)
+
+        self.hass.states.set(entity_id, '200',
+                             {ATTR_UNIT_OF_MEASUREMENT: "μg/m³"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_density.value, 200)
+        self.assertEqual(acc.char_quality.value, 5)
+
+    def test_co2(self):
+        """Test if accessory is updated after state change."""
+        entity_id = 'sensor.co2'
+
+        acc = CarbonDioxideSensor(self.hass, 'CO2', entity_id, 2, config=None)
+        acc.run()
+
+        self.assertEqual(acc.aid, 2)
+        self.assertEqual(acc.category, 10)  # Sensor
+
+        self.assertEqual(acc.char_co2.value, 0)
+        self.assertEqual(acc.char_peak.value, 0)
+        self.assertEqual(acc.char_detected.value, 0)
+
+        self.hass.states.set(entity_id, STATE_UNKNOWN,
+                             {ATTR_UNIT_OF_MEASUREMENT: "ppm"})
+        self.hass.block_till_done()
+
+        self.hass.states.set(entity_id, '1100',
+                             {ATTR_UNIT_OF_MEASUREMENT: "ppm"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_co2.value, 1100)
+        self.assertEqual(acc.char_peak.value, 1100)
+        self.assertEqual(acc.char_detected.value, 1)
+
+        self.hass.states.set(entity_id, '800',
+                             {ATTR_UNIT_OF_MEASUREMENT: "ppm"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_co2.value, 800)
+        self.assertEqual(acc.char_peak.value, 1100)
+        self.assertEqual(acc.char_detected.value, 0)
+
+    def test_light(self):
+        """Test if accessory is updated after state change."""
+        entity_id = 'sensor.light'
+
+        acc = LightSensor(self.hass, 'Light', entity_id, 2, config=None)
+        acc.run()
+
+        self.assertEqual(acc.aid, 2)
+        self.assertEqual(acc.category, 10)  # Sensor
+
+        self.assertEqual(acc.char_light.value, 0.0001)
+
+        self.hass.states.set(entity_id, STATE_UNKNOWN,
+                             {ATTR_UNIT_OF_MEASUREMENT: "lm³"})
+        self.hass.block_till_done()
+
+        self.hass.states.set(entity_id, '300',
+                             {ATTR_UNIT_OF_MEASUREMENT: "lm"})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_light.value, 300)
 
     def test_binary(self):
         """Test if accessory is updated after state change."""
