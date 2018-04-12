@@ -123,8 +123,6 @@ async def async_setup(hass, config):
             _LOGGER.debug("external %s -> %s @ %s", external, internal, host)
         except UpnpSoapError as error:
             _LOGGER.error(error)
-            _LOGGER.exception("UPnP failed to configure port mapping for %s",
-                              external)
             hass.components.persistent_notification.create(
                 '<b>ERROR: tcp port {} is already mapped in your router.'
                 '</b><br />Please disable port_mapping in the <i>upnp</i> '
@@ -138,7 +136,8 @@ async def async_setup(hass, config):
         """De-register the UPnP port mapping."""
         tasks = [service.delete_port_mapping(external, 'TCP')
                  for external in registered]
-        await asyncio.wait(tasks)
+        if tasks:
+            await asyncio.wait(tasks)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
 
