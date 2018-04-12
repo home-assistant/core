@@ -405,7 +405,7 @@ async def test_forward_entry_sets_up_component(hass):
         'forwarded',
         MockModule('forwarded', async_setup_entry=mock_forwarded_setup_entry))
 
-    await hass.config_entries.async_forward_entry(entry, 'forwarded')
+    await hass.config_entries.async_forward_entry_setup(entry, 'forwarded')
     assert len(mock_original_setup_entry.mock_calls) == 0
     assert len(mock_forwarded_setup_entry.mock_calls) == 1
 
@@ -422,6 +422,6 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(hass):
         async_setup_entry=mock_setup_entry,
     ))
 
-    await hass.config_entries.async_forward_entry(entry, 'forwarded')
+    await hass.config_entries.async_forward_entry_setup(entry, 'forwarded')
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
