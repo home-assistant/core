@@ -34,6 +34,7 @@ CATEGORY_WINDOW_COVERING = 'WINDOW_COVERING'
 
 # #### Services ####
 SERV_ACCESSORY_INFO = 'AccessoryInformation'
+SERV_AIR_QUALITY_SENSOR = 'AirQualitySensor'
 SERV_CARBON_DIOXIDE_SENSOR = 'CarbonDioxideSensor'
 SERV_CARBON_MONOXIDE_SENSOR = 'CarbonMonoxideSensor'
 SERV_CONTACT_SENSOR = 'ContactSensor'
@@ -41,6 +42,7 @@ SERV_HUMIDITY_SENSOR = 'HumiditySensor'
 # CurrentRelativeHumidity | StatusActive, StatusFault, StatusTampered,
 # StatusLowBattery, Name
 SERV_LEAK_SENSOR = 'LeakSensor'
+SERV_LIGHT_SENSOR = 'LightSensor'
 SERV_LIGHTBULB = 'Lightbulb'  # On | Brightness, Hue, Saturation, Name
 SERV_LOCK = 'LockMechanism'
 SERV_MOTION_SENSOR = 'MotionSensor'
@@ -55,12 +57,17 @@ SERV_WINDOW_COVERING = 'WindowCovering'
 
 
 # #### Characteristics ####
+CHAR_AIR_PARTICULATE_DENSITY = 'AirParticulateDensity'
+CHAR_AIR_QUALITY = 'AirQuality'
 CHAR_BRIGHTNESS = 'Brightness'  # Int | [0, 100]
 CHAR_CARBON_DIOXIDE_DETECTED = 'CarbonDioxideDetected'
+CHAR_CARBON_DIOXIDE_LEVEL = 'CarbonDioxideLevel'
+CHAR_CARBON_DIOXIDE_PEAK_LEVEL = 'CarbonDioxidePeakLevel'
 CHAR_CARBON_MONOXIDE_DETECTED = 'CarbonMonoxideDetected'
 CHAR_COLOR_TEMPERATURE = 'ColorTemperature'
 CHAR_CONTACT_SENSOR_STATE = 'ContactSensorState'
 CHAR_COOLING_THRESHOLD_TEMPERATURE = 'CoolingThresholdTemperature'
+CHAR_CURRENT_AMBIENT_LIGHT_LEVEL = 'CurrentAmbientLightLevel'
 CHAR_CURRENT_HEATING_COOLING = 'CurrentHeatingCoolingState'
 CHAR_CURRENT_POSITION = 'CurrentPosition'  # Int | [0, 100]
 CHAR_CURRENT_HUMIDITY = 'CurrentRelativeHumidity'  # percent
@@ -93,8 +100,10 @@ PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}
 # #### Device Class ####
 DEVICE_CLASS_CO2 = 'co2'
 DEVICE_CLASS_GAS = 'gas'
+DEVICE_CLASS_LUX = 'lux'
 DEVICE_CLASS_MOISTURE = 'moisture'
 DEVICE_CLASS_MOTION = 'motion'
 DEVICE_CLASS_OCCUPANCY = 'occupancy'
 DEVICE_CLASS_OPENING = 'opening'
+DEVICE_CLASS_PM25 = 'pm25'
 DEVICE_CLASS_SMOKE = 'smoke'
