@@ -43,7 +43,10 @@ class EntityPlatform(object):
         self.config_entry = None
         self.entities = {}
         self._tasks = []
+        # Method to cancel the state change listener
         self._async_unsub_polling = None
+        # Method to cancel the retry of setup
+        self._async_cancel_retry_setup = None
         self._process_updates = asyncio.Lock(loop=hass.loop)
 
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
@@ -145,10 +148,12 @@ class EntityPlatform(object):
 
             async def setup_again(now):
                 """Run setup again."""
+                self._async_cancel_retry_setup = None
                 await self._async_setup_platform(
                     async_create_setup_task, tries)
 
-            async_call_later(hass, wait_time, setup_again)
+            self._async_cancel_retry_setup = \
+                async_call_later(hass, wait_time, setup_again)
             return False
         except asyncio.TimeoutError:
             logger.error(
@@ -315,6 +320,10 @@ class EntityPlatform(object):
 
         This method must be run in the event loop.
         """
+        if self._async_cancel_retry_setup is not None:
+            self._async_cancel_retry_setup()
+            self._async_cancel_retry_setup = None
+
         if not self.entities:
             return
 

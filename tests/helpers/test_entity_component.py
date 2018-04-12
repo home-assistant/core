@@ -376,3 +376,34 @@ async def test_setup_entry_fails_duplicate(hass):
 
     with pytest.raises(ValueError):
         await component.async_setup_entry(entry)
+
+
+async def test_unload_entry_resets_platform(hass):
+    """Test unloading an entry removes all entities."""
+    mock_setup_entry = Mock(return_value=mock_coro(True))
+    loader.set_component(
+        'test_domain.entry_domain',
+        MockPlatform(async_setup_entry=mock_setup_entry))
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entry = MockConfigEntry(domain='entry_domain')
+
+    assert await component.async_setup_entry(entry)
+    assert len(mock_setup_entry.mock_calls) == 1
+    add_entities = mock_setup_entry.mock_calls[0][1][2]
+    add_entities([MockEntity()])
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 1
+
+    assert await component.async_unload_entry(entry)
+    assert len(hass.states.async_entity_ids()) == 0
+
+
+async def test_unload_entry_fails_if_never_loaded(hass):
+    """."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entry = MockConfigEntry(domain='entry_domain')
+
+    with pytest.raises(ValueError):
+        await component.async_unload_entry(entry)
