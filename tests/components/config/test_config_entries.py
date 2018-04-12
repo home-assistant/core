@@ -8,7 +8,8 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries as core_ce
-from homeassistant.config_entries import ConfigFlowHandler, HANDLERS
+from homeassistant.config_entries import HANDLERS
+from homeassistant.flow import ConfigFlowHandler
 from homeassistant.setup import async_setup_component
 from homeassistant.components.config import config_entries
 from homeassistant.loader import set_component
@@ -187,7 +188,9 @@ def test_create_account(hass, client):
     assert data == {
         'domain': 'test',
         'title': 'Test Entry',
-        'type': 'create_entry'
+        'type': 'create_entry',
+        'source': 'user',
+        'version': 1,
     }
 
 
@@ -245,6 +248,8 @@ def test_two_step_flow(hass, client):
             'domain': 'test',
             'type': 'create_entry',
             'title': 'user-title',
+            'version': 1,
+            'source': 'user',
         }
 
 
