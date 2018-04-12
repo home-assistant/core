@@ -64,7 +64,7 @@ WazeRouteCalculator==0.5
 YesssSMS==0.1.1b3
 
 # homeassistant.components.abode
-abodepy==0.12.3
+abodepy==0.13.1
 
 # homeassistant.components.media_player.frontier_silicon
 afsapi==0.0.3
