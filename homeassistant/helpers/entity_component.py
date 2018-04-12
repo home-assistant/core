@@ -113,6 +113,18 @@ class EntityComponent(object):
 
         return await self._platforms[key].async_setup_entry(config_entry)
 
+    async def async_unload_entry(self, config_entry):
+        """Unload a config entry."""
+        key = config_entry.entry_id
+
+        platform = self._platforms.pop(key, None)
+
+        if platform is None:
+            raise ValueError('Config entry was never loaded!')
+
+        await platform.async_reset()
+        return True
+
     @callback
     def async_extract_from_service(self, service, expand_group=True):
         """Extract all known and available entities from a service call.
