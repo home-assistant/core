@@ -10,6 +10,9 @@ from .accessories import HomeAccessory, add_preload_service, setup_char
 from .const import (
     CATEGORY_SENSOR, SERV_HUMIDITY_SENSOR, SERV_TEMPERATURE_SENSOR,
     CHAR_CURRENT_HUMIDITY, CHAR_CURRENT_TEMPERATURE, PROP_CELSIUS,
+    SERV_AIR_QUALITY_SENSOR, CHAR_AIR_QUALITY, CHAR_AIR_PARTICULATE_DENSITY,
+    CHAR_CARBON_DIOXIDE_LEVEL, CHAR_CARBON_DIOXIDE_PEAK_LEVEL,
+    SERV_LIGHT_SENSOR, CHAR_CURRENT_AMBIENT_LIGHT_LEVEL,
     DEVICE_CLASS_CO2, SERV_CARBON_DIOXIDE_SENSOR, CHAR_CARBON_DIOXIDE_DETECTED,
     DEVICE_CLASS_GAS, SERV_CARBON_MONOXIDE_SENSOR,
     CHAR_CARBON_MONOXIDE_DETECTED,
@@ -18,7 +21,8 @@ from .const import (
     DEVICE_CLASS_OCCUPANCY, SERV_OCCUPANCY_SENSOR, CHAR_OCCUPANCY_DETECTED,
     DEVICE_CLASS_OPENING, SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE,
     DEVICE_CLASS_SMOKE, SERV_SMOKE_SENSOR, CHAR_SMOKE_DETECTED)
-from .util import convert_to_float, temperature_to_homekit
+from .util import (
+    convert_to_float, temperature_to_homekit, density_to_air_quality)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +83,78 @@ class HumiditySensor(HomeAccessory):
             self.char_humidity.set_value(humidity)
             _LOGGER.debug('%s: Percent set to %d%%',
                           self.entity_id, humidity)
+
+
+@TYPES.register('AirQualitySensor')
+class AirQualitySensor(HomeAccessory):
+    """Generate a AirQualitySensor accessory as air quality sensor."""
+
+    def __init__(self, *args, config):
+        """Initialize a AirQualitySensor accessory object."""
+        super().__init__(*args, category=CATEGORY_SENSOR)
+
+        serv_air_quality = add_preload_service(self, SERV_AIR_QUALITY_SENSOR,
+                                               [CHAR_AIR_PARTICULATE_DENSITY])
+        self.char_quality = setup_char(
+            CHAR_AIR_QUALITY, serv_air_quality, value=0)
+        self.char_density = setup_char(
+            CHAR_AIR_PARTICULATE_DENSITY, serv_air_quality, value=0)
+
+    def update_state(self, new_state):
+        """Update accessory after state change."""
+        density = convert_to_float(new_state.state)
+        if density is not None:
+            self.char_density.set_value(density)
+            self.char_quality.set_value(density_to_air_quality(density))
+            _LOGGER.debug('%s: Set to %d', self.entity_id, density)
+
+
+@TYPES.register('CarbonDioxideSensor')
+class CarbonDioxideSensor(HomeAccessory):
+    """Generate a CarbonDioxideSensor accessory as CO2 sensor."""
+
+    def __init__(self, *args, config):
+        """Initialize a CarbonDioxideSensor accessory object."""
+        super().__init__(*args, category=CATEGORY_SENSOR)
+
+        serv_co2 = add_preload_service(self, SERV_CARBON_DIOXIDE_SENSOR, [
+            CHAR_CARBON_DIOXIDE_LEVEL, CHAR_CARBON_DIOXIDE_PEAK_LEVEL])
+        self.char_co2 = setup_char(
+            CHAR_CARBON_DIOXIDE_LEVEL, serv_co2, value=0)
+        self.char_peak = setup_char(
+            CHAR_CARBON_DIOXIDE_PEAK_LEVEL, serv_co2, value=0)
+        self.char_detected = setup_char(
+            CHAR_CARBON_DIOXIDE_DETECTED, serv_co2, value=0)
+
+    def update_state(self, new_state):
+        """Update accessory after state change."""
+        co2 = convert_to_float(new_state.state)
+        if co2 is not None:
+            self.char_co2.set_value(co2)
+            if co2 > self.char_peak.value:
+                self.char_peak.set_value(co2)
+            self.char_detected.set_value(co2 > 1000)
+            _LOGGER.debug('%s: Set to %d', self.entity_id, co2)
+
+
+@TYPES.register('LightSensor')
+class LightSensor(HomeAccessory):
+    """Generate a LightSensor accessory as light sensor."""
+
+    def __init__(self, *args, config):
+        """Initialize a LightSensor accessory object."""
+        super().__init__(*args, category=CATEGORY_SENSOR)
+
+        serv_light = add_preload_service(self, SERV_LIGHT_SENSOR)
+        self.char_light = setup_char(
+            CHAR_CURRENT_AMBIENT_LIGHT_LEVEL, serv_light, value=0)
+
+    def update_state(self, new_state):
+        """Update accessory after state change."""
+        luminance = convert_to_float(new_state.state)
+        if luminance is not None:
+            self.char_light.set_value(luminance)
+            _LOGGER.debug('%s: Set to %d', self.entity_id, luminance)
 
 
 @TYPES.register('BinarySensor')
