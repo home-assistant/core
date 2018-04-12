@@ -8,7 +8,8 @@ from zlib import adler32
 
 import voluptuous as vol
 
-from homeassistant.components.cover import SUPPORT_SET_POSITION
+from homeassistant.components.cover import (
+    SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION)
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     ATTR_DEVICE_CLASS, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
@@ -92,9 +93,13 @@ def get_accessory(hass, state, aid, config):
         a_type = 'Thermostat'
 
     elif state.domain == 'cover':
-        # Only add covers that support set_cover_position
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if features & SUPPORT_SET_POSITION:
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+
+        if device_class == 'garage' and \
+                features & (SUPPORT_OPEN | SUPPORT_CLOSE):
+            a_type = 'GarageDoorOpener'
+        elif features & SUPPORT_SET_POSITION:
             a_type = 'WindowCovering'
 
     elif state.domain == 'light':
