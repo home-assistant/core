@@ -13,7 +13,7 @@ import os
 
 import voluptuous as vol
 
-from homeassistant import config_entries, flow
+from homeassistant import flow
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv

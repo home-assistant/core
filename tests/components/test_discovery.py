@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from homeassistant import config_entries, flow
+from homeassistant import flow
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
 from homeassistant.util.dt import utcnow
