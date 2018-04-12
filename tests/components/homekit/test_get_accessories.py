@@ -41,6 +41,13 @@ class TestGetAccessories(unittest.TestCase):
         """Test if mock type was called."""
         self.assertTrue(self.mock_type.called)
 
+    def test_sensor_temperature(self):
+        """Test temperature sensor with device class temperature."""
+        with patch.dict(TYPES, {'TemperatureSensor': self.mock_type}):
+            state = State('sensor.temperature', '23',
+                          {ATTR_DEVICE_CLASS: 'temperature'})
+            get_accessory(None, state, 2, {})
+
     def test_sensor_temperature_celsius(self):
         """Test temperature sensor with Celsius as unit."""
         with patch.dict(TYPES, {'TemperatureSensor': self.mock_type}):
@@ -56,10 +63,64 @@ class TestGetAccessories(unittest.TestCase):
             get_accessory(None, state, 2, {})
 
     def test_sensor_humidity(self):
+        """Test humidity sensor with device class humidity."""
+        with patch.dict(TYPES, {'HumiditySensor': self.mock_type}):
+            state = State('sensor.humidity', '20',
+                          {ATTR_DEVICE_CLASS: 'humidity'})
+            get_accessory(None, state, 2, {})
+
+    def test_sensor_humidity_unit(self):
         """Test humidity sensor with % as unit."""
         with patch.dict(TYPES, {'HumiditySensor': self.mock_type}):
             state = State('sensor.humidity', '20',
                           {ATTR_UNIT_OF_MEASUREMENT: '%'})
+            get_accessory(None, state, 2, {})
+
+    def test_air_quality_sensor(self):
+        """Test air quality sensor with pm25 class."""
+        with patch.dict(TYPES, {'AirQualitySensor': self.mock_type}):
+            state = State('sensor.air_quality', '40',
+                          {ATTR_DEVICE_CLASS: 'pm25'})
+            get_accessory(None, state, 2, {})
+
+    def test_air_quality_sensor_entity_id(self):
+        """Test air quality sensor with entity_id contains pm25."""
+        with patch.dict(TYPES, {'AirQualitySensor': self.mock_type}):
+            state = State('sensor.air_quality_pm25', '40', {})
+            get_accessory(None, state, 2, {})
+
+    def test_co2_sensor(self):
+        """Test co2 sensor with device class co2."""
+        with patch.dict(TYPES, {'CarbonDioxideSensor': self.mock_type}):
+            state = State('sensor.airmeter', '500',
+                          {ATTR_DEVICE_CLASS: 'co2'})
+            get_accessory(None, state, 2, {})
+
+    def test_co2_sensor_entity_id(self):
+        """Test co2 sensor with entity_id contains co2."""
+        with patch.dict(TYPES, {'CarbonDioxideSensor': self.mock_type}):
+            state = State('sensor.airmeter_co2', '500', {})
+            get_accessory(None, state, 2, {})
+
+    def test_light_sensor(self):
+        """Test light sensor with device class lux."""
+        with patch.dict(TYPES, {'LightSensor': self.mock_type}):
+            state = State('sensor.light', '900',
+                          {ATTR_DEVICE_CLASS: 'light'})
+            get_accessory(None, state, 2, {})
+
+    def test_light_sensor_unit_lm(self):
+        """Test light sensor with lm as unit."""
+        with patch.dict(TYPES, {'LightSensor': self.mock_type}):
+            state = State('sensor.light', '900',
+                          {ATTR_UNIT_OF_MEASUREMENT: 'lm'})
+            get_accessory(None, state, 2, {})
+
+    def test_light_sensor_unit_lux(self):
+        """Test light sensor with lux as unit."""
+        with patch.dict(TYPES, {'LightSensor': self.mock_type}):
+            state = State('sensor.light', '900',
+                          {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
             get_accessory(None, state, 2, {})
 
     def test_binary_sensor(self):

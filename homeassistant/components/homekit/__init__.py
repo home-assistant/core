@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.cover import SUPPORT_SET_POSITION
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    ATTR_DEVICE_CLASS, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
@@ -19,7 +19,9 @@ from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 from .const import (
     DOMAIN, HOMEKIT_FILE, CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FILTER,
-    DEFAULT_PORT, DEFAULT_AUTO_START, SERVICE_HOMEKIT_START)
+    DEFAULT_PORT, DEFAULT_AUTO_START, SERVICE_HOMEKIT_START,
+    DEVICE_CLASS_CO2, DEVICE_CLASS_LIGHT, DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_PM25, DEVICE_CLASS_TEMPERATURE)
 from .util import (
     validate_entity_config, show_setup_message)
 
@@ -103,10 +105,22 @@ def get_accessory(hass, state, aid, config):
 
     elif state.domain == 'sensor':
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if unit == TEMP_CELSIUS or unit == TEMP_FAHRENHEIT:
+        device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+
+        if device_class == DEVICE_CLASS_TEMPERATURE or unit == TEMP_CELSIUS \
+                or unit == TEMP_FAHRENHEIT:
             a_type = 'TemperatureSensor'
-        elif unit == '%':
+        elif device_class == DEVICE_CLASS_HUMIDITY or unit == '%':
             a_type = 'HumiditySensor'
+        elif device_class == DEVICE_CLASS_PM25 \
+                or DEVICE_CLASS_PM25 in state.entity_id:
+            a_type = 'AirQualitySensor'
+        elif device_class == DEVICE_CLASS_CO2 \
+                or DEVICE_CLASS_CO2 in state.entity_id:
+            a_type = 'CarbonDioxideSensor'
+        elif device_class == DEVICE_CLASS_LIGHT or unit == 'lm' or \
+                unit == 'lux':
+            a_type = 'LightSensor'
 
     elif state.domain == 'switch' or state.domain == 'remote' \
             or state.domain == 'input_boolean' or state.domain == 'script':
