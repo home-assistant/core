@@ -51,6 +51,7 @@ SERV_SWITCH = 'Switch'
 SERV_TEMPERATURE_SENSOR = 'TemperatureSensor'
 SERV_THERMOSTAT = 'Thermostat'
 SERV_WINDOW_COVERING = 'WindowCovering'
+# CurrentPosition, TargetPosition, PositionState
 
 
 # #### Characteristics ####
@@ -61,7 +62,7 @@ CHAR_COLOR_TEMPERATURE = 'ColorTemperature'
 CHAR_CONTACT_SENSOR_STATE = 'ContactSensorState'
 CHAR_COOLING_THRESHOLD_TEMPERATURE = 'CoolingThresholdTemperature'
 CHAR_CURRENT_HEATING_COOLING = 'CurrentHeatingCoolingState'
-CHAR_CURRENT_POSITION = 'CurrentPosition'
+CHAR_CURRENT_POSITION = 'CurrentPosition'  # Int | [0, 100]
 CHAR_CURRENT_HUMIDITY = 'CurrentRelativeHumidity'  # percent
 CHAR_CURRENT_SECURITY_STATE = 'SecuritySystemCurrentState'
 CHAR_CURRENT_TEMPERATURE = 'CurrentTemperature'
@@ -77,12 +78,11 @@ CHAR_MOTION_DETECTED = 'MotionDetected'
 CHAR_NAME = 'Name'
 CHAR_OCCUPANCY_DETECTED = 'OccupancyDetected'
 CHAR_ON = 'On'  # boolean
-CHAR_POSITION_STATE = 'PositionState'
 CHAR_SATURATION = 'Saturation'  # percent
 CHAR_SERIAL_NUMBER = 'SerialNumber'
 CHAR_SMOKE_DETECTED = 'SmokeDetected'
 CHAR_TARGET_HEATING_COOLING = 'TargetHeatingCoolingState'
-CHAR_TARGET_POSITION = 'TargetPosition'
+CHAR_TARGET_POSITION = 'TargetPosition'  # Int | [0, 100]
 CHAR_TARGET_SECURITY_STATE = 'SecuritySystemTargetState'
 CHAR_TARGET_TEMPERATURE = 'TargetTemperature'
 CHAR_TEMP_DISPLAY_UNITS = 'TemperatureDisplayUnits'

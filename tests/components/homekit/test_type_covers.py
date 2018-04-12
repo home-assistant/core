@@ -43,7 +43,6 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 0)
         self.assertEqual(acc.char_target_position.value, 0)
-        self.assertEqual(acc.char_position_state.value, 0)
 
         self.hass.states.set(window_cover, STATE_UNKNOWN,
                              {ATTR_CURRENT_POSITION: None})
@@ -51,7 +50,6 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 0)
         self.assertEqual(acc.char_target_position.value, 0)
-        self.assertEqual(acc.char_position_state.value, 0)
 
         self.hass.states.set(window_cover, STATE_OPEN,
                              {ATTR_CURRENT_POSITION: 50})
@@ -59,7 +57,6 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 50)
         self.assertEqual(acc.char_target_position.value, 50)
-        self.assertEqual(acc.char_position_state.value, 2)
 
         # Set from HomeKit
         acc.char_target_position.client_update_value(25)
@@ -71,7 +68,6 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 50)
         self.assertEqual(acc.char_target_position.value, 25)
-        self.assertEqual(acc.char_position_state.value, 0)
 
         # Set from HomeKit
         acc.char_target_position.client_update_value(75)
@@ -83,4 +79,3 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 50)
         self.assertEqual(acc.char_target_position.value, 75)
-        self.assertEqual(acc.char_position_state.value, 1)
