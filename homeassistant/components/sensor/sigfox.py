@@ -9,6 +9,7 @@ import datetime
 import json
 import voluptuous as vol
 import requests
+from urllib.parse import urljoin
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -65,7 +66,7 @@ class SigfoxAPI(object):
 
     def check_credentials(self):
         """"Check API credentials are valid."""
-        url = '{}{}'.format(API_URL, 'devicetypes')
+        url = urljoin(API_URL, 'devicetypes')
         response = requests.get(url, auth=self._auth, timeout=10)
         if response.status_code != 200:
             if response.status_code == 401:
@@ -80,7 +81,7 @@ class SigfoxAPI(object):
 
     def get_device_types(self):
         """Get a list of device types."""
-        url = '{}{}'.format(API_URL, 'devicetypes')
+        url = urljoin(API_URL, 'devicetypes')
         response = requests.get(url, auth=self._auth, timeout=10)
         device_types = []
         for device in json.loads(response.text)['data']:
@@ -91,8 +92,8 @@ class SigfoxAPI(object):
         """Get the device_id of each device registered."""
         devices = []
         for unique_type in device_types:
-            url = '{}{}{}{}'.format(
-                API_URL, 'devicetypes/', unique_type, '/devices')
+            location_url = 'devicetypes/{}/devices'.format(unique_type)
+            url = urljoin(API_URL, location_url)
             response = requests.get(url, auth=self._auth, timeout=10)
             devices_data = json.loads(response.text)['data']
             for device in devices_data:
@@ -118,13 +119,13 @@ class SigfoxDevice(Entity):
         self._device_id = device_id
         self._auth = auth
         self._message_data = {}
-        self._name = '{}{}{}'.format(name, '_', device_id)
+        self._name = '{}_{}'.format(name, device_id)
         self._state = None
 
     def get_last_message(self):
         """Return the last message from a device."""
-        url = '{}{}{}{}'.format(
-            API_URL, 'devices/', self._device_id, '/messages?limit=1')
+        device_url = 'devices/{}/messages?limit=1'.format(self._device_id)
+        url = urljoin(API_URL, device_url)
         response = requests.get(url, auth=self._auth, timeout=10)
         data = json.loads(response.text)['data'][0]
         payload = bytes.fromhex(data['data']).decode('utf-8')
