@@ -7,8 +7,7 @@ https://home-assistant.io/components/light.plum_lightpad
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, SUPPORT_COLOR, SUPPORT_WHITE_VALUE, ATTR_MIN_MIREDS,
-    ATTR_MAX_MIREDS, SUPPORT_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_HS_COLOR, PROP_TO_ATTR, ATTR_XY_COLOR, ATTR_WHITE_VALUE)
+    PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, SUPPORT_COLOR, ATTR_HS_COLOR)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.util.color as color_util
 
