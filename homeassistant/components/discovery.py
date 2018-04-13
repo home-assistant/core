@@ -40,6 +40,7 @@ SERVICE_HUE = 'philips_hue'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DAIKIN = 'daikin'
 SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
+SERVICE_HOMEKIT = 'homekit'
 
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_HUE: 'hue',
@@ -79,13 +80,20 @@ SERVICE_HANDLERS = {
     'songpal': ('media_player', 'songpal'),
 }
 
+OPTIONAL_SERVICE_HANDLERS = {
+    SERVICE_HOMEKIT: ('homekit_controller', None),
+}
+
 CONF_IGNORE = 'ignore'
+CONF_ENABLE = 'enable'
 
 CONFIG_SCHEMA = vol.Schema({
     vol.Required(DOMAIN): vol.Schema({
         vol.Optional(CONF_IGNORE, default=[]):
             vol.All(cv.ensure_list, [
-                vol.In(list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS))])
+                vol.In(list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS))]),
+        vol.Optional(CONF_ENABLE, default=[]):
+            vol.All(cv.ensure_list, [vol.In(OPTIONAL_SERVICE_HANDLERS)])
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -103,6 +111,9 @@ async def async_setup(hass, config):
 
     # Platforms ignore by config
     ignored_platforms = config[DOMAIN][CONF_IGNORE]
+
+    # Optional platforms enabled by config
+    enabled_platforms = config[DOMAIN][CONF_ENABLE]
 
     async def new_service_found(service, info):
         """Handle a new service if one is found."""
@@ -125,6 +136,9 @@ async def async_setup(hass, config):
             return
 
         comp_plat = SERVICE_HANDLERS.get(service)
+
+        if not comp_plat and service in enabled_platforms:
+            comp_plat = OPTIONAL_SERVICE_HANDLERS[service]
 
         # We do not know how to handle this service.
         if not comp_plat:

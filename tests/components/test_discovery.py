@@ -25,7 +25,8 @@ UNKNOWN_SERVICE = 'this_service_will_never_be_supported'
 
 BASE_CONFIG = {
     discovery.DOMAIN: {
-        'ignore': []
+        'ignore': [],
+        'enable': []
     }
 }
 
