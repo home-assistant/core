@@ -264,4 +264,4 @@ class TestSwitchMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'test-topic', 'payload')
         self.hass.block_till_done()
         assert len(self.hass.states.async_entity_ids()) == 2
-        #all switches group is 1, unique id created is 1
+        # all switches group is 1, unique id created is 1
