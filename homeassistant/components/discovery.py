@@ -13,6 +13,7 @@ import os
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
@@ -40,6 +41,10 @@ SERVICE_DECONZ = 'deconz'
 SERVICE_DAIKIN = 'daikin'
 SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
 
+CONFIG_ENTRY_HANDLERS = {
+    SERVICE_HUE: 'hue',
+}
+
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
@@ -51,7 +56,6 @@ SERVICE_HANDLERS = {
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
     SERVICE_TELLDUSLIVE: ('tellduslive', None),
-    SERVICE_HUE: ('hue', None),
     SERVICE_DECONZ: ('deconz', None),
     SERVICE_DAIKIN: ('daikin', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
@@ -105,18 +109,26 @@ async def async_setup(hass, config):
             logger.info("Ignoring service: %s %s", service, info)
             return
 
+        discovery_hash = json.dumps([service, info], sort_keys=True)
+        if discovery_hash in already_discovered:
+            return
+
+        already_discovered.add(discovery_hash)
+
+        if service in CONFIG_ENTRY_HANDLERS:
+            await hass.config_entries.flow.async_init(
+                CONFIG_ENTRY_HANDLERS[service],
+                source=config_entries.SOURCE_DISCOVERY,
+                data=info
+            )
+            return
+
         comp_plat = SERVICE_HANDLERS.get(service)
 
         # We do not know how to handle this service.
         if not comp_plat:
             logger.info("Unknown service discovered: %s %s", service, info)
             return
-
-        discovery_hash = json.dumps([service, info], sort_keys=True)
-        if discovery_hash in already_discovered:
-            return
-
-        already_discovered.add(discovery_hash)
 
         logger.info("Found new service: %s %s", service, info)
 

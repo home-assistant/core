@@ -15,8 +15,9 @@ import homeassistant.util.color as color_util
 SUPPORT_MYSENSORS_RGBW = SUPPORT_COLOR | SUPPORT_WHITE_VALUE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the MySensors platform for lights."""
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
+    """Set up the mysensors platform for lights."""
     device_class_map = {
         'S_DIMMER': MySensorsLightDimmer,
         'S_RGB_LIGHT': MySensorsLightRGB,
@@ -24,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     }
     mysensors.setup_mysensors_platform(
         hass, DOMAIN, discovery_info, device_class_map,
-        add_devices=add_devices)
+        async_add_devices=async_add_devices)
 
 
 class MySensorsLight(mysensors.MySensorsEntity, Light):
@@ -140,12 +141,12 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
             self._values[value_type] = STATE_OFF
             self.schedule_update_ha_state()
 
-    def _update_light(self):
+    def _async_update_light(self):
         """Update the controller with values from light child."""
         value_type = self.gateway.const.SetReq.V_LIGHT
         self._state = self._values[value_type] == STATE_ON
 
-    def _update_dimmer(self):
+    def _async_update_dimmer(self):
         """Update the controller with values from dimmer child."""
         value_type = self.gateway.const.SetReq.V_DIMMER
         if value_type in self._values:
@@ -153,7 +154,7 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
             if self._brightness == 0:
                 self._state = False
 
-    def _update_rgb_or_w(self):
+    def _async_update_rgb_or_w(self):
         """Update the controller with values from RGB or RGBW child."""
         value = self._values[self.value_type]
         color_list = rgb_hex_to_rgb_list(value)
@@ -177,11 +178,11 @@ class MySensorsLightDimmer(MySensorsLight):
         if self.gateway.optimistic:
             self.schedule_update_ha_state()
 
-    def update(self):
+    async def async_update(self):
         """Update the controller with the latest value from a sensor."""
-        super().update()
-        self._update_light()
-        self._update_dimmer()
+        await super().async_update()
+        self._async_update_light()
+        self._async_update_dimmer()
 
 
 class MySensorsLightRGB(MySensorsLight):
@@ -203,12 +204,12 @@ class MySensorsLightRGB(MySensorsLight):
         if self.gateway.optimistic:
             self.schedule_update_ha_state()
 
-    def update(self):
+    async def async_update(self):
         """Update the controller with the latest value from a sensor."""
-        super().update()
-        self._update_light()
-        self._update_dimmer()
-        self._update_rgb_or_w()
+        await super().async_update()
+        self._async_update_light()
+        self._async_update_dimmer()
+        self._async_update_rgb_or_w()
 
 
 class MySensorsLightRGBW(MySensorsLightRGB):

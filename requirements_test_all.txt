@@ -7,9 +7,9 @@ coveralls==1.2.0
 flake8-docstrings==1.0.3
 flake8==3.5
 mock-open==1.3.1
-mypy==0.570
+mypy==0.580
 pydocstyle==1.1.1
-pylint==1.8.2
+pylint==1.8.3
 pytest-aiohttp==0.3.0
 pytest-cov==2.5.1
 pytest-sugar==0.9.1
@@ -19,7 +19,7 @@ requests_mock==1.4
 
 
 # homeassistant.components.homekit
-HAP-python==1.1.7
+HAP-python==1.1.8
 
 # homeassistant.components.notify.html5
 PyJWT==1.6.0
@@ -81,7 +81,7 @@ hbmqtt==0.9.1
 holidays==0.9.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180401.0
+home-assistant-frontend==20180404.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -127,7 +127,10 @@ prometheus_client==0.1.0
 pushbullet.py==0.11.0
 
 # homeassistant.components.canary
-py-canary==0.4.1
+py-canary==0.5.0
+
+# homeassistant.components.deconz
+pydeconz==35
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -159,7 +162,7 @@ pywebpush==1.6.0
 restrictedpython==4.0b2
 
 # homeassistant.components.rflink
-rflink==0.0.34
+rflink==0.0.37
 
 # homeassistant.components.ring
 ring_doorbell==0.1.8
