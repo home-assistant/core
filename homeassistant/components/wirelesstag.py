@@ -105,15 +105,17 @@ class WirelessTagPlatform:
             'url': url, 'verb': 'POST',
             'content': content, 'disabled': False, 'nat': True})
 
-    def install_push_nofitications(self, binary_sensors):
+    def install_push_notifications(self, binary_sensors):
         """Setup local push notification from tag manager."""
         self.binary_sensors = binary_sensors
         configs = []
+
         binary_url = self.binary_event_callback_url
         for event in self.binary_sensors:
             for state, name in event.binary_spec.items():
-                content = ('{"type": "' + event.name +
-                           '", "id":{5}, "state": \"' + state + '\"}')
+                content = ('{"type": "' + event.device_class +
+                           '", "id":{' + str(event.tag_id_index_template) +
+                           '}, "state": \"' + state + '\"}')
                 config = self.make_push_notitication(name, binary_url, content)
                 configs.append(config)
 

@@ -47,7 +47,7 @@ SENSOR_TYPES = {
         'attr': 'moisture'
     },
     SENSOR_LIGHT: {
-        'unit': 'lx',
+        'unit': 'lux',
         'icon': 'brightness-6',
         'attr': 'light'
     }

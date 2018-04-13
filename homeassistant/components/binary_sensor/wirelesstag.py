@@ -59,41 +59,41 @@ SENSOR_TYPES = {
     SENSOR_PRESENCE: ['Presence', 'presence', 'is_in_range', {
         "on": "oor",
         "off": "back_in_range"
-    }],
+    }, 2],
     SENSOR_MOTION: ['Motion', 'motion', 'is_moved', {
         "on": "motion_detected",
-    }],
+    }, 5],
     SENSOR_DOOR: ['Door', 'door', 'is_door_open', {
         "on": "door_opened",
         "off": "door_closed"
-    }],
+    }, 5],
     SENSOR_COLD: ['Cold', 'cold', 'is_cold', {
         "on": "temp_toolow",
         "off": "temp_normal"
-    }],
+    }, 4],
     SENSOR_HEAT: ['Heat', 'heat', 'is_heat', {
         "on": "temp_toohigh",
         "off": "temp_normal"
-    }],
+    }, 4],
     SENSOR_DRY: ['Too dry', 'dry', 'is_too_dry', {
         "on": "too_dry",
         "off": "cap_normal"
-    }],
+    }, 2],
     SENSOR_WET: ['Too wet', 'wet', 'is_too_humid', {
         "on": "too_humid",
         "off": "cap_normal"
-    }],
+    }, 2],
     SENSOR_LIGHT: ['Light', 'light', 'is_light_on', {
         "on": "too_bright",
         "off": "light_normal"
-    }],
+    }, 1],
     SENSOR_MOISTURE: ['Leak', 'moisture', 'is_leaking', {
         "on": "water_detected",
         "off": "water_dried",
-    }],
+    }, 1],
     SENSOR_BATTERY: ['Low Battery', 'battery', 'is_battery_low', {
         "on": "low_battery"
-    }]
+    }, 3]
 }
 
 
@@ -118,7 +118,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 sensors.append(WirelessTagBinarySensor(platform, tag,
                                                        sensor_type))
 
-    platform.install_push_nofitications(sensors)
+    platform.install_push_notifications(sensors)
     add_devices(sensors, True)
 
 
@@ -166,6 +166,7 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
         self._device_class = SENSOR_TYPES[self._sensor_type][1]
         self._tag_attr = SENSOR_TYPES[self._sensor_type][2]
         self.binary_spec = SENSOR_TYPES[self._sensor_type][3]
+        self.tag_id_index_template = SENSOR_TYPES[self._sensor_type][4]
         self._state = self.updated_state_value()
         self._api.register_entity(self)
 
