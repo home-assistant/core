@@ -125,7 +125,7 @@ class FlowManager:
             return result
 
         # We pass a copy of the result because we're going to mutate our
-        # versio afterwards and don't want to cause unexpected bugs.
+        # version afterwards and don't want to cause unexpected bugs.
         await self._async_save_entry(dict(result))
         result.pop('data')
         return result
