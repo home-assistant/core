@@ -8,8 +8,8 @@ import logging
 import datetime
 import json
 from urllib.parse import urljoin
-import requests
 
+import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
