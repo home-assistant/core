@@ -3,7 +3,6 @@ import asyncio
 from unittest.mock import MagicMock, patch, mock_open
 
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries, loader, flow
 from homeassistant.setup import async_setup_component
