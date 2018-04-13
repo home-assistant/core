@@ -59,41 +59,41 @@ SENSOR_TYPES = {
     SENSOR_PRESENCE: ['Presence', 'presence', 'is_in_range', {
         "on": "oor",
         "off": "back_in_range"
-    }, 2],
+        }, 2],
     SENSOR_MOTION: ['Motion', 'motion', 'is_moved', {
         "on": "motion_detected",
-    }, 5],
+        }, 5],
     SENSOR_DOOR: ['Door', 'door', 'is_door_open', {
         "on": "door_opened",
         "off": "door_closed"
-    }, 5],
+        }, 5],
     SENSOR_COLD: ['Cold', 'cold', 'is_cold', {
         "on": "temp_toolow",
         "off": "temp_normal"
-    }, 4],
+        }, 4],
     SENSOR_HEAT: ['Heat', 'heat', 'is_heat', {
         "on": "temp_toohigh",
         "off": "temp_normal"
-    }, 4],
+        }, 4],
     SENSOR_DRY: ['Too dry', 'dry', 'is_too_dry', {
         "on": "too_dry",
         "off": "cap_normal"
-    }, 2],
+        }, 2],
     SENSOR_WET: ['Too wet', 'wet', 'is_too_humid', {
         "on": "too_humid",
         "off": "cap_normal"
-    }, 2],
+        }, 2],
     SENSOR_LIGHT: ['Light', 'light', 'is_light_on', {
         "on": "too_bright",
         "off": "light_normal"
-    }, 1],
+        }, 1],
     SENSOR_MOISTURE: ['Leak', 'moisture', 'is_leaking', {
         "on": "water_detected",
         "off": "water_dried",
-    }, 1],
+        }, 1],
     SENSOR_BATTERY: ['Low Battery', 'battery', 'is_battery_low', {
         "on": "low_battery"
-    }, 3]
+        }, 3]
 }
 
 
