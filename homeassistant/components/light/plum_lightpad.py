@@ -122,7 +122,7 @@ class GlowRing(Light):
     def __init__(self, lightpad):
         """Initialize the light."""
         self._lightpad = lightpad
-        self._name = lightpad.friendly_name + "_glow"
+        self._name = lightpad.friendly_name + " Glow Ring"
         self._red = lightpad.glow_color['red']
         self._green = lightpad.glow_color['green']
         self._blue = lightpad.glow_color['blue']
