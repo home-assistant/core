@@ -7,8 +7,8 @@ https://home-assistant.io/components/sensor.sigfox/
 import logging
 import datetime
 import json
-import requests
 from urllib.parse import urljoin
+import requests
 
 import voluptuous as vol
 
