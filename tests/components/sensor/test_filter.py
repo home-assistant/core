@@ -95,15 +95,26 @@ class TestFilterSensor(unittest.TestCase):
                     self.hass.block_till_done()
 
                 state = self.hass.states.get('sensor.test')
-                self.assertEqual('19.25', state.state)
+                self.assertEqual('17.05', state.state)
 
     def test_outlier(self):
         """Test if outlier filter works."""
-        filt = OutlierFilter(window_size=10,
+        filt = OutlierFilter(window_size=3,
                              precision=2,
                              entity=None,
                              radius=4.0)
         for state in self.values:
+            filtered = filt.filter_state(state)
+        self.assertEqual(22, filtered.state)
+
+    def test_initial_outlier(self):
+        """Test issue #13363."""
+        filt = OutlierFilter(window_size=3,
+                             precision=2,
+                             entity=None,
+                             radius=4.0)
+        out = ha.State('sensor.test_monitored', 4000)
+        for state in [out]+self.values:
             filtered = filt.filter_state(state)
         self.assertEqual(22, filtered.state)
 
