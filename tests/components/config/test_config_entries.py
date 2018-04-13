@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries as core_ce
 from homeassistant.config_entries import HANDLERS
-from homeassistant.flow import ConfigFlowHandler
+from homeassistant.flow import FlowHandler
 from homeassistant.setup import async_setup_component
 from homeassistant.components.config import config_entries
 from homeassistant.loader import set_component
@@ -94,7 +94,7 @@ def test_available_flows(hass, client):
 @asyncio.coroutine
 def test_initialize_flow(hass, client):
     """Test we can initialize a flow."""
-    class TestFlow(ConfigFlowHandler):
+    class TestFlow(FlowHandler):
         @asyncio.coroutine
         def async_step_init(self, user_input=None):
             schema = OrderedDict()
@@ -143,7 +143,7 @@ def test_initialize_flow(hass, client):
 @asyncio.coroutine
 def test_abort(hass, client):
     """Test a flow that aborts."""
-    class TestFlow(ConfigFlowHandler):
+    class TestFlow(FlowHandler):
         @asyncio.coroutine
         def async_step_init(self, user_input=None):
             return self.async_abort(reason='bla')
@@ -168,7 +168,7 @@ def test_create_account(hass, client):
     set_component(
         'test', MockModule('test', async_setup_entry=mock_coro_func(True)))
 
-    class TestFlow(ConfigFlowHandler):
+    class TestFlow(FlowHandler):
         VERSION = 1
 
         @asyncio.coroutine
@@ -200,7 +200,7 @@ def test_two_step_flow(hass, client):
     set_component(
         'test', MockModule('test', async_setup_entry=mock_coro_func(True)))
 
-    class TestFlow(ConfigFlowHandler):
+    class TestFlow(FlowHandler):
         VERSION = 1
 
         @asyncio.coroutine
@@ -256,7 +256,7 @@ def test_two_step_flow(hass, client):
 @asyncio.coroutine
 def test_get_progress_index(hass, client):
     """Test querying for the flows that are in progress."""
-    class TestFlow(ConfigFlowHandler):
+    class TestFlow(FlowHandler):
         VERSION = 5
 
         @asyncio.coroutine
@@ -288,7 +288,7 @@ def test_get_progress_index(hass, client):
 @asyncio.coroutine
 def test_get_progress_flow(hass, client):
     """Test we can query the API for same result as we get from init a flow."""
-    class TestFlow(ConfigFlowHandler):
+    class TestFlow(FlowHandler):
         @asyncio.coroutine
         def async_step_init(self, user_input=None):
             schema = OrderedDict()

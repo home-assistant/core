@@ -99,7 +99,7 @@ def test_add_entry_calls_setup_entry(hass, manager):
         'comp',
         MockModule('comp', async_setup_entry=mock_setup_entry))
 
-    class TestFlow(flow.ConfigFlowHandler):
+    class TestFlow(flow.FlowHandler):
 
         VERSION = 1
 
@@ -151,7 +151,7 @@ def test_domains_gets_uniques(manager):
 @asyncio.coroutine
 def test_saving_and_loading(hass):
     """Test that we're saving and loading correctly."""
-    class TestFlow(flow.ConfigFlowHandler):
+    class TestFlow(flow.FlowHandler):
         VERSION = 5
 
         @asyncio.coroutine
@@ -166,7 +166,7 @@ def test_saving_and_loading(hass):
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
         yield from hass.config_entries.flow.async_init('test')
 
-    class Test2Flow(flow.ConfigFlowHandler):
+    class Test2Flow(flow.FlowHandler):
         VERSION = 3
 
         @asyncio.coroutine

@@ -27,7 +27,7 @@ At a minimum, each config flow will have to define a version number and the
 'init' step.
 
     @config_entries.HANDLERS.register(DOMAIN)
-    class ExampleConfigFlow(config_entries.ConfigFlowHandler):
+    class ExampleConfigFlow(config_entries.FlowHandler):
 
         VERSION = 1
 

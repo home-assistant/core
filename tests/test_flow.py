@@ -26,7 +26,7 @@ def manager():
 async def test_configure_reuses_handler_instance(manager):
     """Test that we reuse instances."""
     @manager.mock_reg_handler('test')
-    class TestFlow(flow.ConfigFlowHandler):
+    class TestFlow(flow.FlowHandler):
         handle_count = 0
 
         async def async_step_init(self, user_input=None):
@@ -46,7 +46,7 @@ async def test_configure_reuses_handler_instance(manager):
 async def test_configure_two_steps(manager):
     """Test that we reuse instances."""
     @manager.mock_reg_handler('test')
-    class TestFlow(flow.ConfigFlowHandler):
+    class TestFlow(flow.FlowHandler):
         VERSION = 1
 
         async def async_step_init(self, user_input=None):
@@ -95,7 +95,7 @@ async def test_show_form(manager):
     })
 
     @manager.mock_reg_handler('test')
-    class TestFlow(flow.ConfigFlowHandler):
+    class TestFlow(flow.FlowHandler):
         async def async_step_init(self, user_input=None):
             return self.async_show_form(
                 step_id='init',
@@ -116,7 +116,7 @@ async def test_show_form(manager):
 async def test_abort_removes_instance(manager):
     """Test that abort removes the flow from progress."""
     @manager.mock_reg_handler('test')
-    class TestFlow(flow.ConfigFlowHandler):
+    class TestFlow(flow.FlowHandler):
         is_new = True
 
         async def async_step_init(self, user_input=None):
@@ -137,7 +137,7 @@ async def test_abort_removes_instance(manager):
 async def test_create_saves_data(manager):
     """Test creating a config entry."""
     @manager.mock_reg_handler('test')
-    class TestFlow(flow.ConfigFlowHandler):
+    class TestFlow(flow.FlowHandler):
         VERSION = 5
 
         async def async_step_init(self, user_input=None):
@@ -161,7 +161,7 @@ async def test_create_saves_data(manager):
 async def test_discovery_init_flow(manager):
     """Test a flow initialized by discovery."""
     @manager.mock_reg_handler('test')
-    class TestFlow(flow.ConfigFlowHandler):
+    class TestFlow(flow.FlowHandler):
         VERSION = 5
 
         async def async_step_discovery(self, info):

@@ -191,7 +191,7 @@ async def async_request_configuration(hass, config, deconz_config):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class DeconzFlowHandler(flow.ConfigFlowHandler):
+class DeconzFlowHandler(flow.FlowHandler):
     """Handle a deCONZ config flow."""
 
     VERSION = 1

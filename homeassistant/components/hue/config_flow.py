@@ -41,7 +41,7 @@ def _find_username_from_config(hass, filename):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class HueFlowHandler(flow.ConfigFlowHandler):
+class HueFlowHandler(flow.FlowHandler):
     """Handle a Hue config flow."""
 
     VERSION = 1

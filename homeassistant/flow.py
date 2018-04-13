@@ -131,7 +131,7 @@ class FlowManager:
         return result
 
 
-class ConfigFlowHandler:
+class FlowHandler:
     """Handle the configuration flow of a component."""
 
     # Set by flow manager
