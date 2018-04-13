@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.helpers.script import Script
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['ha-philipsjs==0.0.2']
+REQUIREMENTS = ['ha-philipsjs==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 

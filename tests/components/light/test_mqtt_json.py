@@ -206,7 +206,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(155, state.attributes.get('color_temp'))
         self.assertEqual('colorloop', state.attributes.get('effect'))
         self.assertEqual(150, state.attributes.get('white_value'))
-        self.assertEqual((0.32, 0.336), state.attributes.get('xy_color'))
+        self.assertEqual((0.323, 0.329), state.attributes.get('xy_color'))
 
         # Turn the light off
         fire_mqtt_message(self.hass, 'test_light_rgb', '{"state":"OFF"}')

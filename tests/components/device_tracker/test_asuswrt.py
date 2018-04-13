@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.device_tracker.asuswrt import (
     CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, DOMAIN, _ARP_REGEX,
     CONF_PORT, PLATFORM_SCHEMA, Device, get_scanner, AsusWrtDeviceScanner,
-    _parse_lines, SshConnection, TelnetConnection)
+    _parse_lines, SshConnection, TelnetConnection, CONF_REQUIRE_IP)
 from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
                                  CONF_HOST)
 
@@ -103,6 +103,15 @@ WAKE_DEVICES_AP = {
         mac='01:02:03:04:06:08', ip='123.123.123.125', name=None),
     '08:09:10:11:12:14': Device(
         mac='08:09:10:11:12:14', ip='123.123.123.126', name=None)
+}
+
+WAKE_DEVICES_NO_IP = {
+    '01:02:03:04:06:08': Device(
+        mac='01:02:03:04:06:08', ip='123.123.123.125', name=None),
+    '08:09:10:11:12:14': Device(
+        mac='08:09:10:11:12:14', ip='123.123.123.126', name=None),
+    '08:09:10:11:12:15': Device(
+        mac='08:09:10:11:12:15', ip=None, name=None)
 }
 
 
@@ -410,6 +419,21 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         scanner._get_neigh.return_value = NEIGH_DEVICES
         scanner._get_leases.return_value = LEASES_DEVICES
         self.assertEqual(WAKE_DEVICES_AP, scanner.get_asuswrt_data())
+
+    def test_get_asuswrt_data_no_ip(self):
+        """Test for get asuswrt_data and not requiring ip."""
+        conf = VALID_CONFIG_ROUTER_SSH.copy()[DOMAIN]
+        conf[CONF_REQUIRE_IP] = False
+        scanner = AsusWrtDeviceScanner(conf)
+        scanner._get_wl = mock.Mock()
+        scanner._get_arp = mock.Mock()
+        scanner._get_neigh = mock.Mock()
+        scanner._get_leases = mock.Mock()
+        scanner._get_wl.return_value = WL_DEVICES
+        scanner._get_arp.return_value = ARP_DEVICES
+        scanner._get_neigh.return_value = NEIGH_DEVICES
+        scanner._get_leases.return_value = LEASES_DEVICES
+        self.assertEqual(WAKE_DEVICES_NO_IP, scanner.get_asuswrt_data())
 
     def test_update_info(self):
         """Test for update info."""

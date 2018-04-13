@@ -126,7 +126,7 @@ _LOGGER = logging.getLogger(__name__)
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
-    'config_entry_example',
+    'deconz',
     'hue',
 ]
 
@@ -384,7 +384,7 @@ class FlowManager:
             handler = HANDLERS.get(domain)
 
             if handler is None:
-                raise self.hass.helpers.UnknownHandler
+                raise UnknownHandler
 
             # Make sure requirements and dependencies of component are resolved
             await async_process_deps_reqs(

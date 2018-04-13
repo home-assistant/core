@@ -79,7 +79,7 @@ class IGloLamp(Light):
     @property
     def hs_color(self):
         """Return the hs value."""
-        return color_util.color_RGB_to_hsv(*self._lamp.state()['rgb'])
+        return color_util.color_RGB_to_hs(*self._lamp.state()['rgb'])
 
     @property
     def effect(self):
