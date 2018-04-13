@@ -28,6 +28,9 @@ DOMAIN = 'downloader'
 DOWNLOAD_FAILED_EVENT = 'download_failed'
 DOWNLOAD_COMPLETED_EVENT = 'download_completed'
 
+DOWNLOAD_FAILED_EVENT = 'download_failed'
+DOWNLOAD_COMPLETED_EVENT = 'download_completed'
+
 SERVICE_DOWNLOAD_FILE = 'download_file'
 
 SERVICE_DOWNLOAD_FILE_SCHEMA = vol.Schema({
