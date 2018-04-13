@@ -179,7 +179,7 @@ class NestThermostat(ClimateDevice):
         try:
             self.device.target = temp
         except nest.nest.APIError:
-            _LOGGER.error("An error occured while setting the temperature")
+            _LOGGER.error("An error occurred while setting the temperature")
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""

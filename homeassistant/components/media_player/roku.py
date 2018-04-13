@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
+    MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
@@ -155,7 +155,7 @@ class RokuDevice(MediaPlayerDevice):
             return None
         elif self.current_app.name == "Roku":
             return None
-        return MEDIA_TYPE_VIDEO
+        return MEDIA_TYPE_MOVIE
 
     @property
     def media_image_url(self):

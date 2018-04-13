@@ -28,7 +28,7 @@ from .util import (
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==1.1.7']
+REQUIREMENTS = ['HAP-python==1.1.8']
 
 
 CONFIG_SCHEMA = vol.Schema({
@@ -102,8 +102,7 @@ def get_accessory(hass, state, aid, config):
                                            aid=aid)
 
     elif state.domain == 'alarm_control_panel':
-        _LOGGER.debug('Add "%s" as "%s"', state.entity_id,
-                      'SecuritySystem')
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'SecuritySystem')
         return TYPES['SecuritySystem'](hass, state.entity_id, state.name,
                                        alarm_code=config.get(ATTR_CODE),
                                        aid=aid)
@@ -120,6 +119,7 @@ def get_accessory(hass, state, aid, config):
                                    state.name, support_auto, aid=aid)
 
     elif state.domain == 'light':
+        _LOGGER.debug('Add "%s" as "%s"', state.entity_id, 'Light')
         return TYPES['Light'](hass, state.entity_id, state.name, aid=aid)
 
     elif state.domain == 'switch' or state.domain == 'remote' \

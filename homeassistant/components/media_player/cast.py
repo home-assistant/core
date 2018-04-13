@@ -18,7 +18,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (dispatcher_send,
                                               async_dispatcher_connect)
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_STOP, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
@@ -517,7 +517,7 @@ class CastDevice(MediaPlayerDevice):
         elif self.media_status.media_is_tvshow:
             return MEDIA_TYPE_TVSHOW
         elif self.media_status.media_is_movie:
-            return MEDIA_TYPE_VIDEO
+            return MEDIA_TYPE_MOVIE
         elif self.media_status.media_is_musictrack:
             return MEDIA_TYPE_MUSIC
         return None
