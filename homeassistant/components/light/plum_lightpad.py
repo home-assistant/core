@@ -24,34 +24,44 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     """Setup the Plum Lightpad Light."""
     plum = hass.data['plum']
 
-    for llid, load in plum.logical_loads.items():
+    def new_load(logical_load):
         async_add_devices([
-            LightpadLogicalLoad(plum, llid, load)
+            PlumLight(load=logical_load)
         ])
 
-    for lpid, lightpad in plum.lightpads.items():
+    for load in plum.loads.values():
+        new_load(load)
+
+    plum.add_load_listener(new_load)
+
+    def new_lightpad(lightpad):
         async_add_devices([
-            LightpadGlowRing(plum=plum, lpid=lpid, lightpad=lightpad)
-            # glow ring (color, forced, timeout, glowFade, Intensity, tracksDimmer)
+            GlowRing(lightpad=lightpad)
         ])
 
+    for lightpad in plum.lightpads.values():
+        new_lightpad(lightpad)
 
-class LightpadLogicalLoad(Light):
+    plum.add_lightpad_listener(new_lightpad)
+
+
+class PlumLight(Light):
     """Represenation of a Plum Lightpad dimmer."""
 
-    def __init__(self, plum, llid, load):
+    def __init__(self, load):
         """Initialize the light."""
-        self._plum = plum
-        self._llid = llid
         self._load = load
-        self._name = load.name
         self._brightness = load.level
 
-        plum.add_load_listener(self._llid, self.dimmerchange)
+        self._load.add_event_listener('dimmerchange', self.dimmerchange)
 
-    def dimmerchange(self, level):
-        self._brightness = level
+    def dimmerchange(self, event):
+        self._brightness = event['level']
         self.schedule_update_ha_state()
+
+    @property
+    def llid(self):
+        return self._load.llid
 
     @property
     def should_poll(self):
@@ -61,7 +71,7 @@ class LightpadLogicalLoad(Light):
     @property
     def name(self):
         """Return the name of the switch if any."""
-        return self._name
+        return self._load.name
 
     @property
     def brightness(self) -> int:
@@ -74,42 +84,54 @@ class LightpadLogicalLoad(Light):
         return self._brightness > 0
 
     @property
+    def dimmable(self):
+        return self._load.dimmable
+
+    @property
+    def device_state_attributes(self):
+        return {
+            'llid': self.llid,
+            'brightness': self.brightness,
+            'dimmable': self.dimmable
+        }
+
+    @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
+        if self.dimmable:
+            return SUPPORT_BRIGHTNESS
+        else:
+            return None
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            self._load.brightness(self._brightness)
+            self._load.turn_on(self._brightness)
         else:
-            self._load.on()
+            self._load.turn_on()
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        self._load.off()
+        self._load.turn_off()
 
 
-class LightpadGlowRing(Light):
+class GlowRing(Light):
     """Represenation of a Plum Lightpad dimmer glow ring."""
 
-    def __init__(self, plum, lpid, lightpad):
+    def __init__(self, lightpad):
         """Initialize the light."""
-        self._plum = plum
         self._lightpad = lightpad
-        self._lpid = lpid
-        self._name = lpid + "_glow"
-        self._red = lightpad.glowColor['red']
-        self._green = lightpad.glowColor['green']
-        self._blue = lightpad.glowColor['blue']
-        self._white = lightpad.glowColor['white']
-        self._brightness = lightpad.glowIntensity * 255.0
-        lightpad.add_config_change_listener(self.configchange)
+        self._name = lightpad.friendly_name + "_glow"
+        self._red = lightpad.glow_color['red']
+        self._green = lightpad.glow_color['green']
+        self._blue = lightpad.glow_color['blue']
+        self._white = lightpad.glow_color['white']
+        self._brightness = lightpad.glow_intensity * 255.0
+        lightpad.add_event_listener('configchange', self.configchange_event)
 
-    def configchange(self, config):
-        # self._brightness = level
-        # color ..
+    def configchange_event(self, event):
+        config = event['changes']
         self._red = config['glowColor']['red']
         self._green = config['glowColor']['green']
         self._blue = config['glowColor']['blue']
@@ -160,7 +182,7 @@ class LightpadGlowRing(Light):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self._lightpad.glowEnabled
+        return self._lightpad.glow_enabled
 
     @property
     def supported_features(self):
@@ -171,8 +193,7 @@ class LightpadGlowRing(Light):
     def device_state_attributes(self):
         return {
             'red': self._red, 'green': self._green, 'blue': self._blue, 'white': self._white,
-            'forceGlow': self._lightpad.forceGlow, 'glowTracksDimmer': self._lightpad.glowTracksDimmer,
-            'glowTimeout': self._lightpad.glowTimeout, 'glowFade': self._lightpad.glowFade
+            'glowTimeout': self._lightpad.glow_timeout, 'glowFade': self._lightpad.glow_fade,
         }
 
     def turn_on(self, **kwargs):

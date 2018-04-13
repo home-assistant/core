@@ -24,27 +24,31 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     plum = hass.data['plum']
 
-    for lpid, lightpad in plum.lightpads.items():
+    def new_lightpad(lightpad):
         add_devices_callback([
-            PlumMotionSensor(plum=plum, lpid=lpid, lightpad=lightpad, hass=hass),
+            PlumMotionSensor(lightpad=lightpad, hass=hass),
         ])
+
+    for lpid, lightpad in plum.lightpads.items():
+        new_lightpad(lightpad)
+
+    plum.add_lightpad_listener(new_lightpad)
 
 class PlumMotionSensor(BinarySensorDevice):
 
-    def __init__(self, plum, hass, lpid, lightpad):
-        self._plum = plum
+    def __init__(self, hass, lightpad):
         self._hass = hass
-        self._lpid = lpid
-        self._name = lightpad.name
-        self.off_delay = 5
+        self._lightpad = lightpad
+        self.off_delay = 8 #TODO establish by config
         self._signal = None
         self._latest_motion = None
 
-        plum.add_pir_listener(self._lpid, self.motion_detected)
+        lightpad.add_event_listener('pirSignal', self.motion_detected)
 
-    def motion_detected(self, signal):
-        self._signal = signal
+    def motion_detected(self, event):
+        self._signal = event['signal']
         self._latest_motion = dt_util.utcnow()
+        print("Motion Detected!", self._signal, self._latest_motion)
         self.schedule_update_ha_state()
 
         def off_delay_handler(now):
@@ -54,6 +58,14 @@ class PlumMotionSensor(BinarySensorDevice):
                 self.schedule_update_ha_state()
 
         evt.track_point_in_time(self._hass, off_delay_handler, dt_util.utcnow() + timedelta(seconds=self.off_delay))
+
+    @property
+    def lpid(self):
+        return self._lightpad.lpid
+
+    @property
+    def name(self):
+        return self._lightpad.friendly_name
 
     @property
     def is_on(self):
