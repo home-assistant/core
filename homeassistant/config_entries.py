@@ -27,7 +27,7 @@ At a minimum, each config flow will have to define a version number and the
 'init' step.
 
     @config_entries.HANDLERS.register(DOMAIN)
-    class ExampleConfigFlow(config_entries.ConfigFlowHandler):
+    class ExampleConfigFlow(config_entries.FlowHandler):
 
         VERSION = 1
 
@@ -117,6 +117,7 @@ import uuid
 
 from .core import callback
 from .exceptions import HomeAssistantError
+from .data_entry_flow import FlowManager
 from .setup import async_setup_component, async_process_deps_reqs
 from .util.json import load_json, save_json
 from .util.decorator import Registry
@@ -130,16 +131,10 @@ FLOWS = [
     'hue',
 ]
 
-SOURCE_USER = 'user'
-SOURCE_DISCOVERY = 'discovery'
 
 PATH_CONFIG = '.config_entries.json'
 
 SAVE_DELAY = 1
-
-RESULT_TYPE_FORM = 'form'
-RESULT_TYPE_CREATE_ENTRY = 'create_entry'
-RESULT_TYPE_ABORT = 'abort'
 
 ENTRY_STATE_LOADED = 'loaded'
 ENTRY_STATE_SETUP_ERROR = 'setup_error'
@@ -251,18 +246,6 @@ class UnknownEntry(ConfigError):
     """Unknown entry specified."""
 
 
-class UnknownHandler(ConfigError):
-    """Unknown handler specified."""
-
-
-class UnknownFlow(ConfigError):
-    """Uknown flow specified."""
-
-
-class UnknownStep(ConfigError):
-    """Unknown step specified."""
-
-
 class ConfigEntries:
     """Manage the configuration entries.
 
@@ -272,7 +255,8 @@ class ConfigEntries:
     def __init__(self, hass, hass_config):
         """Initialize the entry manager."""
         self.hass = hass
-        self.flow = FlowManager(hass, hass_config, self._async_add_entry)
+        self.flow = FlowManager(hass, HANDLERS, self._async_missing_handler,
+                                self._async_save_entry)
         self._hass_config = hass_config
         self._entries = None
         self._sched_save = None
@@ -357,8 +341,15 @@ class ConfigEntries:
         await entry.async_unload(
             self.hass, component=getattr(self.hass.components, component))
 
-    async def _async_add_entry(self, entry):
+    async def _async_save_entry(self, result):
         """Add an entry."""
+        entry = ConfigEntry(
+            version=result['version'],
+            domain=result['domain'],
+            title=result['title'],
+            data=result['data'],
+            source=result['source'],
+        )
         self._entries.append(entry)
         self._async_schedule_save()
 
@@ -370,6 +361,18 @@ class ConfigEntries:
             # Setting up component will also load the entries
             await async_setup_component(
                 self.hass, entry.domain, self._hass_config)
+
+    async def _async_missing_handler(self, domain):
+        """Called when a flow handler is not loaded."""
+        # This will load the component and thus register the handler
+        component = getattr(self.hass.components, domain)
+
+        if domain not in HANDLERS:
+            return
+
+        # Make sure requirements and dependencies of component are resolved
+        await async_process_deps_reqs(
+            self.hass, self._hass_config, domain, component)
 
     @callback
     def _async_schedule_save(self):
@@ -388,157 +391,3 @@ class ConfigEntries:
 
         await self.hass.async_add_job(
             save_json, self.hass.config.path(PATH_CONFIG), data)
-
-
-class FlowManager:
-    """Manage all the config flows that are in progress."""
-
-    def __init__(self, hass, hass_config, async_add_entry):
-        """Initialize the flow manager."""
-        self.hass = hass
-        self._hass_config = hass_config
-        self._progress = {}
-        self._async_add_entry = async_add_entry
-
-    @callback
-    def async_progress(self):
-        """Return the flows in progress."""
-        return [{
-            'flow_id': flow.flow_id,
-            'domain': flow.domain,
-            'source': flow.source,
-        } for flow in self._progress.values()]
-
-    async def async_init(self, domain, *, source=SOURCE_USER, data=None):
-        """Start a configuration flow."""
-        handler = HANDLERS.get(domain)
-
-        if handler is None:
-            # This will load the component and thus register the handler
-            component = getattr(self.hass.components, domain)
-            handler = HANDLERS.get(domain)
-
-            if handler is None:
-                raise UnknownHandler
-
-            # Make sure requirements and dependencies of component are resolved
-            await async_process_deps_reqs(
-                self.hass, self._hass_config, domain, component)
-
-        flow_id = uuid.uuid4().hex
-        flow = self._progress[flow_id] = handler()
-        flow.hass = self.hass
-        flow.domain = domain
-        flow.flow_id = flow_id
-        flow.source = source
-
-        if source == SOURCE_USER:
-            step = 'init'
-        else:
-            step = source
-
-        return await self._async_handle_step(flow, step, data)
-
-    async def async_configure(self, flow_id, user_input=None):
-        """Start or continue a configuration flow."""
-        flow = self._progress.get(flow_id)
-
-        if flow is None:
-            raise UnknownFlow
-
-        step_id, data_schema = flow.cur_step
-
-        if data_schema is not None and user_input is not None:
-            user_input = data_schema(user_input)
-
-        return await self._async_handle_step(
-            flow, step_id, user_input)
-
-    @callback
-    def async_abort(self, flow_id):
-        """Abort a flow."""
-        if self._progress.pop(flow_id, None) is None:
-            raise UnknownFlow
-
-    async def _async_handle_step(self, flow, step_id, user_input):
-        """Handle a step of a flow."""
-        method = "async_step_{}".format(step_id)
-
-        if not hasattr(flow, method):
-            self._progress.pop(flow.flow_id)
-            raise UnknownStep("Handler {} doesn't support step {}".format(
-                flow.__class__.__name__, step_id))
-
-        result = await getattr(flow, method)(user_input)
-
-        if result['type'] not in (RESULT_TYPE_FORM, RESULT_TYPE_CREATE_ENTRY,
-                                  RESULT_TYPE_ABORT):
-            raise ValueError(
-                'Handler returned incorrect type: {}'.format(result['type']))
-
-        if result['type'] == RESULT_TYPE_FORM:
-            flow.cur_step = (result['step_id'], result['data_schema'])
-            return result
-
-        # Abort and Success results both finish the flow
-        self._progress.pop(flow.flow_id)
-
-        if result['type'] == RESULT_TYPE_ABORT:
-            return result
-
-        entry = ConfigEntry(
-            version=flow.VERSION,
-            domain=flow.domain,
-            title=result['title'],
-            data=result.pop('data'),
-            source=flow.source
-        )
-        await self._async_add_entry(entry)
-        return result
-
-
-class ConfigFlowHandler:
-    """Handle the configuration flow of a component."""
-
-    # Set by flow manager
-    flow_id = None
-    hass = None
-    domain = None
-    source = SOURCE_USER
-    cur_step = None
-
-    # Set by dev
-    # VERSION
-
-    @callback
-    def async_show_form(self, *, step_id, data_schema=None, errors=None):
-        """Return the definition of a form to gather user input."""
-        return {
-            'type': RESULT_TYPE_FORM,
-            'flow_id': self.flow_id,
-            'domain': self.domain,
-            'step_id': step_id,
-            'data_schema': data_schema,
-            'errors': errors,
-        }
-
-    @callback
-    def async_create_entry(self, *, title, data):
-        """Finish config flow and create a config entry."""
-        return {
-            'type': RESULT_TYPE_CREATE_ENTRY,
-            'flow_id': self.flow_id,
-            'domain': self.domain,
-            'title': title,
-            'data': data,
-        }
-
-    @callback
-    def async_abort(self, *, reason):
-        """Abort the config flow."""
-        return {
-            'type': RESULT_TYPE_ABORT,
-            'flow_id': self.flow_id,
-            'domain': self.domain,
-            'reason': reason
-        }
