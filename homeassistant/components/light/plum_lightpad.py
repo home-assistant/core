@@ -185,6 +185,10 @@ class GlowRing(Light):
         return self._lightpad.glow_enabled
 
     @property
+    def icon(self):
+        return 'mdi:crop-portrait'
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
