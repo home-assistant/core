@@ -36,16 +36,20 @@ class BMWDeviceTracker(object):
         self.vehicle = vehicle
 
     def update(self) -> None:
-        """Update the device info."""
-        dev_id = slugify(self.vehicle.modelName)
+        """Update the device info.
+
+        Only update the state in home assistant if tracking in
+        the car is enabled.
+        """
+        dev_id = slugify(self.vehicle.name)
+
+        if not self.vehicle.state.is_vehicle_tracking_enabled:
+            _LOGGER.debug('Tracking is disabled for vehicle %s', dev_id)
+            return
+
         _LOGGER.debug('Updating %s', dev_id)
-        attrs = {
-            'trackr_id': dev_id,
-            'id': dev_id,
-            'name': self.vehicle.modelName
-        }
+
         self._see(
-            dev_id=dev_id, host_name=self.vehicle.modelName,
-            gps=self.vehicle.state.gps_position, attributes=attrs,
-            icon='mdi:car'
+            dev_id=dev_id, host_name=self.vehicle.name,
+            gps=self.vehicle.state.gps_position, icon='mdi:car'
         )
