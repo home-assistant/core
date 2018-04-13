@@ -98,19 +98,18 @@ class HomeKitLight(HomeKitEntity, Light):
 
     def turn_on(self, **kwargs):
         """Turn the specified light on."""
-        # pylint: disable=invalid-name
-        hs = kwargs.get(ATTR_HS_COLOR)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
         temperature = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
         characteristics = []
-        if hs is not None:
+        if hs_color is not None:
             characteristics.append({'aid': self._aid,
                                     'iid': self._chars['hue'],
-                                    'value': hs[0]})
+                                    'value': hs_color[0]})
             characteristics.append({'aid': self._aid,
                                     'iid': self._chars['saturation'],
-                                    'value': hs[1]})
+                                    'value': hs_color[1]})
         if brightness is not None:
             characteristics.append({'aid': self._aid,
                                     'iid': self._chars['brightness'],

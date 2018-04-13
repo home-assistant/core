@@ -47,7 +47,7 @@ def homekit_http_send(self, message_body=None):
     self.send(msg)
 
 
-def get_serial(self, accessory):
+def get_serial(accessory):
     """Obtain the serial number of a HomeKit device."""
     # pylint: disable=import-error
     import homekit
