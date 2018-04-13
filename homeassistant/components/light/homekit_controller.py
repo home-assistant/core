@@ -29,14 +29,17 @@ class HomeKitLight(HomeKitEntity, Light):
     """Representation of a Homekit light."""
 
     def __init__(self, *args):
+        """Initialise the light."""
         super().__init__(*args)
         self._on = None
         self._brightness = None
-        self._color_tempeature = None
+        self._color_temperature = None
         self._hue = None
         self._saturation = None
 
     def update_characteristics(self, characteristics):
+        """Synchronise light state with Home Assistant."""
+        # pylint: disable=import-error
         import homekit
 
         for characteristic in characteristics:
@@ -71,7 +74,7 @@ class HomeKitLight(HomeKitEntity, Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         if self._features & SUPPORT_BRIGHTNESS:
-            return (self._brightness * 255 / 100)
+            return self._brightness * 255 / 100
         return None
 
     @property
@@ -95,6 +98,7 @@ class HomeKitLight(HomeKitEntity, Light):
 
     def turn_on(self, **kwargs):
         """Turn the specified light on."""
+        # pylint: disable=invalid-name
         hs = kwargs.get(ATTR_HS_COLOR)
         temperature = kwargs.get(ATTR_COLOR_TEMP)
         brightness = kwargs.get(ATTR_BRIGHTNESS)

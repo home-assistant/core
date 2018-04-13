@@ -32,9 +32,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def homekit_http_send(self, message_body=None):
-    """Send the currently buffered request and clear the buffer.
+    r"""Send the currently buffered request and clear the buffer.
 
-    Appends an extra \\r\\n to the buffer.
+    Appends an extra \r\n to the buffer.
     A message_body may be specified, to be appended to the request.
     """
     self._buffer.extend((b"", b""))
@@ -47,10 +47,29 @@ def homekit_http_send(self, message_body=None):
     self.send(msg)
 
 
+def get_serial(self, accessory):
+    """Obtain the serial number of a HomeKit device."""
+    # pylint: disable=import-error
+    import homekit
+    for service in accessory['services']:
+        if homekit.ServicesTypes.get_short(service['type']) != \
+           'accessory-information':
+            continue
+        for characteristic in service['characteristics']:
+            ctype = homekit.CharacteristicsTypes.get_short(
+                characteristic['type'])
+            if ctype != 'serial-number':
+                continue
+            return characteristic['value']
+    return None
+
+
 class HKDevice():
-    """Homekit device"""
+    """HomeKit device."""
 
     def __init__(self, hass, host, port, model, hkid, config_num, config):
+        """Initialise a generic HomeKit device."""
+        # pylint: disable=import-error
         import homekit
 
         _LOGGER.info("Setting up Homekit device %s", model)
@@ -71,6 +90,7 @@ class HKDevice():
         self.pairing_data = homekit.load_pairing(self.pairing_file)
 
         # Monkey patch httpclient for increased compatibility
+        # pylint: disable=protected-access
         http.client.HTTPConnection._send_output = homekit_http_send
 
         self.conn = http.client.HTTPConnection(self.host, port=self.port)
@@ -79,21 +99,9 @@ class HKDevice():
         else:
             self.configure()
 
-    def get_serial(self, accessory):
-        import homekit
-        for service in accessory['services']:
-            if homekit.ServicesTypes.get_short(service['type']) != \
-               'accessory-information':
-                continue
-            for characteristic in service['characteristics']:
-                ctype = homekit.CharacteristicsTypes.get_short(
-                    characteristic['type'])
-                if ctype != 'serial-number':
-                    continue
-                return characteristic['value']
-        return None
-
     def accessory_setup(self):
+        """Handle setup of a HomeKit accessory."""
+        # pylint: disable=import-error
         import homekit
         self.controllerkey, self.accessorykey = \
             homekit.get_session_keys(self.conn, self.pairing_data)
@@ -103,7 +111,7 @@ class HKDevice():
         response = self.securecon.get('/accessories')
         data = json.loads(response.read().decode())
         for accessory in data['accessories']:
-            serial = self.get_serial(accessory)
+            serial = get_serial(accessory)
             if serial in self.hass.data[KNOWN_ACCESSORIES]:
                 continue
             self.hass.data[KNOWN_ACCESSORIES][serial] = self
@@ -120,7 +128,8 @@ class HKDevice():
                                             service_info, self.config)
 
     def device_config_callback(self, callback_data):
-        """Handle initial pairing"""
+        """Handle initial pairing."""
+        # pylint: disable=import-error
         import homekit
         pairing_id = str(uuid.uuid4())
         code = callback_data.get('code').strip()
@@ -135,6 +144,7 @@ class HKDevice():
             self.configurator.notify_errors(_configurator, error_msg)
 
     def configure(self):
+        """Obtain the pairing code for a HomeKit device."""
         description = "Please enter the HomeKit code for your {}".format(
             self.model)
         self.hass.data[DOMAIN+self.hkid] = \
@@ -151,6 +161,7 @@ class HomeKitEntity(Entity):
     """Representation of a Home Assistant HomeKit device."""
 
     def __init__(self, accessory, devinfo):
+        """Initialise a generic HomeKit device."""
         self._name = accessory.model
         self._securecon = accessory.securecon
         self._aid = devinfo['aid']
@@ -160,6 +171,7 @@ class HomeKitEntity(Entity):
         self._chars = {}
 
     def update(self):
+        """Obtain a HomeKit device's state."""
         response = self._securecon.get('/accessories')
         data = json.loads(response.read().decode())
         for accessory in data['accessories']:
@@ -182,13 +194,13 @@ class HomeKitEntity(Entity):
         return self._name
 
     def update_characteristics(self, characteristics):
+        """Synchronise a HomeKit device state with Home Assistant."""
         raise NotImplementedError
 
 
 # pylint: too-many-function-args
 def setup(hass, config):
     """Set up for Homekit devices."""
-
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for Homekit discovery events."""
         # model, id

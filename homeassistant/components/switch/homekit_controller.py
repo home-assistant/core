@@ -27,10 +27,13 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
     """Representation of a Homekit switch."""
 
     def __init__(self, *args):
+        """Initialise the switch."""
         super().__init__(*args)
         self._on = None
 
     def update_characteristics(self, characteristics):
+        """Synchronise the switch state with Home Assistant."""
+        # pylint: disable=import-error
         import homekit
 
         for characteristic in characteristics:
