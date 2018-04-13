@@ -10,7 +10,7 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from homeassistant import core as ha, loader, config_entries
+from homeassistant import core as ha, loader, data_entry_flow, config_entries
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
@@ -455,7 +455,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
     """Helper for creating config entries that adds some defaults."""
 
     def __init__(self, *, domain='test', data=None, version=0, entry_id=None,
-                 source=config_entries.SOURCE_USER, title='Mock Title',
+                 source=data_entry_flow.SOURCE_USER, title='Mock Title',
                  state=None):
         """Initialize a mock config entry."""
         kwargs = {

@@ -13,7 +13,7 @@ import os
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import data_entry_flow
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
@@ -119,7 +119,7 @@ async def async_setup(hass, config):
         if service in CONFIG_ENTRY_HANDLERS:
             await hass.config_entries.flow.async_init(
                 CONFIG_ENTRY_HANDLERS[service],
-                source=config_entries.SOURCE_DISCOVERY,
+                source=data_entry_flow.SOURCE_DISCOVERY,
                 data=info
             )
             return

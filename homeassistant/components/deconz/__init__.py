@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.discovery import SERVICE_DECONZ
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
@@ -191,7 +191,7 @@ async def async_request_configuration(hass, config, deconz_config):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class DeconzFlowHandler(config_entries.ConfigFlowHandler):
+class DeconzFlowHandler(data_entry_flow.FlowHandler):
     """Handle a deCONZ config flow."""
 
     VERSION = 1
