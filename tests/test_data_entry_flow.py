@@ -2,7 +2,7 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant import flow
+from homeassistant import data_entry_flow
 from homeassistant.util.decorator import Registry
 
 from tests.common import mock_coro
@@ -17,7 +17,8 @@ def manager():
     async def async_add_entry(result):
         entries.append(result)
 
-    manager = flow.FlowManager(None, handlers, mock_coro, async_add_entry)
+    manager = data_entry_flow.FlowManager(
+        None, handlers, mock_coro, async_add_entry)
     manager.mock_created_entries = entries
     manager.mock_reg_handler = handlers.register
     return manager
@@ -26,7 +27,7 @@ def manager():
 async def test_configure_reuses_handler_instance(manager):
     """Test that we reuse instances."""
     @manager.mock_reg_handler('test')
-    class TestFlow(flow.FlowHandler):
+    class TestFlow(data_entry_flow.FlowHandler):
         handle_count = 0
 
         async def async_step_init(self, user_input=None):
@@ -46,7 +47,7 @@ async def test_configure_reuses_handler_instance(manager):
 async def test_configure_two_steps(manager):
     """Test that we reuse instances."""
     @manager.mock_reg_handler('test')
-    class TestFlow(flow.FlowHandler):
+    class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 1
 
         async def async_step_init(self, user_input=None):
@@ -79,7 +80,7 @@ async def test_configure_two_steps(manager):
         form['flow_id'], ['INIT-DATA'])
     form = await manager.async_configure(
         form['flow_id'], ['SECOND-DATA'])
-    assert form['type'] == flow.RESULT_TYPE_CREATE_ENTRY
+    assert form['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 1
     result = manager.mock_created_entries[0]
@@ -95,7 +96,7 @@ async def test_show_form(manager):
     })
 
     @manager.mock_reg_handler('test')
-    class TestFlow(flow.FlowHandler):
+    class TestFlow(data_entry_flow.FlowHandler):
         async def async_step_init(self, user_input=None):
             return self.async_show_form(
                 step_id='init',
@@ -116,7 +117,7 @@ async def test_show_form(manager):
 async def test_abort_removes_instance(manager):
     """Test that abort removes the flow from progress."""
     @manager.mock_reg_handler('test')
-    class TestFlow(flow.FlowHandler):
+    class TestFlow(data_entry_flow.FlowHandler):
         is_new = True
 
         async def async_step_init(self, user_input=None):
@@ -137,7 +138,7 @@ async def test_abort_removes_instance(manager):
 async def test_create_saves_data(manager):
     """Test creating a config entry."""
     @manager.mock_reg_handler('test')
-    class TestFlow(flow.FlowHandler):
+    class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 5
 
         async def async_step_init(self, user_input=None):
@@ -155,13 +156,13 @@ async def test_create_saves_data(manager):
     assert entry['domain'] == 'test'
     assert entry['title'] == 'Test Title'
     assert entry['data'] == 'Test Data'
-    assert entry['source'] == flow.SOURCE_USER
+    assert entry['source'] == data_entry_flow.SOURCE_USER
 
 
 async def test_discovery_init_flow(manager):
     """Test a flow initialized by discovery."""
     @manager.mock_reg_handler('test')
-    class TestFlow(flow.FlowHandler):
+    class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 5
 
         async def async_step_discovery(self, info):
@@ -173,7 +174,7 @@ async def test_discovery_init_flow(manager):
     }
 
     await manager.async_init(
-        'test', source=flow.SOURCE_DISCOVERY, data=data)
+        'test', source=data_entry_flow.SOURCE_DISCOVERY, data=data)
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 1
 
@@ -182,4 +183,4 @@ async def test_discovery_init_flow(manager):
     assert entry['domain'] == 'test'
     assert entry['title'] == 'hello'
     assert entry['data'] == data
-    assert entry['source'] == flow.SOURCE_DISCOVERY
+    assert entry['source'] == data_entry_flow.SOURCE_DISCOVERY

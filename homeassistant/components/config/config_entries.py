@@ -3,7 +3,7 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant import config_entries, flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
@@ -24,7 +24,7 @@ def async_setup(hass):
 
 def _prepare_json(result):
     """Convert result for JSON."""
-    if result['type'] != flow.RESULT_TYPE_FORM:
+    if result['type'] != data_entry_flow.RESULT_TYPE_FORM:
         return result
 
     import voluptuous_serialize
@@ -95,7 +95,7 @@ class ConfigManagerFlowIndexView(HomeAssistantView):
 
         return self.json([
             flw for flw in hass.config_entries.flow.async_progress()
-            if flw['source'] != flow.SOURCE_USER])
+            if flw['source'] != data_entry_flow.SOURCE_USER])
 
     @RequestDataValidator(vol.Schema({
         vol.Required('domain'): str,
@@ -108,9 +108,9 @@ class ConfigManagerFlowIndexView(HomeAssistantView):
         try:
             result = yield from hass.config_entries.flow.async_init(
                 data['domain'])
-        except flow.UnknownHandler:
+        except data_entry_flow.UnknownHandler:
             return self.json_message('Invalid handler specified', 404)
-        except flow.UnknownStep:
+        except data_entry_flow.UnknownStep:
             return self.json_message('Handler does not support init', 400)
 
         result = _prepare_json(result)
@@ -126,13 +126,13 @@ class ConfigManagerFlowResourceView(HomeAssistantView):
 
     @asyncio.coroutine
     def get(self, request, flow_id):
-        """Get the current state of a flow."""
+        """Get the current state of a data_entry_flow."""
         hass = request.app['hass']
 
         try:
             result = yield from hass.config_entries.flow.async_configure(
                 flow_id)
-        except flow.UnknownFlow:
+        except data_entry_flow.UnknownFlow:
             return self.json_message('Invalid flow specified', 404)
 
         result = _prepare_json(result)
@@ -148,7 +148,7 @@ class ConfigManagerFlowResourceView(HomeAssistantView):
         try:
             result = yield from hass.config_entries.flow.async_configure(
                 flow_id, data)
-        except flow.UnknownFlow:
+        except data_entry_flow.UnknownFlow:
             return self.json_message('Invalid flow specified', 404)
         except vol.Invalid:
             return self.json_message('User input malformed', 400)
@@ -164,7 +164,7 @@ class ConfigManagerFlowResourceView(HomeAssistantView):
 
         try:
             hass.config_entries.flow.async_abort(flow_id)
-        except flow.UnknownFlow:
+        except data_entry_flow.UnknownFlow:
             return self.json_message('Invalid flow specified', 404)
 
         return self.json_message('Flow aborted')

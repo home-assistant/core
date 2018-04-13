@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries as core_ce
 from homeassistant.config_entries import HANDLERS
-from homeassistant.flow import FlowHandler
+from homeassistant.data_entry_flow import FlowHandler
 from homeassistant.setup import async_setup_component
 from homeassistant.components.config import config_entries
 from homeassistant.loader import set_component

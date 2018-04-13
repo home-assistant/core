@@ -117,7 +117,7 @@ import uuid
 
 from .core import callback
 from .exceptions import HomeAssistantError
-from .flow import FlowManager
+from .data_entry_flow import FlowManager
 from .setup import async_setup_component, async_process_deps_reqs
 from .util.json import load_json, save_json
 from .util.decorator import Registry
