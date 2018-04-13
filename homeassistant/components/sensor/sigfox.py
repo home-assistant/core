@@ -7,9 +7,10 @@ https://home-assistant.io/components/sensor.sigfox/
 import logging
 import datetime
 import json
-import voluptuous as vol
 import requests
 from urllib.parse import urljoin
+
+import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
