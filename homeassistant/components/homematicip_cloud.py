@@ -112,6 +112,7 @@ class HomematicipConnector:
             try:
                 self._retry_task = self._hass.async_add_job(asyncio.sleep(
                     2 ** min(9, self._tries), loop=self._hass.loop))
+                await self._retry_task
             except asyncio.CancelledError:
                 break
             _LOGGER.info('Reconnect (%s) to the HomematicIP cloud server.',
