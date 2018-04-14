@@ -78,6 +78,7 @@ SERVICE_HANDLERS = {
     'bose_soundtouch': ('media_player', 'soundtouch'),
     'bluesound': ('media_player', 'bluesound'),
     'songpal': ('media_player', 'songpal'),
+    'kodi': ('media_player', 'kodi'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
