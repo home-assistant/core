@@ -748,6 +748,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
+    @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
         return self._speed_list
