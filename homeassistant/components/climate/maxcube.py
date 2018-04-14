@@ -19,8 +19,11 @@ STATE_MANUAL = 'manual'
 STATE_BOOST = 'boost'
 STATE_VACATION = 'vacation'
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+SUPPORT_CURRENT_VALVEPOSITION = 8192
 
+ATTR_CURRENT_VALVEPOSITION = 'current_valveposition'
+
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Iterate through all MAX! Devices and add thermostats."""
@@ -32,8 +35,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = '{} {}'.format(
             cube.room_by_id(device.room_id).name, device.name)
 
-        if cube.is_thermostat(device) or cube.is_wallthermostat(device):
+        if cube.is_wallthermostat(device):
             devices.append(MaxCubeClimate(hass, name, device.rf_address))
+
+        if cube.is_thermostat(device):
+            devices.append(MaxCubeClimateValve(hass, name, device.rf_address))
 
     if devices:
         add_devices(devices)
@@ -195,3 +201,37 @@ class MaxCubeClimate(ClimateDevice):
             operation_mode = None
 
         return operation_mode
+
+
+class MaxCubeClimateValve(MaxCubeClimate):
+    """MAX! Cube Valve ClimateDevice."""
+
+    @property
+    def state_attributes(self):
+        """Return the optional state attributes."""
+        data = super().state_attributes
+
+        supported_features = self.supported_features
+        if supported_features & SUPPORT_CURRENT_VALVEPOSITION:
+            data[ATTR_CURRENT_VALVEPOSITION] = self.current_valveposition
+
+        return data
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS | SUPPORT_CURRENT_VALVEPOSITION
+
+    @property
+    def current_valveposition(self):
+        """Return the position of the valve."""
+        device = self._cubehandle.cube.device_by_rf(self._rf_address)
+        return self.map_valvepos_max_hass(device.valve_position)
+
+    @staticmethod
+    def map_valvepos_max_hass(position):
+        """Map Valveposition from MAX! to HASS."""
+        if position is None:
+            return 0.0
+
+        return position
