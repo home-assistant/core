@@ -1268,6 +1268,9 @@ upcloud-api==0.4.2
 # homeassistant.components.sensor.ups
 upsmychoice==1.0.6
 
+# homeassistant.components.sensor.uscis
+uscisstatus==0.1.1
+
 # homeassistant.components.camera.uvc
 uvcclient==0.10.1
 
