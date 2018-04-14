@@ -115,9 +115,9 @@ import logging
 import os
 import uuid
 
+from . import data_entry_flow
 from .core import callback
 from .exceptions import HomeAssistantError
-from .data_entry_flow import FlowManager
 from .setup import async_setup_component, async_process_deps_reqs
 from .util.json import load_json, save_json
 from .util.decorator import Registry
@@ -255,8 +255,8 @@ class ConfigEntries:
     def __init__(self, hass, hass_config):
         """Initialize the entry manager."""
         self.hass = hass
-        self.flow = FlowManager(hass, HANDLERS, self._async_missing_handler,
-                                self._async_save_entry)
+        self.flow = data_entry_flow.FlowManager(
+            hass, self._async_create_flow, self._async_save_entry)
         self._hass_config = hass_config
         self._entries = None
         self._sched_save = None
@@ -345,7 +345,7 @@ class ConfigEntries:
         """Add an entry."""
         entry = ConfigEntry(
             version=result['version'],
-            domain=result['domain'],
+            domain=result['handler'],
             title=result['title'],
             data=result['data'],
             source=result['source'],
@@ -362,17 +362,22 @@ class ConfigEntries:
             await async_setup_component(
                 self.hass, entry.domain, self._hass_config)
 
-    async def _async_missing_handler(self, domain):
-        """Called when a flow handler is not loaded."""
-        # This will load the component and thus register the handler
-        component = getattr(self.hass.components, domain)
+    async def _async_create_flow(self, handler):
+        """Create a flow for specified handler.
 
-        if domain not in HANDLERS:
-            return
+        Handler key is the domain of the component that we want to setup.
+        """
+        component = getattr(self.hass.components, handler)
+        handler = HANDLERS.get(handler)
+
+        if handler is None:
+            raise data_entry_flow.UnknownHandler
 
         # Make sure requirements and dependencies of component are resolved
         await async_process_deps_reqs(
-            self.hass, self._hass_config, domain, component)
+            self.hass, self._hass_config, handler, component)
+
+        return handler()
 
     @callback
     def _async_schedule_save(self):

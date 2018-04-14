@@ -5,8 +5,6 @@ import voluptuous as vol
 from homeassistant import data_entry_flow
 from homeassistant.util.decorator import Registry
 
-from tests.common import mock_coro
-
 
 @pytest.fixture
 def manager():
@@ -14,11 +12,19 @@ def manager():
     handlers = Registry()
     entries = []
 
+    async def async_create_flow(handler_name):
+        handler = handlers.get(handler_name)
+
+        if handler is None:
+            raise data_entry_flow.UnknownHandler
+
+        return handler()
+
     async def async_add_entry(result):
         entries.append(result)
 
     manager = data_entry_flow.FlowManager(
-        None, handlers, mock_coro, async_add_entry)
+        None, async_create_flow, async_add_entry)
     manager.mock_created_entries = entries
     manager.mock_reg_handler = handlers.register
     return manager
@@ -84,7 +90,7 @@ async def test_configure_two_steps(manager):
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 1
     result = manager.mock_created_entries[0]
-    assert result['domain'] == 'test'
+    assert result['handler'] == 'test'
     assert result['data'] == ['INIT-DATA', 'SECOND-DATA']
 
 
@@ -153,7 +159,7 @@ async def test_create_saves_data(manager):
 
     entry = manager.mock_created_entries[0]
     assert entry['version'] == 5
-    assert entry['domain'] == 'test'
+    assert entry['handler'] == 'test'
     assert entry['title'] == 'Test Title'
     assert entry['data'] == 'Test Data'
     assert entry['source'] == data_entry_flow.SOURCE_USER
@@ -180,7 +186,7 @@ async def test_discovery_init_flow(manager):
 
     entry = manager.mock_created_entries[0]
     assert entry['version'] == 5
-    assert entry['domain'] == 'test'
+    assert entry['handler'] == 'test'
     assert entry['title'] == 'hello'
     assert entry['data'] == data
     assert entry['source'] == data_entry_flow.SOURCE_DISCOVERY
