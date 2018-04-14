@@ -4,8 +4,8 @@ import logging
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_SET_COVER_POSITION, STATE_OPEN, STATE_CLOSED, SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER,
-    SERVICE_STOP_COVER)
+    ATTR_ENTITY_ID, SERVICE_SET_COVER_POSITION, STATE_OPEN, STATE_CLOSED,
+    SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, SERVICE_STOP_COVER)
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service, setup_char
