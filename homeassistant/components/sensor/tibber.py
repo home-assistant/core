@@ -75,51 +75,13 @@ class TibberSensor(Entity):
            self._last_updated.hour == now.hour and self._newest_data_timestamp:
             return
 
-        @Throttle(MIN_TIME_BETWEEN_UPDATES)
-        async def _fetch_data():
-            try:
-                await self._tibber_home.update_info()
-                await  self._tibber_home.update_price_info()
-            except (asyncio.TimeoutError, aiohttp.ClientError):
-                return
-            data = self._tibber_home.info['viewer']['home']
-            self._device_state_attributes['app_nickname'] = data['appNickname']
-            self._device_state_attributes['grid_company'] = \
-                data['meteringPointData']['gridCompany']
-            self._device_state_attributes['estimated_annual_consumption'] = \
-                data['meteringPointData']['estimatedAnnualConsumption']
-
-        def _find_current_price():
-            state = None
-            max_price = None
-            min_price = None
-            for key, price_total in self._tibber_home.price_total.items():
-                price_time = dt_util.as_utc(dt_util.parse_datetime(key))
-                price_total = round(price_total, 3)
-                time_diff = (now - price_time).total_seconds()/60
-                if (not self._newest_data_timestamp or
-                        price_time > self._newest_data_timestamp):
-                    self._newest_data_timestamp = price_time
-                if time_diff >= 0 and time_diff < 60:
-                    state = price_total
-                    self._last_updated = price_time
-                if now.date() == price_time.date():
-                    if max_price is None or price_total > max_price:
-                        max_price = price_total
-                    if min_price is None or price_total < min_price:
-                        min_price = price_total
-                self._state = state
-                self._device_state_attributes['max_price'] = max_price
-                self._device_state_attributes['min_price'] = min_price
-            return state is not None
-
         if (not self._newest_data_timestamp or
                 (self._newest_data_timestamp - now).total_seconds()/3600 < 12
                 or not self._is_available):
             _LOGGER.debug("Asking for new data.")
-            await _fetch_data()
+            await self._fetch_data()
 
-        self._is_available = _find_current_price()
+        self._is_available = self._update_current_price()
 
     @property
     def device_state_attributes(self):
@@ -156,3 +118,41 @@ class TibberSensor(Entity):
         """Return a unique ID."""
         home = self._tibber_home.info['viewer']['home']
         return home['meteringPointData']['consumptionEan']
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def _fetch_data(self):
+        try:
+            await self._tibber_home.update_info()
+            await  self._tibber_home.update_price_info()
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            return
+        data = self._tibber_home.info['viewer']['home']
+        self._device_state_attributes['app_nickname'] = data['appNickname']
+        self._device_state_attributes['grid_company'] = \
+            data['meteringPointData']['gridCompany']
+        self._device_state_attributes['estimated_annual_consumption'] = \
+            data['meteringPointData']['estimatedAnnualConsumption']
+
+    def _update_current_price(self):
+        state = None
+        max_price = None
+        min_price = None
+        for key, price_total in self._tibber_home.price_total.items():
+            price_time = dt_util.as_utc(dt_util.parse_datetime(key))
+            price_total = round(price_total, 3)
+            time_diff = (now - price_time).total_seconds()/60
+            if (not self._newest_data_timestamp or
+                    price_time > self._newest_data_timestamp):
+                self._newest_data_timestamp = price_time
+            if 0 <= time_diff < 60:
+                state = price_total
+                self._last_updated = price_time
+            if now.date() == price_time.date():
+                if max_price is None or price_total > max_price:
+                    max_price = price_total
+                if min_price is None or price_total < min_price:
+                    min_price = price_total
+            self._state = state
+            self._device_state_attributes['max_price'] = max_price
+            self._device_state_attributes['min_price'] = min_price
+        return state is not None
