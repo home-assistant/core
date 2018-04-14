@@ -155,8 +155,8 @@ class MpcHcDevice(MediaPlayerDevice):
 
     def media_next_track(self):
         """Send next track command."""
-        self._send_command(921)
+        self._send_command(920)
 
     def media_previous_track(self):
         """Send previous track command."""
-        self._send_command(920)
+        self._send_command(919)

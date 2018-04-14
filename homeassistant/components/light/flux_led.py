@@ -204,7 +204,12 @@ class FluxLight(Light):
             self._bulb.turnOn()
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
-        rgb = color_util.color_hs_to_RGB(*hs_color)
+
+        if hs_color:
+            rgb = color_util.color_hs_to_RGB(*hs_color)
+        else:
+            rgb = None
+
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
 

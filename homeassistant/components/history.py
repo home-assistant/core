@@ -118,6 +118,30 @@ def state_changes_during_period(hass, start_time, end_time=None,
     return states_to_json(hass, states, start_time, entity_ids)
 
 
+def get_last_state_changes(hass, number_of_states, entity_id):
+    """Return the last number_of_states."""
+    from homeassistant.components.recorder.models import States
+
+    start_time = dt_util.utcnow()
+
+    with session_scope(hass=hass) as session:
+        query = session.query(States).filter(
+            (States.last_changed == States.last_updated))
+
+        if entity_id is not None:
+            query = query.filter_by(entity_id=entity_id.lower())
+
+        entity_ids = [entity_id] if entity_id is not None else None
+
+        states = execute(
+            query.order_by(States.last_updated.desc()).limit(number_of_states))
+
+    return states_to_json(hass, reversed(states),
+                          start_time,
+                          entity_ids,
+                          include_start_time_state=False)
+
+
 def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
                filters=None):
     """Return the states at a specific point in time."""

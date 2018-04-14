@@ -13,6 +13,7 @@ import os
 
 import voluptuous as vol
 
+from homeassistant import data_entry_flow
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
@@ -20,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==1.3.0']
+REQUIREMENTS = ['netdisco==1.3.1']
 
 DOMAIN = 'discovery'
 
@@ -39,6 +40,11 @@ SERVICE_HUE = 'philips_hue'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DAIKIN = 'daikin'
 SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
+SERVICE_HOMEKIT = 'homekit'
+
+CONFIG_ENTRY_HANDLERS = {
+    SERVICE_HUE: 'hue',
+}
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
@@ -51,7 +57,6 @@ SERVICE_HANDLERS = {
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
     SERVICE_TELLDUSLIVE: ('tellduslive', None),
-    SERVICE_HUE: ('hue', None),
     SERVICE_DECONZ: ('deconz', None),
     SERVICE_DAIKIN: ('daikin', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
@@ -75,12 +80,20 @@ SERVICE_HANDLERS = {
     'songpal': ('media_player', 'songpal'),
 }
 
+OPTIONAL_SERVICE_HANDLERS = {
+    SERVICE_HOMEKIT: ('homekit_controller', None),
+}
+
 CONF_IGNORE = 'ignore'
+CONF_ENABLE = 'enable'
 
 CONFIG_SCHEMA = vol.Schema({
     vol.Required(DOMAIN): vol.Schema({
         vol.Optional(CONF_IGNORE, default=[]):
-            vol.All(cv.ensure_list, [vol.In(SERVICE_HANDLERS)])
+            vol.All(cv.ensure_list, [
+                vol.In(list(CONFIG_ENTRY_HANDLERS) + list(SERVICE_HANDLERS))]),
+        vol.Optional(CONF_ENABLE, default=[]):
+            vol.All(cv.ensure_list, [vol.In(OPTIONAL_SERVICE_HANDLERS)])
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -99,17 +112,13 @@ async def async_setup(hass, config):
     # Platforms ignore by config
     ignored_platforms = config[DOMAIN][CONF_IGNORE]
 
+    # Optional platforms enabled by config
+    enabled_platforms = config[DOMAIN][CONF_ENABLE]
+
     async def new_service_found(service, info):
         """Handle a new service if one is found."""
         if service in ignored_platforms:
             logger.info("Ignoring service: %s %s", service, info)
-            return
-
-        comp_plat = SERVICE_HANDLERS.get(service)
-
-        # We do not know how to handle this service.
-        if not comp_plat:
-            logger.info("Unknown service discovered: %s %s", service, info)
             return
 
         discovery_hash = json.dumps([service, info], sort_keys=True)
@@ -117,6 +126,24 @@ async def async_setup(hass, config):
             return
 
         already_discovered.add(discovery_hash)
+
+        if service in CONFIG_ENTRY_HANDLERS:
+            await hass.config_entries.flow.async_init(
+                CONFIG_ENTRY_HANDLERS[service],
+                source=data_entry_flow.SOURCE_DISCOVERY,
+                data=info
+            )
+            return
+
+        comp_plat = SERVICE_HANDLERS.get(service)
+
+        if not comp_plat and service in enabled_platforms:
+            comp_plat = OPTIONAL_SERVICE_HANDLERS[service]
+
+        # We do not know how to handle this service.
+        if not comp_plat:
+            logger.info("Unknown service discovered: %s %s", service, info)
+            return
 
         logger.info("Found new service: %s %s", service, info)
 

@@ -1,19 +1,62 @@
 """Extend the basic Accessory and Bridge functions."""
+from datetime import timedelta
+from functools import wraps
+from inspect import getmodule
 import logging
 
 from pyhap.accessory import Accessory, Bridge, Category
 from pyhap.accessory_driver import AccessoryDriver
 
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.core import callback as ha_callback
+from homeassistant.helpers.event import (
+    async_track_state_change, track_point_in_utc_time)
+from homeassistant.util import dt as dt_util
 
 from .const import (
-    ACCESSORY_MODEL, ACCESSORY_NAME, BRIDGE_MODEL, BRIDGE_NAME,
-    MANUFACTURER, SERV_ACCESSORY_INFO, SERV_BRIDGING_STATE,
-    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
+    DEBOUNCE_TIMEOUT, BRIDGE_MODEL, BRIDGE_NAME, MANUFACTURER,
+    SERV_ACCESSORY_INFO, CHAR_MANUFACTURER,
+    CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
 from .util import (
     show_setup_message, dismiss_setup_message)
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def debounce(func):
+    """Decorator function. Debounce callbacks form HomeKit."""
+    @ha_callback
+    def call_later_listener(*args):
+        """Callback listener called from call_later."""
+        # pylint: disable=unsubscriptable-object
+        nonlocal lastargs, remove_listener
+        hass = lastargs['hass']
+        hass.async_add_job(func, *lastargs['args'])
+        lastargs = remove_listener = None
+
+    @wraps(func)
+    def wrapper(*args):
+        """Wrapper starts async timer.
+
+        The accessory must have 'self.hass' and 'self.entity_id' as attributes.
+        """
+        # pylint: disable=not-callable
+        hass = args[0].hass
+        nonlocal lastargs, remove_listener
+        if remove_listener:
+            remove_listener()
+            lastargs = remove_listener = None
+        lastargs = {'hass': hass, 'args': [*args]}
+        remove_listener = track_point_in_utc_time(
+            hass, call_later_listener,
+            dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT))
+        logger.debug('%s: Start %s timeout', args[0].entity_id,
+                     func.__name__.replace('set_', ''))
+
+    remove_listener = None
+    lastargs = None
+    name = getmodule(func).__name__
+    logger = logging.getLogger(name)
+    return wrapper
 
 
 def add_preload_service(acc, service, chars=None):
@@ -29,6 +72,18 @@ def add_preload_service(acc, service, chars=None):
     return service
 
 
+def setup_char(char_name, service, value=None, properties=None, callback=None):
+    """Helper function to return fully configured characteristic."""
+    char = service.get_characteristic(char_name)
+    if value:
+        char.value = value
+    if properties:
+        char.override_properties(properties)
+    if callback:
+        char.setter_callback = callback
+    return char
+
+
 def set_accessory_info(acc, name, model, manufacturer=MANUFACTURER,
                        serial_number='0000'):
     """Set the default accessory information."""
@@ -39,51 +94,54 @@ def set_accessory_info(acc, name, model, manufacturer=MANUFACTURER,
     service.get_characteristic(CHAR_SERIAL_NUMBER).set_value(serial_number)
 
 
-def override_properties(char, properties=None, valid_values=None):
-    """Override characteristic property values and valid values."""
-    if properties:
-        char.properties.update(properties)
-
-    if valid_values:
-        char.properties['ValidValues'].update(valid_values)
-
-
 class HomeAccessory(Accessory):
     """Adapter class for Accessory."""
 
-    # pylint: disable=no-member
-
-    def __init__(self, name=ACCESSORY_NAME, model=ACCESSORY_MODEL,
-                 category='OTHER', **kwargs):
+    def __init__(self, hass, name, entity_id, aid, category):
         """Initialize a Accessory object."""
-        super().__init__(name, **kwargs)
-        set_accessory_info(self, name, model)
+        super().__init__(name, aid=aid)
+        set_accessory_info(self, name, model=entity_id)
         self.category = getattr(Category, category, Category.OTHER)
+        self.entity_id = entity_id
+        self.hass = hass
 
     def _set_services(self):
         add_preload_service(self, SERV_ACCESSORY_INFO)
 
     def run(self):
         """Method called by accessory after driver is started."""
-        state = self._hass.states.get(self._entity_id)
-        self.update_state(new_state=state)
+        state = self.hass.states.get(self.entity_id)
+        self.update_state_callback(new_state=state)
         async_track_state_change(
-            self._hass, self._entity_id, self.update_state)
+            self.hass, self.entity_id, self.update_state_callback)
+
+    def update_state_callback(self, entity_id=None, old_state=None,
+                              new_state=None):
+        """Callback from state change listener."""
+        _LOGGER.debug('New_state: %s', new_state)
+        if new_state is None:
+            return
+        self.update_state(new_state)
+
+    def update_state(self, new_state):
+        """Method called on state change to update HomeKit value.
+
+        Overridden by accessory types.
+        """
+        pass
 
 
 class HomeBridge(Bridge):
     """Adapter class for Bridge."""
 
-    def __init__(self, hass, name=BRIDGE_NAME,
-                 model=BRIDGE_MODEL, **kwargs):
+    def __init__(self, hass, name=BRIDGE_NAME):
         """Initialize a Bridge object."""
-        super().__init__(name, **kwargs)
-        set_accessory_info(self, name, model)
-        self._hass = hass
+        super().__init__(name)
+        set_accessory_info(self, name, model=BRIDGE_MODEL)
+        self.hass = hass
 
     def _set_services(self):
         add_preload_service(self, SERV_ACCESSORY_INFO)
-        add_preload_service(self, SERV_BRIDGING_STATE)
 
     def setup_message(self):
         """Prevent print of pyhap setup message to terminal."""
@@ -92,12 +150,12 @@ class HomeBridge(Bridge):
     def add_paired_client(self, client_uuid, client_public):
         """Override super function to dismiss setup message if paired."""
         super().add_paired_client(client_uuid, client_public)
-        dismiss_setup_message(self._hass)
+        dismiss_setup_message(self.hass)
 
     def remove_paired_client(self, client_uuid):
         """Override super function to show setup message if unpaired."""
         super().remove_paired_client(client_uuid)
-        show_setup_message(self, self._hass)
+        show_setup_message(self.hass, self)
 
 
 class HomeDriver(AccessoryDriver):

@@ -34,10 +34,12 @@ SENSORS = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
     """Set up the MySensors platform for sensors."""
     mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsSensor, add_devices=add_devices)
+        hass, DOMAIN, discovery_info, MySensorsSensor,
+        async_add_devices=async_add_devices)
 
 
 class MySensorsSensor(mysensors.MySensorsEntity):
@@ -81,5 +83,6 @@ class MySensorsSensor(mysensors.MySensorsEntity):
             TEMP_CELSIUS if self.gateway.metric else TEMP_FAHRENHEIT)
         sensor_type = SENSORS.get(set_req(self.value_type).name, [None, None])
         if isinstance(sensor_type, dict):
-            sensor_type = sensor_type.get(pres(self.child_type).name)
+            sensor_type = sensor_type.get(
+                pres(self.child_type).name, [None, None])
         return sensor_type

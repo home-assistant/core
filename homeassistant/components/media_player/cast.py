@@ -18,7 +18,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (dispatcher_send,
                                               async_dispatcher_connect)
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_STOP, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
@@ -288,7 +288,8 @@ class CastDevice(MediaPlayerDevice):
         self._chromecast = None  # type: Optional[pychromecast.Chromecast]
         self.cast_status = None
         self.media_status = None
-        self.media_status_received = None
+        self.media_status_position = None
+        self.media_status_position_received = None
         self._available = False  # type: bool
         self._status_listener = None  # type: Optional[CastStatusListener]
 
@@ -361,7 +362,8 @@ class CastDevice(MediaPlayerDevice):
         self._chromecast = None
         self.cast_status = None
         self.media_status = None
-        self.media_status_received = None
+        self.media_status_position = None
+        self.media_status_position_received = None
         self._status_listener.invalidate()
         self._status_listener = None
 
@@ -388,8 +390,36 @@ class CastDevice(MediaPlayerDevice):
 
     def new_media_status(self, media_status):
         """Handle updates of the media status."""
+        # Only use media position for playing/paused,
+        # and for normal playback rate
+        if (media_status is None or
+                abs(media_status.playback_rate - 1) > 0.01 or
+                not (media_status.player_is_playing or
+                     media_status.player_is_paused)):
+            self.media_status_position = None
+            self.media_status_position_received = None
+        else:
+            # Avoid unnecessary state attribute updates if player_state and
+            # calculated position stay the same
+            now = dt_util.utcnow()
+            do_update = \
+                (self.media_status is None or
+                 self.media_status_position is None or
+                 self.media_status.player_state != media_status.player_state)
+            if not do_update:
+                if media_status.player_is_playing:
+                    elapsed = now - self.media_status_position_received
+                    do_update = abs(media_status.current_time -
+                                    (self.media_status_position +
+                                     elapsed.total_seconds())) > 1
+                else:
+                    do_update = \
+                        self.media_status_position != media_status.current_time
+            if do_update:
+                self.media_status_position = media_status.current_time
+                self.media_status_position_received = now
+
         self.media_status = media_status
-        self.media_status_received = dt_util.utcnow()
         self.schedule_update_ha_state()
 
     def new_connection_status(self, connection_status):
@@ -517,7 +547,7 @@ class CastDevice(MediaPlayerDevice):
         elif self.media_status.media_is_tvshow:
             return MEDIA_TYPE_TVSHOW
         elif self.media_status.media_is_movie:
-            return MEDIA_TYPE_VIDEO
+            return MEDIA_TYPE_MOVIE
         elif self.media_status.media_is_musictrack:
             return MEDIA_TYPE_MUSIC
         return None
@@ -595,13 +625,7 @@ class CastDevice(MediaPlayerDevice):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        if self.media_status is None or \
-                not (self.media_status.player_is_playing or
-                     self.media_status.player_is_paused or
-                     self.media_status.player_is_idle):
-            return None
-
-        return self.media_status.current_time
+        return self.media_status_position
 
     @property
     def media_position_updated_at(self):
@@ -609,7 +633,7 @@ class CastDevice(MediaPlayerDevice):
 
         Returns value from homeassistant.util.dt.utcnow().
         """
-        return self.media_status_received
+        return self.media_status_position_received
 
     @property
     def unique_id(self) -> Optional[str]:

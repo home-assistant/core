@@ -1060,15 +1060,19 @@ class Config(object):
         """Check if the path is valid for access from outside."""
         assert path is not None
 
-        parent = pathlib.Path(path)
+        thepath = pathlib.Path(path)
         try:
-            parent = parent.resolve()  # pylint: disable=no-member
+            # The file path does not have to exist (it's parent should)
+            if thepath.exists():
+                thepath = thepath.resolve()
+            else:
+                thepath = thepath.parent.resolve()
         except (FileNotFoundError, RuntimeError, PermissionError):
             return False
 
         for whitelisted_path in self.whitelist_external_dirs:
             try:
-                parent.relative_to(whitelisted_path)
+                thepath.relative_to(whitelisted_path)
                 return True
             except ValueError:
                 pass
