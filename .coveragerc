@@ -675,6 +675,7 @@ omit =
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/ups.py
+    homeassistant/components/sensor/uscis.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/viaggiatreno.py
     homeassistant/components/sensor/waqi.py
