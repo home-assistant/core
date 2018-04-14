@@ -63,7 +63,7 @@ class BMWConnectedDriveSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return the unique ID of the binary sensor."""
+        """Return the unique ID of the sensor."""
         return self._unique_id
 
     @property
@@ -92,7 +92,7 @@ class BMWConnectedDriveSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the binary sensor."""
+        """Return the state attributes of the sensor."""
         return {
             'car': self._vehicle.name
         }

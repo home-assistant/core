@@ -52,7 +52,7 @@ class BMWLock(LockDevice):
 
     @property
     def unique_id(self):
-        """Return the unique ID of the binary sensor."""
+        """Return the unique ID of the lock."""
         return self._unique_id
 
     @property
