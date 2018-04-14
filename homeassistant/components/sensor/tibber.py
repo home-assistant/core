@@ -137,6 +137,7 @@ class TibberSensor(Entity):
         state = None
         max_price = None
         min_price = None
+        now = dt_util.utcnow()
         for key, price_total in self._tibber_home.price_total.items():
             price_time = dt_util.as_utc(dt_util.parse_datetime(key))
             price_total = round(price_total, 3)
