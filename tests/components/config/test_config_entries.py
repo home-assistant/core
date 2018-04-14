@@ -120,7 +120,7 @@ def test_initialize_flow(hass, client):
 
     assert data == {
         'type': 'form',
-        'domain': 'test',
+        'handler': 'test',
         'step_id': 'init',
         'data_schema': [
             {
@@ -156,7 +156,7 @@ def test_abort(hass, client):
     data = yield from resp.json()
     data.pop('flow_id')
     assert data == {
-        'domain': 'test',
+        'handler': 'test',
         'reason': 'bla',
         'type': 'abort'
     }
@@ -186,7 +186,7 @@ def test_create_account(hass, client):
     data = yield from resp.json()
     data.pop('flow_id')
     assert data == {
-        'domain': 'test',
+        'handler': 'test',
         'title': 'Test Entry',
         'type': 'create_entry',
         'source': 'user',
@@ -226,7 +226,7 @@ def test_two_step_flow(hass, client):
         flow_id = data.pop('flow_id')
         assert data == {
             'type': 'form',
-            'domain': 'test',
+            'handler': 'test',
             'step_id': 'account',
             'data_schema': [
                 {
@@ -245,7 +245,7 @@ def test_two_step_flow(hass, client):
         data = yield from resp.json()
         data.pop('flow_id')
         assert data == {
-            'domain': 'test',
+            'handler': 'test',
             'type': 'create_entry',
             'title': 'user-title',
             'version': 1,
@@ -279,7 +279,7 @@ def test_get_progress_index(hass, client):
     assert data == [
         {
             'flow_id': form['flow_id'],
-            'domain': 'test',
+            'handler': 'test',
             'source': 'hassio'
         }
     ]

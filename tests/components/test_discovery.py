@@ -169,7 +169,7 @@ async def test_discover_config_flow(hass):
 
     with patch.dict(discovery.CONFIG_ENTRY_HANDLERS, {
         'mock-service': 'mock-component'}), patch(
-            'homeassistant.config_entries.FlowManager.async_init') as m_init:
+            'homeassistant.data_entry_flow.FlowManager.async_init') as m_init:
         await mock_discovery(hass, discover)
 
     assert len(m_init.mock_calls) == 1
