@@ -39,7 +39,7 @@ DEFAULT_SUBSCRIBED_EVENTS = [EVENT_STATE_CHANGED,
 DEFAULT_ENTITY_PREFIX = ''
 
 SLAVES_SCHEMA = vol.Schema({
-    vol.Optional(CONF_HOST): cv.string,
+    vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=8123): cv.port,
     vol.Optional(CONF_SECURE, default=False): cv.boolean,
     vol.Optional(CONF_API_PASSWORD): cv.string,
