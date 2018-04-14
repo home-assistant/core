@@ -106,13 +106,13 @@ class WindowCoveringBasic(HomeAccessory):
     The cover entity must support:
         - open_cover
         - close_cover
-        - stop_cover
+        - stop_cover (optional)
     """
 
     def __init__(self, *args, config):
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
-        self.homekit_target = None
+        self.supports_stop = config['supports_stop']
 
         serv_cover = add_preload_service(self, SERV_WINDOW_COVERING)
         self.char_current_position = setup_char(
@@ -124,24 +124,26 @@ class WindowCoveringBasic(HomeAccessory):
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set position to %d', self.entity_id, value)
-        self.homekit_target = value
 
+        service = None
+        hk_position = None
         if value > 70:
             service = SERVICE_OPEN_COVER
             hk_position = 100
         elif value < 30:
             service = SERVICE_CLOSE_COVER
             hk_position = 0
-        else:
+        elif self.supports_stop:
             service = SERVICE_STOP_COVER
             hk_position = 50
 
-        params = {ATTR_ENTITY_ID: self.entity_id}
+        if service is not None:
+            params = {ATTR_ENTITY_ID: self.entity_id}
+            self.hass.services.call(DOMAIN, service, params)
 
-        # Snap the current/target position to the expected final position.
-        self.hass.services.call(DOMAIN, service, params)
-        self.char_current_position.set_value(hk_position)
-        self.char_target_position.set_value(hk_position)
+            # Snap the current/target position to the expected final position.
+            self.char_current_position.set_value(hk_position)
+            self.char_target_position.set_value(hk_position)
 
     def update_state(self, new_state):
         """Update cover position after state changed."""
