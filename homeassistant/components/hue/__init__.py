@@ -32,8 +32,7 @@ CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
 DEFAULT_ALLOW_HUE_GROUPS = True
 
 BRIDGE_CONFIG_SCHEMA = vol.Schema({
-    # Validate as IP address and then convert back to a string.
-    vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
+    vol.Required(CONF_HOST): cv.string,
     # This is for legacy reasons and is only used for importing auth.
     vol.Optional(CONF_FILENAME, default=PHUE_CONFIG_FILE): cv.string,
     vol.Optional(CONF_ALLOW_UNREACHABLE,
