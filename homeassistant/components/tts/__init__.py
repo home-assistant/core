@@ -515,7 +515,7 @@ class TextToSpeechUrlView(HomeAssistantView):
             resp = self.json({'url': url}, 200)
         except HomeAssistantError as err:
             _LOGGER.error("Error on init tts: %s", err)
-            resp = self.json({'error':err}, 500)
+            resp = self.json({'error': err}, 500)
 
         return resp
 
