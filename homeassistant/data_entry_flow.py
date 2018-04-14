@@ -167,25 +167,3 @@ class FlowHandler:
             'handler': self.handler,
             'reason': reason
         }
-
-
-class SingleSchemaFlow(FlowHandler):
-    """Helper class to create a flow from a single voluptuous schema."""
-
-    def __init__(self, schema, title=None):
-        """Initialize the single flow schema."""
-        self._schema = schema
-        self._title = title
-
-    async def step_init(self, user_input=None):
-        """Handle the step of the form."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self._title,
-                data=user_input
-            )
-
-        return self.async_show_form(
-            step_id='init',
-            data_schema=self._schema
-        )
