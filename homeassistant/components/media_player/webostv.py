@@ -184,7 +184,17 @@ class LgWebOSDevice(MediaPlayerDevice):
         try:
             current_input = self._client.get_input()
             if current_input is not None:
-                self._current_source_id = current_input
+                current_channel = self._client.get_current_channel()
+
+                if 'channelId' not in current_channel:
+                    self._channel = None
+                    self._current_source_id = current_input
+                else:
+                    self._channel = current_channel
+                    self._current_source_id = current_channel['channelId']
+
+                _LOGGER.debug("Current source Id: %s", self._current_source_id)
+
                 if self._state in (STATE_UNKNOWN, STATE_OFF):
                     self._state = STATE_PLAYING
             else:
@@ -197,14 +207,12 @@ class LgWebOSDevice(MediaPlayerDevice):
 
                 self._muted = self._client.get_muted()
                 self._volume = self._client.get_volume()
-                self._channel = self._client.get_current_channel()
 
                 self._source_list = {}
                 self._app_list = {}
                 conf_sources = self._customize.get(CONF_SOURCES, [])
 
                 for app in self._client.get_apps():
-                    _LOGGER.debug("App %s", app)
                     self._app_list[app['id']] = app
                     app['sourceName'] = app['title']
                     if app['id'] == self._current_source_id:
@@ -219,7 +227,6 @@ class LgWebOSDevice(MediaPlayerDevice):
                         self._source_list[app['sourceName']] = app
 
                 for source in self._client.get_inputs():
-                    _LOGGER.debug("Input %s", source)
                     source['sourceName'] = source['label']
                     if source['id'] == self._current_source_id:
                         self._current_source = source['sourceName']
@@ -231,7 +238,6 @@ class LgWebOSDevice(MediaPlayerDevice):
                         self._source_list[source['sourceName']] = source
 
                 for source in self._client.get_channels():
-                    _LOGGER.debug("Channel %s", source)
                     channel_number = ('00' + source['channelNumber'])[-3:]
                     source['sourceName'] = ('LiveTV: ' +
                                             'Ch' + channel_number +
@@ -244,7 +250,6 @@ class LgWebOSDevice(MediaPlayerDevice):
                           any(source['channelName'].find(word) != -1
                               for word in conf_sources)):
                         self._source_list[source['sourceName']] = source
-
 
         except (OSError, ConnectionClosed, TypeError,
                 asyncio.TimeoutError):
@@ -300,7 +305,8 @@ class LgWebOSDevice(MediaPlayerDevice):
         """Image url of current playing media."""
         if self._current_source_id in self._app_list:
             icon = self._app_list[self._current_source_id]['largeIcon']
-            icon = self._app_list[self._current_source_id]['icon']
+            if not icon.startswith('http'):
+                icon = self._app_list[self._current_source_id]['icon']
             return icon
         return None
 
@@ -361,15 +367,15 @@ class LgWebOSDevice(MediaPlayerDevice):
         if source_dict.get('id'):
             self._current_source_id = source_dict['id']
             if source_dict.get('title'):
-               self._current_source = source_dict['title']
-               self._client.launch_app(source_dict['id'])
+                self._current_source = source_dict['title']
+                self._client.launch_app(source_dict['id'])
             elif source_dict.get('label'):
-               self._current_source = source_dict['label']
-               self._client.set_input(source_dict['id'])
+                self._current_source = source_dict['label']
+                self._client.set_input(source_dict['id'])
         elif source_dict.get('channelId'):
             self._current_source_id = source_dict['channelId']
             self._current_source = source_dict['sourceName']
-            self._client.set_channel(source_dict['channelId'])           
+            self._client.set_channel(source_dict['channelId'])
 
     def media_play(self):
         """Send play command."""
