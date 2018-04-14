@@ -161,44 +161,39 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         hass.data[DATA_KODI] = dict()
 
     # Is this a manual configuration?
-    if config.get(CONF_HOST) is not None:
+    if discovery_info is None:
         name = config.get(CONF_NAME)
         host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
         tcp_port = config.get(CONF_TCP_PORT)
         encryption = config.get(CONF_PROXY_SSL)
         websocket = config.get(CONF_ENABLE_WEBSOCKET)
-    elif discovery_info is not None:
+    else:
         name = "{} ({})".format(DEFAULT_NAME, discovery_info.get('hostname'))
         host = discovery_info.get('host')
         port = discovery_info.get('port')
         tcp_port = DEFAULT_TCP_PORT
         encryption = DEFAULT_PROXY_SSL
         websocket = DEFAULT_ENABLE_WEBSOCKET
-    else:
-        _LOGGER.warning("Cannot determine device")
-        return
 
     # Only add a device once, so discovered devices do not override manual
     # config.
     ip_addr = socket.gethostbyname(host)
-    if ip_addr not in hass.data[DATA_KODI]:
-        entity = KodiDevice(
-            hass,
-            name=name,
-            host=host, port=port, tcp_port=tcp_port, encryption=encryption,
-            username=config.get(CONF_USERNAME),
-            password=config.get(CONF_PASSWORD),
-            turn_on_action=config.get(CONF_TURN_ON_ACTION),
-            turn_off_action=config.get(CONF_TURN_OFF_ACTION),
-            timeout=config.get(CONF_TIMEOUT), websocket=websocket)
-
-        hass.data[DATA_KODI][ip_addr] = entity
-        async_add_devices([entity], update_before_add=True)
-        _LOGGER.info("Kodi %s:%d added as '%s'", host, port, name)
-    else:
-        _LOGGER.info("Ignoring duplicate Kodi %s:%d", host, port)
+    if ip_addr in hass.data[DATA_KODI]:
         return
+
+    entity = KodiDevice(
+        hass,
+        name=name,
+        host=host, port=port, tcp_port=tcp_port, encryption=encryption,
+        username=config.get(CONF_USERNAME),
+        password=config.get(CONF_PASSWORD),
+        turn_on_action=config.get(CONF_TURN_ON_ACTION),
+        turn_off_action=config.get(CONF_TURN_OFF_ACTION),
+        timeout=config.get(CONF_TIMEOUT), websocket=websocket)
+
+    hass.data[DATA_KODI][ip_addr] = entity
+    async_add_devices([entity], update_before_add=True)
 
     @asyncio.coroutine
     def async_service_handler(service):
