@@ -584,8 +584,9 @@ class TestTTS(object):
         req = requests.post(url, data=json.dumps(data))
         assert req.status_code == 200
         response = json.loads(req.text)
-        response.get('message') == ("http://127.0.0.1:8144/api/tts_proxy/"
-                                   "4cf69a5ff93f5a1ad8a76639d7f6c91fd858d002"
+        assert response.get('message') == (
+                                   "http://127.0.0.1:8144/api/tts_proxy/"
+                                   "265944c108cbb00b2a621be5930513e03a0bb2cd"
                                    "_en_-_demo.mp3")
 
     def test_setup_component_and_web_get_url_bad_config(self):
