@@ -94,6 +94,9 @@ omit =
     homeassistant/components/envisalink.py
     homeassistant/components/*/envisalink.py
 
+    homeassistant/components/eufy.py
+    homeassistant/components/*/eufy.py
+
     homeassistant/components/gc100.py
     homeassistant/components/*/gc100.py
 
@@ -105,6 +108,9 @@ omit =
 
     homeassistant/components/hive.py
     homeassistant/components/*/hive.py
+
+    homeassistant/components/homekit_controller/__init__.py
+    homeassistant/components/*/homekit_controller.py
 
     homeassistant/components/homematic/__init__.py
     homeassistant/components/*/homematic.py
@@ -190,8 +196,8 @@ omit =
     homeassistant/components/pilight.py
     homeassistant/components/*/pilight.py
 
-    homeassistant/components/qwikswitch.py
-    homeassistant/components/*/qwikswitch.py
+    homeassistant/components/switch/qwikswitch.py
+    homeassistant/components/light/qwikswitch.py
 
     homeassistant/components/rachio.py
     homeassistant/components/*/rachio.py
@@ -669,6 +675,7 @@ omit =
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/ups.py
+    homeassistant/components/sensor/uscis.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/viaggiatreno.py
     homeassistant/components/sensor/waqi.py

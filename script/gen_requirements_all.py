@@ -33,6 +33,7 @@ COMMENT_REQUIREMENTS = (
     'i2csense',
     'credstash',
     'bme680',
+    'homekit',
 )
 
 TEST_REQUIREMENTS = (
@@ -73,8 +74,10 @@ TEST_REQUIREMENTS = (
     'pylitejet',
     'pymonoprice',
     'pynx584',
+    'pyqwikswitch',
     'python-forecastio',
     'pyunifi',
+    'pyupnp-async',
     'pywebpush',
     'restrictedpython',
     'rflink',

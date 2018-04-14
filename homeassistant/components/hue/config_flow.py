@@ -6,7 +6,7 @@ import os
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
@@ -41,7 +41,7 @@ def _find_username_from_config(hass, filename):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class HueFlowHandler(config_entries.ConfigFlowHandler):
+class HueFlowHandler(data_entry_flow.FlowHandler):
     """Handle a Hue config flow."""
 
     VERSION = 1

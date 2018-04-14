@@ -6,7 +6,7 @@ pip>=8.0.3
 jinja2>=2.10
 voluptuous==0.11.1
 typing>=3,<4
-aiohttp==3.1.1
+aiohttp==3.1.2
 async_timeout==2.0.1
 astral==1.6
 certifi>=2017.4.17
@@ -22,7 +22,7 @@ attrs==17.4.0
 DoorBirdPy==0.1.3
 
 # homeassistant.components.homekit
-HAP-python==1.1.8
+HAP-python==1.1.9
 
 # homeassistant.components.notify.mastodon
 Mastodon.py==1.2.2
@@ -64,7 +64,7 @@ WazeRouteCalculator==0.5
 YesssSMS==0.1.1b3
 
 # homeassistant.components.abode
-abodepy==0.12.3
+abodepy==0.13.1
 
 # homeassistant.components.media_player.frontier_silicon
 afsapi==0.0.3
@@ -131,7 +131,7 @@ basicmodem==0.7
 batinfo==0.4.2
 
 # homeassistant.components.sensor.eddystone_temperature
-# beacontools[scan]==1.2.1
+# beacontools[scan]==1.2.3
 
 # homeassistant.components.device_tracker.linksys_ap
 # homeassistant.components.sensor.geizhals
@@ -140,7 +140,7 @@ batinfo==0.4.2
 beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
-bellows==0.5.1
+bellows==0.5.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.5.0
@@ -381,6 +381,9 @@ holidays==0.9.4
 # homeassistant.components.frontend
 home-assistant-frontend==20180404.0
 
+# homeassistant.components.homekit_controller
+# homekit==0.5
+
 # homeassistant.components.homematicip_cloud
 homematicip==0.8
 
@@ -454,6 +457,9 @@ keyring==12.0.0
 # homeassistant.scripts.keyring
 keyrings.alt==3.0
 
+# homeassistant.components.eufy
+lakeside==0.4
+
 # homeassistant.components.device_tracker.owntracks
 # homeassistant.components.device_tracker.owntracks_http
 libnacl==1.6.1
@@ -514,9 +520,6 @@ mficlient==0.3.0
 # homeassistant.components.sensor.miflora
 miflora==0.3.0
 
-# homeassistant.components.upnp
-miniupnpc==2.0.2
-
 # homeassistant.components.sensor.mopar
 motorparts==1.0.2
 
@@ -540,7 +543,7 @@ nad_receiver==0.0.9
 nanoleaf==0.4.1
 
 # homeassistant.components.discovery
-netdisco==1.3.0
+netdisco==1.3.1
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -670,7 +673,7 @@ pyHS100==0.3.0
 pyRFXtrx==0.22.0
 
 # homeassistant.components.sensor.tibber
-pyTibber==0.4.0
+pyTibber==0.4.1
 
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
@@ -777,7 +780,7 @@ pyhik==0.1.8
 pyhiveapi==0.2.11
 
 # homeassistant.components.homematic
-pyhomematic==0.1.40
+pyhomematic==0.1.41
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==2.2.1
@@ -885,7 +888,7 @@ pyowm==2.8.0
 pypollencom==1.1.1
 
 # homeassistant.components.qwikswitch
-pyqwikswitch==0.6
+pyqwikswitch==0.7
 
 # homeassistant.components.rainbird
 pyrainbird==0.1.3
@@ -939,7 +942,7 @@ python-clementine-remote==1.0.1
 python-digitalocean==1.13.2
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.0.17
+python-ecobee-api==0.0.18
 
 # homeassistant.components.climate.eq3btsmart
 # python-eq3bt==0.1.9
@@ -1051,6 +1054,9 @@ pytradfri[async]==5.4.2
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
+
+# homeassistant.components.upnp
+pyupnp-async==0.1.0.1
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
@@ -1196,7 +1202,7 @@ spotcrime==1.0.3
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.5
+sqlalchemy==1.2.6
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -1261,6 +1267,9 @@ upcloud-api==0.4.2
 
 # homeassistant.components.sensor.ups
 upsmychoice==1.0.6
+
+# homeassistant.components.sensor.uscis
+uscisstatus==0.1.1
 
 # homeassistant.components.camera.uvc
 uvcclient==0.10.1
