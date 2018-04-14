@@ -34,13 +34,11 @@ class UnknownStep(FlowError):
 class FlowManager:
     """Manage all the flows that are in progress."""
 
-    def __init__(self, hass, handlers, async_missing_handler,
-                 async_save_entry):
+    def __init__(self, hass, async_create_flow, async_save_entry):
         """Initialize the flow manager."""
         self.hass = hass
-        self._handlers = handlers
         self._progress = {}
-        self._async_missing_handler = async_missing_handler
+        self._async_create_flow = async_create_flow
         self._async_save_entry = async_save_entry
 
     @callback
@@ -48,27 +46,18 @@ class FlowManager:
         """Return the flows in progress."""
         return [{
             'flow_id': flow.flow_id,
-            'domain': flow.domain,
+            'handler': flow.handler,
             'source': flow.source,
         } for flow in self._progress.values()]
 
-    async def async_init(self, domain, *, source=SOURCE_USER, data=None):
+    async def async_init(self, handler, *, source=SOURCE_USER, data=None):
         """Start a configuration flow."""
-        handler = self._handlers.get(domain)
-
-        if handler is None:
-            await self._async_missing_handler(domain)
-            handler = self._handlers.get(domain)
-
-        if handler is None:
-            raise UnknownHandler
-
-        flow_id = uuid.uuid4().hex
-        flow = self._progress[flow_id] = handler()
+        flow = await self._async_create_flow(handler)
         flow.hass = self.hass
-        flow.domain = domain
-        flow.flow_id = flow_id
+        flow.handler = handler
+        flow.flow_id = uuid.uuid4().hex
         flow.source = source
+        self._progress[flow.flow_id] = flow
 
         if source == SOURCE_USER:
             step = 'init'
@@ -137,7 +126,7 @@ class FlowHandler:
     # Set by flow manager
     flow_id = None
     hass = None
-    domain = None
+    handler = None
     source = SOURCE_USER
     cur_step = None
 
@@ -150,7 +139,7 @@ class FlowHandler:
         return {
             'type': RESULT_TYPE_FORM,
             'flow_id': self.flow_id,
-            'domain': self.domain,
+            'handler': self.handler,
             'step_id': step_id,
             'data_schema': data_schema,
             'errors': errors,
@@ -163,7 +152,7 @@ class FlowHandler:
             'version': self.VERSION,
             'type': RESULT_TYPE_CREATE_ENTRY,
             'flow_id': self.flow_id,
-            'domain': self.domain,
+            'handler': self.handler,
             'title': title,
             'data': data,
             'source': self.source,
@@ -175,6 +164,6 @@ class FlowHandler:
         return {
             'type': RESULT_TYPE_ABORT,
             'flow_id': self.flow_id,
-            'domain': self.domain,
+            'handler': self.handler,
             'reason': reason
         }
