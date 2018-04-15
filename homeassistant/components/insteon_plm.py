@@ -130,6 +130,10 @@ def async_setup(hass, config):
         entity = hass.states.get(entity_id)
         if entity and isinstance(entity, InsteonPLMEntity):
             entity.load_aldb(db_reload)
+        else:
+            _LOGGER.error('Entity is not an insteon_plm entity')
+            _LOGGER.debug(entity_id)
+            _LOGGER.debug(entity)
 
     def print_aldb(service):
         """Print the All-Link Database for a device."""
@@ -139,6 +143,10 @@ def async_setup(hass, config):
         entity = hass.states.get(entity_id)
         if entity and isinstance(entity, InsteonPLMEntity):
             entity.print_aldb()
+        else:
+            _LOGGER.error('Entity is not an insteon_plm entity')
+            _LOGGER.debug(entity_id)
+            _LOGGER.debug(entity)
 
     def _register_services():
         hass.services.register(DOMAIN, SRV_ADD_ALL_LINK, add_all_link,
