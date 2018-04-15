@@ -71,6 +71,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup LW-12 WiFi LED Controller platform."""
+    import lw12
+
     # Assign configuration variables.
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -80,32 +82,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     effect = config.get(CONF_EFFECT)
     transition = config.get(CONF_TRANSITION)
     # Add devices
-    add_devices([LW12WiFi(name, host, port, rgb, brightness, effect,
+    lw12_light = lw12.LW12Controller(host, port)
+    add_devices([LW12WiFi(name, lw12_light, rgb, brightness, effect,
                           transition)])
 
 
 class LW12WiFi(Light):
     """LW-12 WiFi LED Controller."""
 
-    def __init__(self, name, host, port, rgb_color, brightness, effect,
+    def __init__(self, name, lw12_light, rgb_color, brightness, effect,
                  transition):
         """Initialisation of LW-12 WiFi LED Controller.
 
         Args:
             name: Friendly name for this platform to use.
-            host: Hostname or IP address of the device.
-            port: Port (Default: 5000) to connect to.
+            lw12_light: Instance of the LW12 controller.
             rgb_color: Initial color to set after the light turned on.
             brightness: Brightness of the LEDs to set.
             effect: If not None, turn on the lights with the selected effect.
             transition: Speed of the effects.
         """
-        import lw12
-
-        self._light = lw12.LW12Controller(host, port)
+        self._light = lw12_light
         self._name = name
-        self._host = host
-        self._port = port
         self._rgb_color = rgb_color
         self._brightness = brightness
         self._state = None
