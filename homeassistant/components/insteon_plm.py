@@ -124,7 +124,9 @@ def async_setup(hass, config):
         """Load the device All-Link database."""
         entity_id = service.data.get(CONF_ENTITY_ID)
         reload = service.data.get(SRV_LOAD_DB_RELOAD)
-        db_reload = True if reload.lower() == 'y' else False
+        db_reload = False
+        if reload:
+            db_reload = True if reload.lower() == 'y' else False
         entity = hass.states.get(entity_id)
         if entity and isinstance(InsteonPLMEntity):
             entity.load_aldb(db_reload)
