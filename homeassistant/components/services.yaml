@@ -566,4 +566,3 @@ insteon_plm:
       mode:
         description: Linking mode \n\tC - PLM is controler \n\tR - PLM is responder
         example: C
-i
