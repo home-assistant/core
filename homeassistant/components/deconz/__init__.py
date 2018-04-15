@@ -6,8 +6,6 @@ https://home-assistant.io/components/deconz/
 """
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.discovery import SERVICE_DECONZ
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
