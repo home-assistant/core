@@ -146,7 +146,7 @@ pymonoprice==0.3
 pynx584==0.4
 
 # homeassistant.components.qwikswitch
-pyqwikswitch==0.7
+pyqwikswitch==0.71
 
 # homeassistant.components.sensor.darksky
 # homeassistant.components.weather.darksky
