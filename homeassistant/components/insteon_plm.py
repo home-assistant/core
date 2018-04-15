@@ -146,8 +146,7 @@ def async_setup(hass, config):
         # Furture direction is to create an INSTEON control panel.
         entity_id = service.data.get(CONF_ENTITY_ID)
         entity = hass.states.get(entity_id)
-        insteon_plm_component = get_component(DOMAIN)
-        _LOGGER.debug(dir(insteon_plm_component))
+        _LOGGER.debug(dir(service.data))
         if entity and isinstance(entity, InsteonPLMEntity):
             entity.print_aldb()
         else:
