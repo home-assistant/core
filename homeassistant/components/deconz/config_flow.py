@@ -33,7 +33,7 @@ class DeconzFlowHandler(config_entries.ConfigFlowHandler):
         """Handle a deCONZ config flow start."""
         from pydeconz.utils import async_discovery
 
-        if DOMAIN in self.hass.data:
+        if len(configured_hosts(self.hass)) > 0:
             return self.async_abort(reason='one_instance_only')
 
         if user_input is not None:
@@ -96,11 +96,10 @@ class DeconzFlowHandler(config_entries.ConfigFlowHandler):
 
         config_file = await self.hass.async_add_job(
             load_json, self.hass.config.path(CONFIG_FILE))
-        if config_file and config_file[CONF_HOST] == deconz_config[CONF_HOST]:
-            deconz_config = config_file
-
-        if deconz_config[CONF_HOST] in configured_hosts(self.hass):
-            return self.async_abort(reason='already_configured')
+        if config_file and \
+           config_file[CONF_HOST] == deconz_config[CONF_HOST] and \
+           CONF_API_KEY in config_file:
+            deconz_config[CONF_API_KEY] = config_file[CONF_API_KEY]
 
         return await self.async_step_import(deconz_config)
 
@@ -117,7 +116,9 @@ class DeconzFlowHandler(config_entries.ConfigFlowHandler):
         Otherwise we will delegate to `link` step which
         will ask user to link the bridge.
         """
-        if import_config[CONF_HOST] in configured_hosts(self.hass):
+        if len(configured_hosts(self.hass)) > 0:
+            return self.async_abort(reason='one_instance_only')
+        elif import_config[CONF_HOST] in configured_hosts(self.hass):
             return self.async_abort(reason='already_configured')
         elif CONF_API_KEY not in import_config:
             self.deconz_config = import_config
