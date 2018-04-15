@@ -18,7 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.light import ATTR_BRIGHTNESS
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyqwikswitch==0.6']
+REQUIREMENTS = ['pyqwikswitch==0.71']
 
 _LOGGER = logging.getLogger(__name__)
 
