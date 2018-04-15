@@ -91,7 +91,8 @@ async def async_setup_platform(hass, config, async_add_devices,
                 _LOGGER.debug("Stopping internal pymediaroom discovery.")
                 hass.data[DISCOVERY_MEDIAROOM].close()
 
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_discovery)
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                       stop_discovery)
 
             _LOGGER.debug("Auto discovery installed")
 
