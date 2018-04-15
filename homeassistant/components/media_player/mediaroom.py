@@ -8,6 +8,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.media_player import (
     MEDIA_TYPE_CHANNEL, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_STOP, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
@@ -86,7 +87,8 @@ async def async_setup_platform(hass, config, async_add_devices,
             hass.data[DISCOVERY_MEDIAROOM] = await install_mediaroom_protocol(
                 responses_callback=callback_notify)
 
-            async def stop_discovery(event):
+            @callback
+            def stop_discovery(event):
                 """Stop discovery of new mediaroom STB's."""
                 _LOGGER.debug("Stopping internal pymediaroom discovery.")
                 hass.data[DISCOVERY_MEDIAROOM].close()
