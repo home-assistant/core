@@ -16,6 +16,7 @@ from homeassistant.const import (CONF_PORT, EVENT_HOMEASSISTANT_STOP,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.loader import get_component
 
 REQUIREMENTS = ['insteonplm==0.8.6']
 
@@ -122,18 +123,22 @@ def async_setup(hass, config):
 
     def load_aldb(service):
         """Load the device All-Link database."""
+        from insteonplm.address import Address
         entity_id = service.data.get(CONF_ENTITY_ID)
         reload = service.data.get(SRV_LOAD_DB_RELOAD)
         db_reload = False
         if reload:
             db_reload = True if reload.lower() == 'y' else False
         entity = hass.states.get(entity_id)
-        if entity and isinstance(entity, InsteonPLMEntity):
-            entity.load_aldb(db_reload)
-        else:
-            _LOGGER.error('Entity is not an insteon_plm entity')
-            _LOGGER.debug(entity_id)
-            _LOGGER.debug(entity)
+        if entity:
+            addr = entity.attributes.get('INSTEON Address')
+            if addr:
+                insteon_address = address(addr)
+                device = plm.devices[insteon_address.hex]
+                device.load_aldb(db_reload)
+            else:
+                _LOGGER.error('Entity is not an insteon_plm entity')
+                _LOGGER.debug(entity)
 
     def print_aldb(service):
         """Print the All-Link Database for a device."""
@@ -141,6 +146,8 @@ def async_setup(hass, config):
         # Furture direction is to create an INSTEON control panel.
         entity_id = service.data.get(CONF_ENTITY_ID)
         entity = hass.states.get(entity_id)
+        insteon_plm_component = get_component(DOMAIN)
+        _LOGGER.debug(dir(insteon_plm_component))
         if entity and isinstance(entity, InsteonPLMEntity):
             entity.print_aldb()
         else:
