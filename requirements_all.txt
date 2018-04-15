@@ -458,7 +458,7 @@ keyring==12.0.0
 keyrings.alt==3.0
 
 # homeassistant.components.eufy
-lakeside==0.4
+lakeside==0.5
 
 # homeassistant.components.device_tracker.owntracks
 # homeassistant.components.device_tracker.owntracks_http
