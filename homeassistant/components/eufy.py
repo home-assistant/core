@@ -15,7 +15,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['lakeside==0.4']
+REQUIREMENTS = ['lakeside==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
