@@ -117,7 +117,9 @@ class DeconzFlowHandler(config_entries.ConfigFlowHandler):
         Otherwise we will delegate to `link` step which
         will ask user to link the bridge.
         """
-        if CONF_API_KEY not in import_config:
+        if import_config[CONF_HOST] in configured_hosts(self.hass):
+            return self.async_abort(reason='already_configured')
+        elif CONF_API_KEY not in import_config:
             self.deconz_config = import_config
             return await self.async_step_link()
         return self.async_create_entry(
