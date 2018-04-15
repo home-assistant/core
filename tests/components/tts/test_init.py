@@ -584,10 +584,9 @@ class TestTTS(object):
         req = requests.post(url, data=json.dumps(data))
         assert req.status_code == 200
         response = json.loads(req.text)
-        assert response.get('url') == (
-                                   "http://127.0.0.1:8144/api/tts_proxy/"
-                                   "265944c108cbb00b2a621be5930513e03a0bb2cd"
-                                   "_en_-_demo.mp3")
+        assert response.get('url') == (("{}/api/tts_proxy/265944c108cbb00b2a62"
+                                        "1be5930513e03a0bb2cd_en_-_demo.mp3")
+                                       .format(self.hass.config.api.base_url))
 
     def test_setup_component_and_web_get_url_bad_config(self):
         """Setup the demo platform and receive wrong file from web."""
