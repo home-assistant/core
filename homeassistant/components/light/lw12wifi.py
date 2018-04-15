@@ -55,8 +55,6 @@ DEFAULT_BRIGHTNESS = 255
 DEFAULT_EFFECT = None
 DEFAULT_TRANSITION = 128
 
-DOMAIN = 'lw12wifi'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
