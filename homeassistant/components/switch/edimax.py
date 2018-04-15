@@ -84,12 +84,12 @@ class SmartPlugSwitch(SwitchDevice):
         """Update edimax switch."""
         try:
             self._now_power = float(self.smartplug.now_power)
-        except ValueError:
+        except (TypeError, ValueError):
             self._now_power = None
 
         try:
             self._now_energy_day = float(self.smartplug.now_energy_day)
-        except ValueError:
+        except (TypeError, ValueError):
             self._now_energy_day = None
 
         self._state = self.smartplug.state == 'ON'
