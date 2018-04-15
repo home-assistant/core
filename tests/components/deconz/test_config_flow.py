@@ -1,18 +1,16 @@
 """Tests for deCONZ config flow."""
+from unittest.mock import patch
 import pytest
 
-from unittest.mock import patch
-
 import voluptuous as vol
-
-from homeassistant.components.deconz import config_flow, const
+from homeassistant.components.deconz import config_flow
 from tests.common import MockConfigEntry
 
 import pydeconz
 
 
 async def test_flow_works(hass, aioclient_mock):
-    """Test config flow."""
+    """Test that config flow works."""
     aioclient_mock.get(pydeconz.utils.URL_DISCOVER, json=[
         {'id': 'id', 'internalipaddress': '1.2.3.4', 'internalport': 80}
     ])
@@ -35,7 +33,7 @@ async def test_flow_works(hass, aioclient_mock):
     }
 
 
-async def test_flow_already_registered_bridge(hass, aioclient_mock):
+async def test_flow_already_registered_bridge(hass):
     """Test config flow don't allow more than one bridge to be registered."""
     MockConfigEntry(domain='deconz', data={
         'host': '1.2.3.4'
@@ -90,8 +88,8 @@ async def test_flow_two_bridges_discovered(hass, aioclient_mock):
     result['data_schema']({'host': '5.6.7.8'})
 
 
-async def test_flow_no_api_key(hass, aioclient_mock):
-    """Test config flow discovers no bridges."""
+async def test_link_no_api_key(hass, aioclient_mock):
+    """Test config flow should abort if no API key was possible to retrieve."""
     aioclient_mock.post('http://1.2.3.4:80/api', json=[])
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
@@ -101,6 +99,23 @@ async def test_flow_no_api_key(hass, aioclient_mock):
     assert result['type'] == 'form'
     assert result['step_id'] == 'link'
     assert result['errors'] == {'base': 'no_key'}
+
+
+async def test_link_already_registered_bridge(hass):
+    """Test that link verifies to only allow one config entry to complete.
+
+    This is possible with discovery which will allow the user to complete
+    a second config entry and then complete the discovered config entry.
+    """
+    MockConfigEntry(domain='deconz', data={
+        'host': '1.2.3.4'
+    }).add_to_hass(hass)
+    flow = config_flow.DeconzFlowHandler()
+    flow.hass = hass
+    flow.deconz_config = {'host': '1.2.3.4', 'port': 80}
+
+    result = await flow.async_step_link(user_input={})
+    assert result['type'] == 'abort'
 
 
 async def test_bridge_discovery(hass):
