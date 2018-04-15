@@ -77,8 +77,7 @@ class DeconzFlowHandler(config_entries.ConfigFlowHandler):
                     title='deCONZ',
                     data=self.deconz_config
                 )
-            else:
-                errors['base'] = 'no_key'
+            errors['base'] = 'no_key'
 
         return self.async_show_form(
             step_id='link',
