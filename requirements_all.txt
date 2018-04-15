@@ -888,7 +888,7 @@ pyowm==2.8.0
 pypollencom==1.1.1
 
 # homeassistant.components.qwikswitch
-pyqwikswitch==0.7
+pyqwikswitch==0.71
 
 # homeassistant.components.rainbird
 pyrainbird==0.1.3
