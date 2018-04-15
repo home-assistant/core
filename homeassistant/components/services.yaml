@@ -564,5 +564,5 @@ insteon_plm:
         description: All-Link group number.
         example: 1
       mode:
-        description: Linking mode \n\tC - PLM is controler \n\tR - PLM is responder
-        example: C
+        description: Linking mode   C - PLM is controler   R - PLM is responder
+        example: 'C'
