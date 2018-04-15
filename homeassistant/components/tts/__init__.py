@@ -484,7 +484,7 @@ class Provider(object):
 class TextToSpeechUrlView(HomeAssistantView):
     """TTS view to get a url to a generated speech file."""
 
-    requires_auth = False
+    requires_auth = True
     url = '/api/tts_get_url'
     name = 'api:tts:geturl'
 
