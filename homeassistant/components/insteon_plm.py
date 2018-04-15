@@ -128,7 +128,7 @@ def async_setup(hass, config):
         if reload:
             db_reload = True if reload.lower() == 'y' else False
         entity = hass.states.get(entity_id)
-        if entity and isinstance(InsteonPLMEntity):
+        if entity and isinstance(entity, InsteonPLMEntity):
             entity.load_aldb(db_reload)
 
     def print_aldb(service):
@@ -137,7 +137,7 @@ def async_setup(hass, config):
         # Furture direction is to create an INSTEON control panel.
         entity_id = service.data.get(CONF_ENTITY_ID)
         entity = hass.states.get(entity_id)
-        if entity and isinstance(InsteonPLMEntity):
+        if entity and isinstance(entity, InsteonPLMEntity):
             entity.print_aldb()
 
     def _register_services():
