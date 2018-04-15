@@ -257,7 +257,7 @@ class BroadlinkSP1Switch(BroadlinkRMSwitch):
 
     def __init__(self, friendly_name, device):
         """Initialize the switch."""
-        super().__init__(friendly_name, device, None, None)
+        super().__init__(friendly_name, friendly_name, device, None, None)
         self._command_on = 1
         self._command_off = 0
 
@@ -313,7 +313,7 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
 
     def __init__(self, friendly_name, device, slot, parent_device):
         """Initialize the slot of switch."""
-        super().__init__(friendly_name, device, None, None)
+        super().__init__(friendly_name, friendly_name, device, None, None)
         self._command_on = 1
         self._command_off = 0
         self._slot = slot
