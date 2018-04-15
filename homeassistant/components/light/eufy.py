@@ -111,7 +111,7 @@ class EufyLight(Light):
     @property
     def hs_color(self):
         """Return the color of this light."""
-        if self._colormode == False:
+        if not self._colormode:
             return None
         return self._hs
 
@@ -145,7 +145,7 @@ class EufyLight(Light):
             rgb = color_util.color_hsv_to_RGB(
                 hs[0], hs[1], brightness / 255 * 100)
             self._colormode = True
-        elif self._colormode == True:
+        elif self._colormode:
             rgb = color_util.color_hsv_to_RGB(
                 self._hs[0], self._hs[1], brightness / 255 * 100)
         else:
