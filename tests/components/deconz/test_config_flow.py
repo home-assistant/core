@@ -158,7 +158,7 @@ async def test_bridge_discovery_config_file(hass):
 
 
 async def test_bridge_discovery_other_config_file(hass):
-    """Test a bridge being discovered with a corresponding config file."""
+    """Test a bridge being discovered with another bridges config file."""
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
     with patch.object(config_flow, 'load_json',

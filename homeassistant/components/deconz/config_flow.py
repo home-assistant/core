@@ -120,8 +120,6 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
         """
         if configured_hosts(self.hass):
             return self.async_abort(reason='one_instance_only')
-        elif import_config[CONF_HOST] in configured_hosts(self.hass):
-            return self.async_abort(reason='already_configured')
         elif CONF_API_KEY not in import_config:
             self.deconz_config = import_config
             return await self.async_step_link()
