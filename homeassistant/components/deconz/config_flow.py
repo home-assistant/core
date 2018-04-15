@@ -33,7 +33,7 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
         """Handle a deCONZ config flow start."""
         from pydeconz.utils import async_discovery
 
-        if len(configured_hosts(self.hass)) > 0:
+        if configured_hosts(self.hass):
             return self.async_abort(reason='one_instance_only')
 
         if user_input is not None:
@@ -69,7 +69,7 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
         errors = {}
 
         if user_input is not None:
-            if len(configured_hosts(self.hass)) > 0:
+            if configured_hosts(self.hass):
                 return self.async_abort(reason='one_instance_only')
             session = aiohttp_client.async_get_clientsession(self.hass)
             api_key = await async_get_api_key(session, **self.deconz_config)
@@ -118,7 +118,7 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
         Otherwise we will delegate to `link` step which
         will ask user to link the bridge.
         """
-        if len(configured_hosts(self.hass)) > 0:
+        if configured_hosts(self.hass):
             return self.async_abort(reason='one_instance_only')
         elif import_config[CONF_HOST] in configured_hosts(self.hass):
             return self.async_abort(reason='already_configured')
