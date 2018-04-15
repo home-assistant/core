@@ -48,12 +48,14 @@ class EufyLight(Light):
         self._code = device['code']
         self._type = device['type']
         self._bulb = lakeside.bulb(self._address, self._code, self._type)
+        self._colormode = False
         if self._type == "T1011":
             self._features = SUPPORT_BRIGHTNESS
         elif self._type == "T1012":
             self._features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
         elif self._type == "T1013":
-            self._features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
+            self._features = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | \
+                             SUPPORT_COLOR
         self._bulb.connect()
 
     def update(self):
@@ -62,9 +64,10 @@ class EufyLight(Light):
         self._brightness = self._bulb.brightness
         self._temp = self._bulb.temperature
         if self._bulb.colors:
-            self._hs = color_util.color_RGB_to_hsv(*self._bulb.colors)
+            self._colormode = True
+            self._hs = color_util.color_RGB_to_hs(*self._bulb.colors)
         else:
-            self._hs = None
+            self._colormode = False
         self._state = self._bulb.power
 
     @property
@@ -108,6 +111,8 @@ class EufyLight(Light):
     @property
     def hs_color(self):
         """Return the color of this light."""
+        if not self._colormode:
+            return None
         return self._hs
 
     @property
@@ -128,6 +133,7 @@ class EufyLight(Light):
             brightness = max(1, self._brightness)
 
         if colortemp is not None:
+            self._colormode = False
             temp_in_k = mired_to_kelvin(colortemp)
             relative_temp = temp_in_k - EUFY_MIN_KELVIN
             temp = int(relative_temp * 100 /
@@ -138,6 +144,10 @@ class EufyLight(Light):
         if hs is not None:
             rgb = color_util.color_hsv_to_RGB(
                 hs[0], hs[1], brightness / 255 * 100)
+            self._colormode = True
+        elif self._colormode:
+            rgb = color_util.color_hsv_to_RGB(
+                self._hs[0], self._hs[1], brightness / 255 * 100)
         else:
             rgb = None
 
