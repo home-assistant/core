@@ -7,7 +7,7 @@ https://home-assistant.io/components/media_player.webostv/
 import asyncio
 from datetime import timedelta
 import logging
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 # pylint: disable=unused-import
 from typing import Dict  # noqa: F401
@@ -343,6 +343,39 @@ class LgWebOSDevice(MediaPlayerDevice):
         elif source_dict.get('label'):
             self._current_source = source_dict['label']
             self._client.set_input(source_dict['id'])
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Find app for media_id and initialize with url"""
+        youtube_id = self.youtube_video_id(media_id)
+        if youtube_id is not None:
+            app = "youtube.leanback.v4"
+            media_id = youtube_id
+            self._client.launch_app_with_params(app, contentId=media_id)
+        else:
+            self._client.open_url(media_id)
+
+    def youtube_video_id(self, value):
+        """
+        Examples:
+
+        http://youtu.be/SA2iWivDJiE
+        http://www.youtube.com/watch?v=_oPAwA_Udwc&feature=feedu
+        http://www.youtube.com/embed/SA2iWivDJiE
+        http://www.youtube.com/v/SA2iWivDJiE?version=3&amp;hl=en_US
+        """
+        query = urlparse(value)
+        if query.hostname == 'youtu.be':
+            return query.path[1:]
+        if query.hostname in ('www.youtube.com', 'youtube.com'):
+            if query.path == '/watch':
+                p = parse_qs(query.query)
+                return p['v'][0]
+            if query.path[:7] == '/embed/':
+                return query.path.split('/')[2]
+            if query.path[:3] == '/v/':
+                return query.path.split('/')[2]
+        # fail?
+        return None
 
     def media_play(self):
         """Send play command."""
