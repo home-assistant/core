@@ -20,7 +20,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_OPTIMISTIC, STATE_OFF,
     CONF_TIMEOUT, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY,
-    STATE_UNAVAILABLE
+    STATE_UNAVAILABLE, EVENT_HOMEASSISTANT_STOP
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -81,12 +81,19 @@ async def async_setup_platform(hass, config, async_add_devices,
     if not config[CONF_OPTIMISTIC]:
         from pymediaroom import install_mediaroom_protocol
 
-        already_installed = hass.data.get(DISCOVERY_MEDIAROOM, False)
+        already_installed = hass.data.get(DISCOVERY_MEDIAROOM, None)
         if not already_installed:
-            await install_mediaroom_protocol(
+            hass.data[DISCOVERY_MEDIAROOM] = await install_mediaroom_protocol(
                 responses_callback=callback_notify)
+
+            async def stop_discovery(event):
+                """Stop discovery of new mediaroom STB's."""
+                _LOGGER.debug("Stopping internal pymediaroom discovery.")
+                hass.data[DISCOVERY_MEDIAROOM].close()
+
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_discovery)
+
             _LOGGER.debug("Auto discovery installed")
-            hass.data[DISCOVERY_MEDIAROOM] = True
 
 
 class MediaroomDevice(MediaPlayerDevice):
