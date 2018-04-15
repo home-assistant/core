@@ -110,10 +110,8 @@ class LW12WiFi(Light):
         self._effect = effect
         self._transition_speed = transition
         # Setup feature list
-        self._supported_features = SUPPORT_BRIGHTNESS
-        self._supported_features |= SUPPORT_EFFECT
-        self._supported_features |= SUPPORT_COLOR
-        self._supported_features |= SUPPORT_TRANSITION
+        self._supported_features = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT \
+            | SUPPORT_COLOR | SUPPORT_TRANSITION
 
     @property
     def name(self):
