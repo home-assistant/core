@@ -708,7 +708,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 
     def __init__(self, name, device, model, unique_id):
         """Initialize the plug switch."""
-        from miio.airpurifier import OperationMode
+        from miio.airhumidifier import OperationMode
 
         super().__init__(name, device, model, unique_id)
 
