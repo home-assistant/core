@@ -556,3 +556,14 @@ xiaomi_aqara:
       device_id:
         description: Hardware address of the device to remove.
         example: 158d0000000000
+insteon_plm:
+  start_all_linking:
+    description: Put the PLM into All-Linking mode. Once the the PLM is in All-Linking mode, press the link button on the device to complete All-Linking.
+    fields:
+      group:
+        description: All-Link group number.
+        example: 1
+      mode:
+        description: Linking mode \n\tC - PLM is controler \n\tR - PLM is responder
+        example: C
+i

@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import (CONF_PORT, EVENT_HOMEASSISTANT_STOP,
-                                 CONF_PLATFORM)
+                                 CONF_PLATFORM,
+                                 CONF_ENTITY_ID)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
@@ -28,6 +29,9 @@ CONF_CAT = 'cat'
 CONF_SUBCAT = 'subcat'
 CONF_FIRMWARE = 'firmware'
 CONF_PRODUCT_KEY = 'product_key'
+SRV_START_ALL_LINK = 'start_all_linking'
+SRV_ALL_LINK_GROUP = 'group'
+SRV_ALL_LINK_MODE = 'mode'
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
@@ -47,6 +51,11 @@ CONFIG_SCHEMA = vol.Schema({
         })
 }, extra=vol.ALLOW_EXTRA)
 
+START_ALL_LINK_SCHEMA = vol.Schema({
+    vol.Required(SRV_ALL_LINK_GROUP): vol.Range(min=0, max=255),
+    vol.Required(SRV_ALL_LINK_MODE): vol.In(['C', 'R', 'c', 'r']),
+})
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -54,6 +63,7 @@ def async_setup(hass, config):
     import insteonplm
 
     ipdb = IPDB()
+    plm = None
 
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
@@ -78,6 +88,17 @@ def async_setup(hass, config):
                             discovered={'address': device.address.hex,
                                         'state_key': state_key},
                             hass_config=config))
+    def start_all_linking(service):
+        """Start the INSTEON All-Linking process."""
+        group = service.data.get(SRV_ALL_LINK_GROUP)
+        mode = service.data.get(SRV_ALL_LINK_MODE)
+        link_mode = 1 if mode.lower() == 'c' else 0
+        plm.start_all_linking(link_mode, group)
+
+    def _register_services():
+        hass.services.register(DOMAIN, SRV_START_ALL_LINK, start_all_linking,
+                               schema=START_ALL_LINK_SCHEMA)
+        _LOGGER.debug("Insteon_plm Services registered")
 
     _LOGGER.info("Looking for PLM on %s", port)
     conn = yield from insteonplm.Connection.create(
@@ -105,6 +126,7 @@ def async_setup(hass, config):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, conn.close)
 
     plm.devices.add_device_callback(async_plm_new_device)
+    hass.async_add_job(_register_services)
 
     return True
 
