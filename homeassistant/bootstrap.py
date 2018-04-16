@@ -86,7 +86,8 @@ def async_from_config_dict(config: Dict[str, Any],
     start = time()
 
     if enable_log:
-        async_enable_logging(hass, verbose, log_rotate_days, log_file, log_no_color)
+        async_enable_logging(hass, verbose, log_rotate_days, log_file,
+                             log_no_color)
 
     core_config = config.get(core.DOMAIN, {})
 
@@ -179,7 +180,8 @@ def from_config_file(config_path: str,
     # run task
     hass = hass.loop.run_until_complete(
         async_from_config_file(
-            config_path, hass, verbose, skip_pip, log_rotate_days, log_file, log_no_color)
+            config_path, hass, verbose, skip_pip,
+            log_rotate_days, log_file, log_no_color)
     )
 
     return hass
@@ -203,7 +205,8 @@ def async_from_config_file(config_path: str,
     hass.config.config_dir = config_dir
     yield from async_mount_local_lib_path(config_dir, hass.loop)
 
-    async_enable_logging(hass, verbose, log_rotate_days, log_file, log_no_color)
+    async_enable_logging(hass, verbose, log_rotate_days, log_file,
+                         log_no_color)
 
     try:
         config_dict = yield from hass.async_add_job(
@@ -229,7 +232,6 @@ def async_enable_logging(hass: core.HomeAssistant,
 
     This method must be run in the event loop.
     """
-
     fmt = ("%(asctime)s %(levelname)s (%(threadName)s) "
            "[%(name)s] %(message)s")
     datefmt = '%Y-%m-%d %H:%M:%S'
