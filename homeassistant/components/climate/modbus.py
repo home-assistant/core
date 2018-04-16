@@ -50,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 
-def setup_platform(config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Modbus Thermostat Platform."""
     name = config.get(CONF_NAME)
     modbus_slave = config.get(CONF_SLAVE)
@@ -118,8 +118,9 @@ class ModbusThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
-            target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        target_temperature = kwargs.get(ATTR_TEMPERATURE)
+        if target_temperature is None:
+            return
         byte_string = struct.pack(self._structure, target_temperature)
         register_value = struct.unpack('>h', byte_string[0:2])[0]
 
