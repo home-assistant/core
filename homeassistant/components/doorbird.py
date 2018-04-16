@@ -9,7 +9,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD, \
+    CONF_DEVICES, CONF_NAME
 from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
 
@@ -24,14 +25,20 @@ API_URL = '/api/{}'.format(DOMAIN)
 CONF_DOORBELL_EVENTS = 'doorbell_events'
 CONF_CUSTOM_URL = 'hass_url_override'
 
+DEVICE_SCHEMA = vol.Schema({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_DOORBELL_EVENTS): cv.boolean,
+    vol.Optional(CONF_CUSTOM_URL): cv.string,
+    vol.Optional(CONF_NAME): cv.string
+})
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_DOORBELL_EVENTS): cv.boolean,
-        vol.Optional(CONF_CUSTOM_URL): cv.string,
-    })
+    DOMAIN: vol.All(
+        cv.ensure_list,
+        [DEVICE_SCHEMA]
+    ),
 }, extra=vol.ALLOW_EXTRA)
 
 SENSOR_DOORBELL = 'doorbell'
@@ -41,44 +48,64 @@ def setup(hass, config):
     """Set up the DoorBird component."""
     from doorbirdpy import DoorBird
 
-    device_ip = config[DOMAIN].get(CONF_HOST)
-    username = config[DOMAIN].get(CONF_USERNAME)
-    password = config[DOMAIN].get(CONF_PASSWORD)
+    doorstations = []
 
-    device = DoorBird(device_ip, username, password)
-    status = device.ready()
+    for index, doorstation_config in enumerate(config[DOMAIN]):
+        device_ip = doorstation_config.get(CONF_HOST)
+        username = doorstation_config.get(CONF_USERNAME)
+        password = doorstation_config.get(CONF_PASSWORD)
+        name = doorstation_config.get(CONF_NAME) or 'DoorBird {}'.format(index + 1)
 
-    if status[0]:
-        _LOGGER.info("Connected to DoorBird at %s as %s", device_ip, username)
-        hass.data[DOMAIN] = device
-    elif status[1] == 401:
-        _LOGGER.error("Authorization rejected by DoorBird at %s", device_ip)
-        return False
-    else:
-        _LOGGER.error("Could not connect to DoorBird at %s: Error %s",
-                      device_ip, str(status[1]))
-        return False
+        device = DoorBird(device_ip, username, password)
+        status = device.ready()
 
-    if config[DOMAIN].get(CONF_DOORBELL_EVENTS):
-        # Provide an endpoint for the device to call to trigger events
-        hass.http.register_view(DoorbirdRequestView())
+        if status[0]:
+            _LOGGER.info("Connected to DoorBird at %s as %s", device_ip, username)
+            doorstations.append(ConfiguredDoorbird(device, name))
+        elif status[1] == 401:
+            _LOGGER.error("Authorization rejected by DoorBird at %s", device_ip)
+            return False
+        else:
+            _LOGGER.error("Could not connect to DoorBird at %s: Error %s",
+                          device_ip, str(status[1]))
+            return False
 
-        # Get the URL of this server
-        hass_url = hass.config.api.base_url
+        if doorstation_config.get(CONF_DOORBELL_EVENTS):
+            # Provide an endpoint for the device to call to trigger events
+            hass.http.register_view(DoorbirdRequestView())
 
-        # Override it if another is specified in the component configuration
-        if config[DOMAIN].get(CONF_CUSTOM_URL):
-            hass_url = config[DOMAIN].get(CONF_CUSTOM_URL)
+            # Get the URL of this server
+            hass_url = hass.config.api.base_url
+
+            # Override it if another is specified in the component configuration
+            if doorstation_config.get(CONF_CUSTOM_URL):
+                hass_url = doorstation_config.get(CONF_CUSTOM_URL)
+
+            # This will make HA the only service that gets doorbell events
+            url = '{}{}/{}/{}'.format(hass_url, API_URL, index + 1, SENSOR_DOORBELL)
+
             _LOGGER.info("DoorBird will connect to this instance via %s",
-                         hass_url)
+                         url)
 
-        # This will make HA the only service that gets doorbell events
-        url = '{}{}/{}'.format(hass_url, API_URL, SENSOR_DOORBELL)
-        device.reset_notifications()
-        device.subscribe_notification(SENSOR_DOORBELL, url)
+            device.reset_notifications()
+            device.subscribe_notification(SENSOR_DOORBELL, url)
+
+    hass.data[DOMAIN] = doorstations
 
     return True
 
+class ConfiguredDoorbird():
+    def __init__(self, device, name):
+        self._name = name
+        self._device = device
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def device(self):
+        return self._device
 
 class DoorbirdRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
@@ -86,12 +113,12 @@ class DoorbirdRequestView(HomeAssistantView):
     requires_auth = False
     url = API_URL
     name = API_URL[1:].replace('/', ':')
-    extra_urls = [API_URL + '/{sensor}']
+    extra_urls = [API_URL + '/{index}/{sensor}']
 
     # pylint: disable=no-self-use
     @asyncio.coroutine
-    def get(self, request, sensor):
+    def get(self, request, index, sensor):
         """Respond to requests from the device."""
         hass = request.app['hass']
-        hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor))
+        hass.bus.async_fire('{}_{}_{}'.format(DOMAIN, index, sensor))
         return 'OK'
