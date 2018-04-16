@@ -5,6 +5,7 @@ import pprint
 
 from aiohttp import hdrs, client_exceptions, WSMsgType
 
+from homeassistant import data_entry_flow
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.components.alexa import smart_home as alexa
 from homeassistant.components.google_assistant import smart_home as ga
@@ -47,6 +48,9 @@ class CloudIoT:
         """Connect to the IoT broker."""
         if self.state != STATE_DISCONNECTED:
             raise RuntimeError('Connect called while not disconnected')
+
+        # TODO add easy way to listen to cloud connect/disconnect events
+        # That's how we'll subscribe to auth
 
         hass = self.cloud.hass
         self.close_requested = False
@@ -255,3 +259,20 @@ def async_handle_cloud(hass, cloud, payload):
         _LOGGER.warning("Received unknown cloud action: %s", action)
 
     return None
+
+
+@HANDLERS.register('account_link')
+async def async_handle_account_link(hass, cloud, payload):
+    """Handle an incoming IoT message for linking accounts."""
+    try:
+        await hass.config_entries.flow.async_configure(
+            payload['config_flow_id'], payload['tokens'])
+    except data_entry_flow.UnknownFlow:
+        return {
+            'success': False,
+            'reason': 'unknown_config_flow',
+        }
+
+    return {
+        'success': True
+    }

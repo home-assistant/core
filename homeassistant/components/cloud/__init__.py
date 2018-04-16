@@ -106,6 +106,34 @@ def async_setup(hass, config):
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, cloud.async_start)
     yield from http_api.async_setup(hass)
+
+
+    # TEMP, see iot.py for real TODO
+    async def async_generate_url(flow_id):
+        # TODO extract this into helper
+        websession = hass.helpers.aiohttp_client.async_get_clientsession()
+
+        with async_timeout.timeout(10, loop=hass.loop):
+            await hass.async_add_job(auth_api.check_token, cloud)
+
+        with async_timeout.timeout(10, loop=hass.loop):
+            req = await websession.post(
+                'https://wijyl1dxe5.execute-api.us-east-1.amazonaws.com'
+                '/prod/{service}/generate_authorize_url',
+                headers={
+                    'authorization': cloud.id_token
+                },
+                data={
+                    'config_flow_id': flow_id,
+                }
+            )
+
+        data = await req.json()
+        return data['url']
+
+    hass.components.nest.async_register_flow_handler('Home Assistant Cloud', async_generate_url, False)
+
+
     return True
 
 

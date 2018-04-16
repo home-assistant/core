@@ -13,6 +13,10 @@ SOURCE_DISCOVERY = 'discovery'
 RESULT_TYPE_FORM = 'form'
 RESULT_TYPE_CREATE_ENTRY = 'create_entry'
 RESULT_TYPE_ABORT = 'abort'
+RESULT_TYPE_EXTERNAL_STEP = 'external'
+
+# Event that is fired when a flow is progressed via external source.
+EVENT_DATA_ENTRY_FLOW_PROGRESSED = 'data_entry_flow_progressed'
 
 
 class FlowError(HomeAssistantError):
@@ -73,13 +77,33 @@ class FlowManager:
         if flow is None:
             raise UnknownFlow
 
-        step_id, data_schema = flow.cur_step
+        cur_step = flow.cur_step
 
-        if data_schema is not None and user_input is not None:
-            user_input = data_schema(user_input)
+        if cur_step.get('data_schema') is not None and user_input is not None:
+            user_input = cur_step['data_schema'](user_input)
 
-        return await self._async_handle_step(
-            flow, step_id, user_input)
+        result = await self._async_handle_step(
+            flow, cur_step['step_id'], user_input)
+
+        # If we just got data from an external step which caused us to make
+        # progress, fire an event to update the frontend.
+        if (cur_step['type'] == RESULT_TYPE_EXTERNAL_STEP and
+                cur_step['step_id'] != result.get('step_id')):
+            # These results will end the flow, making a refresh impossible.
+            # So we embed the results.
+            if result['type'] in (RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY):
+                event_data = result
+            else:
+                # Tell frontend to reload the flow state.
+                event_data = {
+                    'handler': flow.handler,
+                    'flow_id': flow_id,
+                    'refresh': True
+                }
+            self.hass.bus.async_fire(EVENT_DATA_ENTRY_FLOW_PROGRESSED,
+                                     event_data)
+
+        return result
 
     @callback
     def async_abort(self, flow_id):
@@ -98,13 +122,13 @@ class FlowManager:
 
         result = await getattr(flow, method)(user_input)
 
-        if result['type'] not in (RESULT_TYPE_FORM, RESULT_TYPE_CREATE_ENTRY,
-                                  RESULT_TYPE_ABORT):
+        if result['type'] not in (RESULT_TYPE_FORM, RESULT_TYPE_EXTERNAL_STEP,
+                                  RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_ABORT):
             raise ValueError(
                 'Handler returned incorrect type: {}'.format(result['type']))
 
-        if result['type'] == RESULT_TYPE_FORM:
-            flow.cur_step = (result['step_id'], result['data_schema'])
+        if result['type'] in (RESULT_TYPE_FORM, RESULT_TYPE_EXTERNAL_STEP):
+            flow.cur_step = result
             return result
 
         # Abort and Success results both finish the flow
@@ -164,4 +188,15 @@ class FlowHandler:
             'flow_id': self.flow_id,
             'handler': self.handler,
             'reason': reason
+        }
+
+    @callback
+    def async_external_step(self, *, step_id, url):
+        """Return the definition of an external step for the user to take."""
+        return {
+            'type': RESULT_TYPE_EXTERNAL_STEP,
+            'flow_id': self.flow_id,
+            'handler': self.handler,
+            'step_id': step_id,
+            'url': url,
         }

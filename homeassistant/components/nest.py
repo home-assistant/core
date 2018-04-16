@@ -6,10 +6,14 @@ https://home-assistant.io/components/nest/
 """
 from concurrent.futures import ThreadPoolExecutor
 import logging
+import uuid
 import socket
 
 import voluptuous as vol
 
+from homeassistant import config_entries, data_entry_flow
+from homeassistant.core import callback
+from homeassistant.loader import bind_hass
 from homeassistant.const import (
     CONF_STRUCTURE, CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
     CONF_MONITORED_CONDITIONS,
@@ -27,6 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'nest'
 
 DATA_NEST = 'nest'
+DATA_NEST_FLOW = 'nest_config_flow'
 
 SIGNAL_NEST_UPDATE = 'nest_update'
 
@@ -187,8 +192,9 @@ async def async_setup(hass, config):
     """Set up Nest components."""
     from nest import Nest
 
-    if 'nest' in _CONFIGURING:
-        return
+    # When we are doing config entries.
+    if DOMAIN not in config:
+        return True
 
     conf = config[DOMAIN]
     client_id = conf[CONF_CLIENT_ID]
@@ -325,3 +331,67 @@ class NestSensorDevice(Entity):
 
         async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE,
                                  async_update_state)
+
+
+@bind_hass
+def async_register_flow_handler(hass, name, generate_oauth_auth_url, use_pin):
+    """Register an auth flow for the config entry flow."""
+    flows = hass.data.get(DATA_NEST_FLOW)
+    if flows is None:
+        flows = hass.data[DATA_NEST_FLOW] = {}
+    handler_id = uuid.uuid4().hex
+    data = {
+        'name': name,
+        'generate_oauth_auth_url': generate_oauth_auth_url,
+        'use_pin': use_pin,
+    }
+    flows[handler_id] = data
+
+    @callback
+    def async_unregister_handler():
+        """Removes the handler."""
+        flows.pop(handler_id, None)
+
+    return async_unregister_handler
+
+
+@config_entries.HANDLERS.register(DOMAIN)
+class NestFlowHandler(data_entry_flow.FlowHandler):
+    """Handle a Nest config flow."""
+
+    VERSION = 1
+
+    def __init__(self):
+        """Initialize Nest config flow."""
+        self._flow_handler = None
+
+    async def async_step_init(self, user_input=None):
+        """Handle a flow start."""
+        flows = self.hass.data.get(DATA_NEST_FLOW, [])
+
+        if not flows:
+            return self.async_abort(
+                reason='no_flow'
+            )
+        elif len(flows) == 1:
+            self._flow_handler = list(flows.keys())[0]
+            return await self.async_step_flow()
+
+        # Handle if we have multiple flows we show a picker.
+
+    async def async_step_flow(self, user_input=None):
+        """Handle the flow authentication."""
+        handler = self.hass.data[DATA_NEST_FLOW][self._flow_handler]
+
+        if user_input:
+            return self.async_create_entry(
+                title='Nest temp',
+                data=user_input,
+            )
+
+        url = await handler['generate_oauth_auth_url'](self.flow_id)
+
+        return self.async_external_step(
+            step_id='flow',
+            url=url,
+        )
