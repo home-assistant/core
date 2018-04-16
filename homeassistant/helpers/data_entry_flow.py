@@ -39,11 +39,7 @@ class FlowManagerIndexView(HomeAssistantView):
         self._flow_mgr = flow_mgr
 
     async def get(self, request):
-        """List flows that are in progress but not started by a user.
-
-        Example of a non-user initiated flow is a discovered Hue hub that
-        requires user interaction to finish setup.
-        """
+        """List flows that are in progress."""
         return self.json(self._flow_mgr.async_progress())
 
     @RequestDataValidator(vol.Schema({
