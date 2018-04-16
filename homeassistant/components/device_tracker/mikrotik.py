@@ -176,7 +176,7 @@ class MikrotikScanner(DeviceScanner):
                      for device in device_names
                      if device.get('mac-address')}
 
-        if self.wireless_exist:
+        if self.wireless_exist or self.capsman_exist:
             self.last_results = {
                 device.get('mac-address'):
                     mac_names.get(device.get('mac-address'))
