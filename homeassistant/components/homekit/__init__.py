@@ -100,7 +100,6 @@ def get_accessory(hass, state, aid, config):
                 features & (SUPPORT_OPEN | SUPPORT_CLOSE):
             a_type = 'GarageDoorOpener'
         elif features & (SUPPORT_OPEN | SUPPORT_CLOSE):
-            config['supports_stop'] = features & SUPPORT_STOP
             a_type = 'WindowCoveringBasic'
         elif features & SUPPORT_SET_POSITION:
             a_type = 'WindowCovering'
