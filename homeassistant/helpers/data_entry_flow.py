@@ -47,12 +47,17 @@ class FlowManagerIndexView(HomeAssistantView):
         return self.json(self._flow_mgr.async_progress())
 
     @RequestDataValidator(vol.Schema({
-        vol.Required('domain'): str,
+        vol.Required('handler'): vol.Any(str, list),
     }))
     async def post(self, request, data):
         """Handle a POST request."""
+        if isinstance(data['handler'], list):
+            handler = tuple(data['handler'])
+        else:
+            handler = data['handler']
+
         try:
-            result = await self._flow_mgr.async_init(data['domain'])
+            result = await self._flow_mgr.async_init(handler)
         except data_entry_flow.UnknownHandler:
             return self.json_message('Invalid handler specified', 404)
         except data_entry_flow.UnknownStep:
