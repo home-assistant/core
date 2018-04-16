@@ -21,7 +21,7 @@ MAX_BRIGHTNESS = 255
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Insteon PLM device."""
-    plm = hass.data['insteon_plm']
+    plm = hass.data['insteon_plm'].get('plm')
 
     address = discovery_info['address']
     device = plm.devices[address]

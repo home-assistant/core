@@ -84,7 +84,6 @@ def async_setup(hass, config):
 
     ipdb = IPDB()
     plm = None
-    entities = {}
 
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
@@ -124,16 +123,15 @@ def async_setup(hass, config):
 
     def load_aldb(service):
         """Load the device All-Link database."""
-        from insteonplm.address import Address
         entity_id = service.data.get(CONF_ENTITY_ID)
         reload = service.data.get(SRV_LOAD_DB_RELOAD)
         db_reload = False
         if reload:
             db_reload = True if reload.lower() == 'y' else False
-        insteon_plm = get_component(DOMAIN)
-        entity = insteon_plm.entities[entity_id]
+        entities = hass.data[DOMAIN].get('entities')
+        entity = entities.get(entity_id)
         if entity:
-            entity.print_aldb()
+            entity.load_aldb(db_reload)
         else:
             _LOGGER.error('Entity %s is not an INSTEON device', entity_id)
 
@@ -142,8 +140,8 @@ def async_setup(hass, config):
         # For now this sends logs to the log file.
         # Furture direction is to create an INSTEON control panel.
         entity_id = service.data.get(CONF_ENTITY_ID)
-        insteon_plm = get_component(DOMAIN)
-        entity = insteon_plm.entities[entity_id]
+        entities = hass.data[DOMAIN].get('entities')
+        entity = entities.get(entity_id)
         if entity:
             entity.print_aldb()
         else:
@@ -181,7 +179,9 @@ def async_setup(hass, config):
                 plm.devices.add_override(address, CONF_PRODUCT_KEY,
                                          device_override[prop])
 
-    hass.data['insteon_plm'] = plm
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN]['plm'] = plm
+    hass.data[DOMAIN]['entities'] = {}
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, conn.close)
 
@@ -300,7 +300,6 @@ class InsteonPLMEntity(Entity):
             self.async_entity_update)
         insteon_plm = get_component(DOMAIN)
         insteon_plm.entities[self.entity_id] = self
-
 
     def load_aldb(self, reload=False):
         """Load the device All-Link Database."""
