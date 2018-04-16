@@ -20,7 +20,8 @@ SEND_IR_CODE_SERVICE_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
     """Set up the mysensors platform for switches."""
     device_class_map = {
         'S_DOOR': MySensorsSwitch,
@@ -39,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     }
     mysensors.setup_mysensors_platform(
         hass, DOMAIN, discovery_info, device_class_map,
-        add_devices=add_devices)
+        async_add_devices=async_add_devices)
 
     def send_ir_code_service(service):
         """Set IR code as device state attribute."""
@@ -59,9 +60,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in _devices:
             device.turn_on(**kwargs)
 
-    hass.services.register(DOMAIN, SERVICE_SEND_IR_CODE,
-                           send_ir_code_service,
-                           schema=SEND_IR_CODE_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_SEND_IR_CODE, send_ir_code_service,
+        schema=SEND_IR_CODE_SERVICE_SCHEMA)
 
 
 class MySensorsSwitch(mysensors.MySensorsEntity, SwitchDevice):
@@ -71,6 +72,12 @@ class MySensorsSwitch(mysensors.MySensorsEntity, SwitchDevice):
     def assumed_state(self):
         """Return True if unable to access real state of entity."""
         return self.gateway.optimistic
+
+    @property
+    def current_power_w(self):
+        """Return the current power usage in W."""
+        set_req = self.gateway.const.SetReq
+        return self._values.get(set_req.V_WATT)
 
     @property
     def is_on(self):
@@ -137,7 +144,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
             self._values[set_req.V_LIGHT] = STATE_OFF
             self.schedule_update_ha_state()
 
-    def update(self):
+    async def async_update(self):
         """Update the controller with the latest value from a sensor."""
-        super().update()
+        await super().async_update()
         self._ir_code = self._values.get(self.value_type)

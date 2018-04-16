@@ -4,8 +4,8 @@ Reads vehicle status from BMW connected drive portal.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bmw_connected_drive/
 """
-import logging
 import asyncio
+import logging
 
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
 from homeassistant.helpers.entity import Entity
@@ -51,13 +51,20 @@ class BMWConnectedDriveSensor(Entity):
         self._attribute = attribute
         self._state = None
         self._unit_of_measurement = None
-        self._name = sensor_name
+        self._name = '{} {}'.format(self._vehicle.name, self._attribute)
+        self._unique_id = '{}-{}'.format(self._vehicle.vin, self._attribute)
+        self._sensor_name = sensor_name
         self._icon = icon
 
     @property
     def should_poll(self) -> bool:
         """Data update is triggered from BMWConnectedDriveEntity."""
         return False
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the sensor."""
+        return self._unique_id
 
     @property
     def name(self) -> str:
@@ -85,21 +92,21 @@ class BMWConnectedDriveSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the binary sensor."""
+        """Return the state attributes of the sensor."""
         return {
-            'car': self._vehicle.modelName
+            'car': self._vehicle.name
         }
 
     def update(self) -> None:
         """Read new state data from the library."""
-        _LOGGER.debug('Updating %s', self._vehicle.modelName)
+        _LOGGER.debug('Updating %s', self._vehicle.name)
         vehicle_state = self._vehicle.state
         self._state = getattr(vehicle_state, self._attribute)
 
         if self._attribute in LENGTH_ATTRIBUTES:
-            self._unit_of_measurement = vehicle_state.unit_of_length
+            self._unit_of_measurement = 'km'
         elif self._attribute == 'remaining_fuel':
-            self._unit_of_measurement = vehicle_state.unit_of_volume
+            self._unit_of_measurement = 'l'
         else:
             self._unit_of_measurement = None
 

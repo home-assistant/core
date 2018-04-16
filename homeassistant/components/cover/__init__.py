@@ -17,6 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import group
+from homeassistant.helpers import intent
 from homeassistant.const import (
     SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER, SERVICE_OPEN_COVER_TILT, SERVICE_CLOSE_COVER_TILT,
@@ -54,6 +55,9 @@ ATTR_CURRENT_POSITION = 'current_position'
 ATTR_CURRENT_TILT_POSITION = 'current_tilt_position'
 ATTR_POSITION = 'position'
 ATTR_TILT_POSITION = 'tilt_position'
+
+INTENT_OPEN_COVER = 'HassOpenCover'
+INTENT_CLOSE_COVER = 'HassCloseCover'
 
 COVER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -181,6 +185,12 @@ async def async_setup(hass, config):
         hass.services.async_register(
             DOMAIN, service_name, async_handle_cover_service,
             schema=schema)
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        INTENT_OPEN_COVER, DOMAIN, SERVICE_OPEN_COVER,
+        "Opened {}"))
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        INTENT_CLOSE_COVER, DOMAIN, SERVICE_CLOSE_COVER,
+        "Closed {}"))
 
     return True
 
