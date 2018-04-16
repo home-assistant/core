@@ -587,6 +587,7 @@ class DeviceScanner(object):
         """Scan for devices."""
         raise NotImplementedError()
 
+    @asyncio.coroutine
     def async_scan_devices(self) -> Any:
         """Scan for devices.
 
@@ -598,6 +599,7 @@ class DeviceScanner(object):
         """Get the name of a device."""
         raise NotImplementedError()
 
+    @asyncio.coroutine
     def async_get_device_name(self, device: str) -> Any:
         """Get the name of a device.
 
@@ -609,6 +611,7 @@ class DeviceScanner(object):
         """Get the extra attributes of a device."""
         raise NotImplementedError()
 
+    @asyncio.coroutine
     def async_get_extra_attributes(self, device: str) -> Any:
         """Get the extra attributes of a device.
 
