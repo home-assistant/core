@@ -315,8 +315,10 @@ class InsteonPLMEntity(Entity):
         if self._insteon_device.aldb.status in [ALDBStatus.LOADED,
                                                 ALDBStatus.PARTIAL]:
             for mem_addr in self._insteon_device.aldb:
-                rec = self._insteon_device.aldb
-                _LOGGER.info(str(rec))
+                rec = self._insteon_device.aldb[mem_addr]
+                # For now we write this to the log
+                # Roadmap is to create a configuration panel
+                _LOGGER.info(rec)
         else:
             _LOGGER.warning('Device All-Link database not loaded')
             _LOGGER.warning('Use service insteon_plm.load_aldb first')
