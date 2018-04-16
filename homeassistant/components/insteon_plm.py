@@ -312,13 +312,23 @@ class InsteonPLMEntity(Entity):
         from insteonplm.devices import ALDBStatus
         _LOGGER.info('ALDB load status for device %s is %s',
                      self.address, self._insteon_device.aldb.status.name)
+        _LOGGER.info('RecID In Use Mode HWM Group Address  Data 1 Data 2 Data 3')
+        _LOGGER.info('----- ------ ---- --- ----- -------- ------ ------ ------')
         if self._insteon_device.aldb.status in [ALDBStatus.LOADED,
                                                 ALDBStatus.PARTIAL]:
             for mem_addr in self._insteon_device.aldb:
                 rec = self._insteon_device.aldb[mem_addr]
                 # For now we write this to the log
                 # Roadmap is to create a configuration panel
-                _LOGGER.info(rec)
+                in_use = 'Y' if rec.control_flags.is_in_use else 'N'
+                mode = 'C' if rec.control_flags.is_controller else 'R'
+                hwm = 'Y' if rec.control_flags.is_high_water_mark else 'N'
+                _LOGGER.info(' {:04x}    {:s}     {:s}   {:s}    {:3d} {:s}'
+                             '   {:3d}   {:3d}   {:3d}'.format(
+                                 rec.mem_addr, in_use, mode, hwm,
+                                 rec.group, rec.address.human,
+                                 rec.data1, rec.data2, rec.data3))
+
         else:
             _LOGGER.warning('Device All-Link database not loaded')
             _LOGGER.warning('Use service insteon_plm.load_aldb first')
