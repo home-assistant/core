@@ -298,8 +298,7 @@ class InsteonPLMEntity(Entity):
         """Register INSTEON update events."""
         self._insteon_device_state.register_updates(
             self.async_entity_update)
-        insteon_plm = get_component(DOMAIN)
-        insteon_plm.entities[self.entity_id] = self
+        hass.data[DOMAIN]['entities'][self.entity_id] = self
 
     def load_aldb(self, reload=False):
         """Load the device All-Link Database."""
