@@ -4,13 +4,13 @@ Support for Plum Lightpad switches.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.plum_lightpad
 """
+from datetime import timedelta
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.light import PLATFORM_SCHEMA
 from homeassistant.helpers import event as evt
 from homeassistant.util import dt as dt_util
-from datetime import timedelta
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 DEPENDENCIES = ['plum_lightpad']
@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             PlumMotionSensor(lightpad=lightpad, hass=hass),
         ])
 
-    for lpid, lightpad in plum.lightpads.items():
+    for lightpad in plum.lightpads.values():
         new_lightpad(lightpad)
 
     plum.add_lightpad_listener(new_lightpad)
@@ -53,7 +53,7 @@ class PlumMotionSensor(BinarySensorDevice):
 
         def off_delay_handler(now):
             """Switch sensor off after a delay."""
-            if ((now - self._latest_motion).seconds >= self.off_delay):
+            if (now - self._latest_motion).seconds >= self.off_delay:
                 self._signal = None
                 self.schedule_update_ha_state()
 

@@ -6,8 +6,9 @@ https://home-assistant.io/components/light.plum_lightpad
 """
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.light import (
-    PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, SUPPORT_COLOR, ATTR_HS_COLOR)
+from homeassistant.components.light import (Light, PLATFORM_SCHEMA,
+                                            SUPPORT_BRIGHTNESS, SUPPORT_COLOR,
+                                            ATTR_HS_COLOR, ATTR_BRIGHTNESS)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.util.color as color_util
 
@@ -19,7 +20,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Setup the Plum Lightpad Light."""
     plum = hass.data['plum']
 
@@ -99,8 +101,7 @@ class PlumLight(Light):
         """Flag supported features."""
         if self.dimmable:
             return SUPPORT_BRIGHTNESS
-        else:
-            return None
+        return None
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
@@ -179,6 +180,10 @@ class GlowRing(Light):
         return self._brightness
 
     @property
+    def glow_intensity(self):
+        return self._brightness / 255.0
+
+    @property
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._lightpad.glow_enabled
@@ -195,19 +200,24 @@ class GlowRing(Light):
     @property
     def device_state_attributes(self):
         return {
-            'red': self._red, 'green': self._green, 'blue': self._blue, 'white': self._white,
-            'glowTimeout': self._lightpad.glow_timeout, 'glowFade': self._lightpad.glow_fade,
+            'red': self._red,
+            'green': self._green,
+            'blue': self._blue,
+            'white': self._white,
+            'glowTimeout': self._lightpad.glow_timeout,
+            'glowFade': self._lightpad.glow_fade,
         }
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-
-            self._lightpad.set_config({"glowIntensity": self._brightness / 255.0})
+            self._lightpad.set_config({"glowIntensity": self.glow_intensity})
         elif ATTR_HS_COLOR in kwargs:
-            self._red, self._green, self._blue = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
-            self._lightpad.set_glow_color(self.red, self.green, self.blue, self.white_value)
+            hs_color = kwargs[ATTR_HS_COLOR]
+            red, green, blue = color_util.color_hs_to_RGB(*hs_color)
+            self._red, self._green, self._blue = red, green, blue
+            self._lightpad.set_glow_color(red, green, blue, self.white_value)
         else:
             self._lightpad.set_config({"glowEnabled": True})
 

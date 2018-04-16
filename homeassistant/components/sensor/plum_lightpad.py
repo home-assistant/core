@@ -27,10 +27,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             PowerSensor(load=logical_load)
         ])
 
-    for llid, load in plum.loads.items():
+    for load in plum.loads.values():
         new_load(load)
 
     plum.add_load_listener(new_load)
+
 
 class PowerSensor(Entity):
     """Representation of a Lightpad power meter Sensor."""
