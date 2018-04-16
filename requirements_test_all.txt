@@ -180,7 +180,7 @@ rxv==0.5.1
 sleepyq==0.6
 
 # homeassistant.components.climate.honeywell
-somecomfort==0.5.0
+somecomfort==0.5.2
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
