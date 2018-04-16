@@ -19,9 +19,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = [
-    'https://github.com/balloob/python-broadlink/archive/'
-    '3580ff2eaccd267846f14246d6ede6e30671f7c6.zip#broadlink==0.5.1']
+REQUIREMENTS = ['broadlink==0.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,7 +106,7 @@ class BroadlinkData(object):
         """Initialize the data object."""
         import broadlink
         self.data = None
-        self._device = broadlink.a1((ip_addr, 80), mac_addr)
+        self._device = broadlink.a1((ip_addr, 80), mac_addr, None)
         self._device.timeout = timeout
         self._schema = vol.Schema({
             vol.Optional('temperature'): vol.Range(min=-50, max=150),

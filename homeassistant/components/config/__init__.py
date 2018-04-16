@@ -14,23 +14,15 @@ from homeassistant.util.yaml import load_yaml, dump
 DOMAIN = 'config'
 DEPENDENCIES = ['http']
 SECTIONS = ('core', 'customize', 'group', 'hassbian', 'automation', 'script',
-            'entity_registry')
+            'entity_registry', 'config_entries')
 ON_DEMAND = ('zwave',)
-FEATURE_FLAGS = ('config_entries',)
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the config component."""
-    global SECTIONS
-
     yield from hass.components.frontend.async_register_built_in_panel(
         'config', 'config', 'mdi:settings')
-
-    # Temporary way of allowing people to opt-in for unreleased config sections
-    for key, value in config.get(DOMAIN, {}).items():
-        if key in FEATURE_FLAGS and value:
-            SECTIONS += (key,)
 
     @asyncio.coroutine
     def setup_panel(panel_name):

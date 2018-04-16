@@ -93,7 +93,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class IFTTTAlarmPanel(alarm.AlarmControlPanel):
-    """Representation of an alarm control panel controlled throught IFTTT."""
+    """Representation of an alarm control panel controlled through IFTTT."""
 
     def __init__(self, name, code, event_away, event_home, event_night,
                  event_disarm, optimistic):

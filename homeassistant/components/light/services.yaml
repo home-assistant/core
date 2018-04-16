@@ -15,6 +15,9 @@ turn_on:
     color_name:
       description: A human readable color name.
       example: 'red'
+    hs_color:
+      description: Color for the light in hue/sat format. Hue is 0-360 and Sat is 0-100.
+      example: '[300, 70]'
     xy_color:
       description: Color for the light in XY-format.
       example: '[0.52, 0.43]'
@@ -179,3 +182,13 @@ xiaomi_miio_set_delayed_turn_off:
     time_period:
       description: Time period for the delayed turn off.
       example: "5, '0:05', {'minutes': 5}"
+
+yeelight_set_mode:
+  description: Set a operation mode.
+  fields:
+    entity_id:
+      description: Name of the light entity.
+      example: 'light.yeelight'
+    mode:
+      description: Operation mode. Valid values are 'last', 'normal', 'rgb', 'hsv', 'color_flow', 'moonlight'.
+      example: 'moonlight'
