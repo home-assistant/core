@@ -41,9 +41,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class InsteonPLMBinarySensor(InsteonPLMEntity, BinarySensorDevice):
     """A Class for an Insteon device entity."""
 
-    def __init__(self, device, state_key):
+    def __init__(self, hass, device, state_key):
         """Initialize the INSTEON PLM binary sensor."""
-        super().__init__(device, state_key)
+        super().__init__(hass, device, state_key)
         self._sensor_type = SENSOR_TYPES.get(self._insteon_device_state.name)
 
     @property
