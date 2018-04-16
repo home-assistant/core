@@ -247,8 +247,9 @@ class IPDB(object):
 class InsteonPLMEntity(Entity):
     """INSTEON abstract base entity."""
 
-    def __init__(self, device, state_key):
+    def __init__(self, hass, device, state_key):
         """Initialize the INSTEON PLM binary sensor."""
+        self._hass = hass
         self._insteon_device_state = device.states[state_key]
         self._insteon_device = device
         self._insteon_device.aldb.add_loaded_callback(self._aldb_loaded)
@@ -298,7 +299,7 @@ class InsteonPLMEntity(Entity):
         """Register INSTEON update events."""
         self._insteon_device_state.register_updates(
             self.async_entity_update)
-        hass.data[DOMAIN]['entities'][self.entity_id] = self
+        self._hass.data[DOMAIN]['entities'][self.entity_id] = self
 
     def load_aldb(self, reload=False):
         """Load the device All-Link Database."""
