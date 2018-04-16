@@ -1,6 +1,5 @@
 """
 Support for monitoring the Deluge BitTorrent client API.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.deluge/
 """
@@ -15,7 +14,7 @@ from homeassistant.const import (
     CONF_MONITORED_VARIABLES, STATE_IDLE)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['deluge-client==1.0.5']
+REQUIREMENTS = ['deluge-client==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 _THROTTLED_REFRESH = None
@@ -24,7 +23,6 @@ DEFAULT_NAME = 'Deluge'
 DEFAULT_PORT = 58846
 DHT_UPLOAD = 1000
 DHT_DOWNLOAD = 1000
-
 SENSOR_TYPES = {
     'current_status': ['Status', None],
     'download_speed': ['Down Speed', 'kB/s'],
@@ -54,11 +52,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
 
     deluge_api = DelugeRPCClient(host, port, username, password)
-    try:
-        deluge_api.connect()
-    except ConnectionRefusedError:
-        _LOGGER.error("Connection to Deluge Daemon failed")
-        return
 
     dev = []
     for variable in config[CONF_MONITORED_VARIABLES]:
@@ -79,6 +72,7 @@ class DelugeSensor(Entity):
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self.data = None
+        self._available = False
 
     @property
     def name(self):
@@ -91,11 +85,26 @@ class DelugeSensor(Entity):
         return self._state
 
     @property
+    def available(self):
+        """Return true if device is available."""
+        return self._available
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def update(self):
+        """ check if deluge_client is connected first """
+        try:
+            self.client._create_socket()
+            self.client.connect()
+            self._available = True
+        except ConnectionRefusedError:
+            _LOGGER.error("Connection to Deluge Daemon failed")
+            self._available = False
+            return
+
         """Get the latest data from Deluge and updates the state."""
         self.data = self.client.call('core.get_session_status',
                                      ['upload_rate', 'download_rate',
