@@ -23,11 +23,6 @@ REQUIREMENTS = ['insteonplm==0.8.6']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'insteon_plm'
-PLATFORMS = ['binary_sensor',
-             'fan',
-             'light',
-             'sensor',
-             'switch']
 
 CONF_OVERRIDE = 'device_override'
 CONF_ADDRESS = 'address'
@@ -89,6 +84,7 @@ def async_setup(hass, config):
 
     ipdb = IPDB()
     plm = None
+    entities = {}
 
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
@@ -134,34 +130,24 @@ def async_setup(hass, config):
         db_reload = False
         if reload:
             db_reload = True if reload.lower() == 'y' else False
-        entity = hass.states.get(entity_id)
+        insteon_plm = get_component(DOMAIN)
+        entity = insteon_plm.entities[entity_id]
         if entity:
-            addr = entity.attributes.get('INSTEON Address')
-            if addr:
-                insteon_address = address(addr)
-                device = plm.devices[insteon_address.hex]
-                device.load_aldb(db_reload)
-            else:
-                _LOGGER.error('Entity is not an insteon_plm entity')
-                _LOGGER.debug(entity)
+            entity.print_aldb()
+        else:
+            _LOGGER.error('Entity %s is not an INSTEON device', entity_id)
 
     def print_aldb(service):
         """Print the All-Link Database for a device."""
         # For now this sends logs to the log file.
         # Furture direction is to create an INSTEON control panel.
         entity_id = service.data.get(CONF_ENTITY_ID)
-        entity = None
-        for str_platform in PLATFORMS:
-            platform = get_component(str_platform)
-            entity = platform.get_entity(entity_id)
-            if entity:
-                break
-        if isinstance(entity, InsteonPLMEntity):
+        insteon_plm = get_component(DOMAIN)
+        entity = insteon_plm.entities[entity_id]
+        if entity:
             entity.print_aldb()
         else:
-            _LOGGER.error('Entity is not an insteon_plm entity')
-            _LOGGER.debug(entity_id)
-            _LOGGER.debug(entity)
+            _LOGGER.error('Entity %s is not an INSTEON device', entity_id)
 
     def _register_services():
         hass.services.register(DOMAIN, SRV_ADD_ALL_LINK, add_all_link,
@@ -312,6 +298,9 @@ class InsteonPLMEntity(Entity):
         """Register INSTEON update events."""
         self._insteon_device_state.register_updates(
             self.async_entity_update)
+        insteon_plm = get_component(DOMAIN)
+        insteon_plm.entities[self.entity_id] = self
+
 
     def load_aldb(self, reload=False):
         """Load the device All-Link Database."""
