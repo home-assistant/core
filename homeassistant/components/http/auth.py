@@ -42,7 +42,8 @@ def setup_auth(app, trusted_networks, api_password):
             authenticated = True
 
         elif (hdrs.AUTHORIZATION in request.headers and
-              validate_authorization_header(api_password, request)):
+              await async_validate_authorization_header(api_password,
+                                                        request)):
             authenticated = True
 
         elif _is_trusted_ip(request, trusted_networks):
@@ -73,12 +74,16 @@ def validate_password(request, api_password):
         api_password, request.app['hass'].http.api_password)
 
 
-def validate_authorization_header(api_password, request):
+async def async_validate_authorization_header(api_password, request):
     """Test an authorization header if valid password."""
     if hdrs.AUTHORIZATION not in request.headers:
         return False
 
     auth_type, auth = request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
+
+    if auth_type == 'Bearer':
+        return await \
+            request.app['hass'].components.auth.async_valid_access_token(auth)
 
     if auth_type != 'Basic':
         return False

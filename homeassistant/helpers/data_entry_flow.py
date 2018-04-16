@@ -7,62 +7,39 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
 
-class SingleSchemaFlow(data_entry_flow.FlowHandler):
-    """Helper class to create a flow from a single voluptuous schema."""
-
-    def __init__(self, schema, title=None):
-        """Initialize the single flow schema."""
-        self._schema = schema
-        self._title = title
-
-    async def async_step_init(self, user_input=None):
-        """Handle the step of the form."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self._title,
-                data=user_input
-            )
-
-        return self.async_show_form(
-            step_id='init',
-            data_schema=self._schema
-        )
-
-
-def _prepare_json(result):
-    """Convert result for JSON."""
-    if result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-        data = result.copy()
-        data.pop('result')
-        data.pop('data')
-        return data
-
-    elif result['type'] != data_entry_flow.RESULT_TYPE_FORM:
-        return result
-
-    import voluptuous_serialize
-
-    data = result.copy()
-
-    schema = data['data_schema']
-    if schema is None:
-        data['data_schema'] = []
-    else:
-        data['data_schema'] = voluptuous_serialize.convert(schema)
-
-    return data
-
-
-class FlowManagerIndexView(HomeAssistantView):
-    """View to create config flows."""
+class _BaseFlowManagerView(HomeAssistantView):
+    """Foundation for flow manager views."""
 
     def __init__(self, flow_mgr):
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
 
-    async def get(self, request):
-        """List flows that are in progress."""
-        return self.json(self._flow_mgr.async_progress())
+    def _prepare_result_json(self, result):
+        """Convert result to JSON."""
+        if result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            data = result.copy()
+            data.pop('result')
+            data.pop('data')
+            return data
+
+        elif result['type'] != data_entry_flow.RESULT_TYPE_FORM:
+            return result
+
+        import voluptuous_serialize
+
+        data = result.copy()
+
+        schema = data['data_schema']
+        if schema is None:
+            data['data_schema'] = []
+        else:
+            data['data_schema'] = voluptuous_serialize.convert(schema)
+
+        return data
+
+
+class FlowManagerIndexView(_BaseFlowManagerView):
+    """View to create config flows."""
 
     @RequestDataValidator(vol.Schema({
         vol.Required('handler'): vol.Any(str, list),
@@ -81,17 +58,13 @@ class FlowManagerIndexView(HomeAssistantView):
         except data_entry_flow.UnknownStep:
             return self.json_message('Handler does not support init', 400)
 
-        result = _prepare_json(result)
+        result = self._prepare_result_json(result)
 
         return self.json(result)
 
 
-class FlowManagerResourceView(HomeAssistantView):
+class FlowManagerResourceView(_BaseFlowManagerView):
     """View to interact with the flow manager."""
-
-    def __init__(self, flow_mgr):
-        """Initialize the flow manager resource view."""
-        self._flow_mgr = flow_mgr
 
     async def get(self, request, flow_id):
         """Get the current state of a data_entry_flow."""
@@ -100,7 +73,7 @@ class FlowManagerResourceView(HomeAssistantView):
         except data_entry_flow.UnknownFlow:
             return self.json_message('Invalid flow specified', 404)
 
-        result = _prepare_json(result)
+        result = self._prepare_result_json(result)
 
         return self.json(result)
 
@@ -114,7 +87,7 @@ class FlowManagerResourceView(HomeAssistantView):
         except vol.Invalid:
             return self.json_message('User input malformed', 400)
 
-        result = _prepare_json(result)
+        result = self._prepare_result_json(result)
 
         return self.json(result)
 

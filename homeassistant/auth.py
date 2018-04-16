@@ -1,5 +1,6 @@
 """Provide an authentication layer for Home Assistant."""
 import asyncio
+from datetime import datetime
 import logging
 import uuid
 
@@ -7,11 +8,12 @@ import attr
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from . import data_entry_flow
-from .core import callback
-from .const import CONF_TYPE, CONF_NAME, CONF_ID
-from .exceptions import HomeAssistantError
-from .util.decorator import Registry
+from homeassistant import data_entry_flow
+from homeassistant.core import callback
+from homeassistant.const import CONF_TYPE, CONF_NAME, CONF_ID
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.decorator import Registry
+from homeassistant.util import dt as dt_util
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,9 +125,23 @@ class User:
 
     id = attr.ib(type=uuid.UUID, default=None)
     is_owner = attr.ib(type=bool, default=False)
+    is_active = attr.ib(type=bool, default=False)
     name = attr.ib(type=str, default=None)
+    # Minimum time a token has to be issued to be considered valid.
+    # When a user clicks "log out all sessions", we update this timestamp.
+    token_min_issued = attr.ib(type=datetime,
+                               default=attr.Factory(dt_util.utcnow))
     # List of credentials of a user.
     credentials = attr.ib(type=list, default=attr.Factory(list))
+
+    def as_dict(self):
+        """Convert user object to a dictionary."""
+        return {
+            'id': self.id,
+            'is_owner': self.is_owner,
+            'is_active': self.is_active,
+            'name': self.name,
+        }
 
 
 @attr.s(slots=True)
@@ -149,29 +165,20 @@ class Client:
     secret = attr.ib(type=str)
 
 
-@attr.s(slots=True)
-class Token:
-    """Token to access Home Assistant."""
-
-    id = attr.ib(type=uuid.UUID)
-    access_token = attr.ib(type=str)
-    refresh_token = attr.ib(type=str)
-    client_id = attr.ib(type=str)
-
-
 @callback
 def load_auth_provider_module(provider):
     """Load an auth provider."""
     # Stub.
-    from .auth_providers import unsecure_example
-    return unsecure_example
+    from .auth_providers import insecure_example
+    return insecure_example
 
 
 async def auth_manager_from_config(hass, provider_configs):
     """Initialize an auth manager from config."""
     store = AuthStore()
-    providers = await asyncio.gather(*[auth_provider_from_config(store, config)
-                                       for config in provider_configs])
+    providers = await asyncio.gather(
+        *[_auth_provider_from_config(store, config)
+          for config in provider_configs])
     provider_hash = {}
     for provider in providers:
         if provider is None:
@@ -191,7 +198,7 @@ async def auth_manager_from_config(hass, provider_configs):
     return manager
 
 
-async def auth_provider_from_config(store, config):
+async def _auth_provider_from_config(store, config):
     """Initialize an auth provider from a config."""
     provider_name = config[CONF_TYPE]
     module = load_auth_provider_module(provider_name)
@@ -220,6 +227,8 @@ class AuthManager:
 
     async def initialize(self):
         """Initialize the auth manager."""
+        if not self._providers:
+            return
         await asyncio.wait([provider.async_initialize() for provider
                             in self._providers.values()])
 
@@ -231,6 +240,10 @@ class AuthManager:
             'id': provider.id,
             'type': provider.type,
         } for provider in self._providers.values()]
+
+    async def async_get_user(self, user_id):
+        """Retrieve a user."""
+        return await self._store.async_get_user(user_id)
 
     async def async_get_or_create_user(self, credentials):
         """Get or create a user."""
@@ -263,14 +276,20 @@ class AuthStore:
     """Stores authentication info.
 
     Any mutation to an object should happen inside the auth store.
+
+    The auth store is lazy. It won't load the data from disk until a method is
+    called that needs it.
     """
 
     def __init__(self):
         """Initialize the auth store."""
-        self.users = []
+        self.users = None
 
     async def credentials_for_provider(self, provider_type, provider_id):
         """Return credentials for specific auth provider type and id."""
+        if self.users is None:
+            await self.async_load()
+
         result = []
 
         for user in self.users:
@@ -281,19 +300,41 @@ class AuthStore:
 
         return result
 
+    async def async_get_user(self, user_id):
+        """Retrieve a user."""
+        if self.users is None:
+            await self.async_load()
+
+        for user in self.users:
+            if user.id == user_id:
+                return user
+
+        return None
+
     async def async_get_or_create_user(self, credentials, auth_provider):
         """Get or create a new user for given credentials.
 
         If link_user is passed in, the credentials will be linked to the passed
         in user if the credentials are new.
         """
+        if self.users is None:
+            await self.async_load()
+
         # New credentials, store in user
         if credentials.id is None:
             info = await auth_provider.async_user_meta_for_credentials(
                 credentials)
+            # Make owner and activate user if it's the first user.
+            if self.users:
+                is_owner = False
+                is_active = False
+            else:
+                is_owner = True
+                is_active = True
+
             new_user = User(
-                # Make owner if it's the first user.
-                is_owner=not self.users,
+                is_owner=is_owner,
+                is_active=is_active,
                 name=info.get('name'),
             )
             self.users.append(new_user)
@@ -314,10 +355,13 @@ class AuthStore:
         await self.async_save()
 
     async def async_load(self):
-        pass
+        """Load the users."""
         # TODO load from disk
+        self.users = []
 
     async def async_save(self):
+        """Save users."""
+        # Set IDs for unsaved users & credentials
         for user in self.users:
             if user.id is None:
                 user.id = uuid.uuid4().hex
