@@ -27,7 +27,6 @@ class HiveDevicePlug(SwitchDevice):
         self.node_id = hivedevice["Hive_NodeID"]
         self.node_name = hivedevice["Hive_NodeName"]
         self.device_type = hivedevice["HA_DeviceType"]
-        self.switch_device_type = hivedevice["Hive_Plug_DeviceType"]
         self.session = hivesession
         self.attributes = {}
         self.data_updatesource = '{}.{}'.format(self.device_type,

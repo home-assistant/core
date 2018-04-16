@@ -38,7 +38,6 @@ class HiveClimateEntity(ClimateDevice):
         self.node_id = hivedevice["Hive_NodeID"]
         self.node_name = hivedevice["Hive_NodeName"]
         self.device_type = hivedevice["HA_DeviceType"]
-        self.node_device_type = hivedevice["Hive_DeviceType"]
         if self.device_type == "Heating":
             self.thermostat_node_id = hivedevice["Thermostat_NodeID"]
         self.session = hivesession
