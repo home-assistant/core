@@ -313,7 +313,7 @@ class InsteonPLMEntity(Entity):
         _LOGGER.info('ALDB load status for device %s is %s',
                      self.address, self._insteon_device.aldb.status.name)
         if self._insteon_device.aldb.status in [ALDBStatus.LOADED,
-                                                ALDBStatus.Partial]:
+                                                ALDBStatus.PARTIAL]:
             for mem_addr in self._insteon_device.aldb:
                 rec = self._insteon_device.aldb
                 _LOGGER.info(rec)
