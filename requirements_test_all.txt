@@ -63,7 +63,7 @@ evohomeclient==0.2.5
 feedparser==5.2.1
 
 # homeassistant.components.sensor.foobot
-foobot_async==0.3.0
+foobot_async==0.3.1
 
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
