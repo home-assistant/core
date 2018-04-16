@@ -81,7 +81,7 @@ class HomematicipConnector:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.close())
 
     async def init(self):
-        """Initial connection."""
+        """Initialize connection."""
         await self.home.init(self._accesspoint)
         await self.home.get_current_state()
 
