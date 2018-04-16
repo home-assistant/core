@@ -23,6 +23,11 @@ REQUIREMENTS = ['insteonplm==0.8.6']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'insteon_plm'
+PLATFORMS = ['binary_sensor',
+             'fan',
+             'light',
+             'sensor',
+             'switch']
 
 CONF_OVERRIDE = 'device_override'
 CONF_ADDRESS = 'address'
@@ -145,9 +150,13 @@ def async_setup(hass, config):
         # For now this sends logs to the log file.
         # Furture direction is to create an INSTEON control panel.
         entity_id = service.data.get(CONF_ENTITY_ID)
-        entity = hass.states.get(entity_id)
-        _LOGGER.debug(dir(service.data))
-        if entity and isinstance(entity, InsteonPLMEntity):
+        entity = None
+        for str_platform in PLATFORMS:
+            platform = get_component(str_platform)
+            entity = platform.get_entity(entity_id)
+            if entity:
+                break
+        if isinstance(entity, InsteonPLMEntity):
             entity.print_aldb()
         else:
             _LOGGER.error('Entity is not an insteon_plm entity')
