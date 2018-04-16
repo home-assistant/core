@@ -140,10 +140,10 @@ class BroadlinkData(object):
 
     def _auth(self, retry=3):
         try:
-            self._connect()
             auth = self._device.auth()
         except socket.timeout:
             auth = False
         if not auth and retry > 0:
+            self._connect()
             return self._auth(retry-1)
         return auth
