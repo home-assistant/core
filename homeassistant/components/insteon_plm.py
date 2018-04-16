@@ -316,7 +316,7 @@ class InsteonPLMEntity(Entity):
                                                 ALDBStatus.PARTIAL]:
             for mem_addr in self._insteon_device.aldb:
                 rec = self._insteon_device.aldb
-                _LOGGER.info(rec)
+                _LOGGER.info(str(rec))
         else:
             _LOGGER.warning('Device All-Link database not loaded')
             _LOGGER.warning('Use service insteon_plm.load_aldb first')
