@@ -99,7 +99,6 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
             if flw['source'] != data_entry_flow.SOURCE_USER])
 
 
-
 class ConfigManagerFlowResourceView(FlowManagerResourceView):
     """View to interact with the flow manager."""
 
