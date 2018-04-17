@@ -77,12 +77,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         ['Power Production Phase L2', obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE],
         ['Power Production Phase L3', obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE],
         ['Long Power Failure Count', obis_ref.LONG_POWER_FAILURE_COUNT],
-	['Voltage Sags Phase L1', obis_ref.VOLTAGE_SAG_L1_COUNT],
-	['Voltage Sags Phase L2', obis_ref.VOLTAGE_SAG_L2_COUNT],
-	['Voltage Sags Phase L3', obis_ref.VOLTAGE_SAG_L3_COUNT],
-	['Voltage Swells Phase L1', obis_ref.VOLTAGE_SWELL_L1_COUNT],
-	['Voltage Swells Phase L2', obis_ref.VOLTAGE_SWELL_L2_COUNT],
-	['Voltage Swells Phase L3', obis_ref.VOLTAGE_SWELL_L3_COUNT],
+        ['Voltage Sags Phase L1', obis_ref.VOLTAGE_SAG_L1_COUNT],
+        ['Voltage Sags Phase L2', obis_ref.VOLTAGE_SAG_L2_COUNT],
+        ['Voltage Sags Phase L3', obis_ref.VOLTAGE_SAG_L3_COUNT],
+        ['Voltage Swells Phase L1', obis_ref.VOLTAGE_SWELL_L1_COUNT],
+        ['Voltage Swells Phase L2', obis_ref.VOLTAGE_SWELL_L2_COUNT],
+        ['Voltage Swells Phase L3', obis_ref.VOLTAGE_SWELL_L3_COUNT],
     ]
 
     # Generate device entities
