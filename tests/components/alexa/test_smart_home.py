@@ -807,7 +807,7 @@ async def test_thermostat(hass):
         'Alexa.ThermostatController', 'SetThermostatMode',
         'climate#test_thermostat', 'climate.set_operation_mode',
         hass,
-        payload={'thermostatMode': {'value' : 'HEAT'}}
+        payload={'thermostatMode': {'value': 'HEAT'}}
     )
     assert call.data['operation_mode'] == 'heat'
 
