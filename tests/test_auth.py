@@ -124,10 +124,11 @@ async def test_linking_user_to_two_auth_providers():
     user = await manager.async_get_or_create_user(step['result'])
     assert user is not None
 
-    step = await manager.login_flow.async_init(('insecure_example', 'another-provider'))
+    step = await manager.login_flow.async_init(('insecure_example',
+                                                'another-provider'))
     step = await manager.login_flow.async_configure(step['flow_id'], {
         'username': 'another-user',
         'password': 'another-password',
     })
-    await manager.link_user(user, step['result'])
+    await manager.async_link_user(user, step['result'])
     assert len(user.credentials) == 2

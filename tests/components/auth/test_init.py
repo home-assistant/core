@@ -162,3 +162,23 @@ async def test_decline_access_token_user_no_longer_exists(hass):
 async def test_decline_refresh_token_user_no_longer_exists(hass):
     """Decline refresh tokens if user no longer exists."""
     assert False
+
+
+async def test_link_user(hass):
+    """Test linking a user to new credentials."""
+    assert False
+
+
+async def test_link_user_invalid_client_id(hass):
+    """Test linking a user to new credentials."""
+    assert False
+
+
+async def test_link_user_invalid_code(hass):
+    """Test linking a user to new credentials."""
+    assert False
+
+
+async def test_link_user_invalid_auth(hass):
+    """Test linking a user to new credentials."""
+    assert False

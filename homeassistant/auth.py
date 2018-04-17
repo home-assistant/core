@@ -250,7 +250,7 @@ class AuthManager:
         return await self._store.async_get_or_create_user(
             credentials, self._async_get_auth_provider(credentials))
 
-    async def link_user(self, user, credentials):
+    async def async_link_user(self, user, credentials):
         """Link credentials to an existing user."""
         await self._store.async_link_user(user, credentials)
 

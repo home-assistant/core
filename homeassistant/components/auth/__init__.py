@@ -337,6 +337,8 @@ class GrantTokenView(HomeAssistantView):
                 'error': 'invalid_request',
             }, status_code=400)
 
+        # TODO validate refresh token claims
+
         try:
             access_token = async_access_token(hass, client_id, refresh_token)
         except jwt.exceptions.InvalidTokenError:
@@ -350,6 +352,35 @@ class GrantTokenView(HomeAssistantView):
             'token_type': 'Bearer',
             'expires_in': int(ACCESS_TOKEN_EXPIRATION.total_seconds()),
         })
+
+
+class LinkUserView(HomeAssistantView):
+    """View to link existing users to new credentials."""
+
+    url = '/api/auth/link_user'
+    name = 'api:auth:link_user'
+
+    def __init__(self, retrieve_credentials):
+        """Initialize the link user view."""
+        self._retrieve_credentials = retrieve_credentials
+
+    @RequestDataValidator(vol.Schema({
+        'code': str,
+        'client_id': str,
+    }))
+    async def post(self, request, data):
+        """Link a user."""
+        hass = request.app['hass']
+        # TODO user = request['user'] ?
+
+        credentials = await self._retrieve_credentials(
+            data['client_id'], data['code'])
+
+        if credentials is None:
+            return self.json_message('Invalid code', status_code=400)
+
+        await hass.auth.async_link_user(user, credentials)
+        return self.json_message('User linked')
 
 
 @callback
