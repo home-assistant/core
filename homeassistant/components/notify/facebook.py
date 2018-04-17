@@ -105,7 +105,6 @@ class FacebookNotificationService(BaseNotificationService):
                                      timeout=10)
                 if resp.status_code != 200:
                     log_error(resp)
-                    
 
 
 def log_error(response):
