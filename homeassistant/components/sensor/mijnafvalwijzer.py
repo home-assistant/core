@@ -8,12 +8,16 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME)
+from homeassistant.util import Throttle
 
 import voluptuous as vol
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import requests
 import asyncio
+import json
+import argparse
+import datetime
 import logging
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,17 +42,20 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     postcode = config.get(CONST_POSTCODE)
     huisnummer = config.get(CONST_HUISNUMMER)
     toevoeging = config.get(CONST_TOEVOEGING)
-    url = ("http://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode={0}&street=&huisnummer={1}&toevoeging={2}&platform=phone&langs=nl&").format(postcode, huisnummer, toevoeging)
+    url = ("http://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode={0}&street=&huisnummer={1}&toevoeging={2}&platform=phone&langs=nl&")\
+          .format(postcode, huisnummer, toevoeging)
     response = requests.get(url)
     json_obj = response.json()
     json_data = json_obj['data']['ophaaldagen']['data']
     json_data_next = json_obj['data']['ophaaldagenNext']['data']
-    today = datetime.today().strftime("%Y-%m-%d")
-    dateConvert = datetime.strptime(today, "%Y-%m-%d") + timedelta(days=1)
-    tomorrow = datetime.strftime(dateConvert, "%Y-%m-%d")
-    trashTotal = [{1: 'today'}, {2: 'tomorrow'}]
+    today = datetime.date.today().strftime("%Y-%m-%d")
+    tomorrow = datetime.date.today() + datetime.timedelta(days=1)
+    #today = "2018-04-18"
+    #tomorrow = "2018-04-19"
+    countType = 1
     trashType = {}
-    countType = 3
+    trashDays = [{1: 'today'}, {2: 'tomorrow'}]
+    trashTotal = []
     devices = []
 
     # Collect trash items
@@ -62,6 +69,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 trashTotal.append(trash)
 
     data = TrashCollectionSchedule(json_data, json_data_next, today, tomorrow, trashTotal)
+
+    for item in trashDays:
+        trashTotal.append(item)
 
     for trash_type in trashTotal:
         for t in trash_type.values():
@@ -116,8 +126,8 @@ class TrashCollectionSchedule(object):
         for name in trashTotal:
             for item in json_data or json_data_next:
                 name = item["nameType"]
-                dateFormat = datetime.strptime(item['date'], "%Y-%m-%d")
-                dateConvert = dateFormat.strftime("%Y-%m-%d")
+                d = datetime.datetime.strptime(item['date'], "%Y-%m-%d")
+                dateConvert = d.strftime("%Y-%m-%d")
                 if name not in trashType:
                     if item['date'] >= today:
                         trash = {}
