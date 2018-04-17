@@ -24,7 +24,7 @@ async def test_flow_works(hass, aioclient_mock):
     result = await flow.async_step_link(user_input={})
 
     assert result['type'] == 'create_entry'
-    assert result['title'] == 'deCONZ'
+    assert result['title'] == 'deCONZ-id'
     assert result['data'] == {
         'bridgeid': 'id',
         'host': '1.2.3.4',
@@ -148,7 +148,7 @@ async def test_bridge_discovery_config_file(hass):
         })
 
     assert result['type'] == 'create_entry'
-    assert result['title'] == 'deCONZ'
+    assert result['title'] == 'deCONZ-id'
     assert result['data'] == {
         'bridgeid': 'id',
         'host': '1.2.3.4',
@@ -216,7 +216,7 @@ async def test_import_with_api_key(hass):
     })
 
     assert result['type'] == 'create_entry'
-    assert result['title'] == 'deCONZ'
+    assert result['title'] == 'deCONZ-id'
     assert result['data'] == {
         'bridgeid': 'id',
         'host': '1.2.3.4',

@@ -65,7 +65,7 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_link(self, user_input=None):
         """Attempt to link with the deCONZ bridge."""
-        from pydeconz.utils import async_get_api_key
+        from pydeconz.utils import async_get_api_key, async_get_bridgeid
         errors = {}
 
         if user_input is not None:
@@ -75,8 +75,11 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
             api_key = await async_get_api_key(session, **self.deconz_config)
             if api_key:
                 self.deconz_config[CONF_API_KEY] = api_key
+                if 'bridgeid' not in self.deconz_config:
+                    self.deconz_config['bridgeid'] = await async_get_bridgeid(
+                        session, **self.deconz_config)
                 return self.async_create_entry(
-                    title='deCONZ',
+                    title='deCONZ-' + self.deconz_config['bridgeid'],
                     data=self.deconz_config
                 )
             errors['base'] = 'no_key'
@@ -118,12 +121,19 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
         Otherwise we will delegate to `link` step which
         will ask user to link the bridge.
         """
+        from pydeconz.utils import async_get_bridgeid
+
         if configured_hosts(self.hass):
             return self.async_abort(reason='one_instance_only')
         elif CONF_API_KEY not in import_config:
             self.deconz_config = import_config
             return await self.async_step_link()
+
+        if 'bridgeid' not in import_config:
+            session = aiohttp_client.async_get_clientsession(self.hass)
+            import_config['bridgeid'] = await async_get_bridgeid(
+                session, **import_config)
         return self.async_create_entry(
-            title='deCONZ',
+            title='deCONZ-' + import_config['bridgeid'],
             data=import_config
         )
