@@ -4,20 +4,16 @@ Support for mijnafvalwijzer trash pickup monitoring.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mijnafvalwijzer/
 """
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME)
-from homeassistant.util import Throttle
 
 import voluptuous as vol
 from datetime import datetime, timedelta
 
 import requests
 import asyncio
-import json
-import argparse
 import logging
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +38,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     postcode = config.get(CONST_POSTCODE)
     huisnummer = config.get(CONST_HUISNUMMER)
     toevoeging = config.get(CONST_TOEVOEGING)
-    url = ("http://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode={0}&street=&huisnummer={1}&toevoeging={2}&platform=phone&langs=nl&").format(postcode,huisnummer,toevoeging)
+    url = ("http://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode={0}&street=&huisnummer={1}&toevoeging={2}&platform=phone&langs=nl&").format(postcode, huisnummer, toevoeging)
     response = requests.get(url)
     json_obj = response.json()
     json_data = json_obj['data']['ophaaldagen']['data']
@@ -54,7 +50,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     trashType = {}
     countType = 3
     devices = []
-   
+
     # Collect trash items
     for item in json_data or json_data_next:
         name = item["nameType"]
