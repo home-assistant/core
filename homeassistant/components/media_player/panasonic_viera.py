@@ -138,20 +138,20 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     def turn_off(self):
         """Turn off media player."""
         if self._state != STATE_OFF:
-            self.send_key('NRC_POWER-ONOFF')
+            self._remote.turn_off()
             self._state = STATE_OFF
 
     def volume_up(self):
         """Volume up the media player."""
-        self.send_key('NRC_VOLUP-ONOFF')
+        self._remote.volume_up()
 
     def volume_down(self):
         """Volume down media player."""
-        self.send_key('NRC_VOLDOWN-ONOFF')
+        self._remote.volume_down()
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self.send_key('NRC_MUTE-ONOFF')
+        self._remote.set_mute(mute)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
