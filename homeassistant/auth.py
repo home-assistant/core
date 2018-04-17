@@ -77,6 +77,15 @@ class AuthProvider:
         """Return all credentials of this provider."""
         return await self.store.credentials_for_provider(self.type, self.id)
 
+    @callback
+    def async_create_credentials(self, data):
+        """Create credentials."""
+        return Credentials(
+            auth_provider_type=self.type,
+            auth_provider_id=self.id,
+            data=data,
+        )
+
     # Implement by extending class
 
     async def async_initialize(self):
@@ -96,15 +105,6 @@ class AuthProvider:
         Will be used to populate info when creating a new user.
         """
         return {}
-
-    @callback
-    def async_create_credentials(self, data):
-        """Create credentials."""
-        return Credentials(
-            auth_provider_type=self.type,
-            auth_provider_id=self.id,
-            data=data,
-        )
 
     # async def async_register_flow(self):
     #     """Return the data flow for registering with the auth provider."""
