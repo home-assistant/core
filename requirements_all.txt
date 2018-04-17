@@ -521,6 +521,9 @@ mficlient==0.3.0
 # homeassistant.components.sensor.miflora
 miflora==0.3.0
 
+# homeassistant.components.sensor.mitemp
+mitemp_bt==0.0.1
+
 # homeassistant.components.sensor.mopar
 motorparts==1.0.2
 
