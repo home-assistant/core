@@ -38,8 +38,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     postcode = config.get(CONST_POSTCODE)
     huisnummer = config.get(CONST_HUISNUMMER)
     toevoeging = config.get(CONST_TOEVOEGING)
-    url = ("http://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode={0}&street=&huisnummer={1}&toevoeging={2}&platform=phone&langs=nl&")\
-          .format(postcode, huisnummer, toevoeging)
+    url = ("http://json.mijnafvalwijzer.nl/?method=postcodecheck&postcode={0}\
+            &street=&huisnummer={1}&toevoeging={2}&platform=phone&langs=nl&")\
+            .format(postcode, huisnummer, toevoeging)
     response = requests.get(url)
     json_obj = response.json()
     json_data = json_obj['data']['ophaaldagen']['data']
