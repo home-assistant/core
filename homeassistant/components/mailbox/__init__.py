@@ -118,7 +118,6 @@ class MailboxEntity(Entity):
             self.async_schedule_update_ha_state(True)
 
         self.hass.bus.async_listen(EVENT, _mailbox_updated)
-        self.async_schedule_update_ha_state(True)
 
     @property
     def state(self):
