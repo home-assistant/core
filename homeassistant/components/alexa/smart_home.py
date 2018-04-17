@@ -1470,7 +1470,7 @@ async def async_api_adjust_target_temp(hass, config, request, entity):
 @extract_entity
 async def async_api_set_thermostat_mode(hass, config, request, entity):
     """Process a set thermostat mode request."""
-    mode = request[API_PAYLOAD]['thermostatMode']
+    mode = request[API_PAYLOAD]['thermostatMode']['value']
 
     operation_list = entity.attributes.get(climate.ATTR_OPERATION_LIST)
     # Work around a pylint false positive due to
