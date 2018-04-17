@@ -203,6 +203,7 @@ colorlog==3.1.2
 concord232==0.15
 
 # homeassistant.components.climate.eq3btsmart
+# homeassistant.components.device_tracker.xiaomi_miio
 # homeassistant.components.fan.xiaomi_miio
 # homeassistant.components.light.xiaomi_miio
 # homeassistant.components.remote.xiaomi_miio
