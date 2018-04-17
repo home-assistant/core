@@ -43,7 +43,7 @@ def from_config_dict(config: Dict[str, Any],
                      skip_pip: bool = False,
                      log_rotate_days: Any = None,
                      log_file: Any = None,
-                     log_no_color: bool = True) \
+                     log_no_color: bool = False) \
                      -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
@@ -76,7 +76,7 @@ def async_from_config_dict(config: Dict[str, Any],
                            skip_pip: bool = False,
                            log_rotate_days: Any = None,
                            log_file: Any = None,
-                           log_no_color: bool = True) \
+                           log_no_color: bool = False) \
                            -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
@@ -168,7 +168,7 @@ def from_config_file(config_path: str,
                      skip_pip: bool = True,
                      log_rotate_days: Any = None,
                      log_file: Any = None,
-                     log_no_color: bool = True):
+                     log_no_color: bool = False):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter if given,
@@ -194,7 +194,7 @@ def async_from_config_file(config_path: str,
                            skip_pip: bool = True,
                            log_rotate_days: Any = None,
                            log_file: Any = None,
-                           log_no_color: bool = True):
+                           log_no_color: bool = False):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter.
@@ -227,7 +227,7 @@ def async_enable_logging(hass: core.HomeAssistant,
                          verbose: bool = False,
                          log_rotate_days=None,
                          log_file=None,
-                         log_no_color: bool = True) -> None:
+                         log_no_color: bool = False) -> None:
     """Set up the logging.
 
     This method must be run in the event loop.
