@@ -4,21 +4,16 @@ Support for mijnafvalwijzer trash pickup monitoring.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mijnafvalwijzer/
 """
-"""
-@ Authors     : Bram van Dartel
-@ Date        : 18/04/2018
-@ Version     : 1.0.4
-@ Description : MijnAfvalwijzer Sensor - It queries mijnafvalwijzer.nl.
-"""
+from datetime import datetime, timedelta
+import voluptuous as vol
 import requests
 import asyncio
 import logging
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from datetime import datetime, timedelta
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME)
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
