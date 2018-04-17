@@ -17,6 +17,12 @@ from homeassistant.loader import set_component
 from tests.common import MockConfigEntry, MockModule, mock_coro_func
 
 
+@pytest.fixture(scope='session', autouse=True)
+def mock_test_component():
+    """Ensure a component called 'test' exists."""
+    set_component('test', MockModule('test'))
+
+
 @pytest.fixture
 def client(hass, aiohttp_client):
     """Fixture that can interact with the config manager API."""
@@ -111,7 +117,7 @@ def test_initialize_flow(hass, client):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = yield from client.post('/api/config/config_entries/flow',
-                                      json={'domain': 'test'})
+                                      json={'handler': 'test'})
 
     assert resp.status == 200
     data = yield from resp.json()
@@ -150,7 +156,7 @@ def test_abort(hass, client):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = yield from client.post('/api/config/config_entries/flow',
-                                      json={'domain': 'test'})
+                                      json={'handler': 'test'})
 
     assert resp.status == 200
     data = yield from resp.json()
@@ -180,7 +186,7 @@ def test_create_account(hass, client):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = yield from client.post('/api/config/config_entries/flow',
-                                      json={'domain': 'test'})
+                                      json={'handler': 'test'})
 
     assert resp.status == 200
     data = yield from resp.json()
@@ -220,7 +226,7 @@ def test_two_step_flow(hass, client):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = yield from client.post('/api/config/config_entries/flow',
-                                      json={'domain': 'test'})
+                                      json={'handler': 'test'})
         assert resp.status == 200
         data = yield from resp.json()
         flow_id = data.pop('flow_id')
@@ -305,7 +311,7 @@ def test_get_progress_flow(hass, client):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = yield from client.post('/api/config/config_entries/flow',
-                                      json={'domain': 'test'})
+                                      json={'handler': 'test'})
 
     assert resp.status == 200
     data = yield from resp.json()
