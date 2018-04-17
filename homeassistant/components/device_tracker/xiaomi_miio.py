@@ -20,7 +20,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
 })
 
-REQUIREMENTS = ['python-miio==0.3.9']
+REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
 
 
 def get_scanner(hass, config):
@@ -41,7 +41,7 @@ def get_scanner(hass, config):
                      device_info.model,
                      device_info.firmware_version,
                      device_info.hardware_version)
-        scanner = XiaomiMiioDeviceScanner(hass, device)
+        scanner = XiaomiMiioDeviceScanner(device)
     except DeviceException as ex:
         _LOGGER.error("Device unavailable or token incorrect: %s", ex)
 
@@ -51,7 +51,7 @@ def get_scanner(hass, config):
 class XiaomiMiioDeviceScanner(DeviceScanner):
     """This class queries a Xiaomi Mi WiFi Repeater."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialize the scanner."""
         self.device = device
 
