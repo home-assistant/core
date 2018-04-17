@@ -59,7 +59,7 @@ class FacebookNotificationService(BaseNotificationService):
             return
 
         # broadcast message
-        if (targets[0] == 'BROADCAST') and (len(targets) == 1):
+        if (targets[0].lower() == 'broadcast')):
 
             broadcast_create_body = {"messages": [body_message]}
             _LOGGER.debug("Broadcast body %s : ", broadcast_create_body)
@@ -83,12 +83,7 @@ class FacebookNotificationService(BaseNotificationService):
                                  headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
                                  timeout=10)
             if resp.status_code != 200:
-                obj = resp.json()
-                error_message = obj['error']['message']
-                error_code = obj['error']['code']
-                _LOGGER.error(
-                    "Error %s : %s (Code %s)", resp.status_code, error_message,
-                    error_code)
+                log_error(resp)
 
         # non-broadcast message
         else:
@@ -109,10 +104,16 @@ class FacebookNotificationService(BaseNotificationService):
                                      headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
                                      timeout=10)
                 if resp.status_code != 200:
-                    obj = resp.json()
-                    error_message = obj['error']['message']
-                    error_code = obj['error']['code']
-                    _LOGGER.error(
-                        "Error %s : %s (Code %s)", resp.status_code,
-                        error_message,
-                        error_code)
+                    log_error(resp)
+                    
+
+
+def log_error(response):
+    """Log error message."""
+    obj = response.json()
+    error_message = obj['error']['message']
+    error_code = obj['error']['code']
+
+    _LOGGER.error(
+        "Error %s : %s (Code %s)", response.status_code, error_message,
+        error_code)
