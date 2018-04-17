@@ -70,16 +70,17 @@ class TestSwitchMQTT(unittest.TestCase):
         switch.turn_on(self.hass, 'switch.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('command-topic', 'beer on', 2, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'command-topic', 'beer on', 2, False)
+        self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_ON, state.state)
 
         switch.turn_off(self.hass, 'switch.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('command-topic', 'beer off', 2, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'command-topic', 'beer off', 2, False)
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)
 

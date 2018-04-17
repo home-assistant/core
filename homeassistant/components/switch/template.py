@@ -38,11 +38,6 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
-SWITCH_SCHEMA = vol.All(
-    cv.deprecated(ATTR_ENTITY_ID),
-    SWITCH_SCHEMA,
-)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SWITCHES): vol.Schema({cv.slug: SWITCH_SCHEMA}),
 })

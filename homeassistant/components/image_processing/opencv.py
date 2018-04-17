@@ -16,7 +16,7 @@ from homeassistant.components.image_processing import (
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['numpy==1.14.0']
+REQUIREMENTS = ['numpy==1.14.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ DEFAULT_TIMEOUT = 10
 SCAN_INTERVAL = timedelta(seconds=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_CLASSIFIER, default=None): {
+    vol.Optional(CONF_CLASSIFIER): {
         cv.string: vol.Any(
             cv.isfile,
             vol.Schema({
@@ -60,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def _create_processor_from_config(hass, camera_entity, config):
     """Create an OpenCV processor from configuration."""
-    classifier_config = config[CONF_CLASSIFIER]
+    classifier_config = config.get(CONF_CLASSIFIER)
     name = '{} {}'.format(
         config[CONF_NAME], split_entity_id(camera_entity)[1].replace('_', ' '))
 
@@ -93,7 +93,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     entities = []
-    if config[CONF_CLASSIFIER] is None:
+    if CONF_CLASSIFIER not in config:
         dest_path = hass.config.path(DEFAULT_CLASSIFIER_PATH)
         _get_default_classifier(dest_path)
         config[CONF_CLASSIFIER] = {

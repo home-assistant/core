@@ -118,7 +118,7 @@ def test_roller_commands(hass, mock_openzwave):
     device = zwave.get_device(hass=hass, node=node, values=values,
                               node_config={})
 
-    device.set_cover_position(25)
+    device.set_cover_position(position=25)
     assert node.set_dimmer.called
     value_id, brightness = node.set_dimmer.mock_calls[0][1]
     assert value_id == value.value_id

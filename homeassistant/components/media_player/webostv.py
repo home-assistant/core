@@ -26,7 +26,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 import homeassistant.util as util
 
-REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2', 'wakeonlan==0.2.2']
+REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2']
 
 _CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
@@ -35,6 +35,7 @@ CONF_SOURCES = 'sources'
 CONF_ON_ACTION = 'turn_on_action'
 
 DEFAULT_NAME = 'LG webOS Smart TV'
+LIVETV_APP_ID = 'com.webos.app.livetv'
 
 WEBOSTV_CONFIG_FILE = 'webostv.conf'
 
@@ -270,8 +271,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         """Title of current playing media."""
         if (self._channel is not None) and ('channelName' in self._channel):
             return self._channel['channelName']
-        else:
-            return None
+        return None
 
     @property
     def media_image_url(self):
@@ -358,8 +358,16 @@ class LgWebOSDevice(MediaPlayerDevice):
 
     def media_next_track(self):
         """Send next track command."""
-        self._client.fast_forward()
+        current_input = self._client.get_input()
+        if current_input == LIVETV_APP_ID:
+            self._client.channel_up()
+        else:
+            self._client.fast_forward()
 
     def media_previous_track(self):
         """Send the previous track command."""
-        self._client.rewind()
+        current_input = self._client.get_input()
+        if current_input == LIVETV_APP_ID:
+            self._client.channel_down()
+        else:
+            self._client.rewind()

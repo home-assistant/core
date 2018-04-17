@@ -6,6 +6,9 @@ https://home-assistant.io/components/weather.buienradar/
 """
 import logging
 import asyncio
+
+import voluptuous as vol
+
 from homeassistant.components.weather import (
     WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
 from homeassistant.const import \
@@ -14,9 +17,8 @@ from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.buienradar import (
     BrData)
-import voluptuous as vol
 
-REQUIREMENTS = ['buienradar==0.9']
+REQUIREMENTS = ['buienradar==0.91']
 
 _LOGGER = logging.getLogger(__name__)
 

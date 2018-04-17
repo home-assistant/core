@@ -4,7 +4,6 @@ Support for the IKEA Tradfri platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.tradfri/
 """
-import asyncio
 import logging
 
 from datetime import timedelta
@@ -20,8 +19,8 @@ DEPENDENCIES = ['tradfri']
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the IKEA Tradfri device platform."""
     if discovery_info is None:
         return
@@ -31,8 +30,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     gateway = hass.data[KEY_GATEWAY][gateway_id]
 
     devices_command = gateway.get_devices()
-    devices_commands = yield from api(devices_command)
-    all_devices = yield from api(devices_commands)
+    devices_commands = await api(devices_command)
+    all_devices = await api(devices_commands)
     devices = [dev for dev in all_devices if not dev.has_light_control]
     async_add_devices(TradfriDevice(device, api) for device in devices)
 
@@ -48,8 +47,7 @@ class TradfriDevice(Entity):
 
         self._refresh(device)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Start thread when added to hass."""
         self._async_start_observe()
 
@@ -91,7 +89,7 @@ class TradfriDevice(Entity):
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
         # pylint: disable=import-error
-        from pytradfri.error import PyTradFriError
+        from pytradfri.error import PytradfriError
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name,
                             exc_info=exc)
@@ -101,7 +99,7 @@ class TradfriDevice(Entity):
                                        err_callback=self._async_start_observe,
                                        duration=0)
             self.hass.async_add_job(self._api(cmd))
-        except PyTradFriError as err:
+        except PytradfriError as err:
             _LOGGER.warning("Observation failed, trying again", exc_info=err)
             self._async_start_observe()
 

@@ -33,7 +33,7 @@ from homeassistant.const import (
 from homeassistant import loader
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, InvalidStateError)
-from homeassistant.util.async import (
+from homeassistant.util.async_ import (
     run_coroutine_threadsafe, run_callback_threadsafe,
     fire_coroutine_threadsafe)
 import homeassistant.util as util
@@ -79,7 +79,7 @@ def callback(func: Callable[..., None]) -> Callable[..., None]:
 
 def is_callback(func: Callable[..., Any]) -> bool:
     """Check if function is safe to be called in the event loop."""
-    return '_hass_callback' in func.__dict__
+    return '_hass_callback' in getattr(func, '__dict__', {})
 
 
 @callback
@@ -117,11 +117,7 @@ class HomeAssistant(object):
         else:
             self.loop = loop or asyncio.get_event_loop()
 
-        executor_opts = {'max_workers': 10}
-        if sys.version_info[:2] >= (3, 5):
-            # It will default set to the number of processors on the machine,
-            # multiplied by 5. That is better for overlap I/O workers.
-            executor_opts['max_workers'] = None
+        executor_opts = {'max_workers': None}
         if sys.version_info[:2] >= (3, 6):
             executor_opts['thread_name_prefix'] = 'SyncWorker'
 
@@ -164,8 +160,7 @@ class HomeAssistant(object):
         finally:
             self.loop.close()
 
-    @asyncio.coroutine
-    def async_start(self):
+    async def async_start(self):
         """Finalize startup from inside the event loop.
 
         This method is a coroutine.
@@ -181,7 +176,7 @@ class HomeAssistant(object):
             # Only block for EVENT_HOMEASSISTANT_START listener
             self.async_stop_track_tasks()
             with timeout(TIMEOUT_EVENT_START, loop=self.loop):
-                yield from self.async_block_till_done()
+                await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 'Something is blocking Home Assistant from wrapping up the '
@@ -190,7 +185,7 @@ class HomeAssistant(object):
                 ', '.join(self.config.components))
 
         # Allow automations to set up the start triggers before changing state
-        yield from asyncio.sleep(0, loop=self.loop)
+        await asyncio.sleep(0, loop=self.loop)
         self.state = CoreState.running
         _async_create_timer(self)
 
@@ -259,27 +254,25 @@ class HomeAssistant(object):
         run_coroutine_threadsafe(
             self.async_block_till_done(), loop=self.loop).result()
 
-    @asyncio.coroutine
-    def async_block_till_done(self):
+    async def async_block_till_done(self):
         """Block till all pending work is done."""
         # To flush out any call_soon_threadsafe
-        yield from asyncio.sleep(0, loop=self.loop)
+        await asyncio.sleep(0, loop=self.loop)
 
         while self._pending_tasks:
             pending = [task for task in self._pending_tasks
                        if not task.done()]
             self._pending_tasks.clear()
             if pending:
-                yield from asyncio.wait(pending, loop=self.loop)
+                await asyncio.wait(pending, loop=self.loop)
             else:
-                yield from asyncio.sleep(0, loop=self.loop)
+                await asyncio.sleep(0, loop=self.loop)
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
         fire_coroutine_threadsafe(self.async_stop(), self.loop)
 
-    @asyncio.coroutine
-    def async_stop(self, exit_code=0) -> None:
+    async def async_stop(self, exit_code=0) -> None:
         """Stop Home Assistant and shuts down all threads.
 
         This method is a coroutine.
@@ -288,12 +281,12 @@ class HomeAssistant(object):
         self.state = CoreState.stopping
         self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        yield from self.async_block_till_done()
+        await self.async_block_till_done()
 
         # stage 2
         self.state = CoreState.not_running
         self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
-        yield from self.async_block_till_done()
+        await self.async_block_till_done()
         self.executor.shutdown()
 
         self.exit_code = exit_code
@@ -912,8 +905,8 @@ class ServiceRegistry(object):
             self._hass.loop
         ).result()
 
-    @asyncio.coroutine
-    def async_call(self, domain, service, service_data=None, blocking=False):
+    async def async_call(self, domain, service, service_data=None,
+                         blocking=False):
         """
         Call a service.
 
@@ -956,14 +949,13 @@ class ServiceRegistry(object):
         self._hass.bus.async_fire(EVENT_CALL_SERVICE, event_data)
 
         if blocking:
-            done, _ = yield from asyncio.wait(
+            done, _ = await asyncio.wait(
                 [fut], loop=self._hass.loop, timeout=SERVICE_CALL_LIMIT)
             success = bool(done)
             unsub()
             return success
 
-    @asyncio.coroutine
-    def _event_to_service_call(self, event):
+    async def _event_to_service_call(self, event):
         """Handle the SERVICE_CALLED events from the EventBus."""
         service_data = event.data.get(ATTR_SERVICE_DATA) or {}
         domain = event.data.get(ATTR_DOMAIN).lower()
@@ -1007,7 +999,7 @@ class ServiceRegistry(object):
                 service_handler.func(service_call)
                 fire_service_executed()
             elif service_handler.is_coroutinefunction:
-                yield from service_handler.func(service_call)
+                await service_handler.func(service_call)
                 fire_service_executed()
             else:
                 def execute_service():
@@ -1015,7 +1007,7 @@ class ServiceRegistry(object):
                     service_handler.func(service_call)
                     fire_service_executed()
 
-                yield from self._hass.async_add_job(execute_service)
+                await self._hass.async_add_job(execute_service)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error executing service %s', service_call)
 
@@ -1068,15 +1060,19 @@ class Config(object):
         """Check if the path is valid for access from outside."""
         assert path is not None
 
-        parent = pathlib.Path(path).parent
+        thepath = pathlib.Path(path)
         try:
-            parent = parent.resolve()  # pylint: disable=no-member
+            # The file path does not have to exist (it's parent should)
+            if thepath.exists():
+                thepath = thepath.resolve()
+            else:
+                thepath = thepath.parent.resolve()
         except (FileNotFoundError, RuntimeError, PermissionError):
             return False
 
         for whitelisted_path in self.whitelist_external_dirs:
             try:
-                parent.relative_to(whitelisted_path)
+                thepath.relative_to(whitelisted_path)
                 return True
             except ValueError:
                 pass

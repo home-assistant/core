@@ -250,12 +250,12 @@ class TestLightMQTT(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
-        self.assertEqual([255, 255, 255], state.attributes.get('rgb_color'))
+        self.assertEqual((255, 255, 255), state.attributes.get('rgb_color'))
         self.assertEqual(255, state.attributes.get('brightness'))
         self.assertEqual(150, state.attributes.get('color_temp'))
         self.assertEqual('none', state.attributes.get('effect'))
         self.assertEqual(255, state.attributes.get('white_value'))
-        self.assertEqual([1, 1], state.attributes.get('xy_color'))
+        self.assertEqual((0.323, 0.329), state.attributes.get('xy_color'))
 
         fire_mqtt_message(self.hass, 'test_light_rgb/status', '0')
         self.hass.block_till_done()
@@ -303,7 +303,7 @@ class TestLightMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         light_state = self.hass.states.get('light.test')
-        self.assertEqual([125, 125, 125],
+        self.assertEqual((255, 255, 255),
                          light_state.attributes.get('rgb_color'))
 
         fire_mqtt_message(self.hass, 'test_light_rgb/xy/status',
@@ -311,7 +311,7 @@ class TestLightMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         light_state = self.hass.states.get('light.test')
-        self.assertEqual([0.675, 0.322],
+        self.assertEqual((0.672, 0.324),
                          light_state.attributes.get('xy_color'))
 
     def test_brightness_controlling_scale(self):
@@ -458,11 +458,11 @@ class TestLightMQTT(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
         self.assertEqual(50, state.attributes.get('brightness'))
-        self.assertEqual([1, 2, 3], state.attributes.get('rgb_color'))
+        self.assertEqual((0, 123, 255), state.attributes.get('rgb_color'))
         self.assertEqual(300, state.attributes.get('color_temp'))
         self.assertEqual('rainbow', state.attributes.get('effect'))
         self.assertEqual(75, state.attributes.get('white_value'))
-        self.assertEqual([0.123, 0.123], state.attributes.get('xy_color'))
+        self.assertEqual((0.14, 0.131), state.attributes.get('xy_color'))
 
     def test_sending_mqtt_commands_and_optimistic(self): \
             # pylint: disable=invalid-name
@@ -492,16 +492,18 @@ class TestLightMQTT(unittest.TestCase):
         light.turn_on(self.hass, 'light.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('test_light_rgb/set', 'on', 2, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light_rgb/set', 'on', 2, False)
+        self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
 
         light.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('test_light_rgb/set', 'off', 2, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light_rgb/set', 'off', 2, False)
+        self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
@@ -512,20 +514,20 @@ class TestLightMQTT(unittest.TestCase):
                       white_value=80)
         self.hass.block_till_done()
 
-        self.mock_publish().async_publish.assert_has_calls([
+        self.mock_publish.async_publish.assert_has_calls([
             mock.call('test_light_rgb/set', 'on', 2, False),
-            mock.call('test_light_rgb/rgb/set', '75,75,75', 2, False),
+            mock.call('test_light_rgb/rgb/set', '50,50,50', 2, False),
             mock.call('test_light_rgb/brightness/set', 50, 2, False),
             mock.call('test_light_rgb/white_value/set', 80, 2, False),
-            mock.call('test_light_rgb/xy/set', '0.123,0.123', 2, False),
+            mock.call('test_light_rgb/xy/set', '0.323,0.329', 2, False),
         ], any_order=True)
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
-        self.assertEqual((75, 75, 75), state.attributes['rgb_color'])
+        self.assertEqual((255, 255, 255), state.attributes['rgb_color'])
         self.assertEqual(50, state.attributes['brightness'])
         self.assertEqual(80, state.attributes['white_value'])
-        self.assertEqual((0.123, 0.123), state.attributes['xy_color'])
+        self.assertEqual((0.323, 0.329), state.attributes['xy_color'])
 
     def test_sending_mqtt_rgb_command_with_template(self):
         """Test the sending of RGB command with template."""
@@ -550,14 +552,14 @@ class TestLightMQTT(unittest.TestCase):
         light.turn_on(self.hass, 'light.test', rgb_color=[255, 128, 64])
         self.hass.block_till_done()
 
-        self.mock_publish().async_publish.assert_has_calls([
+        self.mock_publish.async_publish.assert_has_calls([
             mock.call('test_light_rgb/set', 'on', 0, False),
-            mock.call('test_light_rgb/rgb/set', '#ff8040', 0, False),
+            mock.call('test_light_rgb/rgb/set', '#ff803f', 0, False),
         ], any_order=True)
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
-        self.assertEqual((255, 128, 64), state.attributes['rgb_color'])
+        self.assertEqual((255, 128, 63), state.attributes['rgb_color'])
 
     def test_show_brightness_if_only_command_topic(self):
         """Test the brightness if only a command topic is present."""
@@ -677,7 +679,7 @@ class TestLightMQTT(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
-        self.assertEqual([1, 1], state.attributes.get('xy_color'))
+        self.assertEqual((0.323, 0.329), state.attributes.get('xy_color'))
 
     def test_on_command_first(self):
         """Test on command being sent before brightness."""
@@ -701,16 +703,17 @@ class TestLightMQTT(unittest.TestCase):
         # Should get the following MQTT messages.
         #    test_light/set: 'ON'
         #    test_light/bright: 50
-        self.assertEqual(('test_light/set', 'ON', 0, False),
-                         self.mock_publish.mock_calls[-4][1])
-        self.assertEqual(('test_light/bright', 50, 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_has_calls([
+            mock.call('test_light/set', 'ON', 0, False),
+            mock.call('test_light/bright', 50, 0, False),
+        ], any_order=True)
+        self.mock_publish.async_publish.reset_mock()
 
         light.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('test_light/set', 'OFF', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light/set', 'OFF', 0, False)
 
     def test_on_command_last(self):
         """Test on command being sent after brightness."""
@@ -733,16 +736,17 @@ class TestLightMQTT(unittest.TestCase):
         # Should get the following MQTT messages.
         #    test_light/bright: 50
         #    test_light/set: 'ON'
-        self.assertEqual(('test_light/bright', 50, 0, False),
-                         self.mock_publish.mock_calls[-4][1])
-        self.assertEqual(('test_light/set', 'ON', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_has_calls([
+            mock.call('test_light/bright', 50, 0, False),
+            mock.call('test_light/set', 'ON', 0, False),
+        ], any_order=True)
+        self.mock_publish.async_publish.reset_mock()
 
         light.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('test_light/set', 'OFF', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light/set', 'OFF', 0, False)
 
     def test_on_command_brightness(self):
         """Test on command being sent as only brightness."""
@@ -767,21 +771,24 @@ class TestLightMQTT(unittest.TestCase):
 
         # Should get the following MQTT messages.
         #    test_light/bright: 255
-        self.assertEqual(('test_light/bright', 255, 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light/bright', 255, 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         light.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('test_light/set', 'OFF', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light/set', 'OFF', 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         # Turn on w/ brightness
         light.turn_on(self.hass, 'light.test', brightness=50)
         self.hass.block_till_done()
 
-        self.assertEqual(('test_light/bright', 50, 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'test_light/bright', 50, 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         light.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
@@ -791,10 +798,10 @@ class TestLightMQTT(unittest.TestCase):
         light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75])
         self.hass.block_till_done()
 
-        self.assertEqual(('test_light/rgb', '75,75,75', 0, False),
-                         self.mock_publish.mock_calls[-4][1])
-        self.assertEqual(('test_light/bright', 50, 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_has_calls([
+            mock.call('test_light/rgb', '50,50,50', 0, False),
+            mock.call('test_light/bright', 50, 0, False)
+        ], any_order=True)
 
     def test_default_availability_payload(self):
         """Test availability by default payload with defined topic."""

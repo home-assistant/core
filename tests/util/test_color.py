@@ -2,30 +2,59 @@
 import unittest
 import homeassistant.util.color as color_util
 
+import pytest
+import voluptuous as vol
+
 
 class TestColorUtil(unittest.TestCase):
     """Test color util methods."""
 
     # pylint: disable=invalid-name
-    def test_color_RGB_to_xy(self):
-        """Test color_RGB_to_xy."""
-        self.assertEqual((0, 0, 0), color_util.color_RGB_to_xy(0, 0, 0))
-        self.assertEqual((0.32, 0.336, 255),
-                         color_util.color_RGB_to_xy(255, 255, 255))
+    def test_color_RGB_to_xy_brightness(self):
+        """Test color_RGB_to_xy_brightness."""
+        self.assertEqual((0, 0, 0),
+                         color_util.color_RGB_to_xy_brightness(0, 0, 0))
+        self.assertEqual((0.323, 0.329, 255),
+                         color_util.color_RGB_to_xy_brightness(255, 255, 255))
 
         self.assertEqual((0.136, 0.04, 12),
-                         color_util.color_RGB_to_xy(0, 0, 255))
+                         color_util.color_RGB_to_xy_brightness(0, 0, 255))
 
         self.assertEqual((0.172, 0.747, 170),
+                         color_util.color_RGB_to_xy_brightness(0, 255, 0))
+
+        self.assertEqual((0.701, 0.299, 72),
+                         color_util.color_RGB_to_xy_brightness(255, 0, 0))
+
+        self.assertEqual((0.701, 0.299, 16),
+                         color_util.color_RGB_to_xy_brightness(128, 0, 0))
+
+    def test_color_RGB_to_xy(self):
+        """Test color_RGB_to_xy."""
+        self.assertEqual((0, 0),
+                         color_util.color_RGB_to_xy(0, 0, 0))
+        self.assertEqual((0.323, 0.329),
+                         color_util.color_RGB_to_xy(255, 255, 255))
+
+        self.assertEqual((0.136, 0.04),
+                         color_util.color_RGB_to_xy(0, 0, 255))
+
+        self.assertEqual((0.172, 0.747),
                          color_util.color_RGB_to_xy(0, 255, 0))
 
-        self.assertEqual((0.679, 0.321, 80),
+        self.assertEqual((0.701, 0.299),
                          color_util.color_RGB_to_xy(255, 0, 0))
 
+        self.assertEqual((0.701, 0.299),
+                         color_util.color_RGB_to_xy(128, 0, 0))
+
     def test_color_xy_brightness_to_RGB(self):
-        """Test color_RGB_to_xy."""
+        """Test color_xy_brightness_to_RGB."""
         self.assertEqual((0, 0, 0),
                          color_util.color_xy_brightness_to_RGB(1, 1, 0))
+
+        self.assertEqual((194, 186, 169),
+                         color_util.color_xy_brightness_to_RGB(.35, .35, 128))
 
         self.assertEqual((255, 243, 222),
                          color_util.color_xy_brightness_to_RGB(.35, .35, 255))
@@ -39,21 +68,35 @@ class TestColorUtil(unittest.TestCase):
         self.assertEqual((0, 63, 255),
                          color_util.color_xy_brightness_to_RGB(0, 0, 255))
 
+    def test_color_xy_to_RGB(self):
+        """Test color_xy_to_RGB."""
+        self.assertEqual((255, 243, 222),
+                         color_util.color_xy_to_RGB(.35, .35))
+
+        self.assertEqual((255, 0, 60),
+                         color_util.color_xy_to_RGB(1, 0))
+
+        self.assertEqual((0, 255, 0),
+                         color_util.color_xy_to_RGB(0, 1))
+
+        self.assertEqual((0, 63, 255),
+                         color_util.color_xy_to_RGB(0, 0))
+
     def test_color_RGB_to_hsv(self):
         """Test color_RGB_to_hsv."""
         self.assertEqual((0, 0, 0),
                          color_util.color_RGB_to_hsv(0, 0, 0))
 
-        self.assertEqual((0, 0, 255),
+        self.assertEqual((0, 0, 100),
                          color_util.color_RGB_to_hsv(255, 255, 255))
 
-        self.assertEqual((43690, 255, 255),
+        self.assertEqual((240, 100, 100),
                          color_util.color_RGB_to_hsv(0, 0, 255))
 
-        self.assertEqual((21845, 255, 255),
+        self.assertEqual((120, 100, 100),
                          color_util.color_RGB_to_hsv(0, 255, 0))
 
-        self.assertEqual((0, 255, 255),
+        self.assertEqual((0, 100, 100),
                          color_util.color_RGB_to_hsv(255, 0, 0))
 
     def test_color_hsv_to_RGB(self):
@@ -62,16 +105,16 @@ class TestColorUtil(unittest.TestCase):
                          color_util.color_hsv_to_RGB(0, 0, 0))
 
         self.assertEqual((255, 255, 255),
-                         color_util.color_hsv_to_RGB(0, 0, 255))
+                         color_util.color_hsv_to_RGB(0, 0, 100))
 
         self.assertEqual((0, 0, 255),
-                         color_util.color_hsv_to_RGB(43690, 255, 255))
+                         color_util.color_hsv_to_RGB(240, 100, 100))
 
         self.assertEqual((0, 255, 0),
-                         color_util.color_hsv_to_RGB(21845, 255, 255))
+                         color_util.color_hsv_to_RGB(120, 100, 100))
 
         self.assertEqual((255, 0, 0),
-                         color_util.color_hsv_to_RGB(0, 255, 255))
+                         color_util.color_hsv_to_RGB(0, 100, 100))
 
     def test_color_hsb_to_RGB(self):
         """Test color_hsb_to_RGB."""
@@ -92,20 +135,37 @@ class TestColorUtil(unittest.TestCase):
 
     def test_color_xy_to_hs(self):
         """Test color_xy_to_hs."""
-        self.assertEqual((8609, 255),
+        self.assertEqual((47.294, 100),
                          color_util.color_xy_to_hs(1, 1))
 
-        self.assertEqual((6950, 32),
+        self.assertEqual((38.182, 12.941),
                          color_util.color_xy_to_hs(.35, .35))
 
-        self.assertEqual((62965, 255),
+        self.assertEqual((345.882, 100),
                          color_util.color_xy_to_hs(1, 0))
 
-        self.assertEqual((21845, 255),
+        self.assertEqual((120, 100),
                          color_util.color_xy_to_hs(0, 1))
 
-        self.assertEqual((40992, 255),
+        self.assertEqual((225.176, 100),
                          color_util.color_xy_to_hs(0, 0))
+
+    def test_color_hs_to_xy(self):
+        """Test color_hs_to_xy."""
+        self.assertEqual((0.151, 0.343),
+                         color_util.color_hs_to_xy(180, 100))
+
+        self.assertEqual((0.356, 0.321),
+                         color_util.color_hs_to_xy(350, 12.5))
+
+        self.assertEqual((0.229, 0.474),
+                         color_util.color_hs_to_xy(140, 50))
+
+        self.assertEqual((0.474, 0.317),
+                         color_util.color_hs_to_xy(0, 40))
+
+        self.assertEqual((0.323, 0.329),
+                         color_util.color_hs_to_xy(360, 0))
 
     def test_rgb_hex_to_rgb_list(self):
         """Test rgb_hex_to_rgb_list."""
@@ -150,10 +210,10 @@ class TestColorUtil(unittest.TestCase):
         self.assertEqual((72, 61, 139),
                          color_util.color_name_to_rgb('darkslate blue'))
 
-    def test_color_name_to_rgb_unknown_name_default_white(self):
+    def test_color_name_to_rgb_unknown_name_raises_value_error(self):
         """Test color_name_to_rgb."""
-        self.assertEqual((255, 255, 255),
-                         color_util.color_name_to_rgb('not a color'))
+        with pytest.raises(ValueError):
+            color_util.color_name_to_rgb('not a color')
 
     def test_color_rgb_to_rgbw(self):
         """Test color_rgb_to_rgbw."""
@@ -280,3 +340,13 @@ class ColorTemperatureToRGB(unittest.TestCase):
         rgb = color_util.color_temperature_to_rgb(6500)
         self.assertGreater(rgb[0], rgb[1])
         self.assertGreater(rgb[0], rgb[2])
+
+
+def test_get_color_in_voluptuous():
+    """Test using the get method in color validation."""
+    schema = vol.Schema(color_util.color_name_to_rgb)
+
+    with pytest.raises(vol.Invalid):
+        schema('not a color')
+
+    assert schema('red') == (255, 0, 0)

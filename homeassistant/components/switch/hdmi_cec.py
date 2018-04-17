@@ -47,7 +47,7 @@ class CecSwitchDevice(CecDevice, SwitchDevice):
         self._device.turn_off()
         self._state = STATE_ON
 
-    def toggle(self):
+    def toggle(self, **kwargs):
         """Toggle the entity."""
         self._device.toggle()
         if self._state == STATE_ON:

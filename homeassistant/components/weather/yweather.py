@@ -32,6 +32,7 @@ DEFAULT_NAME = 'Yweather'
 SCAN_INTERVAL = timedelta(minutes=10)
 
 CONDITION_CLASSES = {
+    'clear-night': [31],
     'cloudy': [26, 27, 28, 29, 30],
     'fog': [19, 20, 21, 22, 23],
     'hail': [17, 18, 35],
@@ -50,7 +51,7 @@ CONDITION_CLASSES = {
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_WOEID, default=None): cv.string,
+    vol.Optional(CONF_WOEID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 

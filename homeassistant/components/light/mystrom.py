@@ -11,16 +11,20 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
     Light, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT, ATTR_EFFECT, SUPPORT_FLASH)
+    SUPPORT_EFFECT, ATTR_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR,
+    ATTR_HS_COLOR)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, STATE_UNKNOWN
 
-REQUIREMENTS = ['python-mystrom==0.3.8']
+REQUIREMENTS = ['python-mystrom==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'myStrom bulb'
 
-SUPPORT_MYSTROM = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH)
+SUPPORT_MYSTROM = (
+    SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH |
+    SUPPORT_COLOR
+)
 
 EFFECT_RAINBOW = 'rainbow'
 EFFECT_SUNRISE = 'sunrise'
@@ -39,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the myStrom Light platform."""
-    from pymystrom import MyStromBulb
+    from pymystrom.bulb import MyStromBulb
     from pymystrom.exceptions import MyStromConnectionError
 
     host = config.get(CONF_HOST)
@@ -67,6 +71,8 @@ class MyStromLight(Light):
         self._state = None
         self._available = False
         self._brightness = 0
+        self._color_h = 0
+        self._color_s = 0
 
     @property
     def name(self):
@@ -82,6 +88,11 @@ class MyStromLight(Light):
     def brightness(self):
         """Return the brightness of the light."""
         return self._brightness
+
+    @property
+    def hs_color(self):
+        """Return the color of the light."""
+        return self._color_h, self._color_s
 
     @property
     def available(self) -> bool:
@@ -105,11 +116,21 @@ class MyStromLight(Light):
         brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         effect = kwargs.get(ATTR_EFFECT)
 
+        if ATTR_HS_COLOR in kwargs:
+            color_h, color_s = kwargs[ATTR_HS_COLOR]
+        elif ATTR_BRIGHTNESS in kwargs:
+            # Brightness update, keep color
+            color_h, color_s = self._color_h, self._color_s
+        else:
+            color_h, color_s = 0, 0  # Back to white
+
         try:
             if not self.is_on:
                 self._bulb.set_on()
             if brightness is not None:
-                self._bulb.set_color_hsv(0, 0, round(brightness * 100 / 255))
+                self._bulb.set_color_hsv(
+                    int(color_h), int(color_s), round(brightness * 100 / 255)
+                )
             if effect == EFFECT_SUNRISE:
                 self._bulb.set_sunrise(30)
             if effect == EFFECT_RAINBOW:
@@ -132,7 +153,14 @@ class MyStromLight(Light):
 
         try:
             self._state = self._bulb.get_status()
-            self._brightness = int(self._bulb.get_brightness()) * 255 / 100
+
+            colors = self._bulb.get_color()['color']
+            color_h, color_s, color_v = colors.split(';')
+
+            self._color_h = int(color_h)
+            self._color_s = int(color_s)
+            self._brightness = int(color_v) * 255 / 100
+
             self._available = True
         except MyStromConnectionError:
             _LOGGER.warning("myStrom bulb not online")

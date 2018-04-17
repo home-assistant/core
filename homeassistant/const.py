@@ -1,12 +1,11 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 63
+MINOR_VERSION = 68
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
-REQUIRED_PYTHON_VER = (3, 4, 2)
-REQUIRED_PYTHON_VER_WIN = (3, 5, 2)
+REQUIRED_PYTHON_VER = (3, 5, 3)
 
 # Format for platforms
 PLATFORM_FORMAT = '{}.{}'
@@ -28,6 +27,7 @@ CONF_ADDRESS = 'address'
 CONF_AFTER = 'after'
 CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
+CONF_API_VERSION = 'api_version'
 CONF_AT = 'at'
 CONF_AUTHENTICATION = 'authentication'
 CONF_BASE = 'base'
@@ -76,6 +76,7 @@ CONF_FILENAME = 'filename'
 CONF_FOR = 'for'
 CONF_FORCE_UPDATE = 'force_update'
 CONF_FRIENDLY_NAME = 'friendly_name'
+CONF_FRIENDLY_NAME_TEMPLATE = 'friendly_name_template'
 CONF_HEADERS = 'headers'
 CONF_HOST = 'host'
 CONF_HOSTS = 'hosts'

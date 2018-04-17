@@ -70,7 +70,7 @@ class ZigBeeTemperatureSensor(Entity):
         """Return the unit of measurement the value is expressed in."""
         return TEMP_CELSIUS
 
-    def update(self, *args):
+    def update(self):
         """Get the latest data."""
         try:
             self._temp = zigbee.DEVICE.get_temperature(self._config.address)

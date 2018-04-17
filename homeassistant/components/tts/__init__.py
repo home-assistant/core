@@ -411,7 +411,7 @@ class SpeechManager(object):
 
         if key not in self.mem_cache:
             if key not in self.file_cache:
-                raise HomeAssistantError("%s not in cache!", key)
+                raise HomeAssistantError("{} not in cache!".format(key))
             yield from self.async_file_to_mem(key)
 
         content, _ = mimetypes.guess_type(filename)

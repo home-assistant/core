@@ -76,9 +76,8 @@ def async_http_request(hass, uri):
             req = yield from session.get(uri)
         if req.status != 200:
             return {'error': req.status}
-        else:
-            json_response = yield from req.json()
-            return json_response
+        json_response = yield from req.json()
+        return json_response
     except (asyncio.TimeoutError, aiohttp.ClientError) as exc:
         _LOGGER.error("Cannot connect to ViaggiaTreno API endpoint: %s", exc)
     except ValueError:

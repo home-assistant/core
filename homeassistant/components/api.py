@@ -52,9 +52,8 @@ def setup(hass, config):
     hass.http.register_view(APIComponentsView)
     hass.http.register_view(APITemplateView)
 
-    log_path = hass.data.get(DATA_LOGGING, None)
-    if log_path:
-        hass.http.register_static_path(URL_API_ERROR_LOG, log_path, False)
+    if DATA_LOGGING in hass.data:
+        hass.http.register_view(APIErrorLog)
 
     return True
 
@@ -131,8 +130,7 @@ class APIEventStream(HomeAssistantView):
                     msg = "data: {}\n\n".format(payload)
                     _LOGGER.debug('STREAM %s WRITING %s', id(stop_obj),
                                   msg.strip())
-                    response.write(msg.encode("UTF-8"))
-                    yield from response.drain()
+                    yield from response.write(msg.encode("UTF-8"))
                 except asyncio.TimeoutError:
                     yield from to_write.put(STREAM_PING_PAYLOAD)
 
@@ -355,6 +353,17 @@ class APITemplateView(HomeAssistantView):
         except (ValueError, TemplateError) as ex:
             return self.json_message('Error rendering template: {}'.format(ex),
                                      HTTP_BAD_REQUEST)
+
+
+class APIErrorLog(HomeAssistantView):
+    """View to fetch the error log."""
+
+    url = URL_API_ERROR_LOG
+    name = "api:error_log"
+
+    async def get(self, request):
+        """Retrieve API error log."""
+        return await self.file(request, request.app['hass'].data[DATA_LOGGING])
 
 
 @asyncio.coroutine

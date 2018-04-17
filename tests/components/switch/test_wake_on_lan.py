@@ -40,7 +40,7 @@ class TestWOLSwitch(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('wakeonlan.wol.send_magic_packet', new=send_magic_packet)
+    @patch('wakeonlan.send_magic_packet', new=send_magic_packet)
     @patch('subprocess.call', new=call)
     def test_valid_hostname(self):
         """Test with valid hostname."""
@@ -71,7 +71,7 @@ class TestWOLSwitch(unittest.TestCase):
         state = self.hass.states.get('switch.wake_on_lan')
         self.assertEqual(STATE_ON, state.state)
 
-    @patch('wakeonlan.wol.send_magic_packet', new=send_magic_packet)
+    @patch('wakeonlan.send_magic_packet', new=send_magic_packet)
     @patch('subprocess.call', new=call)
     @patch('platform.system', new=system)
     def test_valid_hostname_windows(self):
@@ -97,7 +97,7 @@ class TestWOLSwitch(unittest.TestCase):
         state = self.hass.states.get('switch.wake_on_lan')
         self.assertEqual(STATE_ON, state.state)
 
-    @patch('wakeonlan.wol.send_magic_packet', new=send_magic_packet)
+    @patch('wakeonlan.send_magic_packet', new=send_magic_packet)
     @patch('subprocess.call', new=call)
     def test_minimal_config(self):
         """Test with minimal config."""
@@ -108,7 +108,7 @@ class TestWOLSwitch(unittest.TestCase):
             }
         }))
 
-    @patch('wakeonlan.wol.send_magic_packet', new=send_magic_packet)
+    @patch('wakeonlan.send_magic_packet', new=send_magic_packet)
     @patch('subprocess.call', new=call)
     def test_broadcast_config(self):
         """Test with broadcast address config."""
@@ -126,7 +126,7 @@ class TestWOLSwitch(unittest.TestCase):
         switch.turn_on(self.hass, 'switch.wake_on_lan')
         self.hass.block_till_done()
 
-    @patch('wakeonlan.wol.send_magic_packet', new=send_magic_packet)
+    @patch('wakeonlan.send_magic_packet', new=send_magic_packet)
     @patch('subprocess.call', new=call)
     def test_off_script(self):
         """Test with turn off script."""
@@ -165,7 +165,7 @@ class TestWOLSwitch(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
         assert len(calls) == 1
 
-    @patch('wakeonlan.wol.send_magic_packet', new=send_magic_packet)
+    @patch('wakeonlan.send_magic_packet', new=send_magic_packet)
     @patch('subprocess.call', new=call)
     @patch('platform.system', new=system)
     def test_invalid_hostname_windows(self):

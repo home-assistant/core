@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PUB_KEY = 'pub_key'
 CONF_SSH_KEY = 'ssh_key'
+CONF_REQUIRE_IP = 'require_ip'
 DEFAULT_SSH_PORT = 22
 SECRET_GROUP = 'Password or SSH Key'
 
@@ -36,6 +37,7 @@ PLATFORM_SCHEMA = vol.All(
         vol.Optional(CONF_PROTOCOL, default='ssh'): vol.In(['ssh', 'telnet']),
         vol.Optional(CONF_MODE, default='router'): vol.In(['router', 'ap']),
         vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
+        vol.Optional(CONF_REQUIRE_IP, default=True): cv.boolean,
         vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
         vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
         vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile
@@ -63,6 +65,7 @@ _IP_NEIGH_REGEX = re.compile(
     r'\w+\s'
     r'(\w+\s(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))))?\s'
     r'\s?(router)?'
+    r'\s?(nud)?'
     r'(?P<status>(\w+))')
 
 _ARP_CMD = 'arp -n'
@@ -114,15 +117,15 @@ class AsusWrtDeviceScanner(DeviceScanner):
         self.protocol = config[CONF_PROTOCOL]
         self.mode = config[CONF_MODE]
         self.port = config[CONF_PORT]
+        self.require_ip = config[CONF_REQUIRE_IP]
 
         if self.protocol == 'ssh':
             self.connection = SshConnection(
                 self.host, self.port, self.username, self.password,
-                self.ssh_key, self.mode == 'ap')
+                self.ssh_key)
         else:
             self.connection = TelnetConnection(
-                self.host, self.port, self.username, self.password,
-                self.mode == 'ap')
+                self.host, self.port, self.username, self.password)
 
         self.last_results = {}
 
@@ -172,7 +175,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
         ret_devices = {}
         for key in devices:
-            if devices[key].ip is not None:
+            if not self.require_ip or devices[key].ip is not None:
                 ret_devices[key] = devices[key]
         return ret_devices
 
@@ -212,6 +215,9 @@ class AsusWrtDeviceScanner(DeviceScanner):
         result = _parse_lines(lines, _IP_NEIGH_REGEX)
         devices = {}
         for device in result:
+            status = device['status']
+            if status is None or status.upper() != 'REACHABLE':
+                continue
             if device['mac'] is not None:
                 mac = device['mac'].upper()
                 old_device = cur_devices.get(mac)
@@ -226,7 +232,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
         result = _parse_lines(lines, _ARP_REGEX)
         devices = {}
         for device in result:
-            if device['mac']:
+            if device['mac'] is not None:
                 mac = device['mac'].upper()
                 devices[mac] = Device(mac, device['ip'], None)
         return devices
@@ -253,7 +259,7 @@ class _Connection:
 class SshConnection(_Connection):
     """Maintains an SSH connection to an ASUS-WRT router."""
 
-    def __init__(self, host, port, username, password, ssh_key, ap):
+    def __init__(self, host, port, username, password, ssh_key):
         """Initialize the SSH connection properties."""
         super().__init__()
 
@@ -263,7 +269,6 @@ class SshConnection(_Connection):
         self._username = username
         self._password = password
         self._ssh_key = ssh_key
-        self._ap = ap
 
     def run_command(self, command):
         """Run commands through an SSH connection.
@@ -281,15 +286,15 @@ class SshConnection(_Connection):
             lines = self._ssh.before.split(b'\n')[1:-1]
             return [line.decode('utf-8') for line in lines]
         except exceptions.EOF as err:
-            _LOGGER.error("Connection refused. SSH enabled?")
+            _LOGGER.error("Connection refused. %s", self._ssh.before)
             self.disconnect()
             return None
         except pxssh.ExceptionPxssh as err:
-            _LOGGER.error("Unexpected SSH error: %s", str(err))
+            _LOGGER.error("Unexpected SSH error: %s", err)
             self.disconnect()
             return None
         except AssertionError as err:
-            _LOGGER.error("Connection to router unavailable: %s", str(err))
+            _LOGGER.error("Connection to router unavailable: %s", err)
             self.disconnect()
             return None
 
@@ -299,10 +304,10 @@ class SshConnection(_Connection):
 
         self._ssh = pxssh.pxssh()
         if self._ssh_key:
-            self._ssh.login(self._host, self._username,
+            self._ssh.login(self._host, self._username, quiet=False,
                             ssh_key=self._ssh_key, port=self._port)
         else:
-            self._ssh.login(self._host, self._username,
+            self._ssh.login(self._host, self._username, quiet=False,
                             password=self._password, port=self._port)
 
         super().connect()
@@ -323,7 +328,7 @@ class SshConnection(_Connection):
 class TelnetConnection(_Connection):
     """Maintains a Telnet connection to an ASUS-WRT router."""
 
-    def __init__(self, host, port, username, password, ap):
+    def __init__(self, host, port, username, password):
         """Initialize the Telnet connection properties."""
         super().__init__()
 
@@ -332,7 +337,6 @@ class TelnetConnection(_Connection):
         self._port = port
         self._username = username
         self._password = password
-        self._ap = ap
         self._prompt_string = None
 
     def run_command(self, command):
