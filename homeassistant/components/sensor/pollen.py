@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, slugify
 
-REQUIREMENTS = ['pypollencom==1.1.1']
+REQUIREMENTS = ['pypollencom==1.1.2']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ALLERGEN_GENUS = 'primary_allergen_genus'
