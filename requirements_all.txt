@@ -1185,7 +1185,7 @@ smappy==0.2.15
 snapcast==2.0.8
 
 # homeassistant.components.climate.honeywell
-somecomfort==0.5.0
+somecomfort==0.5.2
 
 # homeassistant.components.sensor.speedtest
 speedtest-cli==2.0.0
