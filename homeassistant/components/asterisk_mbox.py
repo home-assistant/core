@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (dispatcher_connect,
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
                                               dispatcher_send)
 
 REQUIREMENTS = ['asterisk_mbox==0.5.0']
@@ -44,7 +44,7 @@ def setup(hass, config):
     port = conf.get(CONF_PORT)
     password = conf.get(CONF_PASSWORD)
 
-    hass.data[DOMAIN] = AsteriskData(hass, host, port, password, config)
+    hass.data[DOMAIN] = AsteriskData(host, port, password, config)
 
     return True
 
@@ -52,21 +52,22 @@ def setup(hass, config):
 class AsteriskData(object):
     """Store Asterisk mailbox data."""
 
-    def __init__(self, hass, host, port, password, config):
+    def __init__(self,host, port, password, config):
         """Init the Asterisk data object."""
         from asterisk_mbox import Client as asteriskClient
 
-        self.hass = hass
         self.config = config
         self.client = asteriskClient(host, port, password, self.handle_data)
         self.messages = None
         self.cdr = None
 
-        dispatcher_connect(
+    async def async_added_to_hass(self):
+      """Init Callbacks."""
+        async_dispatcher_connect(
             self.hass, SIGNAL_MESSAGE_REQUEST, self._request_messages)
-        dispatcher_connect(
+        async_dispatcher_connect(
             self.hass, SIGNAL_CDR_REQUEST, self._request_cdr)
-        dispatcher_connect(
+        async_dispatcher_connect(
             self.hass, SIGNAL_DISCOVER_PLATFORM, self._discover_platform)
 
     @callback
@@ -74,7 +75,6 @@ class AsteriskData(object):
         self.hass.async_add_job(discovery.async_load_platform(
             self.hass, "mailbox", component, {}, self.config))
 
-    @callback
     def handle_data(self, command, msg):
         """Handle changes to the mailbox."""
         from asterisk_mbox.commands import (CMD_MESSAGE_LIST,
@@ -111,5 +111,5 @@ class AsteriskData(object):
     @callback
     def _request_cdr(self):
         """Handle changes to the CDR."""
-        _LOGGER.info("Requesting CDR list")
+        _LOGGER.debug("Requesting CDR list")
         self.client.get_cdr()
