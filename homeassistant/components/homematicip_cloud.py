@@ -21,13 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'homematicip_cloud'
 
-COMPONTENTS = [
-    'sensor',
-    # 'binary_sensor',
-    # 'climate',
-    # 'switch',
-    # 'light',
-    # 'alarm_control_panel'
+COMPONENTS = [
+    'sensor'
 ]
 
 CONF_NAME = 'name'
@@ -35,11 +30,11 @@ CONF_ACCESSPOINT = 'accesspoint'
 CONF_AUTHTOKEN = 'authtoken'
 
 CONFIG_SCHEMA = vol.Schema({
-    vol.Optional(DOMAIN): [vol.Schema({
-        vol.Optional(CONF_NAME, default=None): vol.Any(None, cv.string),
+    vol.Optional(DOMAIN, default=[]): vol.All(cv.ensure_list, [vol.Schema({
+        vol.Optional(CONF_NAME): vol.Any(None, cv.string),
         vol.Required(CONF_ACCESSPOINT): cv.string,
         vol.Required(CONF_AUTHTOKEN): cv.string,
-    })],
+    })]),
 }, extra=vol.ALLOW_EXTRA)
 
 HMIP_ACCESS_POINT = 'Access Point'
@@ -62,10 +57,41 @@ ATTR_SABOTAGE = 'sabotage'
 ATTR_OPERATION_LOCK = 'operation_lock'
 
 
+async def async_setup(hass, config):
+    """Set up the HomematicIP component."""
+    from homematicip.base.base_connection import HmipConnectionError
+
+    hass.data.setdefault(DOMAIN, {})
+    accesspoints = config.get(DOMAIN, [])
+    for conf in accesspoints:
+        _websession = async_get_clientsession(hass)
+        _hmip = HomematicipConnector(hass, conf, _websession)
+        try:
+            await _hmip.init()
+        except HmipConnectionError:
+            _LOGGER.error('Failed to connect to the HomematicIP cloud server.')
+            return False
+
+        home = _hmip.home
+        home.name = conf.get(CONF_NAME)
+        home.label = HMIP_ACCESS_POINT
+        home.modelType = HMIP_HUB
+
+        hass.data[DOMAIN][home.id] = home
+        _LOGGER.info('Connected to the HomematicIP cloud server.')
+        homeid = {ATTR_HOME_ID: home.id}
+        for component in COMPONENTS:
+            hass.async_add_job(async_load_platform(hass, component, DOMAIN,
+                                                   homeid, config))
+
+        hass.loop.create_task(_hmip.connect())
+    return True
+
+
 class HomematicipConnector:
     """Manages HomematicIP http and websocket connection."""
 
-    def __init__(self, config, websession, hass):
+    def __init__(self, hass, config, websession):
         """Initialize HomematicIP cloud connection."""
         from homematicip.async.home import AsyncHome
         self._hass = hass
@@ -95,7 +121,6 @@ class HomematicipConnector:
             await hmip_events
         except HmipConnectionError:
             return
-        return
 
     async def connect(self):
         """Start websocket connection."""
@@ -125,38 +150,6 @@ class HomematicipConnector:
             self._retry_task.cancel()
         await self.home.disable_events()
         _LOGGER.info("Closed connection to HomematicIP cloud server.")
-
-
-async def async_setup(hass, config):
-    """Set up the HomematicIP component."""
-    from homematicip.base.base_connection import HmipConnectionError
-
-    hass.data.setdefault(DOMAIN, {})
-    _LOGGER.info('Loading config for HomematicIP cloud connection.')
-    accesspoints = config.get(DOMAIN, [])
-    for conf in accesspoints:
-        _websession = async_get_clientsession(hass)
-        _hmip = HomematicipConnector(conf, _websession, hass)
-        try:
-            await _hmip.init()
-        except HmipConnectionError:
-            _LOGGER.error('Failed to connect to the HomematicIP cloud server.')
-            return False
-
-        home = _hmip.home
-        home.name = conf.get(CONF_NAME)
-        home.label = HMIP_ACCESS_POINT
-        home.modelType = HMIP_HUB
-
-        hass.data[DOMAIN][home.id] = home
-        _LOGGER.info('Connected to the HomematicIP cloud server.')
-        homeid = {ATTR_HOME_ID: home.id}
-        for component in COMPONTENTS:
-            hass.async_add_job(async_load_platform(hass, component, DOMAIN,
-                                                   homeid, config))
-
-        hass.loop.create_task(_hmip.connect())
-    return True
 
 
 class HomematicipGenericDevice(Entity):
