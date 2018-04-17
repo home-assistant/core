@@ -8,7 +8,8 @@ from homeassistant.components.homekit.type_covers import (
     GarageDoorOpener, WindowCovering, WindowCoveringBasic)
 from homeassistant.const import (
     STATE_CLOSED, STATE_UNAVAILABLE, STATE_UNKNOWN, STATE_OPEN,
-    ATTR_SERVICE, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE, ATTR_SUPPORTED_FEATURES)
+    ATTR_SERVICE, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
+    ATTR_SUPPORTED_FEATURES)
 
 from tests.common import get_test_home_assistant
 
@@ -143,8 +144,11 @@ class TestHomekitSensors(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         window_cover = 'cover.window'
 
-        self.hass.states.set(window_cover, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP})
-        acc = WindowCoveringBasic(self.hass, 'Cover', window_cover, 2, config=None)
+        self.hass.states.set(window_cover, STATE_UNKNOWN, {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_STOP
+        })
+        acc = WindowCoveringBasic(self.hass, 'Cover', window_cover, 2,
+                                  config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -202,8 +206,11 @@ class TestHomekitSensors(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         window_cover = 'cover.window'
 
-        self.hass.states.set(window_cover, STATE_UNKNOWN, {ATTR_SUPPORTED_FEATURES: 0})
-        acc = WindowCoveringBasic(self.hass, 'Cover', window_cover, 2, config=None)
+        self.hass.states.set(window_cover, STATE_UNKNOWN, {
+            ATTR_SUPPORTED_FEATURES: 0
+        })
+        acc = WindowCoveringBasic(self.hass, 'Cover', window_cover, 2,
+                                  config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
