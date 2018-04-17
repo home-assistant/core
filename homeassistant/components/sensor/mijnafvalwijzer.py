@@ -10,17 +10,15 @@ https://home-assistant.io/components/sensor.mijnafvalwijzer/
 @ Version     : 1.0.4
 @ Description : MijnAfvalwijzer Sensor - It queries mijnafvalwijzer.nl.
 """
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME)
-
-import voluptuous as vol
-from datetime import datetime, timedelta
-
 import requests
 import asyncio
 import logging
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
+from datetime import datetime, timedelta
+from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (CONF_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,4 +159,3 @@ class TrashCollectionSchedule(object):
                         trash['pickup_date'] = item['nameType']
                         tschedule.append(trash)
                         self.data = tschedule
-
