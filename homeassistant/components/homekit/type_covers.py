@@ -128,28 +128,26 @@ class WindowCoveringBasic(HomeAccessory):
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set position to %d', self.entity_id, value)
 
-        service, position = (None, None)
         if self.supports_stop:
             if value > 70:
                 service, position = (SERVICE_OPEN_COVER, 100)
             elif value < 30:
                 service, position = (SERVICE_CLOSE_COVER, 0)
-            elif self.supports_stop:
+            else:
                 service, position = (SERVICE_STOP_COVER, 50)
         else:
             if value >= 50:
                 service, position = (SERVICE_OPEN_COVER, 100)
-            elif value < 50:
+            else:
                 service, position = (SERVICE_CLOSE_COVER, 0)
 
-        if service is not None:
-            self.hass.services.call(DOMAIN, service, {
-                ATTR_ENTITY_ID: self.entity_id
-            })
+        self.hass.services.call(DOMAIN, service, {
+            ATTR_ENTITY_ID: self.entity_id
+        })
 
-            # Snap the current/target position to the expected final position.
-            self.char_current_position.set_value(position)
-            self.char_target_position.set_value(position)
+        # Snap the current/target position to the expected final position.
+        self.char_current_position.set_value(position)
+        self.char_target_position.set_value(position)
 
     def update_state(self, new_state):
         """Update cover position after state changed."""
