@@ -8,7 +8,7 @@ https://home-assistant.io/components/sensor.homematicip_cloud/
 import logging
 
 from homeassistant.components.homematicip_cloud import (
-    HomematicipGenericDevice, DOMAIN,
+    HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
     ATTR_HOME_NAME, ATTR_HOME_ID, ATTR_LOW_BATTERY, ATTR_DEVICE_RSSI,
     ATTR_CONNECTED, ATTR_DUTY_CYCLE)
 from homeassistant.const import TEMP_CELSIUS
@@ -27,9 +27,9 @@ HMIP_UPTODATE = 'up_to_date'
 HMIP_VALVE_DONE = 'adaption_done'
 HMIP_SABOTAGE = 'sabotage'
 
-STATE_OK = 'OK'
-STATE_LOW_BATTERY = 'Low_battery'
-STATE_SABOTAGE = 'Sabotage'
+STATE_OK = 'ok'
+STATE_LOW_BATTERY = 'low_battery'
+STATE_SABOTAGE = 'sabotage'
 
 
 async def async_setup_platform(hass, config, async_add_devices,
@@ -39,21 +39,21 @@ async def async_setup_platform(hass, config, async_add_devices,
         HeatingThermostat, TemperatureHumiditySensorWithoutDisplay,
         TemperatureHumiditySensorDisplay)
 
-    home = hass.data[DOMAIN][discovery_info[ATTR_HOME_ID]]
+    if discovery_info is None:
+        return
+    home = hass.data[HOMEMATICIP_CLOUD_DOMAIN][discovery_info[ATTR_HOME_ID]]
     devices = [HomematicipAccesspointStatus(home)]
 
     for device in home.devices:
         devices.append(HomematicipDeviceStatus(home, device))
         if isinstance(device, HeatingThermostat):
             devices.append(HomematicipHeatingThermostat(home, device))
-        if isinstance(device, TemperatureHumiditySensorWithoutDisplay):
-            devices.append(HomematicipTemperatureSensor(home, device))
-            devices.append(HomematicipHumiditySensor(home, device))
-        if isinstance(device, TemperatureHumiditySensorDisplay):
+        if (isinstance(device, TemperatureHumiditySensorWithoutDisplay) or
+            isinstance(device, TemperatureHumiditySensorDisplay)):
             devices.append(HomematicipTemperatureSensor(home, device))
             devices.append(HomematicipHumiditySensor(home, device))
 
-    if home.devices:
+    if devices:
         async_add_devices(devices)
 
 
@@ -117,7 +117,7 @@ class HomematicipDeviceStatus(HomematicipGenericDevice):
         elif self._device.lowBat:
             return STATE_LOW_BATTERY
         elif self._device.updateState.lower() != HMIP_UPTODATE:
-            return self._device.updateState.capitalize()
+            return self._device.updateState.lower()
         return STATE_OK
 
 
@@ -139,7 +139,7 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
     def state(self):
         """Return the state of the radiator valve."""
         if self._device.valveState.lower() != HMIP_VALVE_DONE:
-            return self._device.valveState.capitalize()
+            return self._device.valveState.lower()
         return round(self._device.valvePosition*100)
 
     @property
