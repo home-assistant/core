@@ -32,6 +32,7 @@ DOMAIN = 'dsmr'
 ICON_GAS = 'mdi:fire'
 ICON_POWER = 'mdi:flash'
 ICON_POWER_FAILURE = 'mdi:flash-off'
+ICON_SWELL_SAG = 'mdi:pulse'
 
 # Smart meter sends telegram every 10 seconds
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
@@ -188,6 +189,8 @@ class DSMREntity(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
+        if 'Sags' in self._name or 'Swells' in self.name:
+            return ICON_SWELL_SAG
         if 'Failure' in self._name:
             return ICON_POWER_FAILURE
         if 'Power' in self._name:
