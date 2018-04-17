@@ -12,7 +12,7 @@ from tests.common import mock_registry
 
 
 @asyncio.coroutine
-def test_loading_file(hass, test_client):
+def test_loading_file(hass, aiohttp_client):
     """Test that it loads image from disk."""
     mock_registry(hass)
 
@@ -25,7 +25,7 @@ def test_loading_file(hass, test_client):
                 'file_path': 'mock.file',
             }})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
 
     m_open = MockOpen(read_data=b'hello')
     with mock.patch(
@@ -57,7 +57,7 @@ def test_file_not_readable(hass, caplog):
 
 
 @asyncio.coroutine
-def test_camera_content_type(hass, test_client):
+def test_camera_content_type(hass, aiohttp_client):
     """Test local_file camera content_type."""
     cam_config_jpg = {
         'name': 'test_jpg',
@@ -84,7 +84,7 @@ def test_camera_content_type(hass, test_client):
         'camera': [cam_config_jpg, cam_config_png,
                    cam_config_svg, cam_config_noext]})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
 
     image = 'hello'
     m_open = MockOpen(read_data=image.encode())

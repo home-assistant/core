@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_CHANNEL, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_VIDEO, SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_STOP,
+    MEDIA_TYPE_MOVIE, SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_PLAY_MEDIA, SUPPORT_SELECT_SOURCE, DOMAIN, PLATFORM_SCHEMA,
     MediaPlayerDevice)
@@ -45,7 +45,7 @@ SERVICE_SEEK_BY = 'channels_seek_by'
 ATTR_SECONDS = 'seconds'
 
 CHANNELS_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
 })
 
 CHANNELS_SEEK_BY_SCHEMA = CHANNELS_SCHEMA.extend({
@@ -55,14 +55,12 @@ CHANNELS_SEEK_BY_SCHEMA = CHANNELS_SCHEMA.extend({
 REQUIREMENTS = ['pychannels==1.0.0']
 
 
-# pylint: disable=unused-argument, abstract-method
-# pylint: disable=too-many-instance-attributes
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Channels platform."""
     device = ChannelsPlayer(
-        config.get('name', DEFAULT_NAME),
+        config.get('name'),
         config.get(CONF_HOST),
-        config.get(CONF_PORT, DEFAULT_PORT)
+        config.get(CONF_PORT)
         )
 
     if DATA_CHANNELS not in hass.data:
@@ -73,22 +71,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def service_handler(service):
         """Handler for services."""
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        entity_id = service.data.get(ATTR_ENTITY_ID)
 
-        if entity_ids:
-            devices = [device for device in hass.data[DATA_CHANNELS]
-                       if device.entity_id in entity_ids]
-        else:
-            devices = hass.data[DATA_CHANNELS]
+        device = next((device for device in hass.data[DATA_CHANNELS] if
+                       device.entity_id == entity_id), None)
 
-        for device in devices:
-            if service.service == SERVICE_SEEK_FORWARD:
-                device.seek_forward()
-            elif service.service == SERVICE_SEEK_BACKWARD:
-                device.seek_backward()
-            elif service.service == SERVICE_SEEK_BY:
-                seconds = service.data.get('seconds')
-                device.seek_by(seconds)
+        if device is None:
+            _LOGGER.warning("Unable to find Channels with entity_id: %s",
+                            entity_id)
+            return
+
+        if service.service == SERVICE_SEEK_FORWARD:
+            device.seek_forward()
+        elif service.service == SERVICE_SEEK_BACKWARD:
+            device.seek_backward()
+        elif service.service == SERVICE_SEEK_BY:
+            seconds = service.data.get('seconds')
+            device.seek_by(seconds)
 
     hass.services.register(
         DOMAIN, SERVICE_SEEK_FORWARD, service_handler,
@@ -282,7 +281,7 @@ class ChannelsPlayer(MediaPlayerDevice):
         if media_type == MEDIA_TYPE_CHANNEL:
             response = self.client.play_channel(media_id)
             self.update_state(response)
-        elif media_type in [MEDIA_TYPE_VIDEO, MEDIA_TYPE_EPISODE,
+        elif media_type in [MEDIA_TYPE_MOVIE, MEDIA_TYPE_EPISODE,
                             MEDIA_TYPE_TVSHOW]:
             response = self.client.play_recording(media_id)
             self.update_state(response)

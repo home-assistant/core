@@ -6,6 +6,7 @@ https://home-assistant.io/components/notify.lametric/
 """
 import logging
 
+from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -49,6 +50,7 @@ class LaMetricNotificationService(BaseNotificationService):
         self._icon = icon
         self._lifetime = lifetime
         self._cycles = cycles
+        self._devices = []
 
     # pylint: disable=broad-except
     def send_message(self, message="", **kwargs):
@@ -86,12 +88,15 @@ class LaMetricNotificationService(BaseNotificationService):
         model = Model(frames=frames, cycles=cycles, sound=sound)
         lmn = self.hasslametricmanager.manager
         try:
-            devices = lmn.get_devices()
+            self._devices = lmn.get_devices()
         except TokenExpiredError:
             _LOGGER.debug("Token expired, fetching new token")
             lmn.get_token()
-            devices = lmn.get_devices()
-        for dev in devices:
+            self._devices = lmn.get_devices()
+        except RequestsConnectionError:
+            _LOGGER.warning("Problem connecting to LaMetric, "
+                            "using cached devices instead")
+        for dev in self._devices:
             if targets is None or dev["name"] in targets:
                 try:
                     lmn.set_device(dev)

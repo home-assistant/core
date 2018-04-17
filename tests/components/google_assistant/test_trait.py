@@ -9,8 +9,9 @@ from homeassistant.components import (
     climate,
     cover,
     fan,
-    media_player,
+    input_boolean,
     light,
+    media_player,
     scene,
     script,
     switch,
@@ -135,6 +136,43 @@ async def test_onoff_group(hass):
     assert len(off_calls) == 1
     assert off_calls[0].data == {
         ATTR_ENTITY_ID: 'group.bla',
+    }
+
+
+async def test_onoff_input_boolean(hass):
+    """Test OnOff trait support for input_boolean domain."""
+    assert trait.OnOffTrait.supported(media_player.DOMAIN, 0)
+
+    trt_on = trait.OnOffTrait(State('input_boolean.bla', STATE_ON))
+
+    assert trt_on.sync_attributes() == {}
+
+    assert trt_on.query_attributes() == {
+        'on': True
+    }
+
+    trt_off = trait.OnOffTrait(State('input_boolean.bla', STATE_OFF))
+    assert trt_off.query_attributes() == {
+        'on': False
+    }
+
+    on_calls = async_mock_service(hass, input_boolean.DOMAIN, SERVICE_TURN_ON)
+    await trt_on.execute(hass, trait.COMMAND_ONOFF, {
+        'on': True
+    })
+    assert len(on_calls) == 1
+    assert on_calls[0].data == {
+        ATTR_ENTITY_ID: 'input_boolean.bla',
+    }
+
+    off_calls = async_mock_service(hass, input_boolean.DOMAIN,
+                                   SERVICE_TURN_OFF)
+    await trt_on.execute(hass, trait.COMMAND_ONOFF, {
+        'on': False
+    })
+    assert len(off_calls) == 1
+    assert off_calls[0].data == {
+        ATTR_ENTITY_ID: 'input_boolean.bla',
     }
 
 
@@ -323,12 +361,10 @@ async def test_color_spectrum_light(hass):
     """Test ColorSpectrum trait support for light domain."""
     assert not trait.ColorSpectrumTrait.supported(light.DOMAIN, 0)
     assert trait.ColorSpectrumTrait.supported(light.DOMAIN,
-                                              light.SUPPORT_RGB_COLOR)
-    assert trait.ColorSpectrumTrait.supported(light.DOMAIN,
-                                              light.SUPPORT_XY_COLOR)
+                                              light.SUPPORT_COLOR)
 
     trt = trait.ColorSpectrumTrait(State('light.bla', STATE_ON, {
-        light.ATTR_RGB_COLOR: [255, 10, 10]
+        light.ATTR_HS_COLOR: (0, 94),
     }))
 
     assert trt.sync_attributes() == {
@@ -337,7 +373,7 @@ async def test_color_spectrum_light(hass):
 
     assert trt.query_attributes() == {
         'color': {
-            'spectrumRGB': 16714250
+            'spectrumRGB': 16715535
         }
     }
 
@@ -361,7 +397,7 @@ async def test_color_spectrum_light(hass):
     assert len(calls) == 1
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'light.bla',
-        light.ATTR_RGB_COLOR: [16, 16, 255]
+        light.ATTR_HS_COLOR: (240, 93.725),
     }
 
 

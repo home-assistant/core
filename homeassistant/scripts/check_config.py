@@ -95,9 +95,12 @@ def run(script_args: List) -> int:
     if args.files:
         print(color(C_HEAD, 'yaml files'), '(used /',
               color('red', 'not used') + ')')
-        # Python 3.5 gets a recursive, but not in 3.4
-        for yfn in sorted(glob(os.path.join(config_dir, '*.yaml')) +
-                          glob(os.path.join(config_dir, '*/*.yaml'))):
+        deps = os.path.join(config_dir, 'deps')
+        yaml_files = [f for f in glob(os.path.join(config_dir, '**/*.yaml'),
+                                      recursive=True)
+                      if not f.startswith(deps)]
+
+        for yfn in sorted(yaml_files):
             the_color = '' if yfn in res['yaml_files'] else 'red'
             print(color(the_color, '-', yfn))
 
@@ -140,6 +143,9 @@ def run(script_args: List) -> int:
 
         print(color(C_HEAD, 'Used Secrets:'))
         for skey, sval in res['secrets'].items():
+            if sval is None:
+                print(' -', skey + ':', color('red', "not found"))
+                continue
             print(' -', skey + ':', sval, color('cyan', '[from:', flatsecret
                                                 .get(skey, 'keyring') + ']'))
 
@@ -246,7 +252,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     """
     def sort_dict_key(val):
         """Return the dict key for sorting."""
-        key = str.lower(val[0])
+        key = str(val[0]).lower()
         return '0' if key == 'platform' else key
 
     indent_str = indent_count * ' '
@@ -255,10 +261,10 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     if isinstance(layer, Dict):
         for key, value in sorted(layer.items(), key=sort_dict_key):
             if isinstance(value, (dict, list)):
-                print(indent_str, key + ':', line_info(value, **kwargs))
+                print(indent_str, str(key) + ':', line_info(value, **kwargs))
                 dump_dict(value, indent_count + 2)
             else:
-                print(indent_str, key + ':', value)
+                print(indent_str, str(key) + ':', value)
             indent_str = indent_count * ' '
     if isinstance(layer, Sequence):
         for i in layer:
@@ -308,7 +314,8 @@ def check_ha_config_file(config_dir):
             return result.add_error("File configuration.yaml not found.")
         config = load_yaml_config_file(config_path)
     except HomeAssistantError as err:
-        return result.add_error(err)
+        return result.add_error(
+            "Error loading {}: {}".format(config_path, err))
     finally:
         yaml.clear_secret_cache()
 
@@ -325,6 +332,11 @@ def check_ha_config_file(config_dir):
     merge_packages_config(
         config, core_config.get(CONF_PACKAGES, {}), _pack_error)
     del core_config[CONF_PACKAGES]
+
+    # Ensure we have no None values after merge
+    for key, value in config.items():
+        if not value:
+            config[key] = {}
 
     # Filter out repeating config sections
     components = set(key.split(' ')[0] for key in config.keys())

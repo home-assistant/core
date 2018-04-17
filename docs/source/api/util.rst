@@ -4,10 +4,10 @@ homeassistant.util package
 Submodules
 ----------
 
-homeassistant.util.async module
+homeassistant.util.async_ module
 -------------------------------
 
-.. automodule:: homeassistant.util.async
+.. automodule:: homeassistant.util.async_
     :members:
     :undoc-members:
     :show-inheritance:

@@ -11,7 +11,7 @@ import async_timeout
 
 import voluptuous as vol
 
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.helpers import config_validation as cv
 
 import homeassistant.util.dt as dt_util
@@ -54,34 +54,6 @@ async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the Proxy camera platform."""
     async_add_devices([ProxyCamera(hass, config)])
-
-
-async def _read_frame(req):
-    """Read a single frame from an MJPEG stream."""
-    # based on https://gist.github.com/russss/1143799
-    import cgi
-    # Read in HTTP headers:
-    stream = req.content
-    # multipart/x-mixed-replace; boundary=--frameboundary
-    _mimetype, options = cgi.parse_header(req.headers['content-type'])
-    boundary = options.get('boundary').encode('utf-8')
-    if not boundary:
-        _LOGGER.error("Malformed MJPEG missing boundary")
-        raise Exception("Can't find content-type")
-
-    line = await stream.readline()
-    # Seek ahead to the first chunk
-    while line.strip() != boundary:
-        line = await stream.readline()
-    # Read in chunk headers
-    while line.strip() != b'':
-        parts = line.split(b':')
-        if len(parts) > 1 and parts[0].lower() == b'content-length':
-            # Grab chunk length
-            length = int(parts[1].strip())
-        line = await stream.readline()
-    image = await stream.read(length)
-    return image
 
 
 def _resize_image(image, opts):
@@ -227,9 +199,9 @@ class ProxyCamera(Camera):
                                  'boundary=--frameboundary')
         await response.prepare(request)
 
-        def write(img_bytes):
+        async def write(img_bytes):
             """Write image to stream."""
-            response.write(bytes(
+            await response.write(bytes(
                 '--frameboundary\r\n'
                 'Content-Type: {}\r\n'
                 'Content-Length: {}\r\n\r\n'.format(
@@ -240,13 +212,23 @@ class ProxyCamera(Camera):
             req = await stream_coro
 
         try:
+            # This would be nicer as an async generator
+            # But that would only be supported for python >=3.6
+            data = b''
+            stream = req.content
             while True:
-                image = await _read_frame(req)
-                if not image:
+                chunk = await stream.read(102400)
+                if not chunk:
                     break
-                image = await self.hass.async_add_job(
-                    _resize_image, image, self._stream_opts)
-                write(image)
+                data += chunk
+                jpg_start = data.find(b'\xff\xd8')
+                jpg_end = data.find(b'\xff\xd9')
+                if jpg_start != -1 and jpg_end != -1:
+                    image = data[jpg_start:jpg_end + 2]
+                    image = await self.hass.async_add_job(
+                        _resize_image, image, self._stream_opts)
+                    await write(image)
+                    data = data[jpg_end + 2:]
         except asyncio.CancelledError:
             _LOGGER.debug("Stream closed by frontend.")
             req.close()

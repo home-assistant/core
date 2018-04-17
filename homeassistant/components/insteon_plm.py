@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.8.2']
+REQUIREMENTS = ['insteonplm==0.8.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,19 +64,20 @@ def async_setup(hass, config):
         """Detect device from transport to be delegated to platform."""
         for state_key in device.states:
             platform_info = ipdb[device.states[state_key]]
-            platform = platform_info.platform
-            if platform is not None:
-                _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
-                             device.address,
-                             device.states[state_key].name,
-                             platform)
+            if platform_info:
+                platform = platform_info.platform
+                if platform:
+                    _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
+                                 device.address,
+                                 device.states[state_key].name,
+                                 platform)
 
-                hass.async_add_job(
-                    discovery.async_load_platform(
-                        hass, platform, DOMAIN,
-                        discovered={'address': device.address.hex,
-                                    'state_key': state_key},
-                        hass_config=config))
+                    hass.async_add_job(
+                        discovery.async_load_platform(
+                            hass, platform, DOMAIN,
+                            discovered={'address': device.address.hex,
+                                        'state_key': state_key},
+                            hass_config=config))
 
     _LOGGER.info("Looking for PLM on %s", port)
     conn = yield from insteonplm.Connection.create(
@@ -127,13 +128,15 @@ class IPDB(object):
         from insteonplm.states.sensor import (VariableSensor,
                                               OnOffSensor,
                                               SmokeCO2Sensor,
-                                              IoLincSensor)
+                                              IoLincSensor,
+                                              LeakSensorDryWet)
 
         self.states = [State(OnOffSwitch_OutletTop, 'switch'),
                        State(OnOffSwitch_OutletBottom, 'switch'),
                        State(OpenClosedRelay, 'switch'),
                        State(OnOffSwitch, 'switch'),
 
+                       State(LeakSensorDryWet, 'binary_sensor'),
                        State(IoLincSensor, 'binary_sensor'),
                        State(SmokeCO2Sensor, 'sensor'),
                        State(OnOffSensor, 'binary_sensor'),

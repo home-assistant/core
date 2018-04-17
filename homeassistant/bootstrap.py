@@ -86,14 +86,6 @@ def async_from_config_dict(config: Dict[str, Any],
     if enable_log:
         async_enable_logging(hass, verbose, log_rotate_days, log_file)
 
-    if sys.version_info[:2] < (3, 5):
-        _LOGGER.warning(
-            'Python 3.4 support has been deprecated and will be removed in '
-            'the beginning of 2018. Please upgrade Python or your operating '
-            'system. More info: https://home-assistant.io/blog/2017/10/06/'
-            'deprecating-python-3.4-support/'
-        )
-
     core_config = config.get(core.DOMAIN, {})
 
     try:
@@ -118,6 +110,11 @@ def async_from_config_dict(config: Dict[str, Any],
     # Merge packages
     conf_util.merge_packages_config(
         config, core_config.get(conf_util.CONF_PACKAGES, {}))
+
+    # Ensure we have no None values after merge
+    for key, value in config.items():
+        if not value:
+            config[key] = {}
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
     yield from hass.config_entries.async_load()
