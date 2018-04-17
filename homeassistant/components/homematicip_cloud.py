@@ -69,7 +69,8 @@ async def async_setup(hass, config):
         try:
             await _hmip.init()
         except HmipConnectionError:
-            _LOGGER.error('Failed to connect to the HomematicIP cloud server.')
+            _LOGGER.error('Failed to connect to the HomematicIP server, %s.',
+                          conf.get(CONF_ACCESSPOINT))
             return False
 
         home = _hmip.home
@@ -78,7 +79,8 @@ async def async_setup(hass, config):
         home.modelType = HMIP_HUB
 
         hass.data[DOMAIN][home.id] = home
-        _LOGGER.info('Connected to the HomematicIP cloud server.')
+        _LOGGER.info('Connected to the HomematicIP server, %s.',
+                     conf.get(CONF_ACCESSPOINT))
         homeid = {ATTR_HOME_ID: home.id}
         for component in COMPONENTS:
             hass.async_add_job(async_load_platform(hass, component, DOMAIN,
@@ -99,10 +101,10 @@ class HomematicipConnector:
         self._retry_task = None
         self._tries = 0
         self._accesspoint = config.get(CONF_ACCESSPOINT)
-        self._authtoken = config.get(CONF_AUTHTOKEN)
+        _authtoken = config.get(CONF_AUTHTOKEN)
 
         self.home = AsyncHome(hass.loop, websession)
-        self.home.set_auth_token(self._authtoken)
+        self.home.set_auth_token(_authtoken)
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.close())
 
@@ -126,10 +128,7 @@ class HomematicipConnector:
         """Start websocket connection."""
         self._tries = 0
         while True:
-            try:
-                await self._handle_connection()
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected error")
+            await self._handle_connection()
             if self._ws_close_requested:
                 break
             self._ws_close_requested = False
@@ -160,7 +159,7 @@ class HomematicipGenericDevice(Entity):
         self._home = home
         self._device = device
         self.post = post
-        _LOGGER.info('Setting up %s (%s)', self._name(),
+        _LOGGER.info('Setting up %s (%s)', self.name,
                      self._device.modelType)
 
     async def async_added_to_hass(self):
@@ -169,22 +168,18 @@ class HomematicipGenericDevice(Entity):
 
     def _device_changed(self, json, **kwargs):
         """Handle device state changes."""
-        _LOGGER.debug('Event %s (%s)', self._name(), self._device.modelType)
+        _LOGGER.debug('Event %s (%s)', self.name, self._device.modelType)
         self.async_schedule_update_ha_state()
-
-    def _name(self):
-        """Return the name of the generic device."""
-        name = self._device.label
-        if self._home.name is not None:
-            name = self._home.name + ' ' + name
-        if self.post is not None:
-            name = name + ' ' + self.post
-        return name
 
     @property
     def name(self):
         """Return the name of the generic device."""
-        return self._name()
+        name = self._device.label
+        if self._home.name is not None:
+            name = "{} {}".format(self._home.name, name)
+        if self.post is not None:
+            name = "{} {}".format(name, self.post)
+        return name
 
     @property
     def should_poll(self):
