@@ -23,10 +23,6 @@ SUPPORT_LANGUAGES = [
     'de', 'en-GB', 'en-US', 'fr', 'it', 'lb', 'ru', 'sv', 'te', 'tr'
 ]
 
-SUPPORT_VOICES = [
-    'cmu-slt-hsmm'
-]
-
 SUPPORT_CODEC = [
     'aiff', 'au', 'wav'
 ]
@@ -44,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORT_VOICES),
+    vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
     vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODEC)
 })
 

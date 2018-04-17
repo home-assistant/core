@@ -5,38 +5,41 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.kodi/
 """
 import asyncio
+from collections import OrderedDict
 from functools import wraps
 import logging
+import socket
 import urllib
 import re
-import os
 
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, SUPPORT_SHUFFLE_SET,
     MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO, MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN)
+    MEDIA_TYPE_MOVIE, MEDIA_TYPE_VIDEO, MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN, SUPPORT_TURN_ON)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
-    CONF_PORT, CONF_SSL, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
+    CONF_PORT, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
     CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
+from homeassistant.helpers import script, config_validation as cv
+from homeassistant.helpers.template import Template
+from homeassistant.util.yaml import dump
 
-REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
+REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
 EVENT_KODI_CALL_METHOD_RESULT = 'kodi_call_method_result'
 
 CONF_TCP_PORT = 'tcp_port'
+CONF_TURN_ON_ACTION = 'turn_on_action'
 CONF_TURN_OFF_ACTION = 'turn_off_action'
 CONF_ENABLE_WEBSOCKET = 'enable_websocket'
 
@@ -47,7 +50,14 @@ DEFAULT_TIMEOUT = 5
 DEFAULT_PROXY_SSL = False
 DEFAULT_ENABLE_WEBSOCKET = True
 
-TURN_OFF_ACTION = [None, 'quit', 'hibernate', 'suspend', 'reboot', 'shutdown']
+DEPRECATED_TURN_OFF_ACTIONS = {
+    None: None,
+    'quit': 'Application.Quit',
+    'hibernate': 'System.Hibernate',
+    'suspend': 'System.Suspend',
+    'reboot': 'System.Reboot',
+    'shutdown': 'System.Shutdown'
+}
 
 # https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
 MEDIA_TYPES = {
@@ -58,10 +68,14 @@ MEDIA_TYPES = {
     'video': MEDIA_TYPE_VIDEO,
     'set': MEDIA_TYPE_PLAYLIST,
     'musicvideo': MEDIA_TYPE_VIDEO,
-    'movie': MEDIA_TYPE_VIDEO,
+    'movie': MEDIA_TYPE_MOVIE,
     'tvshow': MEDIA_TYPE_TVSHOW,
     'season': MEDIA_TYPE_TVSHOW,
     'episode': MEDIA_TYPE_TVSHOW,
+    # Type 'channel' is used for radio or tv streams from pvr
+    'channel': MEDIA_TYPE_CHANNEL,
+    # Type 'audio' is used for audio media, that Kodi couldn't scroblle
+    'audio': MEDIA_TYPE_MUSIC,
 }
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -75,7 +89,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
     vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
-    vol.Optional(CONF_TURN_OFF_ACTION, default=None): vol.In(TURN_OFF_ACTION),
+    vol.Optional(CONF_TURN_ON_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_TURN_OFF_ACTION):
+        vol.Any(cv.SCRIPT_SCHEMA, vol.In(DEPRECATED_TURN_OFF_ACTIONS)),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
@@ -114,34 +130,69 @@ SERVICE_TO_METHOD = {
 }
 
 
+def _check_deprecated_turn_off(hass, turn_off_action):
+    """Create an equivalent script for old turn off actions."""
+    if isinstance(turn_off_action, str):
+        method = DEPRECATED_TURN_OFF_ACTIONS[turn_off_action]
+        new_config = OrderedDict(
+            [('service', '{}.{}'.format(DOMAIN, SERVICE_CALL_METHOD)),
+             ('data_template', OrderedDict(
+                 [('entity_id', '{{ entity_id }}'),
+                  ('method', method)]))])
+        example_conf = dump(OrderedDict(
+            [(CONF_TURN_OFF_ACTION, new_config)]))
+        _LOGGER.warning(
+            "The '%s' action for turn off Kodi is deprecated and "
+            "will cease to function in a future release. You need to "
+            "change it for a generic Home Assistant script sequence, "
+            "which is, for this turn_off action, like this:\n%s",
+            turn_off_action, example_conf)
+        new_config['data_template'] = OrderedDict(
+            [(key, Template(value, hass))
+             for key, value in new_config['data_template'].items()])
+        turn_off_action = [new_config]
+    return turn_off_action
+
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Kodi platform."""
     if DATA_KODI not in hass.data:
-        hass.data[DATA_KODI] = []
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    tcp_port = config.get(CONF_TCP_PORT)
-    encryption = get_deprecated(config, CONF_PROXY_SSL, CONF_SSL)
-    websocket = config.get(CONF_ENABLE_WEBSOCKET)
+        hass.data[DATA_KODI] = dict()
 
-    if host.startswith('http://') or host.startswith('https://'):
-        host = host.lstrip('http://').lstrip('https://')
-        _LOGGER.warning(
-            "Kodi host name should no longer conatin http:// See updated "
-            "definitions here: "
-            "https://home-assistant.io/components/media_player.kodi/")
+    # Is this a manual configuration?
+    if discovery_info is None:
+        name = config.get(CONF_NAME)
+        host = config.get(CONF_HOST)
+        port = config.get(CONF_PORT)
+        tcp_port = config.get(CONF_TCP_PORT)
+        encryption = config.get(CONF_PROXY_SSL)
+        websocket = config.get(CONF_ENABLE_WEBSOCKET)
+    else:
+        name = "{} ({})".format(DEFAULT_NAME, discovery_info.get('hostname'))
+        host = discovery_info.get('host')
+        port = discovery_info.get('port')
+        tcp_port = DEFAULT_TCP_PORT
+        encryption = DEFAULT_PROXY_SSL
+        websocket = DEFAULT_ENABLE_WEBSOCKET
+
+    # Only add a device once, so discovered devices do not override manual
+    # config.
+    ip_addr = socket.gethostbyname(host)
+    if ip_addr in hass.data[DATA_KODI]:
+        return
 
     entity = KodiDevice(
         hass,
-        name=config.get(CONF_NAME),
+        name=name,
         host=host, port=port, tcp_port=tcp_port, encryption=encryption,
         username=config.get(CONF_USERNAME),
         password=config.get(CONF_PASSWORD),
+        turn_on_action=config.get(CONF_TURN_ON_ACTION),
         turn_off_action=config.get(CONF_TURN_OFF_ACTION),
         timeout=config.get(CONF_TIMEOUT), websocket=websocket)
 
-    hass.data[DATA_KODI].append(entity)
+    hass.data[DATA_KODI][ip_addr] = entity
     async_add_devices([entity], update_before_add=True)
 
     @asyncio.coroutine
@@ -155,10 +206,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                   if key != 'entity_id'}
         entity_ids = service.data.get('entity_id')
         if entity_ids:
-            target_players = [player for player in hass.data[DATA_KODI]
+            target_players = [player
+                              for player in hass.data[DATA_KODI].values()
                               if player.entity_id in entity_ids]
         else:
-            target_players = hass.data[DATA_KODI]
+            target_players = hass.data[DATA_KODI].values()
 
         update_tasks = []
         for player in target_players:
@@ -175,15 +227,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if hass.services.has_service(DOMAIN, SERVICE_ADD_MEDIA):
         return
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     for service in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service]['schema']
         hass.services.async_register(
             DOMAIN, service, async_service_handler,
-            description=descriptions.get(service), schema=schema)
+            schema=schema)
 
 
 def cmd(func):
@@ -210,7 +258,8 @@ class KodiDevice(MediaPlayerDevice):
     """Representation of a XBMC/Kodi device."""
 
     def __init__(self, hass, name, host, port, tcp_port, encryption=False,
-                 username=None, password=None, turn_off_action=None,
+                 username=None, password=None,
+                 turn_on_action=None, turn_off_action=None,
                  timeout=DEFAULT_TIMEOUT, websocket=True):
         """Initialize the Kodi device."""
         import jsonrpc_async
@@ -262,6 +311,17 @@ class KodiDevice(MediaPlayerDevice):
         else:
             self._ws_server = None
 
+        # Script creation for the turn on/off config options
+        if turn_on_action is not None:
+            turn_on_action = script.Script(
+                self.hass, turn_on_action,
+                "{} turn ON script".format(self.name),
+                self.async_update_ha_state(True))
+        if turn_off_action is not None:
+            turn_off_action = script.Script(
+                self.hass, _check_deprecated_turn_off(hass, turn_off_action),
+                "{} turn OFF script".format(self.name))
+        self._turn_on_action = turn_on_action
         self._turn_off_action = turn_off_action
         self._enable_websocket = websocket
         self._players = list()
@@ -281,7 +341,7 @@ class KodiDevice(MediaPlayerDevice):
             # If a new item is playing, force a complete refresh
             force_refresh = data['item']['id'] != self._item.get('id')
 
-        self.hass.async_add_job(self.async_update_ha_state(force_refresh))
+        self.async_schedule_update_ha_state(force_refresh)
 
     @callback
     def async_on_stop(self, sender, data):
@@ -293,23 +353,23 @@ class KodiDevice(MediaPlayerDevice):
         self._players = []
         self._properties = {}
         self._item = {}
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @callback
     def async_on_volume_changed(self, sender, data):
         """Handle the volume changes."""
         self._app_properties['volume'] = data['volume']
         self._app_properties['muted'] = data['muted']
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
 
     @callback
     def async_on_quit(self, sender, data):
-        """Handle the muted volume."""
+        """Reset the player state on quit action."""
         self._players = None
         self._properties = {}
         self._item = {}
         self._app_properties = {}
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.hass.async_add_job(self._ws_server.close())
 
     @asyncio.coroutine
     def _get_players(self):
@@ -334,8 +394,8 @@ class KodiDevice(MediaPlayerDevice):
 
         if self._properties['speed'] == 0 and not self._properties['live']:
             return STATE_PAUSED
-        else:
-            return STATE_PLAYING
+
+        return STATE_PLAYING
 
     @asyncio.coroutine
     def async_ws_connect(self):
@@ -358,6 +418,8 @@ class KodiDevice(MediaPlayerDevice):
                 # Kodi abruptly ends ws connection when exiting. We will try
                 # to reconnect on the next poll.
                 pass
+            # Update HA state after Kodi disconnects
+            self.async_schedule_update_ha_state()
 
         # Create a task instead of adding a tracking job, since this task will
         # run until the websocket connection is closed.
@@ -407,8 +469,8 @@ class KodiDevice(MediaPlayerDevice):
         """Active server for json-rpc requests."""
         if self._enable_websocket and self._ws_server.connected:
             return self._ws_server
-        else:
-            return self._http_server
+
+        return self._http_server
 
     @property
     def name(self):
@@ -438,7 +500,12 @@ class KodiDevice(MediaPlayerDevice):
 
     @property
     def media_content_type(self):
-        """Content type of current playing media."""
+        """Content type of current playing media.
+
+        If the media type cannot be detected, the player type is used.
+        """
+        if MEDIA_TYPES.get(self._item.get('type')) is None and self._players:
+            return MEDIA_TYPES.get(self._players[0]['type'])
         return MEDIA_TYPES.get(self._item.get('type'))
 
     @property
@@ -503,8 +570,8 @@ class KodiDevice(MediaPlayerDevice):
         artists = self._item.get('artist', [])
         if artists:
             return artists[0]
-        else:
-            return None
+
+        return None
 
     @property
     def media_album_artist(self):
@@ -512,35 +579,41 @@ class KodiDevice(MediaPlayerDevice):
         artists = self._item.get('albumartist', [])
         if artists:
             return artists[0]
-        else:
-            return None
+
+        return None
 
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
         supported_features = SUPPORT_KODI
 
-        if self._turn_off_action in TURN_OFF_ACTION:
+        if self._turn_on_action is not None:
+            supported_features |= SUPPORT_TURN_ON
+
+        if self._turn_off_action is not None:
             supported_features |= SUPPORT_TURN_OFF
 
         return supported_features
 
     @cmd
     @asyncio.coroutine
+    def async_turn_on(self):
+        """Execute turn_on_action to turn on media player."""
+        if self._turn_on_action is not None:
+            yield from self._turn_on_action.async_run(
+                variables={"entity_id": self.entity_id})
+        else:
+            _LOGGER.warning("turn_on requested but turn_on_action is none")
+
+    @cmd
+    @asyncio.coroutine
     def async_turn_off(self):
         """Execute turn_off_action to turn off media player."""
-        if self._turn_off_action == 'quit':
-            yield from self.server.Application.Quit()
-        elif self._turn_off_action == 'hibernate':
-            yield from self.server.System.Hibernate()
-        elif self._turn_off_action == 'suspend':
-            yield from self.server.System.Suspend()
-        elif self._turn_off_action == 'reboot':
-            yield from self.server.System.Reboot()
-        elif self._turn_off_action == 'shutdown':
-            yield from self.server.System.Shutdown()
+        if self._turn_off_action is not None:
+            yield from self._turn_off_action.async_run(
+                variables={"entity_id": self.entity_id})
         else:
-            _LOGGER.warning('turn_off requested but turn_off_action is none')
+            _LOGGER.warning("turn_off requested but turn_off_action is none")
 
     @cmd
     @asyncio.coroutine
@@ -678,9 +751,9 @@ class KodiDevice(MediaPlayerDevice):
         elif media_type == "PLAYLIST":
             return self.server.Player.Open(
                 {"item": {"playlistid": int(media_id)}})
-        else:
-            return self.server.Player.Open(
-                {"item": {"file": str(media_id)}})
+
+        return self.server.Player.Open(
+            {"item": {"file": str(media_id)}})
 
     @asyncio.coroutine
     def async_set_shuffle(self, shuffle):
@@ -694,22 +767,26 @@ class KodiDevice(MediaPlayerDevice):
     def async_call_method(self, method, **kwargs):
         """Run Kodi JSONRPC API method with params."""
         import jsonrpc_base
-        _LOGGER.debug('Run API method "%s", kwargs=%s', method, kwargs)
+        _LOGGER.debug("Run API method %s, kwargs=%s", method, kwargs)
         result_ok = False
         try:
             result = yield from getattr(self.server, method)(**kwargs)
             result_ok = True
         except jsonrpc_base.jsonrpc.ProtocolError as exc:
             result = exc.args[2]['error']
-            _LOGGER.error('Run API method %s.%s(%s) error: %s',
+            _LOGGER.error("Run API method %s.%s(%s) error: %s",
                           self.entity_id, method, kwargs, result)
+        except jsonrpc_base.jsonrpc.TransportError:
+            result = None
+            _LOGGER.warning("TransportError trying to run API method "
+                            "%s.%s(%s)", self.entity_id, method, kwargs)
 
         if isinstance(result, dict):
             event_data = {'entity_id': self.entity_id,
                           'result': result,
                           'result_ok': result_ok,
                           'input': {'method': method, 'params': kwargs}}
-            _LOGGER.debug('EVENT kodi_call_method_result: %s', event_data)
+            _LOGGER.debug("EVENT kodi_call_method_result: %s", event_data)
             self.hass.bus.async_fire(EVENT_KODI_CALL_METHOD_RESULT,
                                      event_data=event_data)
         return result
@@ -753,10 +830,13 @@ class KodiDevice(MediaPlayerDevice):
                 yield from self.server.Playlist.Add(params)
             except jsonrpc_base.jsonrpc.ProtocolError as exc:
                 result = exc.args[2]['error']
-                _LOGGER.error('Run API method %s.Playlist.Add(%s) error: %s',
+                _LOGGER.error("Run API method %s.Playlist.Add(%s) error: %s",
                               self.entity_id, media_type, result)
+            except jsonrpc_base.jsonrpc.TransportError:
+                _LOGGER.warning("TransportError trying to add playlist to %s",
+                                self.entity_id)
         else:
-            _LOGGER.warning('No media detected for Playlist.Add')
+            _LOGGER.warning("No media detected for Playlist.Add")
 
     @asyncio.coroutine
     def async_add_all_albums(self, artist_name):
@@ -787,9 +867,9 @@ class KodiDevice(MediaPlayerDevice):
         """Get albums list."""
         if artist_id is None:
             return (yield from self.server.AudioLibrary.GetAlbums())
-        else:
-            return (yield from self.server.AudioLibrary.GetAlbums(
-                {"filter": {"artistid": int(artist_id)}}))
+
+        return (yield from self.server.AudioLibrary.GetAlbums(
+            {"filter": {"artistid": int(artist_id)}}))
 
     @asyncio.coroutine
     def async_find_artist(self, artist_name):
@@ -800,7 +880,7 @@ class KodiDevice(MediaPlayerDevice):
                 artist_name, [a['artist'] for a in artists['artists']])
             return artists['artists'][out[0][0]]['artistid']
         except KeyError:
-            _LOGGER.warning('No artists were found: %s', artist_name)
+            _LOGGER.warning("No artists were found: %s", artist_name)
             return None
 
     @asyncio.coroutine
@@ -808,9 +888,9 @@ class KodiDevice(MediaPlayerDevice):
         """Get songs list."""
         if artist_id is None:
             return (yield from self.server.AudioLibrary.GetSongs())
-        else:
-            return (yield from self.server.AudioLibrary.GetSongs(
-                {"filter": {"artistid": int(artist_id)}}))
+
+        return (yield from self.server.AudioLibrary.GetSongs(
+            {"filter": {"artistid": int(artist_id)}}))
 
     @asyncio.coroutine
     def async_find_song(self, song_name, artist_name=''):
@@ -839,7 +919,7 @@ class KodiDevice(MediaPlayerDevice):
                 album_name, [a['label'] for a in albums['albums']])
             return albums['albums'][out[0][0]]['albumid']
         except KeyError:
-            _LOGGER.warning('No albums were found with artist: %s, album: %s',
+            _LOGGER.warning("No albums were found with artist: %s, album: %s",
                             artist_name, album_name)
             return None
 

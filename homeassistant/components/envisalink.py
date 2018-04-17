@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['pyenvisalink==2.1']
+REQUIREMENTS = ['pyenvisalink==2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,9 +74,9 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(vol.Coerce(int), vol.Range(min=3, max=4)),
         vol.Optional(CONF_EVL_KEEPALIVE, default=DEFAULT_KEEPALIVE):
             vol.All(vol.Coerce(int), vol.Range(min=15)),
-        vol.Optional(CONF_ZONEDUMP_INTERVAL,
-                     default=DEFAULT_ZONEDUMP_INTERVAL):
-            vol.All(vol.Coerce(int), vol.Range(min=15)),
+        vol.Optional(
+            CONF_ZONEDUMP_INTERVAL,
+            default=DEFAULT_ZONEDUMP_INTERVAL): vol.Coerce(int),
     }),
 }, extra=vol.ALLOW_EXTRA)
 

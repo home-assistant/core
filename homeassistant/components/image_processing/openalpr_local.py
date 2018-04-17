@@ -13,11 +13,11 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import split_entity_id, callback
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, CONF_REGION
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, ImageProcessingEntity, CONF_CONFIDENCE, CONF_SOURCE,
     CONF_ENTITY_ID, CONF_NAME, ATTR_ENTITY_ID, ATTR_CONFIDENCE)
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,6 @@ OPENALPR_REGIONS = [
 ]
 
 CONF_ALPR_BIN = 'alp_bin'
-CONF_REGION = 'region'
 
 DEFAULT_BINARY = 'alpr'
 

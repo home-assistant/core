@@ -29,7 +29,7 @@ DOMAIN = 'itunes'
 
 SUPPORT_ITUNES = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY
+    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_TURN_OFF
 
 SUPPORT_AIRPLAY = SUPPORT_VOLUME_SET | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
@@ -60,8 +60,8 @@ class Itunes(object):
 
         if self.port:
             return '{}{}:{}'.format(uri_scheme, self.host, self.port)
-        else:
-            return '{}{}'.format(uri_scheme, self.host)
+
+        return '{}{}'.format(uri_scheme, self.host)
 
     def _request(self, method, path, params=None):
         """Make the actual request and return the parsed response."""
@@ -114,6 +114,10 @@ class Itunes(object):
     def previous(self):
         """Skip back and returns the current state."""
         return self._command('previous')
+
+    def stop(self):
+        """Stop playback and return the current state."""
+        return self._command('stop')
 
     def play_playlist(self, playlist_id_or_name):
         """Set a playlist to be current and returns the current state."""
@@ -225,8 +229,8 @@ class ItunesDevice(MediaPlayerDevice):
 
         if self.player_state == 'paused':
             return STATE_PAUSED
-        else:
-            return STATE_PLAYING
+
+        return STATE_PLAYING
 
     def update(self):
         """Retrieve latest state."""
@@ -280,10 +284,10 @@ class ItunesDevice(MediaPlayerDevice):
         """Image url of current playing media."""
         if self.player_state in (STATE_PLAYING, STATE_IDLE, STATE_PAUSED) and \
            self.current_title is not None:
-            return self.client.artwork_url()
-        else:
-            return 'https://cloud.githubusercontent.com/assets/260/9829355' \
-                '/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png'
+            return self.client.artwork_url() + '?id=' + self.content_id
+
+        return 'https://cloud.githubusercontent.com/assets/260/9829355' \
+            '/33fab972-58cf-11e5-8ea2-2ca74bdaae40.png'
 
     @property
     def media_title(self):
@@ -346,6 +350,11 @@ class ItunesDevice(MediaPlayerDevice):
             response = self.client.play_playlist(media_id)
             self.update_state(response)
 
+    def turn_off(self):
+        """Turn the media player off."""
+        response = self.client.stop()
+        self.update_state(response)
+
 
 class AirPlayDevice(MediaPlayerDevice):
     """Representation an AirPlay device via an iTunes API instance."""
@@ -400,16 +409,16 @@ class AirPlayDevice(MediaPlayerDevice):
         """Return the icon to use in the frontend, if any."""
         if self.selected is True:
             return 'mdi:volume-high'
-        else:
-            return 'mdi:volume-off'
+
+        return 'mdi:volume-off'
 
     @property
     def state(self):
         """Return the state of the device."""
         if self.selected is True:
             return STATE_ON
-        else:
-            return STATE_OFF
+
+        return STATE_OFF
 
     def update(self):
         """Retrieve latest state."""

@@ -7,14 +7,14 @@ https://home-assistant.io/components/notify.instapush/
 import json
 import logging
 
+from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import (
-    CONF_API_KEY, HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
+    ATTR_TITLE, PLATFORM_SCHEMA, ATTR_TITLE_DEFAULT, BaseNotificationService)
+from homeassistant.const import CONF_API_KEY, CONTENT_TYPE_JSON
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://api.instapush.im/v1/'
@@ -76,7 +76,7 @@ class InstapushNotificationService(BaseNotificationService):
         self._headers = {
             HTTP_HEADER_APPID: self._api_key,
             HTTP_HEADER_APPSECRET: self._app_secret,
-            HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON,
+            CONTENT_TYPE: CONTENT_TYPE_JSON,
         }
 
     def send_message(self, message="", **kwargs):

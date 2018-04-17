@@ -8,15 +8,14 @@ import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.components import group
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
                                  SERVICE_TURN_OFF, ATTR_ENTITY_ID,
                                  STATE_UNKNOWN)
+from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -25,7 +24,7 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'fan'
-
+DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_FANS = 'all fans'
@@ -73,7 +72,7 @@ FAN_TURN_ON_SCHEMA = vol.Schema({
 })  # type: dict
 
 FAN_TURN_OFF_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })  # type: dict
 
 FAN_OSCILLATE_SCHEMA = vol.Schema({
@@ -118,14 +117,16 @@ SERVICE_TO_METHOD = {
 }
 
 
-def is_on(hass, entity_id: str=None) -> bool:
+@bind_hass
+def is_on(hass, entity_id: str = None) -> bool:
     """Return if the fans are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_FANS
     state = hass.states.get(entity_id)
     return state.attributes[ATTR_SPEED] not in [SPEED_OFF, STATE_UNKNOWN]
 
 
-def turn_on(hass, entity_id: str=None, speed: str=None) -> None:
+@bind_hass
+def turn_on(hass, entity_id: str = None, speed: str = None) -> None:
     """Turn all or specified fan on."""
     data = {
         key: value for key, value in [
@@ -137,16 +138,16 @@ def turn_on(hass, entity_id: str=None, speed: str=None) -> None:
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
-def turn_off(hass, entity_id: str=None) -> None:
+@bind_hass
+def turn_off(hass, entity_id: str = None) -> None:
     """Turn all or specified fan off."""
-    data = {
-        ATTR_ENTITY_ID: entity_id,
-    }
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
-def toggle(hass, entity_id: str=None) -> None:
+@bind_hass
+def toggle(hass, entity_id: str = None) -> None:
     """Toggle all or specified fans."""
     data = {
         ATTR_ENTITY_ID: entity_id
@@ -155,7 +156,9 @@ def toggle(hass, entity_id: str=None) -> None:
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
-def oscillate(hass, entity_id: str=None, should_oscillate: bool=True) -> None:
+@bind_hass
+def oscillate(hass, entity_id: str = None,
+              should_oscillate: bool = True) -> None:
     """Set oscillation on all or specified fan."""
     data = {
         key: value for key, value in [
@@ -167,7 +170,8 @@ def oscillate(hass, entity_id: str=None, should_oscillate: bool=True) -> None:
     hass.services.call(DOMAIN, SERVICE_OSCILLATE, data)
 
 
-def set_speed(hass, entity_id: str=None, speed: str=None) -> None:
+@bind_hass
+def set_speed(hass, entity_id: str = None, speed: str = None) -> None:
     """Set speed for all or specified fan."""
     data = {
         key: value for key, value in [
@@ -179,7 +183,8 @@ def set_speed(hass, entity_id: str=None, speed: str=None) -> None:
     hass.services.call(DOMAIN, SERVICE_SET_SPEED, data)
 
 
-def set_direction(hass, entity_id: str=None, direction: str=None) -> None:
+@bind_hass
+def set_direction(hass, entity_id: str = None, direction: str = None) -> None:
     """Set direction for all or specified fan."""
     data = {
         key: value for key, value in [
@@ -201,7 +206,7 @@ def async_setup(hass, config: dict):
 
     @asyncio.coroutine
     def async_handle_fan_service(service):
-        """Hande service call for fans."""
+        """Handle service call for fans."""
         method = SERVICE_TO_METHOD.get(service.service)
         params = service.data.copy()
 
@@ -209,35 +214,20 @@ def async_setup(hass, config: dict):
         target_fans = component.async_extract_from_service(service)
         params.pop(ATTR_ENTITY_ID, None)
 
+        update_tasks = []
         for fan in target_fans:
             yield from getattr(fan, method['method'])(**params)
-
-        update_tasks = []
-
-        for fan in target_fans:
             if not fan.should_poll:
                 continue
-
-            update_coro = hass.async_add_job(
-                fan.async_update_ha_state(True))
-            if hasattr(fan, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(fan.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    # Listen for fan service calls.
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     for service_name in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service_name].get('schema')
         hass.services.async_register(
-            DOMAIN, service_name, async_handle_fan_service,
-            descriptions.get(service_name), schema=schema)
+            DOMAIN, service_name, async_handle_fan_service, schema=schema)
 
     return True
 
@@ -269,11 +259,13 @@ class FanEntity(ToggleEntity):
         """
         return self.hass.async_add_job(self.set_direction, direction)
 
-    def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
+    # pylint: disable=arguments-differ
+    def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
         raise NotImplementedError()
 
-    def async_turn_on(self: ToggleEntity, speed: str=None, **kwargs):
+    # pylint: disable=arguments-differ
+    def async_turn_on(self: ToggleEntity, speed: str = None, **kwargs):
         """Turn on the fan.
 
         This method must be run in the event loop and returns a coroutine.

@@ -122,7 +122,7 @@ class HookSmartHome(SwitchDevice):
         return data['return_value'] == '1'
 
     @asyncio.coroutine
-    def async_turn_on(self):
+    def async_turn_on(self, **kwargs):
         """Turn the device on asynchronously."""
         _LOGGER.debug("Turning on: %s", self._name)
         url = '{}{}{}{}'.format(
@@ -131,7 +131,7 @@ class HookSmartHome(SwitchDevice):
         self._state = success
 
     @asyncio.coroutine
-    def async_turn_off(self):
+    def async_turn_off(self, **kwargs):
         """Turn the device off asynchronously."""
         _LOGGER.debug("Turning off: %s", self._name)
         url = '{}{}{}{}'.format(

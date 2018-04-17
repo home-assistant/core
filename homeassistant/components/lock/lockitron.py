@@ -86,7 +86,7 @@ class Lockitron(LockDevice):
             self.device_id, self.access_token, requested_state), timeout=5)
         if response.status_code == 200:
             return response.json()['state']
-        else:
-            _LOGGER.error("Error setting lock state: %s\n%s",
-                          requested_state, response.text)
-            return self._state
+
+        _LOGGER.error("Error setting lock state: %s\n%s",
+                      requested_state, response.text)
+        return self._state

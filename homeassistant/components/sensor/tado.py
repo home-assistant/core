@@ -9,17 +9,19 @@ import logging
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.tado import (DATA_TADO)
+from homeassistant.const import (ATTR_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DATA_ID = 'data_id'
 ATTR_DEVICE = 'device'
-ATTR_ID = 'id'
 ATTR_NAME = 'name'
 ATTR_ZONE = 'zone'
 
-SENSOR_TYPES = ['temperature', 'humidity', 'power',
-                'link', 'heating', 'tado mode', 'overlay']
+CLIMATE_SENSOR_TYPES = ['temperature', 'humidity', 'power',
+                        'link', 'heating', 'tado mode', 'overlay']
+
+HOT_WATER_SENSOR_TYPES = ['power', 'link', 'tado mode', 'overlay']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -30,15 +32,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         zones = tado.get_zones()
     except RuntimeError:
         _LOGGER.error("Unable to get zone info from mytado")
-        return False
+        return
 
     sensor_items = []
     for zone in zones:
         if zone['type'] == 'HEATING':
-            for variable in SENSOR_TYPES:
+            for variable in CLIMATE_SENSOR_TYPES:
                 sensor_items.append(create_zone_sensor(
                     tado, zone, zone['name'], zone['id'],
                     variable))
+        elif zone['type'] == 'HOT_WATER':
+            for variable in HOT_WATER_SENSOR_TYPES:
+                sensor_items.append(create_zone_sensor(
+                    tado, zone, zone['name'], zone['id'],
+                    variable
+                ))
 
     me_data = tado.get_me()
     sensor_items.append(create_device_sensor(
@@ -47,9 +55,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if sensor_items:
         add_devices(sensor_items, True)
-        return True
-    else:
-        return False
 
 
 def create_zone_sensor(tado, zone, name, zone_id, variable):
@@ -142,7 +147,7 @@ class TadoSensor(Entity):
         data = self._store.get_data(self._data_id)
 
         if data is None:
-            _LOGGER.debug("Recieved no data for zone %s", self.zone_name)
+            _LOGGER.debug("Received no data for zone %s", self.zone_name)
             return
 
         unit = TEMP_CELSIUS

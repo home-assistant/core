@@ -14,8 +14,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 
-REQUIREMENTS = ['https://github.com/LinuxChristian/pyW215/archive/'
-                'v0.4.zip#pyW215==0.4']
+REQUIREMENTS = ['pyW215==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,9 +23,9 @@ DEFAULT_PASSWORD = ''
 DEFAULT_USERNAME = 'admin'
 CONF_USE_LEGACY_PROTOCOL = 'use_legacy_protocol'
 
-ATTR_CURRENT_CONSUMPTION = 'Current Consumption'
-ATTR_TOTAL_CONSUMPTION = 'Total Consumption'
-ATTR_TEMPERATURE = 'Temperature'
+ATTR_CURRENT_CONSUMPTION = 'power_consumption'
+ATTR_TOTAL_CONSUMPTION = 'total_consumption'
+ATTR_TEMPERATURE = 'temperature'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -118,7 +117,7 @@ class SmartPlugSwitch(SwitchDevice):
         """Turn the switch on."""
         self.data.smartplug.state = 'ON'
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         self.data.smartplug.state = 'OFF'
 

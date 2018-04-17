@@ -1,4 +1,4 @@
-"""Provide configuration end points for Z-Wave."""
+"""Provide configuration end points for Automations."""
 import asyncio
 
 from homeassistant.components.config import EditIdBasedConfigView

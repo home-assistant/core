@@ -4,15 +4,17 @@ Exposes regular shell commands as services.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/shell_command/
 """
+import asyncio
 import logging
-import subprocess
 import shlex
 
 import voluptuous as vol
 
-from homeassistant.helpers import template
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import ServiceCall
+from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
 
 DOMAIN = 'shell_command'
 
@@ -25,15 +27,17 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the shell_command component."""
     conf = config.get(DOMAIN, {})
 
     cache = {}
 
-    def service_handler(call):
+    @asyncio.coroutine
+    def async_service_handler(service: ServiceCall) -> None:
         """Execute a shell command service."""
-        cmd = conf[call.service]
+        cmd = conf[service.service]
 
         if cmd in cache:
             prog, args, args_compiled = cache[cmd]
@@ -49,7 +53,7 @@ def setup(hass, config):
 
         if args_compiled:
             try:
-                rendered_args = args_compiled.render(call.data)
+                rendered_args = args_compiled.async_render(service.data)
             except TemplateError as ex:
                 _LOGGER.exception("Error rendering command template: %s", ex)
                 return
@@ -58,19 +62,34 @@ def setup(hass, config):
 
         if rendered_args == args:
             # No template used. default behavior
-            shell = True
-        else:
-            # Template used. Break into list and use shell=False for security
-            cmd = [prog] + shlex.split(rendered_args)
-            shell = False
 
-        try:
-            subprocess.call(cmd, shell=shell,
-                            stdout=subprocess.DEVNULL,
-                            stderr=subprocess.DEVNULL)
-        except subprocess.SubprocessError:
-            _LOGGER.exception("Error running command: %s", cmd)
+            # pylint: disable=no-member
+            create_process = asyncio.subprocess.create_subprocess_shell(
+                cmd,
+                loop=hass.loop,
+                stdin=None,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL)
+        else:
+            # Template used. Break into list and use create_subprocess_exec
+            # (which uses shell=False) for security
+            shlexed_cmd = [prog] + shlex.split(rendered_args)
+
+            # pylint: disable=no-member
+            create_process = asyncio.subprocess.create_subprocess_exec(
+                *shlexed_cmd,
+                loop=hass.loop,
+                stdin=None,
+                stdout=asyncio.subprocess.DEVNULL,
+                stderr=asyncio.subprocess.DEVNULL)
+
+        process = yield from create_process
+        yield from process.communicate()
+
+        if process.returncode != 0:
+            _LOGGER.exception("Error running command: `%s`, return code: %s",
+                              cmd, process.returncode)
 
     for name in conf.keys():
-        hass.services.register(DOMAIN, name, service_handler)
+        hass.services.async_register(DOMAIN, name, async_service_handler)
     return True

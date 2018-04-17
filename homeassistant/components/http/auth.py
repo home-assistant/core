@@ -1,66 +1,92 @@
 """Authentication for HTTP component."""
-import asyncio
+
+import base64
 import hmac
 import logging
 
+from aiohttp import hdrs
+from aiohttp.web import middleware
+
+from homeassistant.core import callback
 from homeassistant.const import HTTP_HEADER_HA_AUTH
-from .util import get_real_ip
-from .const import KEY_TRUSTED_NETWORKS, KEY_AUTHENTICATED
+from .const import KEY_AUTHENTICATED, KEY_REAL_IP
 
 DATA_API_PASSWORD = 'api_password'
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@asyncio.coroutine
-def auth_middleware(app, handler):
-    """Authenticate as middleware."""
-    # If no password set, just always set authenticated=True
-    if app['hass'].http.api_password is None:
-        @asyncio.coroutine
-        def no_auth_middleware_handler(request):
-            """Auth middleware to approve all requests."""
+@callback
+def setup_auth(app, trusted_networks, api_password):
+    """Create auth middleware for the app."""
+    @middleware
+    async def auth_middleware(request, handler):
+        """Authenticate as middleware."""
+        # If no password set, just always set authenticated=True
+        if api_password is None:
             request[KEY_AUTHENTICATED] = True
-            return handler(request)
+            return await handler(request)
 
-        return no_auth_middleware_handler
-
-    @asyncio.coroutine
-    def auth_middleware_handler(request):
-        """Auth middleware to check authentication."""
-        # Auth code verbose on purpose
+        # Check authentication
         authenticated = False
 
         if (HTTP_HEADER_HA_AUTH in request.headers and
-                validate_password(
-                    request, request.headers[HTTP_HEADER_HA_AUTH])):
+                hmac.compare_digest(
+                    api_password, request.headers[HTTP_HEADER_HA_AUTH])):
             # A valid auth header has been set
             authenticated = True
 
         elif (DATA_API_PASSWORD in request.query and
-              validate_password(request, request.query[DATA_API_PASSWORD])):
+              hmac.compare_digest(api_password,
+                                  request.query[DATA_API_PASSWORD])):
             authenticated = True
 
-        elif is_trusted_ip(request):
+        elif (hdrs.AUTHORIZATION in request.headers and
+              validate_authorization_header(api_password, request)):
+            authenticated = True
+
+        elif _is_trusted_ip(request, trusted_networks):
             authenticated = True
 
         request[KEY_AUTHENTICATED] = authenticated
+        return await handler(request)
 
-        return handler(request)
+    async def auth_startup(app):
+        """Initialize auth middleware when app starts up."""
+        app.middlewares.append(auth_middleware)
 
-    return auth_middleware_handler
+    app.on_startup.append(auth_startup)
 
 
-def is_trusted_ip(request):
+def _is_trusted_ip(request, trusted_networks):
     """Test if request is from a trusted ip."""
-    ip_addr = get_real_ip(request)
+    ip_addr = request[KEY_REAL_IP]
 
-    return ip_addr and any(
+    return any(
         ip_addr in trusted_network for trusted_network
-        in request.app[KEY_TRUSTED_NETWORKS])
+        in trusted_networks)
 
 
 def validate_password(request, api_password):
     """Test if password is valid."""
     return hmac.compare_digest(
         api_password, request.app['hass'].http.api_password)
+
+
+def validate_authorization_header(api_password, request):
+    """Test an authorization header if valid password."""
+    if hdrs.AUTHORIZATION not in request.headers:
+        return False
+
+    auth_type, auth = request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
+
+    if auth_type != 'Basic':
+        return False
+
+    decoded = base64.b64decode(auth).decode('utf-8')
+    username, password = decoded.split(':', 1)
+
+    if username != 'homeassistant':
+        return False
+
+    return hmac.compare_digest(api_password, password)

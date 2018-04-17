@@ -1,0 +1,52 @@
+{
+  "HourlyAirQualityIndex": {
+    "@GroupName": "London",
+    "@TimeToLive": "38",
+    "LocalAuthority": [
+      {
+        "@LocalAuthorityCode": "24",
+        "@LocalAuthorityName": "Merton",
+        "@LaCentreLatitude": "51.415672",
+        "@LaCentreLongitude": "-0.191814",
+        "@LaCentreLatitudeWGS84": "6695153.285882",
+        "@LaCentreLongitudeWGS84": "-21352.636807",
+        "Site": [
+          {
+            "@BulletinDate": "2017-08-03 03:00:00",
+            "@SiteCode": "ME2",
+            "@SiteName": "Merton - Merton Road",
+            "@SiteType": "Roadside",
+            "@Latitude": "51.4161384794862",
+            "@Longitude": "-0.192230805042824",
+            "@LatitudeWGS84": "6695236.54926",
+            "@LongitudeWGS84": "-21399.0353321",
+            "Species": {
+              "@SpeciesCode": "PM10",
+              "@SpeciesDescription": "PM10 Particulate",
+              "@AirQualityIndex": "2",
+              "@AirQualityBand": "Low",
+              "@IndexSource": "Trigger"
+            }
+          },
+          {
+            "@BulletinDate": "2017-08-03 03:00:00",
+            "@SiteCode": "ME9",
+            "@SiteName": "Merton - Morden Civic Centre 2",
+            "@SiteType": "Roadside",
+            "@Latitude": "51.40162",
+            "@Longitude": "-0.19589212",
+            "@LatitudeWGS84": "6692543.79001",
+            "@LongitudeWGS84": "-21810.7165116",
+            "Species": {
+              "@SpeciesCode": "NO2",
+              "@SpeciesDescription": "Nitrogen Dioxide",
+              "@AirQualityIndex": "1",
+              "@AirQualityBand": "Low",
+              "@IndexSource": "Measurement"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -11,18 +11,18 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME, STATE_UNKNOWN, CONF_CODE, CONF_NAME,
-    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
-import homeassistant.loader as loader
 
-REQUIREMENTS = ['simplisafe-python==1.0.2']
+REQUIREMENTS = ['simplisafe-python==1.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'SimpliSafe'
 DOMAIN = 'simplisafe'
+
 NOTIFICATION_ID = 'simplisafe_notification'
 NOTIFICATION_TITLE = 'SimpliSafe Setup'
 
@@ -42,7 +42,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    persistent_notification = loader.get_component('persistent_notification')
     simplisafe = SimpliSafeApiInterface()
     status = simplisafe.set_credentials(username, password)
     if status:
@@ -53,8 +52,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         message = 'Failed to log into SimpliSafe. Check credentials.'
         _LOGGER.error(message)
-        persistent_notification.create(
-            hass, message,
+        hass.components.persistent_notification.create(
+            message,
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False
@@ -67,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SimpliSafeAlarm(alarm.AlarmControlPanel):
-    """Representation a SimpliSafe alarm."""
+    """Representation of a SimpliSafe alarm."""
 
     def __init__(self, simplisafe, name, code):
         """Initialize the SimpliSafe alarm."""
@@ -80,23 +79,22 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         """Return the name of the device."""
         if self._name is not None:
             return self._name
-        else:
-            return 'Alarm {}'.format(self.simplisafe.location_id())
+        return 'Alarm {}'.format(self.simplisafe.location_id())
 
     @property
     def code_format(self):
-        """One or more characters if code is defined."""
+        """Return one or more characters if code is defined."""
         return None if self._code is None else '.+'
 
     @property
     def state(self):
         """Return the state of the device."""
         status = self.simplisafe.state()
-        if status == 'Off':
+        if status == 'off':
             state = STATE_ALARM_DISARMED
-        elif status == 'Home':
+        elif status == 'home':
             state = STATE_ALARM_ARMED_HOME
-        elif status == 'Away':
+        elif status == 'away':
             state = STATE_ALARM_ARMED_AWAY
         else:
             state = STATE_UNKNOWN
@@ -106,12 +104,12 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            'temperature': self.simplisafe.temperature(),
+            'alarm': self.simplisafe.alarm(),
             'co': self.simplisafe.carbon_monoxide(),
             'fire': self.simplisafe.fire(),
-            'alarm': self.simplisafe.alarm(),
+            'flood': self.simplisafe.flood(),
             'last_event': self.simplisafe.last_event(),
-            'flood': self.simplisafe.flood()
+            'temperature': self.simplisafe.temperature(),
         }
 
     def update(self):

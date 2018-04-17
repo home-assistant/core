@@ -31,13 +31,14 @@ CONF_COST = 'cost'
 CONF_CURRENT_VALUES = 'current_values'
 
 DEFAULT_PERIOD = 'year'
+DEFAULT_UTC_OFFSET = '0'
 
 SENSOR_TYPES = {
-    CONF_INSTANT: ['Energy Usage', 'kW'],
+    CONF_INSTANT: ['Energy Usage', 'W'],
     CONF_AMOUNT: ['Energy Consumed', 'kWh'],
     CONF_BUDGET: ['Energy Budget', None],
     CONF_COST: ['Energy Cost', None],
-    CONF_CURRENT_VALUES: ['Per-Device Usage', 'kW']
+    CONF_CURRENT_VALUES: ['Per-Device Usage', 'W']
 }
 
 TYPES_SCHEMA = vol.In(SENSOR_TYPES)
@@ -50,7 +51,7 @@ SENSORS_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_APPTOKEN): cv.string,
-    vol.Optional(CONF_UTC_OFFSET): cv.string,
+    vol.Optional(CONF_UTC_OFFSET, default=DEFAULT_UTC_OFFSET): cv.string,
     vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA]
 })
 
@@ -120,7 +121,7 @@ class EfergySensor(Entity):
             if self.type == 'instant_readings':
                 url_string = _RESOURCE + 'getInstant?token=' + self.app_token
                 response = get(url_string, timeout=10)
-                self._state = response.json()['reading'] / 1000
+                self._state = response.json()['reading']
             elif self.type == 'amount':
                 url_string = _RESOURCE + 'getEnergy?token=' + self.app_token \
                     + '&offset=' + self.utc_offset + '&period=' \
@@ -144,7 +145,7 @@ class EfergySensor(Entity):
                 for sensor in response.json():
                     if self.sid == sensor['sid']:
                         measurement = next(iter(sensor['data'][0].values()))
-                        self._state = measurement / 1000
+                        self._state = measurement
             else:
                 self._state = 'Unknown'
         except (RequestException, ValueError, KeyError):

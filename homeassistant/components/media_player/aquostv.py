@@ -108,7 +108,6 @@ def _retry(func):
 class SharpAquosTVDevice(MediaPlayerDevice):
     """Representation of a Aquos TV."""
 
-    # pylint: disable=too-many-public-methods
     def __init__(self, name, remote, power_on_enabled=False):
         """Initialize the aquos device."""
         global SUPPORT_SHARPTV
@@ -202,9 +201,9 @@ class SharpAquosTVDevice(MediaPlayerDevice):
         self._remote.volume(int(self._volume * 60) - 2)
 
     @_retry
-    def set_volume_level(self, level):
+    def set_volume_level(self, volume):
         """Set Volume media player."""
-        self._remote.volume(int(level * 60))
+        self._remote.volume(int(volume * 60))
 
     @_retry
     def mute_volume(self, mute):

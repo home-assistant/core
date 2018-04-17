@@ -14,11 +14,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
     CONF_PAYLOAD, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_METHOD, CONF_RESOURCE,
-    CONF_SENSOR_CLASS, CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD,
+    CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD,
     CONF_HEADERS, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION, CONF_DEVICE_CLASS)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.deprecation import get_deprecated
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.string,
-    vol.Optional(CONF_SENSOR_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -53,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     headers = config.get(CONF_HEADERS)
-    device_class = get_deprecated(config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
+    device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
@@ -74,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     add_devices([RestBinarySensor(
-        hass, rest, name, device_class, value_template)])
+        hass, rest, name, device_class, value_template)], True)
 
 
 class RestBinarySensor(BinarySensorDevice):
@@ -89,7 +87,6 @@ class RestBinarySensor(BinarySensorDevice):
         self._state = False
         self._previous_data = None
         self._value_template = value_template
-        self.update()
 
     @property
     def name(self):
@@ -102,10 +99,17 @@ class RestBinarySensor(BinarySensorDevice):
         return self._device_class
 
     @property
+    def available(self):
+        """Return the availability of this sensor."""
+        return self.rest.data is not None
+
+    @property
     def is_on(self):
         """Return true if the binary sensor is on."""
         if self.rest.data is None:
             return False
+
+        response = self.rest.data
 
         if self._value_template is not None:
             response = self._value_template.\

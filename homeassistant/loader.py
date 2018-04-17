@@ -1,24 +1,25 @@
 """
-Provides methods for loading Home Assistant components.
+The methods for loading Home Assistant components.
 
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
 
-Components are loaded by calling get_component('switch') from your code.
+Components can be accessed via hass.components.switch from your code.
 If you want to retrieve a platform that is part of a component, you should
 call get_component('switch.your_platform'). In both cases the config directory
 is checked to see if it contains a user provided version. If not available it
 will check the built-in components and platforms.
 """
+import functools as ft
 import importlib
 import logging
 import os
 import pkgutil
 import sys
-
 from types import ModuleType
+
 # pylint: disable=unused-import
-from typing import Optional, Sequence, Set, Dict  # NOQA
+from typing import Dict, List, Optional, Sequence, Set  # NOQA
 
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
@@ -147,7 +148,7 @@ def get_component(comp_name) -> Optional[ModuleType]:
             # a namespace. We do not care about namespaces.
             # This prevents that when only
             # custom_components/switch/some_platform.py exists,
-            # the import custom_components.switch would succeeed.
+            # the import custom_components.switch would succeed.
             if module.__spec__.origin == 'namespace':
                 continue
 
@@ -168,6 +169,65 @@ def get_component(comp_name) -> Optional[ModuleType]:
     _LOGGER.error("Unable to find component %s", comp_name)
 
     return None
+
+
+class Components:
+    """Helper to load components."""
+
+    def __init__(self, hass):
+        """Initialize the Components class."""
+        self._hass = hass
+
+    def __getattr__(self, comp_name):
+        """Fetch a component."""
+        component = get_component(comp_name)
+        if component is None:
+            raise ImportError('Unable to load {}'.format(comp_name))
+        wrapped = ModuleWrapper(self._hass, component)
+        setattr(self, comp_name, wrapped)
+        return wrapped
+
+
+class Helpers:
+    """Helper to load helpers."""
+
+    def __init__(self, hass):
+        """Initialize the Helpers class."""
+        self._hass = hass
+
+    def __getattr__(self, helper_name):
+        """Fetch a helper."""
+        helper = importlib.import_module(
+            'homeassistant.helpers.{}'.format(helper_name))
+        wrapped = ModuleWrapper(self._hass, helper)
+        setattr(self, helper_name, wrapped)
+        return wrapped
+
+
+class ModuleWrapper:
+    """Class to wrap a Python module and auto fill in hass argument."""
+
+    def __init__(self, hass, module):
+        """Initialize the module wrapper."""
+        self._hass = hass
+        self._module = module
+
+    def __getattr__(self, attr):
+        """Fetch an attribute."""
+        value = getattr(self._module, attr)
+
+        if hasattr(value, '__bind_hass'):
+            value = ft.partial(value, self._hass)
+
+        setattr(self, attr, value)
+        return value
+
+
+def bind_hass(func):
+    """Decorate function to indicate that first argument is hass."""
+    # pylint: disable=protected-access
+    func.__bind_hass = True
+    return func
 
 
 def load_order_component(comp_name: str) -> OrderedSet:
@@ -230,4 +290,4 @@ def _check_prepared() -> None:
     if not PREPARED:
         _LOGGER.warning((
             "You did not call loader.prepare() yet. "
-            "Certain functionality might not be working."))
+            "Certain functionality might not be working"))

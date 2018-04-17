@@ -5,7 +5,8 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE)
+    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, ATTR_POSITION,
+    ATTR_TILT_POSITION)
 from homeassistant.helpers.event import track_utc_time_change
 
 
@@ -35,10 +36,12 @@ class DemoCover(CoverDevice):
         self._set_position = None
         self._set_tilt_position = None
         self._tilt_position = tilt_position
-        self._closing = True
-        self._closing_tilt = True
+        self._requested_closing = True
+        self._requested_closing_tilt = True
         self._unsub_listener_cover = None
         self._unsub_listener_cover_tilt = None
+        self._is_opening = False
+        self._is_closing = False
         if position is None:
             self._closed = True
         else:
@@ -70,6 +73,16 @@ class DemoCover(CoverDevice):
         return self._closed
 
     @property
+    def is_closing(self):
+        """Return if the cover is closing."""
+        return self._is_closing
+
+    @property
+    def is_opening(self):
+        """Return if the cover is opening."""
+        return self._is_opening
+
+    @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
@@ -79,8 +92,7 @@ class DemoCover(CoverDevice):
         """Flag supported features."""
         if self._supported_features is not None:
             return self._supported_features
-        else:
-            return super().supported_features
+        return super().supported_features
 
     def close_cover(self, **kwargs):
         """Close the cover."""
@@ -91,8 +103,10 @@ class DemoCover(CoverDevice):
             self.schedule_update_ha_state()
             return
 
+        self._is_closing = True
         self._listen_cover()
-        self._closing = True
+        self._requested_closing = True
+        self.schedule_update_ha_state()
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
@@ -100,7 +114,7 @@ class DemoCover(CoverDevice):
             return
 
         self._listen_cover_tilt()
-        self._closing_tilt = True
+        self._requested_closing_tilt = True
 
     def open_cover(self, **kwargs):
         """Open the cover."""
@@ -111,8 +125,10 @@ class DemoCover(CoverDevice):
             self.schedule_update_ha_state()
             return
 
+        self._is_opening = True
         self._listen_cover()
-        self._closing = False
+        self._requested_closing = False
+        self.schedule_update_ha_state()
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
@@ -120,28 +136,32 @@ class DemoCover(CoverDevice):
             return
 
         self._listen_cover_tilt()
-        self._closing_tilt = False
+        self._requested_closing_tilt = False
 
-    def set_cover_position(self, position, **kwargs):
+    def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
+        position = kwargs.get(ATTR_POSITION)
         self._set_position = round(position, -1)
         if self._position == position:
             return
 
         self._listen_cover()
-        self._closing = position < self._position
+        self._requested_closing = position < self._position
 
-    def set_cover_tilt_position(self, tilt_position, **kwargs):
+    def set_cover_tilt_position(self, **kwargs):
         """Move the cover til to a specific position."""
+        tilt_position = kwargs.get(ATTR_TILT_POSITION)
         self._set_tilt_position = round(tilt_position, -1)
         if self._tilt_position == tilt_position:
             return
 
         self._listen_cover_tilt()
-        self._closing_tilt = tilt_position < self._tilt_position
+        self._requested_closing_tilt = tilt_position < self._tilt_position
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
+        self._is_closing = False
+        self._is_opening = False
         if self._position is None:
             return
         if self._unsub_listener_cover is not None:
@@ -167,7 +187,7 @@ class DemoCover(CoverDevice):
 
     def _time_changed_cover(self, now):
         """Track time changes."""
-        if self._closing:
+        if self._requested_closing:
             self._position -= 10
         else:
             self._position += 10
@@ -187,7 +207,7 @@ class DemoCover(CoverDevice):
 
     def _time_changed_cover_tilt(self, now):
         """Track time changes."""
-        if self._closing_tilt:
+        if self._requested_closing_tilt:
             self._tilt_position -= 10
         else:
             self._tilt_position += 10

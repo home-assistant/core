@@ -7,14 +7,19 @@ ATTR_ASSOCIATION = "association"
 ATTR_INSTANCE = "instance"
 ATTR_GROUP = "group"
 ATTR_VALUE_ID = "value_id"
-ATTR_OBJECT_ID = "object_id"
+ATTR_MESSAGES = "messages"
 ATTR_NAME = "name"
+ATTR_RETURN_ROUTES = "return_routes"
 ATTR_SCENE_ID = "scene_id"
+ATTR_SCENE_DATA = "scene_data"
 ATTR_BASIC_LEVEL = "basic_level"
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_SIZE = "size"
 ATTR_CONFIG_VALUE = "value"
-NETWORK_READY_WAIT_SECS = 30
+ATTR_POLL_INTENSITY = "poll_intensity"
+ATTR_VALUE_INDEX = "value_index"
+ATTR_VALUE_INSTANCE = "value_instance"
+NETWORK_READY_WAIT_SECS = 300
 
 DISCOVERY_DEVICE = 'device'
 
@@ -28,13 +33,16 @@ SERVICE_ADD_NODE_SECURE = "add_node_secure"
 SERVICE_REMOVE_NODE = "remove_node"
 SERVICE_CANCEL_COMMAND = "cancel_command"
 SERVICE_HEAL_NETWORK = "heal_network"
+SERVICE_HEAL_NODE = "heal_node"
 SERVICE_SOFT_RESET = "soft_reset"
+SERVICE_TEST_NODE = "test_node"
 SERVICE_TEST_NETWORK = "test_network"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 SERVICE_PRINT_CONFIG_PARAMETER = "print_config_parameter"
 SERVICE_PRINT_NODE = "print_node"
 SERVICE_REMOVE_FAILED_NODE = "remove_failed_node"
 SERVICE_REPLACE_FAILED_NODE = "replace_failed_node"
+SERVICE_SET_POLL_INTENSITY = "set_poll_intensity"
 SERVICE_SET_WAKEUP = "set_wakeup"
 SERVICE_STOP_NETWORK = "stop_network"
 SERVICE_START_NETWORK = "start_network"
@@ -173,8 +181,8 @@ SPECIFIC_TYPE_NOT_USED = 0  # Available in all Generic types
 
 GENERIC_TYPE_AV_CONTROL_POINT = 3
 SPECIFIC_TYPE_DOORBELL = 18
-SPECIFIC_TYPE_SATELLITE_RECIEVER = 4
-SPECIFIC_TYPE_SATELLITE_RECIEVER_V2 = 17
+SPECIFIC_TYPE_SATELLITE_RECEIVER = 4
+SPECIFIC_TYPE_SATELLITE_RECEIVER_V2 = 17
 
 GENERIC_TYPE_DISPLAY = 4
 SPECIFIC_TYPE_SIMPLE_DISPLAY = 1
@@ -319,6 +327,7 @@ TYPE_DECIMAL = "Decimal"
 TYPE_INT = "Int"
 TYPE_LIST = "List"
 TYPE_STRING = "String"
+TYPE_BUTTON = "Button"
 
 DISC_COMMAND_CLASS = "command_class"
 DISC_COMPONENT = "component"
@@ -326,14 +335,45 @@ DISC_GENERIC_DEVICE_CLASS = "generic_device_class"
 DISC_GENRE = "genre"
 DISC_INDEX = "index"
 DISC_INSTANCE = "instance"
-DISC_LABEL = "label"
 DISC_NODE_ID = "node_id"
 DISC_OPTIONAL = "optional"
 DISC_PRIMARY = "primary"
-DISC_READONLY = "readonly"
+DISC_SCHEMAS = "schemas"
 DISC_SPECIFIC_DEVICE_CLASS = "specific_device_class"
 DISC_TYPE = "type"
 DISC_VALUES = "values"
-DISC_WRITEONLY = "writeonly"
 
-METER_RESET_INDEX = 33
+# noqa
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L49
+# See also:
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L275
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L278
+INDEX_ALARM_TYPE = 0
+INDEX_ALARM_LEVEL = 1
+INDEX_ALARM_ACCESS_CONTROL = 9
+
+# https://github.com/OpenZWave/open-zwave/blob/de1c0e60edf1d1bee81f1ae54b1f58e66c6fd8ed/cpp/src/command_classes/BarrierOperator.cpp#L69
+INDEX_BARRIER_OPERATOR_LABEL = 1
+
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/DoorLock.cpp#L77
+INDEX_DOOR_LOCK_LOCK = 0
+
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Meter.cpp#L114
+# See also:
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Meter.cpp#L279
+INDEX_METER_POWER = 8
+INDEX_METER_RESET = 33
+
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/SensorMultilevel.cpp#L50
+INDEX_SENSOR_MULTILEVEL_TEMPERATURE = 1
+INDEX_SENSOR_MULTILEVEL_POWER = 4
+
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Color.cpp#L109
+INDEX_SWITCH_COLOR_COLOR = 0
+INDEX_SWITCH_COLOR_CHANNELS = 2
+
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/SwitchMultilevel.cpp#L54
+INDEX_SWITCH_MULTILEVEL_LEVEL = 0
+INDEX_SWITCH_MULTILEVEL_BRIGHT = 1
+INDEX_SWITCH_MULTILEVEL_DIM = 2
+INDEX_SWITCH_MULTILEVEL_DURATION = 5

@@ -14,7 +14,7 @@ from homeassistant.const import CONF_PORT
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['uvcclient==0.10.0']
+REQUIREMENTS = ['uvcclient==0.10.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to connect to NVR: %s", str(ex))
         return False
 
-    identifier = nvrconn.server_version >= (3, 2, 0) and 'id' or 'uuid'
+    identifier = 'id' if nvrconn.server_version >= (3, 2, 0) else 'uuid'
     # Filter out airCam models, which are not supported in the latest
     # version of UnifiVideo and which are EOL by Ubiquiti
     cameras = [
@@ -82,6 +82,7 @@ class UnifiVideoCamera(Camera):
         self.is_streaming = False
         self._connect_addr = None
         self._camera = None
+        self._motion_status = False
 
     @property
     def name(self):
@@ -93,6 +94,12 @@ class UnifiVideoCamera(Camera):
         """Return true if the camera is recording."""
         caminfo = self._nvr.get_camera(self._uuid)
         return caminfo['recordingSettings']['fullTimeRecordEnabled']
+
+    @property
+    def motion_detection_enabled(self):
+        """Camera Motion Detection Status."""
+        caminfo = self._nvr.get_camera(self._uuid)
+        return caminfo['recordingSettings']['motionRecordEnabled']
 
     @property
     def brand(self):
@@ -119,6 +126,9 @@ class UnifiVideoCamera(Camera):
             client_cls = uvc_camera.UVCCameraClientV320
         else:
             client_cls = uvc_camera.UVCCameraClient
+
+        if caminfo['username'] is None:
+            caminfo['username'] = 'ubnt'
 
         camera = None
         for addr in addrs:
@@ -165,3 +175,26 @@ class UnifiVideoCamera(Camera):
                     raise
 
         return _get_image()
+
+    def set_motion_detection(self, mode):
+        """Set motion detection on or off."""
+        from uvcclient.nvr import NvrError
+        if mode is True:
+            set_mode = 'motion'
+        else:
+            set_mode = 'none'
+
+        try:
+            self._nvr.set_recordmode(self._uuid, set_mode)
+            self._motion_status = mode
+        except NvrError as err:
+            _LOGGER.error("Unable to set recordmode to %s", set_mode)
+            _LOGGER.debug(err)
+
+    def enable_motion_detection(self):
+        """Enable motion detection in camera."""
+        self.set_motion_detection(True)
+
+    def disable_motion_detection(self):
+        """Disable motion detection in camera."""
+        self.set_motion_detection(False)

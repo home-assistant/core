@@ -275,8 +275,10 @@ class TestHoneywellRound(unittest.TestCase):
         self.device.temperatures.side_effect = fake_temperatures
         self.round1 = honeywell.RoundThermostat(self.device, '1',
                                                 True, 16)
+        self.round1.update()
         self.round2 = honeywell.RoundThermostat(self.device, '2',
                                                 False, 17)
+        self.round2.update()
 
     def test_attributes(self):
         """Test the attributes."""

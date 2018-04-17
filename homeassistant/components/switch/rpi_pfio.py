@@ -8,11 +8,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
 import homeassistant.components.rpi_pfio as rpi_pfio
+from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_DEFAULT_NAME
-from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,28 +20,29 @@ DEPENDENCIES = ['rpi_pfio']
 
 ATTR_INVERT_LOGIC = 'invert_logic'
 ATTR_NAME = 'name'
+
 CONF_PORTS = 'ports'
 
 DEFAULT_INVERT_LOGIC = False
 
 PORT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_NAME, default=None): cv.string,
-    vol.Optional(ATTR_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean
+    vol.Optional(ATTR_NAME): cv.string,
+    vol.Optional(ATTR_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORTS, default={}): vol.Schema({
-        cv.positive_int: PORT_SCHEMA
+        cv.positive_int: PORT_SCHEMA,
     })
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the PiFace Digital Output devices."""
+    """Set up the PiFace Digital Output devices."""
     switches = []
     ports = config.get(CONF_PORTS)
     for port, port_entity in ports.items():
-        name = port_entity[ATTR_NAME]
+        name = port_entity.get(ATTR_NAME)
         invert_logic = port_entity[ATTR_INVERT_LOGIC]
 
         switches.append(RPiPFIOSwitch(port, name, invert_logic))
@@ -66,7 +67,7 @@ class RPiPFIOSwitch(ToggleEntity):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state."""
         return False
 
     @property
@@ -74,13 +75,13 @@ class RPiPFIOSwitch(ToggleEntity):
         """Return true if device is on."""
         return self._state
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         rpi_pfio.write_output(self._port, 0 if self._invert_logic else 1)
         self._state = True
         self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         rpi_pfio.write_output(self._port, 1 if self._invert_logic else 0)
         self._state = False

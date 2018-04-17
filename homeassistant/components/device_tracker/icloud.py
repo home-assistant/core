@@ -19,7 +19,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 from homeassistant.util.location import distance
-from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -190,10 +189,12 @@ class Icloud(DeviceScanner):
             for device in self.api.devices:
                 status = device.status(DEVICESTATUSSET)
                 devicename = slugify(status['name'].replace(' ', '', 99))
-                if devicename not in self.devices:
-                    self.devices[devicename] = device
-                    self._intervals[devicename] = 1
-                    self._overridestates[devicename] = None
+                if devicename in self.devices:
+                    _LOGGER.error('Multiple devices with name: %s', devicename)
+                    continue
+                self.devices[devicename] = device
+                self._intervals[devicename] = 1
+                self._overridestates[devicename] = None
         except PyiCloudNoDevicesException:
             _LOGGER.error('No iCloud Devices found!')
 
@@ -209,7 +210,7 @@ class Icloud(DeviceScanner):
 
         if self.accountname in _CONFIGURING:
             request_id = _CONFIGURING.pop(self.accountname)
-            configurator = get_component('configurator')
+            configurator = self.hass.components.configurator
             configurator.request_done(request_id)
 
         # Trigger the next step immediately
@@ -217,7 +218,7 @@ class Icloud(DeviceScanner):
 
     def icloud_need_trusted_device(self):
         """We need a trusted device."""
-        configurator = get_component('configurator')
+        configurator = self.hass.components.configurator
         if self.accountname in _CONFIGURING:
             return
 
@@ -229,7 +230,7 @@ class Icloud(DeviceScanner):
             devicesstring += "{}: {};".format(i, devicename)
 
         _CONFIGURING[self.accountname] = configurator.request_config(
-            self.hass, 'iCloud {}'.format(self.accountname),
+            'iCloud {}'.format(self.accountname),
             self.icloud_trusted_device_callback,
             description=(
                 'Please choose your trusted device by entering'
@@ -249,7 +250,7 @@ class Icloud(DeviceScanner):
                     self._trusted_device, self._verification_code):
                 raise PyiCloudException('Unknown failure')
         except PyiCloudException as error:
-            # Reset to the inital 2FA state to allow the user to retry
+            # Reset to the initial 2FA state to allow the user to retry
             _LOGGER.error("Failed to verify verification code: %s", error)
             self._trusted_device = None
             self._verification_code = None
@@ -259,17 +260,17 @@ class Icloud(DeviceScanner):
 
         if self.accountname in _CONFIGURING:
             request_id = _CONFIGURING.pop(self.accountname)
-            configurator = get_component('configurator')
+            configurator = self.hass.components.configurator
             configurator.request_done(request_id)
 
     def icloud_need_verification_code(self):
         """Return the verification code."""
-        configurator = get_component('configurator')
+        configurator = self.hass.components.configurator
         if self.accountname in _CONFIGURING:
             return
 
         _CONFIGURING[self.accountname] = configurator.request_config(
-            self.hass, 'iCloud {}'.format(self.accountname),
+            'iCloud {}'.format(self.accountname),
             self.icloud_verification_callback,
             description=('Please enter the validation code:'),
             entity_picture="/static/images/config_icloud.png",
@@ -308,23 +309,18 @@ class Icloud(DeviceScanner):
             self.api.authenticate()
 
         currentminutes = dt_util.now().hour * 60 + dt_util.now().minute
-        for devicename in self.devices:
-            interval = self._intervals.get(devicename, 1)
-            if ((currentminutes % interval == 0) or
-                    (interval > 10 and
-                     currentminutes % interval in [2, 4])):
-                self.update_device(devicename)
+        try:
+            for devicename in self.devices:
+                interval = self._intervals.get(devicename, 1)
+                if ((currentminutes % interval == 0) or
+                        (interval > 10 and
+                         currentminutes % interval in [2, 4])):
+                    self.update_device(devicename)
+        except ValueError:
+            _LOGGER.debug("iCloud API returned an error")
 
     def determine_interval(self, devicename, latitude, longitude, battery):
         """Calculate new interval."""
-        distancefromhome = None
-        zone_state = self.hass.states.get('zone.home')
-        zone_state_lat = zone_state.attributes['latitude']
-        zone_state_long = zone_state.attributes['longitude']
-        distancefromhome = distance(
-            latitude, longitude, zone_state_lat, zone_state_long)
-        distancefromhome = round(distancefromhome / 1000, 1)
-
         currentzone = active_zone(self.hass, latitude, longitude)
 
         if ((currentzone is not None and
@@ -333,22 +329,48 @@ class Icloud(DeviceScanner):
                  self._overridestates.get(devicename) == 'away')):
             return
 
+        zones = (self.hass.states.get(entity_id) for entity_id
+                 in sorted(self.hass.states.entity_ids('zone')))
+
+        distances = []
+        for zone_state in zones:
+            zone_state_lat = zone_state.attributes['latitude']
+            zone_state_long = zone_state.attributes['longitude']
+            zone_distance = distance(
+                latitude, longitude, zone_state_lat, zone_state_long)
+            distances.append(round(zone_distance / 1000, 1))
+
+        if distances:
+            mindistance = min(distances)
+        else:
+            mindistance = None
+
         self._overridestates[devicename] = None
 
         if currentzone is not None:
             self._intervals[devicename] = 30
             return
 
-        if distancefromhome is None:
+        if mindistance is None:
             return
-        if distancefromhome > 25:
-            self._intervals[devicename] = round(distancefromhome / 2, 0)
-        elif distancefromhome > 10:
-            self._intervals[devicename] = 5
-        else:
-            self._intervals[devicename] = 1
-        if battery is not None and battery <= 33 and distancefromhome > 3:
-            self._intervals[devicename] = self._intervals[devicename] * 2
+
+        # Calculate out how long it would take for the device to drive to the
+        # nearest zone at 120 km/h:
+        interval = round(mindistance / 2, 0)
+
+        # Never poll more than once per minute
+        interval = max(interval, 1)
+
+        if interval > 180:
+            # Three hour drive?  This is far enough that they might be flying
+            # home - check every half hour
+            interval = 30
+
+        if battery is not None and battery <= 33 and mindistance > 3:
+            # Low battery - let's check half as often
+            interval = interval * 2
+
+        self._intervals[devicename] = interval
 
     def update_device(self, devicename):
         """Update the device_tracker entity."""
@@ -398,7 +420,7 @@ class Icloud(DeviceScanner):
                     self.see(**kwargs)
                     self.seen_devices[devicename] = True
         except PyiCloudNoDevicesException:
-            _LOGGER.error('No iCloud Devices found!')
+            _LOGGER.error("No iCloud Devices found")
 
     def lost_iphone(self, devicename):
         """Call the lost iPhone function if the device is found."""

@@ -1,4 +1,4 @@
-"""Test homeasssitant distance utility functions."""
+"""Test homeassistant distance utility functions."""
 
 import unittest
 import homeassistant.util.distance as distance_util

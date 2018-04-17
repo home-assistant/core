@@ -13,19 +13,21 @@ from homeassistant.const import (CONF_ENTITY_ID, STATE_IDLE, CONF_NAME,
 from tests.common import get_test_home_assistant
 
 NAME = "alert_test"
+DONE_MESSAGE = "alert_gone"
 NOTIFIER = 'test'
 TEST_CONFIG = \
     {alert.DOMAIN: {
         NAME: {
             CONF_NAME: NAME,
+            alert.CONF_DONE_MESSAGE: DONE_MESSAGE,
             CONF_ENTITY_ID: "sensor.test",
             CONF_STATE: STATE_ON,
             alert.CONF_REPEAT: 30,
             alert.CONF_SKIP_FIRST: False,
             alert.CONF_NOTIFIERS: [NOTIFIER]}
         }}
-TEST_NOACK = [NAME, NAME, "sensor.test", STATE_ON,
-              [30], False, NOTIFIER, False]
+TEST_NOACK = [NAME, NAME, DONE_MESSAGE, "sensor.test",
+              STATE_ON, [30], False, NOTIFIER, False]
 ENTITY_ID = alert.ENTITY_ID_FORMAT.format(NAME)
 
 
@@ -105,7 +107,7 @@ class TestAlert(unittest.TestCase):
         self.assertEqual(STATE_ON, self.hass.states.get(ENTITY_ID).state)
 
     def test_hidden(self):
-        """Test entity hidding."""
+        """Test entity hiding."""
         assert setup_component(self.hass, alert.DOMAIN, TEST_CONFIG)
         hidden = self.hass.states.get(ENTITY_ID).attributes.get('hidden')
         self.assertTrue(hidden)
@@ -118,6 +120,31 @@ class TestAlert(unittest.TestCase):
         alert.turn_off(self.hass, ENTITY_ID)
         hidden = self.hass.states.get(ENTITY_ID).attributes.get('hidden')
         self.assertFalse(hidden)
+
+    def test_notification_no_done_message(self):
+        """Test notifications."""
+        events = []
+        config = deepcopy(TEST_CONFIG)
+        del(config[alert.DOMAIN][NAME][alert.CONF_DONE_MESSAGE])
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.services.register(
+            notify.DOMAIN, NOTIFIER, record_event)
+
+        assert setup_component(self.hass, alert.DOMAIN, config)
+        self.assertEqual(0, len(events))
+
+        self.hass.states.set("sensor.test", STATE_ON)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(events))
+
+        self.hass.states.set("sensor.test", STATE_OFF)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(events))
 
     def test_notification(self):
         """Test notifications."""
@@ -140,7 +167,7 @@ class TestAlert(unittest.TestCase):
 
         self.hass.states.set("sensor.test", STATE_OFF)
         self.hass.block_till_done()
-        self.assertEqual(1, len(events))
+        self.assertEqual(2, len(events))
 
     def test_skipfirst(self):
         """Test skipping first notification."""
@@ -170,3 +197,13 @@ class TestAlert(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(True, entity.hidden)
+
+    def test_done_message_state_tracker_reset_on_cancel(self):
+        """Test that the done message is reset when cancelled."""
+        entity = alert.Alert(self.hass, *TEST_NOACK)
+        entity._cancel = lambda *args: None
+        assert entity._send_done_message is False
+        entity._send_done_message = True
+        self.hass.add_job(entity.end_alerting)
+        self.hass.block_till_done()
+        assert entity._send_done_message is False

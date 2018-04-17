@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['hbmqtt==0.8']
+REQUIREMENTS = ['hbmqtt==0.9.1']
 DEPENDENCIES = ['http']
 
 # None allows custom config to be created through generate_config

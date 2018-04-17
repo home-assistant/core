@@ -6,15 +6,14 @@ https://home-assistant.io/components/notify/
 """
 import asyncio
 import logging
-import os
 from functools import partial
 
 import voluptuous as vol
 
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.util import slugify
@@ -51,6 +50,7 @@ NOTIFY_SERVICE_SCHEMA = vol.Schema({
 })
 
 
+@bind_hass
 def send_message(hass, message, title=None, data=None):
     """Send a notification message."""
     info = {
@@ -69,10 +69,6 @@ def send_message(hass, message, title=None, data=None):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the notify services."""
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     targets = {}
 
     @asyncio.coroutine
@@ -80,8 +76,6 @@ def async_setup(hass, config):
         """Set up a notify platform."""
         if p_config is None:
             p_config = {}
-        if discovery_info is None:
-            discovery_info = {}
 
         platform = yield from async_prepare_setup_platform(
             hass, config, DOMAIN, p_type)
@@ -103,8 +97,12 @@ def async_setup(hass, config):
                 raise HomeAssistantError("Invalid notify platform.")
 
             if notify_service is None:
-                _LOGGER.error(
-                    "Failed to initialize notification service %s", p_type)
+                # Platforms can decide not to create a service based
+                # on discovery data.
+                if discovery_info is None:
+                    _LOGGER.error(
+                        "Failed to initialize notification service %s",
+                        p_type)
                 return
 
         except Exception:  # pylint: disable=broad-except
@@ -112,6 +110,9 @@ def async_setup(hass, config):
             return
 
         notify_service.hass = hass
+
+        if discovery_info is None:
+            discovery_info = {}
 
         @asyncio.coroutine
         def async_notify_message(service):
@@ -144,7 +145,6 @@ def async_setup(hass, config):
                 targets[target_name] = target
                 hass.services.async_register(
                     DOMAIN, target_name, async_notify_message,
-                    descriptions.get(SERVICE_NOTIFY),
                     schema=NOTIFY_SERVICE_SCHEMA)
 
         platform_name = (
@@ -154,7 +154,7 @@ def async_setup(hass, config):
 
         hass.services.async_register(
             DOMAIN, platform_name_slug, async_notify_message,
-            descriptions.get(SERVICE_NOTIFY), schema=NOTIFY_SERVICE_SCHEMA)
+            schema=NOTIFY_SERVICE_SCHEMA)
 
         return True
 

@@ -199,11 +199,10 @@ class FlicButton(BinarySensorDevice):
                 "Queued %s dropped for %s. Time in queue was %s",
                 click_type, self.address, time_string)
             return True
-        else:
-            _LOGGER.info(
-                "Queued %s allowed for %s. Time in queue was %s",
-                click_type, self.address, time_string)
-            return False
+        _LOGGER.info(
+            "Queued %s allowed for %s. Time in queue was %s",
+            click_type, self.address, time_string)
+        return False
 
     def _on_up_down(self, channel, click_type, was_queued, time_diff):
         """Update device state, if event was not queued."""
@@ -239,6 +238,5 @@ class FlicButton(BinarySensorDevice):
         import pyflic
 
         if connection_status == pyflic.ConnectionStatus.Disconnected:
-            _LOGGER.info("Button (%s) disconnected. Reason: %s",
-                         self.address, disconnect_reason)
-            self.remove()
+            _LOGGER.warning("Button (%s) disconnected. Reason: %s",
+                            self.address, disconnect_reason)

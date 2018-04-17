@@ -1,0 +1,26 @@
+# Describes the format for available ihc services
+
+set_runtime_value_bool:
+  description: Set a boolean runtime value on the ihc controller
+  fields:
+    ihc_id:
+      description: The integer ihc resource id
+    value:
+      description: The boolean value to set
+
+set_runtime_value_int:
+  description: Set an integer runtime value on the ihc controller
+  fields:
+    ihc_id:
+      description: The integer ihc resource id
+    value:
+      description: The integer value to set
+
+set_runtime_value_float:
+  description: Set a float runtime value on the ihc controller
+  fields:
+    ihc_id:
+      description: The integer ihc resource id
+    value:
+      description: The float value to set
+

@@ -12,7 +12,7 @@ PYTHON_LDLIBRARY=$(python -c 'from distutils import sysconfig; print(sysconfig.g
 PYTHON_LIBRARY="${PYTHON_LIBDIR}/${PYTHON_LDLIBRARY}"
 PYTHON_INCLUDE_DIR=$(python -c 'from distutils import sysconfig; print(sysconfig.get_python_inc())')
 
-cd "$(dirname "$0")/.."
+cd /usr/src/app/
 mkdir -p build && cd build
 
 if [ ! -d libcec ]; then

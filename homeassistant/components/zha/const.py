@@ -11,19 +11,15 @@ def populate_data():
     These cannot be module level, as importing bellows must be done in a
     in a function.
     """
-    from bellows.zigbee import zcl
-    from bellows.zigbee.profiles import PROFILES, zha, zll
+    from zigpy import zcl
+    from zigpy.profiles import PROFILES, zha, zll
 
     DEVICE_CLASS[zha.PROFILE_ID] = {
-        zha.DeviceType.ON_OFF_SWITCH: 'switch',
         zha.DeviceType.SMART_PLUG: 'switch',
 
         zha.DeviceType.ON_OFF_LIGHT: 'light',
         zha.DeviceType.DIMMABLE_LIGHT: 'light',
         zha.DeviceType.COLOR_DIMMABLE_LIGHT: 'light',
-        zha.DeviceType.ON_OFF_LIGHT_SWITCH: 'light',
-        zha.DeviceType.DIMMER_SWITCH: 'light',
-        zha.DeviceType.COLOR_DIMMER_SWITCH: 'light',
     }
     DEVICE_CLASS[zll.PROFILE_ID] = {
         zll.DeviceType.ON_OFF_LIGHT: 'light',
@@ -37,8 +33,10 @@ def populate_data():
 
     SINGLE_CLUSTER_DEVICE_CLASS.update({
         zcl.clusters.general.OnOff: 'switch',
+        zcl.clusters.measurement.RelativeHumidity: 'sensor',
         zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
         zcl.clusters.security.IasZone: 'binary_sensor',
+        zcl.clusters.hvac.Fan: 'fan',
     })
 
     # A map of hass components to all Zigbee clusters it could use
@@ -46,6 +44,7 @@ def populate_data():
         profile = PROFILES[profile_id]
         for device_type, component in classes.items():
             if component not in COMPONENT_CLUSTERS:
-                COMPONENT_CLUSTERS[component] = set()
+                COMPONENT_CLUSTERS[component] = (set(), set())
             clusters = profile.CLUSTERS[device_type]
-            COMPONENT_CLUSTERS[component].update(clusters)
+            COMPONENT_CLUSTERS[component][0].update(clusters[0])
+            COMPONENT_CLUSTERS[component][1].update(clusters[1])

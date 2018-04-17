@@ -19,8 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for Vera controller devices."""
     add_devices(
-        VeraBinarySensor(device, VERA_CONTROLLER)
-        for device in VERA_DEVICES['binary_sensor'])
+        VeraBinarySensor(device, hass.data[VERA_CONTROLLER])
+        for device in hass.data[VERA_DEVICES]['binary_sensor'])
 
 
 class VeraBinarySensor(VeraDevice, BinarySensorDevice):

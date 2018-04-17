@@ -8,8 +8,7 @@ import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.wink import WinkDevice, DOMAIN
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.wink import DOMAIN, WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,18 +16,18 @@ DEPENDENCIES = ['wink']
 
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {
-    'opened': 'opening',
     'brightness': 'light',
-    'vibration': 'vibration',
-    'loudness': 'sound',
-    'noise': 'sound',
     'capturing_audio': 'sound',
-    'liquid_detected': 'moisture',
-    'motion': 'motion',
-    'presence': 'occupancy',
+    'capturing_video': None,
     'co_detected': 'gas',
+    'liquid_detected': 'moisture',
+    'loudness': 'sound',
+    'motion': 'motion',
+    'noise': 'sound',
+    'opened': 'opening',
+    'presence': 'occupancy',
     'smoke_detected': 'smoke',
-    'capturing_video': None
+    'vibration': 'vibration',
 }
 
 
@@ -87,7 +86,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 _LOGGER.info("Device isn't a sensor, skipping")
 
 
-class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
+class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice):
     """Representation of a Wink binary sensor."""
 
     def __init__(self, wink, hass):
@@ -104,7 +103,7 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+        """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['binary_sensor'].append(self)
 
     @property
@@ -117,54 +116,55 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return SENSOR_TYPES.get(self.capability)
 
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        return super().device_state_attributes
+
 
 class WinkSmokeDetector(WinkBinarySensorDevice):
     """Representation of a Wink Smoke detector."""
 
-    def __init__(self, wink, hass):
-        """Initialize the Wink binary sensor."""
-        super().__init__(wink, hass)
-
     @property
     def device_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            'test_activated': self.wink.test_activated()
-        }
+        """Return the device state attributes."""
+        _attributes = super().device_state_attributes
+        _attributes['test_activated'] = self.wink.test_activated()
+        return _attributes
 
 
 class WinkHub(WinkBinarySensorDevice):
     """Representation of a Wink Hub."""
 
-    def __init__(self, wink, hass):
-        """Initialize the Wink binary sensor."""
-        super().__init__(wink, hass)
-
     @property
     def device_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            'update needed': self.wink.update_needed(),
-            'firmware version': self.wink.firmware_version()
-        }
+        """Return the device state attributes."""
+        _attributes = super().device_state_attributes
+        _attributes['update_needed'] = self.wink.update_needed()
+        _attributes['firmware_version'] = self.wink.firmware_version()
+        _attributes['pairing_mode'] = self.wink.pairing_mode()
+        _kidde_code = self.wink.kidde_radio_code()
+        if _kidde_code is not None:
+            # The service call to set the Kidde code
+            # takes a string of 1s and 0s so it makes
+            # sense to display it to the user that way
+            _formatted_kidde_code = "{:b}".format(_kidde_code).zfill(8)
+            _attributes['kidde_radio_code'] = _formatted_kidde_code
+        return _attributes
 
 
 class WinkRemote(WinkBinarySensorDevice):
     """Representation of a Wink Lutron Connected bulb remote."""
 
-    def __init__(self, wink, hass):
-        """Initialize the Wink binary sensor."""
-        super().__init__(wink, hass)
-
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            'button_on_pressed': self.wink.button_on_pressed(),
-            'button_off_pressed': self.wink.button_off_pressed(),
-            'button_up_pressed': self.wink.button_up_pressed(),
-            'button_down_pressed': self.wink.button_down_pressed()
-        }
+        _attributes = super().device_state_attributes
+        _attributes['button_on_pressed'] = self.wink.button_on_pressed()
+        _attributes['button_off_pressed'] = self.wink.button_off_pressed()
+        _attributes['button_up_pressed'] = self.wink.button_up_pressed()
+        _attributes['button_down_pressed'] = self.wink.button_down_pressed()
+        return _attributes
 
     @property
     def device_class(self):
@@ -175,25 +175,17 @@ class WinkRemote(WinkBinarySensorDevice):
 class WinkButton(WinkBinarySensorDevice):
     """Representation of a Wink Relay button."""
 
-    def __init__(self, wink, hass):
-        """Initialize the Wink binary sensor."""
-        super().__init__(wink, hass)
-
     @property
     def device_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            'pressed': self.wink.pressed(),
-            'long_pressed': self.wink.long_pressed()
-        }
+        """Return the device state attributes."""
+        _attributes = super().device_state_attributes
+        _attributes['pressed'] = self.wink.pressed()
+        _attributes['long_pressed'] = self.wink.long_pressed()
+        return _attributes
 
 
 class WinkGang(WinkBinarySensorDevice):
     """Representation of a Wink Relay gang."""
-
-    def __init__(self, wink, hass):
-        """Initialize the Wink binary sensor."""
-        super().__init__(wink, hass)
 
     @property
     def is_on(self):

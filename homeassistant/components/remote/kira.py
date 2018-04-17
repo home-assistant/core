@@ -4,16 +4,12 @@ Support for Keene Electronics IR-IP devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/remote.kira/
 """
-import logging
 import functools as ft
+import logging
 
 import homeassistant.components.remote as remote
+from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.helpers.entity import Entity
-
-from homeassistant.const import (
-    STATE_UNKNOWN,
-    CONF_DEVICE,
-    CONF_NAME)
 
 DOMAIN = 'kira'
 
@@ -40,8 +36,6 @@ class KiraRemote(Entity):
         """Initialize KiraRemote class."""
         _LOGGER.debug("KiraRemote device init started for: %s", name)
         self._name = name
-        self._state = STATE_UNKNOWN
-
         self._kira = kira
 
     @property
@@ -49,30 +43,21 @@ class KiraRemote(Entity):
         """Return the Kira device's name."""
         return self._name
 
-    @property
-    def device_state_attributes(self):
-        """Add platform specific attributes."""
-        return {}
-
-    @property
-    def is_on(self):
-        """Return True. Power state doesn't apply to this device."""
-        return True
-
     def update(self):
         """No-op."""
 
-    def send_command(self, **kwargs):
+    def send_command(self, command, **kwargs):
         """Send a command to one device."""
-        for command in kwargs.get(remote.ATTR_COMMAND):
-            code_tuple = (command,
+        for single_command in command:
+            code_tuple = (single_command,
                           kwargs.get(remote.ATTR_DEVICE))
             _LOGGER.info("Sending Command: %s to %s", *code_tuple)
             self._kira.sendCode(code_tuple)
 
-    def async_send_command(self, **kwargs):
+    def async_send_command(self, command, **kwargs):
         """Send a command to a device.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(ft.partial(self.send_command, **kwargs))
+        return self.hass.async_add_job(ft.partial(
+            self.send_command, command, **kwargs))

@@ -42,6 +42,7 @@ class TestRecorder(unittest.TestCase):
         with session_scope(hass=self.hass) as session:
             db_states = list(session.query(States))
             assert len(db_states) == 1
+            assert db_states[0].event_id > 0
             state = db_states[0].to_native()
 
         assert state == self.hass.states.get(entity_id)
@@ -195,8 +196,8 @@ def test_recorder_setup_failure():
     with patch.object(Recorder, '_setup_connection') as setup, \
             patch('homeassistant.components.recorder.time.sleep'):
         setup.side_effect = ImportError("driver not found")
-        rec = Recorder(
-            hass, purge_days=0, uri='sqlite://', include={}, exclude={})
+        rec = Recorder(hass, keep_days=7, purge_interval=2,
+                       uri='sqlite://', include={}, exclude={})
         rec.start()
         rec.join()
 

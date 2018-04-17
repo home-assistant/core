@@ -8,27 +8,34 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.weather import WeatherEntity, PLATFORM_SCHEMA
+from homeassistant.components.sensor.metoffice import (
+    CONDITION_CLASSES, CONF_ATTRIBUTION, MetOfficeCurrentData)
+from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
 from homeassistant.const import (
-    CONF_NAME, TEMP_CELSIUS, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
-# Reuse data and API logic from the sensor implementation
-from homeassistant.components.sensor.metoffice import \
-    MetOfficeCurrentData, CONF_ATTRIBUTION, CONDITION_CLASSES
-
-_LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['datapoint==0.4.3']
 
+_LOGGER = logging.getLogger(__name__)
+
+DEFAULT_NAME = "Met Office"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Inclusive(CONF_LATITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.longitude,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Met Office weather platform."""
     import datapoint as dp
+
+    name = config.get(CONF_NAME)
     datapoint = dp.connection(api_key=config.get(CONF_API_KEY))
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -36,36 +43,35 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
+        return
 
     try:
-        site = datapoint.get_nearest_site(latitude=latitude,
-                                          longitude=longitude)
+        site = datapoint.get_nearest_site(
+            latitude=latitude, longitude=longitude)
     except dp.exceptions.APIException as err:
         _LOGGER.error("Received error from Met Office Datapoint: %s", err)
-        return False
+        return
 
     if not site:
         _LOGGER.error("Unable to get nearest Met Office forecast site")
-        return False
+        return
 
-    # Get data
     data = MetOfficeCurrentData(hass, datapoint, site)
     try:
         data.update()
     except (ValueError, dp.exceptions.APIException) as err:
         _LOGGER.error("Received error from Met Office Datapoint: %s", err)
-        return False
-    add_devices([MetOfficeWeather(site, data, config.get(CONF_NAME))],
-                True)
-    return True
+        return
+
+    add_devices([MetOfficeWeather(site, data, name)], True)
 
 
 class MetOfficeWeather(WeatherEntity):
     """Implementation of a Met Office weather condition."""
 
-    def __init__(self, site, data, config):
+    def __init__(self, site, data, name):
         """Initialise the platform with a data instance and site."""
+        self._name = name
         self.data = data
         self.site = site
 
@@ -76,15 +82,13 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'Met Office ({})'.format(self.site.name)
+        return '{} {}'.format(self._name, self.site.name)
 
     @property
     def condition(self):
         """Return the current condition."""
         return [k for k, v in CONDITION_CLASSES.items() if
                 self.data.data.weather.value in v][0]
-
-    # Now implement the WeatherEntity interface
 
     @property
     def temperature(self):

@@ -8,14 +8,14 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components import ecobee
 from homeassistant.components.notify import (
     BaseNotificationService, PLATFORM_SCHEMA)  # NOQA
-import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['ecobee']
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['ecobee']
 
 CONF_INDEX = 'index'
 

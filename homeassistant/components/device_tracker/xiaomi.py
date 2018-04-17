@@ -5,8 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.xiaomi/
 """
 import logging
-import threading
-from datetime import timedelta
 
 import requests
 import voluptuous as vol
@@ -15,11 +13,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -47,8 +42,6 @@ class XiaomiDeviceScanner(DeviceScanner):
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
 
-        self.lock = threading.Lock()
-
         self.last_results = {}
         self.token = _get_token(self.host, self.username, self.password)
 
@@ -62,35 +55,32 @@ class XiaomiDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        with self.lock:
-            if self.mac2name is None:
-                result = self._retrieve_list_with_retry()
-                if result:
-                    hosts = [x for x in result
-                             if 'mac' in x and 'name' in x]
-                    mac2name_list = [
-                        (x['mac'].upper(), x['name']) for x in hosts]
-                    self.mac2name = dict(mac2name_list)
-                else:
-                    # Error, handled in the _retrieve_list_with_retry
-                    return
-            return self.mac2name.get(device.upper(), None)
+        if self.mac2name is None:
+            result = self._retrieve_list_with_retry()
+            if result:
+                hosts = [x for x in result
+                         if 'mac' in x and 'name' in x]
+                mac2name_list = [
+                    (x['mac'].upper(), x['name']) for x in hosts]
+                self.mac2name = dict(mac2name_list)
+            else:
+                # Error, handled in the _retrieve_list_with_retry
+                return
+        return self.mac2name.get(device.upper(), None)
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """Ensure the informations from the router are up to date.
+        """Ensure the information from the router are up to date.
 
         Returns true if scanning successful.
         """
         if not self.success_init:
             return False
 
-        with self.lock:
-            result = self._retrieve_list_with_retry()
-            if result:
-                self._store_result(result)
-                return True
-            return False
+        result = self._retrieve_list_with_retry()
+        if result:
+            self._store_result(result)
+            return True
+        return False
 
     def _retrieve_list_with_retry(self):
         """Retrieve the device list with a retry if token is invalid.
@@ -101,10 +91,10 @@ class XiaomiDeviceScanner(DeviceScanner):
         result = _retrieve_list(self.host, self.token)
         if result:
             return result
-        else:
-            _LOGGER.info("Refreshing token and retrying device list refresh")
-            self.token = _get_token(self.host, self.username, self.password)
-            return _retrieve_list(self.host, self.token)
+
+        _LOGGER.info("Refreshing token and retrying device list refresh")
+        self.token = _get_token(self.host, self.username, self.password)
+        return _retrieve_list(self.host, self.token)
 
     def _store_result(self, result):
         """Extract and store the device list in self.last_results."""

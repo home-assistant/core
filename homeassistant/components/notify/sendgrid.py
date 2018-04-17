@@ -10,10 +10,11 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import (CONF_API_KEY, CONF_SENDER, CONF_RECIPIENT)
+from homeassistant.const import (
+    CONF_API_KEY, CONF_SENDER, CONF_RECIPIENT, CONTENT_TYPE_TEXT_PLAIN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['sendgrid==4.2.0']
+REQUIREMENTS = ['sendgrid==5.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,12 +68,12 @@ class SendgridNotificationService(BaseNotificationService):
             },
             "content": [
                 {
-                    "type": "text/plain",
+                    "type": CONTENT_TYPE_TEXT_PLAIN,
                     "value": message
                 }
             ]
         }
 
         response = self._sg.client.mail.send.post(request_body=data)
-        if response.status_code is not 202:
+        if response.status_code != 202:
             _LOGGER.error("Unable to send notification")

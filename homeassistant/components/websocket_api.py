@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/developers/websocket_api/
 """
 import asyncio
+from concurrent import futures
 from contextlib import suppress
 from functools import partial
 import json
@@ -21,6 +22,7 @@ from homeassistant.components import frontend
 from homeassistant.core import callback
 from homeassistant.remote import JSONEncoder
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import validate_password
 from homeassistant.components.http.const import KEY_AUTHENTICATED
@@ -29,7 +31,7 @@ from homeassistant.components.http.ban import process_wrong_login
 DOMAIN = 'websocket_api'
 
 URL = '/api/websocket'
-DEPENDENCIES = 'http',
+DEPENDENCIES = ('http',)
 
 MAX_PENDING_MSG = 512
 
@@ -79,7 +81,7 @@ CALL_SERVICE_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('type'): TYPE_CALL_SERVICE,
     vol.Required('domain'): str,
     vol.Required('service'): str,
-    vol.Optional('service_data', default=None): dict
+    vol.Optional('service_data'): dict
 })
 
 GET_STATES_MESSAGE_SCHEMA = vol.Schema({
@@ -118,6 +120,11 @@ BASE_COMMAND_MESSAGE_SCHEMA = vol.Schema({
                                   TYPE_GET_PANELS,
                                   TYPE_PING)
 }, extra=vol.ALLOW_EXTRA)
+
+# Define the possible errors that occur when connections are cancelled.
+# Originally, this was just asyncio.CancelledError, but issue #9546 showed
+# that futures.CancelledErrors can also occur in some situations.
+CANCELLATION_ERRORS = (asyncio.CancelledError, futures.CancelledError)
 
 
 def auth_ok_message():
@@ -184,8 +191,7 @@ def result_message(iden, result=None):
     }
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Initialize the websocket API."""
     hass.http.register_view(WebsocketAPIView)
     return True
@@ -198,19 +204,19 @@ class WebsocketAPIView(HomeAssistantView):
     url = URL
     requires_auth = False
 
-    @asyncio.coroutine
-    def get(self, request):
+    async def get(self, request):
         """Handle an incoming websocket connection."""
         # pylint: disable=no-self-use
-        return ActiveConnection(request.app['hass']).handle(request)
+        return await ActiveConnection(request.app['hass'], request).handle()
 
 
 class ActiveConnection:
     """Handle an active websocket client connection."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, request):
         """Initialize an active connection."""
         self.hass = hass
+        self.request = request
         self.wsock = None
         self.event_listeners = {}
         self.to_write = asyncio.Queue(maxsize=MAX_PENDING_MSG, loop=hass.loop)
@@ -225,17 +231,20 @@ class ActiveConnection:
         """Print an error message."""
         _LOGGER.error("WS %s: %s %s", id(self.wsock), message1, message2)
 
-    @asyncio.coroutine
-    def _writer(self):
+    async def _writer(self):
         """Write outgoing messages."""
         # Exceptions if Socket disconnected or cancelled by connection handler
-        with suppress(RuntimeError, asyncio.CancelledError):
+        with suppress(RuntimeError, *CANCELLATION_ERRORS):
             while not self.wsock.closed:
-                message = yield from self.to_write.get()
+                message = await self.to_write.get()
                 if message is None:
                     break
                 self.debug("Sending", message)
-                yield from self.wsock.send_json(message, dumps=JSON_DUMP)
+                try:
+                    await self.wsock.send_json(message, dumps=JSON_DUMP)
+                except TypeError as err:
+                    _LOGGER.error('Unable to serialize to JSON: %s\n%s',
+                                  err, message)
 
     @callback
     def send_message_outside(self, message):
@@ -258,11 +267,11 @@ class ActiveConnection:
         self._handle_task.cancel()
         self._writer_task.cancel()
 
-    @asyncio.coroutine
-    def handle(self, request):
+    async def handle(self):
         """Handle the websocket connection."""
-        wsock = self.wsock = web.WebSocketResponse()
-        yield from wsock.prepare(request)
+        request = self.request
+        wsock = self.wsock = web.WebSocketResponse(heartbeat=55)
+        await wsock.prepare(request)
         self.debug("Connected")
 
         # Get a reference to current task so we can cancel our connection
@@ -285,8 +294,8 @@ class ActiveConnection:
                 authenticated = True
 
             else:
-                yield from self.wsock.send_json(auth_required_message())
-                msg = yield from wsock.receive_json()
+                await self.wsock.send_json(auth_required_message())
+                msg = await wsock.receive_json()
                 msg = AUTH_MESSAGE_SCHEMA(msg)
 
                 if validate_password(request, msg['api_password']):
@@ -294,18 +303,18 @@ class ActiveConnection:
 
                 else:
                     self.debug("Invalid password")
-                    yield from self.wsock.send_json(
+                    await self.wsock.send_json(
                         auth_invalid_message('Invalid password'))
 
             if not authenticated:
-                yield from process_wrong_login(request)
+                await process_wrong_login(request)
                 return wsock
 
-            yield from self.wsock.send_json(auth_ok_message())
+            await self.wsock.send_json(auth_ok_message())
 
             # ---------- AUTH PHASE OVER ----------
 
-            msg = yield from wsock.receive_json()
+            msg = await wsock.receive_json()
             last_id = 0
 
             while msg:
@@ -323,7 +332,7 @@ class ActiveConnection:
                     getattr(self, handler_name)(msg)
 
                 last_id = cur_id
-                msg = yield from wsock.receive_json()
+                msg = await wsock.receive_json()
 
         except vol.Invalid as err:
             error_msg = "Message incorrectly formatted: "
@@ -350,7 +359,7 @@ class ActiveConnection:
             if wsock.closed:
                 self.debug("Connection closed by client")
             else:
-                self.log_error("Unexpected TypeError", msg)
+                _LOGGER.exception("Unexpected TypeError: %s", msg)
 
         except ValueError as err:
             msg = "Received invalid JSON"
@@ -360,7 +369,7 @@ class ActiveConnection:
             self.log_error(msg)
             self._writer_task.cancel()
 
-        except asyncio.CancelledError:
+        except CANCELLATION_ERRORS:
             self.debug("Connection cancelled by server")
 
         except asyncio.QueueFull:
@@ -385,11 +394,11 @@ class ActiveConnection:
                     self.to_write.put_nowait(final_message)
                 self.to_write.put_nowait(None)
                 # Make sure all error messages are written before closing
-                yield from self._writer_task
+                await self._writer_task
             except asyncio.QueueFull:
                 self._writer_task.cancel()
 
-            yield from wsock.close()
+            await wsock.close()
             self.debug("Closed connection")
 
         return wsock
@@ -401,8 +410,7 @@ class ActiveConnection:
         """
         msg = SUBSCRIBE_EVENTS_MESSAGE_SCHEMA(msg)
 
-        @asyncio.coroutine
-        def forward_events(event):
+        async def forward_events(event):
             """Forward events to websocket."""
             if event.event_type == EVENT_TIME_CHANGED:
                 return
@@ -434,15 +442,14 @@ class ActiveConnection:
     def handle_call_service(self, msg):
         """Handle call service command.
 
-        This is a coroutine.
+        Async friendly.
         """
         msg = CALL_SERVICE_MESSAGE_SCHEMA(msg)
 
-        @asyncio.coroutine
-        def call_service_helper(msg):
+        async def call_service_helper(msg):
             """Call a service and fire complete message."""
-            yield from self.hass.services.async_call(
-                msg['domain'], msg['service'], msg['service_data'], True)
+            await self.hass.services.async_call(
+                msg['domain'], msg['service'], msg.get('service_data'), True)
             self.send_message_outside(result_message(msg['id']))
 
         self.hass.async_add_job(call_service_helper(msg))
@@ -464,8 +471,12 @@ class ActiveConnection:
         """
         msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
 
-        self.to_write.put_nowait(result_message(
-            msg['id'], self.hass.services.async_services()))
+        async def get_services_helper(msg):
+            """Get available services and fire complete message."""
+            descriptions = await async_get_all_descriptions(self.hass)
+            self.send_message_outside(result_message(msg['id'], descriptions))
+
+        self.hass.async_add_job(get_services_helper(msg))
 
     def handle_get_config(self, msg):
         """Handle get config command.
@@ -483,9 +494,14 @@ class ActiveConnection:
         Async friendly.
         """
         msg = GET_PANELS_MESSAGE_SCHEMA(msg)
+        panels = {
+            panel:
+            self.hass.data[frontend.DATA_PANELS][panel].to_response(
+                self.hass, self.request)
+            for panel in self.hass.data[frontend.DATA_PANELS]}
 
         self.to_write.put_nowait(result_message(
-            msg['id'], self.hass.data[frontend.DATA_PANELS]))
+            msg['id'], panels))
 
     def handle_ping(self, msg):
         """Handle ping command.

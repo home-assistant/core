@@ -17,7 +17,7 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template as template_helper
 
-REQUIREMENTS = ['apns2==0.1.1']
+REQUIREMENTS = ['apns2==0.3.0']
 
 APNS_DEVICES = 'apns.yaml'
 CONF_CERTFILE = 'cert_file'
@@ -39,15 +39,12 @@ PLATFORM_SCHEMA = vol.Schema({
 
 REGISTER_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_PUSH_ID): cv.string,
-    vol.Optional(ATTR_NAME, default=None): cv.string,
+    vol.Optional(ATTR_NAME): cv.string,
 })
 
 
 def get_service(hass, config, discovery_info=None):
     """Return push service."""
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
     name = config.get(CONF_NAME)
     cert_file = config.get(CONF_CERTFILE)
     topic = config.get(CONF_TOPIC)
@@ -56,7 +53,7 @@ def get_service(hass, config, discovery_info=None):
     service = ApnsNotificationService(hass, name, topic, sandbox, cert_file)
     hass.services.register(
         DOMAIN, 'apns_{}'.format(name), service.register,
-        descriptions.get(SERVICE_REGISTER), schema=REGISTER_SERVICE_SCHEMA)
+        schema=REGISTER_SERVICE_SCHEMA)
     return service
 
 
@@ -111,17 +108,17 @@ class ApnsDevice(object):
         return self.device_disabled
 
     def disable(self):
-        """Disable the device from recieving notifications."""
+        """Disable the device from receiving notifications."""
         self.device_disabled = True
 
     def __eq__(self, other):
-        """Return the comparision."""
+        """Return the comparison."""
         if isinstance(other, self.__class__):
             return self.push_id == other.push_id and self.name == other.name
         return NotImplemented
 
     def __ne__(self, other):
-        """Return the comparision."""
+        """Return the comparison."""
         return not self.__eq__(other)
 
 

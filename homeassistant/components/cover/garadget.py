@@ -18,10 +18,10 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AVAILABLE = "available"
-ATTR_SENSOR_STRENGTH = "sensor reflection rate"
-ATTR_SIGNAL_STRENGTH = "wifi signal strength (dB)"
-ATTR_TIME_IN_STATE = "time in state"
+ATTR_AVAILABLE = 'available'
+ATTR_SENSOR_STRENGTH = 'sensor_reflection_rate'
+ATTR_SIGNAL_STRENGTH = 'wifi_signal_strength'
+ATTR_TIME_IN_STATE = 'time_in_state'
 
 DEFAULT_NAME = 'Garadget'
 
@@ -159,8 +159,7 @@ class GaradgetCover(CoverDevice):
         """Return if the cover is closed."""
         if self._state == STATE_UNKNOWN:
             return None
-        else:
-            return self._state == STATE_CLOSED
+        return self._state == STATE_CLOSED
 
     @property
     def device_class(self):
@@ -202,21 +201,21 @@ class GaradgetCover(CoverDevice):
         """Check the state of the service during an operation."""
         self.schedule_update_ha_state(True)
 
-    def close_cover(self):
+    def close_cover(self, **kwargs):
         """Close the cover."""
         if self._state not in ['close', 'closing']:
             ret = self._put_command('setState', 'close')
             self._start_watcher('close')
             return ret.get('return_value') == 1
 
-    def open_cover(self):
+    def open_cover(self, **kwargs):
         """Open the cover."""
         if self._state not in ['open', 'opening']:
             ret = self._put_command('setState', 'open')
             self._start_watcher('open')
             return ret.get('return_value') == 1
 
-    def stop_cover(self):
+    def stop_cover(self, **kwargs):
         """Stop the door where it is."""
         if self._state not in ['stopped']:
             ret = self._put_command('setState', 'stop')

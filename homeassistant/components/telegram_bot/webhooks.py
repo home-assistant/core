@@ -12,11 +12,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.util import get_real_ip
+from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.components.telegram_bot import (
-    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA)
+    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA,
+    initialize_bot)
 from homeassistant.const import (
-    CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST,
+    EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST,
     HTTP_UNAUTHORIZED, CONF_URL)
 import homeassistant.helpers.config_validation as cv
 
@@ -50,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config):
     """Set up the Telegram webhooks platform."""
     import telegram
-    bot = telegram.Bot(config[CONF_API_KEY])
+    bot = initialize_bot(config)
 
     current_status = yield from hass.async_add_job(bot.getWebhookInfo)
     base_url = config.get(CONF_URL, hass.config.api.base_url)
@@ -69,8 +70,18 @@ def async_setup_platform(hass, config):
         _LOGGER.error("Invalid telegram webhook %s must be https", handler_url)
         return False
 
+    def _try_to_set_webhook():
+        retry_num = 0
+        while retry_num < 3:
+            try:
+                return bot.setWebhook(handler_url, timeout=5)
+            except telegram.error.TimedOut:
+                retry_num += 1
+                _LOGGER.warning("Timeout trying to set webhook (retry #%d)",
+                                retry_num)
+
     if current_status and current_status['url'] != handler_url:
-        result = yield from hass.async_add_job(bot.setWebhook, handler_url)
+        result = yield from hass.async_add_job(_try_to_set_webhook)
         if result:
             _LOGGER.info("Set new telegram webhook %s", handler_url)
         else:
@@ -100,7 +111,7 @@ class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
     @asyncio.coroutine
     def post(self, request):
         """Accept the POST from telegram."""
-        real_ip = get_real_ip(request)
+        real_ip = request[KEY_REAL_IP]
         if not any(real_ip in net for net in self.trusted_networks):
             _LOGGER.warning("Access denied from %s", real_ip)
             return self.json_message('Access denied', HTTP_UNAUTHORIZED)
@@ -112,5 +123,4 @@ class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
 
         if not self.process_message(data):
             return self.json_message('Invalid message', HTTP_BAD_REQUEST)
-        else:
-            return self.json({})
+        return self.json({})

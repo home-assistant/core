@@ -65,7 +65,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class EightHeatSensor(EightSleepHeatEntity):
-    """Representation of a eight sleep heat-based sensor."""
+    """Representation of an eight sleep heat-based sensor."""
 
     def __init__(self, name, eight, sensor):
         """Initialize the sensor."""
@@ -116,7 +116,7 @@ class EightHeatSensor(EightSleepHeatEntity):
 
 
 class EightUserSensor(EightSleepUserEntity):
-    """Representation of a eight sleep user-based sensor."""
+    """Representation of an eight sleep user-based sensor."""
 
     def __init__(self, name, eight, sensor, units):
         """Initialize the sensor."""
@@ -155,8 +155,8 @@ class EightUserSensor(EightSleepUserEntity):
         elif 'bed_temp' in self._sensor:
             if self._units == 'si':
                 return '°C'
-            else:
-                return '°F'
+            return '°F'
+        return None
 
     @property
     def icon(self):
@@ -197,10 +197,16 @@ class EightUserSensor(EightSleepUserEntity):
         sleep_time = sum(self._attr['breakdown'].values()) - \
             self._attr['breakdown']['awake']
         state_attr[ATTR_SLEEP_DUR] = sleep_time
-        state_attr[ATTR_LIGHT_PERC] = round((
-            self._attr['breakdown']['light'] / sleep_time) * 100, 2)
-        state_attr[ATTR_DEEP_PERC] = round((
-            self._attr['breakdown']['deep'] / sleep_time) * 100, 2)
+        try:
+            state_attr[ATTR_LIGHT_PERC] = round((
+                self._attr['breakdown']['light'] / sleep_time) * 100, 2)
+        except ZeroDivisionError:
+            state_attr[ATTR_LIGHT_PERC] = 0
+        try:
+            state_attr[ATTR_DEEP_PERC] = round((
+                self._attr['breakdown']['deep'] / sleep_time) * 100, 2)
+        except ZeroDivisionError:
+            state_attr[ATTR_DEEP_PERC] = 0
 
         if self._units == 'si':
             room_temp = round(self._attr['room_temp'], 2)
@@ -226,7 +232,7 @@ class EightUserSensor(EightSleepUserEntity):
 
 
 class EightRoomSensor(EightSleepUserEntity):
-    """Representation of a eight sleep room sensor."""
+    """Representation of an eight sleep room sensor."""
 
     def __init__(self, name, eight, sensor, units):
         """Initialize the sensor."""
@@ -264,8 +270,7 @@ class EightRoomSensor(EightSleepUserEntity):
         """Return the unit the value is expressed in."""
         if self._units == 'si':
             return '°C'
-        else:
-            return '°F'
+        return '°F'
 
     @property
     def icon(self):

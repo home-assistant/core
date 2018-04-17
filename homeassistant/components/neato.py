@@ -17,8 +17,8 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/jabesq/pybotvac/archive/v0.0.3.zip'
-                '#pybotvac==0.0.3']
+REQUIREMENTS = ['https://github.com/jabesq/pybotvac/archive/v0.0.5.zip'
+                '#pybotvac==0.0.5']
 
 DOMAIN = 'neato'
 NEATO_ROBOTS = 'neato_robots'
@@ -90,7 +90,7 @@ def setup(hass, config):
         _LOGGER.debug("Failed to login to Neato API")
         return False
     hub.update_robots()
-    for component in ('camera', 'sensor', 'switch'):
+    for component in ('camera', 'vacuum', 'switch'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True

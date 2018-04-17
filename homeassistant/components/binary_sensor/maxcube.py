@@ -36,7 +36,7 @@ class MaxCubeShutter(BinarySensorDevice):
     def __init__(self, hass, name, rf_address):
         """Initialize MAX! Cube BinarySensorDevice."""
         self._name = name
-        self._sensor_type = 'opening'
+        self._sensor_type = 'window'
         self._rf_address = rf_address
         self._cubehandle = hass.data[MAXCUBE_HANDLE]
         self._state = STATE_UNKNOWN

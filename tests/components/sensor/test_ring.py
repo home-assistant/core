@@ -38,7 +38,9 @@ class TestRingSensorSetup(unittest.TestCase):
                 'last_activity',
                 'last_ding',
                 'last_motion',
-                'volume']
+                'volume',
+                'wifi_signal_category',
+                'wifi_signal_strength']
         }
 
     def tearDown(self):
@@ -48,13 +50,17 @@ class TestRingSensorSetup(unittest.TestCase):
 
     @requests_mock.Mocker()
     def test_sensor(self, mock):
-        """Test the Ring senskor class and methods."""
+        """Test the Ring sensor class and methods."""
         mock.post('https://api.ring.com/clients_api/session',
                   text=load_fixture('ring_session.json'))
         mock.get('https://api.ring.com/clients_api/ring_devices',
                  text=load_fixture('ring_devices.json'))
         mock.get('https://api.ring.com/clients_api/doorbots/987652/history',
                  text=load_fixture('ring_doorbots.json'))
+        mock.get('https://api.ring.com/clients_api/doorbots/987652/health',
+                 text=load_fixture('ring_doorboot_health_attrs.json'))
+        mock.get('https://api.ring.com/clients_api/chimes/999999/health',
+                 text=load_fixture('ring_chime_health_attrs.json'))
         base_ring.setup(self.hass, VALID_CONFIG)
         ring.setup_platform(self.hass,
                             self.config,
@@ -63,6 +69,12 @@ class TestRingSensorSetup(unittest.TestCase):
 
         for device in self.DEVICES:
             device.update()
+            if device.name == 'Front Battery':
+                self.assertEqual(80, device.state)
+                self.assertEqual('hp_cam_v1',
+                                 device.device_state_attributes['kind'])
+                self.assertEqual('stickup_cams',
+                                 device.device_state_attributes['type'])
             if device.name == 'Front Door Battery':
                 self.assertEqual(100, device.state)
                 self.assertEqual('lpd_v1',
@@ -73,6 +85,8 @@ class TestRingSensorSetup(unittest.TestCase):
                 self.assertEqual(2, device.state)
                 self.assertEqual('1.2.3',
                                  device.device_state_attributes['firmware'])
+                self.assertEqual('ring_mock_wifi',
+                                 device.device_state_attributes['wifi_name'])
                 self.assertEqual('mdi:bell-ring', device.icon)
                 self.assertEqual('chimes',
                                  device.device_state_attributes['type'])
@@ -80,6 +94,15 @@ class TestRingSensorSetup(unittest.TestCase):
                 self.assertFalse(device.device_state_attributes['answered'])
                 self.assertEqual('America/New_York',
                                  device.device_state_attributes['timezone'])
+
+            if device.name == 'Downstairs WiFi Signal Strength':
+                self.assertEqual(-39, device.state)
+
+            if device.name == 'Front Door WiFi Signal Category':
+                self.assertEqual('good', device.state)
+
+            if device.name == 'Front Door WiFi Signal Strength':
+                self.assertEqual(-58, device.state)
 
             self.assertIsNone(device.entity_picture)
             self.assertEqual(ATTRIBUTION,

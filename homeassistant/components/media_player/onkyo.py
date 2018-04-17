@@ -6,6 +6,9 @@ https://home-assistant.io/components/media_player.onkyo/
 """
 import logging
 
+# pylint: disable=unused-import
+from typing import List  # noqa: F401
+
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -14,7 +17,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['onkyo-eiscp==1.1']
+REQUIREMENTS = ['onkyo-eiscp==1.2.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if receiver.host not in KNOWN_HOSTS:
                 hosts.append(OnkyoDevice(receiver, config.get(CONF_SOURCES)))
                 KNOWN_HOSTS.append(receiver.host)
-    add_devices(hosts)
+    add_devices(hosts, True)
 
 
 class OnkyoDevice(MediaPlayerDevice):
@@ -79,7 +82,6 @@ class OnkyoDevice(MediaPlayerDevice):
         self._source_list = list(sources.values())
         self._source_mapping = sources
         self._reverse_mapping = {value: key for key, value in sources.items()}
-        self.update()
 
     def command(self, command):
         """Run an eiscp command and catch connection errors."""

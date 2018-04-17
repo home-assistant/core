@@ -36,7 +36,7 @@ SPEED_TO_VALUE = {
 
 
 def get_device(values, **kwargs):
-    """Create zwave entity device."""
+    """Create Z-Wave entity device."""
     return ZwaveFan(values)
 
 

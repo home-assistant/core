@@ -36,7 +36,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     time_zone = dt_util.get_time_zone(config.get(CONF_TIME_ZONE))
 
     async_add_devices([WorldClockSensor(time_zone, name)], True)
-    return True
 
 
 class WorldClockSensor(Entity):

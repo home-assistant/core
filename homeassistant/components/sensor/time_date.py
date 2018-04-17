@@ -52,7 +52,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         devices.append(device)
 
     async_add_devices(devices, True)
-    return True
 
 
 class TimeDateSensor(Entity):
@@ -84,15 +83,14 @@ class TimeDateSensor(Entity):
             return 'mdi:calendar-clock'
         elif 'date' in self.type:
             return 'mdi:calendar'
-        else:
-            return 'mdi:clock'
+        return 'mdi:clock'
 
     def get_next_interval(self, now=None):
         """Compute next time an update should occur."""
         if now is None:
             now = dt_util.utcnow()
         if self.type == 'date':
-            now = dt_util.start_of_local_day(now)
+            now = dt_util.start_of_local_day(dt_util.as_local(now))
             return now + timedelta(seconds=86400)
         elif self.type == 'beat':
             interval = 86.4
@@ -131,6 +129,6 @@ class TimeDateSensor(Entity):
     def point_in_time_listener(self, time_date):
         """Get the latest data and update state."""
         self._update_internal_state(time_date)
-        self.hass.async_add_job(self.async_update_ha_state())
+        self.async_schedule_update_ha_state()
         async_track_point_in_utc_time(
             self.hass, self.point_in_time_listener, self.get_next_interval())

@@ -50,7 +50,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
         self._zone_type = zone_type
         self._zone_number = zone_number
 
-        _LOGGER.debug('Setting up zone: ' + zone_name)
+        _LOGGER.debug('Setting up zone: %s', zone_name)
         super().__init__(zone_name, info, controller)
 
     @asyncio.coroutine
@@ -80,4 +80,4 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
     def _update_callback(self, zone):
         """Update the zone's state, if needed."""
         if zone is None or int(zone) == self._zone_number:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()

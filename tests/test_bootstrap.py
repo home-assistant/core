@@ -17,7 +17,7 @@ VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 _LOGGER = logging.getLogger(__name__)
 
 
-# prevent .HA_VERISON file from being written
+# prevent .HA_VERSION file from being written
 @patch(
     'homeassistant.bootstrap.conf_util.process_ha_config_upgrade', Mock())
 @patch('homeassistant.util.location.detect_location_info',

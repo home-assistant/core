@@ -112,8 +112,13 @@ class EmonCmsSensor(Entity):
                  unit_of_measurement, sensorid, elem):
         """Initialize the sensor."""
         if name is None:
-            self._name = "emoncms{}_feedid_{}".format(
-                sensorid, elem["id"])
+            # Suppress ID in sensor name if it's 1, since most people won't
+            # have more than one EmonCMS source and it's redundant to show the
+            # ID if there's only one.
+            id_for_name = '' if str(sensorid) == '1' else sensorid
+            # Use the feed name assigned in EmonCMS or fall back to the feed ID
+            feed_name = elem.get('name') or 'Feed {}'.format(elem['id'])
+            self._name = "EmonCMS{} {}".format(id_for_name, feed_name)
         else:
             self._name = name
         self._identifier = get_id(
@@ -148,7 +153,7 @@ class EmonCmsSensor(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return the atrributes of the sensor."""
+        """Return the attributes of the sensor."""
         return {
             ATTR_FEEDID: self._elem["id"],
             ATTR_TAG: self._elem["tag"],

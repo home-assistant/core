@@ -15,9 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['https://github.com/wmalgadey/PyTado/archive/'
-                '0.1.10.zip#'
-                'PyTado==0.1.10']
+REQUIREMENTS = ['python-tado==0.2.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +45,7 @@ def setup(hass, config):
 
     try:
         tado = Tado(username, password)
+        tado.setDebugging(True)
     except (RuntimeError, urllib.error.HTTPError):
         _LOGGER.error("Unable to connect to mytado with username and password")
         return False
@@ -120,8 +119,10 @@ class TadoDataStore:
 
     def reset_zone_overlay(self, zone_id):
         """Wrap for resetZoneOverlay(..)."""
-        return self.tado.resetZoneOverlay(zone_id)
+        self.tado.resetZoneOverlay(zone_id)
+        self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg
 
     def set_zone_overlay(self, zone_id, mode, temperature=None, duration=None):
         """Wrap for setZoneOverlay(..)."""
-        return self.tado.setZoneOverlay(zone_id, mode, temperature, duration)
+        self.tado.setZoneOverlay(zone_id, mode, temperature, duration)
+        self.update(no_throttle=True)  # pylint: disable=unexpected-keyword-arg

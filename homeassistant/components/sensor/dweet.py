@@ -10,12 +10,11 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['dweepy==0.3.0']
 
@@ -25,7 +24,7 @@ CONF_DEVICE = 'device'
 
 DEFAULT_NAME = 'Dweet.io Sensor'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE): cv.string,
@@ -109,7 +108,6 @@ class DweetData(object):
         self._device = device
         self.data = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Dweet.io."""
         import dweepy

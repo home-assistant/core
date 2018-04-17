@@ -5,7 +5,6 @@
 set -e
 
 cd "$(dirname "$0")/.."
-git submodule init
 script/bootstrap
 
 pip3 install -e .

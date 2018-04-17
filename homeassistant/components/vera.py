@@ -8,36 +8,34 @@ import logging
 from collections import defaultdict
 
 import voluptuous as vol
-
 from requests.exceptions import RequestException
 
 from homeassistant.util.dt import utc_from_timestamp
-from homeassistant.util import (convert, slugify)
+from homeassistant.util import convert, slugify
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
     ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
-    EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_STOP, CONF_LIGHTS, CONF_EXCLUDE)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.31']
+REQUIREMENTS = ['pyvera==0.2.42']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'vera'
 
-VERA_CONTROLLER = None
+VERA_CONTROLLER = 'vera_controller'
 
 CONF_CONTROLLER = 'vera_controller_url'
-CONF_EXCLUDE = 'exclude'
-CONF_LIGHTS = 'lights'
 
 VERA_ID_FORMAT = '{}_{}'
 
 ATTR_CURRENT_POWER_W = "current_power_w"
 ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 
-VERA_DEVICES = defaultdict(list)
+VERA_DEVICES = 'vera_devices'
+VERA_SCENES = 'vera_scenes'
 
 VERA_ID_LIST_SCHEMA = vol.Schema([int])
 
@@ -50,20 +48,20 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 VERA_COMPONENTS = [
-    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'climate', 'cover'
+    'binary_sensor', 'sensor', 'light', 'switch',
+    'lock', 'climate', 'cover', 'scene'
 ]
 
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup(hass, base_config):
     """Set up for Vera devices."""
-    global VERA_CONTROLLER
     import pyvera as veraApi
 
     def stop_subscription(event):
         """Shutdown Vera subscriptions and subscription thread on exit."""
-        _LOGGER.info("Shutting down subscriptions.")
-        VERA_CONTROLLER.stop()
+        _LOGGER.info("Shutting down subscriptions")
+        hass.data[VERA_CONTROLLER].stop()
 
     config = base_config.get(DOMAIN)
 
@@ -73,11 +71,14 @@ def setup(hass, base_config):
     exclude_ids = config.get(CONF_EXCLUDE)
 
     # Initialize the Vera controller.
-    VERA_CONTROLLER, _ = veraApi.init_controller(base_url)
+    controller, _ = veraApi.init_controller(base_url)
+    hass.data[VERA_CONTROLLER] = controller
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
 
     try:
-        all_devices = VERA_CONTROLLER.get_devices()
+        all_devices = controller.get_devices()
+
+        all_scenes = controller.get_scenes()
     except RequestException:
         # There was a network related error connecting to the Vera controller.
         _LOGGER.exception("Error communicating with Vera API")
@@ -87,12 +88,19 @@ def setup(hass, base_config):
     devices = [device for device in all_devices
                if device.device_id not in exclude_ids]
 
+    vera_devices = defaultdict(list)
     for device in devices:
         device_type = map_vera_device(device, light_ids)
         if device_type is None:
             continue
 
-        VERA_DEVICES[device_type].append(device)
+        vera_devices[device_type].append(device)
+    hass.data[VERA_DEVICES] = vera_devices
+
+    vera_scenes = []
+    for scene in all_scenes:
+        vera_scenes.append(scene)
+    hass.data[VERA_SCENES] = vera_scenes
 
     for component in VERA_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, base_config)
@@ -100,7 +108,6 @@ def setup(hass, base_config):
     return True
 
 
-# pylint: disable=too-many-return-statements
 def map_vera_device(vera_device, remap):
     """Map vera classes to Home Assistant types."""
     import pyvera as veraApi
@@ -123,8 +130,7 @@ def map_vera_device(vera_device, remap):
     if isinstance(vera_device, veraApi.VeraSwitch):
         if vera_device.device_id in remap:
             return 'light'
-        else:
-            return 'switch'
+        return 'switch'
     return None
 
 
@@ -165,7 +171,7 @@ class VeraDevice(Entity):
         attr = {}
 
         if self.vera_device.has_battery:
-            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
+            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level
 
         if self.vera_device.is_armable:
             armed = self.vera_device.is_armed

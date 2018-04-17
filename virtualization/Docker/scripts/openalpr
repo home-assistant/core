@@ -11,11 +11,14 @@ PACKAGES=(
 
 apt-get install -y --no-install-recommends ${PACKAGES[@]}
 
+cd /usr/src/app/
+mkdir -p build && cd build
+
 # Clone the latest code from GitHub
-git clone --depth 1 https://github.com/openalpr/openalpr.git /usr/local/src/openalpr
+git clone --depth 1 https://github.com/openalpr/openalpr.git openalpr
 
 # Setup the build directory
-cd /usr/local/src/openalpr/src
+cd openalpr/src/
 mkdir -p build
 cd build
 

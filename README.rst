@@ -1,5 +1,5 @@
-Home Assistant |Build Status| |Coverage Status| |Join the chat at https://gitter.im/home-assistant/home-assistant| |Join the dev chat at https://gitter.im/home-assistant/home-assistant/devs|
-==============================================================================================================================================================================================
+Home Assistant |Build Status| |Coverage Status| |Chat Status|
+=============================================================
 
 Home Assistant is a home automation platform running on Python 3. It is able to track and control all devices at home and offer a platform for automating control.
 
@@ -31,10 +31,8 @@ of a component, check the `Home Assistant help section <https://home-assistant.i
    :target: https://travis-ci.org/home-assistant/home-assistant
 .. |Coverage Status| image:: https://img.shields.io/coveralls/home-assistant/home-assistant.svg
    :target: https://coveralls.io/r/home-assistant/home-assistant?branch=master
-.. |Join the chat at https://gitter.im/home-assistant/home-assistant| image:: https://img.shields.io/badge/gitter-general-blue.svg
-   :target: https://gitter.im/home-assistant/home-assistant?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-.. |Join the dev chat at https://gitter.im/home-assistant/home-assistant/devs| image:: https://img.shields.io/badge/gitter-development-yellowgreen.svg
-   :target: https://gitter.im/home-assistant/home-assistant/devs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |Chat Status| image:: https://img.shields.io/discord/330944238910963714.svg
+   :target: https://discord.gg/c5DvZ4e
 .. |screenshot-states| image:: https://raw.github.com/home-assistant/home-assistant/master/docs/screenshots.png
    :target: https://home-assistant.io/demo/
 .. |screenshot-components| image:: https://raw.github.com/home-assistant/home-assistant/dev/docs/screenshot-components.png

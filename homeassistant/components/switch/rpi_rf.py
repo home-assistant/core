@@ -44,22 +44,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument, import-error
+# pylint: disable=unused-argument, import-error, no-member
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return switches controlled by a generic RF device via GPIO."""
     import rpi_rf
+    from threading import RLock
 
     gpio = config.get(CONF_GPIO)
     rfdevice = rpi_rf.RFDevice(gpio)
+    rfdevice_lock = RLock()
     switches = config.get(CONF_SWITCHES)
 
     devices = []
     for dev_name, properties in switches.items():
         devices.append(
             RPiRFSwitch(
-                hass,
                 properties.get(CONF_NAME, dev_name),
                 rfdevice,
+                rfdevice_lock,
                 properties.get(CONF_PROTOCOL),
                 properties.get(CONF_PULSELENGTH),
                 properties.get(CONF_SIGNAL_REPETITIONS),
@@ -79,13 +81,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RPiRFSwitch(SwitchDevice):
     """Representation of a GPIO RF switch."""
 
-    def __init__(self, hass, name, rfdevice, protocol, pulselength,
+    def __init__(self, name, rfdevice, lock, protocol, pulselength,
                  signal_repetitions, code_on, code_off):
         """Initialize the switch."""
-        self._hass = hass
         self._name = name
         self._state = False
         self._rfdevice = rfdevice
+        self._lock = lock
         self._protocol = protocol
         self._pulselength = pulselength
         self._code_on = code_on
@@ -109,18 +111,19 @@ class RPiRFSwitch(SwitchDevice):
 
     def _send_code(self, code_list, protocol, pulselength):
         """Send the code(s) with a specified pulselength."""
-        _LOGGER.info("Sending code(s): %s", code_list)
-        for code in code_list:
-            self._rfdevice.tx_code(code, protocol, pulselength)
+        with self._lock:
+            _LOGGER.info("Sending code(s): %s", code_list)
+            for code in code_list:
+                self._rfdevice.tx_code(code, protocol, pulselength)
         return True
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the switch on."""
         if self._send_code(self._code_on, self._protocol, self._pulselength):
             self._state = True
             self.schedule_update_ha_state()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         if self._send_code(self._code_off, self._protocol, self._pulselength):
             self._state = False

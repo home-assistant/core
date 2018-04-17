@@ -15,7 +15,6 @@ from homeassistant.const import (
     __version__,
     EVENT_HOMEASSISTANT_START,
     REQUIRED_PYTHON_VER,
-    REQUIRED_PYTHON_VER_WIN,
     RESTART_EXIT_CODE,
 )
 
@@ -31,56 +30,9 @@ def attempt_use_uvloop():
         pass
 
 
-def monkey_patch_asyncio():
-    """Replace weakref.WeakSet to address Python 3 bug.
-
-    Under heavy threading operations that schedule calls into
-    the asyncio event loop, Task objects are created. Due to
-    a bug in Python, GC may have an issue when switching between
-    the threads and objects with __del__ (which various components
-    in HASS have).
-
-    This monkey-patch removes the weakref.Weakset, and replaces it
-    with an object that ignores the only call utilizing it (the
-    Task.__init__ which calls _all_tasks.add(self)). It also removes
-    the __del__ which could trigger the future objects __del__ at
-    unpredictable times.
-
-    The side-effect of this manipulation of the Task is that
-    Task.all_tasks() is no longer accurate, and there will be no
-    warning emitted if a Task is GC'd while in use.
-
-    On Python 3.6, after the bug is fixed, this monkey-patch can be
-    disabled.
-
-    See https://bugs.python.org/issue26617 for details of the Python
-    bug.
-    """
-    # pylint: disable=no-self-use, protected-access, bare-except
-    import asyncio.tasks
-
-    class IgnoreCalls:
-        """Ignore add calls."""
-
-        def add(self, other):
-            """No-op add."""
-            return
-
-    asyncio.tasks.Task._all_tasks = IgnoreCalls()
-    try:
-        del asyncio.tasks.Task.__del__
-    except:
-        pass
-
-
 def validate_python() -> None:
-    """Validate we're running the right Python version."""
-    if sys.platform == "win32" and \
-       sys.version_info[:3] < REQUIRED_PYTHON_VER_WIN:
-        print("Home Assistant requires at least Python {}.{}.{}".format(
-            *REQUIRED_PYTHON_VER_WIN))
-        sys.exit(1)
-    elif sys.version_info[:3] < REQUIRED_PYTHON_VER:
+    """Validate that the right Python version is running."""
+    if sys.version_info[:3] < REQUIRED_PYTHON_VER:
         print("Home Assistant requires at least Python {}.{}.{}".format(
             *REQUIRED_PYTHON_VER))
         sys.exit(1)
@@ -169,6 +121,12 @@ def get_arguments() -> argparse.Namespace:
         default=None,
         help='Enables daily log rotation and keeps up to the specified days')
     parser.add_argument(
+        '--log-file',
+        type=str,
+        default=None,
+        help='Log file to write to.  If not set, CONFIG/home-assistant.log '
+             'is used')
+    parser.add_argument(
         '--runner',
         action='store_true',
         help='On restart exit with code {}'.format(RESTART_EXIT_CODE))
@@ -215,10 +173,11 @@ def daemonize() -> None:
 
 
 def check_pid(pid_file: str) -> None:
-    """Check that HA is not already running."""
+    """Check that Home Assistant is not already running."""
     # Check pid file
     try:
-        pid = int(open(pid_file, 'r').readline())
+        with open(pid_file, 'r') as file:
+            pid = int(file.readline())
     except IOError:
         # PID File does not exist
         return
@@ -240,7 +199,8 @@ def write_pid(pid_file: str) -> None:
     """Create a PID File."""
     pid = os.getpid()
     try:
-        open(pid_file, 'w').write(str(pid))
+        with open(pid_file, 'w') as file:
+            file.write(str(pid))
     except IOError:
         print('Fatal Error: Unable to write pid file {}'.format(pid_file))
         sys.exit(1)
@@ -266,13 +226,13 @@ def closefds_osx(min_fd: int, max_fd: int) -> None:
 
 def cmdline() -> List[str]:
     """Collect path and arguments to re-execute the current hass instance."""
-    if sys.argv[0].endswith(os.path.sep + '__main__.py'):
+    if os.path.basename(sys.argv[0]) == '__main__.py':
         modulepath = os.path.dirname(sys.argv[0])
         os.environ['PYTHONPATH'] = os.path.dirname(modulepath)
         return [sys.executable] + [arg for arg in sys.argv if
                                    arg != '--daemon']
-    else:
-        return [arg for arg in sys.argv if arg != '--daemon']
+
+    return [arg for arg in sys.argv if arg != '--daemon']
 
 
 def setup_and_run_hass(config_dir: str,
@@ -298,20 +258,21 @@ def setup_and_run_hass(config_dir: str,
         }
         hass = bootstrap.from_config_dict(
             config, config_dir=config_dir, verbose=args.verbose,
-            skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days)
+            skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days,
+            log_file=args.log_file)
     else:
         config_file = ensure_config_file(config_dir)
         print('Config directory:', config_dir)
         hass = bootstrap.from_config_file(
             config_file, verbose=args.verbose, skip_pip=args.skip_pip,
-            log_rotate_days=args.log_rotate_days)
+            log_rotate_days=args.log_rotate_days, log_file=args.log_file)
 
     if hass is None:
         return None
 
     if args.open_ui:
         # Imported here to avoid importing asyncio before monkey patch
-        from homeassistant.util.async import run_callback_threadsafe
+        from homeassistant.util.async_ import run_callback_threadsafe
 
         def open_browser(event):
             """Open the webinterface in a browser."""
@@ -329,7 +290,7 @@ def setup_and_run_hass(config_dir: str,
 
 
 def try_to_restart() -> None:
-    """Attempt to clean up state and start a new homeassistant instance."""
+    """Attempt to clean up state and start a new Home Assistant instance."""
     # Things should be mostly shut down already at this point, now just try
     # to clean up things that may have been left behind.
     sys.stderr.write('Home Assistant attempting to restart.\n')
@@ -361,11 +322,11 @@ def try_to_restart() -> None:
     else:
         os.closerange(3, max_fd)
 
-    # Now launch into a new instance of Home-Assistant. If this fails we
+    # Now launch into a new instance of Home Assistant. If this fails we
     # fall through and exit with error 100 (RESTART_EXIT_CODE) in which case
     # systemd will restart us when RestartForceExitStatus=100 is set in the
     # systemd.service file.
-    sys.stderr.write("Restarting Home-Assistant\n")
+    sys.stderr.write("Restarting Home Assistant\n")
     args = cmdline()
     os.execv(args[0], args)
 
@@ -374,17 +335,13 @@ def main() -> int:
     """Start Home Assistant."""
     validate_python()
 
-    if os.environ.get('HASS_MONKEYPATCH_ASYNCIO') == '1':
-        if sys.version_info[:3] >= (3, 6):
+    monkey_patch_needed = sys.version_info[:3] < (3, 6, 3)
+    if monkey_patch_needed and os.environ.get('HASS_NO_MONKEY') != '1':
+        if sys.version_info[:2] >= (3, 6):
             monkey_patch.disable_c_asyncio()
-        monkey_patch.patch_weakref_tasks()
-    elif sys.version_info[:3] < (3, 5, 3):
         monkey_patch.patch_weakref_tasks()
 
     attempt_use_uvloop()
-
-    if sys.version_info[:3] < (3, 5, 3):
-        monkey_patch_asyncio()
 
     args = get_arguments()
 

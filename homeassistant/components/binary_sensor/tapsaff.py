@@ -4,15 +4,15 @@ Support for Taps Affs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.tapsaff/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME)
+    PLATFORM_SCHEMA, BinarySensorDevice)
+from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['tapsaff==0.1.3']
 
@@ -67,7 +67,7 @@ class TapsAffData(object):
     """Class for handling the data retrieval for pins."""
 
     def __init__(self, location):
-        """Initialize the sensor."""
+        """Initialize the data object."""
         from tapsaff import TapsAff
 
         self._is_taps_aff = None

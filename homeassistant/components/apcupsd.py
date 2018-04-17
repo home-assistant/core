@@ -13,7 +13,7 @@ from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['apcaccess==0.0.10']
+REQUIREMENTS = ['apcaccess==0.0.13']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class APCUPSdData(object):
     """
 
     def __init__(self, host, port):
-        """Initialize the data oject."""
+        """Initialize the data object."""
         from apcaccess import status
         self._host = host
         self._port = port

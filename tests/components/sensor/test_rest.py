@@ -1,4 +1,4 @@
-"""The tests for the REST switch platform."""
+"""The tests for the REST sensor platform."""
 import unittest
 from unittest.mock import patch, Mock
 
@@ -15,8 +15,8 @@ from homeassistant.helpers.config_validation import template
 from tests.common import get_test_home_assistant, assert_setup_component
 
 
-class TestRestSwitchSetup(unittest.TestCase):
-    """Tests for setting up the REST switch platform."""
+class TestRestSensorSetup(unittest.TestCase):
+    """Tests for setting up the REST sensor platform."""
 
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -45,18 +45,18 @@ class TestRestSwitchSetup(unittest.TestCase):
            side_effect=requests.exceptions.ConnectionError())
     def test_setup_failed_connect(self, mock_req):
         """Test setup when connection error occurs."""
-        self.assertFalse(rest.setup_platform(self.hass, {
+        self.assertTrue(rest.setup_platform(self.hass, {
             'platform': 'rest',
             'resource': 'http://localhost',
-        }, None))
+        }, lambda devices, update=True: None) is None)
 
     @patch('requests.Session.send', side_effect=Timeout())
     def test_setup_timeout(self, mock_req):
         """Test setup when connection timeout occurs."""
-        self.assertFalse(rest.setup_platform(self.hass, {
+        self.assertTrue(rest.setup_platform(self.hass, {
             'platform': 'rest',
             'resource': 'http://localhost',
-        }, None))
+        }, lambda devices, update=True: None) is None)
 
     @requests_mock.Mocker()
     def test_setup_minimum(self, mock_req):
@@ -132,10 +132,12 @@ class TestRestSensor(unittest.TestCase):
         self.unit_of_measurement = 'MB'
         self.value_template = template('{{ value_json.key }}')
         self.value_template.hass = self.hass
+        self.force_update = False
 
-        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement,
-                                      self.value_template)
+        self.sensor = rest.RestSensor(
+            self.hass, self.rest, self.name, self.unit_of_measurement,
+            self.value_template, [], self.force_update
+        )
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -151,19 +153,26 @@ class TestRestSensor(unittest.TestCase):
 
     def test_unit_of_measurement(self):
         """Test the unit of measurement."""
-        self.assertEqual(self.unit_of_measurement,
-                         self.sensor.unit_of_measurement)
+        self.assertEqual(
+            self.unit_of_measurement, self.sensor.unit_of_measurement)
+
+    def test_force_update(self):
+        """Test the unit of measurement."""
+        self.assertEqual(
+            self.force_update, self.sensor.force_update)
 
     def test_state(self):
         """Test the initial state."""
+        self.sensor.update()
         self.assertEqual(self.initial_state, self.sensor.state)
 
     def test_update_when_value_is_none(self):
         """Test state gets updated to unknown when sensor returns no data."""
-        self.rest.update = Mock('rest.RestData.update',
-                                side_effect=self.update_side_effect(None))
+        self.rest.update = Mock(
+            'rest.RestData.update', side_effect=self.update_side_effect(None))
         self.sensor.update()
         self.assertEqual(STATE_UNKNOWN, self.sensor.state)
+        self.assertFalse(self.sensor.available)
 
     def test_update_when_value_changed(self):
         """Test state gets updated when sensor returns a new status."""
@@ -172,6 +181,7 @@ class TestRestSensor(unittest.TestCase):
                                     '{ "key": "updated_state" }'))
         self.sensor.update()
         self.assertEqual('updated_state', self.sensor.state)
+        self.assertTrue(self.sensor.available)
 
     def test_update_with_no_template(self):
         """Test update when there is no value template."""
@@ -179,9 +189,78 @@ class TestRestSensor(unittest.TestCase):
                                 side_effect=self.update_side_effect(
                                     'plain_state'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement, None)
+                                      self.unit_of_measurement, None, [],
+                                      self.force_update)
         self.sensor.update()
         self.assertEqual('plain_state', self.sensor.state)
+        self.assertTrue(self.sensor.available)
+
+    def test_update_with_json_attrs(self):
+        """Test attributes get extracted from a JSON result."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(
+                                    '{ "key": "some_json_value" }'))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement, None, ['key'],
+                                      self.force_update)
+        self.sensor.update()
+        self.assertEqual('some_json_value',
+                         self.sensor.device_state_attributes['key'])
+
+    @patch('homeassistant.components.sensor.rest._LOGGER')
+    def test_update_with_json_attrs_no_data(self, mock_logger):
+        """Test attributes when no JSON result fetched."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(None))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement, None, ['key'],
+                                      self.force_update)
+        self.sensor.update()
+        self.assertEqual({}, self.sensor.device_state_attributes)
+        self.assertTrue(mock_logger.warning.called)
+
+    @patch('homeassistant.components.sensor.rest._LOGGER')
+    def test_update_with_json_attrs_not_dict(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(
+                                    '["list", "of", "things"]'))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement, None, ['key'],
+                                      self.force_update)
+        self.sensor.update()
+        self.assertEqual({}, self.sensor.device_state_attributes)
+        self.assertTrue(mock_logger.warning.called)
+
+    @patch('homeassistant.components.sensor.rest._LOGGER')
+    def test_update_with_json_attrs_bad_JSON(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(
+                                    'This is text rather than JSON data.'))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement, None, ['key'],
+                                      self.force_update)
+        self.sensor.update()
+        self.assertEqual({}, self.sensor.device_state_attributes)
+        self.assertTrue(mock_logger.warning.called)
+        self.assertTrue(mock_logger.debug.called)
+
+    def test_update_with_json_attrs_and_template(self):
+        """Test attributes get extracted from a JSON result."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(
+                                    '{ "key": "json_state_updated_value" }'))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement,
+                                      self.value_template, ['key'],
+                                      self.force_update)
+        self.sensor.update()
+
+        self.assertEqual('json_state_updated_value', self.sensor.state)
+        self.assertEqual('json_state_updated_value',
+                         self.sensor.device_state_attributes['key'],
+                         self.force_update)
 
 
 class TestRestData(unittest.TestCase):
@@ -192,8 +271,8 @@ class TestRestData(unittest.TestCase):
         self.method = "GET"
         self.resource = "http://localhost"
         self.verify_ssl = True
-        self.rest = rest.RestData(self.method, self.resource, None, None, None,
-                                  self.verify_ssl)
+        self.rest = rest.RestData(
+            self.method, self.resource, None, None, None, self.verify_ssl)
 
     @requests_mock.Mocker()
     def test_update(self, mock_req):

@@ -45,15 +45,14 @@ class BboxDeviceScanner(DeviceScanner):
 
         return [device.mac for device in self.last_results]
 
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        filter_named = [device.name for device in self.last_results if
-                        device.mac == mac]
+        filter_named = [result.name for result in self.last_results if
+                        result.mac == device]
 
         if filter_named:
             return filter_named[0]
-        else:
-            return None
+        return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):

@@ -6,8 +6,9 @@ https://home-assistant.io/components/climate.tado/
 """
 import logging
 
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.const import (PRECISION_TENTHS, TEMP_CELSIUS)
+from homeassistant.components.climate import (
+    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.components.tado import DATA_TADO
 
@@ -24,6 +25,17 @@ CONST_OVERLAY_MANUAL = 'MANUAL'
 # the temperature will be reset after a timespan
 CONST_OVERLAY_TIMER = 'TIMER'
 
+CONST_MODE_FAN_HIGH = 'HIGH'
+CONST_MODE_FAN_MIDDLE = 'MIDDLE'
+CONST_MODE_FAN_LOW = 'LOW'
+
+FAN_MODES_LIST = {
+    CONST_MODE_FAN_HIGH: 'High',
+    CONST_MODE_FAN_MIDDLE: 'Middle',
+    CONST_MODE_FAN_LOW: 'Low',
+    CONST_MODE_OFF: 'Off',
+}
+
 OPERATION_LIST = {
     CONST_OVERLAY_MANUAL: 'Manual',
     CONST_OVERLAY_TIMER: 'Timer',
@@ -31,6 +43,8 @@ OPERATION_LIST = {
     CONST_MODE_SMART_SCHEDULE: 'Smart schedule',
     CONST_MODE_OFF: 'Off',
 }
+
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -41,18 +55,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         zones = tado.get_zones()
     except RuntimeError:
         _LOGGER.error("Unable to get zone info from mytado")
-        return False
+        return
 
     climate_devices = []
     for zone in zones:
-        climate_devices.append(create_climate_device(
-            tado, hass, zone, zone['name'], zone['id']))
+        device = create_climate_device(
+            tado, hass, zone, zone['name'], zone['id'])
+        if not device:
+            continue
+        climate_devices.append(device)
 
     if climate_devices:
         add_devices(climate_devices, True)
-        return True
-    else:
-        return False
 
 
 def create_climate_device(tado, hass, zone, name, zone_id):
@@ -60,9 +74,18 @@ def create_climate_device(tado, hass, zone, name, zone_id):
     capabilities = tado.get_capabilities(zone_id)
 
     unit = TEMP_CELSIUS
-    min_temp = float(capabilities['temperatures']['celsius']['min'])
-    max_temp = float(capabilities['temperatures']['celsius']['max'])
-    ac_mode = capabilities['type'] != 'HEATING'
+    ac_mode = capabilities['type'] == 'AIR_CONDITIONING'
+
+    if ac_mode:
+        temperatures = capabilities['HEAT']['temperatures']
+    elif 'temperatures' in capabilities:
+        temperatures = capabilities['temperatures']
+    else:
+        _LOGGER.debug("Received zone %s has no temperature; not adding", name)
+        return
+
+    min_temp = float(temperatures['celsius']['min'])
+    max_temp = float(temperatures['celsius']['max'])
 
     data_id = 'zone {} {}'.format(name, zone_id)
     device = TadoClimate(tado,
@@ -107,9 +130,16 @@ class TadoClimate(ClimateDevice):
         self._max_temp = max_temp
         self._target_temp = None
         self._tolerance = tolerance
+        self._cooling = False
 
+        self._current_fan = CONST_MODE_OFF
         self._current_operation = CONST_MODE_SMART_SCHEDULE
         self._overlay_mode = CONST_MODE_SMART_SCHEDULE
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def name(self):
@@ -129,12 +159,28 @@ class TadoClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return current readable operation mode."""
+        if self._cooling:
+            return "Cooling"
         return OPERATION_LIST.get(self._current_operation)
 
     @property
     def operation_list(self):
         """Return the list of available operation modes (readable)."""
         return list(OPERATION_LIST.values())
+
+    @property
+    def current_fan_mode(self):
+        """Return the fan setting."""
+        if self.ac_mode:
+            return FAN_MODES_LIST.get(self._current_fan)
+        return None
+
+    @property
+    def fan_list(self):
+        """List of available fan modes."""
+        if self.ac_mode:
+            return list(FAN_MODES_LIST.values())
+        return None
 
     @property
     def temperature_unit(self):
@@ -145,6 +191,11 @@ class TadoClimate(ClimateDevice):
     def is_away_mode_on(self):
         """Return true if away mode is on."""
         return self._is_away
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        return PRECISION_TENTHS
 
     @property
     def target_temperature(self):
@@ -162,6 +213,7 @@ class TadoClimate(ClimateDevice):
         self._target_temp = temperature
         self._control_heating()
 
+    # pylint: disable=arguments-differ
     def set_operation_mode(self, readable_operation_mode):
         """Set new operation mode."""
         operation_mode = CONST_MODE_SMART_SCHEDULE
@@ -180,18 +232,16 @@ class TadoClimate(ClimateDevice):
         """Return the minimum temperature."""
         if self._min_temp:
             return self._min_temp
-        else:
-            # get default temp from super class
-            return super().min_temp
+        # get default temp from super class
+        return super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         if self._max_temp:
             return self._max_temp
-        else:
-            #  Get default temp from super class
-            return super().max_temp
+        #  Get default temp from super class
+        return super().max_temp
 
     def update(self):
         """Update the state of this climate device."""
@@ -200,32 +250,32 @@ class TadoClimate(ClimateDevice):
         data = self._store.get_data(self._data_id)
 
         if data is None:
-            _LOGGER.debug("Recieved no data for zone %s", self.zone_name)
+            _LOGGER.debug("Received no data for zone %s", self.zone_name)
             return
 
         if 'sensorDataPoints' in data:
             sensor_data = data['sensorDataPoints']
-            temperature = float(
-                sensor_data['insideTemperature']['celsius'])
-            humidity = float(
-                sensor_data['humidity']['percentage'])
-            setting = 0
+
+            unit = TEMP_CELSIUS
+
+            if 'insideTemperature' in sensor_data:
+                temperature = float(
+                    sensor_data['insideTemperature']['celsius'])
+                self._cur_temp = self.hass.config.units.temperature(
+                    temperature, unit)
+
+            if 'humidity' in sensor_data:
+                humidity = float(
+                    sensor_data['humidity']['percentage'])
+                self._cur_humidity = humidity
 
             # temperature setting will not exist when device is off
             if 'temperature' in data['setting'] and \
                     data['setting']['temperature'] is not None:
                 setting = float(
                     data['setting']['temperature']['celsius'])
-
-            unit = TEMP_CELSIUS
-
-            self._cur_temp = self.hass.config.units.temperature(
-                temperature, unit)
-
-            self._target_temp = self.hass.config.units.temperature(
-                setting, unit)
-
-            self._cur_humidity = humidity
+                self._target_temp = self.hass.config.units.temperature(
+                    setting, unit)
 
         if 'tadoMode' in data:
             mode = data['tadoMode']
@@ -235,29 +285,46 @@ class TadoClimate(ClimateDevice):
             power = data['setting']['power']
             if power == 'OFF':
                 self._current_operation = CONST_MODE_OFF
+                self._current_fan = CONST_MODE_OFF
+                # There is no overlay, the mode will always be
+                # "SMART_SCHEDULE"
+                self._overlay_mode = CONST_MODE_SMART_SCHEDULE
                 self._device_is_active = False
             else:
                 self._device_is_active = True
 
-        if 'overlay' in data and data['overlay'] is not None:
-            overlay = True
-            termination = data['overlay']['termination']['type']
-        else:
-            overlay = False
-            termination = ""
+        overlay = False
+        overlay_data = None
+        termination = CONST_MODE_SMART_SCHEDULE
+        cooling = False
+        fan_speed = CONST_MODE_OFF
 
-        # If you set mode manualy to off, there will be an overlay
-        # and a termination, but we want to see the mode "OFF"
+        if 'overlay' in data:
+            overlay_data = data['overlay']
+            overlay = overlay_data is not None
 
-        if overlay and self._device_is_active:
-            # There is an overlay the device is on
+        if overlay:
+            termination = overlay_data['termination']['type']
+
+            if 'setting' in overlay_data:
+                setting_data = overlay_data['setting']
+                setting = setting_data is not None
+
+            if setting:
+                if 'mode' in setting_data:
+                    cooling = setting_data['mode'] == 'COOL'
+
+                if 'fanSpeed' in setting_data:
+                    fan_speed = setting_data['fanSpeed']
+
+        if self._device_is_active:
+            # If you set mode manually to off, there will be an overlay
+            # and a termination, but we want to see the mode "OFF"
             self._overlay_mode = termination
             self._current_operation = termination
-        else:
-            # There is no overlay, the mode will always be
-            # "SMART_SCHEDULE"
-            self._overlay_mode = CONST_MODE_SMART_SCHEDULE
-            self._current_operation = CONST_MODE_SMART_SCHEDULE
+
+        self._cooling = cooling
+        self._current_fan = fan_speed
 
     def _control_heating(self):
         """Send new target temperature to mytado."""

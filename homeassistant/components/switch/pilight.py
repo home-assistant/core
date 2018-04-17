@@ -4,6 +4,7 @@ Support for switching devices via Pilight to on and off.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.pilight/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -12,14 +13,15 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.components.pilight as pilight
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_SWITCHES, CONF_STATE,
-                                 CONF_PROTOCOL)
+                                 CONF_PROTOCOL, STATE_ON)
+from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_OFF_CODE = 'off_code'
-CONF_OFF_CODE_RECIEVE = 'off_code_receive'
+CONF_OFF_CODE_RECEIVE = 'off_code_receive'
 CONF_ON_CODE = 'on_code'
-CONF_ON_CODE_RECIEVE = 'on_code_receive'
+CONF_ON_CODE_RECEIVE = 'on_code_receive'
 CONF_SYSTEMCODE = 'systemcode'
 CONF_UNIT = 'unit'
 CONF_UNITCODE = 'unitcode'
@@ -46,9 +48,9 @@ SWITCHES_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_CODE): COMMAND_SCHEMA,
     vol.Required(CONF_OFF_CODE): COMMAND_SCHEMA,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_OFF_CODE_RECIEVE, default=[]): vol.All(cv.ensure_list,
+    vol.Optional(CONF_OFF_CODE_RECEIVE, default=[]): vol.All(cv.ensure_list,
                                                              [COMMAND_SCHEMA]),
-    vol.Optional(CONF_ON_CODE_RECIEVE, default=[]): vol.All(cv.ensure_list,
+    vol.Optional(CONF_ON_CODE_RECEIVE, default=[]): vol.All(cv.ensure_list,
                                                             [COMMAND_SCHEMA])
 })
 
@@ -70,8 +72,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 properties.get(CONF_NAME, dev_name),
                 properties.get(CONF_ON_CODE),
                 properties.get(CONF_OFF_CODE),
-                properties.get(CONF_ON_CODE_RECIEVE),
-                properties.get(CONF_OFF_CODE_RECIEVE)
+                properties.get(CONF_ON_CODE_RECEIVE),
+                properties.get(CONF_OFF_CODE_RECEIVE)
             )
         )
 
@@ -120,6 +122,13 @@ class PilightSwitch(SwitchDevice):
         if any(self._code_on_receive) or any(self._code_off_receive):
             hass.bus.listen(pilight.EVENT, self._handle_code)
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Call when entity about to be added to hass."""
+        state = yield from async_get_last_state(self._hass, self.entity_id)
+        if state:
+            self._state = state.state == STATE_ON
+
     @property
     def name(self):
         """Get the name of the switch."""
@@ -129,6 +138,11 @@ class PilightSwitch(SwitchDevice):
     def should_poll(self):
         """No polling needed, state set when correct code is received."""
         return False
+
+    @property
+    def assumed_state(self):
+        """Return True if unable to access real state of the entity."""
+        return True
 
     @property
     def is_on(self):
@@ -174,10 +188,10 @@ class PilightSwitch(SwitchDevice):
         self._state = turn_on
         self.schedule_update_ha_state()
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the switch on by calling pilight.send service with on code."""
         self.set_state(turn_on=True)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch on by calling pilight.send service with off code."""
         self.set_state(turn_on=False)

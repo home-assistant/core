@@ -130,25 +130,6 @@ class TestAutomationState(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
-    def test_if_fires_on_entity_change_with_state_filter(self):
-        """Test for firing on entity change with state filter."""
-        assert setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'state',
-                    'entity_id': 'test.entity',
-                    'state': 'world'
-                },
-                'action': {
-                    'service': 'test.automation'
-                }
-            }
-        })
-
-        self.hass.states.set('test.entity', 'world')
-        self.hass.block_till_done()
-        self.assertEqual(1, len(self.calls))
-
     def test_if_fires_on_entity_change_with_both_filters(self):
         """Test for firing if both filters are a non match."""
         assert setup_component(self.hass, automation.DOMAIN, {
@@ -217,7 +198,7 @@ class TestAutomationState(unittest.TestCase):
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'state',
-                    'entity_id': 'test.anoter_entity',
+                    'entity_id': 'test.another_entity',
                 },
                 'action': {
                     'service': 'test.automation'
@@ -353,6 +334,47 @@ class TestAutomationState(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
+    def test_if_not_fires_on_entities_change_with_for_after_stop(self):
+        """Test for not firing on entity change with for after stop trigger."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'state',
+                    'entity_id': [
+                        'test.entity_1',
+                        'test.entity_2',
+                    ],
+                    'to': 'world',
+                    'for': {
+                        'seconds': 5
+                    },
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        })
+
+        self.hass.states.set('test.entity_1', 'world')
+        self.hass.states.set('test.entity_2', 'world')
+        self.hass.block_till_done()
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(self.calls))
+
+        self.hass.states.set('test.entity_1', 'world_no')
+        self.hass.states.set('test.entity_2', 'world_no')
+        self.hass.block_till_done()
+        self.hass.states.set('test.entity_1', 'world')
+        self.hass.states.set('test.entity_2', 'world')
+        self.hass.block_till_done()
+        automation.turn_off(self.hass)
+        self.hass.block_till_done()
+
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))
+        self.hass.block_till_done()
+        self.assertEqual(2, len(self.calls))
+
     def test_if_fires_on_entity_change_with_for_attribute_change(self):
         """Test for firing on entity change with for and attribute change."""
         assert setup_component(self.hass, automation.DOMAIN, {
@@ -387,6 +409,40 @@ class TestAutomationState(unittest.TestCase):
             self.hass.block_till_done()
             self.assertEqual(1, len(self.calls))
 
+    def test_if_fires_on_entity_change_with_for_multiple_force_update(self):
+        """Test for firing on entity change with for and force update."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'state',
+                    'entity_id': 'test.force_entity',
+                    'to': 'world',
+                    'for': {
+                        'seconds': 5
+                    },
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        })
+
+        utcnow = dt_util.utcnow()
+        with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
+            mock_utcnow.return_value = utcnow
+            self.hass.states.set('test.force_entity', 'world', None, True)
+            self.hass.block_till_done()
+            for _ in range(0, 4):
+                mock_utcnow.return_value += timedelta(seconds=1)
+                fire_time_changed(self.hass, mock_utcnow.return_value)
+                self.hass.states.set('test.force_entity', 'world', None, True)
+                self.hass.block_till_done()
+            self.assertEqual(0, len(self.calls))
+            mock_utcnow.return_value += timedelta(seconds=4)
+            fire_time_changed(self.hass, mock_utcnow.return_value)
+            self.hass.block_till_done()
+            self.assertEqual(1, len(self.calls))
+
     def test_if_fires_on_entity_change_with_for(self):
         """Test for firing on entity change with for."""
         assert setup_component(self.hass, automation.DOMAIN, {
@@ -412,7 +468,7 @@ class TestAutomationState(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_for_condition(self):
-        """Test for firing if contition is on."""
+        """Test for firing if condition is on."""
         point1 = dt_util.utcnow()
         point2 = point1 + timedelta(seconds=10)
         with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
@@ -448,7 +504,7 @@ class TestAutomationState(unittest.TestCase):
             self.assertEqual(1, len(self.calls))
 
     def test_if_fires_on_for_condition_attribute_change(self):
-        """Test for firing if contition is on with attribute change."""
+        """Test for firing if condition is on with attribute change."""
         point1 = dt_util.utcnow()
         point2 = point1 + timedelta(seconds=4)
         point3 = point1 + timedelta(seconds=8)
@@ -525,3 +581,38 @@ class TestAutomationState(unittest.TestCase):
                     },
                     'action': {'service': 'test.automation'},
                 }})
+
+    def test_wait_template_with_trigger(self):
+        """Test using wait template with 'trigger.entity_id'."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'state',
+                    'entity_id': 'test.entity',
+                    'to': 'world',
+                },
+                'action': [
+                    {'wait_template':
+                        "{{ is_state(trigger.entity_id, 'hello') }}"},
+                    {'service': 'test.automation',
+                     'data_template': {
+                        'some':
+                        '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
+                            'platform', 'entity_id', 'from_state.state',
+                            'to_state.state'))
+                        }}
+                ],
+            }
+        })
+
+        self.hass.block_till_done()
+        self.calls = []
+
+        self.hass.states.set('test.entity', 'world')
+        self.hass.block_till_done()
+        self.hass.states.set('test.entity', 'hello')
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual(
+            'state - test.entity - hello - world',
+            self.calls[0].data['some'])

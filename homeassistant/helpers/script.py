@@ -1,5 +1,5 @@
 """Helpers to execute scripts."""
-import asyncio
+
 import logging
 from itertools import islice
 from typing import Optional, Sequence
@@ -8,13 +8,15 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import CONF_CONDITION, CONF_TIMEOUT
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
-    service, condition, template, config_validation as cv)
+    service, condition, template as template,
+    config_validation as cv)
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_template)
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as date_util
-from homeassistant.util.async import (
+from homeassistant.util.async_ import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,12 +27,13 @@ CONF_SERVICE_DATA = 'data'
 CONF_SEQUENCE = 'sequence'
 CONF_EVENT = 'event'
 CONF_EVENT_DATA = 'event_data'
+CONF_EVENT_DATA_TEMPLATE = 'event_data_template'
 CONF_DELAY = 'delay'
 CONF_WAIT_TEMPLATE = 'wait_template'
 
 
 def call_from_config(hass: HomeAssistant, config: ConfigType,
-                     variables: Optional[Sequence]=None) -> None:
+                     variables: Optional[Sequence] = None) -> None:
     """Call a script based on a config entry."""
     Script(hass, cv.SCRIPT_SCHEMA(config)).run(variables)
 
@@ -38,7 +41,7 @@ def call_from_config(hass: HomeAssistant, config: ConfigType,
 class Script():
     """Representation of a script."""
 
-    def __init__(self, hass: HomeAssistant, sequence, name: str=None,
+    def __init__(self, hass: HomeAssistant, sequence, name: str = None,
                  change_listener=None) -> None:
         """Initialize the script."""
         self.hass = hass
@@ -65,8 +68,7 @@ class Script():
         run_coroutine_threadsafe(
             self.async_run(variables), self.hass.loop).result()
 
-    @asyncio.coroutine
-    def async_run(self, variables: Optional[Sequence]=None) -> None:
+    async def async_run(self, variables: Optional[Sequence] = None) -> None:
         """Run script.
 
         This method is a coroutine.
@@ -95,11 +97,16 @@ class Script():
 
                 delay = action[CONF_DELAY]
 
-                if isinstance(delay, template.Template):
-                    delay = vol.All(
-                        cv.time_period,
-                        cv.positive_timedelta)(
-                            delay.async_render(variables))
+                try:
+                    if isinstance(delay, template.Template):
+                        delay = vol.All(
+                            cv.time_period,
+                            cv.positive_timedelta)(
+                                delay.async_render(variables))
+                except (TemplateError, vol.Invalid) as ex:
+                    _LOGGER.error("Error rendering '%s' delay template: %s",
+                                  self.name, ex)
+                    break
 
                 unsub = async_track_point_in_utc_time(
                     self.hass, async_script_delay,
@@ -117,7 +124,7 @@ class Script():
                 wait_template = action[CONF_WAIT_TEMPLATE]
                 wait_template.hass = self.hass
 
-                # check if condition allready okay
+                # check if condition already okay
                 if condition.async_template(
                         self.hass, wait_template, variables):
                     continue
@@ -129,7 +136,7 @@ class Script():
                     self.hass.async_add_job(self.async_run(variables))
 
                 self._async_listener.append(async_track_template(
-                    self.hass, wait_template, async_script_wait))
+                    self.hass, wait_template, async_script_wait, variables))
 
                 self._cur = cur + 1
                 if self._change_listener:
@@ -145,10 +152,10 @@ class Script():
                     break
 
             elif CONF_EVENT in action:
-                self._async_fire_event(action)
+                self._async_fire_event(action, variables)
 
             else:
-                yield from self._async_call_service(action, variables)
+                await self._async_call_service(action, variables)
 
         self._cur = -1
         self.last_action = None
@@ -169,23 +176,30 @@ class Script():
         if self._change_listener:
             self.hass.async_add_job(self._change_listener)
 
-    @asyncio.coroutine
-    def _async_call_service(self, action, variables):
+    async def _async_call_service(self, action, variables):
         """Call the service specified in the action.
 
         This method is a coroutine.
         """
         self.last_action = action.get(CONF_ALIAS, 'call service')
         self._log("Executing step %s" % self.last_action)
-        yield from service.async_call_from_config(
+        await service.async_call_from_config(
             self.hass, action, True, variables, validate_config=False)
 
-    def _async_fire_event(self, action):
+    def _async_fire_event(self, action, variables):
         """Fire an event."""
         self.last_action = action.get(CONF_ALIAS, action[CONF_EVENT])
         self._log("Executing step %s" % self.last_action)
+        event_data = dict(action.get(CONF_EVENT_DATA, {}))
+        if CONF_EVENT_DATA_TEMPLATE in action:
+            try:
+                event_data.update(template.render_complex(
+                    action[CONF_EVENT_DATA_TEMPLATE], variables))
+            except TemplateError as ex:
+                _LOGGER.error('Error rendering event data template: %s', ex)
+
         self.hass.bus.async_fire(action[CONF_EVENT],
-                                 action.get(CONF_EVENT_DATA))
+                                 event_data)
 
     def _async_check_condition(self, action, variables):
         """Test if condition is matching."""
@@ -209,7 +223,7 @@ class Script():
         def async_script_timeout(now):
             """Call after timeout is retrieve stop script."""
             self._async_listener.remove(unsub)
-            self._log("Timout reach, abort script.")
+            self._log("Timeout reached, abort script.")
             self.async_stop()
 
         unsub = async_track_point_in_utc_time(

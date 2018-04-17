@@ -12,17 +12,19 @@ import voluptuous as vol
 from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_RGB_COLOR,
-    ATTR_WHITE_VALUE, ATTR_XY_COLOR, Light, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_RGB_COLOR,
-    SUPPORT_WHITE_VALUE, SUPPORT_XY_COLOR)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR,
+    ATTR_WHITE_VALUE, Light, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT, SUPPORT_COLOR, SUPPORT_WHITE_VALUE)
 from homeassistant.const import (
     CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT, CONF_NAME,
     CONF_OPTIMISTIC, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON,
     CONF_RGB, CONF_STATE, CONF_VALUE_TEMPLATE, CONF_WHITE_VALUE, CONF_XY)
 from homeassistant.components.mqtt import (
-    CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC)
+    CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
+    MqttAvailability)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +41,7 @@ CONF_EFFECT_COMMAND_TOPIC = 'effect_command_topic'
 CONF_EFFECT_LIST = 'effect_list'
 CONF_EFFECT_STATE_TOPIC = 'effect_state_topic'
 CONF_EFFECT_VALUE_TEMPLATE = 'effect_value_template'
+CONF_RGB_COMMAND_TEMPLATE = 'rgb_command_template'
 CONF_RGB_COMMAND_TOPIC = 'rgb_command_topic'
 CONF_RGB_STATE_TOPIC = 'rgb_state_topic'
 CONF_RGB_VALUE_TEMPLATE = 'rgb_value_template'
@@ -50,6 +53,7 @@ CONF_WHITE_VALUE_COMMAND_TOPIC = 'white_value_command_topic'
 CONF_WHITE_VALUE_SCALE = 'white_value_scale'
 CONF_WHITE_VALUE_STATE_TOPIC = 'white_value_state_topic'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
+CONF_ON_COMMAND_TYPE = 'on_command_type'
 
 DEFAULT_BRIGHTNESS_SCALE = 255
 DEFAULT_NAME = 'MQTT Light'
@@ -57,6 +61,9 @@ DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_WHITE_VALUE_SCALE = 255
+DEFAULT_ON_COMMAND_TYPE = 'last'
+
+VALUES_ON_COMMAND_TYPE = ['first', 'last', 'brightness']
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -75,6 +82,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+    vol.Optional(CONF_RGB_COMMAND_TEMPLATE): cv.template,
     vol.Optional(CONF_RGB_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_RGB_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_RGB_VALUE_TEMPLATE): cv.template,
@@ -87,7 +95,9 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_XY_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_XY_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
-})
+    vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE):
+        vol.In(VALUES_ON_COMMAND_TYPE),
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 @asyncio.coroutine
@@ -125,6 +135,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             CONF_COLOR_TEMP: config.get(CONF_COLOR_TEMP_VALUE_TEMPLATE),
             CONF_EFFECT: config.get(CONF_EFFECT_VALUE_TEMPLATE),
             CONF_RGB: config.get(CONF_RGB_VALUE_TEMPLATE),
+            CONF_RGB_COMMAND_TEMPLATE: config.get(CONF_RGB_COMMAND_TEMPLATE),
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
             CONF_WHITE_VALUE: config.get(CONF_WHITE_VALUE_TEMPLATE),
             CONF_XY: config.get(CONF_XY_VALUE_TEMPLATE),
@@ -138,16 +149,23 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_OPTIMISTIC),
         config.get(CONF_BRIGHTNESS_SCALE),
         config.get(CONF_WHITE_VALUE_SCALE),
+        config.get(CONF_ON_COMMAND_TYPE),
+        config.get(CONF_AVAILABILITY_TOPIC),
+        config.get(CONF_PAYLOAD_AVAILABLE),
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
     )])
 
 
-class MqttLight(Light):
+class MqttLight(MqttAvailability, Light):
     """Representation of a MQTT light."""
 
     def __init__(self, name, effect_list, topic, templates, qos,
                  retain, payload, optimistic, brightness_scale,
-                 white_value_scale):
+                 white_value_scale, on_command_type, availability_topic,
+                 payload_available, payload_not_available):
         """Initialize MQTT light."""
+        super().__init__(availability_topic, qos, payload_available,
+                         payload_not_available)
         self._name = name
         self._effect_list = effect_list
         self._topic = topic
@@ -170,16 +188,16 @@ class MqttLight(Light):
             optimistic or topic[CONF_XY_STATE_TOPIC] is None
         self._brightness_scale = brightness_scale
         self._white_value_scale = white_value_scale
+        self._on_command_type = on_command_type
         self._state = False
         self._brightness = None
-        self._rgb = None
+        self._hs = None
         self._color_temp = None
         self._effect = None
         self._white_value = None
-        self._xy = None
         self._supported_features = 0
         self._supported_features |= (
-            topic[CONF_RGB_COMMAND_TOPIC] is not None and SUPPORT_RGB_COLOR)
+            topic[CONF_RGB_COMMAND_TOPIC] is not None and SUPPORT_COLOR)
         self._supported_features |= (
             topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None and
             SUPPORT_BRIGHTNESS)
@@ -193,14 +211,13 @@ class MqttLight(Light):
             topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None and
             SUPPORT_WHITE_VALUE)
         self._supported_features |= (
-            topic[CONF_XY_COMMAND_TOPIC] is not None and SUPPORT_XY_COLOR)
+            topic[CONF_XY_COMMAND_TOPIC] is not None and SUPPORT_COLOR)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe to MQTT events.
+        """Subscribe to MQTT events."""
+        yield from super().async_added_to_hass()
 
-        This method is a coroutine.
-        """
         templates = {}
         for key, tpl in list(self._templates.items()):
             if tpl is None:
@@ -217,7 +234,7 @@ class MqttLight(Light):
                 self._state = True
             elif payload == self._payload['off']:
                 self._state = False
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -230,7 +247,7 @@ class MqttLight(Light):
             device_value = float(templates[CONF_BRIGHTNESS](payload))
             percent_bright = device_value / self._brightness_scale
             self._brightness = int(percent_bright * 255)
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -245,25 +262,24 @@ class MqttLight(Light):
         @callback
         def rgb_received(topic, payload, qos):
             """Handle new MQTT messages for RGB."""
-            self._rgb = [int(val) for val in
-                         templates[CONF_RGB](payload).split(',')]
-            self.hass.async_add_job(self.async_update_ha_state())
+            rgb = [int(val) for val in
+                   templates[CONF_RGB](payload).split(',')]
+            self._hs = color_util.color_RGB_to_hs(*rgb)
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_RGB_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
                 self.hass, self._topic[CONF_RGB_STATE_TOPIC], rgb_received,
                 self._qos)
-            self._rgb = [255, 255, 255]
+            self._hs = (0, 0)
         if self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
-            self._rgb = [255, 255, 255]
-        else:
-            self._rgb = None
+            self._hs = (0, 0)
 
         @callback
         def color_temp_received(topic, payload, qos):
             """Handle new MQTT messages for color temperature."""
             self._color_temp = int(templates[CONF_COLOR_TEMP](payload))
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_COLOR_TEMP_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -279,7 +295,7 @@ class MqttLight(Light):
         def effect_received(topic, payload, qos):
             """Handle new MQTT messages for effect."""
             self._effect = templates[CONF_EFFECT](payload)
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_EFFECT_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -297,7 +313,7 @@ class MqttLight(Light):
             device_value = float(templates[CONF_WHITE_VALUE](payload))
             percent_white = device_value / self._white_value_scale
             self._white_value = int(percent_white * 255)
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_WHITE_VALUE_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
@@ -312,19 +328,18 @@ class MqttLight(Light):
         @callback
         def xy_received(topic, payload, qos):
             """Handle new MQTT messages for  color."""
-            self._xy = [float(val) for val in
+            xy_color = [float(val) for val in
                         templates[CONF_XY](payload).split(',')]
-            self.hass.async_add_job(self.async_update_ha_state())
+            self._hs = color_util.color_xy_to_hs(*xy_color)
+            self.async_schedule_update_ha_state()
 
         if self._topic[CONF_XY_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
                 self.hass, self._topic[CONF_XY_STATE_TOPIC], xy_received,
                 self._qos)
-            self._xy = [1, 1]
+            self._hs = (0, 0)
         if self._topic[CONF_XY_COMMAND_TOPIC] is not None:
-            self._xy = [1, 1]
-        else:
-            self._xy = None
+            self._hs = (0, 0)
 
     @property
     def brightness(self):
@@ -332,9 +347,9 @@ class MqttLight(Light):
         return self._brightness
 
     @property
-    def rgb_color(self):
-        """Return the RGB color value."""
-        return self._rgb
+    def hs_color(self):
+        """Return the hs color value."""
+        return self._hs
 
     @property
     def color_temp(self):
@@ -345,11 +360,6 @@ class MqttLight(Light):
     def white_value(self):
         """Return the white property."""
         return self._white_value
-
-    @property
-    def xy_color(self):
-        """Return the RGB color value."""
-        return self._xy
 
     @property
     def should_poll(self):
@@ -394,16 +404,57 @@ class MqttLight(Light):
         """
         should_update = False
 
-        if ATTR_RGB_COLOR in kwargs and \
+        if self._on_command_type == 'first':
+            mqtt.async_publish(
+                self.hass, self._topic[CONF_COMMAND_TOPIC],
+                self._payload['on'], self._qos, self._retain)
+            should_update = True
+
+        # If brightness is being used instead of an on command, make sure
+        # there is a brightness input.  Either set the brightness to our
+        # saved value or the maximum value if this is the first call
+        elif self._on_command_type == 'brightness':
+            if ATTR_BRIGHTNESS not in kwargs:
+                kwargs[ATTR_BRIGHTNESS] = self._brightness if \
+                                          self._brightness else 255
+
+        if ATTR_HS_COLOR in kwargs and \
            self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
+
+            hs_color = kwargs[ATTR_HS_COLOR]
+            brightness = kwargs.get(
+                ATTR_BRIGHTNESS, self._brightness if self._brightness else 255)
+            rgb = color_util.color_hsv_to_RGB(
+                hs_color[0], hs_color[1], brightness / 255 * 100)
+            tpl = self._templates[CONF_RGB_COMMAND_TEMPLATE]
+            if tpl:
+                rgb_color_str = tpl.async_render({
+                    'red': rgb[0],
+                    'green': rgb[1],
+                    'blue': rgb[2],
+                })
+            else:
+                rgb_color_str = '{},{},{}'.format(*rgb)
 
             mqtt.async_publish(
                 self.hass, self._topic[CONF_RGB_COMMAND_TOPIC],
-                '{},{},{}'.format(*kwargs[ATTR_RGB_COLOR]), self._qos,
-                self._retain)
+                rgb_color_str, self._qos, self._retain)
 
             if self._optimistic_rgb:
-                self._rgb = kwargs[ATTR_RGB_COLOR]
+                self._hs = kwargs[ATTR_HS_COLOR]
+                should_update = True
+
+        if ATTR_HS_COLOR in kwargs and \
+           self._topic[CONF_XY_COMMAND_TOPIC] is not None:
+
+            xy_color = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
+            mqtt.async_publish(
+                self.hass, self._topic[CONF_XY_COMMAND_TOPIC],
+                '{},{}'.format(*xy_color), self._qos,
+                self._retain)
+
+            if self._optimistic_xy:
+                self._hs = kwargs[ATTR_HS_COLOR]
                 should_update = True
 
         if ATTR_BRIGHTNESS in kwargs and \
@@ -424,6 +475,7 @@ class MqttLight(Light):
             mqtt.async_publish(
                 self.hass, self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC],
                 color_temp, self._qos, self._retain)
+
             if self._optimistic_color_temp:
                 self._color_temp = kwargs[ATTR_COLOR_TEMP]
                 should_update = True
@@ -435,6 +487,7 @@ class MqttLight(Light):
                 mqtt.async_publish(
                     self.hass, self._topic[CONF_EFFECT_COMMAND_TOPIC],
                     effect, self._qos, self._retain)
+
                 if self._optimistic_effect:
                     self._effect = kwargs[ATTR_EFFECT]
                     should_update = True
@@ -451,21 +504,10 @@ class MqttLight(Light):
                 self._white_value = kwargs[ATTR_WHITE_VALUE]
                 should_update = True
 
-        if ATTR_XY_COLOR in kwargs and \
-           self._topic[CONF_XY_COMMAND_TOPIC] is not None:
-
-            mqtt.async_publish(
-                self.hass, self._topic[CONF_XY_COMMAND_TOPIC],
-                '{},{}'.format(*kwargs[ATTR_XY_COLOR]), self._qos,
-                self._retain)
-
-            if self._optimistic_xy:
-                self._xy = kwargs[ATTR_XY_COLOR]
-                should_update = True
-
-        mqtt.async_publish(
-            self.hass, self._topic[CONF_COMMAND_TOPIC], self._payload['on'],
-            self._qos, self._retain)
+        if self._on_command_type == 'last':
+            mqtt.async_publish(self.hass, self._topic[CONF_COMMAND_TOPIC],
+                               self._payload['on'], self._qos, self._retain)
+            should_update = True
 
         if self._optimistic:
             # Optimistically assume that switch has changed state.
@@ -473,7 +515,7 @@ class MqttLight(Light):
             should_update = True
 
         if should_update:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
@@ -488,4 +530,4 @@ class MqttLight(Light):
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()

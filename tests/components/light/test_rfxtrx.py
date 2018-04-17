@@ -248,7 +248,7 @@ class TestLightRfxtrx(unittest.TestCase):
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         self.assertEqual(2, len(rfxtrx_core.RFX_DEVICES))
 
-        # trying to add a swicth
+        # trying to add a switch
         event = rfxtrx_core.get_rfx_object('0b1100100118cdea02010f70')
         event.data = bytearray([0x0b, 0x11, 0x00, 0x10, 0x01, 0x18,
                                 0xcd, 0xea, 0x01, 0x01, 0x0f, 0x70])

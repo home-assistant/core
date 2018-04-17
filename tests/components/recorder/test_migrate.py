@@ -25,7 +25,7 @@ def create_engine_test(*args, **kwargs):
 
 @asyncio.coroutine
 def test_schema_update_calls(hass):
-    """Test that schema migrations occurr in correct order."""
+    """Test that schema migrations occur in correct order."""
     with patch('sqlalchemy.create_engine', new=create_engine_test), \
         patch('homeassistant.components.recorder.migration._apply_update') as \
             update:
@@ -37,7 +37,7 @@ def test_schema_update_calls(hass):
         yield from wait_connection_ready(hass)
 
     update.assert_has_calls([
-        call(hass.data[DATA_INSTANCE].engine, version+1) for version
+        call(hass.data[DATA_INSTANCE].engine, version+1, 0) for version
         in range(0, SCHEMA_VERSION)])
 
 
@@ -64,4 +64,4 @@ def test_schema_migrate(hass):
 def test_invalid_update():
     """Test that an invalid new version raises an exception."""
     with pytest.raises(ValueError):
-        migration._apply_update(None, -1)
+        migration._apply_update(None, -1, 0)

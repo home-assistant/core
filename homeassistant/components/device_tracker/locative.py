@@ -94,21 +94,20 @@ class LocativeView(HomeAssistantView):
                     partial(self.see, dev_id=device,
                             location_name=location_name, gps=gps_location))
                 return 'Setting location to not home'
-            else:
-                # Ignore the message if it is telling us to exit a zone that we
-                # aren't currently in. This occurs when a zone is entered
-                # before the previous zone was exited. The enter message will
-                # be sent first, then the exit message will be sent second.
-                return 'Ignoring exit from {} (already in {})'.format(
-                    location_name, current_state)
+
+            # Ignore the message if it is telling us to exit a zone that we
+            # aren't currently in. This occurs when a zone is entered
+            # before the previous zone was exited. The enter message will
+            # be sent first, then the exit message will be sent second.
+            return 'Ignoring exit from {} (already in {})'.format(
+                location_name, current_state)
 
         elif direction == 'test':
             # In the app, a test message can be sent. Just return something to
             # the user to let them know that it works.
             return 'Received test message.'
 
-        else:
-            _LOGGER.error('Received unidentified message from Locative: %s',
-                          direction)
-            return ('Received unidentified message: {}'.format(direction),
-                    HTTP_UNPROCESSABLE_ENTITY)
+        _LOGGER.error('Received unidentified message from Locative: %s',
+                      direction)
+        return ('Received unidentified message: {}'.format(direction),
+                HTTP_UNPROCESSABLE_ENTITY)

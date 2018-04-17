@@ -31,20 +31,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 @asyncio.coroutine
 def make_sensor(discovery_info):
     """Create ZHA sensors factory."""
-    from bellows.zigbee import zcl
-    if isinstance(discovery_info['clusters'][0],
-                  zcl.clusters.measurement.TemperatureMeasurement):
+    from zigpy.zcl.clusters.measurement import (
+        RelativeHumidity, TemperatureMeasurement
+    )
+    in_clusters = discovery_info['in_clusters']
+    if RelativeHumidity.cluster_id in in_clusters:
+        sensor = RelativeHumiditySensor(**discovery_info)
+    elif TemperatureMeasurement.cluster_id in in_clusters:
         sensor = TemperatureSensor(**discovery_info)
     else:
         sensor = Sensor(**discovery_info)
 
-    clusters = discovery_info['clusters']
-    attr = sensor.value_attribute
     if discovery_info['new_join']:
-        cluster = clusters[0]
+        cluster = list(in_clusters.values())[0]
         yield from cluster.bind()
         yield from cluster.configure_reporting(
-            attr, 300, 600, sensor.min_reportable_change,
+            sensor.value_attribute, 300, 600, sensor.min_reportable_change,
         )
 
     return sensor
@@ -56,10 +58,6 @@ class Sensor(zha.Entity):
     _domain = DOMAIN
     value_attribute = 0
     min_reportable_change = 1
-
-    def __init__(self, **kwargs):
-        """Initialize ZHA sensor."""
-        super().__init__(**kwargs)
 
     @property
     def state(self) -> str:
@@ -83,7 +81,7 @@ class TemperatureSensor(Sensor):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement of this entityy."""
+        """Return the unit of measurement of this entity."""
         return self.hass.config.units.temperature_unit
 
     @property
@@ -94,3 +92,22 @@ class TemperatureSensor(Sensor):
         celsius = round(float(self._state) / 100, 1)
         return convert_temperature(
             celsius, TEMP_CELSIUS, self.unit_of_measurement)
+
+
+class RelativeHumiditySensor(Sensor):
+    """ZHA relative humidity sensor."""
+
+    min_reportable_change = 50  # 0.5%
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return '%'
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        if self._state == 'unknown':
+            return 'unknown'
+
+        return round(float(self._state) / 100, 1)

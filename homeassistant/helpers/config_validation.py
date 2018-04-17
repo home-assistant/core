@@ -1,9 +1,12 @@
 """Helpers for config validation using voluptuous."""
-from datetime import timedelta, datetime as datetime_sys
+from datetime import (timedelta, datetime as datetime_sys,
+                      time as time_sys, date as date_sys)
 import os
 import re
 from urllib.parse import urlparse
 from socket import _GLOBAL_DEFAULT_TIMEOUT
+import logging
+import inspect
 
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
@@ -15,7 +18,7 @@ from homeassistant.const import (
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
-from homeassistant.core import valid_entity_id
+from homeassistant.core import valid_entity_id, split_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
 from homeassistant.util import slugify as util_slugify
@@ -33,6 +36,7 @@ latitude = vol.All(vol.Coerce(float), vol.Range(min=-90, max=90),
                    msg='invalid latitude')
 longitude = vol.All(vol.Coerce(float), vol.Range(min=-180, max=180),
                     msg='invalid longitude')
+gps = vol.ExactSequence([latitude, longitude])
 sun_event = vol.All(vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE))
 port = vol.All(vol.Coerce(int), vol.Range(min=1, max=65535))
 
@@ -53,6 +57,21 @@ def has_at_least_one_key(*keys: str) -> Callable:
             if k in keys:
                 return obj
         raise vol.Invalid('must contain one of {}.'.format(', '.join(keys)))
+
+    return validate
+
+
+def has_at_least_one_key_value(*items: list) -> Callable:
+    """Validate that at least one (key, value) pair exists."""
+    def validate(obj: Dict) -> Dict:
+        """Test (key,value) exist in dict."""
+        if not isinstance(obj, dict):
+            raise vol.Invalid('expected dictionary')
+
+        for item in obj.items():
+            if item in items:
+                return obj
+        raise vol.Invalid('must contain one of {}.'.format(str(items)))
 
     return validate
 
@@ -91,6 +110,19 @@ def isfile(value: Any) -> str:
     return file_in
 
 
+def isdir(value: Any) -> str:
+    """Validate that the value is an existing dir."""
+    if value is None:
+        raise vol.Invalid('not a directory')
+    dir_in = os.path.expanduser(str(value))
+
+    if not os.path.isdir(dir_in):
+        raise vol.Invalid('not a directory')
+    if not os.access(dir_in, os.R_OK):
+        raise vol.Invalid('directory not readable')
+    return dir_in
+
+
 def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
     """Wrap value in list if it is not one."""
     if value is None:
@@ -114,6 +146,29 @@ def entity_ids(value: Union[str, Sequence]) -> Sequence[str]:
         value = [ent_id.strip() for ent_id in value.split(',')]
 
     return [entity_id(ent_id) for ent_id in value]
+
+
+def entity_domain(domain: str):
+    """Validate that entity belong to domain."""
+    def validate(value: Any) -> str:
+        """Test if entity domain is domain."""
+        ent_domain = entities_domain(domain)
+        return ent_domain(value)[0]
+    return validate
+
+
+def entities_domain(domain: str):
+    """Validate that entities belong to domain."""
+    def validate(values: Union[str, Sequence]) -> Sequence[str]:
+        """Test if entity domain is domain."""
+        values = entity_ids(values)
+        for ent_id in values:
+            if split_entity_id(ent_id)[0] != domain:
+                raise vol.Invalid(
+                    "Entity ID '{}' does not belong to domain '{}'"
+                    .format(ent_id, domain))
+        return values
+    return validate
 
 
 def enum(enumClass):
@@ -142,6 +197,38 @@ time_period_dict = vol.All(
     has_at_least_one_key('days', 'hours', 'minutes',
                          'seconds', 'milliseconds'),
     lambda value: timedelta(**value))
+
+
+def time(value) -> time_sys:
+    """Validate and transform a time."""
+    if isinstance(value, time_sys):
+        return value
+
+    try:
+        time_val = dt_util.parse_time(value)
+    except TypeError:
+        raise vol.Invalid('Not a parseable type')
+
+    if time_val is None:
+        raise vol.Invalid('Invalid time specified: {}'.format(value))
+
+    return time_val
+
+
+def date(value) -> date_sys:
+    """Validate and transform a date."""
+    if isinstance(value, date_sys):
+        return value
+
+    try:
+        date_val = dt_util.parse_date(value)
+    except TypeError:
+        raise vol.Invalid('Not a parseable type')
+
+    if date_val is None:
+        raise vol.Invalid("Could not parse date")
+
+    return date_val
 
 
 def time_period_str(value: str) -> timedelta:
@@ -297,16 +384,6 @@ def template_complex(value):
     return template(value)
 
 
-def time(value):
-    """Validate time."""
-    time_val = dt_util.parse_time(value)
-
-    if time_val is None:
-        raise vol.Invalid('Invalid time specified: {}'.format(value))
-
-    return time_val
-
-
 def datetime(value):
     """Validate datetime."""
     if isinstance(value, datetime_sys):
@@ -379,6 +456,22 @@ def ensure_list_csv(value: Any) -> Sequence:
     return ensure_list(value)
 
 
+def deprecated(key):
+    """Log key as deprecated."""
+    module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
+
+    def validator(config):
+        """Check if key is in config and log warning."""
+        if key in config:
+            logging.getLogger(module_name).warning(
+                "The '%s' option (with value '%s') is deprecated, please "
+                "remove it from your configuration.", key, config[key])
+
+        return config
+
+    return validator
+
+
 # Validator helpers
 
 def key_dependency(key, dependency):
@@ -406,6 +499,7 @@ EVENT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required('event'): string,
     vol.Optional('event_data'): dict,
+    vol.Optional('event_data_template'): {match_all: template_complex}
 })
 
 SERVICE_SCHEMA = vol.All(vol.Schema({

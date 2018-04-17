@@ -7,13 +7,12 @@ https://home-assistant.io/components/automation/
 import asyncio
 from functools import partial
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import CoreState
-from homeassistant import config as conf_util
+from homeassistant.loader import bind_hass
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START, CONF_ID)
@@ -26,9 +25,9 @@ from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.loader import get_platform
 from homeassistant.util.dt import utcnow
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.frontend import register_built_in_panel
 
 DOMAIN = 'automation'
+DEPENDENCIES = ['group']
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 GROUP_NAME_ALL_AUTOMATIONS = 'all automations'
@@ -104,6 +103,7 @@ TRIGGER_SERVICE_SCHEMA = vol.Schema({
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
+@bind_hass
 def is_on(hass, entity_id):
     """
     Return true if specified automation entity_id is on.
@@ -113,35 +113,41 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+@bind_hass
 def turn_on(hass, entity_id=None):
     """Turn on specified automation or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
 
 
+@bind_hass
 def turn_off(hass, entity_id=None):
     """Turn off specified automation or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
+@bind_hass
 def toggle(hass, entity_id=None):
     """Toggle specified automation or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
+@bind_hass
 def trigger(hass, entity_id=None):
     """Trigger specified automation or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_TRIGGER, data)
 
 
+@bind_hass
 def reload(hass):
     """Reload the automation from config."""
     hass.services.call(DOMAIN, SERVICE_RELOAD)
 
 
+@bind_hass
 def async_reload(hass):
     """Reload the automation from config.
 
@@ -157,11 +163,6 @@ def async_setup(hass, config):
                                 group_name=GROUP_NAME_ALL_AUTOMATIONS)
 
     yield from _async_process_config(hass, config, component)
-
-    descriptions = yield from hass.async_add_job(
-        conf_util.load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml')
-    )
 
     @asyncio.coroutine
     def trigger_service_handler(service_call):
@@ -208,24 +209,20 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_TRIGGER, trigger_service_handler,
-        descriptions.get(SERVICE_TRIGGER), schema=TRIGGER_SERVICE_SCHEMA)
+        schema=TRIGGER_SERVICE_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler,
-        descriptions.get(SERVICE_RELOAD), schema=RELOAD_SERVICE_SCHEMA)
+        schema=RELOAD_SERVICE_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, toggle_service_handler,
-        descriptions.get(SERVICE_TOGGLE), schema=SERVICE_SCHEMA)
+        schema=SERVICE_SCHEMA)
 
     for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
         hass.services.async_register(
             DOMAIN, service, turn_onoff_service_handler,
-            descriptions.get(service), schema=SERVICE_SCHEMA)
-
-    if 'frontend' in hass.config.components:
-        register_built_in_panel(hass, 'automation', 'Automations',
-                                'mdi:playlist-play')
+            schema=SERVICE_SCHEMA)
 
     return True
 
@@ -341,10 +338,9 @@ class AutomationEntity(ToggleEntity):
             yield from self.async_update_ha_state()
 
     @asyncio.coroutine
-    def async_remove(self):
-        """Remove automation from HASS."""
+    def async_will_remove_from_hass(self):
+        """Remove listeners when removing automation from HASS."""
         yield from self.async_turn_off()
-        yield from super().async_remove()
 
     @asyncio.coroutine
     def async_enable(self):

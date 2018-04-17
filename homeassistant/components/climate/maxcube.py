@@ -7,16 +7,19 @@ https://home-assistant.io/components/maxcube/
 import socket
 import logging
 
-from homeassistant.components.climate import ClimateDevice, STATE_AUTO
+from homeassistant.components.climate import (
+    ClimateDevice, STATE_AUTO, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_OPERATION_MODE)
 from homeassistant.components.maxcube import MAXCUBE_HANDLE
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
 STATE_MANUAL = 'manual'
 STATE_BOOST = 'boost'
 STATE_VACATION = 'vacation'
+
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -47,6 +50,11 @@ class MaxCubeClimate(ClimateDevice):
                                 STATE_VACATION]
         self._rf_address = rf_address
         self._cubehandle = hass.data[MAXCUBE_HANDLE]
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def should_poll(self):
@@ -140,7 +148,7 @@ class MaxCubeClimate(ClimateDevice):
     def map_temperature_max_hass(temperature):
         """Map Temperature from MAX! to HASS."""
         if temperature is None:
-            return STATE_UNKNOWN
+            return 0.0
 
         return temperature
 
