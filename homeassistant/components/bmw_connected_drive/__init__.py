@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'bmw_connected_drive'
 CONF_REGION = 'region'
-
+ATTR_VIN = 'vin'
 
 ACCOUNT_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
@@ -35,40 +35,87 @@ CONFIG_SCHEMA = vol.Schema({
     },
 }, extra=vol.ALLOW_EXTRA)
 
+SERVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_VIN): cv.string,
+})
+
 
 BMW_COMPONENTS = ['binary_sensor', 'device_tracker', 'lock', 'sensor']
 UPDATE_INTERVAL = 5  # in minutes
 
+SERVICE_UPDATE_STATE = 'update_state'
 
-def setup(hass, config):
+_SERVICE_MAP = {
+    'light_flash': 'trigger_remote_light_flash',
+    'sound_horn': 'trigger_remote_horn',
+    'activate_air_conditioning': 'trigger_remote_air_conditioning',
+}
+
+
+def setup(hass, config: dict):
     """Set up the BMW connected drive components."""
     accounts = []
     for name, account_config in config[DOMAIN].items():
-        username = account_config[CONF_USERNAME]
-        password = account_config[CONF_PASSWORD]
-        region = account_config[CONF_REGION]
-        _LOGGER.debug('Adding new account %s', name)
-        bimmer = BMWConnectedDriveAccount(username, password, region, name)
-        accounts.append(bimmer)
-
-        # update every UPDATE_INTERVAL minutes, starting now
-        # this should even out the load on the servers
-
-        now = datetime.datetime.now()
-        track_utc_time_change(
-            hass, bimmer.update,
-            minute=range(now.minute % UPDATE_INTERVAL, 60, UPDATE_INTERVAL),
-            second=now.second)
+        accounts.append(setup_account(account_config, hass, name))
 
     hass.data[DOMAIN] = accounts
 
-    for account in accounts:
-        account.update()
+    def _update_all(call) -> None:
+        """Update all BMW accounts."""
+        for cd_account in hass.data[DOMAIN]:
+            cd_account.update()
+
+    # Service to manually trigger updates for all accounts.
+    hass.services.register(DOMAIN, SERVICE_UPDATE_STATE, _update_all)
+
+    _update_all(None)
 
     for component in BMW_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
+
+
+def setup_account(account_config: dict, hass, name: str) \
+        -> 'BMWConnectedDriveAccount':
+    """Set up a new BMWConnectedDriveAccount based on the config."""
+    username = account_config[CONF_USERNAME]
+    password = account_config[CONF_PASSWORD]
+    region = account_config[CONF_REGION]
+    _LOGGER.debug('Adding new account %s', name)
+    cd_account = BMWConnectedDriveAccount(username, password, region, name)
+
+    def execute_service(call):
+        """Execute a service for a vehicle.
+
+        This must be a member function as we need access to the cd_account
+        object here.
+        """
+        vin = call.data[ATTR_VIN]
+        vehicle = cd_account.account.get_vehicle(vin)
+        if not vehicle:
+            _LOGGER.error('Could not find a vehicle for VIN "%s"!', vin)
+            return
+        function_name = _SERVICE_MAP[call.service]
+        function_call = getattr(vehicle.remote_services, function_name)
+        function_call()
+
+    # register the remote services
+    for service in _SERVICE_MAP:
+        hass.services.register(
+            DOMAIN, service,
+            execute_service,
+            schema=SERVICE_SCHEMA)
+
+    # update every UPDATE_INTERVAL minutes, starting now
+    # this should even out the load on the servers
+    now = datetime.datetime.now()
+    track_utc_time_change(
+        hass, cd_account.update,
+        minute=range(now.minute % UPDATE_INTERVAL, 60, UPDATE_INTERVAL),
+        second=now.second)
+
+    return cd_account
 
 
 class BMWConnectedDriveAccount(object):
