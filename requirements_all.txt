@@ -98,7 +98,7 @@ aiopvapi==1.5.4
 alarmdecoder==1.13.2
 
 # homeassistant.components.sensor.alpha_vantage
-alpha_vantage==1.9.0
+alpha_vantage==2.0.0
 
 # homeassistant.components.amcrest
 amcrest==1.2.2
