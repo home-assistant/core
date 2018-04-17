@@ -102,7 +102,7 @@ class Touchline(ClimateDevice):
     def current_operation(self):
         """Return the current operation mode."""
         return self.map_mode_touchline_hass(self._current_operation,
-			self._current_week_program)
+                                            self._current_week_program)
 
     @property
     def operation_list(self):
