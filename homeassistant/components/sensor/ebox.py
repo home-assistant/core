@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyebox==0.1.0']
+REQUIREMENTS = ['pyebox==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
