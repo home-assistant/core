@@ -34,12 +34,12 @@ class UnknownStep(FlowError):
 class FlowManager:
     """Manage all the flows that are in progress."""
 
-    def __init__(self, hass, async_create_flow, async_save_entry):
+    def __init__(self, hass, async_create_flow, async_finish_flow):
         """Initialize the flow manager."""
         self.hass = hass
         self._progress = {}
         self._async_create_flow = async_create_flow
-        self._async_save_entry = async_save_entry
+        self._async_finish_flow = async_finish_flow
 
     @callback
     def async_progress(self):
@@ -113,10 +113,8 @@ class FlowManager:
         if result['type'] == RESULT_TYPE_ABORT:
             return result
 
-        # We pass a copy of the result because we're going to mutate our
-        # version afterwards and don't want to cause unexpected bugs.
-        await self._async_save_entry(dict(result))
-        result.pop('data')
+        # We pass a copy of the result because we're mutating our version
+        result['result'] = await self._async_finish_flow(dict(result))
         return result
 
 
