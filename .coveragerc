@@ -94,6 +94,9 @@ omit =
     homeassistant/components/envisalink.py
     homeassistant/components/*/envisalink.py
 
+    homeassistant/components/fritzbox.py
+    homeassistant/components/*/fritzbox.py
+
     homeassistant/components/eufy.py
     homeassistant/components/*/eufy.py
 
