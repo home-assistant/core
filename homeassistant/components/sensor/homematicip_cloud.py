@@ -49,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         if isinstance(device, HeatingThermostat):
             devices.append(HomematicipHeatingThermostat(home, device))
         if (isinstance(device, TemperatureHumiditySensorWithoutDisplay) or
-            isinstance(device, TemperatureHumiditySensorDisplay)):
+                isinstance(device, TemperatureHumiditySensorDisplay)):
             devices.append(HomematicipTemperatureSensor(home, device))
             devices.append(HomematicipHumiditySensor(home, device))
 
@@ -61,7 +61,7 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
     """Representation of an HomeMaticIP access point."""
 
     def __init__(self, home):
-        """"Initialize access point device."""
+        """Initialize access point device."""
         super().__init__(home, home, 'Status')
 
     @property
@@ -93,7 +93,7 @@ class HomematicipDeviceStatus(HomematicipGenericDevice):
     """Representation of an HomematicIP device status."""
 
     def __init__(self, home, device):
-        """"Initialize generic status device."""
+        """Initialize generic status device."""
         super().__init__(home, device, 'Status')
 
     @property
@@ -125,7 +125,7 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
     """MomematicIP heating thermostat representation."""
 
     def __init__(self, home, device):
-        """"Initialize heating thermostat device."""
+        """Initialize heating thermostat device."""
         super().__init__(home, device, 'Heating')
 
     @property
@@ -163,7 +163,7 @@ class HomematicipHumiditySensor(HomematicipGenericDevice):
     """MomematicIP humidity device."""
 
     def __init__(self, home, device):
-        """"Initialize the thermometer device."""
+        """Initialize the thermometer device."""
         super().__init__(home, device, 'Humidity')
 
     @property
@@ -195,7 +195,7 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
     """MomematicIP the thermometer device."""
 
     def __init__(self, home, device):
-        """"Initialize the thermometer device."""
+        """Initialize the thermometer device."""
         super().__init__(home, device, 'Temperature')
 
     @property
