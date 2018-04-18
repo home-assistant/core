@@ -147,9 +147,10 @@ class WeatherEntity(Entity):
                 forecast_entry[ATTR_FORECAST_TEMP] = show_temp(
                     self.hass, forecast_entry[ATTR_FORECAST_TEMP],
                     self.temperature_unit, self.precision)
-                forecast_entry[ATTR_FORECAST_TEMP_LOW] = show_temp(
-                    self.hass, forecast_entry[ATTR_FORECAST_TEMP_LOW],
-                    self.temperature_unit, self.precision)
+                if ATTR_FORECAST_TEMP_LOW in forecast_entry:
+                    forecast_entry[ATTR_FORECAST_TEMP_LOW] = show_temp(
+                        self.hass, forecast_entry[ATTR_FORECAST_TEMP_LOW],
+                        self.temperature_unit, self.precision)
                 forecast.append(forecast_entry)
 
             data[ATTR_FORECAST] = forecast
