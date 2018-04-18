@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED, STATE_UNKNOWN,
+    CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED,
     CONF_IP_ADDRESS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
@@ -50,7 +50,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         add_devices(MyGogogate2Device(
             mygogogate2, door, name) for door in devices)
-        return
 
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
@@ -60,7 +59,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             ''.format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
-        return
 
 
 class MyGogogate2Device(CoverDevice):
@@ -72,7 +70,7 @@ class MyGogogate2Device(CoverDevice):
         self.device_id = device['door']
         self._name = name or device['name']
         self._status = device['status']
-        self.available = None
+        self._available = None
 
     @property
     def name(self):
@@ -97,24 +95,22 @@ class MyGogogate2Device(CoverDevice):
     @property
     def available(self):
         """Could the device be accessed during the last update call."""
-        return self.available
+        return self._available
 
     def close_cover(self, **kwargs):
         """Issue close command to cover."""
         self.mygogogate2.close_device(self.device_id)
-        self.schedule_update_ha_state(True)
 
     def open_cover(self, **kwargs):
         """Issue open command to cover."""
         self.mygogogate2.open_device(self.device_id)
-        self.schedule_update_ha_state(True)
 
     def update(self):
         """Update status of cover."""
         try:
             self._status = self.mygogogate2.get_status(self.device_id)
-            self.available = True
+            self._available = True
         except (TypeError, KeyError, NameError, ValueError) as ex:
             _LOGGER.error("%s", ex)
-            self._status = STATE_UNKNOWN
-            self.available = False
+            self._status = None
+            self._available = False

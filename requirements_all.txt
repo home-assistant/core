@@ -756,7 +756,7 @@ pyenvisalink==2.2
 pyephember==0.1.1
 
 # homeassistant.components.sensor.fido
-pyfido==2.1.0
+pyfido==2.1.1
 
 # homeassistant.components.climate.flexit
 pyflexit==0.3
@@ -780,7 +780,7 @@ pyhiveapi==0.2.11
 pyhomematic==0.1.40
 
 # homeassistant.components.sensor.hydroquebec
-pyhydroquebec==2.2.1
+pyhydroquebec==2.2.2
 
 # homeassistant.components.alarm_control_panel.ialarm
 pyialarm==0.2
@@ -882,7 +882,7 @@ pyotp==2.2.6
 pyowm==2.8.0
 
 # homeassistant.components.sensor.pollen
-pypollencom==1.1.1
+pypollencom==1.1.2
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.6
@@ -1185,7 +1185,7 @@ smappy==0.2.15
 snapcast==2.0.8
 
 # homeassistant.components.climate.honeywell
-somecomfort==0.5.0
+somecomfort==0.5.2
 
 # homeassistant.components.sensor.speedtest
 speedtest-cli==2.0.0
