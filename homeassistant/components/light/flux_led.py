@@ -28,7 +28,7 @@ ATTR_MODE = 'mode'
 DOMAIN = 'flux_led'
 
 SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
-                    SUPPORT_COLOR | SUPPORT_WHITE_VALUE)
+                    SUPPORT_COLOR)
 
 MODE_RGB = 'rgb'
 MODE_RGBW = 'rgbw'
@@ -191,6 +191,10 @@ class FluxLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
+
+        if(self._mode is MODE_RGBW):
+            return (SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE)
+
         return SUPPORT_FLUX_LED
 
     @property
