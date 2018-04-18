@@ -380,7 +380,7 @@ hipnotify==1.0.8
 holidays==0.9.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180417.0
+home-assistant-frontend==20180418.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.5
