@@ -46,12 +46,15 @@ class TestWeather(unittest.TestCase):
         assert data.get(ATTR_WEATHER_OZONE) is None
         assert data.get(ATTR_WEATHER_ATTRIBUTION) == \
             'Powered by Home Assistant'
-        assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_CONDITION) == 'rainy'
+        assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_CONDITION) == \
+            'rainy'
         assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_PRECIPITATION) == 1
         assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_TEMP) == 22
         assert data.get(ATTR_FORECAST)[0].get(ATTR_FORECAST_TEMP_LOW) == 15
-        assert data.get(ATTR_FORECAST)[6].get(ATTR_FORECAST_CONDITION) == 'fog'
-        assert data.get(ATTR_FORECAST)[6].get(ATTR_FORECAST_PRECIPITATION) == 0.2
+        assert data.get(ATTR_FORECAST)[6].get(ATTR_FORECAST_CONDITION) == \
+            'fog'
+        assert data.get(ATTR_FORECAST)[6].get(ATTR_FORECAST_PRECIPITATION) \
+            == 0.2
         assert data.get(ATTR_FORECAST)[6].get(ATTR_FORECAST_TEMP) == 21
         assert data.get(ATTR_FORECAST)[6].get(ATTR_FORECAST_TEMP_LOW) == 12
         assert len(data.get(ATTR_FORECAST)) == 7
