@@ -24,7 +24,7 @@ REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Vacuum cleaner'
-ICON = 'mdi:roomba'
+ICON = 'mdi:robot-vacuum'
 DATA_KEY = 'vacuum.xiaomi_miio'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

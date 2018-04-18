@@ -43,7 +43,7 @@ DEFAULT_CERT = '/etc/ssl/certs/ca-certificates.crt'
 DEFAULT_CONTINUOUS = True
 DEFAULT_NAME = 'Roomba'
 
-ICON = 'mdi:roomba'
+ICON = 'mdi:robot-vacuum'
 PLATFORM = 'roomba'
 
 FAN_SPEED_AUTOMATIC = 'Automatic'

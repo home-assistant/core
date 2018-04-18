@@ -76,7 +76,7 @@ SERVICE_TO_METHOD = {
 }
 
 DEFAULT_NAME = 'Vacuum cleaner robot'
-DEFAULT_ICON = 'mdi:roomba'
+DEFAULT_ICON = 'mdi:robot-vacuum'
 
 SUPPORT_TURN_ON = 1
 SUPPORT_TURN_OFF = 2

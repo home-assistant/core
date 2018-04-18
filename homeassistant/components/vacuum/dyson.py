@@ -24,7 +24,7 @@ DEPENDENCIES = ['dyson']
 
 DYSON_360_EYE_DEVICES = "dyson_360_eye_devices"
 
-ICON = 'mdi:roomba'
+ICON = 'mdi:robot-vacuum'
 
 SUPPORT_DYSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                 SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | SUPPORT_STATUS | \
