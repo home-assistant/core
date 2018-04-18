@@ -22,6 +22,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_CONDITION_CLASS = 'condition_class'
 ATTR_FORECAST = 'forecast'
+ATTR_FORECAST_PRECIPITATION = 'precipitation'
 ATTR_FORECAST_TEMP = 'temperature'
 ATTR_FORECAST_TIME = 'datetime'
 ATTR_WEATHER_ATTRIBUTION = 'attribution'
