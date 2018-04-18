@@ -33,15 +33,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo weather."""
     add_devices([
         DemoWeather('South', 'Sunshine', 21.6414, 92, 1099, 0.5, TEMP_CELSIUS,
-                    [['rainy', 22, 15, 1], ['rainy', 19, 8, 5],
-                     ['cloudy', 15, 9, 0], ['sunny', 12, 6, 0],
-                     ['partlycloudy', 14, 7, 2], ['rainy', 18, 7, 15],
-                     ['fog', 21, 12, 0.2]]),
+                    [['rainy', 1, 22, 15], ['rainy', 5, 19, 8],
+                     ['cloudy', 0, 15, 9], ['sunny', 0, 12, 6],
+                     ['partlycloudy', 2, 14, 7], ['rainy', 15, 18, 7],
+                     ['fog', 0.2, 21, 12]]),
         DemoWeather('North', 'Shower rain', -12, 54, 987, 4.8, TEMP_FAHRENHEIT,
-                    [['snowy', -10, -15, 2], ['partlycloudy', -13, -14, 1],
-                     ['sunny', -18, -22, 0], ['sunny', -23, -23, 0.1],
-                     ['snowy', -19, -20, 4], ['sunny', -14, -19, 0.3],
-                     ['sunny', -9, -12, 0]])
+                    [['snowy', 2, -10, -15], ['partlycloudy', 1, -13, -14],
+                     ['sunny', 0, -18, -22], ['sunny', 0.1, -23, -23],
+                     ['snowy', 4, -19, -20], ['sunny', 0.3, -14, -19],
+                     ['sunny', 0, -9, -12]])
     ])
 
 
@@ -116,9 +116,9 @@ class DemoWeather(WeatherEntity):
             data_dict = {
                 ATTR_FORECAST_TIME: reftime.isoformat(),
                 ATTR_FORECAST_CONDITION: entry[0],
-                ATTR_FORECAST_TEMP: entry[1],
-                ATTR_FORECAST_TEMP_LOW: entry[2],
-                ATTR_FORECAST_PRECIPITATION: entry[3]
+                ATTR_FORECAST_PRECIPITATION: entry[1],
+                ATTR_FORECAST_TEMP: entry[2],
+                ATTR_FORECAST_TEMP_LOW: entry[3]
             }
             reftime = reftime + timedelta(hours=4)
             forecast_data.append(data_dict)
