@@ -154,6 +154,13 @@ class TestGetAccessories(unittest.TestCase):
                           {ATTR_SUPPORTED_FEATURES: 4})
             get_accessory(None, state, 2, {})
 
+    def test_cover_open_close(self):
+        """Test cover with support for open and close."""
+        with patch.dict(TYPES, {'WindowCoveringBasic': self.mock_type}):
+            state = State('cover.open_window', 'open',
+                          {ATTR_SUPPORTED_FEATURES: 3})
+            get_accessory(None, state, 2, {})
+
     def test_alarm_control_panel(self):
         """Test alarm control panel."""
         config = {ATTR_CODE: '1234'}
