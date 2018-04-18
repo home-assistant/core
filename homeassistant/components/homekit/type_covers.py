@@ -14,7 +14,7 @@ from .const import (
     CATEGORY_WINDOW_COVERING, SERV_WINDOW_COVERING,
     CHAR_CURRENT_POSITION, CHAR_TARGET_POSITION,
     CATEGORY_GARAGE_DOOR_OPENER, SERV_GARAGE_DOOR_OPENER,
-    CHAR_CURRENT_DOOR_STATE, CHAR_TARGET_DOOR_STATE)
+    CHAR_CURRENT_DOOR_STATE, CHAR_TARGET_DOOR_STATE, CHAR_POSITION_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,10 +104,8 @@ class WindowCovering(HomeAccessory):
 class WindowCoveringBasic(HomeAccessory):
     """Generate a Window accessory for a cover entity.
 
-    The cover entity must support:
-        - open_cover
-        - close_cover
-        - stop_cover (optional)
+    The cover entity must support: open_cover, close_cover,
+    stop_cover (optional).
     """
 
     def __init__(self, *args, config):
@@ -123,6 +121,8 @@ class WindowCoveringBasic(HomeAccessory):
         self.char_target_position = setup_char(
             CHAR_TARGET_POSITION, serv_cover, value=0,
             callback=self.move_cover)
+        self.char_position_state = setup_char(
+            CHAR_POSITION_STATE, serv_cover, value=0)
 
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
@@ -141,13 +141,13 @@ class WindowCoveringBasic(HomeAccessory):
             else:
                 service, position = (SERVICE_CLOSE_COVER, 0)
 
-        self.hass.services.call(DOMAIN, service, {
-            ATTR_ENTITY_ID: self.entity_id
-        })
+        self.hass.services.call(DOMAIN, service,
+                                {ATTR_ENTITY_ID: self.entity_id})
 
         # Snap the current/target position to the expected final position.
         self.char_current_position.set_value(position)
         self.char_target_position.set_value(position)
+        self.char_position_state.set_value(2)
 
     def update_state(self, new_state):
         """Update cover position after state changed."""
@@ -156,3 +156,4 @@ class WindowCoveringBasic(HomeAccessory):
         if hk_position is not None:
             self.char_current_position.set_value(hk_position)
             self.char_target_position.set_value(hk_position)
+            self.char_position_state.set_value(2)

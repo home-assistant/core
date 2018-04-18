@@ -94,6 +94,7 @@ CHAR_TARGET_POSITION = 'TargetPosition'  # Int | [0, 100]
 CHAR_TARGET_SECURITY_STATE = 'SecuritySystemTargetState'
 CHAR_TARGET_TEMPERATURE = 'TargetTemperature'
 CHAR_TEMP_DISPLAY_UNITS = 'TemperatureDisplayUnits'
+CHAR_POSITION_STATE = 'PositionState'
 
 # #### Properties ####
 PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}

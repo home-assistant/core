@@ -140,75 +140,12 @@ class TestHomekitSensors(unittest.TestCase):
         self.assertEqual(acc.char_current_position.value, 50)
         self.assertEqual(acc.char_target_position.value, 75)
 
-    def test_window_open_close_stop(self):
-        """Test if accessory and HA are updated accordingly."""
-        window_cover = 'cover.window'
-
-        self.hass.states.set(window_cover, STATE_UNKNOWN, {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_STOP
-        })
-        acc = WindowCoveringBasic(self.hass, 'Cover', window_cover, 2,
-                                  config=None)
-        acc.run()
-
-        self.assertEqual(acc.aid, 2)
-        self.assertEqual(acc.category, 14)  # WindowCovering
-
-        self.assertEqual(acc.char_current_position.value, 0)
-        self.assertEqual(acc.char_target_position.value, 0)
-
-        self.hass.states.set(window_cover, STATE_UNKNOWN)
-        self.hass.block_till_done()
-
-        self.assertEqual(acc.char_current_position.value, 0)
-        self.assertEqual(acc.char_target_position.value, 0)
-
-        self.hass.states.set(window_cover, STATE_OPEN)
-        self.hass.block_till_done()
-
-        self.assertEqual(acc.char_current_position.value, 100)
-        self.assertEqual(acc.char_target_position.value, 100)
-
-        self.hass.states.set(window_cover, STATE_CLOSED)
-        self.hass.block_till_done()
-
-        self.assertEqual(acc.char_current_position.value, 0)
-        self.assertEqual(acc.char_target_position.value, 0)
-
-        # Set from HomeKit
-        acc.char_target_position.client_update_value(25)
-        self.hass.block_till_done()
-        self.assertEqual(
-            self.events[0].data[ATTR_SERVICE], 'close_cover')
-
-        self.assertEqual(acc.char_current_position.value, 0)
-        self.assertEqual(acc.char_target_position.value, 0)
-
-        # Set from HomeKit
-        acc.char_target_position.client_update_value(90)
-        self.hass.block_till_done()
-        self.assertEqual(
-            self.events[1].data[ATTR_SERVICE], 'open_cover')
-
-        self.assertEqual(acc.char_current_position.value, 100)
-        self.assertEqual(acc.char_target_position.value, 100)
-
-        # Set from HomeKit
-        acc.char_target_position.client_update_value(55)
-        self.hass.block_till_done()
-        self.assertEqual(
-            self.events[2].data[ATTR_SERVICE], 'stop_cover')
-
-        self.assertEqual(acc.char_current_position.value, 50)
-        self.assertEqual(acc.char_target_position.value, 50)
-
     def test_window_open_close(self):
         """Test if accessory and HA are updated accordingly."""
         window_cover = 'cover.window'
 
-        self.hass.states.set(window_cover, STATE_UNKNOWN, {
-            ATTR_SUPPORTED_FEATURES: 0
-        })
+        self.hass.states.set(window_cover, STATE_UNKNOWN,
+                             {ATTR_SUPPORTED_FEATURES: 0})
         acc = WindowCoveringBasic(self.hass, 'Cover', window_cover, 2,
                                   config=None)
         acc.run()
@@ -263,3 +200,40 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 100)
         self.assertEqual(acc.char_target_position.value, 100)
+
+    def test_window_open_close_stop(self):
+        """Test if accessory and HA are updated accordingly."""
+        window_cover = 'cover.window'
+
+        self.hass.states.set(window_cover, STATE_UNKNOWN,
+                             {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP})
+        acc = WindowCoveringBasic(self.hass, 'Cover', window_cover, 2,
+                                  config=None)
+        acc.run()
+
+        # Set from HomeKit
+        acc.char_target_position.client_update_value(25)
+        self.hass.block_till_done()
+        self.assertEqual(
+            self.events[0].data[ATTR_SERVICE], 'close_cover')
+
+        self.assertEqual(acc.char_current_position.value, 0)
+        self.assertEqual(acc.char_target_position.value, 0)
+
+        # Set from HomeKit
+        acc.char_target_position.client_update_value(90)
+        self.hass.block_till_done()
+        self.assertEqual(
+            self.events[1].data[ATTR_SERVICE], 'open_cover')
+
+        self.assertEqual(acc.char_current_position.value, 100)
+        self.assertEqual(acc.char_target_position.value, 100)
+
+        # Set from HomeKit
+        acc.char_target_position.client_update_value(55)
+        self.hass.block_till_done()
+        self.assertEqual(
+            self.events[2].data[ATTR_SERVICE], 'stop_cover')
+
+        self.assertEqual(acc.char_current_position.value, 50)
+        self.assertEqual(acc.char_target_position.value, 50)
