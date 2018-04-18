@@ -85,10 +85,7 @@ async def async_setup_deconz(hass, config_entry):
     hass.data[DOMAIN] = deconz
     hass.data[DATA_DECONZ_ID] = {}
 
-    for component in ['scene']:
-        hass.async_add_job(discovery.async_load_platform(
-            hass, component, DOMAIN, {}))
-    for component in ['binary_sensor', 'light', 'sensor']:
+    for component in ['binary_sensor', 'light', 'scene', 'sensor']:
         hass.async_add_job(hass.config_entries.async_forward_entry_setup(
             config_entry, component))
     deconz.start()
