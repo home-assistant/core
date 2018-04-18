@@ -43,6 +43,7 @@ SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
 SERVICE_HOMEKIT = 'homekit'
 
 CONFIG_ENTRY_HANDLERS = {
+    SERVICE_DECONZ: 'deconz',
     SERVICE_HUE: 'hue',
 }
 
@@ -57,7 +58,6 @@ SERVICE_HANDLERS = {
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
     SERVICE_TELLDUSLIVE: ('tellduslive', None),
-    SERVICE_DECONZ: ('deconz', None),
     SERVICE_DAIKIN: ('daikin', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
     'google_cast': ('media_player', 'cast'),
