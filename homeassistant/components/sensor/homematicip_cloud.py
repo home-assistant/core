@@ -48,8 +48,8 @@ async def async_setup_platform(hass, config, async_add_devices,
         devices.append(HomematicipDeviceStatus(home, device))
         if isinstance(device, HeatingThermostat):
             devices.append(HomematicipHeatingThermostat(home, device))
-        if (isinstance(device, TemperatureHumiditySensorWithoutDisplay) or
-                isinstance(device, TemperatureHumiditySensorDisplay)):
+        if isinstance(device, (TemperatureHumiditySensorDisplay,
+                               TemperatureHumiditySensorWithoutDisplay)):
             devices.append(HomematicipTemperatureSensor(home, device))
             devices.append(HomematicipHumiditySensor(home, device))
 
