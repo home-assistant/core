@@ -94,13 +94,11 @@ class NmapDeviceScanner(DeviceScanner):
         return None
 
     def get_extra_attributes(self, device):
-        """Return the IP pf the given device."""
-        filter_ip = [result.ip for result in self.last_results
-                     if result.mac == device]
-
-        if filter_ip:
-            return {'ip': filter_ip[0]}
-        return None
+        """Return the IP of the given device."""
+        filter_ip = next((
+            result.ip for result in self.last_results
+            if result.mac == device), None)
+        return {'ip': filter_ip}
 
     def _update_info(self):
         """Scan the network for devices.
