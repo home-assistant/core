@@ -208,4 +208,3 @@ class WeatherData(object):
             return
 
         self.forecast_data = fcd.get_forecast()
-
