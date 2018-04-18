@@ -11,13 +11,13 @@ import os
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.camera import (
+    Camera, PLATFORM_SCHEMA, DOMAIN)
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FILE_PATH = 'file_path'
-
 DEFAULT_NAME = 'Local File'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -35,7 +35,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.warning("Could not read camera %s image from file: %s",
                         config[CONF_NAME], file_path)
 
-    add_devices([LocalFile(config[CONF_NAME], file_path)])
+    camera = LocalFile(config[CONF_NAME], file_path)
+
+    def update_file_path_service(call):
+        """Update the file path."""
+        camera.update_file_path(call.data.get("file_path"))
+        return True
+
+    hass.services.register(
+            DOMAIN, 'update_file_path', update_file_path_service)
+
+    add_devices([camera])
 
 
 class LocalFile(Camera):
@@ -60,6 +70,13 @@ class LocalFile(Camera):
         except FileNotFoundError:
             _LOGGER.warning("Could not read camera %s image from file: %s",
                             self._name, self._file_path)
+
+    def update_file_path(self, file_path):
+        """Update the camera file path."""
+        if os.path.isfile(file_path):
+            self._file_path = file_path
+        else:
+            _LOGGER.warning("Invalid file_path: %s", file_path)
 
     @property
     def name(self):
