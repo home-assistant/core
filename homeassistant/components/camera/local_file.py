@@ -75,6 +75,13 @@ class LocalFile(Camera):
         """Update the camera file path."""
         if os.path.isfile(file_path):
             self._file_path = file_path
+            self.hass.bus.fire(
+                DOMAIN, {
+                    'entity_id': self.entity_id,
+                    "event_type": "update_file_path",
+                    'name': self._name,
+                    "file_path": file_path,
+                    })
         else:
             _LOGGER.warning("Invalid file_path: %s", file_path)
 
