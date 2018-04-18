@@ -18,36 +18,25 @@ SECTIONS = ('core', 'customize', 'group', 'hassbian', 'automation', 'script',
 ON_DEMAND = ('zwave',)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the config component."""
-    yield from hass.components.frontend.async_register_built_in_panel(
+    await hass.components.frontend.async_register_built_in_panel(
         'config', 'config', 'mdi:settings')
 
-    @asyncio.coroutine
-    def setup_panel(panel_name):
+    async def setup_panel(panel_name):
         """Set up a panel."""
-        panel = yield from async_prepare_setup_platform(
+        panel = await async_prepare_setup_platform(
             hass, config, DOMAIN, panel_name)
 
         if not panel:
             return
 
-        success = yield from panel.async_setup(hass)
+        success = await panel.async_setup(hass)
 
         if success:
             key = '{}.{}'.format(DOMAIN, panel_name)
             hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: key})
             hass.config.components.add(key)
-
-    tasks = [setup_panel(panel_name) for panel_name in SECTIONS]
-
-    for panel_name in ON_DEMAND:
-        if panel_name in hass.config.components:
-            tasks.append(setup_panel(panel_name))
-
-    if tasks:
-        yield from asyncio.wait(tasks, loop=hass.loop)
 
     @callback
     def component_loaded(event):
@@ -57,6 +46,15 @@ def async_setup(hass, config):
             hass.async_add_job(setup_panel(panel_name))
 
     hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
+
+    tasks = [setup_panel(panel_name) for panel_name in SECTIONS]
+
+    for panel_name in ON_DEMAND:
+        if panel_name in hass.config.components:
+            tasks.append(setup_panel(panel_name))
+
+    if tasks:
+        await asyncio.wait(tasks, loop=hass.loop)
 
     return True
 
@@ -86,11 +84,10 @@ class BaseEditConfigView(HomeAssistantView):
         """Set value."""
         raise NotImplementedError
 
-    @asyncio.coroutine
-    def get(self, request, config_key):
+    async def get(self, request, config_key):
         """Fetch device specific config."""
         hass = request.app['hass']
-        current = yield from self.read_config(hass)
+        current = await self.read_config(hass)
         value = self._get_value(hass, current, config_key)
 
         if value is None:
@@ -98,11 +95,10 @@ class BaseEditConfigView(HomeAssistantView):
 
         return self.json(value)
 
-    @asyncio.coroutine
-    def post(self, request, config_key):
+    async def post(self, request, config_key):
         """Validate config and return results."""
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON specified', 400)
 
@@ -121,10 +117,10 @@ class BaseEditConfigView(HomeAssistantView):
         hass = request.app['hass']
         path = hass.config.path(self.path)
 
-        current = yield from self.read_config(hass)
+        current = await self.read_config(hass)
         self._write_value(hass, current, config_key, data)
 
-        yield from hass.async_add_job(_write, path, current)
+        await hass.async_add_job(_write, path, current)
 
         if self.post_write_hook is not None:
             hass.async_add_job(self.post_write_hook(hass))
@@ -133,10 +129,9 @@ class BaseEditConfigView(HomeAssistantView):
             'result': 'ok',
         })
 
-    @asyncio.coroutine
-    def read_config(self, hass):
+    async def read_config(self, hass):
         """Read the config."""
-        current = yield from hass.async_add_job(
+        current = await hass.async_add_job(
             _read, hass.config.path(self.path))
         if not current:
             current = self._empty_config()
