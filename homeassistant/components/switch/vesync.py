@@ -93,6 +93,17 @@ class VeSyncSwitchHA(SwitchDevice):
         """Return True if switch is on."""
         return self.smartplug.device_status == "on"
 
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        attr = {}
+        attr['connection_status'] = self.smartplug.connection_status
+        attr['connection_type'] = self.smartplug.connection_type
+        attr['device_type'] = self.smartplug.device_type
+        attr['model'] = self.smartplug.model
+
+        return attr
+
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self.smartplug.turn_on()
