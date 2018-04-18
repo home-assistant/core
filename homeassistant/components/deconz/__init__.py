@@ -9,8 +9,7 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
-from homeassistant.helpers import (
-    aiohttp_client, discovery, config_validation as cv)
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.util.json import load_json
 
 # Loading the config flow file will register the flow
