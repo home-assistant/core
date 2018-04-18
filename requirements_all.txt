@@ -1169,7 +1169,7 @@ simplepush==1.1.4
 simplisafe-python==1.0.5
 
 # homeassistant.components.skybell
-skybellpy==0.1.1
+skybellpy==0.1.2
 
 # homeassistant.components.notify.slack
 slacker==0.9.65
