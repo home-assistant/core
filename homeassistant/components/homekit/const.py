@@ -52,7 +52,8 @@ SERV_SMOKE_SENSOR = 'SmokeSensor'
 SERV_SWITCH = 'Switch'
 SERV_TEMPERATURE_SENSOR = 'TemperatureSensor'
 SERV_THERMOSTAT = 'Thermostat'
-SERV_WINDOW_COVERING = 'WindowCovering'  # CurrentPosition, TargetPosition
+SERV_WINDOW_COVERING = 'WindowCovering'
+# CurrentPosition, TargetPosition, PositionState
 
 
 # #### Characteristics ####
@@ -85,6 +86,7 @@ CHAR_MOTION_DETECTED = 'MotionDetected'
 CHAR_NAME = 'Name'
 CHAR_OCCUPANCY_DETECTED = 'OccupancyDetected'
 CHAR_ON = 'On'  # boolean
+CHAR_POSITION_STATE = 'PositionState'
 CHAR_SATURATION = 'Saturation'  # percent
 CHAR_SERIAL_NUMBER = 'SerialNumber'
 CHAR_SMOKE_DETECTED = 'SmokeDetected'
@@ -94,7 +96,6 @@ CHAR_TARGET_POSITION = 'TargetPosition'  # Int | [0, 100]
 CHAR_TARGET_SECURITY_STATE = 'SecuritySystemTargetState'
 CHAR_TARGET_TEMPERATURE = 'TargetTemperature'
 CHAR_TEMP_DISPLAY_UNITS = 'TemperatureDisplayUnits'
-CHAR_POSITION_STATE = 'PositionState'
 
 # #### Properties ####
 PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}

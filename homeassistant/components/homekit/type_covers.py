@@ -12,9 +12,9 @@ from . import TYPES
 from .accessories import HomeAccessory, add_preload_service, setup_char
 from .const import (
     CATEGORY_WINDOW_COVERING, SERV_WINDOW_COVERING,
-    CHAR_CURRENT_POSITION, CHAR_TARGET_POSITION,
+    CHAR_CURRENT_POSITION, CHAR_TARGET_POSITION, CHAR_POSITION_STATE,
     CATEGORY_GARAGE_DOOR_OPENER, SERV_GARAGE_DOOR_OPENER,
-    CHAR_CURRENT_DOOR_STATE, CHAR_TARGET_DOOR_STATE, CHAR_POSITION_STATE)
+    CHAR_CURRENT_DOOR_STATE, CHAR_TARGET_DOOR_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +122,7 @@ class WindowCoveringBasic(HomeAccessory):
             CHAR_TARGET_POSITION, serv_cover, value=0,
             callback=self.move_cover)
         self.char_position_state = setup_char(
-            CHAR_POSITION_STATE, serv_cover, value=0)
+            CHAR_POSITION_STATE, serv_cover, value=2)
 
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""

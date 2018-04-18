@@ -155,24 +155,28 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 0)
         self.assertEqual(acc.char_target_position.value, 0)
+        self.assertEqual(acc.char_position_state.value, 2)
 
         self.hass.states.set(window_cover, STATE_UNKNOWN)
         self.hass.block_till_done()
 
         self.assertEqual(acc.char_current_position.value, 0)
         self.assertEqual(acc.char_target_position.value, 0)
+        self.assertEqual(acc.char_position_state.value, 2)
 
         self.hass.states.set(window_cover, STATE_OPEN)
         self.hass.block_till_done()
 
         self.assertEqual(acc.char_current_position.value, 100)
         self.assertEqual(acc.char_target_position.value, 100)
+        self.assertEqual(acc.char_position_state.value, 2)
 
         self.hass.states.set(window_cover, STATE_CLOSED)
         self.hass.block_till_done()
 
         self.assertEqual(acc.char_current_position.value, 0)
         self.assertEqual(acc.char_target_position.value, 0)
+        self.assertEqual(acc.char_position_state.value, 2)
 
         # Set from HomeKit
         acc.char_target_position.client_update_value(25)
@@ -182,6 +186,7 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 0)
         self.assertEqual(acc.char_target_position.value, 0)
+        self.assertEqual(acc.char_position_state.value, 2)
 
         # Set from HomeKit
         acc.char_target_position.client_update_value(90)
@@ -191,6 +196,7 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 100)
         self.assertEqual(acc.char_target_position.value, 100)
+        self.assertEqual(acc.char_position_state.value, 2)
 
         # Set from HomeKit
         acc.char_target_position.client_update_value(55)
@@ -200,6 +206,7 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 100)
         self.assertEqual(acc.char_target_position.value, 100)
+        self.assertEqual(acc.char_position_state.value, 2)
 
     def test_window_open_close_stop(self):
         """Test if accessory and HA are updated accordingly."""
@@ -219,6 +226,7 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 0)
         self.assertEqual(acc.char_target_position.value, 0)
+        self.assertEqual(acc.char_position_state.value, 2)
 
         # Set from HomeKit
         acc.char_target_position.client_update_value(90)
@@ -228,6 +236,7 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 100)
         self.assertEqual(acc.char_target_position.value, 100)
+        self.assertEqual(acc.char_position_state.value, 2)
 
         # Set from HomeKit
         acc.char_target_position.client_update_value(55)
@@ -237,3 +246,4 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.assertEqual(acc.char_current_position.value, 50)
         self.assertEqual(acc.char_target_position.value, 50)
+        self.assertEqual(acc.char_position_state.value, 2)
