@@ -7,7 +7,8 @@ https://home-assistant.io/components/demo/
 from datetime import datetime, timedelta
 
 from homeassistant.components.weather import (
-    WeatherEntity, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
+    WeatherEntity, ATTR_FORECAST_CONDITION, ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME)
 from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 CONDITION_CLASSES = {
@@ -32,9 +33,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo weather."""
     add_devices([
         DemoWeather('South', 'Sunshine', 21.6414, 92, 1099, 0.5, TEMP_CELSIUS,
-                    [22, 19, 15, 12, 14, 18, 21]),
+                    [['rainy', 22, 15, 1], ['rainy', 19, 8, 5],
+                     ['cloudy', 15, 9, 0], ['sunny', 12, 6, 0],
+                     ['partlycloudy', 14, 7, 2], ['rainy', 18, 7, 15],
+                     ['fog', 21, 12, 0.2]]),
         DemoWeather('North', 'Shower rain', -12, 54, 987, 4.8, TEMP_FAHRENHEIT,
-                    [-10, -13, -18, -23, -19, -14, -9])
+                    [['snowy', -10, -15, 2], ['partlycloudy', -13, -14, 1],
+                     ['sunny', -18, -22, 0], ['sunny', -23, -23, 0.1],
+                     ['snowy', -19, -20, 4], ['sunny', -14, -19, 0.3],
+                     ['sunny', -9, -12, 0]])
     ])
 
 
@@ -108,7 +115,10 @@ class DemoWeather(WeatherEntity):
         for entry in self._forecast:
             data_dict = {
                 ATTR_FORECAST_TIME: reftime.isoformat(),
-                ATTR_FORECAST_TEMP: entry
+                ATTR_FORECAST_CONDITION: entry[0],
+                ATTR_FORECAST_TEMP: entry[1],
+                ATTR_FORECAST_TEMP_LOW: entry[2],
+                ATTR_FORECAST_PRECIPITATION: entry[3]
             }
             reftime = reftime + timedelta(hours=4)
             forecast_data.append(data_dict)

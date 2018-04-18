@@ -10,8 +10,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.weather import (
-    ATTR_FORECAST_PRECIPITATION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME,
-    PLATFORM_SCHEMA, WeatherEntity)
+    ATTR_FORECAST_CONDITION, ATTR_FORECAST_PRECIPITATION, ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
     CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, STATE_UNKNOWN,
     TEMP_CELSIUS)
@@ -22,7 +22,6 @@ REQUIREMENTS = ['pyowm==2.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_FORECAST_CONDITION = 'condition'
 ATTRIBUTION = 'Data provided by OpenWeatherMap'
 
 DEFAULT_NAME = 'OpenWeatherMap'
