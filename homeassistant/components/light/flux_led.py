@@ -12,8 +12,8 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_EFFECT, ATTR_WHITE_VALUE, EFFECT_COLORLOOP,
-    EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_EFFECT, ATTR_WHITE_VALUE,
+    EFFECT_COLORLOOP, EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
     SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
@@ -227,7 +227,7 @@ class FluxLight(Light):
         if rgb is not None:
             self._bulb.setRgb(*tuple(rgb), brightness=self.brightness)
 
-        #brightness change only
+        # brightness change only
         elif brightness is not None:
             (red, green, blue) = self._bulb.getRgb()
             self._bulb.setRgb(red, green, blue, brightness=brightness)
@@ -238,7 +238,7 @@ class FluxLight(Light):
                               random.randint(0, 255),
                               random.randint(0, 255))
 
-        #effect selection
+        # effect selection
         elif effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
 
