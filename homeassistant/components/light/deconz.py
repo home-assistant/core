@@ -19,10 +19,12 @@ DEPENDENCIES = ['deconz']
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Set up the deCONZ light."""
-    if discovery_info is None:
-        return
+    """Old way of setting up deCONZ lights."""
+    pass
 
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the deCONZ lights from a config entry."""
     lights = hass.data[DATA_DECONZ].lights
     groups = hass.data[DATA_DECONZ].groups
     entities = []

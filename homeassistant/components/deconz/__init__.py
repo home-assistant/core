@@ -58,28 +58,25 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass, config_entry):
     """Set up a deCONZ bridge for a config entry."""
     if DOMAIN in hass.data:
         _LOGGER.error(
             "Config entry failed since one deCONZ instance already exists")
         return False
-    result = await async_setup_deconz(hass, None, entry.data)
-    if result:
-        return True
-    return False
+    return await async_setup_deconz(hass, config_entry)
 
 
-async def async_setup_deconz(hass, config, deconz_config):
+async def async_setup_deconz(hass, config_entry):
     """Set up a deCONZ session.
 
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
     """
-    _LOGGER.debug("deCONZ config %s", deconz_config)
+    _LOGGER.debug("deCONZ config %s", config_entry.data)
     from pydeconz import DeconzSession
     session = aiohttp_client.async_get_clientsession(hass)
-    deconz = DeconzSession(hass.loop, session, **deconz_config)
+    deconz = DeconzSession(hass.loop, session, **config_entry.data)
     result = await deconz.async_load_parameters()
     if result is False:
         _LOGGER.error("Failed to communicate with deCONZ")
@@ -88,9 +85,11 @@ async def async_setup_deconz(hass, config, deconz_config):
     hass.data[DOMAIN] = deconz
     hass.data[DATA_DECONZ_ID] = {}
 
-    for component in ['binary_sensor', 'light', 'scene', 'sensor']:
+    for component in ['binary_sensor', 'scene', 'sensor']:
         hass.async_add_job(discovery.async_load_platform(
-            hass, component, DOMAIN, {}, config))
+            hass, component, DOMAIN, {}))
+    hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+        config_entry, 'light'))
     deconz.start()
 
     async def async_configure(call):
