@@ -810,6 +810,9 @@ pyiss==1.0.1
 # homeassistant.components.remote.itach
 pyitachip2ir==0.0.7
 
+# homeassistant.components.auth
+pyjwt==1.6.1
+
 # homeassistant.components.kira
 pykira==0.1.1
 
