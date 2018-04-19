@@ -28,7 +28,7 @@ AUTH_PROVIDER_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): str,
     # Specify ID if you have two auth providers for same type.
     vol.Optional(CONF_ID): str,
-})
+}, extra=vol.ALLOW_EXTRA)
 
 ACCESS_TOKEN_EXPIRATION = timedelta(minutes=30)
 DATA_REQS = 'auth_reqs_processed'

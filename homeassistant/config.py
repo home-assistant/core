@@ -159,7 +159,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.IsDir()]),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
     vol.Optional(CONF_AUTH_PROVIDERS):
-        vol.All(cv.ensure_list, auth.AUTH_PROVIDER_SCHEMA)
+        vol.All(cv.ensure_list, [auth.AUTH_PROVIDER_SCHEMA])
 })
 
 

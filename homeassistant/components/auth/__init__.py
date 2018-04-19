@@ -60,7 +60,9 @@ have type "create_entry" and "result" key will contain an authorization code.
 # POST /api/auth/token
 
 This is an OAuth2 endpoint for granting tokens. We currently support the grant
-types "authorization_code" and "refresh_token".
+types "authorization_code" and "refresh_token". Because we follow the OAuth2
+spec, data should be send in formatted as x-www-form-urlencoded. Examples will
+be in JSON as it's more readable.
 
 ## Grant type authorization_code
 
