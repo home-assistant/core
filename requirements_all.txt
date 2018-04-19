@@ -704,6 +704,9 @@ pyatv==0.3.9
 # homeassistant.components.sensor.bbox
 pybbox==0.0.5-alpha
 
+# homeassistant.components.media_player.blackbird
+pyblackbird==0.5
+
 # homeassistant.components.device_tracker.bluetooth_tracker
 # pybluez==0.22
 
