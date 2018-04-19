@@ -1,16 +1,4 @@
 """Tests for the auth component."""
-from datetime import timedelta
-from unittest.mock import patch
-
-import pytest
-
-from homeassistant import auth as auth_core
-from homeassistant.components import auth as auth_cmp
-from homeassistant.setup import async_setup_component
-
-from tests.common import MockUser
-
-
 from . import async_setup_auth
 
 

@@ -86,7 +86,6 @@ async def test_link_user(hass, aiohttp_client):
     assert len(info['user'].credentials) == 2
 
 
-
 async def test_link_user_invalid_client_id(hass):
     """Test linking a user to new credentials."""
     assert False
