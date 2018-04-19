@@ -9,6 +9,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.light import PLATFORM_SCHEMA
+from homeassistant.core import callback
 from homeassistant.helpers import event as evt
 from homeassistant.util import dt as dt_util
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
@@ -21,18 +22,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+async def async_setup_platform(hass, config, add_devices,
+                               discovery_info=None):
     plum = hass.data['plum']
 
+    @callback
     def new_lightpad(lightpad):
-        add_devices_callback([
+        add_devices([
             PlumMotionSensor(lightpad=lightpad, hass=hass),
         ])
 
+    plum.add_lightpad_listener(new_lightpad)
+
     for lightpad in plum.lightpads.values():
         new_lightpad(lightpad)
-
-    plum.add_lightpad_listener(new_lightpad)
 
 
 class PlumMotionSensor(BinarySensorDevice):

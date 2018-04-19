@@ -47,6 +47,6 @@ async def async_setup(hass, config):
     discovery.load_platform(hass, 'sensor', DOMAIN, None, conf)
     discovery.load_platform(hass, 'binary_sensor', DOMAIN, None, conf)
 
-    await plum.discover()
+    hass.add_job(plum.discover(hass.loop))
 
     return True

@@ -11,6 +11,7 @@ from homeassistant.components.light import (Light, PLATFORM_SCHEMA,
                                             ATTR_HS_COLOR, ATTR_BRIGHTNESS)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.util.color as color_util
+from homeassistant.core import callback
 
 DEPENDENCIES = ['plum_lightpad']
 
@@ -20,30 +21,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, add_devices,
                                discovery_info=None):
     """Setup the Plum Lightpad Light."""
     plum = hass.data['plum']
 
+    @callback
     def new_load(logical_load):
-        async_add_devices([
+        add_devices([
             PlumLight(load=logical_load)
         ])
+
+    plum.add_load_listener(new_load)
 
     for load in plum.loads.values():
         new_load(load)
 
-    plum.add_load_listener(new_load)
-
+    @callback
     def new_lightpad(lightpad):
-        async_add_devices([
+        add_devices([
             GlowRing(lightpad=lightpad)
         ])
 
+    plum.add_lightpad_listener(new_lightpad)
+
     for lightpad in plum.lightpads.values():
         new_lightpad(lightpad)
-
-    plum.add_lightpad_listener(new_lightpad)
 
 
 class PlumLight(Light):
