@@ -51,70 +51,68 @@ ZONE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=8))
 # Valid source ids: 1-8
 SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=8))
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TYPE): vol.In(['serial', 'socket']),
-    vol.Optional(CONF_PORT): cv.string,
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
-    vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
-})
+PLATFORM_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CONF_PORT, CONF_HOST),
+    PLATFORM_SCHEMA=PLATFORM_SCHEMA.extend({
+        vol.Exclusive(CONF_PORT, CONF_TYPE): cv.string,
+        vol.Exclusive(CONF_HOST, CONF_TYPE): cv.string,
+        vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
+        vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
+    }))
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Monoprice Blackbird 4k 8x8 HDBaseT Matrix platform."""
+    if DATA_BLACKBIRD not in hass.data:
+        hass.data[DATA_BLACKBIRD] = {}
+
     port = config.get(CONF_PORT)
     host = config.get(CONF_HOST)
-    device_type = config.get(CONF_TYPE)
 
     from pyblackbird import get_blackbird
     from serial import SerialException
 
-    if device_type == 'serial':
-        if port is None:
-            _LOGGER.error("No port configured")
-            return
+    connection = None
+    if port is not None:
         try:
             blackbird = get_blackbird(port)
+            connection = port
         except SerialException:
             _LOGGER.error("Error connecting to the Blackbird controller")
             return
 
-    elif device_type == 'socket':
+    if host is not None:
         try:
-            if host is None:
-                _LOGGER.error("No host configured")
-                return
             blackbird = get_blackbird(host, False)
+            connection = host
         except socket.timeout:
             _LOGGER.error("Error connecting to the Blackbird controller")
             return
 
-    else:
-        _LOGGER.error("Incorrect device type specified")
-        return
-
     sources = {source_id: extra[CONF_NAME] for source_id, extra
                in config[CONF_SOURCES].items()}
 
-    hass.data[DATA_BLACKBIRD] = []
+    devices = []
     for zone_id, extra in config[CONF_ZONES].items():
         _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
-        hass.data[DATA_BLACKBIRD].append(BlackbirdZone(
-            blackbird, sources, zone_id, extra[CONF_NAME]))
+        unique_id = "{}-{}".format(connection, zone_id)
+        device = BlackbirdZone(blackbird, sources, zone_id, extra[CONF_NAME])
+        hass.data[DATA_BLACKBIRD][unique_id] = device
+        devices.append(device)
 
-    add_devices(hass.data[DATA_BLACKBIRD], True)
+    add_devices(devices, True)
 
     def service_handle(service):
         """Handle for services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         source = service.data.get(ATTR_SOURCE)
         if entity_ids:
-            devices = [device for device in hass.data[DATA_BLACKBIRD]
+            devices = [device for device in hass.data[DATA_BLACKBIRD].values()
                        if device.entity_id in entity_ids]
 
         else:
-            devices = hass.data[DATA_BLACKBIRD]
+            devices = hass.data[DATA_BLACKBIRD].values()
 
         for device in devices:
             if service.service == SERVICE_SETALLZONES:
