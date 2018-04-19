@@ -54,8 +54,8 @@ def setup(hass, config):
         device_ip = doorstation_config.get(CONF_HOST)
         username = doorstation_config.get(CONF_USERNAME)
         password = doorstation_config.get(CONF_PASSWORD)
-        name = doorstation_config.get(CONF_NAME) \
-           or 'DoorBird {}'.format(index + 1)
+        name = (doorstation_config.get(CONF_NAME)
+                or 'DoorBird {}'.format(index + 1))
 
         device = DoorBird(device_ip, username, password)
         status = device.ready()
@@ -100,17 +100,23 @@ def setup(hass, config):
 
 
 class ConfiguredDoorbird():
+    """Attach additional information to pass along with configured device"""
+
     def __init__(self, device, name):
+        """Initialize configured device"""
         self._name = name
         self._device = device
 
     @property
     def name(self):
+        """Custom device name"""
         return self._name
 
     @property
     def device(self):
+        """The configured device"""
         return self._device
+
 
 class DoorbirdRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
