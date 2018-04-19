@@ -191,7 +191,6 @@ class FluxLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-
         if self._mode is MODE_RGBW:
             return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE
 
