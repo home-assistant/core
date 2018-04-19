@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.blackbird
 """
 import logging
+import socket
 
 import voluptuous as vol
 
@@ -66,7 +67,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     device_type = config.get(CONF_TYPE)
 
-    import socket
     from pyblackbird import get_blackbird
     from serial import SerialException
 
@@ -146,14 +146,13 @@ class BlackbirdZone(MediaPlayerDevice):
         """Retrieve latest state."""
         state = self._blackbird.zone_status(self._zone_id)
         if not state:
-            return False
+            return
         self._state = STATE_ON if state.power else STATE_OFF
         idx = state.av
         if idx in self._source_id_name:
             self._source = self._source_id_name[idx]
         else:
             self._source = None
-        return True
 
     @property
     def name(self):
@@ -187,7 +186,6 @@ class BlackbirdZone(MediaPlayerDevice):
 
     def set_all_zones(self, source):
         """Set all zones to one source."""
-        _LOGGER.debug("Setting all zones")
         if source not in self._source_name_id:
             return
         idx = self._source_name_id[source]
