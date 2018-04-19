@@ -747,9 +747,6 @@ pydispatcher==2.0.5
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==0.8
 
-# homeassistant.components.sensor.ebox
-pyebox==0.1.0
-
 # homeassistant.components.climate.econet
 pyeconet==0.0.5
 
