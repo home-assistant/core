@@ -25,19 +25,18 @@ API_URL = '/api/{}'.format(DOMAIN)
 CONF_DOORBELL_EVENTS = 'doorbell_events'
 CONF_CUSTOM_URL = 'hass_url_override'
 
-DEVICES_SCHEMA = vol.All(cv.ensure_list,
-                         [vol.Schema({
-                             vol.Required(CONF_HOST): cv.string,
-                             vol.Required(CONF_USERNAME): cv.string,
-                             vol.Required(CONF_PASSWORD): cv.string,
-                             vol.Optional(CONF_DOORBELL_EVENTS): cv.boolean,
-                             vol.Optional(CONF_CUSTOM_URL): cv.string,
-                             vol.Optional(CONF_NAME): cv.string
-                         })])
+DEVICE_SCHEMA = vol.Schema({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_DOORBELL_EVENTS): cv.boolean,
+    vol.Optional(CONF_CUSTOM_URL): cv.string,
+    vol.Optional(CONF_NAME): cv.string
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICES): DEVICES_SCHEMA
+        vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA])
     }),
 }, extra=vol.ALLOW_EXTRA)
 
