@@ -58,8 +58,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if sensor.read_status() is None:
             raise ValueError("CRC error while reading SHT31 status")
     except (OSError, ValueError):
-        raise HomeAssistantError("SHT31 sensor not detected at address %s " %
-                                 hex(i2c_address))
+        _LOGGER.error(
+            "SHT31 sensor not detected at address %s" % hex(i2c_address))
+        return
     sensor_client = SHTClient(sensor)
 
     sensor_classes = {
