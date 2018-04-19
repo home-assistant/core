@@ -12,10 +12,10 @@ from typing import Any, Optional, Dict
 import voluptuous as vol
 
 from homeassistant import (
-    auth, core, config as conf_util, config_entries, loader,
+    core, config as conf_util, config_entries, loader,
     components as core_components)
 from homeassistant.components import persistent_notification
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, CONF_AUTH_PROVIDERS
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, get_user_site
