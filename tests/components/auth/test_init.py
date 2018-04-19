@@ -8,6 +8,7 @@ from . import async_setup_auth, CLIENT_AUTH
 
 SECRET = 'bla'
 
+
 @pytest.fixture(autouse=True)
 def set_secret(hass):
     """Set a secret."""

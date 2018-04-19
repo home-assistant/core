@@ -1,3 +1,4 @@
+"""Tests for the insecure example auth provider."""
 from unittest.mock import Mock
 import uuid
 
@@ -6,7 +7,7 @@ import pytest
 from homeassistant import auth
 from homeassistant.auth_providers import insecure_example
 
-from tests.common import mock_coro, ensure_auth_manager_loaded
+from tests.common import mock_coro
 
 
 @pytest.fixture
