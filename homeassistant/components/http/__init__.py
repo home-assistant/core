@@ -20,10 +20,6 @@ import homeassistant.remote as rem
 import homeassistant.util as hass_util
 from homeassistant.util.logging import HideSensitiveDataFilter
 
-from .auth import setup_auth
-from .ban import setup_bans
-from .cors import setup_cors
-from .real_ip import setup_real_ip
 from .static import (
     CachingFileResponse, CachingStaticResource, staticresource_middleware)
 
@@ -171,6 +167,12 @@ class HomeAssistantHTTP(object):
                  use_x_forwarded_for, trusted_networks,
                  login_threshold, is_ban_enabled):
         """Initialize the HTTP Home Assistant server."""
+        # To avoid circular dependencies
+        from .auth import setup_auth
+        from .ban import setup_bans
+        from .cors import setup_cors
+        from .real_ip import setup_real_ip
+
         app = self.app = web.Application(
             middlewares=[staticresource_middleware])
 

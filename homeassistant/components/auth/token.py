@@ -1,12 +1,29 @@
 """Token related helpers for the auth component."""
-TEMP_SECRET = 'supersecret'
+import uuid
 
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
+PATH_SECRET = '.auth_secret'
+DATA_SECRET = 'auth_secret'
+
+
+def load_or_create_secret(hass):
+    """Load or create a secret."""
+    path = hass.config.path(PATH_SECRET)
+    try:
+        with open(path, 'rt') as fp:
+            secret = hass.data[DATA_SECRET] = fp.read()
+    except FileNotFoundError:
+        secret = uuid.uuid4().hex
+        with open(path, 'wt'):
+            fp.write(secret)
+        hass.data[DATA_SECRET] = secret
+    return secret
+
 
 @callback
-def async_refresh_token(hass, token):
+def async_refresh_token(hass, secret, token):
     """Generate a set of access/refresh tokens for a user.
 
     Refresh token data:
@@ -17,20 +34,17 @@ def async_refresh_token(hass, token):
     """
     import jwt
 
-    claims = {
+    return jwt.encode({
         'id': token.id,
         'typ': 'refresh',
         'sub': token.user.id,
         'aud': token.client_id,
         'iat': int(dt_util.utcnow().timestamp())
-    }
-
-    return jwt.encode(
-        claims, TEMP_SECRET, algorithm='HS256').decode('utf-8')
+    }, secret, algorithm='HS256').decode('utf-8')
 
 
 @callback
-def async_access_token(hass, token):
+def async_access_token(hass, secret, token):
     """Generate an access token for a user.
 
     Access token data:
@@ -51,10 +65,10 @@ def async_access_token(hass, token):
         'auth_time': int(token.created_at.timestamp()),
         'iat': int(dt_util.utcnow().timestamp()),
         'exp': int((dt_util.utcnow() + token.access_token_valid).timestamp()),
-    }, TEMP_SECRET, algorithm='HS256').decode('utf-8')
+    }, secret, algorithm='HS256').decode('utf-8')
 
 
-async def async_resolve_token(hass, token, client_id=None):
+async def async_resolve_token(hass, secret, token, client_id=None):
     """Get User and AuthToken from a JWT token.
 
     Return None if token cannot be validated.
@@ -66,7 +80,7 @@ async def async_resolve_token(hass, token, client_id=None):
         options['verify_aud'] = False
 
     try:
-        claims = jwt.decode(token, TEMP_SECRET, audience=client_id,
+        claims = jwt.decode(token, secret, audience=client_id,
                             options=options)
     except jwt.exceptions.InvalidTokenError:
         return None

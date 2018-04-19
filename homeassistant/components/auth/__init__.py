@@ -100,25 +100,21 @@ a limited expiration.
     "token_type": "Bearer"
 }
 """
-import base64
-from datetime import timedelta
-import hmac
 import logging
 import uuid
 
 import aiohttp.web
 import voluptuous as vol
 
-from homeassistant import auth, data_entry_flow
+from homeassistant import data_entry_flow
 from homeassistant.core import callback
-from homeassistant.loader import bind_hass
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView, FlowManagerResourceView)
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
 from .client import verify_client
-from .token import async_access_token, async_refresh_token, async_resolve_token
+from . import token
 
 DOMAIN = 'auth'
 REQUIREMENTS = ['pyjwt==1.6.1']
@@ -224,18 +220,24 @@ class GrantTokenView(HomeAssistantView):
         data = await request.post()
         grant_type = data.get('grant_type')
 
+        secret = hass.data.get(token.DATA_SECRET)
+        if secret is None:
+            secret = await hass.async_add_job(
+                token.load_or_create_secret, hass)
+
         if grant_type == 'authorization_code':
-            return await self._async_handle_auth_code(hass, client_id, data)
+            return await self._async_handle_auth_code(
+                hass, secret, client_id, data)
 
         elif grant_type == 'refresh_token':
-            return await self._async_handle_refresh_token(hass, client_id,
-                                                          data)
+            return await self._async_handle_refresh_token(
+                hass, secret, client_id, data)
 
         return self.json({
             'error': 'unsupported_grant_type',
         }, status_code=400)
 
-    async def _async_handle_auth_code(self, hass, client_id, data):
+    async def _async_handle_auth_code(self, hass, secret, client_id, data):
         """Handle authorization code request."""
         code = data.get('code')
 
@@ -252,18 +254,18 @@ class GrantTokenView(HomeAssistantView):
             }, status_code=400)
 
         user = await hass.auth.async_get_or_create_user(credentials)
-        token = await user.async_create_token(client_id)
-        refresh_token = async_refresh_token(hass, token)
-        access_token = async_access_token(hass, token)
+        user_token = await user.async_create_token(client_id)
+        refresh_token = token.async_refresh_token(hass, secret, user_token)
+        access_token = token.async_access_token(hass, secret, user_token)
 
         return self.json({
             'access_token': access_token,
             'token_type': 'Bearer',
             'refresh_token': refresh_token,
-            'expires_in': int(token.access_token_valid.total_seconds()),
+            'expires_in': int(user_token.access_token_valid.total_seconds()),
         })
 
-    async def _async_handle_refresh_token(self, hass, client_id, data):
+    async def _async_handle_refresh_token(self, hass, secret, client_id, data):
         """Handle authorization code request."""
         refresh_token = data.get('refresh_token')
 
@@ -272,14 +274,15 @@ class GrantTokenView(HomeAssistantView):
                 'error': 'invalid_request',
             }, status_code=400)
 
-        info = await async_resolve_token(hass, refresh_token, client_id)
+        info = await token.async_resolve_token(
+            hass, secret, refresh_token, client_id)
 
         if info is None:
             return self.json({
                 'error': 'invalid_grant',
             }, status_code=400)
 
-        access_token = async_access_token(hass, info['token'])
+        access_token = token.async_access_token(hass, secret, info['token'])
 
         return self.json({
             'access_token': access_token,

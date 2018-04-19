@@ -9,6 +9,7 @@ from aiohttp.web import middleware
 
 from homeassistant.core import callback
 from homeassistant.const import HTTP_HEADER_HA_AUTH
+from homeassistant.components.auth import token
 from .const import KEY_AUTHENTICATED, KEY_REAL_IP
 
 DATA_API_PASSWORD = 'api_password'
@@ -82,21 +83,29 @@ async def async_validate_authorization_header(api_password, request):
     hass = request.app['hass']
     auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
 
-    if auth_type == 'Bearer':
-        info = await hass.components.auth.async_resolve_token(hass, auth_val)
-        if info is None:
+    if auth_type == 'Basic':
+        decoded = base64.b64decode(auth_val).decode('utf-8')
+        try:
+            username, password = decoded.split(':', 1)
+        except ValueError:
+            # If no ':' in decoded
             return False
-        request['hass_user'] = info['user']
-        request['hass_token'] = info['token']
-        return True
 
-    if auth_type != 'Basic':
+        if username != 'homeassistant':
+            return False
+
+        return hmac.compare_digest(api_password, password)
+
+    if auth_type != 'Bearer':
         return False
 
-    decoded = base64.b64decode(auth_val).decode('utf-8')
-    username, password = decoded.split(':', 1)
+    secret = hass.data.get(token.DATA_SECRET)
+    if secret is None:
+        secret = await token.load_or_create_secret(hass)
 
-    if username != 'homeassistant':
+    info = await token.async_resolve_token(hass, secret, auth_val)
+    if info is None:
         return False
-
-    return hmac.compare_digest(api_password, password)
+    request['hass_user'] = info['user']
+    request['hass_token'] = info['token']
+    return True

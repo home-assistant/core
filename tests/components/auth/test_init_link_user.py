@@ -1,6 +1,16 @@
 """Tests for the link user flow."""
+import pytest
+
+from homeassistant.components.auth import token
 
 from . import async_setup_auth, CLIENT_AUTH, CLIENT_ID
+
+SECRET = 'bla'
+
+@pytest.fixture(autouse=True)
+def set_secret(hass):
+    """Set a secret."""
+    hass.data[token.DATA_SECRET] = SECRET
 
 
 async def async_get_code(hass, aiohttp_client):
@@ -50,8 +60,8 @@ async def async_get_code(hass, aiohttp_client):
     assert resp.status == 200
     tokens = await resp.json()
 
-    info = await hass.components.auth.async_resolve_token(
-        hass, tokens['access_token'])
+    info = await token.async_resolve_token(
+        hass, SECRET, tokens['access_token'])
     assert info is not None
     assert len(info['user'].credentials) == 1
 
