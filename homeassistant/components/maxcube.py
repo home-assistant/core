@@ -49,9 +49,6 @@ def setup(hass, config):
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
-    if DOMAIN not in config:
-        return False
-
     connection_failed = 0
     gateways = config[DOMAIN][CONF_GATEWAYS]
     for gateway in gateways:
