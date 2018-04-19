@@ -55,7 +55,7 @@ def setup(hass, config):
         username = doorstation_config.get(CONF_USERNAME)
         password = doorstation_config.get(CONF_PASSWORD)
         name = doorstation_config.get(CONF_NAME) \
-               or 'DoorBird {}'.format(index + 1)
+           or 'DoorBird {}'.format(index + 1)
 
         device = DoorBird(device_ip, username, password)
         status = device.ready()
