@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 
+# pylint: disable=import-error
 REQUIREMENTS = []  # ['pyebox==0.1.0'] - disabled because it breaks pip10
 
 _LOGGER = logging.getLogger(__name__)
