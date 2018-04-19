@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_USERNAME, \
-    CONF_PASSWORD, CONF_NAME
+    CONF_PASSWORD, CONF_NAME, CONF_DEVICES
 from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
 
@@ -25,20 +25,20 @@ API_URL = '/api/{}'.format(DOMAIN)
 CONF_DOORBELL_EVENTS = 'doorbell_events'
 CONF_CUSTOM_URL = 'hass_url_override'
 
-DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_DOORBELL_EVENTS): cv.boolean,
-    vol.Optional(CONF_CUSTOM_URL): cv.string,
-    vol.Optional(CONF_NAME): cv.string
-})
+DEVICES_SCHEMA = vol.All(cv.ensure_list,
+                         [vol.Schema({
+                             vol.Required(CONF_HOST): cv.string,
+                             vol.Required(CONF_USERNAME): cv.string,
+                             vol.Required(CONF_PASSWORD): cv.string,
+                             vol.Optional(CONF_DOORBELL_EVENTS): cv.boolean,
+                             vol.Optional(CONF_CUSTOM_URL): cv.string,
+                             vol.Optional(CONF_NAME): cv.string
+                         })])
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(
-        cv.ensure_list,
-        [DEVICE_SCHEMA]
-    ),
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_DEVICES): DEVICES_SCHEMA
+    }),
 }, extra=vol.ALLOW_EXTRA)
 
 SENSOR_DOORBELL = 'doorbell'
@@ -50,7 +50,7 @@ def setup(hass, config):
 
     doorstations = []
 
-    for index, doorstation_config in enumerate(config[DOMAIN]):
+    for index, doorstation_config in enumerate(config[DOMAIN][CONF_DEVICES]):
         device_ip = doorstation_config.get(CONF_HOST)
         username = doorstation_config.get(CONF_USERNAME)
         password = doorstation_config.get(CONF_PASSWORD)
