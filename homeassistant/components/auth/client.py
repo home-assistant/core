@@ -1,46 +1,17 @@
 """Helpers to resolve client ID/secret."""
+import base64
 from functools import wraps
+import hmac
 
 import aiohttp.hdrs
 
-from homeassistant.core import callback
 
-
-@callback
-def verify_client(request):
-    """Decorator to verify the client id/secret in a time safe manner."""
-    return 'fake-client-id'  # TEMP
-
-    # Verify client_id, secret
-    if aiohttp.hdrs.AUTHORIZATION not in request.headers:
-        return False
-
-    auth_type, auth_value = \
-        request.headers.get(aiohttp.hdrs.AUTHORIZATION).split(' ', 1)
-
-    if auth_type != 'Basic':
-        return False
-
-    # decoded = base64.b64decode(auth_value).decode('utf-8')
-    # client_id, client_secret = decoded.split(':', 1)
-    # hass = request.app['hass']
-    # Use hmac.compare_digest(client_secret, client.secret)
-
-    # Look up client id, compare client secret.
-    # secure_lookup should always run in same time wheter it finds or not
-    # finds a matching client.
-    # client = hass.auth.async_secure_lookup_client(client_id)
-    # if we don't find a client, we should still compare passed client
-    # secret to itself to spend the same amount of time as a correct
-    # request.
-
-
-def VerifyClient(method):
+def verify_client(method):
     """Decorator to verify client id/secret on requests."""
     @wraps(method)
     async def wrapper(view, request, *args, **kwargs):
         """Verify client id/secret before doing request."""
-        client_id = verify_client(request)
+        client_id = await _verify_client(request)
 
         if client_id is None:
             return view.json({
@@ -51,3 +22,40 @@ def VerifyClient(method):
             view, request, *args, client_id=client_id, **kwargs)
 
     return wrapper
+
+
+async def _verify_client(request):
+    """Method to verify the client id/secret in consistent time.
+
+    By using a consistent time for looking up client id and comparing the
+    secret, we prevent attacks by malicious actors trying different client ids
+    and are able to derive from the time it takes to process the request if
+    they guessed the client id correctly.
+    """
+    if aiohttp.hdrs.AUTHORIZATION not in request.headers:
+        return None
+
+    auth_type, auth_value = \
+        request.headers.get(aiohttp.hdrs.AUTHORIZATION).split(' ', 1)
+
+    if auth_type != 'Basic':
+        return None
+
+    decoded = base64.b64decode(auth_value).decode('utf-8')
+    try:
+        client_id, client_secret = decoded.split(':', 1)
+    except ValueError:
+        # If no ':' in decoded
+        return None
+
+    client = await request.app['hass'].auth.async_secure_get_client(client_id)
+
+    if client is None:
+        # Still do a compare so we run same time as if a client was found.
+        hmac.compare_digest(client_secret, client_secret)
+        return None
+
+    if hmac.compare_digest(client_secret, client.secret):
+        return client_id
+
+    return None

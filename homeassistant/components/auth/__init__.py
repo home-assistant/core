@@ -117,14 +117,13 @@ from homeassistant.helpers.data_entry_flow import (
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
-from .client import VerifyClient
+from .client import verify_client
 from .token import async_access_token, async_refresh_token, async_resolve_token
 
 DOMAIN = 'auth'
 REQUIREMENTS = ['pyjwt==1.6.1']
 DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
-
 
 
 async def async_setup(hass, config):
@@ -148,7 +147,7 @@ class AuthProvidersView(HomeAssistantView):
     name = 'api:auth:providers'
     requires_auth = False
 
-    @VerifyClient
+    @verify_client
     async def get(self, request, client_id):
         """Get available auth providers."""
         return self.json(request.app['hass'].auth.async_auth_providers())
@@ -165,7 +164,7 @@ class LoginFlowIndexView(FlowManagerIndexView):
         """Do not allow index of flows in progress."""
         return aiohttp.web.Response(status=405)
 
-    @VerifyClient
+    @verify_client
     async def post(self, request, client_id):
         """Create a new login flow."""
         return await super().post(request)
@@ -187,7 +186,7 @@ class LoginFlowResourceView(FlowManagerResourceView):
         """Do not allow getting status of a flow in progress."""
         return self.json_message('Invalid flow specified', 404)
 
-    @VerifyClient
+    @verify_client
     @RequestDataValidator(vol.Schema(dict), allow_empty=True)
     async def post(self, request, client_id, flow_id, data):
         """Handle progressing a login flow request."""
@@ -218,7 +217,7 @@ class GrantTokenView(HomeAssistantView):
         """Initialize the grant token view."""
         self._retrieve_credentials = retrieve_credentials
 
-    @VerifyClient
+    @verify_client
     async def post(self, request, client_id):
         """Grant a token."""
         hass = request.app['hass']

@@ -1,11 +1,23 @@
 """Tests for the Home Assistant auth module."""
+from unittest.mock import Mock
+
+import pytest
 
 from homeassistant import auth, data_entry_flow
+from tests.common import MockUser, ensure_auth_manager_loaded
 
 
-async def test_auth_manager_from_config_validates_config_and_id():
+@pytest.fixture
+def mock_hass():
+    """Hass mock with minimum amount of data set to make it work with auth."""
+    hass = Mock()
+    hass.config.skip_pip = True
+    return hass
+
+
+async def test_auth_manager_from_config_validates_config_and_id(mock_hass):
     """Test get auth providers."""
-    manager = await auth.auth_manager_from_config(None, [{
+    manager = await auth.auth_manager_from_config(mock_hass, [{
         'name': 'Test Name',
         'type': 'insecure_example',
         'users': [],
@@ -36,9 +48,9 @@ async def test_auth_manager_from_config_validates_config_and_id():
     }]
 
 
-async def test_create_new_user():
+async def test_create_new_user(mock_hass):
     """Test creating new user."""
-    manager = await auth.auth_manager_from_config(None, [{
+    manager = await auth.auth_manager_from_config(mock_hass, [{
         'type': 'insecure_example',
         'users': [{
             'username': 'test-user',
@@ -62,9 +74,9 @@ async def test_create_new_user():
     assert user.name == 'Test Name'
 
 
-async def test_login_as_existing_user():
+async def test_login_as_existing_user(mock_hass):
     """Test login as existing user."""
-    manager = await auth.auth_manager_from_config(None, [{
+    manager = await auth.auth_manager_from_config(mock_hass, [{
         'type': 'insecure_example',
         'users': [{
             'username': 'test-user',
@@ -72,16 +84,22 @@ async def test_login_as_existing_user():
             'name': 'Test Name'
         }]
     }])
+    ensure_auth_manager_loaded(manager)
 
     # Add fake user with credentials for example auth provider.
-    user = auth.User(id='mock-user')
+    user = MockUser(
+        id='mock-user',
+        is_owner=False,
+        is_active=False,
+        name='Paulus',
+    ).add_to_auth_manager(manager)
     user.credentials.append(auth.Credentials(
         id='mock-id',
         auth_provider_type='insecure_example',
         auth_provider_id=None,
-        data={'username': 'test-user'}
+        data={'username': 'test-user'},
+        is_new=False,
     ))
-    manager._store.users = [user]
 
     step = await manager.login_flow.async_init(('insecure_example', None))
     assert step['type'] == data_entry_flow.RESULT_TYPE_FORM
@@ -92,16 +110,18 @@ async def test_login_as_existing_user():
     })
     assert step['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     credentials = step['result']
+
     user = await manager.async_get_or_create_user(credentials)
     assert user is not None
     assert user.id == 'mock-user'
     assert user.is_owner is False
-    assert user.name is None
+    assert user.is_active is False
+    assert user.name == 'Paulus'
 
 
-async def test_linking_user_to_two_auth_providers():
+async def test_linking_user_to_two_auth_providers(mock_hass):
     """Test linking user to two auth providers."""
-    manager = await auth.auth_manager_from_config(None, [{
+    manager = await auth.auth_manager_from_config(mock_hass, [{
         'type': 'insecure_example',
         'users': [{
             'username': 'test-user',

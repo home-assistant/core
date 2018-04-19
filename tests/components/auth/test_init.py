@@ -1,59 +1,5 @@
-"""Tests for the auth component."""
-from . import async_setup_auth
-
-
-async def test_fetch_auth_providers(hass, aiohttp_client):
-    """Test fetching auth providers."""
-    client = await async_setup_auth(hass, aiohttp_client)
-    resp = await client.get('/api/auth/providers')
-    assert await resp.json() == [{
-        'name': 'Example',
-        'type': 'insecure_example',
-        'id': None
-    }]
-
-
-async def test_cannot_get_flows_in_progress(hass, aiohttp_client):
-    """Test we cannot get flows in progress."""
-    client = await async_setup_auth(hass, aiohttp_client, [])
-    resp = await client.get('/api/auth/login_flow')
-    assert resp.status == 405
-
-
-async def test_invalid_username_password(hass, aiohttp_client):
-    """Test we cannot get flows in progress."""
-    client = await async_setup_auth(hass, aiohttp_client)
-    resp = await client.post('/api/auth/login_flow', json={
-        'handler': ['insecure_example', None]
-    })
-    assert resp.status == 200
-    step = await resp.json()
-
-    # Incorrect username
-    resp = await client.post(
-        '/api/auth/login_flow/{}'.format(step['flow_id']), json={
-            'username': 'wrong-user',
-            'password': 'test-pass',
-        })
-
-    assert resp.status == 200
-    step = await resp.json()
-
-    assert step['step_id'] == 'init'
-    assert step['errors']['username'] == 'Invalid username'
-
-    # Incorrect password
-    resp = await client.post(
-        '/api/auth/login_flow/{}'.format(step['flow_id']), json={
-            'username': 'test-user',
-            'password': 'wrong-pass',
-        })
-
-    assert resp.status == 200
-    step = await resp.json()
-
-    assert step['step_id'] == 'init'
-    assert step['errors']['password'] == 'Invalid password'
+"""Integration tests for the auth component."""
+from . import async_setup_auth, CLIENT_AUTH
 
 
 async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
@@ -61,7 +7,7 @@ async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     resp = await client.post('/api/auth/login_flow', json={
         'handler': ['insecure_example', None]
-    })
+    }, auth=CLIENT_AUTH)
     assert resp.status == 200
     step = await resp.json()
 
@@ -69,7 +15,7 @@ async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
         '/api/auth/login_flow/{}'.format(step['flow_id']), json={
             'username': 'test-user',
             'password': 'test-pass',
-        })
+        }, auth=CLIENT_AUTH)
 
     assert resp.status == 200
     step = await resp.json()
@@ -79,7 +25,7 @@ async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
     resp = await client.post('/api/auth/token', data={
             'grant_type': 'authorization_code',
             'code': code
-        })
+        }, auth=CLIENT_AUTH)
 
     assert resp.status == 200
     tokens = await resp.json()
@@ -91,7 +37,7 @@ async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
     resp = await client.post('/api/auth/token', data={
             'grant_type': 'refresh_token',
             'refresh_token': tokens['refresh_token']
-        })
+        }, auth=CLIENT_AUTH)
 
     assert resp.status == 200
     tokens = await resp.json()

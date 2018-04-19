@@ -115,8 +115,8 @@ def async_test_home_assistant(loop):
     hass.config_entries._entries = []
     hass.config.async_load = Mock()
     store = auth.AuthStore(hass)
-    store.users = []
     hass.auth = auth.AuthManager(hass, store, [])
+    ensure_auth_manager_loaded(hass.auth)
     INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
@@ -317,8 +317,22 @@ class MockUser(auth.User):
 
     def add_to_hass(self, hass):
         """Test helper to add entry to hass."""
-        hass.auth._store.users.append(self)
+        return self.add_to_auth_manager(hass.auth)
+
+    def add_to_auth_manager(self, auth_mgr):
+        """Test helper to add entry to hass."""
+        auth_mgr._store.users.append(self)
         return self
+
+
+@ha.callback
+def ensure_auth_manager_loaded(auth_mgr):
+    """Ensure an auth manager is considered loaded."""
+    store = auth_mgr._store
+    if store.clients is None:
+        store.clients = []
+    if store.users is None:
+        store.users = []
 
 
 class MockModule(object):

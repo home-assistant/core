@@ -1,6 +1,8 @@
 """Provide an authentication layer for Home Assistant."""
 import asyncio
 from datetime import datetime, timedelta
+import hmac
+import importlib
 import logging
 import uuid
 
@@ -8,7 +10,7 @@ import attr
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant import data_entry_flow
+from homeassistant import data_entry_flow, requirements
 from homeassistant.core import callback
 from homeassistant.const import CONF_TYPE, CONF_NAME, CONF_ID
 from homeassistant.exceptions import HomeAssistantError
@@ -29,6 +31,7 @@ AUTH_PROVIDER_SCHEMA = vol.Schema({
 })
 
 ACCESS_TOKEN_EXPIRATION = timedelta(minutes=30)
+DATA_REQS = 'auth_reqs_processed'
 
 
 class AuthError(HomeAssistantError):
@@ -51,6 +54,8 @@ class AuthProvider:
     """Provider of user authentication."""
 
     DEFAULT_TITLE = 'Unnamed auth provider'
+
+    initialized = False
 
     def __init__(self, store, config):
         """Initialize an auth provider."""
@@ -91,7 +96,10 @@ class AuthProvider:
     # Implement by extending class
 
     async def async_initialize(self):
-        """Initialize the auth provider."""
+        """Initialize the auth provider.
+
+        Optional.
+        """
 
     async def async_credential_flow(self):
         """Return the data flow for logging in with auth provider."""
@@ -186,24 +194,48 @@ class Credentials:
 class Client:
     """Client that interacts with Home Assistant on behalf of a user."""
 
-    id = attr.ib(type=uuid.UUID)
-    secret = attr.ib(type=str)
+    name = attr.ib(type=str)
+    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    secret = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
 
 
-@callback
-def load_auth_provider_module(provider):
+async def load_auth_provider_module(hass, provider):
     """Load an auth provider."""
-    # Stub.
-    from .auth_providers import insecure_example
-    return insecure_example
+    try:
+        module = importlib.import_module(
+            'homeassistant.auth_providers.{}'.format(provider))
+    except ModuleNotFoundError:
+        _LOGGER.warning('Unable to find auth provider %s', provider)
+        return None
+
+    if hass.config.skip_pip or not hasattr(module, 'REQUIREMENTS'):
+        return module
+
+    processed = hass.data.get(DATA_REQS)
+
+    if processed is None:
+        processed = hass.data[DATA_REQS] = set()
+    elif provider in processed:
+        return module
+
+    req_success = await requirements.async_process_requirements(
+        hass, 'auth provider {}'.format(provider), module.REQUIREMENTS)
+
+    if not req_success:
+        return None
+
+    return module
 
 
 async def auth_manager_from_config(hass, provider_configs):
     """Initialize an auth manager from config."""
     store = AuthStore(hass)
-    providers = await asyncio.gather(
-        *[_auth_provider_from_config(store, config)
-          for config in provider_configs])
+    if provider_configs:
+        providers = await asyncio.gather(
+            *[_auth_provider_from_config(hass, store, config)
+              for config in provider_configs])
+    else:
+        providers = []
     provider_hash = {}
     for provider in providers:
         if provider is None:
@@ -219,14 +251,16 @@ async def auth_manager_from_config(hass, provider_configs):
 
         provider_hash[key] = provider
     manager = AuthManager(hass, store, provider_hash)
-    await manager.initialize()
     return manager
 
 
-async def _auth_provider_from_config(store, config):
+async def _auth_provider_from_config(hass, store, config):
     """Initialize an auth provider from a config."""
     provider_name = config[CONF_TYPE]
-    module = load_auth_provider_module(provider_name)
+    module = await load_auth_provider_module(hass, provider_name)
+
+    if module is None:
+        return None
 
     try:
         config = module.CONFIG_SCHEMA(config)
@@ -249,13 +283,6 @@ class AuthManager:
             hass, self._async_create_login_flow,
             self._async_finish_login_flow)
         self._flow_credentials = {}
-
-    async def initialize(self):
-        """Initialize the auth manager."""
-        if not self._providers:
-            return
-        await asyncio.wait([provider.async_initialize() for provider
-                            in self._providers.values()])
 
     @callback
     def async_auth_providers(self):
@@ -283,9 +310,31 @@ class AuthManager:
         """Remove a user."""
         await self._store.async_remove_user(user)
 
+    async def async_create_client(self, name):
+        """Create a new client."""
+        return await self._store.async_create_client(name)
+
+    async def async_secure_get_client(self, client_id):
+        """Get a client.
+
+        This function will always run in the same time, regardless if a client
+        is found or not.
+        """
+        clients = await self._store.async_get_clients()
+        found = None
+        for client in clients:
+            if hmac.compare_digest(client_id, client.id):
+                found = client
+        return found
+
     async def _async_create_login_flow(self, handler):
         """Create a login flow."""
         auth_provider = self._providers[handler]
+
+        if not auth_provider.initialized:
+            auth_provider.initialized = True
+            await auth_provider.async_initialize()
+
         return await auth_provider.async_credential_flow()
 
     async def _async_finish_login_flow(self, result):
@@ -314,6 +363,7 @@ class AuthStore:
         """Initialize the auth store."""
         self.hass = hass
         self.users = None
+        self.clients = None
         self._load_lock = asyncio.Lock()
 
     async def credentials_for_provider(self, provider_type, provider_id):
@@ -391,11 +441,29 @@ class AuthStore:
         self.users.remove(user)
         await self.async_save()
 
+    async def async_create_client(self, name):
+        """Create a new client."""
+        if self.clients is None:
+            await self.async_load()
+
+        client = Client(name)
+        self.clients.append(client)
+        await self.async_save()
+        return client
+
+    async def async_get_clients(self):
+        """Get all known client."""
+        if self.clients is None:
+            await self.async_load()
+
+        return self.clients
+
     async def async_load(self):
         """Load the users."""
         # TODO load from disk
         async with self._load_lock:
             self.users = []
+            self.clients = []
 
     async def async_save(self):
         """Save users."""
