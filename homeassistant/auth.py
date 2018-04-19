@@ -1,6 +1,6 @@
 """Provide an authentication layer for Home Assistant."""
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import uuid
 
@@ -27,6 +27,8 @@ AUTH_PROVIDER_SCHEMA = vol.Schema({
     # Specify ID if you have two auth providers for same type.
     vol.Optional(CONF_ID): str,
 })
+
+ACCESS_TOKEN_EXPIRATION = timedelta(minutes=30)
 
 
 class AuthError(HomeAssistantError):
@@ -123,16 +125,25 @@ class AuthProvider:
 class User:
     """A user."""
 
-    id = attr.ib(type=uuid.UUID, default=None)
+    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
     is_owner = attr.ib(type=bool, default=False)
     is_active = attr.ib(type=bool, default=False)
     name = attr.ib(type=str, default=None)
-    # Minimum time a token has to be issued to be considered valid.
-    # When a user clicks "log out all sessions", we update this timestamp.
-    token_min_issued = attr.ib(type=datetime,
-                               default=attr.Factory(dt_util.utcnow))
+    # For persisting and see if saved?
+    # store = attr.ib(type=AuthStore, default=None)
+
     # List of credentials of a user.
     credentials = attr.ib(type=list, default=attr.Factory(list))
+
+    # List of tokens associated with a user.
+    tokens = attr.ib(type=list, default=attr.Factory(list))
+
+    async def async_create_token(self, client_id):
+        """Create a new token."""
+        token = AuthToken(self, client_id)
+        self.tokens.append(token)
+        # TODO persist
+        return token
 
     def as_dict(self):
         """Convert user object to a dictionary."""
@@ -145,6 +156,19 @@ class User:
 
 
 @attr.s(slots=True)
+class AuthToken:
+    """AuthToken for a user to login."""
+
+    user = attr.ib(type=User)
+    client_id = attr.ib(type=str)
+    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    created_at = attr.ib(type=datetime, default=attr.Factory(dt_util.utcnow))
+    last_refreshed = attr.ib(type=datetime, default=None)
+    access_token_valid = attr.ib(type=timedelta,
+                                 default=ACCESS_TOKEN_EXPIRATION)
+
+
+@attr.s(slots=True)
 class Credentials:
     """Credentials for a user on an auth provider."""
 
@@ -154,7 +178,8 @@ class Credentials:
     # Allow the auth provider to store data to represent their auth.
     data = attr.ib(type=dict)
 
-    id = attr.ib(type=uuid.UUID, default=None)
+    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    is_new = attr.ib(type=bool, default=True)
 
 
 @attr.s(slots=True)
@@ -175,7 +200,7 @@ def load_auth_provider_module(provider):
 
 async def auth_manager_from_config(hass, provider_configs):
     """Initialize an auth manager from config."""
-    store = AuthStore()
+    store = AuthStore(hass)
     providers = await asyncio.gather(
         *[_auth_provider_from_config(store, config)
           for config in provider_configs])
@@ -254,6 +279,10 @@ class AuthManager:
         """Link credentials to an existing user."""
         await self._store.async_link_user(user, credentials)
 
+    async def async_remove_user(self, user):
+        """Remove a user."""
+        await self._store.async_remove_user(user)
+
     async def _async_create_login_flow(self, handler):
         """Create a login flow."""
         auth_provider = self._providers[handler]
@@ -281,9 +310,11 @@ class AuthStore:
     called that needs it.
     """
 
-    def __init__(self):
+    def __init__(self, hass):
         """Initialize the auth store."""
+        self.hass = hass
         self.users = None
+        self._load_lock = asyncio.Lock()
 
     async def credentials_for_provider(self, provider_type, provider_id):
         """Return credentials for specific auth provider type and id."""
@@ -321,7 +352,7 @@ class AuthStore:
             await self.async_load()
 
         # New credentials, store in user
-        if credentials.id is None:
+        if credentials.is_new:
             info = await auth_provider.async_user_meta_for_credentials(
                 credentials)
             # Make owner and activate user if it's the first user.
@@ -353,21 +384,19 @@ class AuthStore:
         """Add credentials to an existing user."""
         user.credentials.append(credentials)
         await self.async_save()
+        credentials.is_new = False
+
+    async def async_remove_user(self, user):
+        """Remove a user."""
+        self.users.remove(user)
+        await self.async_save()
 
     async def async_load(self):
         """Load the users."""
         # TODO load from disk
-        self.users = []
+        async with self._load_lock:
+            self.users = []
 
     async def async_save(self):
         """Save users."""
-        # Set IDs for unsaved users & credentials
-        for user in self.users:
-            if user.id is None:
-                user.id = uuid.uuid4().hex
-
-            for credentials in user.credentials:
-                if credentials.id is None:
-                    credentials.id = uuid.uuid4().hex
-
         # TODO store to disk

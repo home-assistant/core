@@ -102,12 +102,10 @@ a limited expiration.
 """
 import base64
 from datetime import timedelta
-from functools import wraps
 import hmac
 import logging
 import uuid
 
-import aiohttp.hdrs
 import aiohttp.web
 import voluptuous as vol
 
@@ -118,88 +116,29 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView, FlowManagerResourceView)
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.util import dt as dt_util
+
+from .client import VerifyClient
+from .token import async_access_token, async_refresh_token, async_resolve_token
 
 DOMAIN = 'auth'
 REQUIREMENTS = ['pyjwt==1.6.1']
 DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
 
-TEMP_SECRET = 'supersecret'
-ACCESS_TOKEN_EXPIRATION = timedelta(minutes=30)
 
 
 async def async_setup(hass, config):
     """Component to allow users to login."""
-
-    temp_credentials = {}
-
-    @callback
-    def store_credentials(client_id, credentials):
-        """Store credentials and return a code to retrieve it."""
-        code = uuid.uuid4().hex
-        temp_credentials[(client_id, code)] = credentials
-        return code
-
-    @callback
-    def retrieve_credentials(client_id, code):
-        """Retrieve credentials."""
-        return temp_credentials.pop((client_id, code), None)
+    store_credentials, retrieve_credentials = _create_cred_store()
 
     hass.http.register_view(AuthProvidersView)
     hass.http.register_view(LoginFlowIndexView(hass.auth.login_flow))
     hass.http.register_view(
         LoginFlowResourceView(hass.auth.login_flow, store_credentials))
     hass.http.register_view(GrantTokenView(retrieve_credentials))
+    hass.http.register_view(LinkUserView(retrieve_credentials))
 
     return True
-
-
-@callback
-def verify_client(request):
-    """Decorator to verify the client id/secret in a time safe manner."""
-    return 'fake-client-id'  # TEMP
-
-    # Verify client_id, secret
-    if aiohttp.hdrs.AUTHORIZATION not in request.headers:
-        return False
-
-    auth_type, auth_value = \
-        request.headers.get(aiohttp.hdrs.AUTHORIZATION).split(' ', 1)
-
-    if auth_type != 'Basic':
-        return False
-
-    # decoded = base64.b64decode(auth_value).decode('utf-8')
-    # client_id, client_secret = decoded.split(':', 1)
-    # hass = request.app['hass']
-    # Use hmac.compare_digest(client_secret, client.secret)
-
-    # Look up client id, compare client secret.
-    # secure_lookup should always run in same time wheter it finds or not
-    # finds a matching client.
-    # client = hass.auth.async_secure_lookup_client(client_id)
-    # if we don't find a client, we should still compare passed client
-    # secret to itself to spend the same amount of time as a correct
-    # request.
-
-
-def VerifyClient(method):
-    """Decorator to verify client id/secret on requests."""
-    @wraps(method)
-    async def wrapper(view, request, *args, **kwargs):
-        """Verify client id/secret before doing request."""
-        client_id = verify_client(request)
-
-        if client_id is None:
-            return view.json({
-                'error': 'invalid_client',
-            }, status_code=401)
-
-        return await method(
-            view, request, *args, client_id=client_id, **kwargs)
-
-    return wrapper
 
 
 class AuthProvidersView(HomeAssistantView):
@@ -290,7 +229,8 @@ class GrantTokenView(HomeAssistantView):
             return await self._async_handle_auth_code(hass, client_id, data)
 
         elif grant_type == 'refresh_token':
-            return self._async_handle_refresh_token(hass, client_id, data)
+            return await self._async_handle_refresh_token(hass, client_id,
+                                                          data)
 
         return self.json({
             'error': 'unsupported_grant_type',
@@ -312,24 +252,20 @@ class GrantTokenView(HomeAssistantView):
                 'error': 'invalid_request',
             }, status_code=400)
 
-        # TODO if we make this request authenticated, link the user
-
         user = await hass.auth.async_get_or_create_user(credentials)
-        refresh_token = async_refresh_token(hass, client_id, user)
-        access_token = async_access_token(hass, client_id, refresh_token)
+        token = await user.async_create_token(client_id)
+        refresh_token = async_refresh_token(hass, token)
+        access_token = async_access_token(hass, token)
 
         return self.json({
             'access_token': access_token,
             'token_type': 'Bearer',
             'refresh_token': refresh_token,
-            'expires_in': int(ACCESS_TOKEN_EXPIRATION.total_seconds()),
+            'expires_in': int(token.access_token_valid.total_seconds()),
         })
 
-    @callback
-    def _async_handle_refresh_token(self, hass, client_id, data):
+    async def _async_handle_refresh_token(self, hass, client_id, data):
         """Handle authorization code request."""
-        import jwt
-
         refresh_token = data.get('refresh_token')
 
         if refresh_token is None:
@@ -337,20 +273,20 @@ class GrantTokenView(HomeAssistantView):
                 'error': 'invalid_request',
             }, status_code=400)
 
-        # TODO validate refresh token claims
+        info = await async_resolve_token(hass, refresh_token, client_id)
 
-        try:
-            access_token = async_access_token(hass, client_id, refresh_token)
-        except jwt.exceptions.InvalidTokenError:
-            # If the refresh token is invalid.
+        if info is None:
             return self.json({
                 'error': 'invalid_grant',
             }, status_code=400)
 
+        access_token = async_access_token(hass, info['token'])
+
         return self.json({
             'access_token': access_token,
             'token_type': 'Bearer',
-            'expires_in': int(ACCESS_TOKEN_EXPIRATION.total_seconds()),
+            'expires_in': int(
+                info['token'].access_token_valid.total_seconds()),
         })
 
 
@@ -371,9 +307,9 @@ class LinkUserView(HomeAssistantView):
     async def post(self, request, data):
         """Link a user."""
         hass = request.app['hass']
-        # TODO user = request['user'] ?
+        user = request['hass_user']
 
-        credentials = await self._retrieve_credentials(
+        credentials = self._retrieve_credentials(
             data['client_id'], data['code'])
 
         if credentials is None:
@@ -384,82 +320,20 @@ class LinkUserView(HomeAssistantView):
 
 
 @callback
-def async_refresh_token(hass, client_id, user):
-    """Generate a set of tokens for a user.
+def _create_cred_store():
+    """Create a credential store."""
+    temp_credentials = {}
 
-    typ: token type, refresh.
-    sub: identifier of the user.
-    aud: id of client requesting token on behalf of user.
-    iat: unix timestamp when token was issued.
-    """
-    import jwt
+    @callback
+    def store_credentials(client_id, credentials):
+        """Store credentials and return a code to retrieve it."""
+        code = uuid.uuid4().hex
+        temp_credentials[(client_id, code)] = credentials
+        return code
 
-    return jwt.encode({
-        'typ': 'refresh',
-        'sub': user.id,
-        'aud': client_id,
-        'iat': dt_util.utcnow()
-    }, TEMP_SECRET, algorithm='HS256').decode('utf-8')
+    @callback
+    def retrieve_credentials(client_id, code):
+        """Retrieve credentials."""
+        return temp_credentials.pop((client_id, code), None)
 
-
-@callback
-def async_access_token(hass, client_id, refresh_token):
-    """Generate an access token for a user.
-
-    typ: token type, access.
-    sub: identifier of the user.
-    aud: id of client requesting token on behalf of user.
-    auth_time: unix timestamp the refresh token was granted.
-    iat: unix timestsamp when token was issued.
-    exp: unix timestamp when token expires.
-    """
-    import jwt
-
-    claims = jwt.decode(
-        refresh_token.encode('utf-8'), TEMP_SECRET, algorithms=['HS256'],
-        audience=client_id)
-
-    return jwt.encode({
-        'typ': 'access',
-        'sub': claims['sub'],
-        'aud': claims['aud'],
-        'auth_time': claims['iat'],
-        'iat': dt_util.utcnow(),
-        'exp': dt_util.utcnow() + ACCESS_TOKEN_EXPIRATION
-    }, TEMP_SECRET, algorithm='HS256').decode('utf-8')
-
-
-@bind_hass
-async def async_valid_access_token(hass, access_token, client_id=None):
-    """Validate an access token."""
-    return (await async_get_claims(hass, access_token, client_id)) is not None
-
-
-async def async_get_claims(hass, token, client_id=None):
-    """Get claims from a token.
-
-    Return None if token cannot be validated."""
-    import jwt
-
-    options = {}
-    if client_id is None:
-        options['verify_aud'] = False
-
-    try:
-        claims = jwt.decode(token, TEMP_SECRET, audience=client_id,
-                            options=options)
-    except jwt.exceptions.InvalidTokenError:
-        return None
-
-    # Fetch the user and see if user.token_min_issued
-    user = await hass.auth.async_get_user(claims['sub'])
-
-    if user is None or not user.is_active:
-        return None
-
-    # Make sure the token has not been issued before the minimum time.
-    # This feature allows a user to instant invalidate all old tokens.
-    if claims['auth_time'] < int(user.token_min_issued.timestamp()):
-        return None
-
-    return claims
+    return store_credentials, retrieve_credentials

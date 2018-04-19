@@ -79,16 +79,21 @@ async def async_validate_authorization_header(api_password, request):
     if hdrs.AUTHORIZATION not in request.headers:
         return False
 
-    auth_type, auth = request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
+    hass = request.app['hass']
+    auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
 
     if auth_type == 'Bearer':
-        return await \
-            request.app['hass'].components.auth.async_valid_access_token(auth)
+        info = await hass.components.auth.async_resolve_token(hass, auth_val)
+        if info is None:
+            return False
+        request['hass_user'] = info['user']
+        request['hass_token'] = info['token']
+        return True
 
     if auth_type != 'Basic':
         return False
 
-    decoded = base64.b64decode(auth).decode('utf-8')
+    decoded = base64.b64decode(auth_val).decode('utf-8')
     username, password = decoded.split(':', 1)
 
     if username != 'homeassistant':

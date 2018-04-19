@@ -10,7 +10,8 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from homeassistant import core as ha, loader, data_entry_flow, config_entries
+from homeassistant import (
+    auth, core as ha, loader, data_entry_flow, config_entries)
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
@@ -113,6 +114,9 @@ def async_test_home_assistant(loop):
     hass.config_entries = config_entries.ConfigEntries(hass, {})
     hass.config_entries._entries = []
     hass.config.async_load = Mock()
+    store = auth.AuthStore(hass)
+    store.users = []
+    hass.auth = auth.AuthManager(hass, store, [])
     INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
@@ -301,6 +305,20 @@ def mock_registry(hass, mock_entries=None):
     registry.entities = mock_entries or {}
     hass.data[entity_registry.DATA_REGISTRY] = registry
     return registry
+
+
+class MockUser(auth.User):
+    """Mock a user in Home Assistant."""
+
+    def __init__(self, id='mock-id', is_owner=True, is_active=True,
+                 name='Mock User'):
+        """Initialize mock user."""
+        super().__init__(id, is_owner, is_active, name)
+
+    def add_to_hass(self, hass):
+        """Test helper to add entry to hass."""
+        hass.auth._store.users.append(self)
+        return self
 
 
 class MockModule(object):

@@ -1,36 +1,22 @@
 """Tests for the auth component."""
+from datetime import timedelta
+from unittest.mock import patch
+
 import pytest
 
-from homeassistant import auth
+from homeassistant import auth as auth_core
+from homeassistant.components import auth as auth_cmp
 from homeassistant.setup import async_setup_component
 
-
-BASE_CONFIG = [{
-    'name': 'Example',
-    'type': 'insecure_example',
-    'users': [{
-        'username': 'test-user',
-        'password': 'test-pass',
-        'name': 'Test Name'
-    }]
-}]
+from tests.common import MockUser
 
 
-async def async_setup_auth(hass, aiohttp_client, provider_configs):
-    """Helper to setup authentication and create a HTTP client."""
-    hass.auth = await auth.auth_manager_from_config(hass, provider_configs)
-    await async_setup_component(hass, 'auth', {
-        'http': {
-            'api_password': 'bla'
-        }
-    })
-    await async_setup_component(hass, 'api', {})
-    return await aiohttp_client(hass.http.app)
+from . import async_setup_auth
 
 
 async def test_fetch_auth_providers(hass, aiohttp_client):
     """Test fetching auth providers."""
-    client = await async_setup_auth(hass, aiohttp_client, BASE_CONFIG)
+    client = await async_setup_auth(hass, aiohttp_client)
     resp = await client.get('/api/auth/providers')
     assert await resp.json() == [{
         'name': 'Example',
@@ -48,7 +34,7 @@ async def test_cannot_get_flows_in_progress(hass, aiohttp_client):
 
 async def test_invalid_username_password(hass, aiohttp_client):
     """Test we cannot get flows in progress."""
-    client = await async_setup_auth(hass, aiohttp_client, BASE_CONFIG)
+    client = await async_setup_auth(hass, aiohttp_client)
     resp = await client.post('/api/auth/login_flow', json={
         'handler': ['insecure_example', None]
     })
@@ -82,9 +68,9 @@ async def test_invalid_username_password(hass, aiohttp_client):
     assert step['errors']['password'] == 'Invalid password'
 
 
-async def test_login_new_user(hass, aiohttp_client):
-    """Test we cannot get flows in progress."""
-    client = await async_setup_auth(hass, aiohttp_client, BASE_CONFIG)
+async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
+    """Test logging in with new user and refreshing tokens."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     resp = await client.post('/api/auth/login_flow', json={
         'handler': ['insecure_example', None]
     })
@@ -110,8 +96,8 @@ async def test_login_new_user(hass, aiohttp_client):
     assert resp.status == 200
     tokens = await resp.json()
 
-    assert await hass.components.auth.async_valid_access_token(
-        tokens['access_token'])
+    assert await hass.components.auth.async_resolve_token(
+        hass, tokens['access_token']) is not None
 
     # Use refresh token to get more tokens.
     resp = await client.post('/api/auth/token', data={
@@ -122,9 +108,10 @@ async def test_login_new_user(hass, aiohttp_client):
     assert resp.status == 200
     tokens = await resp.json()
     assert 'refresh_token' not in tokens
-    assert await hass.components.auth.async_valid_access_token(
-        tokens['access_token'])
+    assert await hass.components.auth.async_resolve_token(
+        hass, tokens['access_token']) is not None
 
+    # Test using access token to hit API.
     resp = await client.get('/api/')
     assert resp.status == 401
 
@@ -132,53 +119,3 @@ async def test_login_new_user(hass, aiohttp_client):
         'authorization': 'Bearer {}'.format(tokens['access_token'])
     })
     assert resp.status == 200
-
-
-async def test_decline_access_token_issued_too_old(hass):
-    """Decline access tokens if issued before user.token_min_issued."""
-    assert False
-
-
-async def test_decline_refresh_token_issued_too_old(hass):
-    """Decline refresh tokens if issued before user.token_min_issued."""
-    assert False
-
-
-async def test_decline_access_token_user_not_active(hass):
-    """Decline access tokens if user is not marked as active."""
-    assert False
-
-
-async def test_decline_refresh_token_user_not_active(hass):
-    """Decline refresh tokens if user is not marked as active."""
-    assert False
-
-
-async def test_decline_access_token_user_no_longer_exists(hass):
-    """Decline access tokens if user no longer exists."""
-    assert False
-
-
-async def test_decline_refresh_token_user_no_longer_exists(hass):
-    """Decline refresh tokens if user no longer exists."""
-    assert False
-
-
-async def test_link_user(hass):
-    """Test linking a user to new credentials."""
-    assert False
-
-
-async def test_link_user_invalid_client_id(hass):
-    """Test linking a user to new credentials."""
-    assert False
-
-
-async def test_link_user_invalid_code(hass):
-    """Test linking a user to new credentials."""
-    assert False
-
-
-async def test_link_user_invalid_auth(hass):
-    """Test linking a user to new credentials."""
-    assert False
