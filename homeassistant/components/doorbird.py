@@ -99,21 +99,21 @@ def setup(hass, config):
 
 
 class ConfiguredDoorbird():
-    """Attach additional information to pass along with configured device"""
+    """Attach additional information to pass along with configured device."""
 
     def __init__(self, device, name):
-        """Initialize configured device"""
+        """Initialize configured device."""
         self._name = name
         self._device = device
 
     @property
     def name(self):
-        """Custom device name"""
+        """Custom device name."""
         return self._name
 
     @property
     def device(self):
-        """The configured device"""
+        """The configured device."""
         return self._device
 
 
