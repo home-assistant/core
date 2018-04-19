@@ -648,6 +648,7 @@ omit =
     homeassistant/components/sensor/sensehat.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/serial.py
+    homeassistant/components/sensor/sht31.py
     homeassistant/components/sensor/shodan.py
     homeassistant/components/sensor/sigfox.py
     homeassistant/components/sensor/simulated.py
