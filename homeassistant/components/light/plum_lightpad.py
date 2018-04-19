@@ -9,7 +9,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (Light, PLATFORM_SCHEMA,
                                             SUPPORT_BRIGHTNESS, SUPPORT_COLOR,
                                             ATTR_HS_COLOR, ATTR_BRIGHTNESS)
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 import homeassistant.util.color as color_util
 from homeassistant.core import callback
 
@@ -42,6 +42,11 @@ async def async_setup_platform(hass, config, add_devices,
         add_devices([
             GlowRing(lightpad=lightpad)
         ])
+
+        def cleanup(event):
+            lightpad.close()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
     plum.add_lightpad_listener(new_lightpad)
 
