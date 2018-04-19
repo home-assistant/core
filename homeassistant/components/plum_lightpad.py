@@ -13,7 +13,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['plumlightpad==0.0.8']
+REQUIREMENTS = ['plumlightpad==0.0.9']
 
 DOMAIN = 'plum_lightpad'
 
