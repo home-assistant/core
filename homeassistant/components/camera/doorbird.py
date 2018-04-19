@@ -33,12 +33,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for doorstation in hass.data.get(DOORBIRD_DOMAIN):
         device = doorstation.device
         async_add_devices([
-            DoorBirdCamera(device.live_image_url, _CAMERA_LIVE.format(doorstation.name), _LIVE_INTERVAL),
             DoorBirdCamera(
-                device.history_image_url(1, 'doorbell'), _CAMERA_LAST_VISITOR.format(doorstation.name),
+                device.live_image_url,
+                _CAMERA_LIVE.format(doorstation.name),
+                _LIVE_INTERVAL),
+            DoorBirdCamera(
+                device.history_image_url(1, 'doorbell'),
+                _CAMERA_LAST_VISITOR.format(doorstation.name),
                 _LAST_VISITOR_INTERVAL),
             DoorBirdCamera(
-                device.history_image_url(1, 'motionsensor'), _CAMERA_LAST_MOTION.format(doorstation.name),
+                device.history_image_url(1, 'motionsensor'),
+                _CAMERA_LAST_MOTION.format(doorstation.name),
                 _LAST_MOTION_INTERVAL),
         ])
 

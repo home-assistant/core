@@ -9,8 +9,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD, \
-    CONF_DEVICES, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_USERNAME, \
+    CONF_PASSWORD, CONF_NAME
 from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
 
@@ -54,16 +54,19 @@ def setup(hass, config):
         device_ip = doorstation_config.get(CONF_HOST)
         username = doorstation_config.get(CONF_USERNAME)
         password = doorstation_config.get(CONF_PASSWORD)
-        name = doorstation_config.get(CONF_NAME) or 'DoorBird {}'.format(index + 1)
+        name = doorstation_config.get(CONF_NAME) \
+               or 'DoorBird {}'.format(index + 1)
 
         device = DoorBird(device_ip, username, password)
         status = device.ready()
 
         if status[0]:
-            _LOGGER.info("Connected to DoorBird at %s as %s", device_ip, username)
+            _LOGGER.info("Connected to DoorBird at %s as %s", device_ip,
+                         username)
             doorstations.append(ConfiguredDoorbird(device, name))
         elif status[1] == 401:
-            _LOGGER.error("Authorization rejected by DoorBird at %s", device_ip)
+            _LOGGER.error("Authorization rejected by DoorBird at %s",
+                          device_ip)
             return False
         else:
             _LOGGER.error("Could not connect to DoorBird at %s: Error %s",
@@ -77,12 +80,13 @@ def setup(hass, config):
             # Get the URL of this server
             hass_url = hass.config.api.base_url
 
-            # Override it if another is specified in the component configuration
+            # Override if another is specified in the component configuration
             if doorstation_config.get(CONF_CUSTOM_URL):
                 hass_url = doorstation_config.get(CONF_CUSTOM_URL)
 
             # This will make HA the only service that gets doorbell events
-            url = '{}{}/{}/{}'.format(hass_url, API_URL, index + 1, SENSOR_DOORBELL)
+            url = '{}{}/{}/{}'.format(hass_url, API_URL, index + 1,
+                                      SENSOR_DOORBELL)
 
             _LOGGER.info("DoorBird will connect to this instance via %s",
                          url)
@@ -93,6 +97,7 @@ def setup(hass, config):
     hass.data[DOMAIN] = doorstations
 
     return True
+
 
 class ConfiguredDoorbird():
     def __init__(self, device, name):
