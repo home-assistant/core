@@ -80,7 +80,6 @@ async def async_validate_authorization_header(api_password, request):
     if hdrs.AUTHORIZATION not in request.headers:
         return False
 
-    hass = request.app['hass']
     auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
 
     if auth_type == 'Basic':
@@ -99,6 +98,7 @@ async def async_validate_authorization_header(api_password, request):
     if auth_type != 'Bearer':
         return False
 
+    hass = request.app['hass']
     secret = hass.data.get(token.DATA_SECRET)
     if secret is None:
         secret = await token.load_or_create_secret(hass)

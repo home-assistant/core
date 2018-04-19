@@ -1,4 +1,6 @@
 """The tests for the Home Assistant HTTP component."""
+import logging
+
 from homeassistant.setup import async_setup_component
 
 import homeassistant.components.http as http
@@ -76,14 +78,13 @@ async def test_api_no_base_url(hass):
 
 async def test_not_log_password(hass, aiohttp_client, caplog):
     """Test access with password doesn't get logged."""
-    result = await async_setup_component(hass, 'api', {
+    assert await async_setup_component(hass, 'api', {
         'http': {
             http.CONF_API_PASSWORD: 'some-pass'
         }
     })
-    assert result
-
     client = await aiohttp_client(hass.http.app)
+    logging.getLogger('aiohttp.access').setLevel(logging.INFO)
 
     resp = await client.get('/api/', params={
         'api_password': 'some-pass'

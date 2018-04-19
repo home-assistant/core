@@ -361,7 +361,7 @@ class AuthStore:
         self.hass = hass
         self.users = None
         self.clients = None
-        self._load_lock = asyncio.Lock()
+        self._load_lock = asyncio.Lock(loop=hass.loop)
 
     async def credentials_for_provider(self, provider_type, provider_id):
         """Return credentials for specific auth provider type and id."""

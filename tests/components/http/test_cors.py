@@ -21,7 +21,7 @@ TRUSTED_ORIGIN = 'https://home-assistant.io'
 
 async def test_cors_middleware_not_loaded_by_default(hass):
     """Test accessing to server from banned IP when feature is off."""
-    with patch('homeassistant.components.http.setup_cors') as mock_setup:
+    with patch('homeassistant.components.http.cors.setup_cors') as mock_setup:
         await async_setup_component(hass, 'http', {
             'http': {}
         })
@@ -31,7 +31,7 @@ async def test_cors_middleware_not_loaded_by_default(hass):
 
 async def test_cors_middleware_loaded_from_config(hass):
     """Test accessing to server from banned IP when feature is off."""
-    with patch('homeassistant.components.http.setup_cors') as mock_setup:
+    with patch('homeassistant.components.http.cors.setup_cors') as mock_setup:
         await async_setup_component(hass, 'http', {
             'http': {
                 'cors_allowed_origins': ['http://home-assistant.io']

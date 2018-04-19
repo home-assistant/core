@@ -34,7 +34,7 @@ async def test_access_from_banned_ip(hass, aiohttp_client):
 
 async def test_ban_middleware_not_loaded_by_config(hass):
     """Test accessing to server from banned IP when feature is off."""
-    with patch('homeassistant.components.http.setup_bans') as mock_setup:
+    with patch('homeassistant.components.http.ban.setup_bans') as mock_setup:
         await async_setup_component(hass, 'http', {
             'http': {
                 http.CONF_IP_BAN_ENABLED: False,
@@ -46,7 +46,7 @@ async def test_ban_middleware_not_loaded_by_config(hass):
 
 async def test_ban_middleware_loaded_by_default(hass):
     """Test accessing to server from banned IP when feature is off."""
-    with patch('homeassistant.components.http.setup_bans') as mock_setup:
+    with patch('homeassistant.components.http.ban.setup_bans') as mock_setup:
         await async_setup_component(hass, 'http', {
             'http': {}
         })
