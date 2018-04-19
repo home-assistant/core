@@ -12,12 +12,12 @@ def load_or_create_secret(hass):
     """Load or create a secret."""
     path = hass.config.path(PATH_SECRET)
     try:
-        with open(path, 'rt') as fp:
-            secret = hass.data[DATA_SECRET] = fp.read()
+        with open(path, 'rt') as fil:
+            secret = hass.data[DATA_SECRET] = fil.read()
     except FileNotFoundError:
         secret = uuid.uuid4().hex
-        with open(path, 'wt'):
-            fp.write(secret)
+        with open(path, 'wt') as fil:
+            fil.write(secret)
         hass.data[DATA_SECRET] = secret
     return secret
 
@@ -91,8 +91,8 @@ async def async_resolve_token(hass, secret, token, client_id=None):
         return None
 
     # Ensure token still exists.
-    for token in user.tokens:
-        if token.id == claims['id']:
+    for user_token in user.tokens:
+        if user_token.id == claims['id']:
             break
     else:
         # No token found
@@ -100,5 +100,7 @@ async def async_resolve_token(hass, secret, token, client_id=None):
 
     return {
         'user': user,
-        'token': token,
+        # PyLint is wrong here, we guard for this with the else statement.
+        # pylint: disable=undefined-loop-variable
+        'token': user_token,
     }

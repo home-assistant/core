@@ -160,9 +160,11 @@ class LoginFlowIndexView(FlowManagerIndexView):
         """Do not allow index of flows in progress."""
         return aiohttp.web.Response(status=405)
 
+    # pylint: disable=arguments-differ
     @verify_client
     async def post(self, request, client_id):
         """Create a new login flow."""
+        # pylint: disable=no-value-for-parameter
         return await super().post(request)
 
 
@@ -178,10 +180,12 @@ class LoginFlowResourceView(FlowManagerResourceView):
         super().__init__(flow_mgr)
         self._store_credentials = store_credentials
 
+    # pylint: disable=arguments-differ
     async def get(self, request):
         """Do not allow getting status of a flow in progress."""
         return self.json_message('Invalid flow specified', 404)
 
+    # pylint: disable=arguments-differ
     @verify_client
     @RequestDataValidator(vol.Schema(dict), allow_empty=True)
     async def post(self, request, client_id, flow_id, data):
@@ -254,7 +258,7 @@ class GrantTokenView(HomeAssistantView):
             }, status_code=400)
 
         user = await hass.auth.async_get_or_create_user(credentials)
-        user_token = await user.async_create_token(client_id)
+        user_token = await hass.auth.async_create_token(user, client_id)
         refresh_token = token.async_refresh_token(hass, secret, user_token)
         access_token = token.async_access_token(hass, secret, user_token)
 

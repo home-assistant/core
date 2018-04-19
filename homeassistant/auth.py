@@ -63,7 +63,7 @@ class AuthProvider:
         self.config = config
 
     @property
-    def id(self):
+    def id(self):  # pylint: disable=invalid-name
         """Return id of the auth provider.
 
         Optional, can be None.
@@ -145,13 +145,6 @@ class User:
 
     # List of tokens associated with a user.
     tokens = attr.ib(type=list, default=attr.Factory(list))
-
-    async def async_create_token(self, client_id):
-        """Create a new token."""
-        token = AuthToken(self, client_id)
-        self.tokens.append(token)
-        # TODO persist
-        return token
 
     def as_dict(self):
         """Convert user object to a dictionary."""
@@ -310,6 +303,10 @@ class AuthManager:
         """Remove a user."""
         await self._store.async_remove_user(user)
 
+    async def async_create_token(self, user, client_id):
+        """Create a new token for a user."""
+        return await self._store.async_create_token(user, client_id)
+
     async def async_create_client(self, name):
         """Create a new client."""
         return await self._store.async_create_client(name)
@@ -441,6 +438,13 @@ class AuthStore:
         self.users.remove(user)
         await self.async_save()
 
+    async def async_create_token(self, user, client_id):
+        """Create a new token for a user."""
+        token = AuthToken(user, client_id)
+        user.tokens.append(token)
+        await self.async_save()
+        return token
+
     async def async_create_client(self, name):
         """Create a new client."""
         if self.clients is None:
@@ -460,11 +464,10 @@ class AuthStore:
 
     async def async_load(self):
         """Load the users."""
-        # TODO load from disk
         async with self._load_lock:
             self.users = []
             self.clients = []
 
     async def async_save(self):
         """Save users."""
-        # TODO store to disk
+        pass
