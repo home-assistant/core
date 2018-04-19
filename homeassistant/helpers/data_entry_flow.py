@@ -14,6 +14,7 @@ class _BaseFlowManagerView(HomeAssistantView):
         """Initialize the flow manager index view."""
         self._flow_mgr = flow_mgr
 
+    # pylint: disable=no-self-use
     def _prepare_result_json(self, result):
         """Convert result to JSON."""
         if result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:

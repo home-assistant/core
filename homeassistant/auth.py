@@ -197,7 +197,7 @@ async def load_auth_provider_module(hass, provider):
     try:
         module = importlib.import_module(
             'homeassistant.auth_providers.{}'.format(provider))
-    except ModuleNotFoundError:
+    except ImportError:
         _LOGGER.warning('Unable to find auth provider %s', provider)
         return None
 
