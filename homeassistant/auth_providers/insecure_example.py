@@ -17,7 +17,7 @@ USER_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = auth.AUTH_PROVIDER_SCHEMA.extend({
     vol.Required('users'): [USER_SCHEMA]
-})
+}, extra=vol.PREVENT_EXTRA)
 
 
 @auth.AUTH_PROVIDERS.register('insecure_example')
