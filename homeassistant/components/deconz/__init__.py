@@ -58,22 +58,17 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, config_entry):
-    """Set up a deCONZ bridge for a config entry."""
-    if DOMAIN in hass.data:
-        _LOGGER.error(
-            "Config entry failed since one deCONZ instance already exists")
-        return False
-    return await async_setup_deconz(hass, config_entry)
-
-
-async def async_setup_deconz(hass, config_entry):
-    """Set up a deCONZ session.
+    """Set up a deCONZ bridge for a config entry.
 
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
     """
-    _LOGGER.debug("deCONZ config %s", config_entry.data)
     from pydeconz import DeconzSession
+    if DOMAIN in hass.data:
+        _LOGGER.error(
+            "Config entry failed since one deCONZ instance already exists")
+        return False
+
     session = aiohttp_client.async_get_clientsession(hass)
     deconz = DeconzSession(hass.loop, session, **config_entry.data)
     result = await deconz.async_load_parameters()
