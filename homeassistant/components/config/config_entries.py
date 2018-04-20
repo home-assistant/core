@@ -1,11 +1,10 @@
 """Http views to control the config manager."""
 import asyncio
 
-import voluptuous as vol
-
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.helpers.data_entry_flow import (
+    FlowManagerIndexView, FlowManagerResourceView)
 
 
 REQUIREMENTS = ['voluptuous-serialize==1']
@@ -16,15 +15,17 @@ def async_setup(hass):
     """Enable the Home Assistant views."""
     hass.http.register_view(ConfigManagerEntryIndexView)
     hass.http.register_view(ConfigManagerEntryResourceView)
-    hass.http.register_view(ConfigManagerFlowIndexView)
-    hass.http.register_view(ConfigManagerFlowResourceView)
+    hass.http.register_view(
+        ConfigManagerFlowIndexView(hass.config_entries.flow))
+    hass.http.register_view(
+        ConfigManagerFlowResourceView(hass.config_entries.flow))
     hass.http.register_view(ConfigManagerAvailableFlowView)
     return True
 
 
 def _prepare_json(result):
     """Convert result for JSON."""
-    if result['type'] != config_entries.RESULT_TYPE_FORM:
+    if result['type'] != data_entry_flow.RESULT_TYPE_FORM:
         return result
 
     import voluptuous_serialize
@@ -78,7 +79,7 @@ class ConfigManagerEntryResourceView(HomeAssistantView):
         return self.json(result)
 
 
-class ConfigManagerFlowIndexView(HomeAssistantView):
+class ConfigManagerFlowIndexView(FlowManagerIndexView):
     """View to create config flows."""
 
     url = '/api/config/config_entries/flow'
@@ -94,80 +95,15 @@ class ConfigManagerFlowIndexView(HomeAssistantView):
         hass = request.app['hass']
 
         return self.json([
-            flow for flow in hass.config_entries.flow.async_progress()
-            if flow['source'] != config_entries.SOURCE_USER])
-
-    @RequestDataValidator(vol.Schema({
-        vol.Required('domain'): str,
-    }))
-    @asyncio.coroutine
-    def post(self, request, data):
-        """Handle a POST request."""
-        hass = request.app['hass']
-
-        try:
-            result = yield from hass.config_entries.flow.async_init(
-                data['domain'])
-        except config_entries.UnknownHandler:
-            return self.json_message('Invalid handler specified', 404)
-        except config_entries.UnknownStep:
-            return self.json_message('Handler does not support init', 400)
-
-        result = _prepare_json(result)
-
-        return self.json(result)
+            flw for flw in hass.config_entries.flow.async_progress()
+            if flw['source'] != data_entry_flow.SOURCE_USER])
 
 
-class ConfigManagerFlowResourceView(HomeAssistantView):
+class ConfigManagerFlowResourceView(FlowManagerResourceView):
     """View to interact with the flow manager."""
 
     url = '/api/config/config_entries/flow/{flow_id}'
     name = 'api:config:config_entries:flow:resource'
-
-    @asyncio.coroutine
-    def get(self, request, flow_id):
-        """Get the current state of a flow."""
-        hass = request.app['hass']
-
-        try:
-            result = yield from hass.config_entries.flow.async_configure(
-                flow_id)
-        except config_entries.UnknownFlow:
-            return self.json_message('Invalid flow specified', 404)
-
-        result = _prepare_json(result)
-
-        return self.json(result)
-
-    @RequestDataValidator(vol.Schema(dict), allow_empty=True)
-    @asyncio.coroutine
-    def post(self, request, flow_id, data):
-        """Handle a POST request."""
-        hass = request.app['hass']
-
-        try:
-            result = yield from hass.config_entries.flow.async_configure(
-                flow_id, data)
-        except config_entries.UnknownFlow:
-            return self.json_message('Invalid flow specified', 404)
-        except vol.Invalid:
-            return self.json_message('User input malformed', 400)
-
-        result = _prepare_json(result)
-
-        return self.json(result)
-
-    @asyncio.coroutine
-    def delete(self, request, flow_id):
-        """Cancel a flow in progress."""
-        hass = request.app['hass']
-
-        try:
-            hass.config_entries.flow.async_abort(flow_id)
-        except config_entries.UnknownFlow:
-            return self.json_message('Invalid flow specified', 404)
-
-        return self.json_message('Flow aborted')
 
 
 class ConfigManagerAvailableFlowView(HomeAssistantView):
