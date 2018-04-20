@@ -131,7 +131,7 @@ class YahooWeatherSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = { ATTR_ATTRIBUTION: CONF_ATTRIBUTION }
+        attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
 
         if self._code is None or "weather" in self._type:
             attrs['condition_code'] = self._code
