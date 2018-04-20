@@ -10,6 +10,7 @@ import binascii
 from datetime import timedelta
 import logging
 import socket
+import time
 
 import voluptuous as vol
 
@@ -122,6 +123,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     if extra > 0:
                         packet = packet + ('=' * (4 - extra))
                     payload = b64decode(packet)
+                    time.sleep(0.8)
                     yield from hass.async_add_job(
                         broadlink_device.send_data, payload)
                     break
