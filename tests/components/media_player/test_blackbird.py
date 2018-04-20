@@ -181,7 +181,7 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
                             2: {'name': 'two'}},
             }, lambda *args, **kwargs: None, {})
             self.hass.block_till_done()
-        self.media_player = self.hass.data[DATA_BLACKBIRD][0]
+        self.media_player = self.hass.data[DATA_BLACKBIRD]['/dev/ttyUSB0-3']
         self.media_player.hass = self.hass
         self.media_player.entity_id = 'media_player.zone_3'
 
@@ -195,7 +195,8 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
         self.assertTrue(self.hass.services.has_service(DOMAIN,
                                                        SERVICE_SETALLZONES))
         self.assertEqual(len(self.hass.data[DATA_BLACKBIRD]), 1)
-        self.assertEqual(self.hass.data[DATA_BLACKBIRD][0].name, 'Zone name')
+        self.assertEqual(self.hass.data[DATA_BLACKBIRD]['/dev/ttyUSB0-3'].name,
+                         'Zone name')
 
     def test_setallzones_service_call_with_entity_id(self):
         """Test set all zone source service call with entity id."""
