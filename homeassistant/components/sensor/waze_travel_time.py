@@ -7,7 +7,6 @@ https://home-assistant.io/components/sensor.waze_travel_time/
 from datetime import timedelta
 import logging
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -61,6 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([sensor])
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
+
 
 class WazeTravelTime(Entity):
     """Representation of a Waze travel time sensor."""
