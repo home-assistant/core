@@ -1,7 +1,6 @@
 """Token related helpers for the auth component."""
 import binascii
 import os
-import uuid
 
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
