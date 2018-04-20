@@ -30,31 +30,6 @@ CONF_BUTTON_EVENTS = 'button_events'
 CV_DIM_VALUE = vol.All(vol.Coerce(float), vol.Range(min=1, max=3))
 
 
-def _validate_sensor(config):
-    """Validate sensor."""
-    try:
-        from pyqwikswitch import SENSORS
-    except ImportError:
-        return config
-
-    try:
-        _, _type = SENSORS[config['type']]
-    except KeyError:
-        raise vol.Invalid(
-            "Invalid sensor type {}. Valid values are {}".format(
-                config['type'], ', '.join(SENSORS)))
-
-    if _type is bool:
-        return config
-
-    for _key in ('invert', 'class'):
-        if _key in config:
-            raise vol.Invalid(
-                "{} should only be used for binary_sensors".format(_key))
-
-    return config
-
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_URL, default='http://127.0.0.1:2020'):
@@ -69,7 +44,7 @@ CONFIG_SCHEMA = vol.Schema({
                 vol.Required('type'): str,
                 vol.Optional('class'): DEVICE_CLASSES_SCHEMA,
                 vol.Optional('invert'): bool
-            })], [_validate_sensor]),
+            })]),
         vol.Optional(CONF_SWITCHES, default=[]): vol.All(
             cv.ensure_list, [str])
     })}, extra=vol.ALLOW_EXTRA)
@@ -179,8 +154,14 @@ async def async_setup(hass, config):
             _, _type = SENSORS[sens['type']]
             if _type is bool:
                 comps['binary_sensor'].append(sens)
-            else:
-                comps['sensor'].append(sens)
+                continue
+            comps['sensor'].append(sens)
+            for _key in ('invert', 'class'):
+                if _key in sens:
+                    _LOGGER.warning(
+                        "%s should only be used for binary_sensors: %s",
+                        _key, sens)
+
     except KeyError:
         _LOGGER.warning("Sensor validation failed")
 

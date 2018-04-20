@@ -38,9 +38,9 @@ class QSBinarySensor(QSEntity, BinarySensorDevice):
 
         super().__init__(sensor['id'], sensor['name'])
         self.channel = sensor['channel']
-        self.sensor_type = sensor['type']
+        sensor_type = sensor['type']
 
-        self._decode, _ = SENSORS[self.sensor_type]
+        self._decode, _ = SENSORS[sensor_type]
         self._invert = not sensor.get('invert', False)
         self._class = sensor.get('class', 'door')
 

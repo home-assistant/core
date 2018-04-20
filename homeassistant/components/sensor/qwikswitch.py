@@ -36,11 +36,11 @@ class QSSensor(QSEntity):
 
         super().__init__(sensor['id'], sensor['name'])
         self.channel = sensor['channel']
-        self.sensor_type = sensor['type']
+        sensor_type = sensor['type']
 
-        self._decode, self.unit = SENSORS[self.sensor_type]
+        self._decode, self.unit = SENSORS[sensor_type]
         if isinstance(self.unit, type):
-            self.unit = "{}:{}".format(self.sensor_type, self.channel)
+            self.unit = "{}:{}".format(sensor_type, self.channel)
 
     @callback
     def update_packet(self, packet):
