@@ -1,8 +1,10 @@
 """Provide an authentication layer for Home Assistant."""
 import asyncio
+import binascii
 from collections import OrderedDict
 from datetime import datetime, timedelta
 import hmac
+import os
 import importlib
 import logging
 import uuid
@@ -184,13 +186,24 @@ class Credentials:
     is_new = attr.ib(type=bool, default=True)
 
 
+def generate_secret():
+    """Generate a secret.
+
+    Backport of secrets.token_hex from Python 3.6
+
+    Event loop friendly.
+    """
+    entropy = 64
+    return binascii.hexlify(os.urandom(entropy)).decode('ascii')
+
+
 @attr.s(slots=True)
 class Client:
     """Client that interacts with Home Assistant on behalf of a user."""
 
     name = attr.ib(type=str)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
-    secret = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    secret = attr.ib(type=str, default=attr.Factory(generate_secret))
 
 
 async def load_auth_provider_module(hass, provider):
