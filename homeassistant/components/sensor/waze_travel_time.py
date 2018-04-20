@@ -7,12 +7,14 @@ https://home-assistant.io/components/sensor.waze_travel_time/
 from datetime import timedelta
 import logging
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_REGION
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START,
+    ATTR_LATITUDE, ATTR_LONGITUDE)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.location as location
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -20,6 +22,7 @@ REQUIREMENTS = ['WazeRouteCalculator==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_DURATION = 'duration'
 ATTR_DISTANCE = 'distance'
 ATTR_ROUTE = 'route'
 
@@ -42,31 +45,42 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
+TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Waze travel time sensor platform."""
-    destination = config.get(CONF_DESTINATION)
-    name = config.get(CONF_NAME)
-    origin = config.get(CONF_ORIGIN)
-    region = config.get(CONF_REGION)
+    def run_setup(event):
+        destination = config.get(CONF_DESTINATION)
+        name = config.get(CONF_NAME)
+        origin = config.get(CONF_ORIGIN)
+        region = config.get(CONF_REGION)
 
-    try:
-        waze_data = WazeRouteData(origin, destination, region)
-    except requests.exceptions.HTTPError as error:
-        _LOGGER.error("%s", error)
-        return
+        sensor = WazeTravelTime(hass, name, origin, destination, region)
+        add_devices([sensor])
 
-    add_devices([WazeTravelTime(waze_data, name)], True)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 
 class WazeTravelTime(Entity):
     """Representation of a Waze travel time sensor."""
 
-    def __init__(self, waze_data, name):
+    def __init__(self, hass, name, origin, destination, region):
         """Initialize the Waze travel time sensor."""
+        self._hass = hass
         self._name = name
+        self._region = region
         self._state = None
-        self.waze_data = waze_data
+
+        if origin.split('.', 1)[0] in TRACKABLE_DOMAINS:
+            self._origin_entity_id = origin
+        else:
+            self._origin = origin
+
+        if destination.split('.', 1)[0] in TRACKABLE_DOMAINS:
+            self._destination_entity_id = destination
+        else:
+            self._destination = destination
 
     @property
     def name(self):
@@ -76,7 +90,12 @@ class WazeTravelTime(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return round(self._state['duration'])
+        if self._state is None:
+            return None
+
+        if 'duration' in self._state:
+            return round(self._state['duration'])
+        return None
 
     @property
     def unit_of_measurement(self):
@@ -91,46 +110,93 @@ class WazeTravelTime(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the last update."""
-        return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_DISTANCE: round(self._state['distance']),
-            ATTR_ROUTE: self._state['route'],
-        }
+        if self._state is None:
+            return None
 
-    def update(self):
-        """Fetch new state data for the sensor."""
-        try:
-            self.waze_data.update()
-            self._state = self.waze_data.data
-        except KeyError:
-            _LOGGER.error("Error retrieving data from server")
+        res = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
+        if 'duration' in self._state:
+            res[ATTR_DURATION] = self._state['duration']
+        if 'distance' in self._state:
+            res[ATTR_DISTANCE] = self._state['distance']
+        if 'route' in self._state:
+            res[ATTR_ROUTE] = self._state['route']
+        return res
 
+    def _get_location_from_entity(self, entity_id):
+        """Get the location from the entity state or attributes."""
+        entity = self._hass.states.get(entity_id)
 
-class WazeRouteData(object):
-    """Get data from Waze."""
+        if entity is None:
+            _LOGGER.error("Unable to find entity %s", entity_id)
+            return None
 
-    def __init__(self, origin, destination, region):
-        """Initialize the data object."""
-        self._destination = destination
-        self._origin = origin
-        self._region = region
-        self.data = {}
+        # Check if the entity has location attributes (zone)
+        if location.has_location(entity):
+            return self._get_location_from_attributes(entity)
+
+        # Check if device is in a zone (device_tracker)
+        zone_entity = self._hass.states.get("zone.%s" % entity.state)
+        if location.has_location(zone_entity):
+            _LOGGER.debug(
+                "%s is in %s, getting zone location",
+                entity_id, zone_entity.entity_id
+            )
+            return self._get_location_from_attributes(zone_entity)
+
+        # If zone was not found in state then use the state as the location
+        if entity_id.startswith("sensor."):
+            return entity.state
+
+        # When everything fails just return nothing
+        return None
+
+    @staticmethod
+    def _get_location_from_attributes(entity):
+        """Get the lat/long string from an entities attributes."""
+        attr = entity.attributes
+        return "%s,%s" % (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+
+    def _resolve_zone(self, friendly_name):
+        entities = self._hass.states.all()
+        for entity in entities:
+            if entity.domain == 'zone' and entity.name == friendly_name:
+                return self._get_location_from_attributes(entity)
+
+        return friendly_name
 
     @Throttle(SCAN_INTERVAL)
     def update(self):
-        """Fetch latest data from Waze."""
+        """Fetch new state data for the sensor."""
         import WazeRouteCalculator
-        _LOGGER.debug("Update in progress...")
-        try:
-            params = WazeRouteCalculator.WazeRouteCalculator(
-                self._origin, self._destination, self._region, None)
-            results = params.calc_all_routes_info()
-            best_route = next(iter(results))
-            (duration, distance) = results[best_route]
-            best_route_str = bytes(best_route, 'ISO-8859-1').decode('UTF-8')
-            self.data['duration'] = duration
-            self.data['distance'] = distance
-            self.data['route'] = best_route_str
-        except WazeRouteCalculator.WRCError as exp:
-            _LOGGER.error("Error on retrieving data: %s", exp)
-            return
+
+        if hasattr(self, '_origin_entity_id'):
+            self._origin = self._get_location_from_entity(
+                self._origin_entity_id
+            )
+
+        if hasattr(self, '_destination_entity_id'):
+            self._destination = self._get_location_from_entity(
+                self._destination_entity_id
+            )
+
+        self._destination = self._resolve_zone(self._destination)
+        self._origin = self._resolve_zone(self._origin)
+
+        if self._destination is not None and self._origin is not None:
+            try:
+                params = WazeRouteCalculator.WazeRouteCalculator(
+                    self._origin, self._destination, self._region)
+                routes = params.calc_all_routes_info()
+                route = next(iter(routes))
+                duration, distance = routes[route]
+                route = bytes(route, 'ISO-8859-1').decode('UTF-8')
+                self._state = {
+                    'duration': duration,
+                    'distance': distance,
+                    'route': route}
+            except WazeRouteCalculator.WRCError as exp:
+                _LOGGER.error("Error on retrieving data: %s", exp)
+                return
+            except KeyError:
+                _LOGGER.error("Error retrieving data from server")
+                return
