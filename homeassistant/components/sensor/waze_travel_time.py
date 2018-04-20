@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START, 
+    ATTR_ATTRIBUTION, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START,
     ATTR_LATITUDE, ATTR_LONGITUDE)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.location as location
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = config.get(CONF_NAME)
         origin = config.get(CONF_ORIGIN)
         region = config.get(CONF_REGION)
-        
+
         sensor = WazeTravelTime(hass, name, origin, destination, region)
         add_devices([sensor])
         
@@ -113,7 +113,7 @@ class WazeTravelTime(Entity):
         if self._state is None:
             return None
 
-        res = {ATTR_ATTRIBUTION:CONF_ATTRIBUTION}
+        res = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
         if 'duration' in self._state:
             res[ATTR_DURATION] = self._state['duration']
         if 'distance' in self._state:
