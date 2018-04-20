@@ -38,6 +38,7 @@ class BMWLock(LockDevice):
         self._vehicle = vehicle
         self._attribute = attribute
         self._name = '{} {}'.format(self._vehicle.name, self._attribute)
+        self._unique_id = '{}-{}'.format(self._vehicle.vin, self._attribute)
         self._sensor_name = sensor_name
         self._state = None
 
@@ -48,6 +49,11 @@ class BMWLock(LockDevice):
         Updates are triggered from BMWConnectedDriveAccount.
         """
         return False
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the lock."""
+        return self._unique_id
 
     @property
     def name(self):

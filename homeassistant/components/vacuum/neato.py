@@ -24,8 +24,6 @@ SUPPORT_NEATO = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
                  SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
                  SUPPORT_STATUS | SUPPORT_MAP
 
-ICON = 'mdi:roomba'
-
 ATTR_CLEAN_START = 'clean_start'
 ATTR_CLEAN_STOP = 'clean_stop'
 ATTR_CLEAN_AREA = 'clean_area'
@@ -130,11 +128,6 @@ class NeatoConnectedVacuum(VacuumDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use for device."""
-        return ICON
 
     @property
     def supported_features(self):

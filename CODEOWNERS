@@ -63,6 +63,7 @@ homeassistant/components/media_player/xiaomi_tv.py @fattdev
 homeassistant/components/media_player/yamaha_musiccast.py @jalmeroth
 homeassistant/components/plant.py @ChristianKuehnel
 homeassistant/components/sensor/airvisual.py @bachya
+homeassistant/components/sensor/filter.py @dgomes
 homeassistant/components/sensor/gearbest.py @HerrHofrat
 homeassistant/components/sensor/irish_rail_transport.py @ttroy50
 homeassistant/components/sensor/miflora.py @danielhiversen @ChristianKuehnel
@@ -72,6 +73,7 @@ homeassistant/components/sensor/sma.py @kellerza
 homeassistant/components/sensor/sql.py @dgomes
 homeassistant/components/sensor/sytadin.py @gautric
 homeassistant/components/sensor/tibber.py @danielhiversen
+homeassistant/components/sensor/upnp.py @dgomes
 homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/switch/rainmachine.py @bachya
 homeassistant/components/switch/tplink.py @rytilahti

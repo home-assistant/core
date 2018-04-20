@@ -807,15 +807,23 @@ async def test_thermostat(hass):
         'Alexa.ThermostatController', 'SetThermostatMode',
         'climate#test_thermostat', 'climate.set_operation_mode',
         hass,
-        payload={'thermostatMode': 'HEAT'}
+        payload={'thermostatMode': {'value': 'HEAT'}}
     )
     assert call.data['operation_mode'] == 'heat'
 
+    call, _ = await assert_request_calls_service(
+        'Alexa.ThermostatController', 'SetThermostatMode',
+        'climate#test_thermostat', 'climate.set_operation_mode',
+        hass,
+        payload={'thermostatMode': 'HEAT'}
+    )
+
+    assert call.data['operation_mode'] == 'heat'
     msg = await assert_request_fails(
         'Alexa.ThermostatController', 'SetThermostatMode',
         'climate#test_thermostat', 'climate.set_operation_mode',
         hass,
-        payload={'thermostatMode': 'INVALID'}
+        payload={'thermostatMode': {'value': 'INVALID'}}
     )
     assert msg['event']['payload']['type'] == 'UNSUPPORTED_THERMOSTAT_MODE'
 
