@@ -74,13 +74,14 @@ async def async_resolve_token(hass, token, client_id=None):
         # No token found
         return None
 
+    # PyLint doesn't understand that user_token exists. We guard with the else.
+    # pylint: disable=undefined-loop-variable
+
     decode_options = {}
     if client_id is None:
         decode_options['verify_aud'] = False
 
     try:
-        # PyLint is wrong here, we guard for this with the else statement.
-        # pylint: disable=undefined-loop-variable
         jwt.decode(token, user_token.secret, audience=client_id,
                    options=decode_options)
     except jwt.exceptions.InvalidTokenError:
