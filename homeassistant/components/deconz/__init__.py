@@ -4,28 +4,20 @@ Support for deCONZ devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/deconz/
 """
-import logging
-
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.discovery import SERVICE_DECONZ
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery, aiohttp_client
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util.json import load_json, save_json
+from homeassistant.helpers import (
+    aiohttp_client, discovery, config_validation as cv)
+from homeassistant.util.json import load_json
 
-REQUIREMENTS = ['pydeconz==35']
+# Loading the config flow file will register the flow
+from .config_flow import configured_hosts
+from .const import CONFIG_FILE, DATA_DECONZ_ID, DOMAIN, _LOGGER
 
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'deconz'
-DATA_DECONZ_ID = 'deconz_entities'
-
-CONFIG_FILE = 'deconz.conf'
+REQUIREMENTS = ['pydeconz==36']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -46,44 +38,36 @@ SERVICE_SCHEMA = vol.Schema({
 })
 
 
-CONFIG_INSTRUCTIONS = """
-Unlock your deCONZ gateway to register with Home Assistant.
-
-1. [Go to deCONZ system settings](http://{}:{}/edit_system.html)
-2. Press "Unlock Gateway" button
-
-[deCONZ platform documentation](https://home-assistant.io/components/deconz/)
-"""
-
-
 async def async_setup(hass, config):
-    """Set up services and configuration for deCONZ component."""
-    result = False
-    config_file = await hass.async_add_job(
-        load_json, hass.config.path(CONFIG_FILE))
+    """Load configuration for deCONZ component.
 
-    async def async_deconz_discovered(service, discovery_info):
-        """Call when deCONZ gateway has been found."""
-        deconz_config = {}
-        deconz_config[CONF_HOST] = discovery_info.get(CONF_HOST)
-        deconz_config[CONF_PORT] = discovery_info.get(CONF_PORT)
-        await async_request_configuration(hass, config, deconz_config)
-
-    if config_file:
-        result = await async_setup_deconz(hass, config, config_file)
-
-    if not result and DOMAIN in config and CONF_HOST in config[DOMAIN]:
-        deconz_config = config[DOMAIN]
-        if CONF_API_KEY in deconz_config:
-            result = await async_setup_deconz(hass, config, deconz_config)
-        else:
-            await async_request_configuration(hass, config, deconz_config)
-            return True
-
-    if not result:
-        discovery.async_listen(hass, SERVICE_DECONZ, async_deconz_discovered)
-
+    Discovery has loaded the component if DOMAIN is not present in config.
+    """
+    if DOMAIN in config:
+        deconz_config = None
+        config_file = await hass.async_add_job(
+            load_json, hass.config.path(CONFIG_FILE))
+        if config_file:
+            deconz_config = config_file
+        elif CONF_HOST in config[DOMAIN]:
+            deconz_config = config[DOMAIN]
+        if deconz_config and not configured_hosts(hass):
+            hass.async_add_job(hass.config_entries.flow.async_init(
+                DOMAIN, source='import', data=deconz_config
+            ))
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a deCONZ bridge for a config entry."""
+    if DOMAIN in hass.data:
+        _LOGGER.error(
+            "Config entry failed since one deCONZ instance already exists")
+        return False
+    result = await async_setup_deconz(hass, None, entry.data)
+    if result:
+        return True
+    return False
 
 
 async def async_setup_deconz(hass, config, deconz_config):
@@ -94,8 +78,8 @@ async def async_setup_deconz(hass, config, deconz_config):
     """
     _LOGGER.debug("deCONZ config %s", deconz_config)
     from pydeconz import DeconzSession
-    websession = async_get_clientsession(hass)
-    deconz = DeconzSession(hass.loop, websession, **deconz_config)
+    session = aiohttp_client.async_get_clientsession(hass)
+    deconz = DeconzSession(hass.loop, session, **deconz_config)
     result = await deconz.async_load_parameters()
     if result is False:
         _LOGGER.error("Failed to communicate with deCONZ")
@@ -152,121 +136,3 @@ async def async_setup_deconz(hass, config, deconz_config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deconz_shutdown)
     return True
-
-
-async def async_request_configuration(hass, config, deconz_config):
-    """Request configuration steps from the user."""
-    configurator = hass.components.configurator
-
-    async def async_configuration_callback(data):
-        """Set up actions to do when our configuration callback is called."""
-        from pydeconz.utils import async_get_api_key
-        websession = async_get_clientsession(hass)
-        api_key = await async_get_api_key(websession, **deconz_config)
-        if api_key:
-            deconz_config[CONF_API_KEY] = api_key
-            result = await async_setup_deconz(hass, config, deconz_config)
-            if result:
-                await hass.async_add_job(
-                    save_json, hass.config.path(CONFIG_FILE), deconz_config)
-                configurator.async_request_done(request_id)
-                return
-            else:
-                configurator.async_notify_errors(
-                    request_id, "Couldn't load configuration.")
-        else:
-            configurator.async_notify_errors(
-                request_id, "Couldn't get an API key.")
-        return
-
-    instructions = CONFIG_INSTRUCTIONS.format(
-        deconz_config[CONF_HOST], deconz_config[CONF_PORT])
-
-    request_id = configurator.async_request_config(
-        "deCONZ", async_configuration_callback,
-        description=instructions,
-        entity_picture="/static/images/logo_deconz.jpeg",
-        submit_caption="I have unlocked the gateway",
-    )
-
-
-@config_entries.HANDLERS.register(DOMAIN)
-class DeconzFlowHandler(config_entries.ConfigFlowHandler):
-    """Handle a deCONZ config flow."""
-
-    VERSION = 1
-
-    def __init__(self):
-        """Initialize the deCONZ flow."""
-        self.bridges = []
-        self.deconz_config = {}
-
-    async def async_step_init(self, user_input=None):
-        """Handle a flow start."""
-        from pydeconz.utils import async_discovery
-
-        if DOMAIN in self.hass.data:
-            return self.async_abort(
-                reason='one_instance_only'
-            )
-
-        if user_input is not None:
-            for bridge in self.bridges:
-                if bridge[CONF_HOST] == user_input[CONF_HOST]:
-                    self.deconz_config = bridge
-                    return await self.async_step_link()
-
-        session = aiohttp_client.async_get_clientsession(self.hass)
-        self.bridges = await async_discovery(session)
-
-        if len(self.bridges) == 1:
-            self.deconz_config = self.bridges[0]
-            return await self.async_step_link()
-        elif len(self.bridges) > 1:
-            hosts = []
-            for bridge in self.bridges:
-                hosts.append(bridge[CONF_HOST])
-            return self.async_show_form(
-                step_id='init',
-                data_schema=vol.Schema({
-                    vol.Required(CONF_HOST): vol.In(hosts)
-                })
-            )
-
-        return self.async_abort(
-            reason='no_bridges'
-        )
-
-    async def async_step_link(self, user_input=None):
-        """Attempt to link with the deCONZ bridge."""
-        from pydeconz.utils import async_get_api_key
-        errors = {}
-
-        if user_input is not None:
-            session = aiohttp_client.async_get_clientsession(self.hass)
-            api_key = await async_get_api_key(session, **self.deconz_config)
-            if api_key:
-                self.deconz_config[CONF_API_KEY] = api_key
-                return self.async_create_entry(
-                    title='deCONZ',
-                    data=self.deconz_config
-                )
-            else:
-                errors['base'] = 'no_key'
-
-        return self.async_show_form(
-            step_id='link',
-            errors=errors,
-        )
-
-
-async def async_setup_entry(hass, entry):
-    """Set up a bridge for a config entry."""
-    if DOMAIN in hass.data:
-        _LOGGER.error(
-            "Config entry failed since one deCONZ instance already exists")
-        return False
-    result = await async_setup_deconz(hass, None, entry.data)
-    if result:
-        return True
-    return False

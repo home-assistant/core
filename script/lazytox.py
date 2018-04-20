@@ -18,7 +18,7 @@ except ImportError:
 
 
 RE_ASCII = re.compile(r"\033\[[^m]*m")
-Error = namedtuple('Error', ['file', 'line', 'col', 'msg'])
+Error = namedtuple('Error', ['file', 'line', 'col', 'msg', 'skip'])
 
 PASS = 'green'
 FAIL = 'bold_red'
@@ -109,8 +109,9 @@ async def pylint(files):
         line = line.split(':')
         if len(line) < 3:
             continue
-        res.append(Error(line[0].replace('\\', '/'),
-                         line[1], "", line[2].strip()))
+        _fn = line[0].replace('\\', '/')
+        res.append(Error(
+            _fn, line[1], '', line[2].strip(), _fn.startswith('tests/')))
     return res
 
 
@@ -122,8 +123,8 @@ async def flake8(files):
         line = line.split(':')
         if len(line) < 4:
             continue
-        res.append(Error(line[0].replace('\\', '/'),
-                         line[1], line[2], line[3].strip()))
+        _fn = line[0].replace('\\', '/')
+        res.append(Error(_fn, line[1], line[2], line[3].strip(), False))
     return res
 
 
@@ -144,7 +145,7 @@ async def lint(files):
         err_msg = "{} {}:{} {}".format(err.file, err.line, err.col, err.msg)
 
         # tests/* does not have to pass lint
-        if err.file.startswith('tests/'):
+        if err.skip:
             print(err_msg)
         else:
             printc(FAIL, err_msg)

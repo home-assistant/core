@@ -42,7 +42,8 @@ def from_config_dict(config: Dict[str, Any],
                      verbose: bool = False,
                      skip_pip: bool = False,
                      log_rotate_days: Any = None,
-                     log_file: Any = None) \
+                     log_file: Any = None,
+                     log_no_color: bool = False) \
                      -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
@@ -60,7 +61,7 @@ def from_config_dict(config: Dict[str, Any],
     hass = hass.loop.run_until_complete(
         async_from_config_dict(
             config, hass, config_dir, enable_log, verbose, skip_pip,
-            log_rotate_days, log_file)
+            log_rotate_days, log_file, log_no_color)
     )
 
     return hass
@@ -74,7 +75,8 @@ def async_from_config_dict(config: Dict[str, Any],
                            verbose: bool = False,
                            skip_pip: bool = False,
                            log_rotate_days: Any = None,
-                           log_file: Any = None) \
+                           log_file: Any = None,
+                           log_no_color: bool = False) \
                            -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
@@ -84,7 +86,8 @@ def async_from_config_dict(config: Dict[str, Any],
     start = time()
 
     if enable_log:
-        async_enable_logging(hass, verbose, log_rotate_days, log_file)
+        async_enable_logging(hass, verbose, log_rotate_days, log_file,
+                             log_no_color)
 
     core_config = config.get(core.DOMAIN, {})
 
@@ -164,7 +167,8 @@ def from_config_file(config_path: str,
                      verbose: bool = False,
                      skip_pip: bool = True,
                      log_rotate_days: Any = None,
-                     log_file: Any = None):
+                     log_file: Any = None,
+                     log_no_color: bool = False):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter if given,
@@ -176,7 +180,8 @@ def from_config_file(config_path: str,
     # run task
     hass = hass.loop.run_until_complete(
         async_from_config_file(
-            config_path, hass, verbose, skip_pip, log_rotate_days, log_file)
+            config_path, hass, verbose, skip_pip,
+            log_rotate_days, log_file, log_no_color)
     )
 
     return hass
@@ -188,7 +193,8 @@ def async_from_config_file(config_path: str,
                            verbose: bool = False,
                            skip_pip: bool = True,
                            log_rotate_days: Any = None,
-                           log_file: Any = None):
+                           log_file: Any = None,
+                           log_no_color: bool = False):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter.
@@ -199,7 +205,8 @@ def async_from_config_file(config_path: str,
     hass.config.config_dir = config_dir
     yield from async_mount_local_lib_path(config_dir, hass.loop)
 
-    async_enable_logging(hass, verbose, log_rotate_days, log_file)
+    async_enable_logging(hass, verbose, log_rotate_days, log_file,
+                         log_no_color)
 
     try:
         config_dict = yield from hass.async_add_job(
@@ -216,39 +223,50 @@ def async_from_config_file(config_path: str,
 
 
 @core.callback
-def async_enable_logging(hass: core.HomeAssistant, verbose: bool = False,
-                         log_rotate_days=None, log_file=None) -> None:
+def async_enable_logging(hass: core.HomeAssistant,
+                         verbose: bool = False,
+                         log_rotate_days=None,
+                         log_file=None,
+                         log_no_color: bool = False) -> None:
     """Set up the logging.
 
     This method must be run in the event loop.
     """
-    logging.basicConfig(level=logging.INFO)
     fmt = ("%(asctime)s %(levelname)s (%(threadName)s) "
            "[%(name)s] %(message)s")
-    colorfmt = "%(log_color)s{}%(reset)s".format(fmt)
     datefmt = '%Y-%m-%d %H:%M:%S'
+
+    if not log_no_color:
+        try:
+            from colorlog import ColoredFormatter
+            # basicConfig must be called after importing colorlog in order to
+            # ensure that the handlers it sets up wraps the correct streams.
+            logging.basicConfig(level=logging.INFO)
+
+            colorfmt = "%(log_color)s{}%(reset)s".format(fmt)
+            logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
+                colorfmt,
+                datefmt=datefmt,
+                reset=True,
+                log_colors={
+                    'DEBUG': 'cyan',
+                    'INFO': 'green',
+                    'WARNING': 'yellow',
+                    'ERROR': 'red',
+                    'CRITICAL': 'red',
+                }
+            ))
+        except ImportError:
+            pass
+
+    # If the above initialization failed for any reason, setup the default
+    # formatting.  If the above succeeds, this wil result in a no-op.
+    logging.basicConfig(format=fmt, datefmt=datefmt, level=logging.INFO)
 
     # Suppress overly verbose logs from libraries that aren't helpful
     logging.getLogger('requests').setLevel(logging.WARNING)
     logging.getLogger('urllib3').setLevel(logging.WARNING)
     logging.getLogger('aiohttp.access').setLevel(logging.WARNING)
-
-    try:
-        from colorlog import ColoredFormatter
-        logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
-            colorfmt,
-            datefmt=datefmt,
-            reset=True,
-            log_colors={
-                'DEBUG': 'cyan',
-                'INFO': 'green',
-                'WARNING': 'yellow',
-                'ERROR': 'red',
-                'CRITICAL': 'red',
-            }
-        ))
-    except ImportError:
-        pass
 
     # Log errors to a file if we have write access to file or config dir
     if log_file is None:

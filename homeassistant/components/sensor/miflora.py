@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 
 
-REQUIREMENTS = ['miflora==0.3.0']
+REQUIREMENTS = ['miflora==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,10 +63,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from miflora import miflora_poller
     try:
         import bluepy.btle  # noqa: F401 # pylint: disable=unused-variable
-        from miflora.backends.bluepy import BluepyBackend
+        from btlewrap import BluepyBackend
         backend = BluepyBackend
     except ImportError:
-        from miflora.backends.gatttool import GatttoolBackend
+        from btlewrap import GatttoolBackend
         backend = GatttoolBackend
     _LOGGER.debug('Miflora is using %s backend.', backend.__name__)
 
@@ -138,7 +138,7 @@ class MiFloraSensor(Entity):
 
         This uses a rolling median over 3 values to filter out outliers.
         """
-        from miflora.backends import BluetoothBackendException
+        from btlewrap import BluetoothBackendException
         try:
             _LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)
