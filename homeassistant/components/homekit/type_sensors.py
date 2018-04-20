@@ -8,7 +8,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS, STATE_ON, STATE_HOME)
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service, setup_char
+from .accessories import HomeAccessory, add_preload_service
 from .const import (
     SERV_HUMIDITY_SENSOR, SERV_TEMPERATURE_SENSOR,
     CHAR_CURRENT_HUMIDITY, CHAR_CURRENT_TEMPERATURE, PROP_CELSIUS,
@@ -55,9 +55,8 @@ class TemperatureSensor(HomeAccessory):
         """Initialize a TemperatureSensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
         serv_temp = add_preload_service(self, SERV_TEMPERATURE_SENSOR)
-        self.char_temp = setup_char(
-            CHAR_CURRENT_TEMPERATURE, serv_temp, value=0,
-            properties=PROP_CELSIUS)
+        self.char_temp = serv_temp.configure_char(
+            CHAR_CURRENT_TEMPERATURE, value=0, properties=PROP_CELSIUS)
         self.unit = None
 
     def update_state(self, new_state):
@@ -79,8 +78,8 @@ class HumiditySensor(HomeAccessory):
         """Initialize a HumiditySensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
         serv_humidity = add_preload_service(self, SERV_HUMIDITY_SENSOR)
-        self.char_humidity = setup_char(
-            CHAR_CURRENT_HUMIDITY, serv_humidity, value=0)
+        self.char_humidity = serv_humidity.configure_char(
+            CHAR_CURRENT_HUMIDITY, value=0)
 
     def update_state(self, new_state):
         """Update accessory after state change."""
@@ -101,10 +100,10 @@ class AirQualitySensor(HomeAccessory):
 
         serv_air_quality = add_preload_service(self, SERV_AIR_QUALITY_SENSOR,
                                                [CHAR_AIR_PARTICULATE_DENSITY])
-        self.char_quality = setup_char(
-            CHAR_AIR_QUALITY, serv_air_quality, value=0)
-        self.char_density = setup_char(
-            CHAR_AIR_PARTICULATE_DENSITY, serv_air_quality, value=0)
+        self.char_quality = serv_air_quality.configure_char(
+            CHAR_AIR_QUALITY, value=0)
+        self.char_density = serv_air_quality.configure_char(
+            CHAR_AIR_PARTICULATE_DENSITY, value=0)
 
     def update_state(self, new_state):
         """Update accessory after state change."""
@@ -125,12 +124,12 @@ class CarbonDioxideSensor(HomeAccessory):
 
         serv_co2 = add_preload_service(self, SERV_CARBON_DIOXIDE_SENSOR, [
             CHAR_CARBON_DIOXIDE_LEVEL, CHAR_CARBON_DIOXIDE_PEAK_LEVEL])
-        self.char_co2 = setup_char(
-            CHAR_CARBON_DIOXIDE_LEVEL, serv_co2, value=0)
-        self.char_peak = setup_char(
-            CHAR_CARBON_DIOXIDE_PEAK_LEVEL, serv_co2, value=0)
-        self.char_detected = setup_char(
-            CHAR_CARBON_DIOXIDE_DETECTED, serv_co2, value=0)
+        self.char_co2 = serv_co2.configure_char(
+            CHAR_CARBON_DIOXIDE_LEVEL, value=0)
+        self.char_peak = serv_co2.configure_char(
+            CHAR_CARBON_DIOXIDE_PEAK_LEVEL, value=0)
+        self.char_detected = serv_co2.configure_char(
+            CHAR_CARBON_DIOXIDE_DETECTED, value=0)
 
     def update_state(self, new_state):
         """Update accessory after state change."""
@@ -152,8 +151,8 @@ class LightSensor(HomeAccessory):
         super().__init__(*args, category=CATEGORY_SENSOR)
 
         serv_light = add_preload_service(self, SERV_LIGHT_SENSOR)
-        self.char_light = setup_char(
-            CHAR_CURRENT_AMBIENT_LIGHT_LEVEL, serv_light, value=0)
+        self.char_light = serv_light.configure_char(
+            CHAR_CURRENT_AMBIENT_LIGHT_LEVEL, value=0)
 
     def update_state(self, new_state):
         """Update accessory after state change."""
@@ -177,7 +176,7 @@ class BinarySensor(HomeAccessory):
             else BINARY_SENSOR_SERVICE_MAP[DEVICE_CLASS_OCCUPANCY]
 
         service = add_preload_service(self, service_char[0])
-        self.char_detected = setup_char(service_char[1], service, value=0)
+        self.char_detected = service.configure_char(service_char[1], value=0)
 
     def update_state(self, new_state):
         """Update accessory after state change."""

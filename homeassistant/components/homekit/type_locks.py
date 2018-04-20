@@ -7,7 +7,7 @@ from homeassistant.components.lock import (
     ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN)
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service, setup_char
+from .accessories import HomeAccessory, add_preload_service
 from .const import (
     SERV_LOCK, CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE)
 
@@ -35,12 +35,12 @@ class Lock(HomeAccessory):
         self.flag_target_state = False
 
         serv_lock_mechanism = add_preload_service(self, SERV_LOCK)
-        self.char_current_state = setup_char(
-            CHAR_LOCK_CURRENT_STATE, serv_lock_mechanism,
+        self.char_current_state = serv_lock_mechanism.configure_char(
+            CHAR_LOCK_CURRENT_STATE,
             value=HASS_TO_HOMEKIT[STATE_UNKNOWN])
-        self.char_target_state = setup_char(
-            CHAR_LOCK_TARGET_STATE, serv_lock_mechanism,
-            value=HASS_TO_HOMEKIT[STATE_LOCKED], callback=self.set_state)
+        self.char_target_state = serv_lock_mechanism.configure_char(
+            CHAR_LOCK_TARGET_STATE, value=HASS_TO_HOMEKIT[STATE_LOCKED],
+            setter_callback=self.set_state)
 
     def set_state(self, value):
         """Set lock state to value if call came from HomeKit."""

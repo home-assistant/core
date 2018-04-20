@@ -9,7 +9,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_CODE)
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service, setup_char
+from .accessories import HomeAccessory, add_preload_service
 from .const import (
     SERV_SECURITY_SYSTEM, CHAR_CURRENT_SECURITY_STATE,
     CHAR_TARGET_SECURITY_STATE)
@@ -36,11 +36,11 @@ class SecuritySystem(HomeAccessory):
         self.flag_target_state = False
 
         serv_alarm = add_preload_service(self, SERV_SECURITY_SYSTEM)
-        self.char_current_state = setup_char(
-            CHAR_CURRENT_SECURITY_STATE, serv_alarm, value=3)
-        self.char_target_state = setup_char(
-            CHAR_TARGET_SECURITY_STATE, serv_alarm, value=3,
-            callback=self.set_security_state)
+        self.char_current_state = serv_alarm.configure_char(
+            CHAR_CURRENT_SECURITY_STATE, value=3)
+        self.char_target_state = serv_alarm.configure_char(
+            CHAR_TARGET_SECURITY_STATE, value=3,
+            setter_callback=self.set_security_state)
 
     def set_security_state(self, value):
         """Move security state to value if call came from HomeKit."""

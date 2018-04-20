@@ -75,18 +75,6 @@ def add_preload_service(acc, service, chars=None):
     return service
 
 
-def setup_char(char_name, service, value=None, properties=None, callback=None):
-    """Helper function to return fully configured characteristic."""
-    char = service.get_characteristic(char_name)
-    if value:
-        char.value = value
-    if properties:
-        char.override_properties(properties)
-    if callback:
-        char.setter_callback = callback
-    return char
-
-
 def set_accessory_info(acc, name, model, serial_number,
                        manufacturer=MANUFACTURER,
                        firmware_revision=__version__):

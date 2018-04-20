@@ -14,8 +14,7 @@ from homeassistant.const import (
     STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import TYPES
-from .accessories import (
-    HomeAccessory, add_preload_service, debounce, setup_char)
+from .accessories import HomeAccessory, add_preload_service, debounce
 from .const import (
     SERV_THERMOSTAT, CHAR_CURRENT_HEATING_COOLING,
     CHAR_TARGET_HEATING_COOLING, CHAR_CURRENT_TEMPERATURE,
@@ -60,34 +59,34 @@ class Thermostat(HomeAccessory):
             self, SERV_THERMOSTAT, self.chars)
 
         # Current and target mode characteristics
-        self.char_current_heat_cool = setup_char(
-            CHAR_CURRENT_HEATING_COOLING, serv_thermostat, value=0)
-        self.char_target_heat_cool = setup_char(
-            CHAR_TARGET_HEATING_COOLING, serv_thermostat, value=0,
-            callback=self.set_heat_cool)
+        self.char_current_heat_cool = serv_thermostat.configure_char(
+            CHAR_CURRENT_HEATING_COOLING, value=0)
+        self.char_target_heat_cool = serv_thermostat.configure_char(
+            CHAR_TARGET_HEATING_COOLING, value=0,
+            setter_callback=self.set_heat_cool)
 
         # Current and target temperature characteristics
-        self.char_current_temp = setup_char(
-            CHAR_CURRENT_TEMPERATURE, serv_thermostat, value=21.0)
-        self.char_target_temp = setup_char(
-            CHAR_TARGET_TEMPERATURE, serv_thermostat, value=21.0,
-            callback=self.set_target_temperature)
+        self.char_current_temp = serv_thermostat.configure_char(
+            CHAR_CURRENT_TEMPERATURE, value=21.0)
+        self.char_target_temp = serv_thermostat.configure_char(
+            CHAR_TARGET_TEMPERATURE, value=21.0,
+            setter_callback=self.set_target_temperature)
 
         # Display units characteristic
-        self.char_display_units = setup_char(
-            CHAR_TEMP_DISPLAY_UNITS, serv_thermostat, value=0)
+        self.char_display_units = serv_thermostat.configure_char(
+            CHAR_TEMP_DISPLAY_UNITS, value=0)
 
         # If the device supports it: high and low temperature characteristics
         self.char_cooling_thresh_temp = None
         self.char_heating_thresh_temp = None
         if CHAR_COOLING_THRESHOLD_TEMPERATURE in self.chars:
-            self.char_cooling_thresh_temp = setup_char(
-                CHAR_COOLING_THRESHOLD_TEMPERATURE, serv_thermostat,
-                value=23.0, callback=self.set_cooling_threshold)
+            self.char_cooling_thresh_temp = serv_thermostat.configure_char(
+                CHAR_COOLING_THRESHOLD_TEMPERATURE, value=23.0,
+                setter_callback=self.set_cooling_threshold)
         if CHAR_HEATING_THRESHOLD_TEMPERATURE in self.chars:
-            self.char_heating_thresh_temp = setup_char(
-                CHAR_HEATING_THRESHOLD_TEMPERATURE, serv_thermostat,
-                value=19.0, callback=self.set_heating_threshold)
+            self.char_heating_thresh_temp = serv_thermostat.configure_char(
+                CHAR_HEATING_THRESHOLD_TEMPERATURE, value=19.0,
+                setter_callback=self.set_heating_threshold)
 
     def set_heat_cool(self, value):
         """Move operation mode to value if call came from HomeKit."""
