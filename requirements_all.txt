@@ -36,9 +36,6 @@ Mastodon.py==1.2.2
 # homeassistant.components.isy994
 PyISY==1.1.0
 
-# homeassistant.components.notify.html5
-PyJWT==1.6.0
-
 # homeassistant.components.sensor.mvglive
 PyMVGLive==1.1.4
 
@@ -811,6 +808,7 @@ pyiss==1.0.1
 pyitachip2ir==0.0.7
 
 # homeassistant.components.auth
+# homeassistant.components.notify.html5
 pyjwt==1.6.1
 
 # homeassistant.components.kira

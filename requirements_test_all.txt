@@ -21,9 +21,6 @@ requests_mock==1.4
 # homeassistant.components.homekit
 HAP-python==1.1.9
 
-# homeassistant.components.notify.html5
-PyJWT==1.6.0
-
 # homeassistant.components.media_player.sonos
 SoCo==0.14
 
