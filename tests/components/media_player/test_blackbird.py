@@ -59,7 +59,6 @@ class TestBlackbirdSchema(unittest.TestCase):
         """Test valid schema."""
         valid_schema = {
             'platform': 'blackbird',
-            'type': 'serial',
             'port': '/dev/ttyUSB0',
             'zones': {1: {'name': 'a'},
                       2: {'name': 'a'},
@@ -87,8 +86,7 @@ class TestBlackbirdSchema(unittest.TestCase):
         """Test valid schema."""
         valid_schema = {
             'platform': 'blackbird',
-            'type': 'socket',
-            'port': '192.168.1.50',
+            'host': '192.168.1.50',
             'zones': {1: {'name': 'a'},
                       2: {'name': 'a'},
                       3: {'name': 'a'},
@@ -109,10 +107,18 @@ class TestBlackbirdSchema(unittest.TestCase):
         schemas = (
             {},  # Empty
             None,  # None
-            # Missing type
+            # Port and host used concurrently
             {
                 'platform': 'blackbird',
-                'port': 'aaa',
+                'port': '/dev/ttyUSB0',
+                'host': '192.168.1.50',
+                'name': 'Name',
+                'zones': {1: {'name': 'a'}},
+                'sources': {1: {'name': 'b'}},
+            },
+            # Port or host missing
+            {
+                'platform': 'blackbird',
                 'name': 'Name',
                 'zones': {1: {'name': 'a'}},
                 'sources': {1: {'name': 'b'}},
@@ -120,8 +126,7 @@ class TestBlackbirdSchema(unittest.TestCase):
             # Invalid zone number
             {
                 'platform': 'blackbird',
-                'type': 'serial',
-                'port': 'aaa',
+                'port': '/dev/ttyUSB0',
                 'name': 'Name',
                 'zones': {11: {'name': 'a'}},
                 'sources': {1: {'name': 'b'}},
@@ -129,8 +134,7 @@ class TestBlackbirdSchema(unittest.TestCase):
             # Invalid source number
             {
                 'platform': 'blackbird',
-                'type': 'serial',
-                'port': 'aaa',
+                'port': '/dev/ttyUSB0',
                 'name': 'Name',
                 'zones': {1: {'name': 'a'}},
                 'sources': {9: {'name': 'b'}},
@@ -138,8 +142,7 @@ class TestBlackbirdSchema(unittest.TestCase):
             # Zone missing name
             {
                 'platform': 'blackbird',
-                'type': 'serial',
-                'port': 'aaa',
+                'port': '/dev/ttyUSB0',
                 'name': 'Name',
                 'zones': {1: {}},
                 'sources': {1: {'name': 'b'}},
@@ -147,20 +150,10 @@ class TestBlackbirdSchema(unittest.TestCase):
             # Source missing name
             {
                 'platform': 'blackbird',
-                'type': 'serial',
-                'port': 'aaa',
+                'port': '/dev/ttyUSB0',
                 'name': 'Name',
                 'zones': {1: {'name': 'a'}},
                 'sources': {1: {}},
-            },
-            # Invalid type
-            {
-                'platform': 'blackbird',
-                'type': 'aaa',
-                'port': 'aaa',
-                'name': 'Name',
-                'zones': {1: {'name': 'a'}},
-                'sources': {1: {'name': 'b'}},
             },
         )
         for value in schemas:
@@ -181,7 +174,6 @@ class TestBlackbirdMediaPlayer(unittest.TestCase):
                         new=lambda *a: self.blackbird):
             setup_platform(self.hass, {
                 'platform': 'blackbird',
-                'type': 'serial',
                 'port': '/dev/ttyUSB0',
                 'zones': {3: {'name': 'Zone name'}},
                 'sources': {1: {'name': 'one'},
