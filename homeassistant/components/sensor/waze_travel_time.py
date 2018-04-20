@@ -48,6 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Waze travel time sensor platform."""
     def run_setup(event):
