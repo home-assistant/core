@@ -325,7 +325,7 @@ class InsteonPLMEntity(Entity):
         self.print_aldb()
 
 
-def print_aldb_to_log(self, aldb):
+def print_aldb_to_log(aldb):
     """Print the All-Link Database to the log file."""
     from insteonplm.devices import ALDBStatus
     _LOGGER.info('ALDB load status for device %s is %s',
