@@ -587,3 +587,5 @@ insteon_plm:
       entity_id:
         description: Name of the device to print
         example: 'light.1a2b3c'
+  print_im_all_link_database:
+    description: Print the All-Link Database for the INSTEON Modem (IM).

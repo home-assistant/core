@@ -69,7 +69,8 @@ DEL_ALL_LINK_SCHEMA = vol.Schema({
 
 LOAD_ALDB_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Optional(SRV_ALL_LINK_MODE, default='n'): vol.In(['Y', 'N', 'y', 'n']),
+    vol.Optional(SRV_LOAD_DB_RELOAD, default='n'): vol.In(['Y', 'N',
+                                                           'y', 'n']),
     })
 
 PRINT_ALDB_SCHEMA = vol.Schema({
