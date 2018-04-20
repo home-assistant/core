@@ -16,7 +16,6 @@ from homeassistant.const import (CONF_PORT, EVENT_HOMEASSISTANT_STOP,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
-from homeassistant.loader import get_component
 
 REQUIREMENTS = ['insteonplm==0.8.6']
 
@@ -35,6 +34,7 @@ SRV_ADD_ALL_LINK = 'add_all_link'
 SRV_DEL_ALL_LINK = 'delete_all_link'
 SRV_LOAD_ALDB = 'load_all_link_database'
 SRV_PRINT_ALDB = 'print_all_link_database'
+SRV_PRINT_IM_ALDB = 'print_im_all_link_database'
 SRV_ALL_LINK_GROUP = 'group'
 SRV_ALL_LINK_MODE = 'mode'
 SRV_LOAD_DB_RELOAD = 'reload'
@@ -147,6 +147,12 @@ def async_setup(hass, config):
         else:
             _LOGGER.error('Entity %s is not an INSTEON device', entity_id)
 
+    def print_im_aldb(service):
+        """Print the All-Link Database for a device."""
+        # For now this sends logs to the log file.
+        # Furture direction is to create an INSTEON control panel.
+        print_aldb_to_log(plm.aldb)
+
     def _register_services():
         hass.services.register(DOMAIN, SRV_ADD_ALL_LINK, add_all_link,
                                schema=ADD_ALL_LINK_SCHEMA)
@@ -156,6 +162,8 @@ def async_setup(hass, config):
                                schema=LOAD_ALDB_SCHEMA)
         hass.services.register(DOMAIN, SRV_PRINT_ALDB, print_aldb,
                                schema=PRINT_ALDB_SCHEMA)
+        hass.services.register(DOMAIN, SRV_PRINT_IM_ALDB, print_im_aldb,
+                               schema=None)
         _LOGGER.debug("Insteon_plm Services registered")
 
     _LOGGER.info("Looking for PLM on %s", port)
@@ -309,31 +317,35 @@ class InsteonPLMEntity(Entity):
 
     def print_aldb(self):
         """Print the device ALDB to the log file."""
-        from insteonplm.devices import ALDBStatus
-        _LOGGER.info('ALDB load status for device %s is %s',
-                     self.address, self._insteon_device.aldb.status.name)
-        _LOGGER.info('RecID In Use Mode HWM Group Address  Data 1 Data 2 Data 3')
-        _LOGGER.info('----- ------ ---- --- ----- -------- ------ ------ ------')
-        if self._insteon_device.aldb.status in [ALDBStatus.LOADED,
-                                                ALDBStatus.PARTIAL]:
-            for mem_addr in self._insteon_device.aldb:
-                rec = self._insteon_device.aldb[mem_addr]
-                # For now we write this to the log
-                # Roadmap is to create a configuration panel
-                in_use = 'Y' if rec.control_flags.is_in_use else 'N'
-                mode = 'C' if rec.control_flags.is_controller else 'R'
-                hwm = 'Y' if rec.control_flags.is_high_water_mark else 'N'
-                _LOGGER.info(' {:04x}    {:s}     {:s}   {:s}    {:3d} {:s}'
-                             '   {:3d}   {:3d}   {:3d}'.format(
-                                 rec.mem_addr, in_use, mode, hwm,
-                                 rec.group, rec.address.human,
-                                 rec.data1, rec.data2, rec.data3))
-
-        else:
-            _LOGGER.warning('Device All-Link database not loaded')
-            _LOGGER.warning('Use service insteon_plm.load_aldb first')
+        print_aldb_to_log(self._insteon_device.aldb)
 
     @callback
     def _aldb_loaded(self):
         """All-Link Database loaded for the device."""
         self.print_aldb()
+
+
+def print_aldb_to_log(self, aldb):
+    """Print the All-Link Database to the log file."""
+    from insteonplm.devices import ALDBStatus
+    _LOGGER.info('ALDB load status for device %s is %s',
+                 self.address, self._insteon_device.aldb.status.name)
+    _LOGGER.info('RecID In Use Mode HWM Group Address  Data 1 Data 2 Data 3')
+    _LOGGER.info('----- ------ ---- --- ----- -------- ------ ------ ------')
+    if aldb.status in [ALDBStatus.LOADED, ALDBStatus.PARTIAL]:
+        for mem_addr in aldb:
+            rec = aldb[mem_addr]
+            # For now we write this to the log
+            # Roadmap is to create a configuration panel
+            in_use = 'Y' if rec.control_flags.is_in_use else 'N'
+            mode = 'C' if rec.control_flags.is_controller else 'R'
+            hwm = 'Y' if rec.control_flags.is_high_water_mark else 'N'
+            _LOGGER.info(' {:04x}    {:s}     {:s}   {:s}    {:3d} {:s}'
+                         '   {:3d}   {:3d}   {:3d}'.format(
+                             rec.mem_addr, in_use, mode, hwm,
+                             rec.group, rec.address.human,
+                             rec.data1, rec.data2, rec.data3))
+
+    else:
+        _LOGGER.warning('Device All-Link database not loaded')
+        _LOGGER.warning('Use service insteon_plm.load_aldb first')
