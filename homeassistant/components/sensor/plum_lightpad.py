@@ -25,15 +25,16 @@ async def async_setup_platform(hass, config, add_devices,
     plum = hass.data['plum']
 
     @callback
-    def new_load(logical_load):
+    async def new_load(logical_load):
         add_devices([
             PowerSensor(load=logical_load)
         ])
 
-    for load in plum.loads.values():
-        new_load(load)
-
     plum.add_load_listener(new_load)
+
+    for load in plum.loads.values():
+        await new_load(load)
+
 
 
 class PowerSensor(Entity):

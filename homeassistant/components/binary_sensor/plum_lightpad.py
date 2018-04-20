@@ -27,7 +27,7 @@ async def async_setup_platform(hass, config, add_devices,
     plum = hass.data['plum']
 
     @callback
-    def new_lightpad(lightpad):
+    async def new_lightpad(lightpad):
         add_devices([
             PlumMotionSensor(lightpad=lightpad, hass=hass),
         ])
@@ -35,7 +35,7 @@ async def async_setup_platform(hass, config, add_devices,
     plum.add_lightpad_listener(new_lightpad)
 
     for lightpad in plum.lightpads.values():
-        new_lightpad(lightpad)
+        await new_lightpad(lightpad)
 
 
 class PlumMotionSensor(BinarySensorDevice):

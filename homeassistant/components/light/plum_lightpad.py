@@ -21,37 +21,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Setup the Plum Lightpad Light."""
     plum = hass.data['plum']
 
     @callback
-    def new_load(logical_load):
-        add_devices([
+    async def new_load(logical_load):
+        async_add_entities([
             PlumLight(load=logical_load)
         ])
 
     plum.add_load_listener(new_load)
 
     for load in plum.loads.values():
-        new_load(load)
+        await new_load(load)
 
     @callback
-    def new_lightpad(lightpad):
-        add_devices([
+    async def new_lightpad(lightpad):
+        async_add_entities([
             GlowRing(lightpad=lightpad)
         ])
-
-        def cleanup(event):
-            lightpad.close()
-
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
     plum.add_lightpad_listener(new_lightpad)
 
     for lightpad in plum.lightpads.values():
-        new_lightpad(lightpad)
+        await new_lightpad(lightpad)
 
 
 class PlumLight(Light):
