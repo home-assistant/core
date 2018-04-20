@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         sensor = WazeTravelTime(hass, name, origin, destination, region)
         add_devices([sensor])
-        
+
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 class WazeTravelTime(Entity):
@@ -163,7 +163,7 @@ class WazeTravelTime(Entity):
                 return self._get_location_from_attributes(entity)
 
         return friendly_name
-        
+
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Fetch new state data for the sensor."""
