@@ -14,7 +14,6 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_NAME, CONF_MONITORED_CONDITIONS)
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import display_temp
@@ -58,8 +57,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if sensor.read_status() is None:
             raise ValueError("CRC error while reading SHT31 status")
     except (OSError, ValueError):
-        raise HomeAssistantError("SHT31 sensor not detected at address %s " %
-                                 hex(i2c_address))
+        _LOGGER.error(
+            "SHT31 sensor not detected at address %s", hex(i2c_address))
+        return
     sensor_client = SHTClient(sensor)
 
     sensor_classes = {
