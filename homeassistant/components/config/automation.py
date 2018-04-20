@@ -45,7 +45,8 @@ class EditAutomationConfigView(EditIdBasedConfigView):
             if key in new_value:
                 updated_value[key] = new_value[key]
 
-        # We cover all fields above, but just in case we start supporting more fields
+        # We cover all current fields above, but just in case we start
+        # supporting more fields in the future.
         updated_value.update(cur_value)
         updated_value.update(new_value)
         data[index] = updated_value

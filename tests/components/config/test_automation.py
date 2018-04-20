@@ -1,7 +1,6 @@
 """Test Automation config panel."""
-import asyncio
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
@@ -82,4 +81,3 @@ async def test_update_device_config(hass, aiohttp_client):
         'action': [],
     }
     assert written[0] == orig_data
-
