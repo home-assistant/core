@@ -245,3 +245,39 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(hass):
     await hass.config_entries.async_forward_entry_setup(entry, 'forwarded')
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_discovery_notification(hass):
+    """Test that we create/dismiss a notification when source is discovery."""
+    await async_setup_component(hass, 'persistent_notification', {})
+
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+
+        async def async_step_discovery(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(
+                    title='Test Title',
+                    data={
+                        'token': 'abcd'
+                    }
+                )
+            return self.async_show_form(
+                step_id='discovery',
+            )
+
+    with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
+        result = await hass.config_entries.flow.async_init(
+            'test', source=data_entry_flow.SOURCE_DISCOVERY)
+
+    await hass.async_block_till_done()
+    state = hass.states.get('persistent_notification.config_entry_discovery')
+    assert state is not None
+
+    result = await hass.config_entries.flow.async_configure(
+        result['flow_id'], {})
+    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+    state = hass.states.get('persistent_notification.config_entry_discovery')
+    assert state is None

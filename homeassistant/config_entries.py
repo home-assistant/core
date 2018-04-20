@@ -141,6 +141,26 @@ ENTRY_STATE_SETUP_ERROR = 'setup_error'
 ENTRY_STATE_NOT_LOADED = 'not_loaded'
 ENTRY_STATE_FAILED_UNLOAD = 'failed_unload'
 
+DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
+DISCOVERY_SOURCES = (data_entry_flow.SOURCE_DISCOVERY,)
+
+
+@callback
+def async_create_discovery_notification(hass):
+    """Notify user of a discovered config entry."""
+    hass.components.persistent_notification.async_create(
+        title='New devices discovered',
+        message=("We have discovered new devices on your network. "
+                 "[Check it out](/config/integrations)"),
+        notification_id=DISCOVERY_NOTIFICATION_ID
+    )
+
+
+def async_dismiss_discovery_notification(hass):
+    """Dismiss discovery notification."""
+    hass.components.persistent_notification.async_dismiss(
+        DISCOVERY_NOTIFICATION_ID)
+
 
 class ConfigEntry:
     """Hold a configuration entry."""
@@ -362,9 +382,18 @@ class ConfigEntries:
             await async_setup_component(
                 self.hass, entry.domain, self._hass_config)
 
+        # remove notification if 0 flows with discovery source in progress
+        if result['source'] not in DISCOVERY_SOURCES:
+            return entry
+
+        # If no discovery config entries in progress, remove notification.
+        if not any(ent['source'] in DISCOVERY_SOURCES for ent
+                   in self.hass.config_entries.flow.async_progress()):
+            async_dismiss_discovery_notification(self.hass)
+
         return entry
 
-    async def _async_create_flow(self, handler):
+    async def _async_create_flow(self, handler, *, source, data):
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to setup.
@@ -378,6 +407,10 @@ class ConfigEntries:
         # Make sure requirements and dependencies of component are resolved
         await async_process_deps_reqs(
             self.hass, self._hass_config, handler, component)
+
+        # Create notification.
+        if source in DISCOVERY_SOURCES:
+            async_create_discovery_notification(self.hass)
 
         return handler()
 
