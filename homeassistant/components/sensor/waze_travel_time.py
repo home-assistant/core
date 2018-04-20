@@ -11,7 +11,9 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START, ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START, 
+    ATTR_LATITUDE, ATTR_LONGITUDE)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.location as location
 from homeassistant.helpers.entity import Entity
@@ -68,12 +70,12 @@ class WazeTravelTime(Entity):
         self._name = name
         self._region = region
         self._state = None
-        
+
         if origin.split('.', 1)[0] in TRACKABLE_DOMAINS:
             self._origin_entity_id = origin
         else:
             self._origin = origin
-            
+
         if destination.split('.', 1)[0] in TRACKABLE_DOMAINS:
             self._destination_entity_id = destination
         else:
@@ -89,7 +91,7 @@ class WazeTravelTime(Entity):
         """Return the state of the sensor."""
         if self._state is None:
             return None
-            
+
         if 'duration' in self._state:
             return round(self._state['duration'])
         return None
@@ -109,7 +111,7 @@ class WazeTravelTime(Entity):
         """Return the state attributes of the last update."""
         if self._state is None:
             return None
-        
+
         res = {ATTR_ATTRIBUTION:CONF_ATTRIBUTION}
         if 'duration' in self._state:
             res[ATTR_DURATION] = self._state['duration']
@@ -118,7 +120,7 @@ class WazeTravelTime(Entity):
         if 'route' in self._state:
             res[ATTR_ROUTE] = self._state['route']            
         return res
-        
+
     def _get_location_from_entity(self, entity_id):
         """Get the location from the entity state or attributes."""
         entity = self._hass.states.get(entity_id)
@@ -146,7 +148,7 @@ class WazeTravelTime(Entity):
 
         # When everything fails just return nothing
         return None
-        
+
     @staticmethod
     def _get_location_from_attributes(entity):
         """Get the lat/long string from an entities attributes."""
@@ -165,20 +167,20 @@ class WazeTravelTime(Entity):
     def update(self):
         """Fetch new state data for the sensor."""
         import WazeRouteCalculator
-        
+
         if hasattr(self, '_origin_entity_id'):
             self._origin = self._get_location_from_entity(
                 self._origin_entity_id
             )
-            
+
         if hasattr(self, '_destination_entity_id'):
             self._destination = self._get_location_from_entity(
                 self._destination_entity_id
             )
-        
+
         self._destination = self._resolve_zone(self._destination)
         self._origin = self._resolve_zone(self._origin)
-            
+
         if self._destination is not None and self._origin is not None:
             try:
                 params = WazeRouteCalculator.WazeRouteCalculator(
