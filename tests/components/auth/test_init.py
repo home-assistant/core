@@ -1,6 +1,4 @@
 """Integration tests for the auth component."""
-import pytest
-
 from homeassistant.components.auth import token
 
 from . import async_setup_auth, CLIENT_AUTH

@@ -1,6 +1,4 @@
 """Tests for the link user flow."""
-import pytest
-
 from homeassistant.components.auth import token
 
 from . import async_setup_auth, CLIENT_AUTH, CLIENT_ID
