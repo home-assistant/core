@@ -9,6 +9,7 @@ from aiohue.lights import Lights
 from aiohue.groups import Groups
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import hue
 import homeassistant.components.light.hue as hue_light
 from homeassistant.util import color
@@ -196,9 +197,11 @@ async def setup_bridge(hass, mock_bridge):
     """Load the Hue light platform with the provided bridge."""
     hass.config.components.add(hue.DOMAIN)
     hass.data[hue.DOMAIN] = {'mock-host': mock_bridge}
-    await hass.helpers.discovery.async_load_platform('light', 'hue', {
+    config_entry = config_entries.ConfigEntry(1, hue.DOMAIN, 'Mock Title', {
         'host': 'mock-host'
-    })
+    }, 'test')
+    await hass.config_entries.async_forward_entry_setup(config_entry, 'light')
+    # To flush out the service call to update the group
     await hass.async_block_till_done()
 
 

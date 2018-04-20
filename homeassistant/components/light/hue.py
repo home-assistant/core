@@ -49,11 +49,17 @@ GROUP_MIN_API_VERSION = (1, 13, 0)
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Set up the Hue lights."""
-    if discovery_info is None:
-        return
+    """Old way of setting up Hue lights.
 
-    bridge = hass.data[hue.DOMAIN][discovery_info['host']]
+    Can only be called when a user accidentally mentions hue platform in their
+    config. But even in that case it would have been ignored.
+    """
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the Hue lights from a config entry."""
+    bridge = hass.data[hue.DOMAIN][config_entry.data['host']]
     cur_lights = {}
     cur_groups = {}
 

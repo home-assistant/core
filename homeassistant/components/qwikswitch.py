@@ -18,7 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.light import ATTR_BRIGHTNESS
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyqwikswitch==0.6']
+REQUIREMENTS = ['pyqwikswitch==0.71']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,17 +34,54 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Coerce(str),
         vol.Optional(CONF_DIMMER_ADJUST, default=1): CV_DIM_VALUE,
         vol.Optional(CONF_BUTTON_EVENTS, default=[]): cv.ensure_list_csv,
-        vol.Optional(CONF_SENSORS, default={}): vol.Schema({cv.slug: str}),
+        vol.Optional(CONF_SENSORS, default=[]): vol.All(
+            cv.ensure_list, [vol.Schema({
+                vol.Required('id'): str,
+                vol.Optional('channel', default=1): int,
+                vol.Required('name'): str,
+                vol.Required('type'): str,
+            })]),
         vol.Optional(CONF_SWITCHES, default=[]): vol.All(
             cv.ensure_list, [str])
     })}, extra=vol.ALLOW_EXTRA)
 
 
-class QSToggleEntity(Entity):
-    """Representation of a Qwikswitch Entity.
+class QSEntity(Entity):
+    """Qwikswitch Entity base."""
 
-    Implement base QS methods. Modeled around HA ToggleEntity[1] & should only
-    be used in a class that extends both QSToggleEntity *and* ToggleEntity.
+    def __init__(self, qsid, name):
+        """Initialize the QSEntity."""
+        self._name = name
+        self.qsid = qsid
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def poll(self):
+        """QS sensors gets packets in update_packet."""
+        return False
+
+    @property
+    def unique_id(self):
+        """Return a unique identifier for this sensor."""
+        return "qs{}".format(self.qsid)
+
+    @callback
+    def update_packet(self, packet):
+        """Receive update packet from QSUSB. Match dispather_send signature."""
+        self.async_schedule_update_ha_state()
+
+    async def async_added_to_hass(self):
+        """Listen for updates from QSUSb via dispatcher."""
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            self.qsid, self.update_packet)
+
+
+class QSToggleEntity(QSEntity):
+    """Representation of a Qwikswitch Toggle Entity.
 
     Implemented:
      - QSLight extends QSToggleEntity and Light[2] (ToggleEntity[1])
@@ -57,52 +94,28 @@ class QSToggleEntity(Entity):
 
     def __init__(self, qsid, qsusb):
         """Initialize the ToggleEntity."""
-        from pyqwikswitch import (QS_NAME, QSDATA, QS_TYPE, QSType)
-        self.qsid = qsid
-        self._qsusb = qsusb.devices
-        dev = qsusb.devices[qsid]
-        self._dim = dev[QS_TYPE] == QSType.dimmer
-        self._name = dev[QSDATA][QS_NAME]
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the light."""
-        return self._name
+        self.device = qsusb.devices[qsid]
+        super().__init__(qsid, self.device.name)
 
     @property
     def is_on(self):
         """Check if device is on (non-zero)."""
-        return self._qsusb[self.qsid, 1] > 0
+        return self.device.value > 0
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         new = kwargs.get(ATTR_BRIGHTNESS, 255)
-        self._qsusb.set_value(self.qsid, new)
+        self.hass.data[DOMAIN].devices.set_value(self.qsid, new)
 
     async def async_turn_off(self, **_):
         """Turn the device off."""
-        self._qsusb.set_value(self.qsid, 0)
-
-    def _update(self, _packet=None):
-        """Schedule an update - match dispather_send signature."""
-        self.async_schedule_update_ha_state()
-
-    async def async_added_to_hass(self):
-        """Listen for updates from QSUSb via dispatcher."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            self.qsid, self._update)
+        self.hass.data[DOMAIN].devices.set_value(self.qsid, 0)
 
 
 async def async_setup(hass, config):
     """Qwiskswitch component setup."""
     from pyqwikswitch.async_ import QSUsb
-    from pyqwikswitch import (
-        CMD_BUTTONS, QS_CMD, QS_ID, QS_TYPE, QSType)
+    from pyqwikswitch import CMD_BUTTONS, QS_CMD, QS_ID, QSType
 
     # Add cmd's to in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
@@ -112,8 +125,8 @@ async def async_setup(hass, config):
 
     url = config[DOMAIN][CONF_URL]
     dimmer_adjust = config[DOMAIN][CONF_DIMMER_ADJUST]
-    sensors = config[DOMAIN]['sensors']
-    switches = config[DOMAIN]['switches']
+    sensors = config[DOMAIN][CONF_SENSORS]
+    switches = config[DOMAIN][CONF_SWITCHES]
 
     def callback_value_changed(_qsd, qsid, _val):
         """Update entity values based on device change."""
@@ -131,17 +144,17 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = qsusb
 
     _new = {'switch': [], 'light': [], 'sensor': sensors}
-    for _id, item in qsusb.devices:
-        if _id in switches:
-            if item[QS_TYPE] != QSType.relay:
+    for qsid, dev in qsusb.devices.items():
+        if qsid in switches:
+            if dev.qstype != QSType.relay:
                 _LOGGER.warning(
-                    "You specified a switch that is not a relay %s", _id)
+                    "You specified a switch that is not a relay %s", qsid)
                 continue
-            _new['switch'].append(_id)
-        elif item[QS_TYPE] in [QSType.relay, QSType.dimmer]:
-            _new['light'].append(_id)
+            _new['switch'].append(qsid)
+        elif dev.qstype in (QSType.relay, QSType.dimmer):
+            _new['light'].append(qsid)
         else:
-            _LOGGER.warning("Ignored unknown QSUSB device: %s", item)
+            _LOGGER.warning("Ignored unknown QSUSB device: %s", dev)
             continue
 
     # Load platforms
@@ -149,24 +162,21 @@ async def async_setup(hass, config):
         if comp_conf:
             load_platform(hass, comp_name, DOMAIN, {DOMAIN: comp_conf}, config)
 
-    def callback_qs_listen(item):
+    def callback_qs_listen(qspacket):
         """Typically a button press or update signal."""
         # If button pressed, fire a hass event
-        if QS_ID in item:
-            if item.get(QS_CMD, '') in cmd_buttons:
+        if QS_ID in qspacket:
+            if qspacket.get(QS_CMD, '') in cmd_buttons:
                 hass.bus.async_fire(
-                    'qwikswitch.button.{}'.format(item[QS_ID]), item)
+                    'qwikswitch.button.{}'.format(qspacket[QS_ID]), qspacket)
                 return
 
-            # Private method due to bad __iter__ design in qsusb
-            # qsusb.devices returns a list of tuples
-            if item[QS_ID] not in \
-                    qsusb.devices._data:  # pylint: disable=protected-access
+            if qspacket[QS_ID] not in qsusb.devices:
                 # Not a standard device in, component can handle packet
                 # i.e. sensors
-                _LOGGER.debug("Dispatch %s ((%s))", item[QS_ID], item)
+                _LOGGER.debug("Dispatch %s ((%s))", qspacket[QS_ID], qspacket)
                 hass.helpers.dispatcher.async_dispatcher_send(
-                    item[QS_ID], item)
+                    qspacket[QS_ID], qspacket)
 
         # Update all ha_objects
         hass.async_add_job(qsusb.update_from_devices)

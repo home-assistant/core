@@ -95,6 +95,11 @@ class LinuxBatterySensor(Entity):
         return self._name
 
     @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return 'battery'
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._battery_stat.capacity
