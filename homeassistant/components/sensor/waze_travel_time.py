@@ -119,7 +119,7 @@ class WazeTravelTime(Entity):
         if 'distance' in self._state:
             res[ATTR_DISTANCE] = self._state['distance']
         if 'route' in self._state:
-            res[ATTR_ROUTE] = self._state['route']            
+            res[ATTR_ROUTE] = self._state['route']
         return res
 
     def _get_location_from_entity(self, entity_id):
