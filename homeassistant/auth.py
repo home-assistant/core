@@ -1,5 +1,6 @@
 """Provide an authentication layer for Home Assistant."""
 import asyncio
+from collections import OrderedDict
 from datetime import datetime, timedelta
 import hmac
 import importlib
@@ -229,7 +230,8 @@ async def auth_manager_from_config(hass, provider_configs):
               for config in provider_configs])
     else:
         providers = []
-    provider_hash = {}
+    # So returned auth providers are in same order as config
+    provider_hash = OrderedDict()
     for provider in providers:
         if provider is None:
             continue
