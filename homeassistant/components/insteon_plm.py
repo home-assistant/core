@@ -328,8 +328,7 @@ class InsteonPLMEntity(Entity):
 def print_aldb_to_log(aldb):
     """Print the All-Link Database to the log file."""
     from insteonplm.devices import ALDBStatus
-    _LOGGER.info('ALDB load status for device %s is %s',
-                 self.address, self._insteon_device.aldb.status.name)
+    _LOGGER.info('ALDB load status is %s', aldb.status.name)
     _LOGGER.info('RecID In Use Mode HWM Group Address  Data 1 Data 2 Data 3')
     _LOGGER.info('----- ------ ---- --- ----- -------- ------ ------ ------')
     if aldb.status in [ALDBStatus.LOADED, ALDBStatus.PARTIAL]:
