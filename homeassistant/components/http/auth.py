@@ -98,11 +98,7 @@ async def async_validate_auth_header(api_password, request):
         return False
 
     hass = request.app['hass']
-    secret = hass.data.get(token.DATA_SECRET)
-    if secret is None:
-        secret = await token.load_or_create_secret(hass)
-
-    info = await token.async_resolve_token(hass, secret, auth_val)
+    info = await token.async_resolve_token(hass, auth_val)
     if info is None:
         return False
     request['hass_user'] = info['user']

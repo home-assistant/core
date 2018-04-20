@@ -226,24 +226,19 @@ class GrantTokenView(HomeAssistantView):
         data = await request.post()
         grant_type = data.get('grant_type')
 
-        secret = hass.data.get(token.DATA_SECRET)
-        if secret is None:
-            secret = await hass.async_add_job(
-                token.load_or_create_secret, hass)
-
         if grant_type == 'authorization_code':
             return await self._async_handle_auth_code(
-                hass, secret, client_id, data)
+                hass, client_id, data)
 
         elif grant_type == 'refresh_token':
             return await self._async_handle_refresh_token(
-                hass, secret, client_id, data)
+                hass, client_id, data)
 
         return self.json({
             'error': 'unsupported_grant_type',
         }, status_code=400)
 
-    async def _async_handle_auth_code(self, hass, secret, client_id, data):
+    async def _async_handle_auth_code(self, hass, client_id, data):
         """Handle authorization code request."""
         code = data.get('code')
 
@@ -261,8 +256,8 @@ class GrantTokenView(HomeAssistantView):
 
         user = await hass.auth.async_get_or_create_user(credentials)
         user_token = await hass.auth.async_create_token(user, client_id)
-        refresh_token = token.async_refresh_token(hass, secret, user_token)
-        access_token = token.async_access_token(hass, secret, user_token)
+        refresh_token = token.async_refresh_token(hass, user_token)
+        access_token = token.async_access_token(hass, user_token)
 
         return self.json({
             'access_token': access_token,
@@ -271,7 +266,7 @@ class GrantTokenView(HomeAssistantView):
             'expires_in': int(user_token.access_token_valid.total_seconds()),
         })
 
-    async def _async_handle_refresh_token(self, hass, secret, client_id, data):
+    async def _async_handle_refresh_token(self, hass, client_id, data):
         """Handle authorization code request."""
         refresh_token = data.get('refresh_token')
 
@@ -281,14 +276,14 @@ class GrantTokenView(HomeAssistantView):
             }, status_code=400)
 
         info = await token.async_resolve_token(
-            hass, secret, refresh_token, client_id)
+            hass, refresh_token, client_id)
 
         if info is None:
             return self.json({
                 'error': 'invalid_grant',
             }, status_code=400)
 
-        access_token = token.async_access_token(hass, secret, info['token'])
+        access_token = token.async_access_token(hass, info['token'])
 
         return self.json({
             'access_token': access_token,

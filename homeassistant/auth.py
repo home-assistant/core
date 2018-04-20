@@ -53,6 +53,17 @@ class UnknownError(AuthError):
     """When an unknown error occurs."""
 
 
+def generate_secret():
+    """Generate a secret.
+
+    Backport of secrets.token_hex from Python 3.6
+
+    Event loop friendly.
+    """
+    entropy = 64
+    return binascii.hexlify(os.urandom(entropy)).decode('ascii')
+
+
 class AuthProvider:
     """Provider of user authentication."""
 
@@ -170,6 +181,7 @@ class AuthToken:
     last_refreshed = attr.ib(type=datetime, default=None)
     access_token_valid = attr.ib(type=timedelta,
                                  default=ACCESS_TOKEN_EXPIRATION)
+    secret = attr.ib(type=str, default=attr.Factory(generate_secret))
 
 
 @attr.s(slots=True)
@@ -184,17 +196,6 @@ class Credentials:
 
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
     is_new = attr.ib(type=bool, default=True)
-
-
-def generate_secret():
-    """Generate a secret.
-
-    Backport of secrets.token_hex from Python 3.6
-
-    Event loop friendly.
-    """
-    entropy = 64
-    return binascii.hexlify(os.urandom(entropy)).decode('ascii')
 
 
 @attr.s(slots=True)

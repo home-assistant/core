@@ -6,15 +6,6 @@ from homeassistant.components.auth import token
 from . import async_setup_auth, CLIENT_AUTH
 
 
-SECRET = 'bla'
-
-
-@pytest.fixture(autouse=True)
-def set_secret(hass):
-    """Set a secret."""
-    hass.data[token.DATA_SECRET] = SECRET
-
-
 async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
     """Test logging in with new user and refreshing tokens."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
@@ -44,7 +35,7 @@ async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
     tokens = await resp.json()
 
     assert await token.async_resolve_token(
-        hass, SECRET, tokens['access_token']) is not None
+        hass, tokens['access_token']) is not None
 
     # Use refresh token to get more tokens.
     resp = await client.post('/api/auth/token', data={
@@ -56,7 +47,7 @@ async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
     tokens = await resp.json()
     assert 'refresh_token' not in tokens
     assert await token.async_resolve_token(
-        hass, SECRET, tokens['access_token']) is not None
+        hass, tokens['access_token']) is not None
 
     # Test using access token to hit API.
     resp = await client.get('/api/')
