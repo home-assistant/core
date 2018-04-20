@@ -1,4 +1,6 @@
 """Token related helpers for the auth component."""
+import binascii
+import os
 import uuid
 
 from homeassistant.core import callback
@@ -15,7 +17,10 @@ def load_or_create_secret(hass):
         with open(path, 'rt') as fil:
             secret = hass.data[DATA_SECRET] = fil.read()
     except FileNotFoundError:
-        secret = uuid.uuid4().hex
+        # Backport secrets.token_hex from Python 3.6
+        entropy = 64
+        secret = binascii.hexlify(os.urandom(entropy)).decode('ascii')
+
         with open(path, 'wt') as fil:
             fil.write(secret)
         hass.data[DATA_SECRET] = secret
