@@ -30,7 +30,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     all_switches = []
 
     for setting in switches:
-        all_switches.append(AmcrestSwitch(setting, camera))
+        all_switches.append(AmcrestSwitch(setting, camera, name))
 
     async_add_devices(all_switches, True)
 
