@@ -30,7 +30,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     all_switches = []
 
     for setting in switches:
-        all_switches.append(AmcrestSwitch(setting, camera))
+        all_switches.append(AmcrestSwitch(setting, camera, name))
 
     async_add_devices(all_switches, True)
 
@@ -38,11 +38,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class AmcrestSwitch(ToggleEntity):
     """Representation of an Amcrest IP camera switch."""
 
-    def __init__(self, setting, camera):
+    def __init__(self, setting, camera, name):
         """Initialize the Amcrest switch."""
         self._setting = setting
         self._camera = camera
-        self._name = SWITCHES[setting][0]
+        self._name = '{} {}'.format(SWITCHES[setting][0], name)
         self._icon = SWITCHES[setting][1]
         self._state = None
 
