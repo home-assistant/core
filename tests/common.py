@@ -115,7 +115,7 @@ def async_test_home_assistant(loop):
     hass.config_entries._entries = []
     hass.config.async_load = Mock()
     store = auth.AuthStore(hass)
-    hass.auth = auth.AuthManager(hass, store, [])
+    hass.auth = auth.AuthManager(hass, store, {})
     ensure_auth_manager_loaded(hass.auth)
     INSTANCES.append(hass)
 
