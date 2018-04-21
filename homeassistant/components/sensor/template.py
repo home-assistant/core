@@ -11,8 +11,8 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA, \
-    DEVICE_CLASSES_SCHEMA
+from homeassistant.components.sensor import ENTITY_ID_FORMAT, \
+    PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE, ATTR_ENTITY_ID,
