@@ -145,23 +145,6 @@ DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
 DISCOVERY_SOURCES = (data_entry_flow.SOURCE_DISCOVERY,)
 
 
-@callback
-def async_create_discovery_notification(hass):
-    """Notify user of a discovered config entry."""
-    hass.components.persistent_notification.async_create(
-        title='New devices discovered',
-        message=("We have discovered new devices on your network. "
-                 "[Check it out](/config/integrations)"),
-        notification_id=DISCOVERY_NOTIFICATION_ID
-    )
-
-
-def async_dismiss_discovery_notification(hass):
-    """Dismiss discovery notification."""
-    hass.components.persistent_notification.async_dismiss(
-        DISCOVERY_NOTIFICATION_ID)
-
-
 class ConfigEntry:
     """Hold a configuration entry."""
 
@@ -389,7 +372,8 @@ class ConfigEntries:
         # If no discovery config entries in progress, remove notification.
         if not any(ent['source'] in DISCOVERY_SOURCES for ent
                    in self.hass.config_entries.flow.async_progress()):
-            async_dismiss_discovery_notification(self.hass)
+            hass.components.persistent_notification.async_dismiss(
+                DISCOVERY_NOTIFICATION_ID)
 
         return entry
 
@@ -410,7 +394,12 @@ class ConfigEntries:
 
         # Create notification.
         if source in DISCOVERY_SOURCES:
-            async_create_discovery_notification(self.hass)
+            hass.components.persistent_notification.async_create(
+                title='New devices discovered',
+                message=("We have discovered new devices on your network. "
+                        "[Check it out](/config/integrations)"),
+                notification_id=DISCOVERY_NOTIFICATION_ID
+            )
 
         return handler()
 
