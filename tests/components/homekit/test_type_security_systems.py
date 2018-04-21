@@ -109,8 +109,16 @@ class TestHomekitSecuritySystems(unittest.TestCase):
 
         acc = SecuritySystem(self.hass, 'SecuritySystem', acp,
                              2, config={ATTR_CODE: None})
-        acc.run()
+        # Set from HomeKit
+        acc.char_target_state.client_update_value(0)
+        self.hass.block_till_done()
+        self.assertEqual(
+            self.events[0].data[ATTR_SERVICE], 'alarm_arm_home')
+        self.assertNotIn(ATTR_CODE, self.events[0].data[ATTR_SERVICE_DATA])
+        self.assertEqual(acc.char_target_state.value, 0)
 
+        acc = SecuritySystem(self.hass, 'SecuritySystem', acp,
+                             2, config={})
         # Set from HomeKit
         acc.char_target_state.client_update_value(0)
         self.hass.block_till_done()
