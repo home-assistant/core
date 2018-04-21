@@ -372,7 +372,7 @@ class ConfigEntries:
         # If no discovery config entries in progress, remove notification.
         if not any(ent['source'] in DISCOVERY_SOURCES for ent
                    in self.hass.config_entries.flow.async_progress()):
-            hass.components.persistent_notification.async_dismiss(
+            self.hass.components.persistent_notification.async_dismiss(
                 DISCOVERY_NOTIFICATION_ID)
 
         return entry
@@ -394,10 +394,10 @@ class ConfigEntries:
 
         # Create notification.
         if source in DISCOVERY_SOURCES:
-            hass.components.persistent_notification.async_create(
+            self.hass.components.persistent_notification.async_create(
                 title='New devices discovered',
                 message=("We have discovered new devices on your network. "
-                        "[Check it out](/config/integrations)"),
+                         "[Check it out](/config/integrations)"),
                 notification_id=DISCOVERY_NOTIFICATION_ID
             )
 
