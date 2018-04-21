@@ -42,7 +42,7 @@ class AmcrestSwitch(ToggleEntity):
         """Initialize the Amcrest switch."""
         self._setting = setting
         self._camera = camera
-        self._name = '{} {}'.format(SWITCHES[setting][0],name)
+        self._name = '{} {}'.format(SWITCHES[setting][0], name)
         self._icon = SWITCHES[setting][1]
         self._state = None
 
