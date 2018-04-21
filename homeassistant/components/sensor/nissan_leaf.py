@@ -47,6 +47,11 @@ class LeafBatterySensor(LeafEntity):
             self.car.leaf.vin)
 
     @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return 'battery'
+
+    @property
     def state(self):
         """Battery state percentage."""
         return round(self.car.data[DATA_BATTERY], 0)
