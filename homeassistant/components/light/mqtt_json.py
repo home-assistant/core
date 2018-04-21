@@ -217,6 +217,8 @@ class MqttJson(MqttAvailability, Light):
                     self._hs = (hue, saturation)
                 except KeyError:
                     pass
+                except ValueError:
+                    _LOGGER.warning("Invalid HS color value received")
 
             if self._brightness is not None:
                 try:
