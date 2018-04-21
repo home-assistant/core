@@ -8,17 +8,18 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
+from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_URL,
-    CONF_SENSORS, CONF_SWITCHES)
+    CONF_SENSORS, CONF_SWITCHES, CONF_URL, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.light import ATTR_BRIGHTNESS
-import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyqwikswitch==0.71']
+REQUIREMENTS = ['pyqwikswitch==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +28,7 @@ DOMAIN = 'qwikswitch'
 CONF_DIMMER_ADJUST = 'dimmer_adjust'
 CONF_BUTTON_EVENTS = 'button_events'
 CV_DIM_VALUE = vol.All(vol.Coerce(float), vol.Range(min=1, max=3))
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -40,6 +42,8 @@ CONFIG_SCHEMA = vol.Schema({
                 vol.Optional('channel', default=1): int,
                 vol.Required('name'): str,
                 vol.Required('type'): str,
+                vol.Optional('class'): DEVICE_CLASSES_SCHEMA,
+                vol.Optional('invert'): bool
             })]),
         vol.Optional(CONF_SWITCHES, default=[]): vol.All(
             cv.ensure_list, [str])
@@ -115,7 +119,7 @@ class QSToggleEntity(QSEntity):
 async def async_setup(hass, config):
     """Qwiskswitch component setup."""
     from pyqwikswitch.async_ import QSUsb
-    from pyqwikswitch import CMD_BUTTONS, QS_CMD, QS_ID, QSType
+    from pyqwikswitch import CMD_BUTTONS, QS_CMD, QS_ID, QSType, SENSORS
 
     # Add cmd's to in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
@@ -143,22 +147,39 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = qsusb
 
-    _new = {'switch': [], 'light': [], 'sensor': sensors}
+    comps = {'switch': [], 'light': [], 'sensor': [], 'binary_sensor': []}
+
+    try:
+        for sens in sensors:
+            _, _type = SENSORS[sens['type']]
+            if _type is bool:
+                comps['binary_sensor'].append(sens)
+                continue
+            comps['sensor'].append(sens)
+            for _key in ('invert', 'class'):
+                if _key in sens:
+                    _LOGGER.warning(
+                        "%s should only be used for binary_sensors: %s",
+                        _key, sens)
+
+    except KeyError:
+        _LOGGER.warning("Sensor validation failed")
+
     for qsid, dev in qsusb.devices.items():
         if qsid in switches:
             if dev.qstype != QSType.relay:
                 _LOGGER.warning(
                     "You specified a switch that is not a relay %s", qsid)
                 continue
-            _new['switch'].append(qsid)
+            comps['switch'].append(qsid)
         elif dev.qstype in (QSType.relay, QSType.dimmer):
-            _new['light'].append(qsid)
+            comps['light'].append(qsid)
         else:
             _LOGGER.warning("Ignored unknown QSUSB device: %s", dev)
             continue
 
     # Load platforms
-    for comp_name, comp_conf in _new.items():
+    for comp_name, comp_conf in comps.items():
         if comp_conf:
             load_platform(hass, comp_name, DOMAIN, {DOMAIN: comp_conf}, config)
 
@@ -190,9 +211,8 @@ async def async_setup(hass, config):
 
     @callback
     def async_stop(_):
-        """Stop the listener queue and clean up."""
+        """Stop the listener."""
         hass.data[DOMAIN].stop()
-        _LOGGER.info("Waiting for long poll to QSUSB to time out (max 30sec)")
 
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, async_stop)
 
