@@ -30,10 +30,7 @@ class SecuritySystem(HomeAccessory):
     def __init__(self, *args, config):
         """Initialize a SecuritySystem accessory object."""
         super().__init__(*args, category=CATEGORY_ALARM_SYSTEM)
-        try:
-            self._alarm_code = config[ATTR_CODE]
-        except KeyError:
-            self._alarm_code = False
+        self._alarm_code = config.get(ATTR_CODE)
         self.flag_target_state = False
 
         serv_alarm = add_preload_service(self, SERV_SECURITY_SYSTEM)
