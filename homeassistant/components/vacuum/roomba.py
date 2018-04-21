@@ -43,7 +43,6 @@ DEFAULT_CERT = '/etc/ssl/certs/ca-certificates.crt'
 DEFAULT_CONTINUOUS = True
 DEFAULT_NAME = 'Roomba'
 
-ICON = 'mdi:roomba'
 PLATFORM = 'roomba'
 
 FAN_SPEED_AUTOMATIC = 'Automatic'
@@ -164,11 +163,6 @@ class RoombaVacuum(VacuumDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use for device."""
-        return ICON
 
     @property
     def device_state_attributes(self):

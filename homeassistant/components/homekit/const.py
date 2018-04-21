@@ -52,7 +52,8 @@ SERV_SMOKE_SENSOR = 'SmokeSensor'
 SERV_SWITCH = 'Switch'
 SERV_TEMPERATURE_SENSOR = 'TemperatureSensor'
 SERV_THERMOSTAT = 'Thermostat'
-SERV_WINDOW_COVERING = 'WindowCovering'  # CurrentPosition, TargetPosition
+SERV_WINDOW_COVERING = 'WindowCovering'
+# CurrentPosition, TargetPosition, PositionState
 
 
 # #### Characteristics ####
@@ -85,6 +86,7 @@ CHAR_MOTION_DETECTED = 'MotionDetected'
 CHAR_NAME = 'Name'
 CHAR_OCCUPANCY_DETECTED = 'OccupancyDetected'
 CHAR_ON = 'On'  # boolean
+CHAR_POSITION_STATE = 'PositionState'
 CHAR_SATURATION = 'Saturation'  # percent
 CHAR_SERIAL_NUMBER = 'SerialNumber'
 CHAR_SMOKE_DETECTED = 'SmokeDetected'

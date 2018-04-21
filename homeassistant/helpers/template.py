@@ -452,6 +452,38 @@ def logarithm(value, base=math.e):
         return value
 
 
+def sine(value):
+    """Filter to get sine of the value."""
+    try:
+        return math.sin(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
+def cosine(value):
+    """Filter to get cosine of the value."""
+    try:
+        return math.cos(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
+def tangent(value):
+    """Filter to get tangent of the value."""
+    try:
+        return math.tan(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
+def square_root(value):
+    """Filter to get square root of the value."""
+    try:
+        return math.sqrt(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
 def timestamp_custom(value, date_format=DATE_STR_FORMAT, local=True):
     """Filter to convert given timestamp to format."""
     try:
@@ -571,6 +603,10 @@ ENV = TemplateEnvironment()
 ENV.filters['round'] = forgiving_round
 ENV.filters['multiply'] = multiply
 ENV.filters['log'] = logarithm
+ENV.filters['sin'] = sine
+ENV.filters['cos'] = cosine
+ENV.filters['tan'] = tangent
+ENV.filters['sqrt'] = square_root
 ENV.filters['timestamp_custom'] = timestamp_custom
 ENV.filters['timestamp_local'] = timestamp_local
 ENV.filters['timestamp_utc'] = timestamp_utc
@@ -583,6 +619,13 @@ ENV.filters['regex_replace'] = regex_replace
 ENV.filters['regex_search'] = regex_search
 ENV.filters['regex_findall_index'] = regex_findall_index
 ENV.globals['log'] = logarithm
+ENV.globals['sin'] = sine
+ENV.globals['cos'] = cosine
+ENV.globals['tan'] = tangent
+ENV.globals['sqrt'] = square_root
+ENV.globals['pi'] = math.pi
+ENV.globals['tau'] = math.pi * 2
+ENV.globals['e'] = math.e
 ENV.globals['float'] = forgiving_float
 ENV.globals['now'] = dt_util.now
 ENV.globals['utcnow'] = dt_util.utcnow

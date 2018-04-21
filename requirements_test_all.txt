@@ -63,7 +63,7 @@ evohomeclient==0.2.5
 feedparser==5.2.1
 
 # homeassistant.components.sensor.foobot
-foobot_async==0.3.0
+foobot_async==0.3.1
 
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
@@ -81,7 +81,7 @@ hbmqtt==0.9.1
 holidays==0.9.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180414.0
+home-assistant-frontend==20180420.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -129,8 +129,11 @@ pushbullet.py==0.11.0
 # homeassistant.components.canary
 py-canary==0.5.0
 
+# homeassistant.components.media_player.blackbird
+pyblackbird==0.5
+
 # homeassistant.components.deconz
-pydeconz==35
+pydeconz==36
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -146,7 +149,7 @@ pymonoprice==0.3
 pynx584==0.4
 
 # homeassistant.components.qwikswitch
-pyqwikswitch==0.7
+pyqwikswitch==0.8
 
 # homeassistant.components.sensor.darksky
 # homeassistant.components.weather.darksky
@@ -180,7 +183,7 @@ rxv==0.5.1
 sleepyq==0.6
 
 # homeassistant.components.climate.honeywell
-somecomfort==0.5.0
+somecomfort==0.5.2
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator

@@ -36,18 +36,18 @@ class QSSensor(QSEntity):
 
         super().__init__(sensor['id'], sensor['name'])
         self.channel = sensor['channel']
-        self.sensor_type = sensor['type']
+        sensor_type = sensor['type']
 
-        self._decode, self.unit = SENSORS[self.sensor_type]
+        self._decode, self.unit = SENSORS[sensor_type]
         if isinstance(self.unit, type):
-            self.unit = "{}:{}".format(self.sensor_type, self.channel)
+            self.unit = "{}:{}".format(sensor_type, self.channel)
 
     @callback
     def update_packet(self, packet):
         """Receive update packet from QSUSB."""
-        val = self._decode(packet.get('data'), channel=self.channel)
-        _LOGGER.debug("Update %s (%s) decoded as %s: %s: %s",
-                      self.entity_id, self.qsid, val, self.channel, packet)
+        val = self._decode(packet, channel=self.channel)
+        _LOGGER.debug("Update %s (%s:%s) decoded as %s: %s",
+                      self.entity_id, self.qsid, self.channel, val, packet)
         if val is not None:
             self._val = val
             self.async_schedule_update_ha_state()

@@ -338,7 +338,7 @@ class ConfigEntries:
         if component not in self.hass.config.components:
             return True
 
-        await entry.async_unload(
+        return await entry.async_unload(
             self.hass, component=getattr(self.hass.components, component))
 
     async def _async_save_entry(self, result):
@@ -361,6 +361,8 @@ class ConfigEntries:
             # Setting up component will also load the entries
             await async_setup_component(
                 self.hass, entry.domain, self._hass_config)
+
+        return entry
 
     async def _async_create_flow(self, handler):
         """Create a flow for specified handler.
