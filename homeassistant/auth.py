@@ -3,7 +3,6 @@ import asyncio
 import binascii
 from collections import OrderedDict
 from datetime import datetime, timedelta
-import hmac
 import os
 import importlib
 import logging
@@ -177,11 +176,10 @@ class RefreshToken:
     client_id = attr.ib(type=str)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
     created_at = attr.ib(type=datetime, default=attr.Factory(dt_util.utcnow))
-    last_refreshed = attr.ib(type=datetime, default=None)
     access_token_expiration = attr.ib(type=timedelta,
                                       default=ACCESS_TOKEN_EXPIRATION)
     token = attr.ib(type=str,
-                    default=attr.Factory(lambda: generate_secret(128)))
+                    default=attr.Factory(lambda: generate_secret(64)))
     access_tokens = attr.ib(type=list, default=attr.Factory(list))
 
 
