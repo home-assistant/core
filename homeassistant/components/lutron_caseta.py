@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pylutron-caseta==0.5.0']
+REQUIREMENTS = ['pylutron-caseta==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,6 +82,8 @@ class LutronCasetaDevice(Entity):
         self._device_type = device["type"]
         self._device_name = device["name"]
         self._device_zone = device["zone"]
+        self._device_model = device["model"]
+        self._device_serial = device["serial"]
         self._state = None
         self._smartbridge = bridge
 
@@ -95,6 +97,21 @@ class LutronCasetaDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return self._device_name
+
+    @property
+    def model(self):
+        """Return the model number of the device."""
+        return self._device_model
+
+    @property
+    def serial(self):
+        """Return the serial number of the device."""
+        return self._device_serial
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the device (model + serial)."""
+        return "{}.{}".format(self._device_model, self._device_serial)
 
     @property
     def device_state_attributes(self):
