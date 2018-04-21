@@ -324,7 +324,8 @@ class MqttJson(MqttAvailability, Light):
 
         message = {'state': 'ON'}
 
-        if ATTR_HS_COLOR in kwargs and (self._hs_support or self._rgb or self._xy):
+        if ATTR_HS_COLOR in kwargs and (self._hs_support
+                                        or self._rgb or self._xy):
             hs_color = kwargs[ATTR_HS_COLOR]
             message['color'] = {}
             if self._rgb:
