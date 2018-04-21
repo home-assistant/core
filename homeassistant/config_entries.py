@@ -382,7 +382,7 @@ class ConfigEntries:
             await async_setup_component(
                 self.hass, entry.domain, self._hass_config)
 
-        # remove notification if 0 flows with discovery source in progress
+        # Return Entry if they not from a discovery request
         if result['source'] not in DISCOVERY_SOURCES:
             return entry
 
