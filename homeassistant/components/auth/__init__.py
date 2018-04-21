@@ -116,10 +116,8 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
 from .client import verify_client
-from . import token
 
 DOMAIN = 'auth'
-REQUIREMENTS = ['pyjwt==1.6.1']
 DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,7 +146,11 @@ class AuthProvidersView(HomeAssistantView):
     @verify_client
     async def get(self, request, client_id):
         """Get available auth providers."""
-        return self.json(request.app['hass'].auth.async_auth_providers())
+        return self.json([{
+            'name': provider.name,
+            'id': provider.id,
+            'type': provider.type,
+        } for provider in request.app['hass'].auth.async_auth_providers()])
 
 
 class LoginFlowIndexView(FlowManagerIndexView):
@@ -255,41 +257,41 @@ class GrantTokenView(HomeAssistantView):
             }, status_code=400)
 
         user = await hass.auth.async_get_or_create_user(credentials)
-        user_token = await hass.auth.async_create_token(user, client_id)
-        refresh_token = token.async_refresh_token(hass, user_token)
-        access_token = token.async_access_token(hass, user_token)
+        refresh_token = await hass.auth.async_create_refresh_token(user,
+                                                                   client_id)
+        access_token = hass.auth.async_create_access_token(refresh_token)
 
         return self.json({
-            'access_token': access_token,
+            'access_token': access_token.token,
             'token_type': 'Bearer',
-            'refresh_token': refresh_token,
-            'expires_in': int(user_token.access_token_valid.total_seconds()),
+            'refresh_token': refresh_token.token,
+            'expires_in':
+                int(refresh_token.access_token_expiration.total_seconds()),
         })
 
     async def _async_handle_refresh_token(self, hass, client_id, data):
         """Handle authorization code request."""
-        refresh_token = data.get('refresh_token')
+        token = data.get('refresh_token')
 
-        if refresh_token is None:
+        if token is None:
             return self.json({
                 'error': 'invalid_request',
             }, status_code=400)
 
-        info = await token.async_resolve_token(
-            hass, refresh_token, client_id)
+        refresh_token = await hass.auth.async_get_refresh_token(token)
 
-        if info is None:
+        if refresh_token is None or refresh_token.client_id != client_id:
             return self.json({
                 'error': 'invalid_grant',
             }, status_code=400)
 
-        access_token = token.async_access_token(hass, info['token'])
+        access_token = hass.auth.async_create_access_token(refresh_token)
 
         return self.json({
-            'access_token': access_token,
+            'access_token': access_token.token,
             'token_type': 'Bearer',
-            'expires_in': int(
-                info['token'].access_token_valid.total_seconds()),
+            'expires_in':
+                int(refresh_token.access_token_expiration.total_seconds()),
         })
 
 

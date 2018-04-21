@@ -48,7 +48,7 @@ async def _verify_client(request):
         # If no ':' in decoded
         return None
 
-    client = await request.app['hass'].auth.async_secure_get_client(client_id)
+    client = await request.app['hass'].auth.async_get_client(client_id)
 
     if client is None:
         # Still do a compare so we run same time as if a client was found.

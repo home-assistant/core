@@ -9,7 +9,6 @@ from aiohttp.web import middleware
 
 from homeassistant.core import callback
 from homeassistant.const import HTTP_HEADER_HA_AUTH
-from homeassistant.components.auth import token
 from .const import KEY_AUTHENTICATED, KEY_REAL_IP
 
 DATA_API_PASSWORD = 'api_password'
@@ -98,9 +97,9 @@ async def async_validate_auth_header(api_password, request):
         return False
 
     hass = request.app['hass']
-    info = await token.async_resolve_token(hass, auth_val)
-    if info is None:
+    access_token = hass.auth.async_get_access_token(auth_val)
+    if access_token is None:
         return False
-    request['hass_user'] = info['user']
-    request['hass_token'] = info['token']
+
+    request['hass_user'] = access_token.refresh_token.user
     return True

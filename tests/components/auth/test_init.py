@@ -1,6 +1,4 @@
 """Integration tests for the auth component."""
-from homeassistant.components.auth import token
-
 from . import async_setup_auth, CLIENT_AUTH
 
 
@@ -32,8 +30,7 @@ async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
     assert resp.status == 200
     tokens = await resp.json()
 
-    assert await token.async_resolve_token(
-        hass, tokens['access_token']) is not None
+    assert hass.auth.async_get_access_token(tokens['access_token']) is not None
 
     # Use refresh token to get more tokens.
     resp = await client.post('/api/auth/token', data={
@@ -44,8 +41,7 @@ async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
     assert resp.status == 200
     tokens = await resp.json()
     assert 'refresh_token' not in tokens
-    assert await token.async_resolve_token(
-        hass, tokens['access_token']) is not None
+    assert hass.auth.async_get_access_token(tokens['access_token']) is not None
 
     # Test using access token to hit API.
     resp = await client.get('/api/')

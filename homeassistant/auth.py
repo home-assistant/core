@@ -53,14 +53,13 @@ class UnknownError(AuthError):
     """When an unknown error occurs."""
 
 
-def generate_secret():
+def generate_secret(entropy=32):
     """Generate a secret.
 
     Backport of secrets.token_hex from Python 3.6
 
     Event loop friendly.
     """
-    entropy = 64
     return binascii.hexlify(os.urandom(entropy)).decode('ascii')
 
 
@@ -158,7 +157,7 @@ class User:
     credentials = attr.ib(type=list, default=attr.Factory(list))
 
     # List of tokens associated with a user.
-    tokens = attr.ib(type=list, default=attr.Factory(list))
+    refresh_tokens = attr.ib(type=dict, default=attr.Factory(dict))
 
     def as_dict(self):
         """Convert user object to a dictionary."""
@@ -171,17 +170,37 @@ class User:
 
 
 @attr.s(slots=True)
-class AuthToken:
-    """AuthToken for a user to login."""
+class RefreshToken:
+    """RefreshToken for a user to grant new access tokens."""
 
     user = attr.ib(type=User)
     client_id = attr.ib(type=str)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
     created_at = attr.ib(type=datetime, default=attr.Factory(dt_util.utcnow))
     last_refreshed = attr.ib(type=datetime, default=None)
-    access_token_valid = attr.ib(type=timedelta,
-                                 default=ACCESS_TOKEN_EXPIRATION)
-    secret = attr.ib(type=str, default=attr.Factory(generate_secret))
+    access_token_expiration = attr.ib(type=timedelta,
+                                      default=ACCESS_TOKEN_EXPIRATION)
+    token = attr.ib(type=str,
+                    default=attr.Factory(lambda: generate_secret(128)))
+    access_tokens = attr.ib(type=list, default=attr.Factory(list))
+
+
+@attr.s(slots=True)
+class AccessToken:
+    """Access token to access the API.
+
+    These will only ever be stored in memory and not be persisted.
+    """
+
+    refresh_token = attr.ib(type=RefreshToken)
+    created_at = attr.ib(type=datetime, default=attr.Factory(dt_util.utcnow))
+    token = attr.ib(type=str,
+                    default=attr.Factory(generate_secret))
+
+    @property
+    def expires(self):
+        """Return datetime when this token expires."""
+        return self.created_at + self.refresh_token.access_token_expiration
 
 
 @attr.s(slots=True)
@@ -291,16 +310,12 @@ class AuthManager:
         self.login_flow = data_entry_flow.FlowManager(
             hass, self._async_create_login_flow,
             self._async_finish_login_flow)
-        self._flow_credentials = {}
+        self.access_tokens = {}
 
     @callback
     def async_auth_providers(self):
         """Return a list of available auth providers."""
-        return [{
-            'name': provider.name,
-            'id': provider.id,
-            'type': provider.type,
-        } for provider in self._providers.values()]
+        return self._providers.values()
 
     async def async_get_user(self, user_id):
         """Retrieve a user."""
@@ -319,26 +334,33 @@ class AuthManager:
         """Remove a user."""
         await self._store.async_remove_user(user)
 
-    async def async_create_token(self, user, client_id):
-        """Create a new token for a user."""
-        return await self._store.async_create_token(user, client_id)
+    async def async_create_refresh_token(self, user, client_id):
+        """Create a new refresh token for a user."""
+        return await self._store.async_create_refresh_token(user, client_id)
+
+    async def async_get_refresh_token(self, token):
+        """Get refresh token by token."""
+        return await self._store.async_get_refresh_token(token)
+
+    @callback
+    def async_create_access_token(self, refresh_token):
+        """Create a new access token."""
+        access_token = AccessToken(refresh_token)
+        self.access_tokens[access_token.token] = access_token
+        return access_token
+
+    @callback
+    def async_get_access_token(self, token):
+        """Get an access token."""
+        return self.access_tokens.get(token)
 
     async def async_create_client(self, name):
         """Create a new client."""
         return await self._store.async_create_client(name)
 
-    async def async_secure_get_client(self, client_id):
-        """Get a client.
-
-        This function will always run in the same time, regardless if a client
-        is found or not.
-        """
-        clients = await self._store.async_get_clients()
-        found = None
-        for client in clients:
-            if hmac.compare_digest(client_id, client.id):
-                found = client
-        return found
+    async def async_get_client(self, client_id):
+        """Get a client."""
+        return await self._store.async_get_client(client_id)
 
     async def _async_create_login_flow(self, handler):
         """Create a login flow."""
@@ -384,26 +406,20 @@ class AuthStore:
         if self.users is None:
             await self.async_load()
 
-        result = []
-
-        for user in self.users:
-            for credentials in user.credentials:
-                if (credentials.auth_provider_type == provider_type and
-                        credentials.auth_provider_id == provider_id):
-                    result.append(credentials)
-
-        return result
+        return [
+            credentials
+            for user in self.users.values()
+            for credentials in user.credentials
+            if (credentials.auth_provider_type == provider_type and
+                credentials.auth_provider_id == provider_id)
+        ]
 
     async def async_get_user(self, user_id):
         """Retrieve a user."""
         if self.users is None:
             await self.async_load()
 
-        for user in self.users:
-            if user.id == user_id:
-                return user
-
-        return None
+        return self.users.get(user_id)
 
     async def async_get_or_create_user(self, credentials, auth_provider):
         """Get or create a new user for given credentials.
@@ -431,11 +447,11 @@ class AuthStore:
                 is_active=is_active,
                 name=info.get('name'),
             )
-            self.users.append(new_user)
+            self.users[new_user.id] = new_user
             await self.async_link_user(new_user, credentials)
             return new_user
 
-        for user in self.users:
+        for user in self.users.values():
             for creds in user.credentials:
                 if (creds.auth_provider_type == credentials.auth_provider_type
                         and creds.auth_provider_id == creds.auth_provider_id):
@@ -451,15 +467,27 @@ class AuthStore:
 
     async def async_remove_user(self, user):
         """Remove a user."""
-        self.users.remove(user)
+        self.users.pop(user.id)
         await self.async_save()
 
-    async def async_create_token(self, user, client_id):
+    async def async_create_refresh_token(self, user, client_id):
         """Create a new token for a user."""
-        token = AuthToken(user, client_id)
-        user.tokens.append(token)
+        refresh_token = RefreshToken(user, client_id)
+        user.refresh_tokens[refresh_token.token] = refresh_token
         await self.async_save()
-        return token
+        return refresh_token
+
+    async def async_get_refresh_token(self, token):
+        """Get refresh token by token."""
+        if self.users is None:
+            await self.async_load()
+
+        for user in self.users.values():
+            refresh_token = user.refresh_tokens.get(token)
+            if refresh_token is not None:
+                return refresh_token
+
+        return None
 
     async def async_create_client(self, name):
         """Create a new client."""
@@ -467,22 +495,22 @@ class AuthStore:
             await self.async_load()
 
         client = Client(name)
-        self.clients.append(client)
+        self.clients[client.id] = client
         await self.async_save()
         return client
 
-    async def async_get_clients(self):
-        """Get all known client."""
+    async def async_get_client(self, client_id):
+        """Get a client."""
         if self.clients is None:
             await self.async_load()
 
-        return self.clients
+        return self.clients.get(client_id)
 
     async def async_load(self):
         """Load the users."""
         async with self._load_lock:
-            self.users = []
-            self.clients = []
+            self.users = {}
+            self.clients = {}
 
     async def async_save(self):
         """Save users."""

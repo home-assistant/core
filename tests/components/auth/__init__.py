@@ -31,9 +31,8 @@ async def async_setup_auth(hass, aiohttp_client, provider_configs=BASE_CONFIG,
             'api_password': 'bla'
         }
     })
-    hass.auth._store.clients.append(
-        auth.Client('Test Client', CLIENT_ID, CLIENT_SECRET)
-    )
+    client = auth.Client('Test Client', CLIENT_ID, CLIENT_SECRET)
+    hass.auth._store.clients[client.id] = client
     if setup_api:
         await async_setup_component(hass, 'api', {})
     return await aiohttp_client(hass.http.app)

@@ -1,6 +1,4 @@
 """Tests for the link user flow."""
-from homeassistant.components.auth import token
-
 from . import async_setup_auth, CLIENT_AUTH, CLIENT_ID
 
 
@@ -51,9 +49,10 @@ async def async_get_code(hass, aiohttp_client):
     assert resp.status == 200
     tokens = await resp.json()
 
-    info = await token.async_resolve_token(hass, tokens['access_token'])
-    assert info is not None
-    assert len(info['user'].credentials) == 1
+    access_token = hass.auth.async_get_access_token(tokens['access_token'])
+    assert access_token is not None
+    user = access_token.refresh_token.user
+    assert len(user.credentials) == 1
 
     # Now authenticate with the 2nd flow
     resp = await client.post('/api/auth/login_flow', json={
@@ -72,7 +71,7 @@ async def async_get_code(hass, aiohttp_client):
     step = await resp.json()
 
     return {
-        'user': info['user'],
+        'user': user,
         'code': step['result'],
         'client': client,
         'tokens': tokens,
