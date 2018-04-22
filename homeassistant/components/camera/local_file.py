@@ -4,6 +4,7 @@ Camera that loads a picture from a local file.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.local_file/
 """
+import asyncio
 import logging
 import mimetypes
 import os
@@ -48,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         camera.update_file_path(file_path)
         return True
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         SERVICE_UPDATE_FILE_PATH,
         update_file_path_service,
