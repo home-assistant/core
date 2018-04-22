@@ -8,6 +8,7 @@ import logging
 from datetime import timedelta, datetime
 
 import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
                                  ATTR_ATTRIBUTION)
