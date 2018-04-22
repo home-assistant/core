@@ -134,8 +134,7 @@ def test_update_file_path_service(hass):
 
     with mock.patch(
             'homeassistant.components.camera.open', mopen, create=True), \
-            mock.patch.object(
-                    hass.config, 'is_allowed_path', return_value=True):
+            mock.patch('os.path.isfile', mock.Mock(return_value=True)):
 
         camera.update_file_path(hass, '/img/test.jpg')
         yield from hass.async_block_till_done()
