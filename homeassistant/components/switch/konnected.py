@@ -17,7 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['konnected']
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set switches attached to a Konnected device."""
     if discovery_info is None:
         return
@@ -73,7 +74,7 @@ class KonnectedSwitch(ToggleEntity):
         self._data[ATTR_STATE] = state
         self.schedule_update_ha_state()
         _LOGGER.debug('Setting status of %s actuator pin %s to %s',
-                     self._device_id, self.name, state)
+                      self._device_id, self.name, state)
 
     @asyncio.coroutine
     def async_set_state(self, state):

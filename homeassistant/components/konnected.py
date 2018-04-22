@@ -174,8 +174,8 @@ class KonnectedDevice(object):
                 ATTR_STATE: initial_state
             }
             _LOGGER.debug('Set up sensor %s (initial state: %s)',
-                         sensors[pin].get('name'),
-                         sensors[pin].get(ATTR_STATE))
+                          sensors[pin].get('name'),
+                          sensors[pin].get(ATTR_STATE))
 
         actuators = {}
         for entity in self.config().get(CONF_SWITCHES) or []:
@@ -200,8 +200,8 @@ class KonnectedDevice(object):
                 'activation': entity['activation'],
             }
             _LOGGER.debug('Set up actuator %s (initial state: %s)',
-                         actuators[pin].get(CONF_NAME),
-                         actuators[pin].get(ATTR_STATE))
+                          actuators[pin].get(CONF_NAME),
+                          actuators[pin].get(ATTR_STATE))
 
         device_data = {
             'client': self.client,
@@ -240,16 +240,16 @@ class KonnectedDevice(object):
         current_sensor_configuration = [
             {'pin': s[CONF_PIN]} for s in self.status.get('sensors')]
         _LOGGER.debug('%s: desired sensor config: %s', self.device_id,
-                     desired_sensor_configuration)
+                      desired_sensor_configuration)
         _LOGGER.debug('%s: current sensor config: %s', self.device_id,
-                     current_sensor_configuration)
+                      current_sensor_configuration)
 
         desired_actuator_config = self.actuator_configuration()
         current_actuator_config = self.status.get('actuators')
         _LOGGER.debug('%s: desired actuator config: %s', self.device_id,
-                     desired_actuator_config)
+                      desired_actuator_config)
         _LOGGER.debug('%s: current actuator config: %s', self.device_id,
-                     current_actuator_config)
+                      current_actuator_config)
 
         if (desired_sensor_configuration != current_sensor_configuration) or \
                 (current_actuator_config != desired_actuator_config):

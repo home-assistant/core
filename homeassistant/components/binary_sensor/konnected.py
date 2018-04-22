@@ -17,7 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['konnected']
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up binary sensors attached to a Konnected device."""
     if discovery_info is None:
         return
