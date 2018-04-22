@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.postnl/
 """
 import logging
 from datetime import timedelta, datetime
-import re
 
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -87,8 +86,8 @@ class PostNLSensor(Entity):
 
         for shipment in shipments:
             status = shipment['status']['formatted']['short']
-            status = api.parse_time(status, '%H:%M')
-            status = api.parse_date(status, '%d-%m-%Y')
+            status = self._api.parse_time(status, '%H:%M')
+            status = self._api.parse_date(status, '%d-%m-%Y')
 
             name = shipment['settings']['title']
             status_counts[name] = status
