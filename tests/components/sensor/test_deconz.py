@@ -72,6 +72,11 @@ async def test_binary_sensors(hass):
     data = {"sensors": SENSOR}
     await setup_bridge(hass, data)
     assert "sensor.sensor_1_name" in hass.data[deconz.DATA_DECONZ_ID]
+    assert "sensor.sensor_2_name" not in hass.data[deconz.DATA_DECONZ_ID]
+    assert "sensor.sensor_3_name" not in hass.data[deconz.DATA_DECONZ_ID]
+    assert "sensor.sensor_3_name_battery_level" not in \
+        hass.data[deconz.DATA_DECONZ_ID]
+    assert "sensor.sensor_4_name" not in hass.data[deconz.DATA_DECONZ_ID]
     assert "sensor.sensor_4_name_battery_level" in \
         hass.data[deconz.DATA_DECONZ_ID]
     assert len(hass.states.async_all()) == 2
