@@ -7,9 +7,11 @@ https://home-assistant.io/components/sensor.phicomm/
 
 import asyncio
 import logging
+
+from datetime import timedelta
+
 import requests
 import voluptuous as vol
-from datetime import timedelta
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -66,9 +68,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     phicomm = PhicommData(hass, username, password)
     devices = yield from phicomm.make_sensors(name, sensors)
-    async_add_devices(devices)
-
-    async_track_time_interval(hass, phicomm.async_update, scan_interval)
+    if devices:
+        async_add_devices(devices)
+        async_track_time_interval(hass, phicomm.async_update, scan_interval)
+    else:
+        _LOGGER.error("No sensors added: %s.", name)
 
 
 class PhicommSensor(Entity):
@@ -146,6 +150,8 @@ class PhicommData():
         self._username = username
         self._password = password
         self._token_path = hass.config.path(TOKEN_FILE + username)
+        self._token = None
+        self._devices = None
         self.devs = None
 
     @asyncio.coroutine
@@ -156,13 +162,11 @@ class PhicommData():
                 self._token = file.read()
                 _LOGGER.debug("Load: %s => %s", self._token_path, self._token)
         except BaseException:
-            self._token = None
+            pass
 
         self.update_data()
-
         if not self.devs:
-            _LOGGER.error("No sensors added: %s.", name)
-            return
+            return None
 
         devices = []
         for index in range(len(self.devs)):
