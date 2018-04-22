@@ -9,7 +9,7 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service, debounce
+from .accessories import HomeAccessory, debounce
 from .const import (
     SERV_LIGHTBULB, CHAR_COLOR_TEMPERATURE,
     CHAR_BRIGHTNESS, CHAR_HUE, CHAR_ON, CHAR_SATURATION)
@@ -47,7 +47,7 @@ class Light(HomeAccessory):
             self._hue = None
             self._saturation = None
 
-        serv_light = add_preload_service(self, SERV_LIGHTBULB, self.chars)
+        serv_light = self.add_preload_service(SERV_LIGHTBULB, self.chars)
         self.char_on = serv_light.configure_char(
             CHAR_ON, value=self._state, setter_callback=self.set_state)
 

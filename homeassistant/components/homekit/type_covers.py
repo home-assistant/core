@@ -11,7 +11,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES)
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service
+from .accessories import HomeAccessory
 from .const import (
     SERV_WINDOW_COVERING, CHAR_CURRENT_POSITION,
     CHAR_TARGET_POSITION, CHAR_POSITION_STATE,
@@ -33,7 +33,7 @@ class GarageDoorOpener(HomeAccessory):
         super().__init__(*args, category=CATEGORY_GARAGE_DOOR_OPENER)
         self.flag_target_state = False
 
-        serv_garage_door = add_preload_service(self, SERV_GARAGE_DOOR_OPENER)
+        serv_garage_door = self.add_preload_service(SERV_GARAGE_DOOR_OPENER)
         self.char_current_state = serv_garage_door.configure_char(
             CHAR_CURRENT_DOOR_STATE, value=0)
         self.char_target_state = serv_garage_door.configure_char(
@@ -74,7 +74,7 @@ class WindowCovering(HomeAccessory):
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
         self.homekit_target = None
 
-        serv_cover = add_preload_service(self, SERV_WINDOW_COVERING)
+        serv_cover = self.add_preload_service(SERV_WINDOW_COVERING)
         self.char_current_position = serv_cover.configure_char(
             CHAR_CURRENT_POSITION, value=0)
         self.char_target_position = serv_cover.configure_char(
@@ -114,7 +114,7 @@ class WindowCoveringBasic(HomeAccessory):
             .attributes.get(ATTR_SUPPORTED_FEATURES)
         self.supports_stop = features & SUPPORT_STOP
 
-        serv_cover = add_preload_service(self, SERV_WINDOW_COVERING)
+        serv_cover = self.add_preload_service(SERV_WINDOW_COVERING)
         self.char_current_position = serv_cover.configure_char(
             CHAR_CURRENT_POSITION, value=0)
         self.char_target_position = serv_cover.configure_char(

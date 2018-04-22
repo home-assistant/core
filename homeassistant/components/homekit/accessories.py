@@ -61,19 +61,6 @@ def debounce(func):
     return wrapper
 
 
-def add_preload_service(acc, service, chars=None):
-    """Define and return a service to be available for the accessory."""
-    from pyhap.loader import get_serv_loader, get_char_loader
-    service = get_serv_loader().get_service(service)
-    if chars:
-        chars = chars if isinstance(chars, list) else [chars]
-        for char_name in chars:
-            char = get_char_loader().get_char(char_name)
-            service.add_characteristic(char)
-    acc.add_service(service)
-    return service
-
-
 class HomeAccessory(Accessory):
     """Adapter class for Accessory."""
 
@@ -87,9 +74,6 @@ class HomeAccessory(Accessory):
         self.category = category
         self.entity_id = entity_id
         self.hass = hass
-
-    def _set_services(self):
-        add_preload_service(self, SERV_ACCESSORY_INFO)
 
     def run(self):
         """Method called by accessory after driver is started."""
@@ -124,9 +108,6 @@ class HomeBridge(Bridge):
             firmware_revision=__version__, manufacturer=MANUFACTURER,
             model=BRIDGE_MODEL, serial_number=BRIDGE_SERIAL_NUMBER)
         self.hass = hass
-
-    def _set_services(self):
-        add_preload_service(self, SERV_ACCESSORY_INFO)
 
     def setup_message(self):
         """Prevent print of pyhap setup message to terminal."""

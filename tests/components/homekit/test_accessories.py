@@ -7,7 +7,6 @@ import unittest
 from unittest.mock import call, patch, Mock
 
 from homeassistant.components.homekit.accessories import (
-    add_preload_service,
     debounce, HomeAccessory, HomeBridge, HomeDriver)
 from homeassistant.components.homekit.const import (
     BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER, SERV_ACCESSORY_INFO,
@@ -62,32 +61,6 @@ class TestAccessories(unittest.TestCase):
         assert counter == 2
 
         hass.stop()
-
-    def test_add_preload_service(self):
-        """Test add_preload_service without additional characteristics."""
-        acc = Mock()
-        serv = add_preload_service(acc, 'AirPurifier')
-        self.assertEqual(acc.mock_calls, [call.add_service(serv)])
-        with self.assertRaises(ValueError):
-            serv.get_characteristic('Name')
-
-        # Test with typo in service name
-        with self.assertRaises(KeyError):
-            add_preload_service(Mock(), 'AirPurifierTypo')
-
-        # Test adding additional characteristic as string
-        serv = add_preload_service(Mock(), 'AirPurifier', 'Name')
-        serv.get_characteristic('Name')
-
-        # Test adding additional characteristics as list
-        serv = add_preload_service(Mock(), 'AirPurifier',
-                                   ['Name', 'RotationSpeed'])
-        serv.get_characteristic('Name')
-        serv.get_characteristic('RotationSpeed')
-
-        # Test adding additional characteristic with typo
-        with self.assertRaises(KeyError):
-            add_preload_service(Mock(), 'AirPurifier', 'NameTypo')
 
     def test_home_accessory(self):
         """Test HomeAccessory class."""

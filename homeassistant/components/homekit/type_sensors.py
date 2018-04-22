@@ -8,7 +8,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS, STATE_ON, STATE_HOME)
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service
+from .accessories import HomeAccessory
 from .const import (
     SERV_HUMIDITY_SENSOR, SERV_TEMPERATURE_SENSOR,
     CHAR_CURRENT_HUMIDITY, CHAR_CURRENT_TEMPERATURE, PROP_CELSIUS,
@@ -54,7 +54,7 @@ class TemperatureSensor(HomeAccessory):
     def __init__(self, *args, config):
         """Initialize a TemperatureSensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
-        serv_temp = add_preload_service(self, SERV_TEMPERATURE_SENSOR)
+        serv_temp = self.add_preload_service(SERV_TEMPERATURE_SENSOR)
         self.char_temp = serv_temp.configure_char(
             CHAR_CURRENT_TEMPERATURE, value=0, properties=PROP_CELSIUS)
         self.unit = None
@@ -77,7 +77,7 @@ class HumiditySensor(HomeAccessory):
     def __init__(self, *args, config):
         """Initialize a HumiditySensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
-        serv_humidity = add_preload_service(self, SERV_HUMIDITY_SENSOR)
+        serv_humidity = self.add_preload_service(SERV_HUMIDITY_SENSOR)
         self.char_humidity = serv_humidity.configure_char(
             CHAR_CURRENT_HUMIDITY, value=0)
 
@@ -98,8 +98,8 @@ class AirQualitySensor(HomeAccessory):
         """Initialize a AirQualitySensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
 
-        serv_air_quality = add_preload_service(self, SERV_AIR_QUALITY_SENSOR,
-                                               [CHAR_AIR_PARTICULATE_DENSITY])
+        serv_air_quality = self.add_preload_service(
+            SERV_AIR_QUALITY_SENSOR, [CHAR_AIR_PARTICULATE_DENSITY])
         self.char_quality = serv_air_quality.configure_char(
             CHAR_AIR_QUALITY, value=0)
         self.char_density = serv_air_quality.configure_char(
@@ -122,7 +122,7 @@ class CarbonDioxideSensor(HomeAccessory):
         """Initialize a CarbonDioxideSensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
 
-        serv_co2 = add_preload_service(self, SERV_CARBON_DIOXIDE_SENSOR, [
+        serv_co2 = self.add_preload_service(SERV_CARBON_DIOXIDE_SENSOR, [
             CHAR_CARBON_DIOXIDE_LEVEL, CHAR_CARBON_DIOXIDE_PEAK_LEVEL])
         self.char_co2 = serv_co2.configure_char(
             CHAR_CARBON_DIOXIDE_LEVEL, value=0)
@@ -150,7 +150,7 @@ class LightSensor(HomeAccessory):
         """Initialize a LightSensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
 
-        serv_light = add_preload_service(self, SERV_LIGHT_SENSOR)
+        serv_light = self.add_preload_service(SERV_LIGHT_SENSOR)
         self.char_light = serv_light.configure_char(
             CHAR_CURRENT_AMBIENT_LIGHT_LEVEL, value=0)
 
@@ -175,7 +175,7 @@ class BinarySensor(HomeAccessory):
             if device_class in BINARY_SENSOR_SERVICE_MAP \
             else BINARY_SENSOR_SERVICE_MAP[DEVICE_CLASS_OCCUPANCY]
 
-        service = add_preload_service(self, service_char[0])
+        service = self.add_preload_service(service_char[0])
         self.char_detected = service.configure_char(service_char[1], value=0)
 
     def update_state(self, new_state):

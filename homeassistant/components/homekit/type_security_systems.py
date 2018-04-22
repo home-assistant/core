@@ -9,7 +9,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_CODE)
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service
+from .accessories import HomeAccessory
 from .const import (
     SERV_SECURITY_SYSTEM, CHAR_CURRENT_SECURITY_STATE,
     CHAR_TARGET_SECURITY_STATE)
@@ -35,7 +35,7 @@ class SecuritySystem(HomeAccessory):
         self._alarm_code = config.get(ATTR_CODE)
         self.flag_target_state = False
 
-        serv_alarm = add_preload_service(self, SERV_SECURITY_SYSTEM)
+        serv_alarm = self.add_preload_service(SERV_SECURITY_SYSTEM)
         self.char_current_state = serv_alarm.configure_char(
             CHAR_CURRENT_SECURITY_STATE, value=3)
         self.char_target_state = serv_alarm.configure_char(

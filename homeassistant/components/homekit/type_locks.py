@@ -7,7 +7,7 @@ from homeassistant.components.lock import (
     ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN)
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service
+from .accessories import HomeAccessory
 from .const import (
     SERV_LOCK, CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE)
 
@@ -34,7 +34,7 @@ class Lock(HomeAccessory):
         super().__init__(*args, category=CATEGORY_DOOR_LOCK)
         self.flag_target_state = False
 
-        serv_lock_mechanism = add_preload_service(self, SERV_LOCK)
+        serv_lock_mechanism = self.add_preload_service(SERV_LOCK)
         self.char_current_state = serv_lock_mechanism.configure_char(
             CHAR_LOCK_CURRENT_STATE,
             value=HASS_TO_HOMEKIT[STATE_UNKNOWN])

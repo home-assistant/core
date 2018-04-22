@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service, debounce
+from .accessories import HomeAccessory, debounce
 from .const import (
     SERV_THERMOSTAT, CHAR_CURRENT_HEATING_COOLING,
     CHAR_TARGET_HEATING_COOLING, CHAR_CURRENT_TEMPERATURE,
@@ -55,8 +55,7 @@ class Thermostat(HomeAccessory):
             self.chars.extend((CHAR_COOLING_THRESHOLD_TEMPERATURE,
                                CHAR_HEATING_THRESHOLD_TEMPERATURE))
 
-        serv_thermostat = add_preload_service(
-            self, SERV_THERMOSTAT, self.chars)
+        serv_thermostat = self.add_preload_service(SERV_THERMOSTAT, self.chars)
 
         # Current and target mode characteristics
         self.char_current_heat_cool = serv_thermostat.configure_char(

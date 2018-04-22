@@ -8,7 +8,7 @@ from homeassistant.const import (
 from homeassistant.core import split_entity_id
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service
+from .accessories import HomeAccessory
 from .const import SERV_SWITCH, CHAR_ON
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class Switch(HomeAccessory):
         self._domain = split_entity_id(self.entity_id)[0]
         self.flag_target_state = False
 
-        serv_switch = add_preload_service(self, SERV_SWITCH)
+        serv_switch = self.add_preload_service(SERV_SWITCH)
         self.char_on = serv_switch.configure_char(
             CHAR_ON, value=False, setter_callback=self.set_state)
 
