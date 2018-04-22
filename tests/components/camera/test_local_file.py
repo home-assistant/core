@@ -139,7 +139,10 @@ def test_update_file_path_service(hass):
             m_open, create=True), \
             mock.patch('os.path.isfile', mock.Mock(return_value=True)):
 
-        camera.update_file_path(hass, '/img/test.jpg')
+        data = {'entity_id': 'camera.local_file',
+                'file_path': '/img/test.jpg'}
+        hass.services.call(
+                camera, 'update_file_path', data)
         yield from hass.async_block_till_done()
 
         mock_write = mopen().write
