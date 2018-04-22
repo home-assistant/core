@@ -143,7 +143,7 @@ def test_update_file_path_service(hass):
 
         data = {'entity_id': 'camera.local_file',
                 'file_path': '/img/test.jpg'}
-        hass.services.call(
+        hass.services.async_call(
                 camera.DOMAIN, SERVICE_UPDATE_FILE_PATH, data)
         yield from hass.async_block_till_done()
 
