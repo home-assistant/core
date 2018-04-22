@@ -82,6 +82,8 @@ class OnkyoDevice(MediaPlayerDevice):
 
     def __init__(self, receiver, sources, name=None):
         """Initialize the Onkyo Receiver."""
+        from concurrent.futures import ThreadPoolExecutor
+
         self._receiver = receiver
         self._muted = False
         self._volume = 0
@@ -93,7 +95,9 @@ class OnkyoDevice(MediaPlayerDevice):
         self._source_mapping = sources
         self._reverse_mapping = {value: key for key, value in sources.items()}
 
-    def command(self, command):
+        self._executor = ThreadPoolExecutor(max_workers=1)
+
+    def execute_command(self, command):
         """Run an eiscp command and catch connection errors."""
         try:
             result = self._receiver.command(command)
@@ -106,6 +110,11 @@ class OnkyoDevice(MediaPlayerDevice):
                              self._name)
             return False
         return result
+
+    def command(self, command):
+        """Add a command to the execution queue and wait for a result."""
+        future = self._executor.submit(self.execute_command, command)
+        return future.result()
 
     def update(self):
         """Get the latest state from the device."""
