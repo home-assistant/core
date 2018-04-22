@@ -152,7 +152,7 @@ class MiTempBtSensor(Entity):
             self.data.append(data)
         else:
             _LOGGER.warning("Did not receive any data from Mi Temp sensor %s",
-                         self.name)
+                            self.name)
             # Remove old data from median list or set sensor value to None
             # if no data is available anymore
             if self.data:
