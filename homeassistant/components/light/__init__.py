@@ -43,6 +43,7 @@ SUPPORT_FLASH = 8
 SUPPORT_COLOR = 16
 SUPPORT_TRANSITION = 32
 SUPPORT_WHITE_VALUE = 128
+SUPPORT_SPEED = 100
 
 # Integer that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
@@ -70,6 +71,9 @@ ATTR_FLASH = "flash"
 FLASH_SHORT = "short"
 FLASH_LONG = "long"
 
+# Speed attributes
+ATTR_SPEED = "speed"
+
 # List of possible effects
 ATTR_EFFECT_LIST = "effect_list"
 
@@ -92,6 +96,7 @@ PROP_TO_ATTR = {
     'white_value': ATTR_WHITE_VALUE,
     'effect_list': ATTR_EFFECT_LIST,
     'effect': ATTR_EFFECT,
+    'speed': ATTR_SPEED,
 }
 
 # Service call validation schemas
@@ -116,7 +121,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
         vol.All(vol.ExactSequence(
             (vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
              vol.All(vol.Coerce(float), vol.Range(min=0, max=100)))),
-                vol.Coerce(tuple)),
+        vol.Coerce(tuple)),
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Exclusive(ATTR_KELVIN, COLOR_GROUP):
@@ -124,6 +129,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
     ATTR_EFFECT: cv.string,
+    ATTR_SPEED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=100)),
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
@@ -157,12 +163,12 @@ def is_on(hass, entity_id=None):
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
             brightness_pct=None, rgb_color=None, xy_color=None, hs_color=None,
             color_temp=None, kelvin=None, white_value=None,
-            profile=None, flash=None, effect=None, color_name=None):
+            profile=None, flash=None, effect=None, color_name=None, speed=None):
     """Turn all or specified light on."""
     hass.add_job(
         async_turn_on, hass, entity_id, transition, brightness, brightness_pct,
         rgb_color, xy_color, hs_color, color_temp, kelvin, white_value,
-        profile, flash, effect, color_name)
+        profile, flash, effect, color_name, speed)
 
 
 @callback
@@ -171,7 +177,7 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
                   brightness_pct=None, rgb_color=None, xy_color=None,
                   hs_color=None, color_temp=None, kelvin=None,
                   white_value=None, profile=None, flash=None, effect=None,
-                  color_name=None):
+                  color_name=None, speed=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -189,6 +195,7 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
+            (ATTR_SPEED, speed),
         ] if value is not None
     }
 
@@ -270,6 +277,10 @@ def preprocess_turn_on_alternatives(params):
     if rgb_color is not None:
         params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
 
+    speed = params.pop(ATTR_SPEED, None)
+    if speed is not None:
+        params[ATTR_SPEED] = int(speed)
+
 
 class SetIntentHandler(intent.IntentHandler):
     """Handle set color intents."""
@@ -278,7 +289,8 @@ class SetIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Required('name'): cv.string,
         vol.Optional('color'): color_util.color_name_to_rgb,
-        vol.Optional('brightness'): vol.All(vol.Coerce(int), vol.Range(0, 100))
+        vol.Optional('brightness'): vol.All(vol.Coerce(int), vol.Range(0, 100)),
+        vol.Optional('speed'): vol.All(vol.Coerce(int), vol.Range(0, 100))
     }
 
     async def async_handle(self, intent_obj):
@@ -490,6 +502,11 @@ class Light(ToggleEntity):
     @property
     def effect(self):
         """Return the current effect."""
+        return None
+
+    @property
+    def speed(self):
+        """Return the speed."""
         return None
 
     @property
