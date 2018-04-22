@@ -115,3 +115,33 @@ def test_camera_content_type(hass, aiohttp_client):
     assert resp_4.content_type == 'image/jpeg'
     body = yield from resp_4.text()
     assert body == image
+
+
+@asyncio.coroutine
+def test_update_file_path_service(hass, aiohttp_client):
+    """Test the update_file_path service."""
+    mock_registry(hass)
+
+    with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
+            mock.patch('os.access', mock.Mock(return_value=True)):
+        yield from async_setup_component(hass, 'camera', {
+            'camera': {
+                'name': 'update_file_path',
+                'platform': 'local_file',
+                'file_path': 'mock.file',
+            }})
+
+    client = yield from aiohttp_client(hass.http.app)
+
+    m_open = MockOpen(read_data=b'hello')
+    with mock.patch(
+            'homeassistant.components.camera.local_file.open',
+            m_open, create=True
+    ):
+        resp = yield from client.get(
+                '/api/camera_proxy/camera.update_file_path')
+
+    assert resp.status == 200
+    body = yield from resp.text()
+    assert body == 'hello'
+    assert False
