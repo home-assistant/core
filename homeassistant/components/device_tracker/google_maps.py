@@ -79,6 +79,6 @@ class GoogleMapsScanner(object):
                 gps=(person.latitude, person.longitude),
                 picture=person.picture_url,
                 source_type=SOURCE_TYPE_GPS,
-				gps_accuracy=person.accuracy,
+                gps_accuracy=person.accuracy,
                 attributes=attrs
             )
