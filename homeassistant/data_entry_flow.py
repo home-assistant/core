@@ -67,7 +67,7 @@ class FlowManager:
         return await self._async_handle_step(flow, step, data)
 
     async def async_configure(self, flow_id, user_input=None):
-        """Start or continue a configuration flow."""
+        """Continue a configuration flow."""
         flow = self._progress.get(flow_id)
 
         if flow is None:

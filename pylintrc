@@ -41,3 +41,7 @@ disable=
 
 [EXCEPTIONS]
 overgeneral-exceptions=Exception,HomeAssistantError
+
+# For attrs
+[typecheck]
+ignored-classes=_CountingAttr

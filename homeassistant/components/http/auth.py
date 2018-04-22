@@ -42,7 +42,7 @@ def setup_auth(app, trusted_networks, api_password):
             authenticated = True
 
         elif (hdrs.AUTHORIZATION in request.headers and
-              validate_authorization_header(api_password, request)):
+              await async_validate_auth_header(api_password, request)):
             authenticated = True
 
         elif _is_trusted_ip(request, trusted_networks):
@@ -73,20 +73,33 @@ def validate_password(request, api_password):
         api_password, request.app['hass'].http.api_password)
 
 
-def validate_authorization_header(api_password, request):
+async def async_validate_auth_header(api_password, request):
     """Test an authorization header if valid password."""
     if hdrs.AUTHORIZATION not in request.headers:
         return False
 
-    auth_type, auth = request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
+    auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
 
-    if auth_type != 'Basic':
+    if auth_type == 'Basic':
+        decoded = base64.b64decode(auth_val).decode('utf-8')
+        try:
+            username, password = decoded.split(':', 1)
+        except ValueError:
+            # If no ':' in decoded
+            return False
+
+        if username != 'homeassistant':
+            return False
+
+        return hmac.compare_digest(api_password, password)
+
+    if auth_type != 'Bearer':
         return False
 
-    decoded = base64.b64decode(auth).decode('utf-8')
-    username, password = decoded.split(':', 1)
-
-    if username != 'homeassistant':
+    hass = request.app['hass']
+    access_token = hass.auth.async_get_access_token(auth_val)
+    if access_token is None:
         return False
 
-    return hmac.compare_digest(api_password, password)
+    request['hass_user'] = access_token.refresh_token.user
+    return True

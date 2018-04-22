@@ -256,7 +256,7 @@ class ConfigEntries:
         """Initialize the entry manager."""
         self.hass = hass
         self.flow = data_entry_flow.FlowManager(
-            hass, self._async_create_flow, self._async_save_entry)
+            hass, self._async_create_flow, self._async_finish_flow)
         self._hass_config = hass_config
         self._entries = None
         self._sched_save = None
@@ -341,8 +341,8 @@ class ConfigEntries:
         return await entry.async_unload(
             self.hass, component=getattr(self.hass.components, component))
 
-    async def _async_save_entry(self, result):
-        """Add an entry."""
+    async def _async_finish_flow(self, result):
+        """Finish a config flow and add an entry."""
         entry = ConfigEntry(
             version=result['version'],
             domain=result['handler'],
