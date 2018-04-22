@@ -124,7 +124,7 @@ def test_update_file_path_service(hass):
     mopen = mock.mock_open()
 
     with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
-            mock.patch('os.access', mock.Mock(return_value=False)):
+            mock.patch('os.access', mock.Mock(return_value=True)):
         yield from async_setup_component(hass, 'camera', {
             'camera': {
                 'name': 'config_test',
@@ -132,8 +132,10 @@ def test_update_file_path_service(hass):
                 'file_path': 'mock.file',
             }})
 
+    m_open = MockOpen(read_data=b'hello')
     with mock.patch(
-            'homeassistant.components.camera.open', mopen, create=True), \
+            'homeassistant.components.camera.local_file.open',
+            m_open, create=True), \
             mock.patch('os.path.isfile', mock.Mock(return_value=True)):
 
         camera.update_file_path(hass, '/img/test.jpg')
