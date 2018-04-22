@@ -6,6 +6,7 @@ https://home-assistant.io/components/konnected/
 """
 import asyncio
 import logging
+import hmac
 import voluptuous as vol
 
 from aiohttp.hdrs import AUTHORIZATION
@@ -30,33 +31,40 @@ DOMAIN = 'konnected'
 PIN_TO_ZONE = {1: 1, 2: 2, 5: 3, 6: 4, 7: 5, 8: 'out', 9: 6}
 ZONE_TO_PIN = {zone: pin for pin, zone in PIN_TO_ZONE.items()}
 
+_SENSOR_SCHEMA = vol.All(
+    vol.Schema({
+        vol.Exclusive(CONF_PIN, 's_pin'): vol.Any(*PIN_TO_ZONE),
+        vol.Exclusive(CONF_ZONE, 's_pin'): vol.Any(*ZONE_TO_PIN),
+        vol.Required(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
+        vol.Optional(CONF_NAME): config_validation.string,
+    }), config_validation.has_at_least_one_key(CONF_PIN, CONF_ZONE)
+)
+
+_SWITCH_SCHEMA = vol.All(
+    vol.Schema({
+        vol.Exclusive(CONF_PIN, 'a_pin'): vol.Any(*PIN_TO_ZONE),
+        vol.Exclusive(CONF_ZONE, 'a_pin'): vol.Any(*ZONE_TO_PIN),
+        vol.Optional(CONF_NAME): config_validation.string,
+        vol.Optional('activation', default='high'):
+            vol.All(vol.Lower, vol.Any('high', 'low'))
+    }), config_validation.has_at_least_one_key(CONF_PIN, CONF_ZONE)
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema({
             vol.Required('auth_token'): config_validation.string,
             vol.Required(CONF_DEVICES): [{
                 vol.Required(CONF_ID, default=''): config_validation.string,
-                vol.Optional(CONF_SENSORS): [{
-                    vol.Exclusive(CONF_PIN, 's_pin'): vol.Any(*PIN_TO_ZONE),
-                    vol.Exclusive(CONF_ZONE, 's_pin'): vol.Any(*ZONE_TO_PIN),
-                    vol.Required(CONF_TYPE, default='motion'):
-                        DEVICE_CLASSES_SCHEMA,
-                    vol.Optional(CONF_NAME): config_validation.string,
-                }],
-                vol.Optional(CONF_SWITCHES): [{
-                    vol.Exclusive(CONF_PIN, 'a_pin'): vol.Any(*PIN_TO_ZONE),
-                    vol.Exclusive(CONF_ZONE, 'a_pin'): vol.Any(*ZONE_TO_PIN),
-                    vol.Optional(CONF_NAME): config_validation.string,
-                    vol.Required('activation', default='high'):
-                        vol.All(vol.Lower, vol.Any('high', 'low'))
-                }],
+                vol.Optional(CONF_SENSORS): [_SENSOR_SCHEMA],
+                vol.Optional(CONF_SWITCHES): [_SWITCH_SCHEMA],
             }],
         }),
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-DEPENDENCIES = ['http']
+DEPENDENCIES = ['http', 'discovery']
 
 ENDPOINT_ROOT = '/api/konnected'
 UPDATE_ENDPOINT = (
@@ -78,7 +86,7 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def async_device_discovered(service, info):
         """Call when a Konnected device has been discovered."""
-        _LOGGER.info("Discovered a new Konnected device: %s", info)
+        _LOGGER.debug("Discovered a new Konnected device: %s", info)
         host = info.get(CONF_HOST)
         port = info.get(CONF_PORT)
 
@@ -114,7 +122,7 @@ class KonnectedDevice(object):
         """Set up a newly discovered Konnected device."""
         user_config = self.config()
         if user_config:
-            _LOGGER.info('Configuring Konnected device %s', self.device_id)
+            _LOGGER.debug('Configuring Konnected device %s', self.device_id)
             self.save_data()
             self.sync_device()
             self.hass.async_add_job(
@@ -167,7 +175,7 @@ class KonnectedDevice(object):
                     self.device_id[6:], PIN_TO_ZONE[pin])),
                 ATTR_STATE: initial_state
             }
-            _LOGGER.info('Set up sensor %s (initial state: %s)',
+            _LOGGER.debug('Set up sensor %s (initial state: %s)',
                          sensors[pin].get('name'),
                          sensors[pin].get(ATTR_STATE))
 
@@ -193,7 +201,7 @@ class KonnectedDevice(object):
                 ATTR_STATE: initial_state,
                 'activation': entity['activation'],
             }
-            _LOGGER.info('Set up actuator %s (initial state: %s)',
+            _LOGGER.debug('Set up actuator %s (initial state: %s)',
                          actuators[pin].get(CONF_NAME),
                          actuators[pin].get(ATTR_STATE))
 
@@ -205,10 +213,10 @@ class KonnectedDevice(object):
             CONF_PORT: self.port,
         }
 
-        if 'devices' not in self.hass.data[DOMAIN]:
+        if CONF_DEVICES not in self.hass.data[DOMAIN]:
             self.hass.data[DOMAIN][CONF_DEVICES] = {}
 
-        _LOGGER.info('Storing data in hass.data[konnected]: %s', device_data)
+        _LOGGER.debug('Storing data in hass.data[konnected]: %s', device_data)
         self.hass.data[DOMAIN][CONF_DEVICES][self.device_id] = device_data
 
     @property
@@ -233,21 +241,21 @@ class KonnectedDevice(object):
         desired_sensor_configuration = self.sensor_configuration()
         current_sensor_configuration = [
             {'pin': s[CONF_PIN]} for s in self.status.get('sensors')]
-        _LOGGER.info('%s: desired sensor config: %s', self.device_id,
+        _LOGGER.debug('%s: desired sensor config: %s', self.device_id,
                      desired_sensor_configuration)
-        _LOGGER.info('%s: current sensor config: %s', self.device_id,
+        _LOGGER.debug('%s: current sensor config: %s', self.device_id,
                      current_sensor_configuration)
 
         desired_actuator_config = self.actuator_configuration()
         current_actuator_config = self.status.get('actuators')
-        _LOGGER.info('%s: desired actuator config: %s', self.device_id,
+        _LOGGER.debug('%s: desired actuator config: %s', self.device_id,
                      desired_actuator_config)
-        _LOGGER.info('%s: current actuator config: %s', self.device_id,
+        _LOGGER.debug('%s: current actuator config: %s', self.device_id,
                      current_actuator_config)
 
         if (desired_sensor_configuration != current_sensor_configuration) or \
                 (current_actuator_config != desired_actuator_config):
-            _LOGGER.info('pushing settings to device %s', self.device_id)
+            _LOGGER.debug('pushing settings to device %s', self.device_id)
             self.client.put_settings(
                 desired_sensor_configuration,
                 desired_actuator_config,
@@ -274,7 +282,7 @@ class KonnectedView(HomeAssistantView):
         data = hass.data[DOMAIN]
 
         auth = request.headers.get(AUTHORIZATION, None)
-        if 'Bearer {}'.format(self.auth_token) != auth:
+        if not hmac.compare_digest('Bearer {}'.format(self.auth_token), auth):
             return self.json_message(
                 "unauthorized", status_code=HTTP_UNAUTHORIZED)
         pin_num = int(pin_num)

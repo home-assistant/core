@@ -47,7 +47,7 @@ class KonnectedSwitch(ToggleEntity):
                 device_id, PIN_TO_ZONE[pin_num]))
         self._data['entity'] = self
         self._client = client
-        _LOGGER.info('Created new switch: %s', self._name)
+        _LOGGER.debug('Created new switch: %s', self._name)
 
     @property
     def name(self):
@@ -73,7 +73,7 @@ class KonnectedSwitch(ToggleEntity):
         self._state = state
         self._data[ATTR_STATE] = state
         self.schedule_update_ha_state()
-        _LOGGER.info('Setting status of %s actuator pin %s to %s',
+        _LOGGER.debug('Setting status of %s actuator pin %s to %s',
                      self._device_id, self.name, state)
 
     @asyncio.coroutine
@@ -82,4 +82,3 @@ class KonnectedSwitch(ToggleEntity):
         self._state = state
         self._data[ATTR_STATE] = state
         self.async_schedule_update_ha_state()
-        _LOGGER.info('Updating state: %s is %s', self.name, state)
