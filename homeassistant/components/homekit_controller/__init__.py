@@ -152,7 +152,7 @@ class HKDevice():
             error_msg = "Received an unknown error. Please file a bug."
             _configurator = self.hass.data[DOMAIN+self.hkid]
             self.configurator.notify_errors(_configurator, error_msg)
-            return
+            raise
 
         if self.pairing_data is not None:
             homekit.save_pairing(self.pairing_file, self.pairing_data)
