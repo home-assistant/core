@@ -141,17 +141,17 @@ class MiTempBtSensor(Entity):
             _LOGGER.debug("Polling data for %s", self.name)
             data = self.poller.parameter_value(self.parameter)
         except IOError as ioerr:
-            _LOGGER.info("Polling error %s", ioerr)
+            _LOGGER.warning("Polling error %s", ioerr)
             return
         except BluetoothBackendException as bterror:
-            _LOGGER.info("Polling error %s", bterror)
+            _LOGGER.warning("Polling error %s", bterror)
             return
 
         if data is not None:
             _LOGGER.debug("%s = %s", self.name, data)
             self.data.append(data)
         else:
-            _LOGGER.info("Did not receive any data from Mi Temp sensor %s",
+            _LOGGER.warning("Did not receive any data from Mi Temp sensor %s",
                          self.name)
             # Remove old data from median list or set sensor value to None
             # if no data is available anymore
@@ -161,7 +161,6 @@ class MiTempBtSensor(Entity):
                 self._state = None
             return
 
-        _LOGGER.debug("Data collected: %s", self.data)
         if len(self.data) > self.median_count:
             self.data = self.data[1:]
 
