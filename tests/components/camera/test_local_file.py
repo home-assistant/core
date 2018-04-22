@@ -122,6 +122,7 @@ def test_camera_content_type(hass, aiohttp_client):
 def test_update_file_path_service(hass):
     """Test update_file_path service."""
     mopen = mock.mock_open()
+    mock_registry(hass)
 
     with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
             mock.patch('os.access', mock.Mock(return_value=True)):
