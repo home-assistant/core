@@ -14,7 +14,7 @@ from homeassistant.components.discovery import SERVICE_HOMEKIT
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['homekit==0.5']
+REQUIREMENTS = ['homekit==0.6']
 
 DOMAIN = 'homekit_controller'
 HOMEKIT_DIR = '.homekit'
@@ -133,10 +133,31 @@ class HKDevice():
         import homekit
         pairing_id = str(uuid.uuid4())
         code = callback_data.get('code').strip()
-        self.pairing_data = homekit.perform_pair_setup(
-            self.conn, code, pairing_id)
+        try:
+            self.pairing_data = homekit.perform_pair_setup(self.conn, code,
+                                                           pairing_id)
+        except homekit.exception.UnavailableError:
+            error_msg = "This accessory is already paired to another device. \
+                         Please reset the accessory and try again."
+            _configurator = self.hass.data[DOMAIN+self.hkid]
+            self.configurator.notify_errors(_configurator, error_msg)
+            return
+        except homekit.exception.AuthenticationError:
+            error_msg = "Incorrect HomeKit code for {}. Please check it and \
+                         try again.".format(self.model)
+            _configurator = self.hass.data[DOMAIN+self.hkid]
+            self.configurator.notify_errors(_configurator, error_msg)
+            return
+        except homekit.exception.UnknownError:
+            error_msg = "Received an unknown error. Please file a bug."
+            _configurator = self.hass.data[DOMAIN+self.hkid]
+            self.configurator.notify_errors(_configurator, error_msg)
+            raise
+
         if self.pairing_data is not None:
             homekit.save_pairing(self.pairing_file, self.pairing_data)
+            _configurator = self.hass.data[DOMAIN+self.hkid]
+            self.configurator.request_done(_configurator)
             self.accessory_setup()
         else:
             error_msg = "Unable to pair, please try again"
