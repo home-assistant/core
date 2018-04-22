@@ -1,4 +1,4 @@
-"""deCONZ scenes platform tests."""
+"""deCONZ binary sensor platform tests."""
 from unittest.mock import Mock, patch
 
 from homeassistant import config_entries
@@ -7,24 +7,21 @@ from homeassistant.components import deconz
 from tests.common import mock_coro
 
 
-GROUP = {
+SENSOR = {
     "1": {
-        "id": "Group id",
-        "name": "Group name",
-        "state": {},
-        "action": {},
-        "scenes": [{
-            "id": "1",
-            "name": "Scene name"
-        }],
+        "id": "Sensor id",
+        "name": "Sensor name",
+        "type": "ZHAPresence",
+        "state": {"presence": False},
+        "config": {}
     }
 }
 
-DATA = {"groups": GROUP}
+DATA = {"sensors": SENSOR}
 
 
 async def setup_bridge(hass):
-    """Load the deCONZ scene platform."""
+    """Load the deCONZ binary sensor platform."""
     from pydeconz import DeconzSession
     loop = Mock()
     session = Mock()
@@ -39,7 +36,7 @@ async def setup_bridge(hass):
     config_entry = config_entries.ConfigEntry(1, deconz.DOMAIN, 'Mock Title', {
         'host': 'mock-host'
     }, 'test')
-    await hass.config_entries.async_forward_entry_setup(config_entry, 'scene')
+    await hass.config_entries.async_forward_entry_setup(config_entry, 'binary_sensor')
     # To flush out the service call to update the group
     await hass.async_block_till_done()
 
@@ -48,4 +45,4 @@ async def test_scene(hass):
     """Test the update_lights function with some lights."""
     await setup_bridge(hass)
     assert next(iter(hass.data[deconz.DATA_DECONZ_ID])) == \
-        "scene.group_name_scene_name"
+        "binary_sensor.sensor_name"
