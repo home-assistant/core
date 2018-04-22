@@ -49,10 +49,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return True
 
     hass.services.register(
-            DOMAIN,
-            SERVICE_UPDATE_FILE_PATH,
-            update_file_path_service,
-            schema=CAMERA_SERVICE_UPDATE_FILE_PATH)
+        DOMAIN,
+        SERVICE_UPDATE_FILE_PATH,
+        update_file_path_service,
+        schema=CAMERA_SERVICE_UPDATE_FILE_PATH)
 
     add_devices([camera])
 
