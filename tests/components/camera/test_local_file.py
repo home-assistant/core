@@ -1,16 +1,28 @@
 """The tests for local file camera component."""
 import asyncio
 from unittest import mock
-from unittest.mock import mock_open
 
+import pytest
 
 # Using third party package because of a bug reading binary data in Python 3.4
 # https://bugs.python.org/issue23004
 from mock_open import MockOpen
 
+import homeassistant.components.camera as camera
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
+
+
+@pytest.fixture
+def mock_camera(hass):
+    """Initialize a demo camera platform."""
+    assert hass.loop.run_until_complete(async_setup_component(hass, 'camera', {
+        camera.DOMAIN: {
+            'platform': 'local_file',
+            'file_path': 'mock.file',
+        }
+    }))
 
 
 @asyncio.coroutine
@@ -120,24 +132,18 @@ def test_camera_content_type(hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_update_file_path_service(hass):
-    """Test the update_file_path service."""
-    mock_registry(hass)
-    mopen = mock_open()
+def test_snapshot_service(hass, mock_camera):
+    """Test snapshot service."""
+    mopen = mock.mock_open()
 
-    with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
-            mock.patch('os.access', mock.Mock(return_value=True)):
-        yield from async_setup_component(hass, 'camera', {
-            'camera': {
-                'name': 'update_file_path',
-                'platform': 'local_file',
-                'file_path': 'mock.file',
-            }})
+    with mock.patch(
+            'homeassistant.components.camera.open', mopen, create=True), \
+            mock.patch.object(
+                    hass.config, 'is_allowed_path', return_value=True):
 
         hass.components.camera.local_file.update_file_path('/img/test.jpg')
-
         yield from hass.async_block_till_done()
-        mock_write = mopen().write
-        assert len(mock_write.mock_calls) == 1
 
-#    assert False
+        mock_write = mopen().write
+
+        assert len(mock_write.mock_calls) == 1
