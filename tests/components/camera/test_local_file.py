@@ -6,7 +6,7 @@ from unittest import mock
 # https://bugs.python.org/issue23004
 from mock_open import MockOpen
 
-from homeassistant.components.camera.local_file import LocalFile as camera
+import homeassistant.components.camera as camera
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
@@ -142,7 +142,7 @@ def test_update_file_path_service(hass):
         data = {'entity_id': 'camera.local_file',
                 'file_path': '/img/test.jpg'}
         hass.services.call(
-                camera, 'update_file_path', data)
+                camera.DOMAIN, 'update_file_path', data)
         yield from hass.async_block_till_done()
 
         mock_write = mopen().write
