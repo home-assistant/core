@@ -38,7 +38,7 @@ GROUP = {
 
 
 async def setup_bridge(hass, data):
-    """Load the deCONZ binary sensor platform."""
+    """Load the deCONZ light platform."""
     from pydeconz import DeconzSession
     loop = Mock()
     session = Mock()
