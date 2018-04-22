@@ -6,6 +6,7 @@ from unittest import mock
 # https://bugs.python.org/issue23004
 from mock_open import MockOpen
 
+from homeassistant.components.camera.local_file import LocalFile as camera
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
@@ -131,7 +132,12 @@ def test_update_file_path_service(hass):
                 'file_path': 'mock.file',
             }})
 
-        hass.components.camera.update_file_path('/img/test.jpg')
+    with mock.patch(
+            'homeassistant.components.camera.open', mopen, create=True), \
+            mock.patch.object(
+                    hass.config, 'is_allowed_path', return_value=True):
+
+        camera.update_file_path(hass, '/img/test.jpg')
         yield from hass.async_block_till_done()
 
         mock_write = mopen().write
