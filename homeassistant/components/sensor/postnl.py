@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_SCAN_INTERVAL, ATTR_ATTRIBUTION)
+                                 ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'postnl'
 ICON = 'mdi:package-variant-closed'
 ATTRIBUTION = 'Information provided by PostNL'
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=90)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -60,9 +60,7 @@ class PostNLSensor(Entity):
         self._name = name
         self._attributes = None
         self._state = None
-
         self._api = api
-        self.update = Throttle(config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))(self.update)
 
     @property
     def name(self):
@@ -79,6 +77,7 @@ class PostNLSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return 'package(s)'
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update device state."""
 
