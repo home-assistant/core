@@ -10,7 +10,7 @@ import re
 
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL,
+from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
                                  ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -27,8 +27,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    cv.time_period,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 # pylint: disable=unused-argument
@@ -63,8 +62,7 @@ class PostNLSensor(Entity):
         self._state = None
 
         self._api = api
-
-        self.update = Throttle(MIN_TIME_BETWEEN_UPDATES)(self.update)
+        self.update = Throttle(SCAN_INTERVAL)(self.update)
 
     @property
     def name(self):
