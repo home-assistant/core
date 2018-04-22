@@ -17,8 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['konnected']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set switches attached to a Konnected device."""
     if discovery_info is None:
         return
@@ -29,7 +28,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     switches = [KonnectedSwitch(device_id, pin_num, pin_data, client)
                 for pin_num, pin_data in
                 data[CONF_DEVICES][device_id][CONF_SWITCHES].items()]
-    async_add_devices(switches, True)
+    async_add_devices(switches)
 
 
 class KonnectedSwitch(ToggleEntity):

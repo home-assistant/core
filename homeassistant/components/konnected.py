@@ -72,8 +72,7 @@ UPDATE_ENDPOINT = (
     r'/device/{device_id:[a-zA-Z0-9]+}/{pin_num:[0-9]}/{state:[01]}')
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Konnected platform."""
     cfg = config.get(DOMAIN)
     if cfg is None:
@@ -83,8 +82,7 @@ def async_setup(hass, config):
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {'auth_token': auth_token}
 
-    @asyncio.coroutine
-    def async_device_discovered(service, info):
+    async def async_device_discovered(service, info):
         """Call when a Konnected device has been discovered."""
         _LOGGER.debug("Discovered a new Konnected device: %s", info)
         host = info.get(CONF_HOST)
@@ -124,7 +122,7 @@ class KonnectedDevice(object):
         if user_config:
             _LOGGER.debug('Configuring Konnected device %s', self.device_id)
             self.save_data()
-            self.sync_device()
+            self.hass.async_add_job(self.sync_device)
             self.hass.async_add_job(
                 discovery.async_load_platform(
                     self.hass, 'binary_sensor',
