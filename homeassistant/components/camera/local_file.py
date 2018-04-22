@@ -12,17 +12,22 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_NAME
 from homeassistant.components.camera import (
-    Camera, PLATFORM_SCHEMA, DOMAIN)
+    Camera, CAMERA_SERVICE_SCHEMA, DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FILE_PATH = 'file_path'
 DEFAULT_NAME = 'Local File'
+SERVICE_UPDATE_FILE_PATH = 'update_file_path'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FILE_PATH): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+})
+
+CAMERA_SERVICE_UPDATE_FILE_PATH = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Required(CONF_FILE_PATH): cv.string
 })
 
 
@@ -39,11 +44,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def update_file_path_service(call):
         """Update the file path."""
-        camera.update_file_path(call.data.get("file_path"))
+        file_path = call.data.get(CONF_FILE_PATH)
+        camera.update_file_path(file_path)
         return True
 
     hass.services.register(
-            DOMAIN, 'update_file_path', update_file_path_service)
+            DOMAIN,
+            SERVICE_UPDATE_FILE_PATH,
+            update_file_path_service,
+            schema=CAMERA_SERVICE_UPDATE_FILE_PATH)
 
     add_devices([camera])
 
@@ -72,16 +81,9 @@ class LocalFile(Camera):
                             self._name, self._file_path)
 
     def update_file_path(self, file_path):
-        """Update the camera file path."""
+        """Update the local_file camera file path."""
         if os.path.isfile(file_path):
             self._file_path = file_path
-            self.hass.bus.fire(
-                DOMAIN, {
-                    'entity_id': self.entity_id,
-                    "event_type": "update_file_path",
-                    'name': self._name,
-                    "file_path": file_path,
-                    })
         else:
             _LOGGER.warning("Invalid file_path: %s", file_path)
 
