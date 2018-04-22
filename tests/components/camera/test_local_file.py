@@ -6,7 +6,6 @@ from unittest import mock
 # https://bugs.python.org/issue23004
 from mock_open import MockOpen
 
-import homeassistant.components.camera.local_file as camera
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
@@ -119,8 +118,8 @@ def test_camera_content_type(hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_snapshot_service(hass):
-    """Test snapshot service."""
+def test_update_file_path_service(hass):
+    """Test update_file_path service."""
     mopen = mock.mock_open()
 
     with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
@@ -132,7 +131,7 @@ def test_snapshot_service(hass):
                 'file_path': 'mock.file',
             }})
 
-        camera.update_file_path('/img/test.jpg')
+        hass.components.camera.update_file_path('/img/test.jpg')
         yield from hass.async_block_till_done()
 
         mock_write = mopen().write
