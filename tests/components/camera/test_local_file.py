@@ -1,6 +1,8 @@
 """The tests for local file camera component."""
 import asyncio
 from unittest import mock
+from unittest.mock import mock_open
+
 
 # Using third party package because of a bug reading binary data in Python 3.4
 # https://bugs.python.org/issue23004
@@ -118,9 +120,10 @@ def test_camera_content_type(hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_update_file_path_service(hass, aiohttp_client):
+def test_update_file_path_service(hass):
     """Test the update_file_path service."""
     mock_registry(hass)
+    mopen = mock_open()
 
     with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
             mock.patch('os.access', mock.Mock(return_value=True)):
@@ -131,17 +134,10 @@ def test_update_file_path_service(hass, aiohttp_client):
                 'file_path': 'mock.file',
             }})
 
-    client = yield from aiohttp_client(hass.http.app)
+        hass.components.camera.local_file.update_file_path('/img/test.jpg')
 
-    m_open = MockOpen(read_data=b'hello')
-    with mock.patch(
-            'homeassistant.components.camera.local_file.open',
-            m_open, create=True
-    ):
-        resp = yield from client.get(
-                '/api/camera_proxy/camera.update_file_path')
+        yield from hass.async_block_till_done()
+        mock_write = mopen().write
+        assert len(mock_write.mock_calls) == 1
 
-    assert resp.status == 200
-    body = yield from resp.text()
-    assert body == 'hello'
-    assert False
+#    assert False
