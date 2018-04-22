@@ -87,8 +87,7 @@ class PostNLSensor(Entity):
 
         for shipment in shipments:
             status = shipment['status']['formatted']['short']
-            status = self._api.parse_time(status, '%H:%M')
-            status = self._api.parse_date(status, '%d-%m-%Y')
+            status = self._api.parse_datetime(status, '%d-%m-%Y', '%H:%M')
 
             name = shipment['settings']['title']
             status_counts[name] = status
