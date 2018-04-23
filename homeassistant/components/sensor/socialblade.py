@@ -30,7 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setting the platform in HASS and Channel Information."""
-    social_blade = SocialBladeSensor(config['channel_id'], config[CONF_FRIENDLY_NAME])
+    social_blade = SocialBladeSensor(config['channel_id'],
+                                     config[CONF_FRIENDLY_NAME])
     social_blade.update()
     if social_blade.valid_channel_id:
         add_devices([social_blade])
