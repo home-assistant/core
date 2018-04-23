@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([social_blade])
     else:
         _LOGGER.error("Setup Social Blade Sensor Fail"
-                      " check if your channel ID is Valid")
+                      " check if your channel ID is valid")
 
 
 class SocialBladeSensor(Entity):
