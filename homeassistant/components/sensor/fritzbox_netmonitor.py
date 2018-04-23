@@ -11,7 +11,7 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_HOST, STATE_UNAVAILABLE)
+from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_UNAVAILABLE)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -20,6 +20,7 @@ REQUIREMENTS = ['fritzconnection==0.6.5']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_DEFAULT_NAME = 'fritz_netmonitor'
 CONF_DEFAULT_IP = '169.254.1.1'  # This IP is valid for all FRITZ!Box routers.
 
 ATTR_BYTES_RECEIVED = 'bytes_received'
@@ -42,6 +43,7 @@ STATE_OFFLINE = 'offline'
 ICON = 'mdi:web'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=CONF_DEFAULT_NAME): cv.string,
     vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
 })
 
@@ -52,6 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import fritzconnection as fc
     from fritzconnection.fritzconnection import FritzConnectionException
 
+    name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
 
     try:
@@ -65,15 +68,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         _LOGGER.info("Successfully connected to FRITZ!Box")
 
-    add_devices([FritzboxMonitorSensor(fstatus)], True)
+    add_devices([FritzboxMonitorSensor(name, fstatus)], True)
 
 
 class FritzboxMonitorSensor(Entity):
     """Implementation of a fritzbox monitor sensor."""
 
-    def __init__(self, fstatus):
+    def __init__(self, name, fstatus):
         """Initialize the sensor."""
-        self._name = 'fritz_netmonitor'
+        self._name = name
         self._fstatus = fstatus
         self._state = STATE_UNAVAILABLE
         self._is_linked = self._is_connected = self._wan_access_type = None

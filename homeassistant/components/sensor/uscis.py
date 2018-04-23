@@ -42,7 +42,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class UscisSensor(Entity):
     """USCIS Sensor will check case status on daily basis."""
 
-    HOURS_TO_UPDATE = timedelta(hours=24)
+
+    MIN_TIME_BETWEEN_UPDATES = timedelta(hours=24)
 
     CURRENT_STATUS = "current_status"
     LAST_CASE_UPDATE = "last_update_date"
@@ -70,7 +71,8 @@ class UscisSensor(Entity):
         """Return the state attributes."""
         return self._attributes
 
-    @Throttle(HOURS_TO_UPDATE)
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Using Request to access USCIS website and fetch data."""
         import uscisstatus

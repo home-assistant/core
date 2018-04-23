@@ -43,7 +43,7 @@ class SocialBladeSensor(Entity):
     """Social Blade Sensor will check the subscribers / total views on
      givin youtube channel using the channel id."""
 
-    HOURS_TO_UPDATE = timedelta(hours=2)
+    MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
 
     SUBSCRIBERS = "subscribers"
     TOTAL_VIEWS = "total_views"
@@ -71,7 +71,7 @@ class SocialBladeSensor(Entity):
         """Return the state attributes."""
         return self._attributes
 
-    @Throttle(HOURS_TO_UPDATE)
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Using Request to access SocialBlade website and fetch data."""
         import socialbladeclient

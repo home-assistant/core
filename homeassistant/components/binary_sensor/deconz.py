@@ -15,10 +15,12 @@ DEPENDENCIES = ['deconz']
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Set up the deCONZ binary sensor."""
-    if discovery_info is None:
-        return
+    """Old way of setting up deCONZ binary sensors."""
+    pass
 
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the deCONZ binary sensor."""
     from pydeconz.sensor import DECONZ_BINARY_SENSOR
     sensors = hass.data[DATA_DECONZ].sensors
     entities = []

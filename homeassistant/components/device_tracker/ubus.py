@@ -103,6 +103,9 @@ class UbusDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         if self.mac2name is None:
             self._generate_mac2name()
+        if self.mac2name is None:
+            # Generation of mac2name dictionary failed
+            return None
         name = self.mac2name.get(device.upper(), None)
         return name
 
@@ -204,7 +207,7 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
     try:
         res = requests.post(url, data=data, timeout=5)
 
-    except requests.exceptions.Timeout:
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
         return
 
     if res.status_code == 200:

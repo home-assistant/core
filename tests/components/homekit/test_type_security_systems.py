@@ -35,8 +35,8 @@ class TestHomekitSecuritySystems(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         acp = 'alarm_control_panel.test'
 
-        acc = SecuritySystem(self.hass, acp, 'SecuritySystem',
-                             alarm_code='1234', aid=2)
+        acc = SecuritySystem(self.hass, 'SecuritySystem', acp,
+                             2, config={ATTR_CODE: '1234'})
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -107,10 +107,18 @@ class TestHomekitSecuritySystems(unittest.TestCase):
         """Test accessory if security_system doesn't require a alarm_code."""
         acp = 'alarm_control_panel.test'
 
-        acc = SecuritySystem(self.hass, acp, 'SecuritySystem',
-                             alarm_code=None, aid=2)
-        acc.run()
+        acc = SecuritySystem(self.hass, 'SecuritySystem', acp,
+                             2, config={ATTR_CODE: None})
+        # Set from HomeKit
+        acc.char_target_state.client_update_value(0)
+        self.hass.block_till_done()
+        self.assertEqual(
+            self.events[0].data[ATTR_SERVICE], 'alarm_arm_home')
+        self.assertNotIn(ATTR_CODE, self.events[0].data[ATTR_SERVICE_DATA])
+        self.assertEqual(acc.char_target_state.value, 0)
 
+        acc = SecuritySystem(self.hass, 'SecuritySystem', acp,
+                             2, config={})
         # Set from HomeKit
         acc.char_target_state.client_update_value(0)
         self.hass.block_till_done()
