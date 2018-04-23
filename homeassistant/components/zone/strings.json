@@ -1,0 +1,18 @@
+{
+    "config": {
+        "title": "Zone",
+        "step": {
+            "init": {
+                "title": "Define zone parameters",
+                "data": {
+                    "name": "name",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "radius": "Radius",
+                    "passive": "Passive",
+                    "icon": "icon"
+                }
+            }
+        }
+    }
+}

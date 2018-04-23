@@ -19,17 +19,17 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.location import distance
 
+from .config_flow import configured_zones
+from .const import CONF_PASSIVE, DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_PASSIVE = 'passive'
 ATTR_RADIUS = 'radius'
 
-CONF_PASSIVE = 'passive'
-
 DEFAULT_NAME = 'Unnamed zone'
 DEFAULT_PASSIVE = False
 DEFAULT_RADIUS = 100
-DOMAIN = 'zone'
 
 ENTITY_ID_FORMAT = 'zone.{}'
 ENTITY_ID_HOME = ENTITY_ID_FORMAT.format('home')
@@ -38,6 +38,7 @@ ICON_HOME = 'mdi:home'
 ICON_IMPORT = 'mdi:import'
 
 STATE = 'zoning'
+
 
 # The config that zone accepts is the same as if it has platforms.
 PLATFORM_SCHEMA = vol.Schema({
@@ -104,29 +105,42 @@ def in_zone(zone, latitude, longitude, radius=0):
     return zone_dist - radius < zone.attributes[ATTR_RADIUS]
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
-    """Set up the zone."""
-    entities = set()
-    tasks = []
+async def async_setup(hass, config):
+    """Import new configured zone as config entry."""
     for _, entry in config_per_platform(config, DOMAIN):
-        name = entry.get(CONF_NAME)
-        zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
-                    entry.get(CONF_RADIUS), entry.get(CONF_ICON),
-                    entry.get(CONF_PASSIVE))
-        zone.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, name, entities)
-        tasks.append(zone.async_update_ha_state())
-        entities.add(zone.entity_id)
+        if (entry[CONF_LATITUDE], entry[CONF_LONGITUDE]) not in \
+            configured_zones(hass):
+            hass.async_add_job(hass.config_entries.flow.async_init(
+                DOMAIN, source='import', data=entry
+            ))
 
-    if ENTITY_ID_HOME not in entities:
-        zone = Zone(hass, hass.config.location_name,
-                    hass.config.latitude, hass.config.longitude,
-                    DEFAULT_RADIUS, ICON_HOME, False)
-        zone.entity_id = ENTITY_ID_HOME
-        tasks.append(zone.async_update_ha_state())
+    if (hass.config.latitude, hass.config.longitude) not in \
+        configured_zones(hass):
+        entry = {
+            CONF_NAME: hass.config.location_name,
+            CONF_LATITUDE: hass.config.latitude,
+            CONF_LONGITUDE: hass.config.longitude,
+            CONF_RADIUS: DEFAULT_RADIUS,
+            CONF_ICON: ICON_HOME,
+            CONF_PASSIVE: False
+        }
+        hass.async_add_job(hass.config_entries.flow.async_init(
+            DOMAIN, source='import', data=entry
+        ))
 
-    yield from asyncio.wait(tasks, loop=hass.loop)
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up zone as config entry."""
+    entry = config_entry.data
+    name = entry[CONF_NAME]
+    zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
+                entry.get(CONF_RADIUS), entry.get(CONF_ICON),
+                entry.get(CONF_PASSIVE))
+    zone.entity_id = async_generate_entity_id(
+        ENTITY_ID_FORMAT, name, None, hass)
+    await asyncio.wait([zone.async_update_ha_state()], loop=hass.loop)
     return True
 
 
