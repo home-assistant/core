@@ -9,8 +9,7 @@ import logging
 
 from homeassistant.components.homematicip_cloud import (
     HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
-    ATTR_HOME_NAME, ATTR_HOME_ID, ATTR_LOW_BATTERY, ATTR_DEVICE_RSSI,
-    ATTR_CONNECTED, ATTR_DUTY_CYCLE)
+    ATTR_HOME_ID, ATTR_LOW_BATTERY)
 from homeassistant.const import TEMP_CELSIUS
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +44,6 @@ async def async_setup_platform(hass, config, async_add_devices,
     devices = [HomematicipAccesspointStatus(home)]
 
     for device in home.devices:
-        devices.append(HomematicipDeviceStatus(home, device))
         if isinstance(device, HeatingThermostat):
             devices.append(HomematicipHeatingThermostat(home, device))
         if isinstance(device, (TemperatureHumiditySensorDisplay,
@@ -62,7 +60,7 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
 
     def __init__(self, home):
         """Initialize access point device."""
-        super().__init__(home, home, 'Status')
+        super().__init__(home, home)
 
     @property
     def icon(self):
@@ -82,11 +80,7 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the access point."""
-        return {
-            ATTR_HOME_NAME: self._home.name,
-            ATTR_CONNECTED: self._home.connected,
-            ATTR_DUTY_CYCLE: self._home.dutyCycle,
-            }
+        return {}
 
 
 class HomematicipDeviceStatus(HomematicipGenericDevice):
@@ -151,11 +145,8 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_VALVE_STATE: self._device.valveState.lower(),
-            ATTR_VALVE_POSITION: round(self._device.valvePosition*100),
             ATTR_TEMPERATURE_OFFSET: self._device.temperatureOffset,
             ATTR_LOW_BATTERY: self._device.lowBat,
-            ATTR_DEVICE_RSSI: self._device.rssiDeviceValue
         }
 
 
@@ -185,9 +176,7 @@ class HomematicipHumiditySensor(HomematicipGenericDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_HUMIDITY: self._device.humidity,
             ATTR_LOW_BATTERY: self._device.lowBat,
-            ATTR_DEVICE_RSSI: self._device.rssiDeviceValue,
         }
 
 
@@ -217,8 +206,6 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_TEMPERATURE: self._device.actualTemperature,
             ATTR_TEMPERATURE_OFFSET: self._device.temperatureOffset,
             ATTR_LOW_BATTERY: self._device.lowBat,
-            ATTR_DEVICE_RSSI: self._device.rssiDeviceValue,
         }

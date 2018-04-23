@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['homematicip==0.9.1']
+REQUIREMENTS = ['homematicip==0.9.2.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -194,16 +194,7 @@ class HomematicipGenericDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
-        laststatus = ''
-        if self._device.lastStatusUpdate is not None:
-            laststatus = self._device.lastStatusUpdate.isoformat()
         return {
-            ATTR_HOME_NAME: self._home.name,
-            ATTR_DEVICE_LABEL: self._device.label,
-            ATTR_STATUS_UPDATE: laststatus,
-            ATTR_FIRMWARE_STATE: self._device.updateState.lower(),
-            ATTR_UNREACHABLE: self._device.unreach,
             ATTR_LOW_BATTERY: self._device.lowBat,
-            ATTR_DEVICE_RSSI: self._device.rssiDeviceValue,
             ATTR_MODEL_TYPE: self._device.modelType
         }
