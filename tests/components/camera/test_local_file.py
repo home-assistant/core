@@ -6,9 +6,6 @@ from unittest import mock
 # https://bugs.python.org/issue23004
 from mock_open import MockOpen
 
-import homeassistant.components.camera as camera
-from homeassistant.components.camera.local_file import (
-    SERVICE_UPDATE_FILE_PATH)
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
@@ -121,32 +118,20 @@ def test_camera_content_type(hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_update_file_path_service(hass):
+def test_update_file_path(hass):
     """Test update_file_path service."""
-    mopen = mock.mock_open()
-    mock_registry(hass)
+    # Setup platform
+    yield from async_setup_component(hass, 'camera', {
+        'camera': {
+            'platform': 'local_file',
+            'file_path': 'mock/path.jpg'
+        }
+    })
 
-    with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
-            mock.patch('os.access', mock.Mock(return_value=True)):
-        yield from async_setup_component(hass, 'camera', {
-            'camera': {
-                'name': 'config_test',
-                'platform': 'local_file',
-                'file_path': 'mock.file',
-            }})
+    # Fetch state and check motion detection attribute
+    state = hass.states.get('camera.local_file')
+    assert state.attributes.get('friendly_name') == 'Local File'
+    assert state.attributes.get('file_path') == 'mock/path.jpg'
 
-    m_open = MockOpen(read_data=b'hello')
-    with mock.patch(
-            'homeassistant.components.camera.local_file.open',
-            m_open, create=True), \
-            mock.patch('os.path.isfile', mock.Mock(return_value=True)):
-
-        data = {'entity_id': 'camera.local_file',
-                'file_path': '/img/test.jpg'}
-        hass.services.async_call(
-                camera.DOMAIN, SERVICE_UPDATE_FILE_PATH, data)
-        yield from hass.async_block_till_done()
-
-        mock_write = mopen().write
-
-        assert len(mock_write.mock_calls) == 1
+    # Call service to update file_path
+#    camera.enable_motion_detection(hass, 'camera.demo_camera')
