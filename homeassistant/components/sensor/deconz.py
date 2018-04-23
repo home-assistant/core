@@ -22,10 +22,12 @@ ATTR_EVENT_ID = 'event_id'
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Set up the deCONZ sensors."""
-    if discovery_info is None:
-        return
+    """Old way of setting up deCONZ sensors."""
+    pass
 
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the deCONZ sensors."""
     from pydeconz.sensor import DECONZ_SENSOR, SWITCH as DECONZ_REMOTE
     sensors = hass.data[DATA_DECONZ].sensors
     entities = []
