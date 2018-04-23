@@ -9,8 +9,7 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
-from homeassistant.helpers import (
-    aiohttp_client, discovery, config_validation as cv)
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.util.json import load_json
 
 # Loading the config flow file will register the flow
@@ -58,28 +57,20 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
-    """Set up a deCONZ bridge for a config entry."""
-    if DOMAIN in hass.data:
-        _LOGGER.error(
-            "Config entry failed since one deCONZ instance already exists")
-        return False
-    result = await async_setup_deconz(hass, None, entry.data)
-    if result:
-        return True
-    return False
-
-
-async def async_setup_deconz(hass, config, deconz_config):
-    """Set up a deCONZ session.
+async def async_setup_entry(hass, config_entry):
+    """Set up a deCONZ bridge for a config entry.
 
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
     """
-    _LOGGER.debug("deCONZ config %s", deconz_config)
     from pydeconz import DeconzSession
+    if DOMAIN in hass.data:
+        _LOGGER.error(
+            "Config entry failed since one deCONZ instance already exists")
+        return False
+
     session = aiohttp_client.async_get_clientsession(hass)
-    deconz = DeconzSession(hass.loop, session, **deconz_config)
+    deconz = DeconzSession(hass.loop, session, **config_entry.data)
     result = await deconz.async_load_parameters()
     if result is False:
         _LOGGER.error("Failed to communicate with deCONZ")
@@ -89,8 +80,8 @@ async def async_setup_deconz(hass, config, deconz_config):
     hass.data[DATA_DECONZ_ID] = {}
 
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
-        hass.async_add_job(discovery.async_load_platform(
-            hass, component, DOMAIN, {}, config))
+        hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+            config_entry, component))
     deconz.start()
 
     async def async_configure(call):
