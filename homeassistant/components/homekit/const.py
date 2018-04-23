@@ -102,6 +102,8 @@ PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}
 
 # #### Device Class ####
 DEVICE_CLASS_CO2 = 'co2'
+DEVICE_CLASS_DOOR = 'door'
+DEVICE_CLASS_GARAGE_DOOR = 'garage_door'
 DEVICE_CLASS_GAS = 'gas'
 DEVICE_CLASS_HUMIDITY = 'humidity'
 DEVICE_CLASS_LIGHT = 'light'
@@ -112,3 +114,4 @@ DEVICE_CLASS_OPENING = 'opening'
 DEVICE_CLASS_PM25 = 'pm25'
 DEVICE_CLASS_SMOKE = 'smoke'
 DEVICE_CLASS_TEMPERATURE = 'temperature'
+DEVICE_CLASS_WINDOW = 'window'
