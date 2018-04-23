@@ -65,19 +65,14 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorDevice):
         elif self._sensor_type == 'rain_sensor':
             for sensor in mydata.sensors:
                 if sensor['name'] == 'Rain':
-                    if sensor['active'] == 1:
-                        self._state = True
-                    else:
-                        self._state = False
+                    self._state = sensor['active'] == 1
                     break
         elif self._sensor_type == 'is_watering':
             if mydata.running is None or not mydata.running:
                 self._state = False
             else:
-                if int(mydata.running[0]['relay']) == self.data.get('relay'):
-                    self._state = True
-                else:
-                    self._state = False
+                self._state = int(
+                    mydata.running[0]['relay']) == self.data.get('relay')
 
     @property
     def icon(self):

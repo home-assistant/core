@@ -159,11 +159,12 @@ class HydrawiseEntity(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        temp = self.hass.data['hydrawise'].data.\
+            controller_info['controllers'][0]['last_contact_readable']
         return {
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-                'identifier': self.data.get('relay'),
-                'last contact:': self.hass.data['hydrawise'].data
-                .controller_info['controllers'][0]['last_contact_readable'],
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            'identifier': self.data.get('relay'),
+            'last contact:': temp
         }
 
     @property

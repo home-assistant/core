@@ -89,10 +89,8 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchDevice):
             if mydata.running is None or not mydata.running:
                 self._state = False
             else:
-                if int(mydata.running[0]['relay']) == self.data.get('relay'):
-                    self._state = True
-                else:
-                    self._state = False
+                self._state = int(
+                    mydata.running[0]['relay']) == self.data.get('relay')
         elif self._sensor_type == 'auto_watering':
             for relay in mydata.relays:
                 if relay.get('relay') == self.data.get('relay'):
@@ -105,9 +103,10 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        temp = self.hass.data['hydrawise'].data.\
+            controller_info['controllers'][0]['last_contact_readable']
         return {
-                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-                'identifier': self.data.get('relay'),
-                'last contact:': self.hass.data['hydrawise'].data
-                .controller_info['controllers'][0]['last_contact_readable']
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            'identifier': self.data.get('relay'),
+            'last contact:': temp
         }
