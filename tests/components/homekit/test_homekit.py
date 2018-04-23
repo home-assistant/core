@@ -173,7 +173,7 @@ class TestHomeKit(unittest.TestCase):
 
         self.assertEqual(mock_add_bridge_acc.mock_calls, [call(state)])
         self.assertEqual(mock_show_setup_msg.mock_calls, [
-            call(homekit.bridge, self.hass)])
+            call(self.hass, homekit.bridge)])
         self.assertEqual(homekit.driver.mock_calls, [call.start()])
         self.assertTrue(homekit.started)
 

@@ -34,7 +34,7 @@ class TestHomekitSwitches(unittest.TestCase):
         entity_id = 'switch.test'
         domain = split_entity_id(entity_id)[0]
 
-        acc = Switch(self.hass, entity_id, 'Switch', aid=2)
+        acc = Switch(self.hass, 'Switch', entity_id, 2, config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -70,7 +70,7 @@ class TestHomekitSwitches(unittest.TestCase):
         entity_id = 'remote.test'
         domain = split_entity_id(entity_id)[0]
 
-        acc = Switch(self.hass, entity_id, 'Switch', aid=2)
+        acc = Switch(self.hass, 'Switch', entity_id, 2, config=None)
         acc.run()
 
         self.assertEqual(acc.char_on.value, False)
@@ -89,7 +89,7 @@ class TestHomekitSwitches(unittest.TestCase):
         entity_id = 'input_boolean.test'
         domain = split_entity_id(entity_id)[0]
 
-        acc = Switch(self.hass, entity_id, 'Switch', aid=2)
+        acc = Switch(self.hass, 'Switch', entity_id, 2, config=None)
         acc.run()
 
         self.assertEqual(acc.char_on.value, False)

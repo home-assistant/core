@@ -94,6 +94,12 @@ omit =
     homeassistant/components/envisalink.py
     homeassistant/components/*/envisalink.py
 
+    homeassistant/components/fritzbox.py
+    homeassistant/components/*/fritzbox.py
+
+    homeassistant/components/eufy.py
+    homeassistant/components/*/eufy.py
+
     homeassistant/components/gc100.py
     homeassistant/components/*/gc100.py
 
@@ -105,6 +111,9 @@ omit =
 
     homeassistant/components/hive.py
     homeassistant/components/*/hive.py
+
+    homeassistant/components/homekit_controller/__init__.py
+    homeassistant/components/*/homekit_controller.py
 
     homeassistant/components/homematic/__init__.py
     homeassistant/components/*/homematic.py
@@ -190,8 +199,8 @@ omit =
     homeassistant/components/pilight.py
     homeassistant/components/*/pilight.py
 
-    homeassistant/components/qwikswitch.py
-    homeassistant/components/*/qwikswitch.py
+    homeassistant/components/switch/qwikswitch.py
+    homeassistant/components/light/qwikswitch.py
 
     homeassistant/components/rachio.py
     homeassistant/components/*/rachio.py
@@ -407,7 +416,6 @@ omit =
     homeassistant/components/image_processing/seven_segments.py
     homeassistant/components/keyboard_remote.py
     homeassistant/components/keyboard.py
-    homeassistant/components/light/aurora.py
     homeassistant/components/light/avion.py
     homeassistant/components/light/blinksticklight.py
     homeassistant/components/light/blinkt.py
@@ -422,6 +430,7 @@ omit =
     homeassistant/components/light/lifx.py
     homeassistant/components/light/limitlessled.py
     homeassistant/components/light/mystrom.py
+    homeassistant/components/light/nanoleaf_aurora.py
     homeassistant/components/light/osramlightify.py
     homeassistant/components/light/piglow.py
     homeassistant/components/light/rpi_gpio_pwm.py
@@ -640,7 +649,9 @@ omit =
     homeassistant/components/sensor/sensehat.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/serial.py
+    homeassistant/components/sensor/sht31.py
     homeassistant/components/sensor/shodan.py
+    homeassistant/components/sensor/sigfox.py
     homeassistant/components/sensor/simulated.py
     homeassistant/components/sensor/skybeacon.py
     homeassistant/components/sensor/sma.py
@@ -670,6 +681,7 @@ omit =
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/ups.py
+    homeassistant/components/sensor/uscis.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/viaggiatreno.py
     homeassistant/components/sensor/waqi.py

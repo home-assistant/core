@@ -24,8 +24,6 @@ DEPENDENCIES = ['dyson']
 
 DYSON_360_EYE_DEVICES = "dyson_360_eye_devices"
 
-ICON = 'mdi:roomba'
-
 SUPPORT_DYSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                 SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | SUPPORT_STATUS | \
                 SUPPORT_BATTERY | SUPPORT_STOP
@@ -56,7 +54,6 @@ class Dyson360EyeDevice(VacuumDevice):
         """Dyson 360 Eye robot vacuum device."""
         _LOGGER.debug("Creating device %s", device.name)
         self._device = device
-        self._icon = ICON
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -81,11 +78,6 @@ class Dyson360EyeDevice(VacuumDevice):
     def name(self):
         """Return the name of the device."""
         return self._device.name
-
-    @property
-    def icon(self):
-        """Return the icon to use for device."""
-        return self._icon
 
     @property
     def status(self):
