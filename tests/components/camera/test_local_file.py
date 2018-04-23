@@ -6,6 +6,7 @@ from unittest import mock
 # https://bugs.python.org/issue23004
 from mock_open import MockOpen
 
+from homeassistant.components import camera
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
@@ -134,4 +135,6 @@ def test_update_file_path(hass):
     assert state.attributes.get('file_path') == 'mock/path.jpg'
 
     # Call service to update file_path
-#    camera.enable_motion_detection(hass, 'camera.demo_camera')
+    camera.update_file_path(hass, 'new/path.jpg')
+    yield from hass.async_block_till_done()
+    assert state.attributes.get('file_path') == 'new/path.jpg'
