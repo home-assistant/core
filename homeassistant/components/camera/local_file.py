@@ -84,6 +84,7 @@ class LocalFile(Camera):
         """Update the local_file camera file path."""
         if os.path.isfile(file_path):
             self._file_path = file_path
+            self.schedule_update_ha_state()
         else:
             _LOGGER.warning("Invalid file_path: %s", file_path)
 
