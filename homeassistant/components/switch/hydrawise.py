@@ -1,0 +1,113 @@
+"""
+Support for Hydrawise cloud.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.hydrawise
+"""
+import logging
+
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.hydrawise import (
+    ALLOWED_WATERING_TIME, CONF_ATTRIBUTION, CONF_WATERING_TIME,
+    DATA_HYDRAWISE, DEFAULT_WATERING_TIME, HydrawiseEntity, SWITCHES)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS)
+
+DEPENDENCIES = ['hydrawise']
+
+_LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SWITCHES)):
+        vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
+    vol.Optional(CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME):
+        vol.All(vol.In(ALLOWED_WATERING_TIME)),
+})
+
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up a sensor for a hydrawise device."""
+    hydrawise = hass.data[DATA_HYDRAWISE].data
+
+    default_watering_timer = config.get(CONF_WATERING_TIME)
+
+    sensors = []
+    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+        # create a switch for each zone
+        for zone in hydrawise.relays:
+            sensors.append(
+                HydrawiseSwitch(default_watering_timer,
+                                zone,
+                                sensor_type))
+
+    add_devices(sensors, True)
+    return True
+
+
+class HydrawiseSwitch(HydrawiseEntity, SwitchDevice):
+    """A switch implementation for hydrawise device."""
+
+    def __init__(self, default_watering_timer, *args):
+        """Initialize a switch for hydrawise device."""
+        super().__init__(*args)
+        self._default_watering_timer = default_watering_timer
+
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self._state
+
+    def turn_on(self, **kwargs):
+        """Turn the device on."""
+        if self._sensor_type == 'manual_watering':
+            self.hass.data['hydrawise'].data.run_zone(
+                self._default_watering_timer, (self.data.get('relay')-1))
+        elif self._sensor_type == 'auto_watering':
+            self.hass.data['hydrawise'].data.suspend_zone(
+                0, (self.data.get('relay')-1))
+        self._state = True
+
+    def turn_off(self, **kwargs):
+        """Turn the device off."""
+        if self._sensor_type == 'manual_watering':
+            self.hass.data['hydrawise'].data.run_zone(
+                0, (self.data.get('relay')-1))
+        elif self._sensor_type == 'auto_watering':
+            self.hass.data['hydrawise'].data.suspend_zone(
+                365, (self.data.get('relay')-1))
+        self._state = False
+
+    def update(self):
+        """Update device state."""
+        mydata = self.hass.data['hydrawise'].data
+        _LOGGER.debug("Updating Hydrawise switch: %s", self._name)
+        if self._sensor_type == 'manual_watering':
+
+            if mydata.running is None or not mydata.running:
+                self._state = False
+            else:
+                if int(mydata.running[0]['relay']) == self.data.get('relay'):
+                    self._state = True
+                else:
+                    self._state = False
+        elif self._sensor_type == 'auto_watering':
+            for relay in mydata.relays:
+                if relay.get('relay') == self.data.get('relay'):
+                    if relay.get('suspended') is not None:
+                        self._state = False
+                    else:
+                        self._state = True
+                    break
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                'identifier': self.data.get('relay'),
+                'last contact:': self.hass.data['hydrawise'].data
+                .controller_info['controllers'][0]['last_contact_readable']
+        }
