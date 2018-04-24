@@ -124,27 +124,32 @@ def test_camera_content_type(hass, aiohttp_client):
 def test_update_file_path(hass):
     """Test update_file_path service."""
     # Setup platform
-    yield from async_setup_component(hass, 'camera', {
-        'camera': {
-            'platform': 'local_file',
-            'file_path': 'mock/path.jpg'
+
+    mock_registry(hass)
+
+    with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
+            mock.patch('os.access', mock.Mock(return_value=True)):
+        yield from async_setup_component(hass, 'camera', {
+            'camera': {
+                'platform': 'local_file',
+                'file_path': 'mock/path.jpg'
+            }
+        })
+
+        # Fetch state and check motion detection attribute
+        state = hass.states.get('camera.local_file')
+        assert state.attributes.get('friendly_name') == 'Local File'
+        assert state.attributes.get('file_path') == 'mock/path.jpg'
+
+        service_data = {
+            "entity_id": 'camera.local_file',
+            "file_path": 'new/path.jpg'
         }
-    })
 
-    # Fetch state and check motion detection attribute
-    state = hass.states.get('camera.local_file')
-    assert state.attributes.get('friendly_name') == 'Local File'
-    assert state.attributes.get('file_path') == 'mock/path.jpg'
+        yield from hass.services.async_call(camera.DOMAIN,
+                                     SERVICE_UPDATE_FILE_PATH,
+                                     service_data)
+        yield from hass.async_block_till_done()
 
-    # THE FOLLOWING FAILS, I DON'T UNDERSTAND WHY
-
-    service_data = {
-        "entity_id": 'camera.local_file',
-        "file_path": 'new/path.jpg'
-    }
-    hass.services.call(
-        camera.DOMAIN, SERVICE_UPDATE_FILE_PATH, service_data)
-    yield from hass.async_block_till_done()
-
-    state = hass.states.get('camera.local_file')
-    assert state.attributes.get('file_path') == 'new/path.jpg'
+        state = hass.states.get('camera.local_file')
+        assert state.attributes.get('file_path') == 'new/path.jpg'
