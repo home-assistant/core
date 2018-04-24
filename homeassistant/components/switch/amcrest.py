@@ -1,9 +1,9 @@
 """
 Support for toggling Amcrest IP camera settings.
 
-Latest change may change switch entity_id. 
+Latest change may change switch entity_id.
 Please check your automation and update the identity-id if you have previously
-assigned a name to your camera as it appends 
+assigned a name to your camera as it appends
 the name of the camera to the switch id.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.amcrest/
@@ -38,7 +38,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     async_add_devices(all_switches, True)
 
-    
+
 class AmcrestSwitch(ToggleEntity):
     """Representation of an Amcrest IP camera switch."""
 
