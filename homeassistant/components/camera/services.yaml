@@ -24,7 +24,7 @@ snapshot:
       description: Template of a Filename. Variable is entity_id.
       example: '/tmp/snapshot_{{ entity_id }}'
 
-update_file_path:
+local_file_update_file_path:
   description: Update the file_path for a local_file camera.
   fields:
     entity_id:
