@@ -7,11 +7,9 @@ https://home-assistant.io/components/sensor.phicomm/
 
 import asyncio
 import logging
+import voluptuous as vol
 
 from datetime import timedelta
-
-import requests
-import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -19,7 +17,7 @@ from homeassistant.const import (
     CONF_SENSORS, CONF_SCAN_INTERVAL, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,22 +55,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the Phicomm sensor."""
-    name = config.get(CONF_NAME)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    sensors = config.get(CONF_SENSORS)
-    scan_interval = config.get(CONF_SCAN_INTERVAL)
+    name = config[CONF_NAME]
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    sensors = config[CONF_SENSORS]
+    scan_interval = config[CONF_SCAN_INTERVAL]
 
     phicomm = PhicommData(hass, username, password)
-    devices = yield from phicomm.make_sensors(name, sensors)
-    if devices:
-        async_add_devices(devices)
-        async_track_time_interval(hass, phicomm.async_update, scan_interval)
-    else:
+    await phicomm.update_data()
+    if not phicomm.devs:
         _LOGGER.error("No sensors added: %s.", name)
+        return
+
+    devices = []
+    for index in range(len(phicomm.devs)):
+        for sensor_type in sensors:
+            devices.append(PhicommSensor(phicomm, name, index, sensor_type))
+    async_add_devices(devices)
+
+    phicomm.devices = devices
+    async_track_time_interval(hass, phicomm.async_update, scan_interval)
 
 
 class PhicommSensor(Entity):
@@ -150,79 +155,67 @@ class PhicommData():
         self._username = username
         self._password = password
         self._token_path = hass.config.path(TOKEN_FILE + username)
-        self._token = None
-        self._devices = None
         self.devs = None
 
-    @asyncio.coroutine
-    def make_sensors(self, name, sensors):
-        """Make sensors with online data."""
         try:
             with open(self._token_path) as file:
                 self._token = file.read()
-                _LOGGER.debug("Load: %s => %s", self._token_path, self._token)
         except BaseException:
-            pass
+            self._token = None
 
-        self.update_data()
-        if not self.devs:
-            return None
-
-        devices = []
-        for index in range(len(self.devs)):
-            for sensor_type in sensors:
-                devices.append(PhicommSensor(self, name, index, sensor_type))
-        self._devices = devices
-        return devices
-
-    @asyncio.coroutine
-    def async_update(self, time):
+    async def async_update(self, time):
         """Update online data and update ha state."""
         old_devs = self.devs
-        self.update_data()
+        await self.update_data()
 
         tasks = []
-        for device in self._devices:
+        for device in self.devices:
             if device.state != device.state_from_devs(old_devs):
                 _LOGGER.info('%s: => %s', device.name, device.state)
                 tasks.append(device.async_update_ha_state())
 
         if tasks:
-            yield from asyncio.wait(tasks, loop=self._hass.loop)
+            await asyncio.wait(tasks, loop=self._hass.loop)
 
-    def update_data(self):
+    async def update_data(self):
         """Update online data."""
         try:
-            json = self.fetch_data()
+            json = await self.fetch_data()
             if ('error' in json) and (json['error'] != '0'):
                 _LOGGER.debug("Reset token: error=%s", json['error'])
                 self._token = None
-                json = self.fetch_data()
+                json = await self.fetch_data()
             self.devs = json['data']['devs']
             _LOGGER.info("Get data: devs=%s", self.devs)
         except BaseException:
+            self.devs = {}
             import traceback
             _LOGGER.error('Exception: %s', traceback.format_exc())
 
-    def fetch_data(self):
+    async def fetch_data(self):
         """Fetch the latest data from Phicomm server."""
+        session = self._hass.helpers.aiohttp_client.async_get_clientsession()
+
         if self._token is None:
             import hashlib
             md5 = hashlib.md5()
             md5.update(self._password.encode('utf8'))
-            data = {
-                'authorizationcode': AUTH_CODE,
-                'phonenumber': self._username,
-                'password': md5.hexdigest().upper()
-            }
+            data = {'authorizationcode': AUTH_CODE,
+                    'phonenumber': self._username,
+                    'password': md5.hexdigest().upper()}
             headers = {'User-Agent': USER_AGENT}
-            json = requests.post(TOKEN_URL, headers=headers, data=data).json()
+            async with session.post(TOKEN_URL, headers=headers, data=data) \
+                    as response:
+                json = await response.json(content_type=None)
+
             _LOGGER.debug("Get token: %s", json)
-            if 'access_token' in json:
-                self._token = json['access_token']
-                with open(self._token_path, 'w') as file:
-                    file.write(self._token)
-            else:
+            if 'access_token' not in json:
                 return None
+
+            self._token = json['access_token']
+            with open(self._token_path, 'w') as file:
+                file.write(self._token)
+
         headers = {'User-Agent': USER_AGENT, 'Authorization': self._token}
-        return requests.get(DATA_URL, headers=headers).json()
+        async with session.get(DATA_URL, headers=headers) as response:
+            return await response.json()
