@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.components.homematicip_cloud import (
     HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
-    ATTR_HOME_ID, ATTR_LOW_BATTERY)
+    ATTR_HOME_ID)
 from homeassistant.const import TEMP_CELSIUS
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,14 +141,6 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
         """Return the unit this state is expressed in."""
         return '%'
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_TEMPERATURE_OFFSET: self._device.temperatureOffset,
-            ATTR_LOW_BATTERY: self._device.lowBat,
-        }
-
 
 class HomematicipHumiditySensor(HomematicipGenericDevice):
     """MomematicIP humidity device."""
@@ -172,13 +164,6 @@ class HomematicipHumiditySensor(HomematicipGenericDevice):
         """Return the unit this state is expressed in."""
         return '%'
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_LOW_BATTERY: self._device.lowBat,
-        }
-
 
 class HomematicipTemperatureSensor(HomematicipGenericDevice):
     """MomematicIP the thermometer device."""
@@ -201,11 +186,3 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return TEMP_CELSIUS
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_TEMPERATURE_OFFSET: self._device.temperatureOffset,
-            ATTR_LOW_BATTERY: self._device.lowBat,
-        }
