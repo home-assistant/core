@@ -108,8 +108,8 @@ class LutronCasetaDevice(Entity):
 
     @property
     def unique_id(self):
-        """Return the unique ID of the device (model + serial)."""
-        return "{}.{}".format(self._device_model, self._device_serial)
+        """Return the unique ID of the device (serial)."""
+        return str(self._device_serial)
 
     @property
     def device_state_attributes(self):
