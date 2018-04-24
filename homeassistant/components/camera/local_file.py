@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FILE_PATH = 'file_path'
 DEFAULT_NAME = 'Local File'
-SERVICE_UPDATE_FILE_PATH = 'update_file_path'
+SERVICE_UPDATE_FILE_PATH = 'local_file_update_file_path'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FILE_PATH): cv.string,
@@ -95,8 +95,10 @@ class LocalFile(Camera):
     @property
     def device_state_attributes(self):
         """Return the camera state attributes."""
-        attr = {
-            'access_token': self.access_tokens[-1],
-            'file_path': self._file_path
-        }
-        return attr
+        attr = super(LocalFile, self).device_state_attributes
+        if attr is None:
+            attr = {}
+        return {
+            'file_path': self._file_path,
+            **attr
+            }
