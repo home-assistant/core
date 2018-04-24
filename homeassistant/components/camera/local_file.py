@@ -34,12 +34,6 @@ CAMERA_SERVICE_UPDATE_FILE_PATH = CAMERA_SERVICE_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Camera that works with local files."""
     file_path = config[CONF_FILE_PATH]
-
-    # check filepath given is readable
-    if not os.access(file_path, os.R_OK):
-        _LOGGER.warning("Could not read camera %s image from file: %s",
-                        config[CONF_NAME], file_path)
-
     camera = LocalFile(config[CONF_NAME], file_path)
 
     def update_file_path_service(call):
@@ -65,6 +59,7 @@ class LocalFile(Camera):
         super().__init__()
 
         self._name = name
+        self.check_file_path_access(file_path)
         self._file_path = file_path
         # Set content type of local file
         content, _ = mimetypes.guess_type(file_path)
@@ -80,13 +75,17 @@ class LocalFile(Camera):
             _LOGGER.warning("Could not read camera %s image from file: %s",
                             self._name, self._file_path)
 
+    def check_file_path_access(self, file_path):
+        """Check that filepath given is readable."""
+        if not os.access(file_path, os.R_OK):
+            _LOGGER.warning("Could not read camera %s image from file: %s",
+                            self._name, file_path)
+
     def update_file_path(self, file_path):
-        """Update the local_file camera file path."""
-        if os.path.isfile(file_path):
-            self._file_path = file_path
-            self.schedule_update_ha_state()
-        else:
-            _LOGGER.warning("Invalid file_path: %s", file_path)
+        """Update the file_path."""
+        self.check_file_path_access(file_path)
+        self._file_path = file_path
+        self.schedule_update_ha_state()
 
     @property
     def name(self):
