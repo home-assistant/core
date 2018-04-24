@@ -120,8 +120,7 @@ def test_camera_content_type(hass, aiohttp_client):
     assert body == image
 
 
-@asyncio.coroutine
-def test_update_file_path(hass):
+async def test_update_file_path(hass):
     """Test update_file_path service."""
     # Setup platform
 
@@ -129,7 +128,7 @@ def test_update_file_path(hass):
 
     with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
             mock.patch('os.access', mock.Mock(return_value=True)):
-        yield from async_setup_component(hass, 'camera', {
+        await async_setup_component(hass, 'camera', {
             'camera': {
                 'platform': 'local_file',
                 'file_path': 'mock/path.jpg'
@@ -146,10 +145,10 @@ def test_update_file_path(hass):
             "file_path": 'new/path.jpg'
         }
 
-        yield from hass.services.async_call(DOMAIN,
-                                            SERVICE_UPDATE_FILE_PATH,
-                                            service_data)
-        yield from hass.async_block_till_done()
+        await hass.services.async_call(DOMAIN,
+                                       SERVICE_UPDATE_FILE_PATH,
+                                       service_data)
+        await hass.async_block_till_done()
 
         state = hass.states.get('camera.local_file')
         assert state.attributes.get('file_path') == 'new/path.jpg'
