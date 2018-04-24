@@ -57,7 +57,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     excl_filter = config.get(CONF_EXCL_FILTER)
 
     try:
-        waze_data = WazeRouteData(origin, destination, region, inc_filter, excl_filter)
+        waze_data = WazeRouteData(origin, destination, region, 
+            inc_filter, excl_filter)
     except requests.exceptions.HTTPError as error:
         _LOGGER.error("%s", error)
         return
@@ -134,9 +135,11 @@ class WazeRouteData(object):
                 self._origin, self._destination, self._region, None)
             results = params.calc_all_routes_info()
             if self._inc_filter is not None:
-                results = {k: v for k, v in results.items() if self._inc_filter.lower() in k.lower()}
+                results = {k: v for k, v in results.items() if 
+                    self._inc_filter.lower() in k.lower()}
             if self._excl_filter is not None:
-                results = {k: v for k, v in results.items() if self._excl_filter.lower() not in k.lower()}
+                results = {k: v for k, v in results.items() if 
+                    self._excl_filter.lower() not in k.lower()}
             best_route = next(iter(results))
             (duration, distance) = results[best_route]
             best_route_str = bytes(best_route, 'ISO-8859-1').decode('UTF-8')
