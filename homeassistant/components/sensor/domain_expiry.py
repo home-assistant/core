@@ -5,14 +5,13 @@ For more details about this sensor please refer to the documentation at
 https://home-assistant.io/components/sensor.domain_expiry/
 """
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_HOST,
-                                 EVENT_HOMEASSISTANT_START)
+from homeassistant.const import (CONF_NAME, CONF_HOST)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['python-whois==0.6.9']
@@ -20,10 +19,6 @@ REQUIREMENTS = ['python-whois==0.6.9']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Domain Expiry'
-
-SCAN_INTERVAL = timedelta(hours=24)
-
-TIMEOUT = 10.0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -33,18 +28,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up domain expiry sensor."""
-    def run_setup(event):
-        """Wait until Home Assistant is fully initialized before creating.
+    server_name = config.get(CONF_HOST)
+    sensor_name = config.get(CONF_NAME)
 
-        Delay the setup until Home Assistant is fully initialized.
-        """
-        server_name = config.get(CONF_HOST)
-        sensor_name = config.get(CONF_NAME)
-
-        add_devices([DomainExpiry(sensor_name, server_name)],
-                    True)
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
+    add_devices([DomainExpiry(sensor_name, server_name)], True)
 
 
 class DomainExpiry(Entity):
@@ -80,5 +67,9 @@ class DomainExpiry(Entity):
         """Fetch the domain information."""
         import whois
         domain = whois.whois(self.server_name)
-        expiry = domain.expiration_date - datetime.today()
-        self._state = expiry.days
+        if isinstance(domain.expiration_date, datetime):
+            expiry = domain.expiration_date - datetime.today()
+            self._state = expiry.days
+        else:
+            _LOGGER.error("Cannot get expiry date for %s", self.server_name)
+
