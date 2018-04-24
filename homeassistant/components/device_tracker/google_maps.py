@@ -19,7 +19,7 @@ from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['locationsharinglib==1.2.1']
+REQUIREMENTS = ['locationsharinglib==1.2.2']
 
 CREDENTIALS_FILE = '.google_maps_location_sharing.cookies'
 
