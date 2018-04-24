@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         camera.update_file_path(file_path)
         return True
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN,
         SERVICE_UPDATE_FILE_PATH,
         update_file_path_service,
