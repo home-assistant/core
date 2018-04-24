@@ -31,8 +31,9 @@ DEFAULT_NAME = 'Unnamed zone'
 DEFAULT_PASSIVE = False
 DEFAULT_RADIUS = 100
 
+HOME_ZONE = 'home'
 ENTITY_ID_FORMAT = 'zone.{}'
-ENTITY_ID_HOME = ENTITY_ID_FORMAT.format('home')
+ENTITY_ID_HOME = ENTITY_ID_FORMAT.format(HOME_ZONE)
 
 ICON_HOME = 'mdi:home'
 ICON_IMPORT = 'mdi:import'
@@ -112,17 +113,16 @@ async def async_setup(hass, config):
             hass.async_add_job(hass.config_entries.flow.async_init(
                 DOMAIN, source='import', data=entry
             ))
-        else:
-            print('already configured', entry[CONF_NAME])
 
-    if hass.config.location_name not in configured_zones(hass):
+    if HOME_ZONE not in configured_zones(hass):
         entry = {
             CONF_NAME: hass.config.location_name,
             CONF_LATITUDE: hass.config.latitude,
             CONF_LONGITUDE: hass.config.longitude,
             CONF_RADIUS: DEFAULT_RADIUS,
             CONF_ICON: ICON_HOME,
-            CONF_PASSIVE: False
+            CONF_PASSIVE: False,
+            HOME_ZONE: True
         }
         hass.async_add_job(hass.config_entries.flow.async_init(
             DOMAIN, source='import', data=entry
@@ -138,8 +138,11 @@ async def async_setup_entry(hass, config_entry):
     zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
                 entry.get(CONF_RADIUS), entry.get(CONF_ICON),
                 entry.get(CONF_PASSIVE))
-    zone.entity_id = async_generate_entity_id(
-        ENTITY_ID_FORMAT, name, None, hass)
+    if HOME_ZONE in entry:
+        zone.entity_id = ENTITY_ID_HOME
+    else:
+        zone.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, name, None, hass)
     await asyncio.wait([zone.async_update_ha_state()], loop=hass.loop)
     return True
 
