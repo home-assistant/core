@@ -5,14 +5,17 @@
             "init": {
                 "title": "Define zone parameters",
                 "data": {
-                    "name": "name",
+                    "name": "Name",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "radius": "Radius",
                     "passive": "Passive",
-                    "icon": "icon"
+                    "icon": "Icon"
                 }
             }
+        },
+        "error": {
+            "name_exists": "Name already exists"
         }
     }
 }

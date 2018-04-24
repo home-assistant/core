@@ -13,6 +13,9 @@
                     "icon": "Icon"
                 }
             }
+        },
+        "error": {
+            "name_exists": "Name already exists"
         }
     }
 }

@@ -108,14 +108,14 @@ def in_zone(zone, latitude, longitude, radius=0):
 async def async_setup(hass, config):
     """Import new configured zone as config entry."""
     for _, entry in config_per_platform(config, DOMAIN):
-        if (entry[CONF_LATITUDE], entry[CONF_LONGITUDE]) not in \
-            configured_zones(hass):
+        if entry[CONF_NAME] not in configured_zones(hass):
             hass.async_add_job(hass.config_entries.flow.async_init(
                 DOMAIN, source='import', data=entry
             ))
+        else:
+            print('already configured', entry[CONF_NAME])
 
-    if (hass.config.latitude, hass.config.longitude) not in \
-        configured_zones(hass):
+    if hass.config.location_name not in configured_zones(hass):
         entry = {
             CONF_NAME: hass.config.location_name,
             CONF_LATITUDE: hass.config.latitude,

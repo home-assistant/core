@@ -14,8 +14,8 @@ from .const import CONF_PASSIVE, DOMAIN
 @callback
 def configured_zones(hass):
     """Return a set of the configured hosts."""
-    return set((entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE]) for \
-        entry in hass.config_entries.async_entries(DOMAIN))
+    return set((entry.data[CONF_NAME]) for
+               entry in hass.config_entries.async_entries(DOMAIN))
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -30,12 +30,15 @@ class ZoneFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
+        errors = {}
+
         if user_input is not None:
-            print(user_input)
-            return self.async_create_entry(
-                title='Zone ' + user_input[CONF_NAME],
-                data=user_input
-            )
+            if user_input[CONF_NAME] not in configured_zones(self.hass):
+                return self.async_create_entry(
+                    title='Zone ' + user_input[CONF_NAME],
+                    data=user_input,
+                )
+            errors['base'] = 'name_exists'
 
         return self.async_show_form(
             step_id='init',
@@ -46,7 +49,8 @@ class ZoneFlowHandler(data_entry_flow.FlowHandler):
                 vol.Optional(CONF_RADIUS): vol.Coerce(float),
                 vol.Optional(CONF_ICON): str,
                 vol.Optional(CONF_PASSIVE): bool,
-            })
+            }),
+            errors=errors,
         )
 
     async def async_step_import(self, import_config):
@@ -57,8 +61,7 @@ class ZoneFlowHandler(data_entry_flow.FlowHandler):
         This will execute for any zone that does not have a
         config entry yet (based on latitude and longitude).
         """
-
         return self.async_create_entry(
             title='Zone ' + import_config[CONF_NAME],
-            data=import_config
+            data=import_config,
         )
