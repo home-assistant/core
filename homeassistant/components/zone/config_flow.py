@@ -7,6 +7,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_ICON, CONF_RADIUS)
 from homeassistant.core import callback
+from homeassistant.util import slugify
 
 from .const import CONF_PASSIVE, DOMAIN
 
@@ -14,7 +15,7 @@ from .const import CONF_PASSIVE, DOMAIN
 @callback
 def configured_zones(hass):
     """Return a set of the configured hosts."""
-    return set((entry.data[CONF_NAME]) for
+    return set((slugify(entry.data[CONF_NAME])) for
                entry in hass.config_entries.async_entries(DOMAIN))
 
 

@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.loader import bind_hass
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.util import slugify
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.location import distance
 
@@ -108,13 +109,16 @@ def in_zone(zone, latitude, longitude, radius=0):
 
 async def async_setup(hass, config):
     """Import new configured zone as config entry."""
+    zones = set()
     for _, entry in config_per_platform(config, DOMAIN):
-        if entry[CONF_NAME] not in configured_zones(hass):
+        name = slugify(entry[CONF_NAME])
+        if name not in configured_zones(hass):
+            zones.add(name)
             hass.async_add_job(hass.config_entries.flow.async_init(
                 DOMAIN, source='import', data=entry
             ))
 
-    if HOME_ZONE not in configured_zones(hass):
+    if  HOME_ZONE not in zones and HOME_ZONE not in configured_zones(hass):
         entry = {
             CONF_NAME: hass.config.location_name,
             CONF_LATITUDE: hass.config.latitude,
@@ -122,7 +126,7 @@ async def async_setup(hass, config):
             CONF_RADIUS: DEFAULT_RADIUS,
             CONF_ICON: ICON_HOME,
             CONF_PASSIVE: False,
-            HOME_ZONE: True
+            HOME_ZONE: ENTITY_ID_HOME
         }
         hass.async_add_job(hass.config_entries.flow.async_init(
             DOMAIN, source='import', data=entry
@@ -139,7 +143,7 @@ async def async_setup_entry(hass, config_entry):
                 entry.get(CONF_RADIUS), entry.get(CONF_ICON),
                 entry.get(CONF_PASSIVE))
     if HOME_ZONE in entry:
-        zone.entity_id = ENTITY_ID_HOME
+        zone.entity_id = entry[HOME_ZONE]
     else:
         zone.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, name, None, hass)
