@@ -41,8 +41,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SocialBladeSensor(Entity):
-    """Social Blade Sensor will check the subscribers / total views on
-     givin youtube channel using the channel id."""
+    """
+    Social Blade Sensor will check the subscribers / total views on
+    givin youtube channel using the channel id.
+     """
 
     MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
 
