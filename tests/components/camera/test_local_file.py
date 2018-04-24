@@ -147,8 +147,8 @@ def test_update_file_path(hass):
         }
 
         yield from hass.services.async_call(camera.DOMAIN,
-                                     SERVICE_UPDATE_FILE_PATH,
-                                     service_data)
+                                            SERVICE_UPDATE_FILE_PATH,
+                                            service_data)
         yield from hass.async_block_till_done()
 
         state = hass.states.get('camera.local_file')
