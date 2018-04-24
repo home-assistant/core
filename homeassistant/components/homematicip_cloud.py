@@ -31,7 +31,7 @@ CONF_AUTHTOKEN = 'authtoken'
 
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN, default=[]): vol.All(cv.ensure_list, [vol.Schema({
-        vol.Optional(CONF_NAME): vol.Any(None, cv.string),
+        vol.Optional(CONF_NAME): vol.Any(cv.string),
         vol.Required(CONF_ACCESSPOINT): cv.string,
         vol.Required(CONF_AUTHTOKEN): cv.string,
     })]),
