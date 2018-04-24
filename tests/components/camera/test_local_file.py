@@ -6,7 +6,7 @@ from unittest import mock
 # https://bugs.python.org/issue23004
 from mock_open import MockOpen
 
-from homeassistant.components import camera
+from homeassistant.components.camera import DOMAIN
 from homeassistant.components.camera.local_file import (
     SERVICE_UPDATE_FILE_PATH)
 from homeassistant.setup import async_setup_component
@@ -146,7 +146,7 @@ def test_update_file_path(hass):
             "file_path": 'new/path.jpg'
         }
 
-        yield from hass.services.async_call(camera.DOMAIN,
+        yield from hass.services.async_call(DOMAIN,
                                             SERVICE_UPDATE_FILE_PATH,
                                             service_data)
         yield from hass.async_block_till_done()
