@@ -118,7 +118,7 @@ async def async_setup(hass, config):
                 DOMAIN, source='import', data=entry
             ))
 
-    if  HOME_ZONE not in zones and HOME_ZONE not in configured_zones(hass):
+    if HOME_ZONE not in zones and HOME_ZONE not in configured_zones(hass):
         entry = {
             CONF_NAME: hass.config.location_name,
             CONF_LATITUDE: hass.config.latitude,
