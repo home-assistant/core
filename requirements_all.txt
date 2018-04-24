@@ -389,7 +389,7 @@ holidays==0.9.4
 home-assistant-frontend==20180420.0
 
 # homeassistant.components.homekit_controller
-# homekit==0.5
+# homekit==0.6
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.8
@@ -754,7 +754,7 @@ pyeconet==0.0.5
 pyedimax==0.1
 
 # homeassistant.components.eight_sleep
-pyeight==0.0.7
+pyeight==0.0.8
 
 # homeassistant.components.media_player.emby
 pyemby==1.5
@@ -778,7 +778,7 @@ pyfritzhome==0.3.7
 pyfttt==0.3
 
 # homeassistant.components.cover.gogogate2
-pygogogate2==0.0.3
+pygogogate2==0.0.7
 
 # homeassistant.components.remote.harmony
 pyharmony==1.0.20

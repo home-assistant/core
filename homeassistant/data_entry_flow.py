@@ -52,7 +52,7 @@ class FlowManager:
 
     async def async_init(self, handler, *, source=SOURCE_USER, data=None):
         """Start a configuration flow."""
-        flow = await self._async_create_flow(handler)
+        flow = await self._async_create_flow(handler, source=source, data=data)
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex

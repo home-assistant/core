@@ -13,10 +13,12 @@ DEPENDENCIES = ['deconz']
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Set up scenes for deCONZ component."""
-    if discovery_info is None:
-        return
+    """Old way of setting up deCONZ scenes."""
+    pass
 
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up scenes for deCONZ component."""
     scenes = hass.data[DATA_DECONZ].scenes
     entities = []
 
