@@ -72,4 +72,3 @@ class DomainExpiry(Entity):
             self._state = expiry.days
         else:
             _LOGGER.error("Cannot get expiry date for %s", self.server_name)
-
