@@ -574,6 +574,7 @@ omit =
     homeassistant/components/sensor/discogs.py
     homeassistant/components/sensor/dnsip.py
     homeassistant/components/sensor/dovado.py
+    homeassistant/components/sensor/domain_expiry.py
     homeassistant/components/sensor/dte_energy_bridge.py
     homeassistant/components/sensor/dublin_bus_transport.py
     homeassistant/components/sensor/dwd_weather_warnings.py
