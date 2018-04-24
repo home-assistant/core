@@ -5,7 +5,7 @@ For more details about this sensor please refer to the documentation at
 https://home-assistant.io/components/sensor.domain_expiry/
 """
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import voluptuous as vol
 
@@ -19,6 +19,8 @@ REQUIREMENTS = ['python-whois==0.6.9']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Domain Expiry'
+
+SCAN_INTERVAL = timedelta(hours=24)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
