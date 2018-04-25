@@ -10,9 +10,10 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_LATITUDE,
-    CONF_LONGITUDE, CONF_ICON, CONF_RADIUS)
+    ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_ENTITY_ID,
+    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_ICON, CONF_RADIUS)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
@@ -125,11 +126,11 @@ async def async_setup(hass, config):
             CONF_LONGITUDE: hass.config.longitude,
             CONF_RADIUS: DEFAULT_RADIUS,
             CONF_ICON: ICON_HOME,
-            CONF_PASSIVE: False
+            CONF_PASSIVE: False,
+            CONF_ENTITY_ID: ENTITY_ID_HOME
         }
-        hass.async_add_job(hass.config_entries.flow.async_init(
-            DOMAIN, source='import', data=entry
-        ))
+        config_entry = ConfigEntry(1, DOMAIN, 'Home', entry, 'home-assistant')
+        hass.async_add_job(async_setup_entry(hass, config_entry))
 
     return True
 
@@ -143,8 +144,10 @@ async def async_setup_entry(hass, config_entry):
     zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
                 entry.get(CONF_RADIUS), entry.get(CONF_ICON),
                 entry.get(CONF_PASSIVE))
-    zone.entity_id = async_generate_entity_id(
-        ENTITY_ID_FORMAT, name, None, hass)
+    zone.entity_id = entry.get(CONF_ENTITY_ID)
+    if not zone.entity_id:
+        zone.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, name, None, hass)
     await asyncio.wait([zone.async_update_ha_state()], loop=hass.loop)
     hass.data[DOMAIN][name] = zone
     return True
