@@ -1152,9 +1152,6 @@ schiene==0.22
 # homeassistant.components.scsgate
 scsgate==0.1.0
 
-# homeassistant.components.sensor.dominionenergy
-selenium==3.11.0
-
 # homeassistant.components.notify.sendgrid
 sendgrid==5.3.0
 
