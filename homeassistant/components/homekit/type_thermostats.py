@@ -5,7 +5,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE, ATTR_TEMPERATURE,
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     ATTR_OPERATION_MODE, ATTR_OPERATION_LIST,
-    STATE_HEAT, STATE_COOL, STATE_AUTO,
+    STATE_HEAT, STATE_COOL, STATE_AUTO, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
@@ -41,6 +41,7 @@ class Thermostat(HomeAccessory):
         """Initialize a Thermostat accessory object."""
         super().__init__(*args, category=CATEGORY_THERMOSTAT)
         self._unit = TEMP_CELSIUS
+        self.power_state = False
         self.heat_cool_flag_target_state = False
         self.temperature_flag_target_state = False
         self.coolingthresh_flag_target_state = False
@@ -53,6 +54,9 @@ class Thermostat(HomeAccessory):
         if features & SUPPORT_TEMP_RANGE:
             self.chars.extend((CHAR_COOLING_THRESHOLD_TEMPERATURE,
                                CHAR_HEATING_THRESHOLD_TEMPERATURE))
+
+        if features & SUPPORT_ON_OFF:
+            self.power_state = True
 
         serv_thermostat = add_preload_service(
             self, SERV_THERMOSTAT, self.chars)
@@ -178,8 +182,10 @@ class Thermostat(HomeAccessory):
 
         # Update target operation mode
         operation_mode = new_state.attributes.get(ATTR_OPERATION_MODE)
-        if operation_mode \
-                and operation_mode in HC_HASS_TO_HOMEKIT:
+        if self.power_state and new_state.state == STATE_OFF:
+            self.char_target_heat_cool.set_value(
+                HC_HASS_TO_HOMEKIT[STATE_OFF])
+        elif operation_mode and operation_mode in HC_HASS_TO_HOMEKIT:
             if not self.heat_cool_flag_target_state:
                 self.char_target_heat_cool.set_value(
                     HC_HASS_TO_HOMEKIT[operation_mode])
