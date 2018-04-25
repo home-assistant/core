@@ -95,10 +95,6 @@ class LocalFile(Camera):
     @property
     def device_state_attributes(self):
         """Return the camera state attributes."""
-        attr = super(LocalFile, self).device_state_attributes
-        if attr is None:
-            attr = {}
         return {
             'file_path': self._file_path,
-            **attr
-            }
+        }
