@@ -53,7 +53,7 @@ SOURCE_IDS = vol.All(vol.Coerce(int), vol.Range(min=1, max=8))
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_PORT, CONF_HOST),
-    PLATFORM_SCHEMA=PLATFORM_SCHEMA.extend({
+    PLATFORM_SCHEMA.extend({
         vol.Exclusive(CONF_PORT, CONF_TYPE): cv.string,
         vol.Exclusive(CONF_HOST, CONF_TYPE): cv.string,
         vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
