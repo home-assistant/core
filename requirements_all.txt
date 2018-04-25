@@ -392,7 +392,7 @@ home-assistant-frontend==20180425.0
 # homekit==0.6
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.8
+homematicip==0.9.2.4
 
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
