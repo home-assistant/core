@@ -1,4 +1,5 @@
 """Test zone component."""
+
 import unittest
 from unittest.mock import patch, Mock
 
@@ -61,6 +62,7 @@ async def test_setup_entry_successful(hass):
         zone.CONF_RADIUS: 250,
         zone.CONF_RADIUS: True
     }
+    hass.data[zone.DOMAIN] = {}
     assert await zone.async_setup_entry(hass, entry) is True
     assert 'Test Zone' in hass.data[zone.DOMAIN]
 

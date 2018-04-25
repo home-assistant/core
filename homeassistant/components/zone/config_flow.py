@@ -34,8 +34,9 @@ class ZoneFlowHandler(data_entry_flow.FlowHandler):
         errors = {}
 
         if user_input is not None:
-            if slugify(user_input[CONF_NAME]) not in \
-               configured_zones(self.hass):
+            name = slugify(user_input[CONF_NAME])
+            if name not in configured_zones(self.hass) and \
+                name not in self.hass.data[DOMAIN]:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=user_input,

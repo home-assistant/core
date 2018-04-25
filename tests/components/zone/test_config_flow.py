@@ -1,8 +1,10 @@
 """Tests for zone config flow."""
+
 from homeassistant.components.zone import config_flow
 from homeassistant.components.zone.const import CONF_PASSIVE, DOMAIN
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_ICON, CONF_RADIUS)
+
 from tests.common import MockConfigEntry
 
 

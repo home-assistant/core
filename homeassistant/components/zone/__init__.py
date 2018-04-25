@@ -4,16 +4,14 @@ Support for the definition of zones.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zone/
 """
-import asyncio
+
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_ENTITY_ID, CONF_NAME, CONF_LATITUDE,
-    CONF_LONGITUDE, CONF_ICON, CONF_RADIUS)
+    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_ICON, CONF_RADIUS)
 from homeassistant.helpers import config_per_platform
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.util import slugify
@@ -47,7 +45,14 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-    """Import new configured zone as config entry."""
+    """Import new configured zone as config entry.
+
+    Import all zones from configuration that is not already a config entry.
+    Create a zone entity for the homeassistant zone in configuration.yaml,
+    but don't cache this as a config entry.
+    """
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
     zones = set()
     zone_entries = configured_zones(hass)
     for _, entry in config_per_platform(config, DOMAIN):
@@ -59,35 +64,26 @@ async def async_setup(hass, config):
             ))
 
     if HOME_ZONE not in zones and HOME_ZONE not in zone_entries:
-        entry = {
-            CONF_NAME: hass.config.location_name,
-            CONF_LATITUDE: hass.config.latitude,
-            CONF_LONGITUDE: hass.config.longitude,
-            CONF_RADIUS: DEFAULT_RADIUS,
-            CONF_ICON: ICON_HOME,
-            CONF_PASSIVE: False,
-            CONF_ENTITY_ID: ENTITY_ID_HOME
-        }
-        config_entry = ConfigEntry(1, DOMAIN, 'Home', entry, 'home-assistant')
-        hass.async_add_job(async_setup_entry(hass, config_entry))
+        name = hass.config.location_name
+        zone = Zone(hass, name, hass.config.latitude, hass.config.longitude,
+                    DEFAULT_RADIUS, ICON_HOME, False)
+        zone.entity_id = ENTITY_ID_HOME
+        hass.async_add_job(zone.async_update_ha_state())
+        hass.data[DOMAIN][name] = zone
 
     return True
 
 
 async def async_setup_entry(hass, config_entry):
     """Set up zone as config entry."""
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
     entry = config_entry.data
     name = entry[CONF_NAME]
     zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
                 entry.get(CONF_RADIUS), entry.get(CONF_ICON),
                 entry.get(CONF_PASSIVE))
-    zone.entity_id = entry.get(CONF_ENTITY_ID)
-    if not zone.entity_id:
-        zone.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, name, None, hass)
-    await asyncio.wait([zone.async_update_ha_state()], loop=hass.loop)
+    zone.entity_id = async_generate_entity_id(
+        ENTITY_ID_FORMAT, name, None, hass)
+    hass.async_add_job(zone.async_update_ha_state())
     hass.data[DOMAIN][name] = zone
     return True
 

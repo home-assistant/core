@@ -1,4 +1,5 @@
 """Component entity and functionality."""
+
 from homeassistant.const import ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import bind_hass
