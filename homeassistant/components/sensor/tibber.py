@@ -149,7 +149,6 @@ class TibberSensor(Entity):
                 state = price_total
                 self._last_updated = price_time
             if now.date() == price_time.date():
-                print(now,  price_time, price_time.date(), price_total)
                 max_price = max(max_price, price_total)
                 min_price = min(min_price, price_total)
             self._state = state
