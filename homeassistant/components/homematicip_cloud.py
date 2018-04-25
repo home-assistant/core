@@ -24,6 +24,7 @@ DOMAIN = 'homematicip_cloud'
 COMPONENTS = [
     'sensor',
     'binary_sensor',
+    'switch',
 ]
 
 CONF_NAME = 'name'
