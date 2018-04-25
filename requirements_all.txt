@@ -180,7 +180,7 @@ botocore==1.7.34
 
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
-broadlink==0.8.0
+broadlink==0.9.0
 
 # homeassistant.components.device_tracker.bluetooth_tracker
 bt_proximity==0.1.2
