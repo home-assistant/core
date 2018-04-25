@@ -131,8 +131,8 @@ play_media:
       description: The ID of the content to play. Platform dependent.
       example: 'https://home-assistant.io/images/cast/splash.png'
     media_content_type:
-      description: The type of the content to play. Must be one of MUSIC, TVSHOW, VIDEO, EPISODE, CHANNEL or PLAYLIST
-      example: 'MUSIC'
+      description: The type of the content to play. Must be one of music, tvshow, video, episode, channel or playlist
+      example: 'music'
 
 select_source:
   description: Send the media player the command to change input source.
@@ -402,3 +402,13 @@ songpal_set_sound_setting:
     value:
       description: Value to set.
       example: 'on'
+
+blackbird_set_all_zones:
+  description: Set all Blackbird zones to a single source.
+  fields:
+    entity_id:
+      description: Name of any blackbird zone.
+      example: 'media_player.zone_1'
+    source:
+      description: Name of source to switch to.
+      example: 'Source 1'

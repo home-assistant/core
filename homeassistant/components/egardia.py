@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_PORT, CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_NAME,
     EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pythonegardia==1.0.38']
+REQUIREMENTS = ['pythonegardia==1.0.39']
 
 _LOGGER = logging.getLogger(__name__)
 

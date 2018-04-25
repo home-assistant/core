@@ -87,6 +87,8 @@ class EmailReader(object):
         _, message_data = self.connection.uid(
             'fetch', message_uid, '(RFC822)')
 
+        if message_data is None:
+            return None
         raw_email = message_data[0][1]
         email_message = email.message_from_bytes(raw_email)
         return email_message

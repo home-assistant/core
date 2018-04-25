@@ -182,10 +182,8 @@ def nice_print_node(node):
     node_dict['values'] = {value_id: _obj_to_dict(value)
                            for value_id, value in node.values.items()}
 
-    print("\n\n\n")
-    print("FOUND NODE", node.product_name)
-    pprint(node_dict)
-    print("\n\n\n")
+    _LOGGER.info("FOUND NODE %s \n"
+                 "%s", node.product_name, node_dict)
 
 
 def get_config_value(node, value_index, tries=5):
@@ -442,9 +440,16 @@ def setup(hass, config):
             if value.index != param:
                 continue
             if value.type in [const.TYPE_LIST, const.TYPE_BOOL]:
-                value.data = selection
-                _LOGGER.info("Setting config list parameter %s on Node %s "
-                             "with selection %s", param, node_id,
+                value.data = str(selection)
+                _LOGGER.info("Setting config parameter %s on Node %s "
+                             "with list/bool selection %s", param, node_id,
+                             str(selection))
+                return
+            if value.type == const.TYPE_BUTTON:
+                network.manager.pressButton(value.value_id)
+                network.manager.releaseButton(value.value_id)
+                _LOGGER.info("Setting config parameter %s on Node %s "
+                             "with button selection %s", param, node_id,
                              selection)
                 return
             value.data = int(selection)

@@ -25,30 +25,35 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
         for device in gateway.devices['binary_sensor']:
             model = device['model']
-            if model in ['motion', 'sensor_motion.aq2']:
+            if model in ['motion', 'sensor_motion', 'sensor_motion.aq2']:
                 devices.append(XiaomiMotionSensor(device, hass, gateway))
-            elif model in ['magnet', 'sensor_magnet.aq2']:
+            elif model in ['magnet', 'sensor_magnet', 'sensor_magnet.aq2']:
                 devices.append(XiaomiDoorSensor(device, gateway))
             elif model == 'sensor_wleak.aq1':
                 devices.append(XiaomiWaterLeakSensor(device, gateway))
-            elif model == 'smoke':
+            elif model in ['smoke', 'sensor_smoke']:
                 devices.append(XiaomiSmokeSensor(device, gateway))
-            elif model == 'natgas':
+            elif model in ['natgas', 'sensor_natgas']:
                 devices.append(XiaomiNatgasSensor(device, gateway))
-            elif model in ['switch', 'sensor_switch.aq2', 'sensor_switch.aq3']:
-                devices.append(XiaomiButton(device, 'Switch', 'status',
+            elif model in ['switch', 'sensor_switch',
+                           'sensor_switch.aq2', 'sensor_switch.aq3']:
+                if 'proto' not in device or int(device['proto'][0:1]) == 1:
+                    data_key = 'status'
+                else:
+                    data_key = 'channel_0'
+                devices.append(XiaomiButton(device, 'Switch', data_key,
                                             hass, gateway))
-            elif model == '86sw1':
+            elif model in ['86sw1', 'sensor_86sw1.aq1']:
                 devices.append(XiaomiButton(device, 'Wall Switch', 'channel_0',
                                             hass, gateway))
-            elif model == '86sw2':
+            elif model in ['86sw2', 'sensor_86sw2.aq1']:
                 devices.append(XiaomiButton(device, 'Wall Switch (Left)',
                                             'channel_0', hass, gateway))
                 devices.append(XiaomiButton(device, 'Wall Switch (Right)',
                                             'channel_1', hass, gateway))
                 devices.append(XiaomiButton(device, 'Wall Switch (Both)',
                                             'dual_channel', hass, gateway))
-            elif model == 'cube':
+            elif model in ['cube', 'sensor_cube']:
                 devices.append(XiaomiCube(device, hass, gateway))
     add_devices(devices)
 
@@ -129,8 +134,12 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         """Initialize the XiaomiMotionSensor."""
         self._hass = hass
         self._no_motion_since = 0
+        if 'proto' not in device or int(device['proto'][0:1]) == 1:
+            data_key = 'status'
+        else:
+            data_key = 'motion_status'
         XiaomiBinarySensor.__init__(self, device, 'Motion Sensor', xiaomi_hub,
-                                    'status', 'motion')
+                                    data_key, 'motion')
 
     @property
     def device_state_attributes(self):

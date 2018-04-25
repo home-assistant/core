@@ -4,13 +4,13 @@ Support for the Hive devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.hive/
 """
-import colorsys
 from homeassistant.components.hive import DATA_HIVE
 from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_COLOR_TEMP,
-                                            ATTR_RGB_COLOR,
+                                            ATTR_HS_COLOR,
                                             SUPPORT_BRIGHTNESS,
                                             SUPPORT_COLOR_TEMP,
-                                            SUPPORT_RGB_COLOR, Light)
+                                            SUPPORT_COLOR, Light)
+import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['hive']
 
@@ -34,6 +34,7 @@ class HiveDeviceLight(Light):
         self.device_type = hivedevice["HA_DeviceType"]
         self.light_device_type = hivedevice["Hive_Light_DeviceType"]
         self.session = hivesession
+        self.attributes = {}
         self.data_updatesource = '{}.{}'.format(self.device_type,
                                                 self.node_id)
         self.session.entities.append(self)
@@ -47,6 +48,11 @@ class HiveDeviceLight(Light):
     def name(self):
         """Return the display name of this light."""
         return self.node_name
+
+    @property
+    def device_state_attributes(self):
+        """Show Device Attributes."""
+        return self.attributes
 
     @property
     def brightness(self):
@@ -75,10 +81,11 @@ class HiveDeviceLight(Light):
             return self.session.light.get_color_temp(self.node_id)
 
     @property
-    def rgb_color(self) -> tuple:
-        """Return the RBG color value."""
+    def hs_color(self) -> tuple:
+        """Return the hs color value."""
         if self.light_device_type == "colourtuneablelight":
-            return self.session.light.get_color(self.node_id)
+            rgb = self.session.light.get_color(self.node_id)
+            return color_util.color_RGB_to_hs(*rgb)
 
     @property
     def is_on(self):
@@ -99,15 +106,11 @@ class HiveDeviceLight(Light):
         if ATTR_COLOR_TEMP in kwargs:
             tmp_new_color_temp = kwargs.get(ATTR_COLOR_TEMP)
             new_color_temp = round(1000000 / tmp_new_color_temp)
-        if ATTR_RGB_COLOR in kwargs:
-            get_new_color = kwargs.get(ATTR_RGB_COLOR)
-            tmp_new_color = colorsys.rgb_to_hsv(get_new_color[0],
-                                                get_new_color[1],
-                                                get_new_color[2])
-            hue = int(round(tmp_new_color[0] * 360))
-            saturation = int(round(tmp_new_color[1] * 100))
-            value = int(round((tmp_new_color[2] / 255) * 100))
-            new_color = (hue, saturation, value)
+        if ATTR_HS_COLOR in kwargs:
+            get_new_color = kwargs.get(ATTR_HS_COLOR)
+            hue = int(get_new_color[0])
+            saturation = int(get_new_color[1])
+            new_color = (hue, saturation, 100)
 
         self.session.light.turn_on(self.node_id, self.light_device_type,
                                    new_brightness, new_color_temp,
@@ -132,10 +135,12 @@ class HiveDeviceLight(Light):
             supported_features = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
         elif self.light_device_type == "colourtuneablelight":
             supported_features = (
-                SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR)
+                SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR)
 
         return supported_features
 
     def update(self):
         """Update all Node data from Hive."""
         self.session.core.update_data(self.node_id)
+        self.attributes = self.session.attributes.state_attributes(
+            self.node_id)

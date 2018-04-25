@@ -22,12 +22,22 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 62910
 DOMAIN = 'maxcube'
 
-MAXCUBE_HANDLE = 'maxcube'
+DATA_KEY = 'maxcube'
+
+NOTIFICATION_ID = 'maxcube_notification'
+NOTIFICATION_TITLE = 'Max!Cube gateway setup'
+
+CONF_GATEWAYS = 'gateways'
+
+CONFIG_GATEWAY = vol.Schema({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_GATEWAYS, default={}):
+            vol.All(cv.ensure_list, [CONFIG_GATEWAY])
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -36,18 +46,30 @@ def setup(hass, config):
     """Establish connection to MAX! Cube."""
     from maxcube.connection import MaxCubeConnection
     from maxcube.cube import MaxCube
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {}
 
-    host = config.get(DOMAIN).get(CONF_HOST)
-    port = config.get(DOMAIN).get(CONF_PORT)
+    connection_failed = 0
+    gateways = config[DOMAIN][CONF_GATEWAYS]
+    for gateway in gateways:
+        host = gateway[CONF_HOST]
+        port = gateway[CONF_PORT]
 
-    try:
-        cube = MaxCube(MaxCubeConnection(host, port))
-    except timeout:
-        _LOGGER.error("Connection to Max!Cube could not be established")
-        cube = None
+        try:
+            cube = MaxCube(MaxCubeConnection(host, port))
+            hass.data[DATA_KEY][host] = MaxCubeHandle(cube)
+        except timeout as ex:
+            _LOGGER.error("Unable to connect to Max!Cube gateway: %s", str(ex))
+            hass.components.persistent_notification.create(
+                'Error: {}<br />'
+                'You will need to restart Home Assistant after fixing.'
+                ''.format(ex),
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_ID)
+            connection_failed += 1
+
+    if connection_failed >= len(gateways):
         return False
-
-    hass.data[MAXCUBE_HANDLE] = MaxCubeHandle(cube)
 
     load_platform(hass, 'climate', DOMAIN)
     load_platform(hass, 'binary_sensor', DOMAIN)

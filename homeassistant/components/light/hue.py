@@ -13,12 +13,12 @@ import async_timeout
 
 import homeassistant.components.hue as hue
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
-    ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
-    FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION, SUPPORT_XY_COLOR, Light)
-import homeassistant.util.color as color_util
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
+    ATTR_TRANSITION, ATTR_HS_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
+    FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR, SUPPORT_TRANSITION,
+    Light)
+from homeassistant.util import color
 
 DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -28,8 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_HUE_ON_OFF = (SUPPORT_FLASH | SUPPORT_TRANSITION)
 SUPPORT_HUE_DIMMABLE = (SUPPORT_HUE_ON_OFF | SUPPORT_BRIGHTNESS)
 SUPPORT_HUE_COLOR_TEMP = (SUPPORT_HUE_DIMMABLE | SUPPORT_COLOR_TEMP)
-SUPPORT_HUE_COLOR = (SUPPORT_HUE_DIMMABLE | SUPPORT_EFFECT |
-                     SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR)
+SUPPORT_HUE_COLOR = (SUPPORT_HUE_DIMMABLE | SUPPORT_EFFECT | SUPPORT_COLOR)
 SUPPORT_HUE_EXTENDED = (SUPPORT_HUE_COLOR_TEMP | SUPPORT_HUE_COLOR)
 
 SUPPORT_HUE = {
@@ -50,11 +49,17 @@ GROUP_MIN_API_VERSION = (1, 13, 0)
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Set up the Hue lights."""
-    if discovery_info is None:
-        return
+    """Old way of setting up Hue lights.
 
-    bridge = hass.data[hue.DOMAIN][discovery_info['host']]
+    Can only be called when a user accidentally mentions hue platform in their
+    config. But even in that case it would have been ignored.
+    """
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the Hue lights from a config entry."""
+    bridge = hass.data[hue.DOMAIN][config_entry.data['host']]
     cur_lights = {}
     cur_groups = {}
 
@@ -228,15 +233,43 @@ class HueLight(Light):
         return self.light.state.get('bri')
 
     @property
-    def xy_color(self):
-        """Return the XY color value."""
+    def _color_mode(self):
+        """Return the hue color mode."""
         if self.is_group:
-            return self.light.action.get('xy')
-        return self.light.state.get('xy')
+            return self.light.action.get('colormode')
+        return self.light.state.get('colormode')
+
+    @property
+    def hs_color(self):
+        """Return the hs color value."""
+        # pylint: disable=redefined-outer-name
+        mode = self._color_mode
+
+        if mode not in ('hs', 'xy'):
+            return
+
+        source = self.light.action if self.is_group else self.light.state
+
+        hue = source.get('hue')
+        sat = source.get('sat')
+
+        # Sometimes the state will not include valid hue/sat values.
+        # Reported as issue 13434
+        if hue is not None and sat is not None:
+            return hue / 65535 * 360, sat / 255 * 100
+
+        if 'xy' not in source:
+            return None
+
+        return color.color_xy_to_hs(*source['xy'])
 
     @property
     def color_temp(self):
         """Return the CT color value."""
+        # Don't return color temperature unless in color temperature mode
+        if self._color_mode != "ct":
+            return None
+
         if self.is_group:
             return self.light.action.get('ct')
         return self.light.state.get('ct')
@@ -272,25 +305,15 @@ class HueLight(Light):
         if ATTR_TRANSITION in kwargs:
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
-        if ATTR_XY_COLOR in kwargs:
+        if ATTR_HS_COLOR in kwargs:
             if self.is_osram:
-                color_hue, sat = color_util.color_xy_to_hs(
-                    *kwargs[ATTR_XY_COLOR])
-                command['hue'] = color_hue / 360 * 65535
-                command['sat'] = sat / 100 * 255
+                command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
+                command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
             else:
-                command['xy'] = kwargs[ATTR_XY_COLOR]
-        elif ATTR_RGB_COLOR in kwargs:
-            if self.is_osram:
-                hsv = color_util.color_RGB_to_hsv(
-                    *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-                command['hue'] = hsv[0] / 360 * 65535
-                command['sat'] = hsv[1] / 100 * 255
-                command['bri'] = hsv[2] / 100 * 255
-            else:
-                xyb = color_util.color_RGB_to_xy(
-                    *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-                command['xy'] = xyb[0], xyb[1]
+                # Philips hue bulb models respond differently to hue/sat
+                # requests, so we convert to XY first to ensure a consistent
+                # color.
+                command['xy'] = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
