@@ -125,8 +125,7 @@ async def async_setup(hass, config):
             CONF_LONGITUDE: hass.config.longitude,
             CONF_RADIUS: DEFAULT_RADIUS,
             CONF_ICON: ICON_HOME,
-            CONF_PASSIVE: False,
-            HOME_ZONE: ENTITY_ID_HOME
+            CONF_PASSIVE: False
         }
         hass.async_add_job(hass.config_entries.flow.async_init(
             DOMAIN, source='import', data=entry
@@ -138,17 +137,14 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up zone as config entry."""
     if DOMAIN not in hass.data:
-        hass.data[DOMAIN]  = {}
+        hass.data[DOMAIN] = {}
     entry = config_entry.data
     name = entry[CONF_NAME]
     zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
                 entry.get(CONF_RADIUS), entry.get(CONF_ICON),
                 entry.get(CONF_PASSIVE))
-    if HOME_ZONE in entry:
-        zone.entity_id = entry[HOME_ZONE]
-    else:
-        zone.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, name, None, hass)
+    zone.entity_id = async_generate_entity_id(
+        ENTITY_ID_FORMAT, name, None, hass)
     await asyncio.wait([zone.async_update_ha_state()], loop=hass.loop)
     hass.data[DOMAIN][name] = zone
     return True
