@@ -41,8 +41,6 @@ ICON_IMPORT = 'mdi:import'
 
 STATE = 'zoning'
 
-ZONES = {}
-
 # The config that zone accepts is the same as if it has platforms.
 PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -138,6 +136,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up zone as config entry."""
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN]  = {}
     entry = config_entry.data
     name = entry[CONF_NAME]
     zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
@@ -149,13 +149,14 @@ async def async_setup_entry(hass, config_entry):
         zone.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, name, None, hass)
     await asyncio.wait([zone.async_update_ha_state()], loop=hass.loop)
-    ZONES[name] = zone
+    hass.data[DOMAIN][name] = zone
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    zone = ZONES.pop(config_entry.data[CONF_NAME])
+    zones = hass.data[DOMAIN]
+    zone = zones.pop(config_entry.data[CONF_NAME])
     await zone.async_remove()
     return True
 
