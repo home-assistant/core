@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.util import slugify
 
 from .config_flow import configured_zones
-from .const import CONF_PASSIVE, DOMAIN
+from .const import CONF_PASSIVE, DOMAIN, HOME_ZONE
 from .zone import Zone
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,6 @@ DEFAULT_NAME = 'Unnamed zone'
 DEFAULT_PASSIVE = False
 DEFAULT_RADIUS = 100
 
-HOME_ZONE = 'home'
 ENTITY_ID_FORMAT = 'zone.{}'
 ENTITY_ID_HOME = ENTITY_ID_FORMAT.format(HOME_ZONE)
 

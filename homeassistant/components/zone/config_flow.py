@@ -9,7 +9,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.util import slugify
 
-from .const import CONF_PASSIVE, DOMAIN
+from .const import CONF_PASSIVE, DOMAIN, HOME_ZONE
 
 
 @callback
@@ -35,8 +35,7 @@ class ZoneFlowHandler(data_entry_flow.FlowHandler):
 
         if user_input is not None:
             name = slugify(user_input[CONF_NAME])
-            if name not in configured_zones(self.hass) and \
-                name not in self.hass.data[DOMAIN]:
+            if name not in configured_zones(self.hass) and name != HOME_ZONE:
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=user_input,
