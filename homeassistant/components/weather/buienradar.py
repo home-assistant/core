@@ -122,15 +122,6 @@ class BrWeather(WeatherEntity):
                     return conditions.get(ccode)
 
     @property
-    def entity_picture(self):
-        """Return the entity picture to use in the frontend, if any."""
-        from buienradar.buienradar import (IMAGE)
-
-        if self._data and self._data.condition:
-            return self._data.condition.get(IMAGE, None)
-        return None
-
-    @property
     def temperature(self):
         """Return the current temperature."""
         return self._data.temperature
