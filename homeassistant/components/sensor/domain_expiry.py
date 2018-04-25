@@ -11,7 +11,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_HOST)
+from homeassistant.const import (CONF_NAME, CONF_DOMAIN)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['python-whois==0.6.9']
@@ -23,14 +23,14 @@ DEFAULT_NAME = 'Domain Expiry'
 SCAN_INTERVAL = timedelta(hours=24)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_DOMAIN): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up domain expiry sensor."""
-    server_name = config.get(CONF_HOST)
+    server_name = config.get(CONF_DOMAIN)
     sensor_name = config.get(CONF_NAME)
 
     add_devices([DomainExpiry(sensor_name, server_name)], True)
