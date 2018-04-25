@@ -21,7 +21,7 @@ async def test_flow_works(hass):
         })
 
     assert result['type'] == 'create_entry'
-    assert result['title'] == 'Zone Name'
+    assert result['title'] == 'Name'
     assert result['data'] == {
         CONF_NAME: 'Name',
         CONF_LATITUDE: '1.1',
@@ -59,7 +59,7 @@ async def test_import_works(hass):
         })
 
     assert result['type'] == 'create_entry'
-    assert result['title'] == 'Zone Name'
+    assert result['title'] == 'Name'
     assert result['data'] == {
         CONF_NAME: 'Name',
         CONF_LATITUDE: '1.1',

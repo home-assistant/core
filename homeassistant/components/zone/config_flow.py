@@ -37,7 +37,7 @@ class ZoneFlowHandler(data_entry_flow.FlowHandler):
             if slugify(user_input[CONF_NAME]) not in \
                configured_zones(self.hass):
                 return self.async_create_entry(
-                    title='Zone ' + user_input[CONF_NAME],
+                    title=user_input[CONF_NAME],
                     data=user_input,
                 )
             errors['base'] = 'name_exists'
@@ -64,6 +64,6 @@ class ZoneFlowHandler(data_entry_flow.FlowHandler):
         config entry yet (based on latitude and longitude).
         """
         return self.async_create_entry(
-            title='Zone ' + import_config[CONF_NAME],
+            title=import_config[CONF_NAME],
             data=import_config,
         )
