@@ -83,7 +83,7 @@ class GenericCamera(Camera):
 
     @property
     def frame_interval(self):
-        """Return the interval between frames of the mjpeg stream"""
+        """Return the interval between frames of the mjpeg stream."""
         return self._frame_interval
 
     def camera_image(self):

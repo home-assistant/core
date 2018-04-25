@@ -258,7 +258,7 @@ class Camera(Entity):
 
     @property
     def frame_interval(self):
-        """Return the interval between frames of the mjpeg stream"""
+        """Return the interval between frames of the mjpeg stream."""
         return 0.5
 
     def camera_image(self):
