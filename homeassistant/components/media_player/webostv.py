@@ -352,33 +352,30 @@ class LgWebOSDevice(MediaPlayerDevice):
         if media_type == MEDIA_TYPE_CHANNEL:
             _LOGGER.debug("Searching channel...")
             partial_match_channel_id = None
+            perfect_match_channel_id = None
 
             for channel in self._client.get_channels():
-                _LOGGER.debug(
-                    "Checking channel number <%s>, name <%s>, id <%s>...",
-                    channel['channelNumber'],
-                    channel['channelName'],
-                    channel['channelId'])
                 if media_id == channel['channelNumber']:
-                    _LOGGER.debug(
-                        "Perfect match on channel number: switching!")
-                    self._client.set_channel(channel['channelId'])
-                    return
+                    perfect_match_channel_id = channel['channelId']
+                    continue
                 elif media_id.lower() == channel['channelName'].lower():
-                    _LOGGER.debug(
-                        "Perfect match on channel name: switching!")
-                    self._client.set_channel(channel['channelId'])
-                    return
+                    perfect_match_channel_id = channel['channelId']
+                    continue
                 elif media_id.lower() in channel['channelName'].lower():
-                    _LOGGER.debug(
-                        "Partial match on channel name: saving it...")
                     partial_match_channel_id = channel['channelId']
 
-            if partial_match_channel_id is not None:
-                _LOGGER.debug(
-                    "Using partial match on channel name: switching!")
+            if perfect_match_channel_id is not None:
+                _LOGGER.info(
+                    "Switching to channel <%s> with perfect match",
+                    perfect_match_channel_id)
+                self._client.set_channel(perfect_match_channel_id)
+            elif partial_match_channel_id is not None:
+                _LOGGER.info(
+                    "Switching to channel <%s> with partial match",
+                    partial_match_channel_id)
                 self._client.set_channel(partial_match_channel_id)
-                return
+
+            return
 
     def media_play(self):
         """Send play command."""
