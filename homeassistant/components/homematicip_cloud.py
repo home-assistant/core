@@ -25,6 +25,7 @@ COMPONENTS = [
     'sensor',
     'binary_sensor',
     'switch',
+    'light'
 ]
 
 CONF_NAME = 'name'
