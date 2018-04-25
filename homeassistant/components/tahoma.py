@@ -38,6 +38,8 @@ TAHOMA_COMPONENTS = [
 TAHOMA_TYPES = {
     'rts:RollerShutterRTSComponent': 'cover',
     'rts:CurtainRTSComponent': 'cover',
+    'rts:BlindRTSComponent': 'cover',
+    'rts:VenetianBlindRTSComponent': 'cover',
     'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
     'io:RollerShutterVeluxIOComponent': 'cover',
     'io:RollerShutterGenericIOComponent': 'cover',
