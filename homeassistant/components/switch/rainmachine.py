@@ -23,10 +23,17 @@ ATTR_CYCLES = 'cycles'
 ATTR_DELAY = 'delay'
 ATTR_DELAY_ON = 'delay_on'
 ATTR_FREQUENCY = 'frequency'
+ATTR_IGNORE_WEATHER = 'ignoring_weather_data'
+ATTR_NEXT_RUN = 'next_run'
+ATTR_SIMULATION_EXPIRED = 'simulation_expired'
 ATTR_SOAK = 'soak'
 ATTR_START_TIME = 'start_time'
 ATTR_STATUS = 'status'
 ATTR_TOTAL_DURATION = 'total_duration'
+ATTR_USE_WATERSENSE = 'using_watersense'
+ATTR_WATER_SKIP = 'watering_percentage_skip_amount'
+ATTR_YEARLY_RECURRING = 'yearly_recurring'
+ATTR_ZONES = 'zones'
 
 DEFAULT_ZONE_RUN = 60 * 10
 
@@ -122,16 +129,12 @@ class RainMachineProgram(RainMachineEntity):
         """Initialize."""
         super().__init__(client, device_mac, program_json)
 
-        frequency = self.calculate_running_days(
-            self._entity_json['frequency']['type'],
-            self._entity_json['frequency']['param'])
-
         self._attrs.update({
             ATTR_CS_ON: self._entity_json['cs_on'],
             ATTR_CYCLES: self._entity_json['cycles'],
             ATTR_DELAY: self._entity_json['delay'],
             ATTR_DELAY_ON: self._entity_json['delay_on'],
-            ATTR_FREQUENCY: frequency,
+            ATTR_FREQUENCY: self._calculate_running_days(),
             ATTR_SOAK: self._entity_json['soak'],
             ATTR_START_TIME: self._entity_json['startTime'],
             ATTR_STATUS: PROGRAM_STATUS_MAP[self._entity_json['status']]
@@ -153,9 +156,15 @@ class RainMachineProgram(RainMachineEntity):
         return '{0}_program_{1}'.format(
             self.device_mac.replace(':', ''), self.rainmachine_entity_id)
 
-    @staticmethod
-    def calculate_running_days(freq_type: int, freq_param: str) -> str:
-        """Calculates running days from an RM string ("0010001100")."""
+    @property
+    def zones(self) -> list:
+        """Return a list of active zones associated with this program."""
+        return [z for z in self._entity_json['wateringTimes'] if z['active']]
+
+    def _calculate_running_days(self) -> str:
+        """Calculate running days from an RM string ("0010001100")."""
+        freq_type = self._entity_json['frequency']['type']
+        freq_param = self._entity_json['frequency']['param']
         if freq_type == 0:
             return 'Daily'
 
@@ -205,6 +214,28 @@ class RainMachineProgram(RainMachineEntity):
         try:
             self._entity_json = self._client.programs.get(
                 self.rainmachine_entity_id)
+
+            self._attrs.update({
+                ATTR_CS_ON: self._entity_json.get('cs_on'),
+                ATTR_CYCLES: self._entity_json.get('cycles'),
+                ATTR_DELAY: self._entity_json.get('delay'),
+                ATTR_DELAY_ON: self._entity_json.get('delay_on'),
+                ATTR_FREQUENCY: self._calculate_running_days(),
+                ATTR_IGNORE_WEATHER:
+                    self._entity_json.get('ignoreInternetWeather'),
+                ATTR_NEXT_RUN: self._entity_json.get('nextRun'),
+                ATTR_SIMULATION_EXPIRED:
+                    self._entity_json.get('simulationExpired'),
+                ATTR_SOAK: self._entity_json.get('soak'),
+                ATTR_START_TIME: self._entity_json.get('startTime'),
+                ATTR_STATUS:
+                    PROGRAM_STATUS_MAP[self._entity_json.get('status')],
+                ATTR_USE_WATERSENSE: self._entity_json.get('useWaterSense'),
+                ATTR_WATER_SKIP: self._entity_json.get('freq_modified'),
+                ATTR_YEARLY_RECURRING:
+                    self._entity_json.get('yearlyRecurring'),
+                ATTR_ZONES: ', '.join(z['name'] for z in self.zones)
+            })
         except exceptions.HTTPError as exc_info:
             _LOGGER.error('Unable to update info for program "%s"',
                           self.unique_id)
