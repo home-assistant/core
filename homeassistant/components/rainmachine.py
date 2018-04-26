@@ -52,8 +52,8 @@ def setup(hass, config):
     from regenmaschine.exceptions import HTTPError
 
     conf = config[DOMAIN]
-    ip_address = conf.get(CONF_IP_ADDRESS, None)
-    email_address = conf.get(CONF_EMAIL, None)
+    ip_address = conf.get(CONF_IP_ADDRESS)
+    email_address = conf.get(CONF_EMAIL)
     password = conf[CONF_PASSWORD]
 
     try:
