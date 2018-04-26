@@ -155,7 +155,7 @@ class TestMQTTComponent(unittest.TestCase):
         """Test invalid subscribe topics."""
         mqtt.valid_subscribe_topic('#')
         mqtt.valid_subscribe_topic('sport/#')
-        mqtt.valid_subscribe_topic('sport/#/')
+        self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'sport/#/')
         self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'foo/bar#')
         self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'foo/#/bar')
 
