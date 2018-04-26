@@ -47,7 +47,7 @@ CONFIG_SCHEMA = vol.Schema({
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
             }))
-}, extra=vol.ALLOW_EXTRA)
+    }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
