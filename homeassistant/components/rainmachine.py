@@ -34,28 +34,28 @@ MIN_SCAN_TIME_LOCAL = timedelta(seconds=1)
 MIN_SCAN_TIME_REMOTE = timedelta(seconds=1)
 MIN_SCAN_TIME_FORCED = timedelta(milliseconds=100)
 
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema(
-        vol.All(
-            cv.has_at_least_one_key(CONF_IP_ADDRESS, CONF_EMAIL),
-            {
-                vol.Exclusive(CONF_IP_ADDRESS, 'auth'): cv.string,
-                vol.Exclusive(CONF_EMAIL, 'auth'):
-                    vol.Email(),  # pylint: disable=no-value-for-parameter
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            }))
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema(
+            vol.All(
+                cv.has_at_least_one_key(CONF_IP_ADDRESS, CONF_EMAIL),
+                {
+                    vol.Exclusive(CONF_IP_ADDRESS, 'auth'): cv.string,
+                    vol.Exclusive(CONF_EMAIL, 'auth'):
+                        vol.Email(),  # pylint: disable=no-value-for-parameter
+                    vol.Required(CONF_PASSWORD): cv.string,
+                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+                }))
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Set up an Arlo component."""
     from regenmaschine import Authenticator, Client
     from regenmaschine.exceptions import HTTPError
-
-    _LOGGER.debug('Config data: %s', config)
 
     conf = config[DOMAIN]
     ip_address = conf.get(CONF_IP_ADDRESS, None)
@@ -67,14 +67,11 @@ def setup(hass, config):
             port = conf[CONF_PORT]
             ssl = conf[CONF_SSL]
             auth = Authenticator.create_local(
-                ip_address,
-                password,
-                port=port,
-                https=ssl)
-            _LOGGER.debug('Configuring local API: %s', auth)
+                ip_address, password, port=port, https=ssl)
+            _LOGGER.debug('Configuring local API: %s', ip_address)
         elif email_address:
             auth = Authenticator.create_remote(email_address, password)
-            _LOGGER.debug('Configuring remote API: %s', auth)
+            _LOGGER.debug('Configuring remote API')
 
         client = Client(auth)
         hass.data[DATA_RAINMACHINE] = client

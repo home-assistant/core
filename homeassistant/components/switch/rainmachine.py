@@ -43,11 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         _LOGGER.debug('Adding program: %s', program)
         entities.append(
-            RainMachineProgram(
-                client,
-                device_name,
-                device_mac,
-                program))
+            RainMachineProgram(client, device_name, device_mac, program))
 
     for zone in client.zones.all().get('zones', {}):
         if not zone.get('active'):
@@ -55,12 +51,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         _LOGGER.debug('Adding zone: %s', zone)
         entities.append(
-            RainMachineZone(
-                client,
-                device_name,
-                device_mac,
-                zone,
-                zone_run_time))
+            RainMachineZone(client, device_name, device_mac, zone,
+                            zone_run_time))
 
     add_devices(entities, True)
 
@@ -189,8 +181,10 @@ class RainMachineZone(RainMachineEntity):
         super().__init__(client, device_name, device_mac, zone_json)
         self._run_time = zone_run_time
         self._attrs.update({
-            ATTR_CYCLES: self._entity_json.get('noOfCycles'),
-            ATTR_TOTAL_DURATION: self._entity_json.get('userDuration')
+            ATTR_CYCLES:
+            self._entity_json.get('noOfCycles'),
+            ATTR_TOTAL_DURATION:
+            self._entity_json.get('userDuration')
         })
 
     @property
