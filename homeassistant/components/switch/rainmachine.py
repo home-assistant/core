@@ -1,130 +1,91 @@
 """Implements a RainMachine sprinkler controller for Home Assistant."""
 
-from datetime import timedelta
 from logging import getLogger
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS, CONF_EMAIL, CONF_IP_ADDRESS,
-    CONF_PASSWORD, CONF_PLATFORM, CONF_PORT, CONF_SCAN_INTERVAL, CONF_SSL)
-from homeassistant.util import Throttle
+from homeassistant.components.rainmachine import (
+    DATA_RAINMACHINE, aware_throttle)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS
 
 _LOGGER = getLogger(__name__)
-REQUIREMENTS = ['regenmaschine==0.4.1']
+DEPENDENCIES = ['rainmachine']
 
+ATTR_CS_ON = 'cs_on'
 ATTR_CYCLES = 'cycles'
+ATTR_DELAY = 'delay'
+ATTR_DELAY_ON = 'delay_on'
+ATTR_FREQUENCY = 'frequency'
+ATTR_SOAK = 'soak'
+ATTR_START_TIME = 'start_time'
+ATTR_STATUS = 'status'
 ATTR_TOTAL_DURATION = 'total_duration'
 
 CONF_ZONE_RUN_TIME = 'zone_run_time'
 
-DEFAULT_PORT = 8080
-DEFAULT_SSL = True
 DEFAULT_ZONE_RUN_SECONDS = 60 * 10
 
-MIN_SCAN_TIME_LOCAL = timedelta(seconds=1)
-MIN_SCAN_TIME_REMOTE = timedelta(seconds=5)
-MIN_SCAN_TIME_FORCED = timedelta(milliseconds=100)
+DAYS = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
+]
 
-PLATFORM_SCHEMA = vol.Schema(
-    vol.All(
-        cv.has_at_least_one_key(CONF_IP_ADDRESS, CONF_EMAIL),
-        {
-            vol.Required(CONF_PLATFORM): cv.string,
-            vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
-            vol.Exclusive(CONF_IP_ADDRESS, 'auth'): cv.string,
-            vol.Exclusive(CONF_EMAIL, 'auth'):
-                vol.Email(),  # pylint: disable=no-value-for-parameter
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN_SECONDS):
-                cv.positive_int
-        }),
-    extra=vol.ALLOW_EXTRA)
+PROGRAM_STATUS_MAP = {
+    0: 'Not Running',
+    1: 'Running',
+    2: 'Queued'
+}
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN_SECONDS):
+        cv.positive_int
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set this component up under its platform."""
-    import regenmaschine as rm
+    client = hass.data.get(DATA_RAINMACHINE)
+    device_name = client.provision.device_name()['name']
+    device_mac = client.provision.wifi()['macAddress']
 
-    _LOGGER.debug('Config data: %s', config)
+    _LOGGER.debug('Config received: %s', config)
 
-    ip_address = config.get(CONF_IP_ADDRESS, None)
-    email_address = config.get(CONF_EMAIL, None)
-    password = config[CONF_PASSWORD]
     zone_run_time = config[CONF_ZONE_RUN_TIME]
 
-    try:
-        if ip_address:
-            _LOGGER.debug('Configuring local API')
+    entities = []
+    for program in client.programs.all().get('programs', {}):
+        if not program.get('active'):
+            continue
 
-            port = config[CONF_PORT]
-            ssl = config[CONF_SSL]
-            auth = rm.Authenticator.create_local(
-                ip_address, password, port=port, https=ssl)
-        elif email_address:
-            _LOGGER.debug('Configuring remote API')
-            auth = rm.Authenticator.create_remote(email_address, password)
+        _LOGGER.debug('Adding program: %s', program)
+        entities.append(
+            RainMachineProgram(
+                client,
+                device_name,
+                device_mac,
+                program))
 
-        _LOGGER.debug('Querying against: %s', auth.url)
+    for zone in client.zones.all().get('zones', {}):
+        if not zone.get('active'):
+            continue
 
-        client = rm.Client(auth)
-        device_name = client.provision.device_name()['name']
-        device_mac = client.provision.wifi()['macAddress']
+        _LOGGER.debug('Adding zone: %s', zone)
+        entities.append(
+            RainMachineZone(
+                client,
+                device_name,
+                device_mac,
+                zone,
+                zone_run_time))
 
-        entities = []
-        for program in client.programs.all().get('programs', {}):
-            if not program.get('active'):
-                continue
-
-            _LOGGER.debug('Adding program: %s', program)
-            entities.append(
-                RainMachineProgram(client, device_name, device_mac, program))
-
-        for zone in client.zones.all().get('zones', {}):
-            if not zone.get('active'):
-                continue
-
-            _LOGGER.debug('Adding zone: %s', zone)
-            entities.append(
-                RainMachineZone(client, device_name, device_mac, zone,
-                                zone_run_time))
-
-        add_devices(entities)
-    except rm.exceptions.HTTPError as exc_info:
-        _LOGGER.error('An HTTP error occurred while talking with RainMachine')
-        _LOGGER.debug(exc_info)
-        return False
-    except UnboundLocalError as exc_info:
-        _LOGGER.error('Could not authenticate against RainMachine')
-        _LOGGER.debug(exc_info)
-        return False
-
-
-def aware_throttle(api_type):
-    """Create an API type-aware throttler."""
-    _decorator = None
-    if api_type == 'local':
-
-        @Throttle(MIN_SCAN_TIME_LOCAL, MIN_SCAN_TIME_FORCED)
-        def decorator(function):
-            """Create a local API throttler."""
-            return function
-
-        _decorator = decorator
-    else:
-
-        @Throttle(MIN_SCAN_TIME_REMOTE, MIN_SCAN_TIME_FORCED)
-        def decorator(function):
-            """Create a remote API throttler."""
-            return function
-
-        _decorator = decorator
-
-    return _decorator
+    add_devices(entities, True)
 
 
 class RainMachineEntity(SwitchDevice):
@@ -135,6 +96,7 @@ class RainMachineEntity(SwitchDevice):
         self._api_type = 'remote' if client.auth.using_remote_api else 'local'
         self._client = client
         self._entity_json = entity_json
+
         self.device_mac = device_mac
         self.device_name = device_name
 
@@ -146,8 +108,12 @@ class RainMachineEntity(SwitchDevice):
     @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
-        if self._client:
-            return self._attrs
+        return self._attrs
+
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return 'mdi:water'
 
     @property
     def is_enabled(self) -> bool:
@@ -184,6 +150,25 @@ class RainMachineEntity(SwitchDevice):
 class RainMachineProgram(RainMachineEntity):
     """A RainMachine program."""
 
+    def __init__(self, client, device_name, device_mac, program_json):
+        """Initialize."""
+        super().__init__(client, device_name, device_mac, program_json)
+
+        frequency = calculate_running_days(
+            self._entity_json['frequency']['type'],
+            self._entity_json['frequency']['param'])
+
+        self._attrs.update({
+            ATTR_CS_ON: self._entity_json['cs_on'],
+            ATTR_CYCLES: self._entity_json['cycles'],
+            ATTR_DELAY: self._entity_json['delay'],
+            ATTR_DELAY_ON: self._entity_json['delay_on'],
+            ATTR_FREQUENCY: frequency,
+            ATTR_SOAK: self._entity_json['soak'],
+            ATTR_START_TIME: self._entity_json['startTime'],
+            ATTR_STATUS: PROGRAM_STATUS_MAP[self._entity_json['status']]
+        })
+
     @property
     def is_on(self) -> bool:
         """Return whether the program is running."""
@@ -199,6 +184,26 @@ class RainMachineProgram(RainMachineEntity):
         """Return a unique, HASS-friendly identifier for this entity."""
         return '{0}_program_{1}'.format(
             self.device_mac.replace(':', ''), self.rainmachine_entity_id)
+
+    @staticmethod
+    def calculate_running_days(freq_type: int, freq_param: str) -> str:
+        """Calculates running days from an RM string ("0010001100")."""
+        if freq_type == 0:
+            return 'Daily'
+
+        if freq_type == 1:
+            return 'Every {0} Days'.format(freq_param)
+
+        if freq_type == 2:
+            return ', '.join([
+                DAYS[idx] for idx, val in enumerate(freq_param[2:-1][::-1])
+                if val == '1'
+            ])
+
+        if freq_type == 4:
+            return '{0} Days'.format('Odd' if freq_param == '1' else 'Even')
+
+        return None
 
     def turn_off(self, **kwargs) -> None:
         """Turn the program off."""
