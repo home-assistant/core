@@ -8,7 +8,7 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
-from requests.exceptions import HTTPError, ConnectTimeout
+from requests.exceptions import ConnectTimeout
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
@@ -47,12 +47,13 @@ CONFIG_SCHEMA = vol.Schema({
                 vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
             }))
-    }, extra=vol.ALLOW_EXTRA)
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Set up an Arlo component."""
-    import regenmaschine as rm
+    from regenmaschine import Authenticator, Client
+    from regenmaschine.exceptions import HTTPError
 
     _LOGGER.debug('Config data: %s', config)
 
@@ -65,19 +66,19 @@ def setup(hass, config):
         if ip_address:
             port = conf[CONF_PORT]
             ssl = conf[CONF_SSL]
-            auth = rm.Authenticator.create_local(
+            auth = Authenticator.create_local(
                 ip_address,
                 password,
                 port=port,
                 https=ssl)
             _LOGGER.debug('Configuring local API: %s', auth)
         elif email_address:
-            auth = rm.Authenticator.create_remote(email_address, password)
+            auth = Authenticator.create_remote(email_address, password)
             _LOGGER.debug('Configuring remote API: %s', auth)
 
-        client = rm.Client(auth)
+        client = Client(auth)
         hass.data[DATA_RAINMACHINE] = client
-    except (rm.exceptions.HTTPError, UnboundLocalError) as exc_info:
+    except (HTTPError, ConnectTimeout, UnboundLocalError) as exc_info:
         _LOGGER.error('An error occurred: %s', str(exc_info))
         hass.components.persistent_notification.create(
             'Error: {0}<br />'
