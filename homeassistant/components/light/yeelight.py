@@ -253,22 +253,12 @@ class YeelightLight(Light):
     @property
     def min_mireds(self):
         """Return minimum supported color temperature."""
-        if self._min_mireds is not None:
-            return self._min_mireds
-
-        if self.supported_features & SUPPORT_COLOR_TEMP:
-            return kelvin_to_mired(YEELIGHT_SPECS['color1']['max_kelvin'])
-        return kelvin_to_mired(YEELIGHT_SPECS['mono1']['max_kelvin'])
+        return self._min_mireds
 
     @property
     def max_mireds(self):
         """Return maximum supported color temperature."""
-        if self._max_mireds is not None:
-            return self._max_mireds
-
-        if self.supported_features & SUPPORT_COLOR_TEMP:
-            return kelvin_to_mired(YEELIGHT_SPECS['color1']['min_kelvin'])
-        return kelvin_to_mired(YEELIGHT_SPECS['mono1']['min_kelvin'])
+        return self._max_mireds
 
     def _get_hs_from_properties(self):
         rgb = self._properties.get('rgb', None)
@@ -332,6 +322,18 @@ class YeelightLight(Light):
 
             if self._bulb_device.bulb_type == yeelight.BulbType.Color:
                 self._supported_features = SUPPORT_YEELIGHT_RGB
+
+            if self._min_mireds is None:
+                if self.supported_features & SUPPORT_COLOR_TEMP:
+                    self._min_mireds = kelvin_to_mired(
+                        YEELIGHT_SPECS['color1']['max_kelvin'])
+                    self._max_mireds = kelvin_to_mired(
+                        YEELIGHT_SPECS['color1']['min_kelvin'])
+                else:
+                    self._min_mireds = kelvin_to_mired(
+                        YEELIGHT_SPECS['mono1']['max_kelvin'])
+                    self._max_mireds = kelvin_to_mired(
+                        YEELIGHT_SPECS['mono1']['min_kelvin'])
 
             self._is_on = self._properties.get('power') == 'on'
 
