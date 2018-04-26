@@ -60,7 +60,7 @@ class TibberSensor(Entity):
         """Initialize the sensor."""
         self._tibber_home = tibber_home
         self._last_updated = None
-        self._newest_data_timestamp = None
+        self._last_data_timestamp = None
         self._state = None
         self._is_available = False
         self._device_state_attributes = {}
@@ -70,13 +70,13 @@ class TibberSensor(Entity):
 
     async def async_update(self):
         """Get the latest data and updates the states."""
-        now = dt_util.utcnow()
+        now = dt_util.now()
         if self._tibber_home.current_price_total and self._last_updated and \
-           self._last_updated.hour == now.hour and self._newest_data_timestamp:
+           self._last_updated.hour == now.hour and self._last_data_timestamp:
             return
 
-        if (not self._newest_data_timestamp or
-                (self._newest_data_timestamp - now).total_seconds()/3600 < 12
+        if (not self._last_data_timestamp or
+                (self._last_data_timestamp - now).total_seconds()/3600 < 12
                 or not self._is_available):
             _LOGGER.debug("Asking for new data.")
             await self._fetch_data()
@@ -135,24 +135,22 @@ class TibberSensor(Entity):
 
     def _update_current_price(self):
         state = None
-        max_price = None
-        min_price = None
-        now = dt_util.utcnow()
+        max_price = 0
+        min_price = 10000
+        now = dt_util.now()
         for key, price_total in self._tibber_home.price_total.items():
-            price_time = dt_util.as_utc(dt_util.parse_datetime(key))
+            price_time = dt_util.as_local(dt_util.parse_datetime(key))
             price_total = round(price_total, 3)
             time_diff = (now - price_time).total_seconds()/60
-            if (not self._newest_data_timestamp or
-                    price_time > self._newest_data_timestamp):
-                self._newest_data_timestamp = price_time
+            if (not self._last_data_timestamp or
+                    price_time > self._last_data_timestamp):
+                self._last_data_timestamp = price_time
             if 0 <= time_diff < 60:
                 state = price_total
                 self._last_updated = price_time
             if now.date() == price_time.date():
-                if max_price is None or price_total > max_price:
-                    max_price = price_total
-                if min_price is None or price_total < min_price:
-                    min_price = price_total
+                max_price = max(max_price, price_total)
+                min_price = min(min_price, price_total)
             self._state = state
             self._device_state_attributes['max_price'] = max_price
             self._device_state_attributes['min_price'] = min_price
