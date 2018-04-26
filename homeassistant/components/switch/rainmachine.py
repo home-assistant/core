@@ -127,7 +127,7 @@ class RainMachineProgram(RainMachineEntity):
     @property
     def name(self) -> str:
         """Return the name of the program."""
-        return 'Program: {}'.format(self._entity_json.get('name'))
+        return 'Program: {0}'.format(self._entity_json.get('name'))
 
     @property
     def unique_id(self) -> str:
@@ -181,10 +181,8 @@ class RainMachineZone(RainMachineEntity):
         super().__init__(client, device_name, device_mac, zone_json)
         self._run_time = zone_run_time
         self._attrs.update({
-            ATTR_CYCLES:
-            self._entity_json.get('noOfCycles'),
-            ATTR_TOTAL_DURATION:
-            self._entity_json.get('userDuration')
+            ATTR_CYCLES: self._entity_json.get('noOfCycles'),
+            ATTR_TOTAL_DURATION: self._entity_json.get('userDuration')
         })
 
     @property
@@ -195,7 +193,7 @@ class RainMachineZone(RainMachineEntity):
     @property
     def name(self) -> str:
         """Return the name of the zone."""
-        return 'Zone: {}'.format(self._entity_json.get('name'))
+        return 'Zone: {0}'.format(self._entity_json.get('name'))
 
     @property
     def unique_id(self) -> str:
