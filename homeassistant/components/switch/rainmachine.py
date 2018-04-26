@@ -1,4 +1,9 @@
-"""Implements a RainMachine sprinkler controller for Home Assistant."""
+"""
+This component provides support for RainMachine programs and zones.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/switch.rainmachine/
+"""
 
 from logging import getLogger
 
@@ -13,10 +18,33 @@ DEPENDENCIES = ['rainmachine']
 
 _LOGGER = getLogger(__name__)
 
+ATTR_CS_ON = 'cs_on'
 ATTR_CYCLES = 'cycles'
+ATTR_DELAY = 'delay'
+ATTR_DELAY_ON = 'delay_on'
+ATTR_FREQUENCY = 'frequency'
+ATTR_SOAK = 'soak'
+ATTR_START_TIME = 'start_time'
+ATTR_STATUS = 'status'
 ATTR_TOTAL_DURATION = 'total_duration'
 
 DEFAULT_ZONE_RUN = 60 * 10
+
+DAYS = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
+]
+
+PROGRAM_STATUS_MAP = {
+    0: 'Not Running',
+    1: 'Running',
+    2: 'Queued'
+}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -90,6 +118,25 @@ class RainMachineEntity(SwitchDevice):
 class RainMachineProgram(RainMachineEntity):
     """A RainMachine program."""
 
+    def __init__(self, client, device_mac, program_json):
+        """Initialize."""
+        super().__init__(client, device_mac, program_json)
+
+        frequency = self.calculate_running_days(
+            self._entity_json['frequency']['type'],
+            self._entity_json['frequency']['param'])
+
+        self._attrs.update({
+            ATTR_CS_ON: self._entity_json['cs_on'],
+            ATTR_CYCLES: self._entity_json['cycles'],
+            ATTR_DELAY: self._entity_json['delay'],
+            ATTR_DELAY_ON: self._entity_json['delay_on'],
+            ATTR_FREQUENCY: frequency,
+            ATTR_SOAK: self._entity_json['soak'],
+            ATTR_START_TIME: self._entity_json['startTime'],
+            ATTR_STATUS: PROGRAM_STATUS_MAP[self._entity_json['status']]
+        })
+
     @property
     def is_on(self) -> bool:
         """Return whether the program is running."""
@@ -105,6 +152,26 @@ class RainMachineProgram(RainMachineEntity):
         """Return a unique, HASS-friendly identifier for this entity."""
         return '{0}_program_{1}'.format(
             self.device_mac.replace(':', ''), self.rainmachine_entity_id)
+
+    @staticmethod
+    def calculate_running_days(freq_type: int, freq_param: str) -> str:
+        """Calculates running days from an RM string ("0010001100")."""
+        if freq_type == 0:
+            return 'Daily'
+
+        if freq_type == 1:
+            return 'Every {0} Days'.format(freq_param)
+
+        if freq_type == 2:
+            return ', '.join([
+                DAYS[idx] for idx, val in enumerate(freq_param[2:-1][::-1])
+                if val == '1'
+            ])
+
+        if freq_type == 4:
+            return '{0} Days'.format('Odd' if freq_param == '1' else 'Even')
+
+        return None
 
     def turn_off(self, **kwargs) -> None:
         """Turn the program off."""
