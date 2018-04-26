@@ -18,30 +18,48 @@ DEPENDENCIES = ['rainmachine']
 
 _LOGGER = getLogger(__name__)
 
+ATTR_AREA = 'area'
 ATTR_CS_ON = 'cs_on'
+ATTR_CURRENT_CYCLE = 'current_cycle'
+ATTR_CURRENT_FIELD_CAPACITY = 'current_field_capacity'
 ATTR_CYCLES = 'cycles'
 ATTR_DELAY = 'delay'
 ATTR_DELAY_ON = 'delay_on'
+ATTR_EFFICIENCY = 'sprinkler_head_efficiency'
+ATTR_FIELD_CAPACITY = 'field_capacity'
+ATTR_FLOW_RATE = 'flow_rate'
 ATTR_FREQUENCY = 'frequency'
 ATTR_IGNORE_WEATHER = 'ignoring_weather_data'
+ATTR_INTAKE_RATE = 'soil_intake_rate'
+ATTR_MACHINE_DURATION = 'machine_duration'
+ATTR_MASTER_VALVE = 'master_valve'
+ATTR_MAX_DEPLETION = 'max_allowed_depletion'
 ATTR_NEXT_RUN = 'next_run'
+ATTR_NO_CYCLES = 'number_of_cycles'
+ATTR_PERM_WILTING = 'permanent_wilting_point'
+ATTR_PRECIP_RATE = 'sprinkler_head_precipitation_rate'
+ATTR_REFERENCE_TIME = 'suggested_summer_watering_seconds'
+ATTR_RESTRICTIONS = 'restrictions'
+ATTR_ROOT_DEPTH = 'average_root_depth'
+ATTR_SAVINGS = 'savings'
+ATTR_SECONDS_REMAINING = 'seconds_remaining'
 ATTR_SIMULATION_EXPIRED = 'simulation_expired'
+ATTR_SLOPE = 'slope'
 ATTR_SOAK = 'soak'
+ATTR_SOIL_TYPE = 'soil_type'
+ATTR_SPRINKLER_TYPE = 'sprinkler_head_type'
 ATTR_START_TIME = 'start_time'
 ATTR_STATUS = 'status'
+ATTR_SUN_EXPOSURE = 'sun_exposure'
+ATTR_SURFACE_ACCUM = 'soil_surface_accumulation'
+ATTR_TALL = 'is_tall'
 ATTR_TOTAL_DURATION = 'total_duration'
+ATTR_USER_DURATION = 'user_duration'
 ATTR_USE_WATERSENSE = 'using_watersense'
+ATTR_VEGETATION_TYPE = 'vegetation_type'
 ATTR_WATER_SKIP = 'watering_percentage_skip_amount'
 ATTR_YEARLY_RECURRING = 'yearly_recurring'
 ATTR_ZONES = 'zones'
-ATTR_USER_DURATION = 'user_duration'
-ATTR_MACHINE_DURATION = 'machine_duration'
-ATTR_SECONDS_REMAINING = 'seconds_remaining'
-ATTR_CURRENT_CYCLE = 'current_cycle'
-ATTR_NO_CYCLES = 'number_of_cycles'
-ATTR_RESTRICTIONS = 'restrictions'
-ATTR_VEGETATION_TYPE = 'vegetation_type'
-ATTR_MASTER_VALVE = 'master_valve'
 
 DEFAULT_ZONE_RUN = 60 * 10
 
@@ -59,6 +77,46 @@ PROGRAM_STATUS_MAP = {
     0: 'Not Running',
     1: 'Running',
     2: 'Queued'
+}
+
+SOIL_TYPE_MAP = {
+    0: 'Not Set',
+    1: 'Clay Loam',
+    2: 'Silty Clay',
+    3: 'Clay',
+    4: 'Loam',
+    5: 'Sandy Loam',
+    6: 'Loamy Sand',
+    7: 'Sand',
+    8: 'Sandy Clay',
+    9: 'Silt Loam',
+    10: 'Silt',
+    99: 'Other'
+}
+
+SLOPE_TYPE_MAP = {
+    0: 'Not Set',
+    1: 'Flat',
+    2: 'Moderate',
+    3: 'High',
+    4: 'Very High',
+    99: 'Other'
+}
+
+SPRINKLER_TYPE_MAP = {
+    0: 'Not Set',
+    1: 'Popup Spray',
+    2: 'Rotors',
+    3: 'Surface Drip',
+    4: 'Bubblers',
+    99: 'Other'
+}
+
+SUN_EXPOSURE_MAP = {
+    0: 'Not Set',
+    1: 'Full Sun',
+    2: 'Partial Shade',
+    3: 'Full Shade'
 }
 
 VEGETATION_MAP = {
@@ -115,7 +173,6 @@ class RainMachineEntity(SwitchDevice):
         self._api_type = 'remote' if client.auth.using_remote_api else 'local'
         self._client = client
         self._entity_json = entity_json
-        self._properties_json = {}
 
         self.device_mac = device_mac
 
@@ -267,11 +324,8 @@ class RainMachineZone(RainMachineEntity):
                  zone_run_time):
         """Initialize a RainMachine zone."""
         super().__init__(client, device_mac, zone_json)
+        self._properties_json = {}
         self._run_time = zone_run_time
-        self._attrs.update({
-            ATTR_CYCLES: self._entity_json.get('noOfCycles'),
-            ATTR_TOTAL_DURATION: self._entity_json.get('userDuration')
-        })
 
     @property
     def is_on(self) -> bool:
@@ -319,17 +373,61 @@ class RainMachineZone(RainMachineEntity):
             self._entity_json = self._client.zones.get(
                 self.rainmachine_entity_id)
 
+            self._properties_json = self._client.zones.get(
+                self.rainmachine_entity_id, properties=True)
+
             self._attrs.update({
-                ATTR_USER_DURATION: self._entity_json.get('userDuration'),
+                ATTR_AREA: self._properties_json.get('waterSense').get('area'),
+                ATTR_CURRENT_CYCLE: self._entity_json.get('cycle'),
+                ATTR_CURRENT_FIELD_CAPACITY:
+                    self._properties_json.get(
+                        'waterSense').get('currentFieldCapacity'),
+                ATTR_EFFICIENCY:
+                    self._properties_json.get(
+                        'waterSense').get('appEfficiency'),
+                ATTR_FIELD_CAPACITY:
+                    self._properties_json.get(
+                        'waterSense').get('fieldCapacity'),
+                ATTR_FLOW_RATE:
+                    self._properties_json.get('waterSense').get('flowRate'),
+                ATTR_INTAKE_RATE:
+                    self._properties_json.get(
+                        'waterSense').get('soilIntakeRate'),
                 ATTR_MACHINE_DURATION:
                     self._entity_json.get('machineDuration'),
-                ATTR_SECONDS_REMAINING: self._entity_json.get('remaining'),
-                ATTR_CURRENT_CYCLE: self._entity_json.get('cycle'),
+                ATTR_MASTER_VALVE: self._entity_json.get('master'),
+                ATTR_MAX_DEPLETION:
+                    self._properties_json.get(
+                        'waterSense').get('maxAllowedDepletion'),
                 ATTR_NO_CYCLES: self._entity_json.get('noOfCycles'),
+                ATTR_PERM_WILTING:
+                    self._properties_json.get('waterSense').get('permWilting'),
+                ATTR_PRECIP_RATE:
+                    self._properties_json.get(
+                        'waterSense').get('precipitationRate'),
+                ATTR_REFERENCE_TIME:
+                    self._properties_json.get(
+                        'waterSense').get('referenceTime'),
                 ATTR_RESTRICTIONS: self._entity_json.get('restriction'),
+                ATTR_ROOT_DEPTH:
+                    self._properties_json.get('waterSense').get('rootDepth'),
+                ATTR_SAVINGS: self._properties_json.get('savings'),
+                ATTR_SECONDS_REMAINING: self._entity_json.get('remaining'),
+                ATTR_SLOPE: SLOPE_TYPE_MAP[self._properties_json.get('slope')],
+                ATTR_SOIL_TYPE:
+                    SOIL_TYPE_MAP[self._properties_json.get('sun')],
+                ATTR_SPRINKLER_TYPE:
+                    SPRINKLER_TYPE_MAP[self._properties_json.get('group_id')],
+                ATTR_SUN_EXPOSURE:
+                    SUN_EXPOSURE_MAP[self._properties_json.get('sun')],
+                ATTR_SURFACE_ACCUM:
+                    self._properties_json.get(
+                        'waterSense').get('allowedSurfaceAcc'),
+                ATTR_TALL:
+                    self._properties_json.get('waterSense').get('isTallPlant'),
+                ATTR_USER_DURATION: self._entity_json.get('userDuration'),
                 ATTR_VEGETATION_TYPE:
                     VEGETATION_MAP[self._entity_json.get('type')],
-                ATTR_MASTER_VALVE: self._entity_json.get('master'),
             })
         except HTTPError as exc_info:
             _LOGGER.error('Unable to update info for zone "%s"',
