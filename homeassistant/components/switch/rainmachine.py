@@ -178,6 +178,26 @@ class RainMachineProgram(RainMachineSwitch):
         """Return a list of active zones associated with this program."""
         return [z for z in self._obj['wateringTimes'] if z['active']]
 
+    @staticmethod
+    def calculate_running_days(freq_type: int, freq_param: str) -> str:
+        """Calculates running days from an RM string ("0010001100")."""
+        if freq_type == 0:
+            return 'Daily'
+
+        if freq_type == 1:
+            return 'Every {0} Days'.format(freq_param)
+
+        if freq_type == 2:
+            return ', '.join([
+                DAYS[idx] for idx, val in enumerate(freq_param[2:-1][::-1])
+                if val == '1'
+            ])
+
+        if freq_type == 4:
+            return '{0} Days'.format('Odd' if freq_param == '1' else 'Even')
+
+        return None
+
     def turn_off(self, **kwargs) -> None:
         """Turn the program off."""
         from regenmaschine.exceptions import HTTPError
