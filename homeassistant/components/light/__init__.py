@@ -293,7 +293,7 @@ class SetIntentHandler(intent.IntentHandler):
         vol.Optional('brightness'): vol.All(vol.Coerce(int),
                                             vol.Range(0, 100)),
         vol.Optional('effect_speed'): vol.All(vol.Coerce(int),
-                                            vol.Range(0, 100))
+                                              vol.Range(0, 100))
     }
 
     async def async_handle(self, intent_obj):
