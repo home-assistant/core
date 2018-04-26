@@ -121,7 +121,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
         vol.All(vol.ExactSequence(
             (vol.All(vol.Coerce(float), vol.Range(min=0, max=360)),
              vol.All(vol.Coerce(float), vol.Range(min=0, max=100)))),
-        vol.Coerce(tuple)),
+                vol.Coerce(tuple)),
     vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Exclusive(ATTR_KELVIN, COLOR_GROUP):
@@ -163,7 +163,8 @@ def is_on(hass, entity_id=None):
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
             brightness_pct=None, rgb_color=None, xy_color=None, hs_color=None,
             color_temp=None, kelvin=None, white_value=None,
-            profile=None, flash=None, effect=None, color_name=None, speed=None):
+            profile=None, flash=None, effect=None, color_name=None,
+            speed=None):
     """Turn all or specified light on."""
     hass.add_job(
         async_turn_on, hass, entity_id, transition, brightness, brightness_pct,
@@ -289,7 +290,8 @@ class SetIntentHandler(intent.IntentHandler):
     slot_schema = {
         vol.Required('name'): cv.string,
         vol.Optional('color'): color_util.color_name_to_rgb,
-        vol.Optional('brightness'): vol.All(vol.Coerce(int), vol.Range(0, 100)),
+        vol.Optional('brightness'): vol.All(vol.Coerce(int),
+                vol.Range(0, 100)),
         vol.Optional('speed'): vol.All(vol.Coerce(int), vol.Range(0, 100))
     }
 
