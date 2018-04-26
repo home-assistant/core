@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger('test_logger')
 @asyncio.coroutine
 def setup_test_case(hass, aiohttp_client):
     """Setup system_log component before test case."""
-    config = {'system_log': {'max_entries': 2}}
+    config = {'system_log': {'max_entries': 2, 'fire_event': True}}
     yield from async_setup_component(hass, system_log.DOMAIN, config)
 
 
