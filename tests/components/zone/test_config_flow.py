@@ -53,29 +53,3 @@ async def test_flow_requires_name_different_from_home(hass):
 
     result = await flow.async_step_init(user_input={CONF_NAME: HOME_ZONE})
     assert result['errors'] == {'base': 'name_exists'}
-
-
-async def test_import_works(hass):
-    """Test that config import works."""
-    flow = config_flow.ZoneFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_import({
-        CONF_NAME: 'Name',
-        CONF_LATITUDE: '1.1',
-        CONF_LONGITUDE: '2.2',
-        CONF_RADIUS: '100',
-        CONF_ICON: 'mdi:home',
-        CONF_PASSIVE: True
-        })
-
-    assert result['type'] == 'create_entry'
-    assert result['title'] == 'Name'
-    assert result['data'] == {
-        CONF_NAME: 'Name',
-        CONF_LATITUDE: '1.1',
-        CONF_LONGITUDE: '2.2',
-        CONF_RADIUS: '100',
-        CONF_ICON: 'mdi:home',
-        CONF_PASSIVE: True
-    }

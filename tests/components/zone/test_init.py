@@ -1,55 +1,13 @@
 """Test zone component."""
 
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock
 
 from homeassistant import setup
 from homeassistant.components import zone
 
 from tests.common import get_test_home_assistant
 from tests.common import MockConfigEntry
-
-
-async def test_setup_new_zone_starts_config_entry(hass):
-    """Test that configured zone initiates an import."""
-    with patch.object(hass, 'config_entries') as mock_config_entries:
-        assert await setup.async_setup_component(hass, zone.DOMAIN, {
-            zone.DOMAIN: {
-                zone.CONF_NAME: 'Test Zone',
-                zone.CONF_LATITUDE: 1.1,
-                zone.CONF_LONGITUDE: -2.2
-            }
-        }) is True
-    # Import flow started
-    assert len(mock_config_entries.flow.mock_calls) == 2
-
-
-async def test_setup_registered_zone_skips_config_entry(hass):
-    """Test that an already registered zone does not initiate an import."""
-    entry = MockConfigEntry(domain=zone.DOMAIN, data={
-        zone.CONF_NAME: 'Test Zone'
-    })
-    entry.add_to_hass(hass)
-    with patch.object(hass, 'config_entries') as mock_config_entries:
-        assert await setup.async_setup_component(hass, zone.DOMAIN, {
-            zone.DOMAIN: {
-                zone.CONF_NAME: 'Test Zone'
-            }
-        }) is True
-    # No import flow started
-    assert len(mock_config_entries.flow.mock_calls) == 0
-
-
-async def test_config_entry_overrides_home_zone(hass):
-    """Test that a config entry can override home zone."""
-    entry = MockConfigEntry(domain=zone.DOMAIN, data={
-        zone.CONF_NAME: 'home'
-    })
-    entry.add_to_hass(hass)
-    assert await setup.async_setup_component(hass, zone.DOMAIN, {}) is True
-    await hass.async_block_till_done()
-    # No home zone created from setup
-    assert not hass.data[zone.DOMAIN]
 
 
 async def test_setup_entry_successful(hass):
@@ -64,7 +22,21 @@ async def test_setup_entry_successful(hass):
     }
     hass.data[zone.DOMAIN] = {}
     assert await zone.async_setup_entry(hass, entry) is True
-    assert 'Test Zone' in hass.data[zone.DOMAIN]
+    assert 'test_zone' in hass.data[zone.DOMAIN]
+
+
+async def test_unload_entry_successful(hass):
+    """Test unload entry is successful."""
+    entry = Mock()
+    entry.data = {
+        zone.CONF_NAME: 'Test Zone',
+        zone.CONF_LATITUDE: 1.1,
+        zone.CONF_LONGITUDE: -2.2
+    }
+    hass.data[zone.DOMAIN] = {}
+    assert await zone.async_setup_entry(hass, entry) is True
+    assert await zone.async_unload_entry(hass, entry) is True
+    assert not hass.data[zone.DOMAIN]
 
 
 class TestComponentZone(unittest.TestCase):
@@ -87,9 +59,10 @@ class TestComponentZone(unittest.TestCase):
         assert self.hass.config.latitude == state.attributes['latitude']
         assert self.hass.config.longitude == state.attributes['longitude']
         assert not state.attributes.get('passive', False)
+        assert 'test_home' in self.hass.data[zone.DOMAIN]
 
     def test_setup(self):
-        """Test setup."""
+        """Test a successful setup."""
         info = {
             'name': 'Test Zone',
             'latitude': 32.880837,
@@ -106,21 +79,52 @@ class TestComponentZone(unittest.TestCase):
         assert info['longitude'] == state.attributes['longitude']
         assert info['radius'] == state.attributes['radius']
         assert info['passive'] == state.attributes['passive']
+        assert 'test_zone' in self.hass.data[zone.DOMAIN]
+        assert 'test_home' in self.hass.data[zone.DOMAIN]
 
-    def test_setup_zone_overrides_home_zone(self):
-        """Test setup."""
+    def test_setup_zone_skips_home_zone(self):
+        """Test that zone named Home should override hass home zone."""
         info = {
-            'name': 'home',
-            'latitude': 32.880837,
-            'longitude': -117.237561,
-            'radius': 250,
-            'passive': True
+            'name': 'Home',
+            'latitude': 1.1,
+            'longitude': -2.2,
         }
         assert setup.setup_component(self.hass, zone.DOMAIN, {'zone': info})
 
         assert len(self.hass.states.entity_ids('zone')) == 1
         state = self.hass.states.get('zone.home')
         assert info['name'] == state.name
+        assert 'home' in self.hass.data[zone.DOMAIN]
+        assert 'test_home' not in self.hass.data[zone.DOMAIN]
+
+    def test_setup_registered_zone_skips_home_zone(self):
+        """Test that config entry named home should override hass home zone."""
+        entry = MockConfigEntry(domain=zone.DOMAIN, data={
+            zone.CONF_NAME: 'home'
+        })
+        entry.add_to_hass(self.hass)
+        assert setup.setup_component(self.hass, zone.DOMAIN, {'zone': None})
+        assert len(self.hass.states.entity_ids('zone')) == 0
+        assert not self.hass.data[zone.DOMAIN]
+
+    def test_setup_registered_zone_skips_configured_zone(self):
+        """Test if config entry will override configured zone."""
+        entry = MockConfigEntry(domain=zone.DOMAIN, data={
+            zone.CONF_NAME: 'Test Zone'
+        })
+        entry.add_to_hass(self.hass)
+        info = {
+            'name': 'Test Zone',
+            'latitude': 1.1,
+            'longitude': -2.2,
+        }
+        assert setup.setup_component(self.hass, zone.DOMAIN, {'zone': info})
+
+        assert len(self.hass.states.entity_ids('zone')) == 1
+        state = self.hass.states.get('zone.test_zone')
+        assert not state
+        assert 'test_zone' not in self.hass.data[zone.DOMAIN]
+        assert 'test_home' in self.hass.data[zone.DOMAIN]
 
     def test_active_zone_skips_passive_zones(self):
         """Test active and passive zones."""

@@ -54,16 +54,3 @@ class ZoneFlowHandler(data_entry_flow.FlowHandler):
             }),
             errors=errors,
         )
-
-    async def async_step_import(self, import_config):
-        """Import a configured zone as a config entry.
-
-        This flow is triggered by `async_setup` for configured zones.
-
-        This will execute for any zone that does not have a
-        config entry yet (based on latitude and longitude).
-        """
-        return self.async_create_entry(
-            title=import_config[CONF_NAME],
-            data=import_config,
-        )
