@@ -291,7 +291,7 @@ class SetIntentHandler(intent.IntentHandler):
         vol.Required('name'): cv.string,
         vol.Optional('color'): color_util.color_name_to_rgb,
         vol.Optional('brightness'): vol.All(vol.Coerce(int),
-                vol.Range(0, 100)),
+                                            vol.Range(0, 100)),
         vol.Optional('speed'): vol.All(vol.Coerce(int), vol.Range(0, 100))
     }
 
