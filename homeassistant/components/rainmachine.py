@@ -36,24 +36,18 @@ MIN_SCAN_TIME_FORCED = timedelta(milliseconds=100)
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN:
-        vol.Schema(
-            vol.All(
-                cv.has_at_least_one_key(CONF_IP_ADDRESS, CONF_EMAIL),
-                {
-                    vol.Exclusive(CONF_IP_ADDRESS, 'auth'): cv.string,
-                    vol.Exclusive(CONF_EMAIL, 'auth'):
-                        vol.Email(),  # pylint: disable=no-value-for-parameter
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-                }))
+        DOMAIN: vol.Schema({
+            vol.Required(CONF_IP_ADDRESS): cv.string,
+            vol.Required(CONF_PASSWORD): cv.string,
+            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        })
     },
     extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
-    """Set up an Arlo component."""
+    """Set up the RainMachine component."""
     from regenmaschine import Authenticator, Client
     from regenmaschine.exceptions import HTTPError
 
