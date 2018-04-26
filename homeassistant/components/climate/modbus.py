@@ -52,6 +52,7 @@ CONF_SCALE = 'scale'
 
 REGISTER_TYPE_HOLDING = 'holding'
 REGISTER_TYPE_INPUT = 'input'
+REGISTER_TYPE_COIL = 'coil'
 
 DATA_TYPE_INT = 'int'
 DATA_TYPE_UINT = 'uint'
@@ -62,9 +63,9 @@ SUPPORTED_FEATURES = {
     CONF_TEMPERATURE: 0,
     CONF_TARGET_TEMPERATURE: SUPPORT_TARGET_TEMPERATURE,
     CONF_HUMIDITY: 0,
-    CONF_TARGET_HUMIDITY: SUPPORT_TARGET_HUMIDITY |
-                          SUPPORT_TARGET_HUMIDITY_LOW |
-                          SUPPORT_TARGET_HUMIDITY_HIGH,
+    CONF_TARGET_HUMIDITY: (SUPPORT_TARGET_HUMIDITY |
+                           SUPPORT_TARGET_HUMIDITY_LOW |
+                           SUPPORT_TARGET_HUMIDITY_HIGH),
     CONF_OPERATION: SUPPORT_OPERATION_MODE,
     CONF_FAN: SUPPORT_FAN_MODE,
     CONF_SWING: SUPPORT_SWING_MODE,
@@ -92,7 +93,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Modbus climate devices."""
+    """Set up the Modbus Thermostat Platform."""
     name = config.get(CONF_NAME)
     operation_list = config.get(CONF_OPERATION_LIST)
     fan_list = config.get(CONF_FAN_LIST)
@@ -286,7 +287,7 @@ class ModbusClimate(ClimateDevice):
             register_type, slave, register, count, scale, offset = \
                 self.register_info(mod)
 
-            if register_type == 'coil':
+            if register_type == REGISTER_TYPE_COIL:
                 result = modbus.HUB.read_coils(slave, register, count)
                 value = bool(result.bits[0])
             else:
@@ -399,10 +400,11 @@ class ModbusClimate(ClimateDevice):
             self.register_info(mod)
         _LOGGER.info("Write %s: %s = %f", self.name, prop, value)
 
-        if register_type == 'coil':
+        if register_type == REGISTER_TYPE_COIL:
             modbus.HUB.write_coil(slave, register, bool(value))
         else:
             val = (value - offset) / scale
+            # TODO: write_registers with count and structure represent
             modbus.HUB.write_register(slave, register, int(val))
 
         self._values[prop] = value
