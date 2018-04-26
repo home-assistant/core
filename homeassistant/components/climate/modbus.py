@@ -284,8 +284,9 @@ class ModbusClimate(ClimateDevice):
         """Update state."""
         for prop in self._mods:
             mod = self._mods[prop]
-            register_type, slave, register, count, scale, offset = \
+            register_type, slave, register, scale, offset = \
                 self.register_info(mod)
+            count = mod[CONF_COUNT] if CONF_COUNT in mod else 1
 
             if register_type == REGISTER_TYPE_COIL:
                 result = modbus.HUB.read_coils(slave, register, count)
@@ -384,10 +385,9 @@ class ModbusClimate(ClimateDevice):
         register = mod[CONF_REGISTER] \
             if self._index == -1 else mod[CONF_REGISTERS][self._index]
         slave = mod[CONF_SLAVE] if CONF_SLAVE in mod else 1
-        count = mod[CONF_COUNT] if CONF_COUNT in mod else 1
         scale = mod[CONF_SCALE] if CONF_SCALE in mod else 1
         offset = mod[CONF_OFFSET] if CONF_OFFSET in mod else 0
-        return (register_type, slave, register, count, scale, offset)
+        return (register_type, slave, register, scale, offset)
 
     def get_value(self, prop):
         """Get property value."""
@@ -396,15 +396,13 @@ class ModbusClimate(ClimateDevice):
     def set_value(self, prop, value):
         """Set property value."""
         mod = self._mods[prop]
-        register_type, slave, register, count, scale, offset = \
-            self.register_info(mod)
+        register_type, slave, register, scale, offset = self.register_info(mod)
         _LOGGER.info("Write %s: %s = %f", self.name, prop, value)
 
         if register_type == REGISTER_TYPE_COIL:
             modbus.HUB.write_coil(slave, register, bool(value))
         else:
             val = (value - offset) / scale
-            # TODO: write_registers with count and structure represent
             modbus.HUB.write_register(slave, register, int(val))
 
         self._values[prop] = value
