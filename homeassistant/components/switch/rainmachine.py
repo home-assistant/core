@@ -34,6 +34,14 @@ ATTR_USE_WATERSENSE = 'using_watersense'
 ATTR_WATER_SKIP = 'watering_percentage_skip_amount'
 ATTR_YEARLY_RECURRING = 'yearly_recurring'
 ATTR_ZONES = 'zones'
+ATTR_USER_DURATION = 'user_duration'
+ATTR_MACHINE_DURATION = 'machine_duration'
+ATTR_SECONDS_REMAINING = 'seconds_remaining'
+ATTR_CURRENT_CYCLE = 'current_cycle'
+ATTR_NO_CYCLES = 'number_of_cycles'
+ATTR_RESTRICTIONS = 'restrictions'
+ATTR_VEGETATION_TYPE = 'vegetation_type'
+ATTR_MASTER_VALVE = 'master_valve'
 
 DEFAULT_ZONE_RUN = 60 * 10
 
@@ -51,6 +59,19 @@ PROGRAM_STATUS_MAP = {
     0: 'Not Running',
     1: 'Running',
     2: 'Queued'
+}
+
+VEGETATION_MAP = {
+    0: 'Not Set',
+    1: 'Not Set',
+    2: 'Grass',
+    3: 'Fruit Trees',
+    4: 'Flowers',
+    5: 'Vegetables',
+    6: 'Citrus',
+    7: 'Bushes',
+    8: 'Xeriscape',
+    99: 'Other'
 }
 
 
@@ -94,6 +115,7 @@ class RainMachineEntity(SwitchDevice):
         self._api_type = 'remote' if client.auth.using_remote_api else 'local'
         self._client = client
         self._entity_json = entity_json
+        self._properties_json = {}
 
         self.device_mac = device_mac
 
@@ -184,32 +206,28 @@ class RainMachineProgram(RainMachineEntity):
 
     def turn_off(self, **kwargs) -> None:
         """Turn the program off."""
-        import regenmaschine.exceptions as exceptions
+        from regenmaschine.exceptions import HTTPError
 
         try:
             self._client.programs.stop(self.rainmachine_entity_id)
-        except exceptions.BrokenAPICall:
-            _LOGGER.error('programs.stop currently broken in remote API')
-        except exceptions.HTTPError as exc_info:
+        except HTTPError as exc_info:
             _LOGGER.error('Unable to turn off program "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the program on."""
-        import regenmaschine.exceptions as exceptions
+        from regenmaschine.exceptions import HTTPError
 
         try:
             self._client.programs.start(self.rainmachine_entity_id)
-        except exceptions.BrokenAPICall:
-            _LOGGER.error('programs.start currently broken in remote API')
-        except exceptions.HTTPError as exc_info:
+        except HTTPError as exc_info:
             _LOGGER.error('Unable to turn on program "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     @Throttle(MIN_SCAN_TIME, MIN_SCAN_TIME_FORCED)
     def update(self) -> None:
         """Update info for the program."""
-        import regenmaschine.exceptions as exceptions
+        from regenmaschine.exceptions import HTTPError
 
         try:
             self._entity_json = self._client.programs.get(
@@ -236,7 +254,7 @@ class RainMachineProgram(RainMachineEntity):
                     self._entity_json.get('yearlyRecurring'),
                 ATTR_ZONES: ', '.join(z['name'] for z in self.zones)
             })
-        except exceptions.HTTPError as exc_info:
+        except HTTPError as exc_info:
             _LOGGER.error('Unable to update info for program "%s"',
                           self.unique_id)
             _LOGGER.debug(exc_info)
@@ -273,34 +291,47 @@ class RainMachineZone(RainMachineEntity):
 
     def turn_off(self, **kwargs) -> None:
         """Turn the zone off."""
-        import regenmaschine.exceptions as exceptions
+        from regenmaschine.exceptions import HTTPError
 
         try:
             self._client.zones.stop(self.rainmachine_entity_id)
-        except exceptions.HTTPError as exc_info:
+        except HTTPError as exc_info:
             _LOGGER.error('Unable to turn off zone "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the zone on."""
-        import regenmaschine.exceptions as exceptions
+        from regenmaschine.exceptions import HTTPError
 
         try:
             self._client.zones.start(self.rainmachine_entity_id,
                                      self._run_time)
-        except exceptions.HTTPError as exc_info:
+        except HTTPError as exc_info:
             _LOGGER.error('Unable to turn on zone "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     @Throttle(MIN_SCAN_TIME, MIN_SCAN_TIME_FORCED)
     def update(self) -> None:
         """Update info for the zone."""
-        import regenmaschine.exceptions as exceptions
+        from regenmaschine.exceptions import HTTPError
 
         try:
             self._entity_json = self._client.zones.get(
                 self.rainmachine_entity_id)
-        except exceptions.HTTPError as exc_info:
+
+            self._attrs.update({
+                ATTR_USER_DURATION: self._entity_json.get('userDuration'),
+                ATTR_MACHINE_DURATION:
+                    self._entity_json.get('machineDuration'),
+                ATTR_SECONDS_REMAINING: self._entity_json.get('remaining'),
+                ATTR_CURRENT_CYCLE: self._entity_json.get('cycle'),
+                ATTR_NO_CYCLES: self._entity_json.get('noOfCycles'),
+                ATTR_RESTRICTIONS: self._entity_json.get('restriction'),
+                ATTR_VEGETATION_TYPE:
+                    VEGETATION_MAP[self._entity_json.get('type')],
+                ATTR_MASTER_VALVE: self._entity_json.get('master'),
+            })
+        except HTTPError as exc_info:
             _LOGGER.error('Unable to update info for zone "%s"',
                           self.unique_id)
             _LOGGER.debug(exc_info)
