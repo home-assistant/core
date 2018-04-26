@@ -38,14 +38,6 @@ ATTR_STATUS = 'status'
 ATTR_SUN_EXPOSURE = 'sun_exposure'
 ATTR_VEGETATION_TYPE = 'vegetation_type'
 ATTR_ZONES = 'zones'
-ATTR_USER_DURATION = 'user_duration'
-ATTR_MACHINE_DURATION = 'machine_duration'
-ATTR_SECONDS_REMAINING = 'seconds_remaining'
-ATTR_CURRENT_CYCLE = 'current_cycle'
-ATTR_NO_CYCLES = 'number_of_cycles'
-ATTR_RESTRICTIONS = 'restrictions'
-ATTR_VEGETATION_TYPE = 'vegetation_type'
-ATTR_MASTER_VALVE = 'master_valve'
 
 DEFAULT_ZONE_RUN = 60 * 10
 
