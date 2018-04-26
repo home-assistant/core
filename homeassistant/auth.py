@@ -128,18 +128,6 @@ class AuthProvider:
         """
         return {}
 
-    # async def async_register_flow(self):
-    #     """Return the data flow for registering with the auth provider."""
-    #     raise NotImplementedError
-
-    # async def async_register(self, flow_result):
-    #     """Create a new user and return credentials."""
-    #     raise NotImplementedError
-
-    # async def async_change_password(self, credentials, new_password):
-    #     """Change the password of a user."""
-    #     raise NotImplementedError
-
 
 @attr.s(slots=True)
 class User:
@@ -155,7 +143,7 @@ class User:
     # List of credentials of a user.
     credentials = attr.ib(type=list, default=attr.Factory(list))
 
-    # List of tokens associated with a user.
+    # Tokens associated with a user.
     refresh_tokens = attr.ib(type=dict, default=attr.Factory(dict))
 
     def as_dict(self):
@@ -310,7 +298,7 @@ class AuthManager:
             self._async_finish_login_flow)
         self.access_tokens = {}
 
-    @callback
+    @property
     def async_auth_providers(self):
         """Return a list of available auth providers."""
         return self._providers.values()
@@ -372,8 +360,9 @@ class AuthManager:
 
     async def _async_finish_login_flow(self, result):
         """Result of a credential login flow."""
-        provider = self._providers[result['handler']]
-        return await provider.async_get_or_create_credentials(result['data'])
+        auth_provider = self._providers[result['handler']]
+        return await auth_provider.async_get_or_create_credentials(
+            result['data'])
 
     @callback
     def _async_get_auth_provider(self, credentials):
@@ -452,7 +441,8 @@ class AuthStore:
         for user in self.users.values():
             for creds in user.credentials:
                 if (creds.auth_provider_type == credentials.auth_provider_type
-                        and creds.auth_provider_id == creds.auth_provider_id):
+                        and creds.auth_provider_id ==
+                        credentials.auth_provider_id):
                     return user
 
         raise ValueError('We got credentials with ID but found no user')

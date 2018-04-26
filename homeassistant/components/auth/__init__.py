@@ -150,11 +150,11 @@ class AuthProvidersView(HomeAssistantView):
             'name': provider.name,
             'id': provider.id,
             'type': provider.type,
-        } for provider in request.app['hass'].auth.async_auth_providers()])
+        } for provider in request.app['hass'].auth.async_auth_providers])
 
 
 class LoginFlowIndexView(FlowManagerIndexView):
-    """View to create config flows."""
+    """View to create a config flow."""
 
     url = '/api/auth/login_flow'
     name = 'api:auth:login_flow'
