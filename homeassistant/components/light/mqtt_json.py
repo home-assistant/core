@@ -74,7 +74,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_WHITE_VALUE, default=DEFAULT_WHITE_VALUE): cv.boolean,
     vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
-    vol.Optional(CONF_SPEED, default=DEFAULT_SPEED): cv.positive_int,
+    vol.Optional(CONF_SPEED, default=DEFAULT_SPEED): cv.boolean,
     vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
