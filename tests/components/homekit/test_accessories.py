@@ -10,7 +10,7 @@ from homeassistant.components.homekit.accessories import (
     add_preload_service, set_accessory_info,
     debounce, HomeAccessory, HomeBridge, HomeDriver)
 from homeassistant.components.homekit.const import (
-    BRIDGE_MODEL, BRIDGE_NAME, SERV_ACCESSORY_INFO,
+    BRIDGE_MODEL, BRIDGE_NAME, SERV_ACCESSORY_INFO, CHAR_FIRMWARE_REVISION,
     CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
 from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
 import homeassistant.util.dt as dt_util
@@ -92,7 +92,8 @@ class TestAccessories(unittest.TestCase):
         """Test setting the basic accessory information."""
         # Test HomeAccessory
         acc = HomeAccessory('HA', 'Home Accessory', 'homekit.accessory', 2, '')
-        set_accessory_info(acc, 'name', 'model', 'manufacturer', '0000')
+        set_accessory_info(acc, 'name', 'model', 'manufacturer', '0000',
+                           '1.2.3')
 
         serv = acc.get_service(SERV_ACCESSORY_INFO)
         self.assertEqual(serv.get_characteristic(CHAR_NAME).value, 'name')
@@ -101,10 +102,13 @@ class TestAccessories(unittest.TestCase):
             serv.get_characteristic(CHAR_MANUFACTURER).value, 'manufacturer')
         self.assertEqual(
             serv.get_characteristic(CHAR_SERIAL_NUMBER).value, '0000')
+        self.assertEqual(
+            serv.get_characteristic(CHAR_FIRMWARE_REVISION).value, '1.2.3')
 
         # Test HomeBridge
         acc = HomeBridge('hass')
-        set_accessory_info(acc, 'name', 'model', 'manufacturer', '0000')
+        set_accessory_info(acc, 'name', 'model', 'manufacturer', '0000',
+                           '1.2.3')
 
         serv = acc.get_service(SERV_ACCESSORY_INFO)
         self.assertEqual(serv.get_characteristic(CHAR_MODEL).value, 'model')
@@ -112,6 +116,8 @@ class TestAccessories(unittest.TestCase):
             serv.get_characteristic(CHAR_MANUFACTURER).value, 'manufacturer')
         self.assertEqual(
             serv.get_characteristic(CHAR_SERIAL_NUMBER).value, '0000')
+        self.assertEqual(
+            serv.get_characteristic(CHAR_FIRMWARE_REVISION).value, '1.2.3')
 
     def test_home_accessory(self):
         """Test HomeAccessory class."""
