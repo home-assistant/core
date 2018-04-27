@@ -107,3 +107,15 @@ async def test_setup_entry_successful(hass):
         (entry, 'scene')
     assert mock_config_entries.async_forward_entry_setup.mock_calls[3][1] == \
         (entry, 'sensor')
+
+
+async def test_unload_entry(hass):
+    """Test being able to unload an entry."""
+    entry = Mock()
+    entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
+    with patch('pydeconz.DeconzSession.async_load_parameters',
+               return_value=mock_coro(True)):
+        assert await deconz.async_setup_entry(hass, entry) is True
+
+    assert await deconz.async_unload_entry(hass, entry)
+    assert deconz.DOMAIN not in hass.data
