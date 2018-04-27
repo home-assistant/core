@@ -6,7 +6,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.rainmachine import (
-    DATA_RAINMACHINE, MIN_SCAN_TIME, MIN_SCAN_TIME_FORCED)
+    DATA_RAINMACHINE, DEFAULT_ATTRIBUTION, MIN_SCAN_TIME, MIN_SCAN_TIME_FORCED)
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS
 from homeassistant.util import Throttle
@@ -71,7 +71,7 @@ class RainMachineEntity(SwitchDevice):
         self.device_name = device_name
 
         self._attrs = {
-            ATTR_ATTRIBUTION: '© RainMachine',
+            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
             ATTR_DEVICE_CLASS: self.device_name
         }
 

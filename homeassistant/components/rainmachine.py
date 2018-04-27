@@ -24,8 +24,7 @@ DOMAIN = 'rainmachine'
 NOTIFICATION_ID = 'rainmachine_notification'
 NOTIFICATION_TITLE = 'RainMachine Component Setup'
 
-CONF_ATTRIBUTION = 'Data provided by Green Electronics LLC'
-
+DEFAULT_ATTRIBUTION = 'Data provided by Green Electronics LLC'
 DEFAULT_PORT = 8080
 DEFAULT_SSL = True
 
