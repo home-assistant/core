@@ -1,0 +1,21 @@
+#!/bin/bash
+# Sets up chrome for headless use.
+# https://gist.github.com/ziadoz/3e8ab7e944d02fe872c3454d17af31a5
+
+# Stop on errors
+set -e
+
+echo 'Starting Chrome Install\n'
+
+# Versions
+CHROME_DRIVER_VERSION=`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`
+SELENIUM_STANDALONE_VERSION=3.4.0
+SELENIUM_SUBDIR=$(echo "$SELENIUM_STANDALONE_VERSION" | cut -d"." -f-2)
+
+# Install Chrome.
+curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list
+apt-get -y update
+apt-get -y install google-chrome-stable --no-install-recommends
+
+google-chrome --version
