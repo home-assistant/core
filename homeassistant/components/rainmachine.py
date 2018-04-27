@@ -12,8 +12,7 @@ from requests.exceptions import ConnectTimeout
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
-    CONF_EMAIL, CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL)
-from homeassistant.util import Throttle
+    CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL)
 
 REQUIREMENTS = ['regenmaschine==0.4.1']
 
@@ -30,8 +29,7 @@ CONF_ATTRIBUTION = 'Data provided by Green Electronics LLC'
 DEFAULT_PORT = 8080
 DEFAULT_SSL = True
 
-MIN_SCAN_TIME_LOCAL = timedelta(seconds=1)
-MIN_SCAN_TIME_REMOTE = timedelta(seconds=1)
+MIN_SCAN_TIME = timedelta(seconds=1)
 MIN_SCAN_TIME_FORCED = timedelta(milliseconds=100)
 
 CONFIG_SCHEMA = vol.Schema(
@@ -52,21 +50,14 @@ def setup(hass, config):
     from regenmaschine.exceptions import HTTPError
 
     conf = config[DOMAIN]
-    ip_address = conf.get(CONF_IP_ADDRESS)
-    email_address = conf.get(CONF_EMAIL)
+    ip_address = conf[CONF_IP_ADDRESS]
     password = conf[CONF_PASSWORD]
+    port = conf[CONF_PORT]
+    ssl = conf[CONF_SSL]
 
     try:
-        if ip_address:
-            port = conf[CONF_PORT]
-            ssl = conf[CONF_SSL]
-            auth = Authenticator.create_local(
-                ip_address, password, port=port, https=ssl)
-            _LOGGER.debug('Configuring local API: %s', ip_address)
-        elif email_address:
-            auth = Authenticator.create_remote(email_address, password)
-            _LOGGER.debug('Configuring remote API')
-
+        auth = Authenticator.create_local(
+            ip_address, password, port=port, https=ssl)
         client = Client(auth)
         hass.data[DATA_RAINMACHINE] = client
     except (HTTPError, ConnectTimeout, UnboundLocalError) as exc_info:
@@ -79,26 +70,3 @@ def setup(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
     return True
-
-
-def aware_throttle(api_type):
-    """Create an API type-aware throttler."""
-    _decorator = None
-    if api_type == 'local':
-
-        @Throttle(MIN_SCAN_TIME_LOCAL, MIN_SCAN_TIME_FORCED)
-        def decorator(function):
-            """Create a local API throttler."""
-            return function
-
-        _decorator = decorator
-    else:
-
-        @Throttle(MIN_SCAN_TIME_REMOTE, MIN_SCAN_TIME_FORCED)
-        def decorator(function):
-            """Create a remote API throttler."""
-            return function
-
-        _decorator = decorator
-
-    return _decorator

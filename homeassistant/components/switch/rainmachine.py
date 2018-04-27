@@ -6,9 +6,10 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.rainmachine import (
-    DATA_RAINMACHINE, aware_throttle)
+    DATA_RAINMACHINE, MIN_SCAN_TIME, MIN_SCAN_TIME_FORCED)
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS
+from homeassistant.util import Throttle
 
 _LOGGER = getLogger(__name__)
 DEPENDENCIES = ['rainmachine']
@@ -94,27 +95,6 @@ class RainMachineEntity(SwitchDevice):
         """Return the RainMachine ID for this entity."""
         return self._entity_json.get('uid')
 
-    @aware_throttle('local')
-    def _local_update(self) -> None:
-        """Call an update with scan times appropriate for the local API."""
-        self._update()
-
-    @aware_throttle('remote')
-    def _remote_update(self) -> None:
-        """Call an update with scan times appropriate for the remote API."""
-        self._update()
-
-    def _update(self) -> None:  # pylint: disable=no-self-use
-        """Logic for update method, regardless of API type."""
-        raise NotImplementedError()
-
-    def update(self) -> None:
-        """Determine how the entity updates itself."""
-        if self._api_type == 'remote':
-            self._remote_update()
-        else:
-            self._local_update()
-
 
 class RainMachineProgram(RainMachineEntity):
     """A RainMachine program."""
@@ -159,7 +139,8 @@ class RainMachineProgram(RainMachineEntity):
             _LOGGER.error('Unable to turn on program "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
-    def _update(self) -> None:
+    @Throttle(MIN_SCAN_TIME, MIN_SCAN_TIME_FORCED)
+    def update(self) -> None:
         """Update info for the program."""
         import regenmaschine.exceptions as exceptions
 
@@ -222,7 +203,8 @@ class RainMachineZone(RainMachineEntity):
             _LOGGER.error('Unable to turn on zone "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
-    def _update(self) -> None:
+    @Throttle(MIN_SCAN_TIME, MIN_SCAN_TIME_FORCED)
+    def update(self) -> None:
         """Update info for the zone."""
         import regenmaschine.exceptions as exceptions
 
