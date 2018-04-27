@@ -13,9 +13,9 @@ from homeassistant.helpers.event import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DEBOUNCE_TIMEOUT, BRIDGE_MODEL, BRIDGE_NAME, MANUFACTURER,
-    SERV_ACCESSORY_INFO, CHAR_MANUFACTURER,
-    CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
+    DEBOUNCE_TIMEOUT, BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER,
+    MANUFACTURER, SERV_ACCESSORY_INFO, CHAR_MANUFACTURER,
+    CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER, UNKNOWN)
 from .util import (
     show_setup_message, dismiss_setup_message)
 
@@ -85,7 +85,7 @@ def setup_char(char_name, service, value=None, properties=None, callback=None):
 
 
 def set_accessory_info(acc, name, model, manufacturer=MANUFACTURER,
-                       serial_number='0000'):
+                       serial_number=UNKNOWN):
     """Set the default accessory information."""
     service = acc.get_service(SERV_ACCESSORY_INFO)
     service.get_characteristic(CHAR_NAME).set_value(name)
@@ -100,7 +100,8 @@ class HomeAccessory(Accessory):
     def __init__(self, hass, name, entity_id, aid, category):
         """Initialize a Accessory object."""
         super().__init__(name, aid=aid)
-        set_accessory_info(self, name, model=entity_id)
+        domain = entity_id.split(".")[0].replace("_", " ").title()
+        set_accessory_info(self, name, model=domain, serial_number=entity_id)
         self.category = getattr(Category, category, Category.OTHER)
         self.entity_id = entity_id
         self.hass = hass
@@ -137,7 +138,8 @@ class HomeBridge(Bridge):
     def __init__(self, hass, name=BRIDGE_NAME):
         """Initialize a Bridge object."""
         super().__init__(name)
-        set_accessory_info(self, name, model=BRIDGE_MODEL)
+        set_accessory_info(self, name, model=BRIDGE_MODEL,
+                           serial_number=BRIDGE_SERIAL_NUMBER)
         self.hass = hass
 
     def _set_services(self):

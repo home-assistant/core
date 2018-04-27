@@ -18,9 +18,11 @@ DEFAULT_PORT = 51827
 SERVICE_HOMEKIT_START = 'start'
 
 # #### STRING CONSTANTS ####
-BRIDGE_MODEL = 'homekit.bridge'
-BRIDGE_NAME = 'Home Assistant'
-MANUFACTURER = 'HomeAssistant'
+BRIDGE_MODEL = 'Bridge'
+BRIDGE_NAME = 'Home Assistant Bridge'
+BRIDGE_SERIAL_NUMBER = 'homekit.bridge'
+MANUFACTURER = 'Home Assistant'
+UNKNOWN = 'Unknown'
 
 # #### Categories ####
 CATEGORY_ALARM_SYSTEM = 'ALARM_SYSTEM'
