@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.deconz/
 """
 from homeassistant.components.deconz import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
+    DOMAIN as DATA_DECONZ, DATA_DECONZ_EVENT, DATA_DECONZ_ID)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, CONF_EVENT, CONF_ID)
 from homeassistant.core import EventOrigin, callback
@@ -35,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     for sensor in sensors.values():
         if sensor and sensor.type in DECONZ_SENSOR:
             if sensor.type in DECONZ_REMOTE:
-                DeconzEvent(hass, sensor)
+                hass.data[DATA_DECONZ_EVENT].append(DeconzEvent(hass, sensor))
                 if sensor.battery:
                     entities.append(DeconzBattery(sensor))
             else:

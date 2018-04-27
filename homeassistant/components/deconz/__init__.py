@@ -14,7 +14,8 @@ from homeassistant.util.json import load_json
 
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
-from .const import CONFIG_FILE, DATA_DECONZ_ID, DOMAIN, _LOGGER
+from .const import (
+    CONFIG_FILE, DATA_DECONZ_EVENT, DATA_DECONZ_ID, DOMAIN, _LOGGER)
 
 REQUIREMENTS = ['pydeconz==36']
 
@@ -79,6 +80,7 @@ async def async_setup_entry(hass, config_entry):
         return False
 
     hass.data[DOMAIN] = deconz
+    hass.data[DATA_DECONZ_EVENT] = []
     hass.data[DATA_DECONZ_ID] = {}
 
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
@@ -137,6 +139,8 @@ async def async_unload_entry(hass, config_entry):
     hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
     deconz.close()
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
-        hass.async_add_job(hass.config_entries.async_forward_entry_unload(
-            config_entry, component))
+        await hass.config_entries.async_forward_entry_unload(
+            config_entry, component)
+    for event in hass.data[DATA_DECONZ_EVENT]:
+        del event
     return True
