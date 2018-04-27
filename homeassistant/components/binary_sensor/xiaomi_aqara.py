@@ -497,4 +497,3 @@ class XiaomiCube(XiaomiBinarySensor):
             self._last_action = 'rotate'
 
         return True
-
