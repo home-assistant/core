@@ -32,6 +32,8 @@ LEGACY_DEVICE_TYPE_MAP = {
     'ceiling1': 'ceiling',
 }
 
+CONF_MODEL = 'model'
+
 CONF_TRANSITION = 'transition'
 DEFAULT_TRANSITION = 350
 
@@ -45,6 +47,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
     vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
     vol.Optional(CONF_SAVE_ON_CHANGE, default=True): cv.boolean,
+    vol.Optional(CONF_MODEL): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -59,9 +62,16 @@ SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_EFFECT |
                         SUPPORT_COLOR_TEMP)
 
-YEELIGHT_MIN_KELVIN = YEELIGHT_MAX_KELVIN = 2700
-YEELIGHT_RGB_MIN_KELVIN = 1700
-YEELIGHT_RGB_MAX_KELVIN = 6500
+YEELIGHT_SPECS = {
+    'mono1': {'min_kelvin': 2700, 'max_kelvin': 2700},
+    'color1': {'min_kelvin': 1700, 'max_kelvin': 6500},
+    'strip1': {'min_kelvin': 1700, 'max_kelvin': 6500},
+    'bslamp1': {'min_kelvin': 1700, 'max_kelvin': 6500},
+    'ceiling1': {'min_kelvin': 2700, 'max_kelvin': 6500},
+    'ceiling2': {'min_kelvin': 2700, 'max_kelvin': 6500},
+    'ceiling3': {'min_kelvin': 2700, 'max_kelvin': 6000},
+    'ceiling4': {'min_kelvin': 2700, 'max_kelvin': 6500},
+}
 
 EFFECT_DISCO = "Disco"
 EFFECT_TEMP = "Slow Temp"
@@ -131,14 +141,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug("Adding autodetected %s", discovery_info['hostname'])
 
         device_type = discovery_info['device_type']
-        device_type = LEGACY_DEVICE_TYPE_MAP.get(device_type, device_type)
+        legacy_device_type = LEGACY_DEVICE_TYPE_MAP.get(device_type,
+                                                        device_type)
 
         # Not using hostname, as it seems to vary.
-        name = "yeelight_%s_%s" % (device_type,
+        name = "yeelight_%s_%s" % (legacy_device_type,
                                    discovery_info['properties']['mac'])
         device = {'name': name, 'ipaddr': discovery_info['host']}
 
-        light = YeelightLight(device, DEVICE_SCHEMA({}))
+        light = YeelightLight(device, DEVICE_SCHEMA({CONF_MODEL: device_type}))
         lights.append(light)
         hass.data[DATA_KEY][name] = light
     else:
@@ -195,6 +206,15 @@ class YeelightLight(Light):
         self._is_on = None
         self._hs = None
 
+        self._model = config['model']
+        self._min_mireds = None
+        self._max_mireds = None
+        if self._model is not None and self._model in YEELIGHT_SPECS:
+            self._min_mireds = kelvin_to_mired(
+                YEELIGHT_SPECS[self._model]['max_kelvin'])
+            self._max_mireds = kelvin_to_mired(
+                YEELIGHT_SPECS[self._model]['min_kelvin'])
+
     @property
     def available(self) -> bool:
         """Return if bulb is available."""
@@ -233,16 +253,12 @@ class YeelightLight(Light):
     @property
     def min_mireds(self):
         """Return minimum supported color temperature."""
-        if self.supported_features & SUPPORT_COLOR_TEMP:
-            return kelvin_to_mired(YEELIGHT_RGB_MAX_KELVIN)
-        return kelvin_to_mired(YEELIGHT_MAX_KELVIN)
+        return self._min_mireds
 
     @property
     def max_mireds(self):
         """Return maximum supported color temperature."""
-        if self.supported_features & SUPPORT_COLOR_TEMP:
-            return kelvin_to_mired(YEELIGHT_RGB_MIN_KELVIN)
-        return kelvin_to_mired(YEELIGHT_MIN_KELVIN)
+        return self._max_mireds
 
     def _get_hs_from_properties(self):
         rgb = self._properties.get('rgb', None)
@@ -306,6 +322,18 @@ class YeelightLight(Light):
 
             if self._bulb_device.bulb_type == yeelight.BulbType.Color:
                 self._supported_features = SUPPORT_YEELIGHT_RGB
+
+            if self._min_mireds is None:
+                if self.supported_features & SUPPORT_COLOR_TEMP:
+                    self._min_mireds = kelvin_to_mired(
+                        YEELIGHT_SPECS['color1']['max_kelvin'])
+                    self._max_mireds = kelvin_to_mired(
+                        YEELIGHT_SPECS['color1']['min_kelvin'])
+                else:
+                    self._min_mireds = kelvin_to_mired(
+                        YEELIGHT_SPECS['mono1']['max_kelvin'])
+                    self._max_mireds = kelvin_to_mired(
+                        YEELIGHT_SPECS['mono1']['min_kelvin'])
 
             self._is_on = self._properties.get('power') == 'on'
 
