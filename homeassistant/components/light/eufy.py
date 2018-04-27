@@ -61,13 +61,14 @@ class EufyLight(Light):
     def update(self):
         """Synchronise state from the bulb."""
         self._bulb.update()
-        self._brightness = self._bulb.brightness
-        self._temp = self._bulb.temperature
-        if self._bulb.colors:
-            self._colormode = True
-            self._hs = color_util.color_RGB_to_hs(*self._bulb.colors)
-        else:
-            self._colormode = False
+        if self._bulb.power:
+            self._brightness = self._bulb.brightness
+            self._temp = self._bulb.temperature
+            if self._bulb.colors:
+                self._colormode = True
+                self._hs = color_util.color_RGB_to_hs(*self._bulb.colors)
+            else:
+                self._colormode = False
         self._state = self._bulb.power
 
     @property
@@ -130,7 +131,9 @@ class EufyLight(Light):
         if brightness is not None:
             brightness = int(brightness * 100 / 255)
         else:
-            brightness = max(1, self._brightness)
+            if self._brightness is None:
+                self._brightness = 100
+            brightness = self._brightness
 
         if colortemp is not None:
             self._colormode = False
