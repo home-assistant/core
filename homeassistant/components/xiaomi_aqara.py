@@ -334,4 +334,3 @@ def _add_gateway_to_schema(xiaomi, schema):
     return schema.extend({
         vol.Required(ATTR_GW_MAC, **kwargs): gateway
     })
-

@@ -92,4 +92,3 @@ class XiaomiSensor(XiaomiDevice):
             return False
         self._state = round(value, 1)
         return True
-

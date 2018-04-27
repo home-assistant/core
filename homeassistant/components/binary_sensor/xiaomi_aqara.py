@@ -2,8 +2,8 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY, XiaomiDevice, 
-                                                   DOMAIN_CONFIG, CONF_LOCKUIDS)
+from homeassistant.components.xiaomi_aqara import (
+    PY_XIAOMI_GATEWAY, XiaomiDevice, DOMAIN_CONFIG, CONF_LOCKUIDS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if model in ['motion', 'sensor_motion', 'sensor_motion.aq2']:
                 devices.append(XiaomiMotionSensor(device, hass, gateway))
             elif model in ['lock.aq1']:
-                devices.append(XiaomiUnlockSensor(hass.data[DOMAIN_CONFIG], devices, device, hass, gateway))
+                devices.append(XiaomiUnlockSensor(hass.data[DOMAIN_CONFIG],
+                    devices, device, hass, gateway))
             elif model in ['magnet', 'sensor_magnet', 'sensor_magnet.aq2']:
                 devices.append(XiaomiDoorSensor(device, gateway))
             elif model == 'sensor_wleak.aq1':
@@ -73,7 +74,8 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
     def __init__(self, device, name, xiaomi_hub, data_key, device_class):
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = data_key
-        self._real_sid = None if 'real_sid' not in device else device['real_sid']
+        self._real_sid = \
+            None if 'real_sid' not in device else device['real_sid']
         self._device_class = device_class
         self._should_poll = False
         self._density = 0
@@ -227,15 +229,17 @@ class XiaomiUnlockSensor(XiaomiBinarySensor):
                                     'status', 'motion')
 
     def push_sub_devices(self, uid=None):
+        """Parse data sent by gateway."""
         for key in self.sub_devices:
             self.sub_devices[key].push_data({
-                'status': MOTION if uid is not None and uid == key else NO_MOTION
+                'status':
+                    MOTION if uid is not None and uid == key else NO_MOTION
             }, {
                 'sid': key,
                 'cmd': 'report',
-                'status': MOTION if uid is not None and uid == key else NO_MOTION
+                'status':
+                    MOTION if uid is not None and uid == key else NO_MOTION
             })
-
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
