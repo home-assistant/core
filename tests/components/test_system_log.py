@@ -80,7 +80,7 @@ async def test_error(hass, aiohttp_client):
 
 
 async def test_config_not_fire_event(hass):
-    """Test that error are posted as events."""
+    """Test that errors are not posted as events with default config."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     events = []
 
