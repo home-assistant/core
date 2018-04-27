@@ -28,6 +28,7 @@ DOMAIN = 'vera'
 VERA_CONTROLLER = 'vera_controller'
 
 CONF_CONTROLLER = 'vera_controller_url'
+CONF_UNIQUE_ENTITIES = 'unique_entities'
 
 VERA_ID_FORMAT = '{}_{}'
 
@@ -43,7 +44,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_CONTROLLER): cv.url,
         vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
-        vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA
+        vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
+        vol.Optional(CONF_UNIQUE_ENTITIES, default=True): cv.boolean
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -69,6 +71,8 @@ def setup(hass, base_config):
     base_url = config.get(CONF_CONTROLLER)
     light_ids = config.get(CONF_LIGHTS)
     exclude_ids = config.get(CONF_EXCLUDE)
+    global unique_entities
+    unique_entities = config.get(CONF_UNIQUE_ENTITIES)
 
     # Initialize the Vera controller.
     controller, _ = veraApi.init_controller(base_url)
@@ -144,8 +148,11 @@ class VeraDevice(Entity):
 
         self._name = self.vera_device.name
         # Append device id to prevent name clashes in HA.
-        self.vera_id = VERA_ID_FORMAT.format(
-            slugify(vera_device.name), vera_device.device_id)
+        if unique_entities:
+            self.vera_id = VERA_ID_FORMAT.format(
+                slugify(vera_device.name), vera_device.device_id)
+        else:
+            self.vera_id = slugify(vera_device.name)
 
         self.controller.register(vera_device, self._update_callback)
         self.update()
