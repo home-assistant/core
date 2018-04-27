@@ -97,7 +97,11 @@ def valid_topic(value: Any) -> str:
         raw_value = value.encode('utf-8')
     except UnicodeError:
         raise vol.Invalid("MQTT topic name/filter must be valid UTF-8 string.")
-    vol.Length(min=1, max=65535)(raw_value)
+    if not raw_value:
+        raise vol.Invalid("MQTT topic name/filter must not be empty.")
+    if len(raw_value) > 65535:
+        raise vol.Invalid("MQTT topic name/filter must not be longer than "
+                          "65535 encoded bytes.")
     if '\0' in value:
         raise vol.Invalid("MQTT topic name/filter must not contain null "
                           "character.")
