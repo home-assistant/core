@@ -1,9 +1,6 @@
 """Test system log component."""
-import asyncio
 import logging
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 from homeassistant.core import callback
 from homeassistant.bootstrap import async_setup_component
