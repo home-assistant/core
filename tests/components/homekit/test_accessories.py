@@ -136,7 +136,7 @@ class TestAccessories(unittest.TestCase):
         hass.states.set('homekit.accessory', 'off')
         hass.block_till_done()
 
-        acc = HomeAccessory('hass', 'test_name', 'test_model', 2, '')
+        acc = HomeAccessory('hass', 'test_name', 'test_model.demo', 2, '')
         self.assertEqual(acc.display_name, 'test_name')
         self.assertEqual(acc.aid, 2)
         self.assertEqual(len(acc.services), 1)
