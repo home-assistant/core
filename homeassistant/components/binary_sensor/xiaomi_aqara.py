@@ -36,8 +36,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 devices.append(XiaomiMotionSensor(device, hass, gateway))
             elif model in ['lock.aq1']:
                 devices.append(XiaomiUnlockSensor(hass.data[DOMAIN_CONFIG],
-                                                    devices, device, hass,
-                                                    gateway))
+                                                  devices, device,
+                                                  hass, gateway))
             elif model in ['magnet', 'sensor_magnet', 'sensor_magnet.aq2']:
                 devices.append(XiaomiDoorSensor(device, gateway))
             elif model == 'sensor_wleak.aq1':
