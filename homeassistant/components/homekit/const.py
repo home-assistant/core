@@ -74,6 +74,7 @@ CHAR_CURRENT_POSITION = 'CurrentPosition'  # Int | [0, 100]
 CHAR_CURRENT_HUMIDITY = 'CurrentRelativeHumidity'  # percent
 CHAR_CURRENT_SECURITY_STATE = 'SecuritySystemCurrentState'
 CHAR_CURRENT_TEMPERATURE = 'CurrentTemperature'
+CHAR_FIRMWARE_REVISION = 'FirmwareRevision'
 CHAR_HEATING_THRESHOLD_TEMPERATURE = 'HeatingThresholdTemperature'
 CHAR_HUE = 'Hue'  # arcdegress | [0, 360]
 CHAR_LEAK_DETECTED = 'LeakDetected'

@@ -7,6 +7,7 @@ import logging
 from pyhap.accessory import Accessory, Bridge, Category
 from pyhap.accessory_driver import AccessoryDriver
 
+from homeassistant.const import __version__
 from homeassistant.core import callback as ha_callback
 from homeassistant.helpers.event import (
     async_track_state_change, track_point_in_utc_time)
@@ -14,7 +15,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     DEBOUNCE_TIMEOUT, BRIDGE_MODEL, BRIDGE_NAME, MANUFACTURER,
-    SERV_ACCESSORY_INFO, CHAR_MANUFACTURER,
+    SERV_ACCESSORY_INFO, CHAR_FIRMWARE_REVISION, CHAR_MANUFACTURER,
     CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
 from .util import (
     show_setup_message, dismiss_setup_message)
@@ -85,13 +86,15 @@ def setup_char(char_name, service, value=None, properties=None, callback=None):
 
 
 def set_accessory_info(acc, name, model, manufacturer=MANUFACTURER,
-                       serial_number='0000'):
+                       serial_number='0000', firmware_revision=__version__):
     """Set the default accessory information."""
     service = acc.get_service(SERV_ACCESSORY_INFO)
     service.get_characteristic(CHAR_NAME).set_value(name)
     service.get_characteristic(CHAR_MODEL).set_value(model)
     service.get_characteristic(CHAR_MANUFACTURER).set_value(manufacturer)
     service.get_characteristic(CHAR_SERIAL_NUMBER).set_value(serial_number)
+    (service.get_characteristic(CHAR_FIRMWARE_REVISION)
+     .set_value(firmware_revision))
 
 
 class HomeAccessory(Accessory):
