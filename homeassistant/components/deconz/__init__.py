@@ -26,6 +26,8 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+SERVICE_DECONZ = 'configure'
+
 SERVICE_FIELD = 'field'
 SERVICE_ENTITY = 'entity'
 SERVICE_DATA = 'data'
@@ -112,7 +114,7 @@ async def async_setup_entry(hass, config_entry):
                 return
         await deconz.async_put_state(field, data)
     hass.services.async_register(
-        DOMAIN, 'configure', async_configure, schema=SERVICE_SCHEMA)
+        DOMAIN, SERVICE_DECONZ, async_configure, schema=SERVICE_SCHEMA)
 
     @callback
     def deconz_shutdown(event):
@@ -126,4 +128,15 @@ async def async_setup_entry(hass, config_entry):
         deconz.close()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deconz_shutdown)
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload deCONZ config entry."""
+    deconz = hass.data.pop(DOMAIN)
+    hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
+    deconz.close()
+    for component in ['binary_sensor', 'light', 'scene', 'sensor']:
+        hass.async_add_job(hass.config_entries.async_forward_entry_unload(
+            config_entry, component))
     return True
