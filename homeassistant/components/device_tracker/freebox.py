@@ -3,47 +3,26 @@ Support for device tracking through Freebox routers.
 
 This tracker keeps track of the devices connected to the configured Freebox.
 
-Example configuration.yaml entry:
-
-device_tracker:
-  - platform: freebox
-    host: foobar.fbox.fr
-    port: 1234
-
-You can find out your Freebox host and port by opening this address in your
-browser: http://mafreebox.freebox.fr/api_version. The returned json should
-contain an api_domain (host) and a https_port (port).
-
-The first time you add your Freebox, you will need to authorize Home Assistant
-by pressing the right button on the facade of the Freebox when prompted to do
-so.
-
-Note that the Freebox waits for some time before marking a device as
-inactive, meaning that there will be a small delay (1 or 2 minutes)
-between the time you disconnect a device and the time it will appear
-as "away" in Hass. You should take this into account when specifying
-consider_home.
-On the contrary, the Freebox immediately reports devices newly connected, so
-they should appear as "home" almost instantly, as soon as Hass refreshes the
-devices states.
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.freebox/
 """
+import asyncio
 import copy
 import logging
+import socket
 from collections import namedtuple
 from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 from homeassistant.const import (
     CONF_HOST, CONF_PORT)
-from homeassistant.util import Throttle
 
-REQUIREMENTS = ['freepybox==0.0.3']
+REQUIREMENTS = ['aiofreepybox==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +37,8 @@ PLATFORM_SCHEMA = vol.All(
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
-def setup_scanner(hass, config, see, discovery_info=None):
+async def async_setup_scanner(hass, config, async_see, discovery_info=None):
+    """Set up the Freebox device tracker and start the polling."""
     freebox_config = copy.deepcopy(config)
     if discovery_info is not None:
         freebox_config[CONF_HOST] = discovery_info['properties']['api_domain']
@@ -66,7 +46,9 @@ def setup_scanner(hass, config, see, discovery_info=None):
         _LOGGER.info("Discovered Freebox server: %s:%s",
                      freebox_config[CONF_HOST], freebox_config[CONF_PORT])
 
-    FreeboxDeviceScanner(hass, freebox_config, see)
+    scanner = FreeboxDeviceScanner(hass, freebox_config, async_see)
+    interval = freebox_config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    await scanner.async_start(hass, interval)
     return True
 
 
@@ -75,34 +57,22 @@ Device = namedtuple('Device', ['id', 'name', 'ip'])
 
 def _build_device(device_dict):
     return Device(
-            device_dict['l2ident']['id'],
-            device_dict['primary_name'],
-            device_dict['l3connectivities'][0]['addr'])
+        device_dict['l2ident']['id'],
+        device_dict['primary_name'],
+        device_dict['l3connectivities'][0]['addr'])
 
 
 class FreeboxDeviceScanner(object):
     """This class scans for devices connected to the Freebox."""
 
-    def __init__(self, hass, config, see):
+    def __init__(self, hass, config, async_see):
         """Initialize the scanner."""
+        from aiofreepybox import Freepybox
+
         self.host = config[CONF_HOST]
         self.port = config[CONF_PORT]
         self.token_file = hass.config.path(FREEBOX_CONFIG_FILE)
-
-        self.see = see
-
-        self.update_info()
-
-        interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        track_time_interval(hass, self.update_info, interval)
-
-    @Throttle(MIN_TIME_BETWEEN_SCANS)
-    def update_info(self, now=None):
-        """Check the Freebox for devices."""
-        _LOGGER.info('Scanning devices')
-
-        from freepybox import Freepybox
-        import socket
+        self.async_see = async_see
 
         # Hardcode the app description to avoid invalidating the authentication
         # file at each new version.
@@ -116,21 +86,35 @@ class FreeboxDeviceScanner(object):
         }
 
         api_version = 'v1'  # Use the lowest working version.
-        fbx = Freepybox(
+        self.fbx = Freepybox(
             app_desc=app_desc,
             token_file=self.token_file,
             api_version=api_version)
-        fbx.open(self.host, self.port)
+
+    async def async_start(self, hass, interval):
+        """Perform a first update and start polling at the given interval."""
+        await self.async_update_info()
+        interval = max(interval, MIN_TIME_BETWEEN_SCANS)
+        async_track_time_interval(hass, self.async_update_info, interval)
+
+    async def async_update_info(self, now=None):
+        """Check the Freebox for devices."""
+        from aiofreepybox.exceptions import HttpRequestError
+
+        _LOGGER.info('Scanning devices')
+
+        await self.fbx.open(self.host, self.port)
         try:
-            hosts = fbx.lan.get_hosts_list()
-        finally:
-            fbx.close()
+            hosts = await self.fbx.lan.get_hosts_list()
+        except HttpRequestError:
+            _LOGGER.exception('Failed to scan devices')
+        else:
+            active_devices = [_build_device(device)
+                              for device in hosts
+                              if device['active']]
 
-        last_results = [_build_device(device)
-                        for device in hosts
-                        if device['active']]
+            if active_devices:
+                await asyncio.wait([self.async_see(mac=d.id, host_name=d.name)
+                                    for d in active_devices])
 
-        for d in last_results:
-            self.see(mac=d.id, host_name=d.name)
-
-        return True
+        await self.fbx.close()
