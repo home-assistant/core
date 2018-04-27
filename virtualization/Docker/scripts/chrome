@@ -5,12 +5,11 @@
 # Stop on errors
 set -e
 
-echo 'Starting Chrome Install\n'
+cd /usr/src/app/
+mkdir -p build && cd build
 
 # Versions
 CHROME_DRIVER_VERSION=`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`
-SELENIUM_STANDALONE_VERSION=3.4.0
-SELENIUM_SUBDIR=$(echo "$SELENIUM_STANDALONE_VERSION" | cut -d"." -f-2)
 
 # Install Chrome.
 curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
@@ -19,3 +18,10 @@ apt-get -y update
 apt-get -y install google-chrome-stable --no-install-recommends
 
 google-chrome --version
+
+# Install ChromeDriver
+curl -sS http://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip -o chromedriver_linux64.zip
+unzip chromedriver_linux64.zip -d ./
+rm chromedriver_linux64.zip
+mv -f chromedriver /usr/local/bin/chromedriver
+chmod +x /usr/local/bin/chromedriver

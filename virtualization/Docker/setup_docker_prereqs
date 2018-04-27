@@ -33,6 +33,7 @@ PACKAGES_DEV=(
   cmake
   git
   swig
+  unzip
 )
 
 # Install packages
