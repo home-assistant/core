@@ -115,7 +115,21 @@ async def async_setup(hass, config):
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
 
-    if api_password is not None:
+    if api_password == 'welcome':
+        _LOGGER.warning('Using default password, this is not recommended!')
+        hass.components.persistent_notification.async_create(
+            """It is strongly recommended to set a non default password!
+            Edit the password in `secrets.yaml`""",
+            title="Default Password used!")
+    elif api_password is None:
+        _LOGGER.warning('No password set in configuration.yaml http: section!')
+        hass.components.persistent_notification.async_create(
+            """It is strongly recommended to set a password!
+            Edit the password in `secrets.yaml` and include it in
+            `configuration.yaml` by removing the `#` in fromt of
+            `# api_password: !secret http_password`""",
+            title="No Password set!")
+    else:
         logging.getLogger('aiohttp.access').addFilter(
             HideSensitiveDataFilter(api_password))
 
