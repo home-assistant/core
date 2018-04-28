@@ -231,7 +231,7 @@ def date(value) -> date_sys:
     return date_val
 
 
-def time_period_str(value: str) -> timedelta:
+def time_period_str_colon(value: str) -> timedelta:
     """Validate and transform time offset."""
     if isinstance(value, int):
         raise vol.Invalid('Make sure you wrap time values in quotes')
@@ -266,15 +266,36 @@ def time_period_str(value: str) -> timedelta:
     return offset
 
 
-def time_period_seconds(value: Union[int, str]) -> timedelta:
-    """Validate and transform seconds to a time offset."""
-    try:
-        return timedelta(seconds=int(value))
-    except (ValueError, TypeError):
-        raise vol.Invalid('Expected seconds, got {}'.format(value))
+def time_period_str_unit(value: str) -> timedelta:
+    value = string(value)
+
+    if value.endswith('ms'):
+        try:
+            return timedelta(milliseconds=float(value[:-2].rstrip()))
+        except ValueError:
+            raise vol.Invalid("Expected milliseconds, got {}".format(value))
+    elif value.endswith('min'):
+        try:
+            return timedelta(minutes=float(value[:-3].rstrip()))
+        except ValueError:
+            raise vol.Invalid("Expected minutes, got {}".format(value))
+    elif value.endswith('h'):
+        try:
+            return timedelta(hours=float(value[:-1].rstrip()))
+        except ValueError:
+            raise vol.Invalid("Expected hours, got {}".format(value))
+    else:
+        # Default to seconds
+        if value.endswith('s'):
+            value = value[-1].rstrip()
+
+        try:
+            return timedelta(seconds=float(value))
+        except ValueError:
+            raise vol.Invalid("Expected seconds, got {}".format(value))
 
 
-time_period = vol.Any(time_period_str, time_period_seconds, timedelta,
+time_period = vol.Any(time_period_str_colon, time_period_str_unit, timedelta,
                       time_period_dict)
 
 
