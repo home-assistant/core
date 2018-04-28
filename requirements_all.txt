@@ -1323,6 +1323,7 @@ watchdog==0.8.3
 # homeassistant.components.waterfurnace
 waterfurnace==0.4.0
 
+# homeassistant.components.cover.ryobi_gdo
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0
 
