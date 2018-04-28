@@ -208,6 +208,9 @@ omit =
     homeassistant/components/raincloud.py
     homeassistant/components/*/raincloud.py
 
+    homeassistant/components/rainmachine.py
+    homeassistant/components/*/rainmachine.py
+
     homeassistant/components/raspihats.py
     homeassistant/components/*/raspihats.py
 
@@ -711,7 +714,6 @@ omit =
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/pulseaudio_loopback.py
     homeassistant/components/switch/rainbird.py
-    homeassistant/components/switch/rainmachine.py
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
     homeassistant/components/switch/snmp.py
