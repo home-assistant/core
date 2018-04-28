@@ -24,7 +24,6 @@ REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Vacuum cleaner'
-ICON = 'mdi:roomba'
 DATA_KEY = 'vacuum.xiaomi_miio'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -142,7 +141,6 @@ class MiroboVacuum(VacuumDevice):
     def __init__(self, name, vacuum):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         self._name = name
-        self._icon = ICON
         self._vacuum = vacuum
 
         self.vacuum_state = None
@@ -157,11 +155,6 @@ class MiroboVacuum(VacuumDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use for device."""
-        return self._icon
 
     @property
     def status(self):

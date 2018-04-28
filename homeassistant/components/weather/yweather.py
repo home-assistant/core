@@ -32,6 +32,7 @@ DEFAULT_NAME = 'Yweather'
 SCAN_INTERVAL = timedelta(minutes=10)
 
 CONDITION_CLASSES = {
+    'clear-night': [31],
     'cloudy': [26, 27, 28, 29, 30],
     'fog': [19, 20, 21, 22, 23],
     'hail': [17, 18, 35],

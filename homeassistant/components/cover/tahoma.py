@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up Tahoma covers."""
+    """Set up the Tahoma covers."""
     controller = hass.data[TAHOMA_DOMAIN]['controller']
     devices = []
     for device in hass.data[TAHOMA_DOMAIN]['devices']['cover']:
