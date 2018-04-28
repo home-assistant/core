@@ -1218,7 +1218,7 @@ spotcrime==1.0.3
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.6
+sqlalchemy==1.2.7
 
 # homeassistant.components.statsd
 statsd==3.2.1
