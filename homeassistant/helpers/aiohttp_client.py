@@ -67,13 +67,14 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
     return clientsession
 
 
+@asyncio.coroutine
 @bind_hass
-async def async_aiohttp_proxy_web(hass, request, web_coro, buffer_size=102400,
-                                  timeout=10):
+def async_aiohttp_proxy_web(hass, request, web_coro, buffer_size=102400,
+                            timeout=10):
     """Stream websession request to aiohttp web response."""
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
-            req = await web_coro
+            req = yield from web_coro
 
     except asyncio.CancelledError:
         # The user cancelled the request
@@ -88,7 +89,7 @@ async def async_aiohttp_proxy_web(hass, request, web_coro, buffer_size=102400,
         raise HTTPBadGateway() from err
 
     try:
-        await async_aiohttp_proxy_stream(
+        yield from async_aiohttp_proxy_stream(
             hass,
             request,
             req.content,

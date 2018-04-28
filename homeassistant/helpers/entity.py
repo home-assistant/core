@@ -1,4 +1,5 @@
 """An abstract class for entities."""
+import asyncio
 import logging
 import functools as ft
 from timeit import default_timer as timer
@@ -182,7 +183,8 @@ class Entity(object):
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
 
-    async def async_update_ha_state(self, force_refresh=False):
+    @asyncio.coroutine
+    def async_update_ha_state(self, force_refresh=False):
         """Update Home Assistant with current state of entity.
 
         If force_refresh == True will update entity before setting state.
@@ -199,7 +201,7 @@ class Entity(object):
         # update entity data
         if force_refresh:
             try:
-                await self.async_device_update()
+                yield from self.async_device_update()
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
@@ -296,7 +298,8 @@ class Entity(object):
         """Schedule an update ha state change task."""
         self.hass.async_add_job(self.async_update_ha_state(force_refresh))
 
-    async def async_device_update(self, warning=True):
+    @asyncio.coroutine
+    def async_device_update(self, warning=True):
         """Process 'update' or 'async_update' from entity.
 
         This method is a coroutine.
@@ -307,7 +310,7 @@ class Entity(object):
 
         # Process update sequential
         if self.parallel_updates:
-            await self.parallel_updates.acquire()
+            yield from self.parallel_updates.acquire()
 
         if warning:
             update_warn = self.hass.loop.call_later(
@@ -319,9 +322,9 @@ class Entity(object):
         try:
             if hasattr(self, 'async_update'):
                 # pylint: disable=no-member
-                await self.async_update()
+                yield from self.async_update()
             else:
-                await self.hass.async_add_job(self.update)
+                yield from self.hass.async_add_job(self.update)
         finally:
             self._update_staged = False
             if warning:
