@@ -52,7 +52,7 @@ class HueUsernameView(HomeAssistantView):
 
 
 class HueGroupView(HomeAssistantView):
-    """Dummy group handler to get Logitech Pop working."""
+    """Group handler to get Logitech Pop working."""
 
     url = '/api/{username}/groups/0/action'
     name = 'emulated_hue:groups:state'
@@ -64,10 +64,14 @@ class HueGroupView(HomeAssistantView):
 
     @core.callback
     def put(self, request, username):
-        """Dummy handler."""
-        return self.json([{'error': {'address': '/groups/0/action/scene',
-                           'type': 7, 'description': 'invalid value, dummy ' +
-                                                     'for parameter, scene'}}])
+        """Process a request to make the Logitech Pop working."""
+        return self.json([{
+            'error': {
+                'address': '/groups/0/action/scene',
+                'type': 7,
+                'description': 'invalid value, dummy for parameter, scene'
+            }
+        }])
 
 
 class HueAllLightsStateView(HomeAssistantView):
