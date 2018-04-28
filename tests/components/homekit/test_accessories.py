@@ -10,8 +10,8 @@ from homeassistant.components.homekit.accessories import (
     add_preload_service, set_accessory_info,
     debounce, HomeAccessory, HomeBridge, HomeDriver)
 from homeassistant.components.homekit.const import (
-    BRIDGE_MODEL, BRIDGE_NAME, SERV_ACCESSORY_INFO,
-    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
+    BRIDGE_MODEL, BRIDGE_NAME, SERV_ACCESSORY_INFO, CHAR_FIRMWARE_REVISION,
+    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER, MANUFACTURER)
 from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED
 import homeassistant.util.dt as dt_util
 
@@ -92,26 +92,30 @@ class TestAccessories(unittest.TestCase):
         """Test setting the basic accessory information."""
         # Test HomeAccessory
         acc = HomeAccessory('HA', 'Home Accessory', 'homekit.accessory', 2, '')
-        set_accessory_info(acc, 'name', 'model', 'manufacturer', '0000')
+        set_accessory_info(acc, 'name', 'model', '0000', MANUFACTURER, '1.2.3')
 
         serv = acc.get_service(SERV_ACCESSORY_INFO)
         self.assertEqual(serv.get_characteristic(CHAR_NAME).value, 'name')
         self.assertEqual(serv.get_characteristic(CHAR_MODEL).value, 'model')
         self.assertEqual(
-            serv.get_characteristic(CHAR_MANUFACTURER).value, 'manufacturer')
-        self.assertEqual(
             serv.get_characteristic(CHAR_SERIAL_NUMBER).value, '0000')
+        self.assertEqual(
+            serv.get_characteristic(CHAR_MANUFACTURER).value, MANUFACTURER)
+        self.assertEqual(
+            serv.get_characteristic(CHAR_FIRMWARE_REVISION).value, '1.2.3')
 
         # Test HomeBridge
         acc = HomeBridge('hass')
-        set_accessory_info(acc, 'name', 'model', 'manufacturer', '0000')
+        set_accessory_info(acc, 'name', 'model', '0000', MANUFACTURER, '1.2.3')
 
         serv = acc.get_service(SERV_ACCESSORY_INFO)
         self.assertEqual(serv.get_characteristic(CHAR_MODEL).value, 'model')
         self.assertEqual(
-            serv.get_characteristic(CHAR_MANUFACTURER).value, 'manufacturer')
-        self.assertEqual(
             serv.get_characteristic(CHAR_SERIAL_NUMBER).value, '0000')
+        self.assertEqual(
+            serv.get_characteristic(CHAR_MANUFACTURER).value, MANUFACTURER)
+        self.assertEqual(
+            serv.get_characteristic(CHAR_FIRMWARE_REVISION).value, '1.2.3')
 
     def test_home_accessory(self):
         """Test HomeAccessory class."""
@@ -124,7 +128,7 @@ class TestAccessories(unittest.TestCase):
         self.assertEqual(len(acc.services), 1)
         serv = acc.services[0]  # SERV_ACCESSORY_INFO
         self.assertEqual(
-            serv.get_characteristic(CHAR_MODEL).value, 'homekit.accessory')
+            serv.get_characteristic(CHAR_MODEL).value, 'Homekit')
 
         hass.states.set('homekit.accessory', 'on')
         hass.block_till_done()
@@ -132,13 +136,13 @@ class TestAccessories(unittest.TestCase):
         hass.states.set('homekit.accessory', 'off')
         hass.block_till_done()
 
-        acc = HomeAccessory('hass', 'test_name', 'test_model', 2, '')
+        acc = HomeAccessory('hass', 'test_name', 'test_model.demo', 2, '')
         self.assertEqual(acc.display_name, 'test_name')
         self.assertEqual(acc.aid, 2)
         self.assertEqual(len(acc.services), 1)
         serv = acc.services[0]  # SERV_ACCESSORY_INFO
         self.assertEqual(
-            serv.get_characteristic(CHAR_MODEL).value, 'test_model')
+            serv.get_characteristic(CHAR_MODEL).value, 'Test Model')
 
         hass.stop()
 
