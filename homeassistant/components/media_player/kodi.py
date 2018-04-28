@@ -8,6 +8,7 @@ import asyncio
 from collections import OrderedDict
 from functools import wraps
 import logging
+import socket
 import urllib
 import re
 
@@ -157,13 +158,29 @@ def _check_deprecated_turn_off(hass, turn_off_action):
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Kodi platform."""
     if DATA_KODI not in hass.data:
-        hass.data[DATA_KODI] = []
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    tcp_port = config.get(CONF_TCP_PORT)
-    encryption = config.get(CONF_PROXY_SSL)
-    websocket = config.get(CONF_ENABLE_WEBSOCKET)
+        hass.data[DATA_KODI] = dict()
+
+    # Is this a manual configuration?
+    if discovery_info is None:
+        name = config.get(CONF_NAME)
+        host = config.get(CONF_HOST)
+        port = config.get(CONF_PORT)
+        tcp_port = config.get(CONF_TCP_PORT)
+        encryption = config.get(CONF_PROXY_SSL)
+        websocket = config.get(CONF_ENABLE_WEBSOCKET)
+    else:
+        name = "{} ({})".format(DEFAULT_NAME, discovery_info.get('hostname'))
+        host = discovery_info.get('host')
+        port = discovery_info.get('port')
+        tcp_port = DEFAULT_TCP_PORT
+        encryption = DEFAULT_PROXY_SSL
+        websocket = DEFAULT_ENABLE_WEBSOCKET
+
+    # Only add a device once, so discovered devices do not override manual
+    # config.
+    ip_addr = socket.gethostbyname(host)
+    if ip_addr in hass.data[DATA_KODI]:
+        return
 
     entity = KodiDevice(
         hass,
@@ -175,7 +192,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         turn_off_action=config.get(CONF_TURN_OFF_ACTION),
         timeout=config.get(CONF_TIMEOUT), websocket=websocket)
 
-    hass.data[DATA_KODI].append(entity)
+    hass.data[DATA_KODI][ip_addr] = entity
     async_add_devices([entity], update_before_add=True)
 
     @asyncio.coroutine
@@ -189,10 +206,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                   if key != 'entity_id'}
         entity_ids = service.data.get('entity_id')
         if entity_ids:
-            target_players = [player for player in hass.data[DATA_KODI]
+            target_players = [player
+                              for player in hass.data[DATA_KODI].values()
                               if player.entity_id in entity_ids]
         else:
-            target_players = hass.data[DATA_KODI]
+            target_players = hass.data[DATA_KODI].values()
 
         update_tasks = []
         for player in target_players:
