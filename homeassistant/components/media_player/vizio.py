@@ -19,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 import homeassistant.util as util
 
-REQUIREMENTS = ['pyvizio==0.0.2']
+REQUIREMENTS = ['pyvizio==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
