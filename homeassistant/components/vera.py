@@ -71,6 +71,7 @@ def setup(hass, base_config):
     base_url = config.get(CONF_CONTROLLER)
     light_ids = config.get(CONF_LIGHTS)
     exclude_ids = config.get(CONF_EXCLUDE)
+#    global unique_entities
     unique_entities = config.get(CONF_UNIQUE_ENTITIES)
 
     # Initialize the Vera controller.
@@ -106,7 +107,8 @@ def setup(hass, base_config):
     hass.data[VERA_SCENES] = vera_scenes
 
     for component in VERA_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {'unique_entities': unique_entities}, base_config)
+        discovery.load_platform(hass, component, DOMAIN,
+                {'unique_entities': unique_entities}, base_config)
 
     return True
 

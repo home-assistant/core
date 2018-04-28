@@ -32,7 +32,8 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up of Vera thermostats."""
     add_devices_callback(
-        VeraThermostat(device, hass.data[VERA_CONTROLLER], discovery_info['unique_entities']) for
+        VeraThermostat(device, hass.data[VERA_CONTROLLER],
+            discovery_info['unique_entities']) for
         device in hass.data[VERA_DEVICES]['climate'])
 
 
