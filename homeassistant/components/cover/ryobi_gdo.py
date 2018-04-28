@@ -78,8 +78,8 @@ def retrieve_api_key(username, password, device_id):
     _LOGGER.debug(req.status_code)
     if req.status_code == 200:
         _LOGGER.debug("auth OK. api_key retrieved")
-        local_api_key = req.json()['result']['metaData']\
-['wskAuthAttempts'][0]['apiKey']
+        req_meta = req.json()['result']['metaData']
+        local_api_key = req_meta['wskAuthAttempts'][0]['apiKey']
     else:
         _LOGGER.error("auth KO. No api_key retrieved. cover %s will\
                       not be add", str(device_id))
@@ -260,15 +260,13 @@ class RyobiCover(CoverDevice):
         """Update status from the door."""
         _LOGGER.debug("Updating RyobiGDO status")
         gdo_status = self._get_status()
-        door_state = gdo_status['result'][0]['deviceTypeMap']\
-['garageDoor_7']['at']['doorState']['value']
-        light_state = gdo_status['result'][0]['deviceTypeMap']\
-['garageLight_7']['at']['lightState']['value']
-        backup_battery_level = gdo_status['result'][0]['deviceTypeMap']\
-['backupCharger_8']['at']['chargeLevel']['value']
+        dtm = gdo_status['result'][0]['deviceTypeMap']
+        door_state = dtm['garageDoor_7']['at']['doorState']['value']
+        light_state = dtm['garageLight_7']['at']['lightState']['value']
+        backup_bat_level = dtm['backupCharger_8']['at']['chargeLevel']['value']
         _LOGGER.info("Cover " + self._device_id + " status: doorState: "
                      + str(door_state) + ", LightState: " + str(light_state)
-                     + ", BackupBatteryLevel: " + str(backup_battery_level))
+                     + ", BackupBatteryLevel: " + str(backup_bat_level))
         if door_state == 1:
             self._door_state = STATE_OPEN
             self.schedule_update_ha_state()
