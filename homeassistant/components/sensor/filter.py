@@ -380,7 +380,7 @@ class RangeFilter(Filter):
             _LOGGER.debug("Lower outlier nr. %s in %s: %s",
                           self._stats_internal['erasures_low'],
                           self._entity, new_state)
-            new_state.state = self._upper_bound
+            new_state.state = self._lower_bound
 
         return new_state
 
