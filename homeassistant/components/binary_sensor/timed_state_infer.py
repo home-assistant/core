@@ -11,8 +11,8 @@ from homeassistant.const import CONF_ENTITY_ID, STATE_UNKNOWN, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.event import track_point_in_time, track_state_change, \
-    async_track_state_change, async_track_point_in_time
+from homeassistant.helpers.event import async_track_state_change,\
+    async_track_point_in_time
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,6 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_VALUE_ON): vol.Coerce(float),
     vol.Required(CONF_VALUE_OFF): vol.Coerce(float)
 })
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
