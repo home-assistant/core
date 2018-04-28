@@ -5,6 +5,7 @@ config
 
 # Test related files
 .tox
+.mypy_cache
 
 # Other virtualization methods
 venv
