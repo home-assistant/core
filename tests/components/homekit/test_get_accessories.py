@@ -125,6 +125,13 @@ class TestGetAccessories(unittest.TestCase):
                           {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
             get_accessory(None, state, 2, {})
 
+    def test_light_sensor_unit_lx(self):
+        """Test light sensor with lx as unit."""
+        with patch.dict(TYPES, {'LightSensor': self.mock_type}):
+            state = State('sensor.light', '900',
+                          {ATTR_UNIT_OF_MEASUREMENT: 'lx'})
+            get_accessory(None, state, 2, {})
+
     def test_binary_sensor(self):
         """Test binary sensor with opening class."""
         with patch.dict(TYPES, {'BinarySensor': self.mock_type}):
