@@ -141,7 +141,7 @@ class TestFilterSensor(unittest.TestCase):
                            lower_bound=lower,
                            upper_bound=upper)
         for unf_state in self.values:
-            prev = unf_state.state
+            prev = float(unf_state.state)
             filtered = filt.filter_state(unf_state)
             if prev < lower:
                 self.assertEqual(lower, filtered.state)
