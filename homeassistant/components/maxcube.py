@@ -32,7 +32,7 @@ CONF_GATEWAYS = 'gateways'
 CONFIG_GATEWAY = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SCAN_INTERVAL, default=300): cv.positive_int,
+    vol.Optional(CONF_SCAN_INTERVAL, default=300): cv.time_period,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -55,7 +55,7 @@ def setup(hass, config):
     for gateway in gateways:
         host = gateway[CONF_HOST]
         port = gateway[CONF_PORT]
-        scan_interval = gateway[CONF_SCAN_INTERVAL]
+        scan_interval = gateway[CONF_SCAN_INTERVAL].total_seconds()
 
         try:
             cube = MaxCube(MaxCubeConnection(host, port))
