@@ -18,7 +18,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import sanitize_filename
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['restrictedpython==4.0b2']
+REQUIREMENTS = ['restrictedpython==4.0b3']
 
 _LOGGER = logging.getLogger(__name__)
 
