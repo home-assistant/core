@@ -4,7 +4,6 @@ Event parser and human readable log generator.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logbook/
 """
-import asyncio
 import logging
 from datetime import timedelta
 from itertools import groupby
@@ -88,8 +87,7 @@ def async_log_entry(hass, name, message, domain=None, entity_id=None):
     hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data)
 
 
-@asyncio.coroutine
-def setup(hass, config):
+async def setup(hass, config):
     """Listen for download events to download files."""
     @callback
     def log_message(service):
@@ -105,7 +103,7 @@ def setup(hass, config):
 
     hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
 
-    yield from hass.components.frontend.async_register_built_in_panel(
+    await hass.components.frontend.async_register_built_in_panel(
         'logbook', 'logbook', 'mdi:format-list-bulleted-type')
 
     hass.services.async_register(
@@ -124,8 +122,7 @@ class LogbookView(HomeAssistantView):
         """Initialize the logbook view."""
         self.config = config
 
-    @asyncio.coroutine
-    def get(self, request, datetime=None):
+    async def get(self, request, datetime=None):
         """Retrieve logbook entries."""
         if datetime:
             datetime = dt_util.parse_datetime(datetime)
@@ -144,8 +141,7 @@ class LogbookView(HomeAssistantView):
             return self.json(list(
                 _get_events(hass, self.config, start_day, end_day)))
 
-        response = yield from hass.async_add_job(json_events)
-        return response
+        return await hass.async_add_job(json_events)
 
 
 class Entry(object):
