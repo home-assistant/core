@@ -108,7 +108,8 @@ def setup(hass, base_config):
 
     for component in VERA_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN,
-                                {'unique_entities': unique_entities}, base_config)
+                                {'unique_entities': unique_entities},
+                                base_config)
 
     return True
 
