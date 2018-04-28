@@ -1,6 +1,5 @@
 """Google Assistant OAuth View."""
 
-import asyncio
 import logging
 
 # Typing imports
@@ -44,8 +43,7 @@ class GoogleAssistantAuthView(HomeAssistantView):
         self.client_id = cfg.get(CONF_CLIENT_ID)
         self.access_token = cfg.get(CONF_ACCESS_TOKEN)
 
-    @asyncio.coroutine
-    def get(self, request: Request) -> Response:
+    async def get(self, request: Request) -> Response:
         """Handle oauth token request."""
         query = request.query
         redirect_uri = query.get('redirect_uri')

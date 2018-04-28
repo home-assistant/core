@@ -639,9 +639,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 ADDED_ENTITY_IDS_KEY = 'wunderground_added_entity_ids'
 
 
-@asyncio.coroutine
-def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                         async_add_devices, discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                               async_add_devices, discovery_info=None):
     """Set up the WUnderground sensor."""
     hass.data.setdefault(ADDED_ENTITY_IDS_KEY, set())
 
@@ -656,7 +655,7 @@ def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(WUndergroundSensor(hass, rest, variable, namespace))
 
-    yield from rest.async_update()
+    await rest.async_update()
     if not rest.data:
         raise PlatformNotReady
 

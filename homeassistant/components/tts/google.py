@@ -39,8 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_get_engine(hass, config):
+async def async_get_engine(hass, config):
     """Set up Google speech component."""
     return GoogleProvider(hass, config[CONF_LANG])
 
@@ -70,8 +69,7 @@ class GoogleProvider(Provider):
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
-    @asyncio.coroutine
-    def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from google."""
         from gtts_token import gtts_token
 
@@ -81,7 +79,7 @@ class GoogleProvider(Provider):
 
         data = b''
         for idx, part in enumerate(message_parts):
-            part_token = yield from self.hass.async_add_job(
+            part_token = await self.hass.async_add_job(
                 token.calculate_token, part)
 
             url_param = {
@@ -97,7 +95,7 @@ class GoogleProvider(Provider):
 
             try:
                 with async_timeout.timeout(10, loop=self.hass.loop):
-                    request = yield from websession.get(
+                    request = await websession.get(
                         GOOGLE_SPEECH_URL, params=url_param,
                         headers=self.headers
                     )
@@ -106,7 +104,7 @@ class GoogleProvider(Provider):
                         _LOGGER.error("Error %d on load url %s",
                                       request.status, request.url)
                         return (None, None)
-                    data += yield from request.read()
+                    data += await request.read()
 
             except (asyncio.TimeoutError, aiohttp.ClientError):
                 _LOGGER.error("Timeout for google speech.")
