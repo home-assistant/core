@@ -9,12 +9,13 @@ import logging
 from datetime import timedelta
 import voluptuous as vol
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.const import CONF_NAME
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers import config_validation as cv
-from homeassistant.const import CONF_FRIENDLY_NAME
 
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import Entity
+
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,16 +23,20 @@ REQUIREMENTS = ['socialbladeclient==0.2']
 
 DEFAULT_NAME = "Social Blade"
 
+CHANNEL_ID = 'channel_id'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required('channel_id'): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CHANNEL_ID): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setting the platform in HASS and Channel Information."""
-    social_blade = SocialBladeSensor(config['channel_id'],
-                                     config[CONF_FRIENDLY_NAME])
+    social_blade = SocialBladeSensor(config[CHANNEL_ID],
+                                     config[CONF_NAME])
     social_blade.update()
     if social_blade.valid_channel_id:
         add_devices([social_blade])
@@ -42,8 +47,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class SocialBladeSensor(Entity):
     """Representation of a Social Blade Sensor."""
-
-    MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
 
     SUBSCRIBERS = "subscribers"
     TOTAL_VIEWS = "total_views"
@@ -84,5 +87,6 @@ class SocialBladeSensor(Entity):
             self.valid_channel_id = True
 
         except ValueError:
-            _LOGGER("Please Check that you have valid channel id")
+            _LOGGER.exception("SocialBlade setup failed : Please check that \
+                                you have valid channel id")
             self.valid_channel_id = False
