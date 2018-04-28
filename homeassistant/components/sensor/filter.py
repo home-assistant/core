@@ -364,7 +364,6 @@ class RangeFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the range filter."""
-
         if new_state.state > self._upper_bound:
 
             self._stats_internal['erasures_up'] += 1
