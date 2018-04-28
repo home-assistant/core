@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera switches."""
     add_devices(
         VeraSwitch(device, hass.data[VERA_CONTROLLER],
-            discovery_info['unique_entities']) for
+                   discovery_info['unique_entities']) for
         device in hass.data[VERA_DEVICES]['switch'])
 
 

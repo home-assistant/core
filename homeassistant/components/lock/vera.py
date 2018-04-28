@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Vera locks."""
     add_devices(
         VeraLock(device, hass.data[VERA_CONTROLLER],
-            discovery_info['unique_entities']) for
+                 discovery_info['unique_entities']) for
         device in hass.data[VERA_DEVICES]['lock'])
 
 

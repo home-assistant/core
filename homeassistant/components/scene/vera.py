@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera scenes."""
     add_devices(
         [VeraScene(scene, hass.data[VERA_CONTROLLER],
-            discovery_info['unique_entities'])
+                   discovery_info['unique_entities'])
          for scene in hass.data[VERA_SCENES]], True)
 
 
