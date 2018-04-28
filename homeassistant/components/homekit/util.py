@@ -33,7 +33,7 @@ def validate_entity_config(values):
     return entities
 
 
-def show_setup_message(bridge, hass):
+def show_setup_message(hass, bridge):
     """Display persistent notification with setup information."""
     pin = bridge.pincode.decode()
     _LOGGER.info('Pincode: %s', pin)
@@ -64,3 +64,16 @@ def temperature_to_homekit(temperature, unit):
 def temperature_to_states(temperature, unit):
     """Convert temperature back from Celsius to Home Assistant unit."""
     return round(temp_util.convert(temperature, TEMP_CELSIUS, unit), 1)
+
+
+def density_to_air_quality(density):
+    """Map PM2.5 density to HomeKit AirQuality level."""
+    if density <= 35:
+        return 1
+    elif density <= 75:
+        return 2
+    elif density <= 115:
+        return 3
+    elif density <= 150:
+        return 4
+    return 5

@@ -140,6 +140,11 @@ class NestTempSensor(NestSensor):
         """Return the state of the sensor."""
         return self._state
 
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return 'temperature'
+
     def update(self):
         """Retrieve latest state."""
         if self.device.temperature_scale == 'C':
