@@ -31,10 +31,12 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
                  SUPPORT_OPERATION_MODE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the MySensors climate."""
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
+    """Set up the mysensors climate."""
     mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsHVAC, add_devices=add_devices)
+        hass, DOMAIN, discovery_info, MySensorsHVAC,
+        async_add_devices=async_add_devices)
 
 
 class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
@@ -163,8 +165,8 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
             self._values[self.value_type] = operation_mode
             self.schedule_update_ha_state()
 
-    def update(self):
+    async def async_update(self):
         """Update the controller with the latest value from a sensor."""
-        super().update()
+        await super().async_update()
         self._values[self.value_type] = DICT_MYS_TO_HA[
             self._values[self.value_type]]

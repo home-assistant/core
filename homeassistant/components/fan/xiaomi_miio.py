@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'zhimi.humidifier.ca1']),
 })
 
-REQUIREMENTS = ['python-miio==0.3.8']
+REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
 
 ATTR_MODEL = 'model'
 
@@ -708,7 +708,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 
     def __init__(self, name, device, model, unique_id):
         """Initialize the plug switch."""
-        from miio.airpurifier import OperationMode
+        from miio.airhumidifier import OperationMode
 
         super().__init__(name, device, model, unique_id)
 
@@ -748,6 +748,7 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
             self._available = False
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
+    @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
         return self._speed_list

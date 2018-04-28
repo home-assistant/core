@@ -329,3 +329,24 @@ class TestSensorMQTT(unittest.TestCase):
         self.assertEqual('100',
                          state.attributes.get('val'))
         self.assertEqual('100', state.state)
+
+    def test_unique_id(self):
+        """Test unique id option only creates one sensor per unique_id."""
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: [{
+                'platform': 'mqtt',
+                'name': 'Test 1',
+                'state_topic': 'test-topic',
+                'unique_id': 'TOTALLY_UNIQUE'
+            }, {
+                'platform': 'mqtt',
+                'name': 'Test 2',
+                'state_topic': 'test-topic',
+                'unique_id': 'TOTALLY_UNIQUE'
+            }]
+        })
+
+        fire_mqtt_message(self.hass, 'test-topic', 'payload')
+        self.hass.block_till_done()
+
+        assert len(self.hass.states.all()) == 1

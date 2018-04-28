@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
+    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_PREVIOUS_TRACK,
     MediaPlayerDevice, SUPPORT_PLAY, PLATFORM_SCHEMA)
 from homeassistant.const import (
@@ -231,7 +231,7 @@ class EmbyDevice(MediaPlayerDevice):
         if media_type == 'Episode':
             return MEDIA_TYPE_TVSHOW
         elif media_type == 'Movie':
-            return MEDIA_TYPE_VIDEO
+            return MEDIA_TYPE_MOVIE
         elif media_type == 'Trailer':
             return MEDIA_TYPE_TRAILER
         elif media_type == 'Music':

@@ -206,7 +206,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(155, state.attributes.get('color_temp'))
         self.assertEqual('colorloop', state.attributes.get('effect'))
         self.assertEqual(150, state.attributes.get('white_value'))
-        self.assertEqual((0.32, 0.336), state.attributes.get('xy_color'))
+        self.assertEqual((0.323, 0.329), state.attributes.get('xy_color'))
 
         # Turn the light off
         fire_mqtt_message(self.hass, 'test_light_rgb', '{"state":"OFF"}')
@@ -333,6 +333,33 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(155, state.attributes['color_temp'])
         self.assertEqual('colorloop', state.attributes['effect'])
         self.assertEqual(170, state.attributes['white_value'])
+
+        # Test a color command
+        light.turn_on(self.hass, 'light.test',
+                      brightness=50, hs_color=(125, 100))
+        self.hass.block_till_done()
+
+        self.assertEqual('test_light_rgb/set',
+                         self.mock_publish.async_publish.mock_calls[0][1][0])
+        self.assertEqual(2,
+                         self.mock_publish.async_publish.mock_calls[0][1][2])
+        self.assertEqual(False,
+                         self.mock_publish.async_publish.mock_calls[0][1][3])
+        # Get the sent message
+        message_json = json.loads(
+            self.mock_publish.async_publish.mock_calls[1][1][1])
+        self.assertEqual(50, message_json["brightness"])
+        self.assertEqual({
+            'r': 0,
+            'g': 50,
+            'b': 4,
+        }, message_json["color"])
+        self.assertEqual("ON", message_json["state"])
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(50, state.attributes['brightness'])
+        self.assertEqual((125, 100), state.attributes['hs_color'])
 
     def test_flash_short_and_long(self): \
             # pylint: disable=invalid-name

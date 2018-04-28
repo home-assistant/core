@@ -32,17 +32,20 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 TAHOMA_COMPONENTS = [
-    'scene', 'sensor', 'cover'
+    'scene', 'sensor', 'cover', 'switch'
 ]
 
 TAHOMA_TYPES = {
     'rts:RollerShutterRTSComponent': 'cover',
     'rts:CurtainRTSComponent': 'cover',
+    'rts:BlindRTSComponent': 'cover',
+    'rts:VenetianBlindRTSComponent': 'cover',
     'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
     'io:RollerShutterVeluxIOComponent': 'cover',
     'io:RollerShutterGenericIOComponent': 'cover',
     'io:WindowOpenerVeluxIOComponent': 'cover',
     'io:LightIOSystemSensor': 'sensor',
+    'rts:GarageDoor4TRTSComponent': 'switch',
 }
 
 

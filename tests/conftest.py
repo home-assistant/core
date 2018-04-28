@@ -20,7 +20,7 @@ if os.environ.get('UVLOOP') == '1':
     import uvloop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-logging.basicConfig()
+logging.basicConfig(level=logging.INFO)
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
@@ -123,7 +123,5 @@ def mock_device_tracker_conf():
     ), patch(
         'homeassistant.components.device_tracker.async_load_config',
             side_effect=lambda *args: mock_coro(devices)
-    ), patch('homeassistant.components.device_tracker'
-             '.Device.set_vendor_for_mac'):
-
+    ):
         yield devices

@@ -393,8 +393,8 @@ def zone(hass, zone_ent, entity):
     if latitude is None or longitude is None:
         return False
 
-    return zone_cmp.in_zone(zone_ent, latitude, longitude,
-                            entity.attributes.get(ATTR_GPS_ACCURACY, 0))
+    return zone_cmp.zone.in_zone(zone_ent, latitude, longitude,
+                                 entity.attributes.get(ATTR_GPS_ACCURACY, 0))
 
 
 def zone_from_config(config, config_validation=True):

@@ -809,7 +809,8 @@ class TestConfig(unittest.TestCase):
 
             valid = [
                 test_file,
-                tmp_dir
+                tmp_dir,
+                os.path.join(tmp_dir, 'notfound321')
             ]
             for path in valid:
                 assert self.config.is_allowed_path(path)
