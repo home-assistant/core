@@ -185,6 +185,9 @@ class Metrics(object):
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         metric = state.entity_id.split(".")[1]
 
+        if '_' not in str(metric):
+            metric = state.entity_id.replace('.', '_')
+
         try:
             int(metric.split("_")[-1])
             metric = "_".join(metric.split("_")[:-1])
