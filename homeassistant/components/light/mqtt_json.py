@@ -13,14 +13,15 @@ from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_TRANSITION, ATTR_WHITE_VALUE, ATTR_HS_COLOR,
+    ATTR_TRANSITION, ATTR_WHITE_VALUE, ATTR_HS_COLOR, ATTR_EFFECT_SPEED,
     FLASH_LONG, FLASH_SHORT, Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR,
-    SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
+    SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE, SUPPORT_EFFECT_SPEED)
 from homeassistant.components.light.mqtt import CONF_BRIGHTNESS_SCALE
 from homeassistant.const import (
     CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT,
-    CONF_NAME, CONF_OPTIMISTIC, CONF_RGB, CONF_WHITE_VALUE, CONF_XY)
+    CONF_NAME, CONF_OPTIMISTIC, CONF_RGB, CONF_WHITE_VALUE, CONF_XY,
+    CONF_EFFECT_SPEED)
 from homeassistant.components.mqtt import (
     CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
@@ -45,6 +46,7 @@ DEFAULT_RGB = False
 DEFAULT_WHITE_VALUE = False
 DEFAULT_XY = False
 DEFAULT_BRIGHTNESS_SCALE = 255
+DEFAULT_EFFECT_SPEED = False
 
 CONF_EFFECT_LIST = 'effect_list'
 
@@ -72,6 +74,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_WHITE_VALUE, default=DEFAULT_WHITE_VALUE): cv.boolean,
     vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
+    vol.Optional(CONF_EFFECT_SPEED, default=DEFAULT_EFFECT_SPEED): cv.boolean,
     vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
@@ -108,7 +111,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
-        config.get(CONF_BRIGHTNESS_SCALE)
+        config.get(CONF_BRIGHTNESS_SCALE),
+        config.get(CONF_EFFECT_SPEED)
     )])
 
 
@@ -118,7 +122,7 @@ class MqttJson(MqttAvailability, Light):
     def __init__(self, name, effect_list, topic, qos, retain, optimistic,
                  brightness, color_temp, effect, rgb, white_value, xy,
                  flash_times, availability_topic, payload_available,
-                 payload_not_available, brightness_scale):
+                 payload_not_available, brightness_scale, effect_speed):
         """Initialize MQTT JSON light."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
@@ -156,6 +160,11 @@ class MqttJson(MqttAvailability, Light):
         else:
             self._white_value = None
 
+        if effect_speed:
+            self._effect_speed = 100
+        else:
+            self._effect_speed = None
+
         self._flash_times = flash_times
         self._brightness_scale = brightness_scale
 
@@ -166,6 +175,7 @@ class MqttJson(MqttAvailability, Light):
         self._supported_features |= (effect and SUPPORT_EFFECT)
         self._supported_features |= (white_value and SUPPORT_WHITE_VALUE)
         self._supported_features |= (xy and SUPPORT_COLOR)
+        self._supported_features |= (effect_speed and SUPPORT_EFFECT_SPEED)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -237,6 +247,14 @@ class MqttJson(MqttAvailability, Light):
                 except ValueError:
                     _LOGGER.warning("Invalid white value received")
 
+            if self._effect_speed is not None:
+                try:
+                    self._effect_speed = int(values['speed'])
+                except KeyError:
+                    pass
+                except ValueError:
+                    _LOGGER.warning("Invalid effect speed value received")
+
             self.async_schedule_update_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -273,6 +291,11 @@ class MqttJson(MqttAvailability, Light):
     def white_value(self):
         """Return the white property."""
         return self._white_value
+
+    @property
+    def effect_speed(self):
+        """Return the effect speed property."""
+        return self._effect_speed
 
     @property
     def should_poll(self):
@@ -369,6 +392,13 @@ class MqttJson(MqttAvailability, Light):
 
             if self._optimistic:
                 self._white_value = kwargs[ATTR_WHITE_VALUE]
+                should_update = True
+
+        if ATTR_EFFECT_SPEED in kwargs:
+            message['speed'] = int(kwargs[ATTR_EFFECT_SPEED])
+
+            if self._optimistic:
+                self._effect_speed = kwargs[ATTR_EFFECT_SPEED]
                 should_update = True
 
         mqtt.async_publish(
