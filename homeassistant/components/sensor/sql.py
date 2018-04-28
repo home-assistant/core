@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sql/
 """
 import decimal
+import datetime
 import logging
 
 import voluptuous as vol
@@ -145,6 +146,8 @@ class SQLSensor(Entity):
                 for key, value in res.items():
                     if isinstance(value, decimal.Decimal):
                         value = float(value)
+                    if isinstance(value, datetime.date):
+                        value = str(value)
                     self._attributes[key] = value
         except sqlalchemy.exc.SQLAlchemyError as err:
             _LOGGER.error("Error executing query %s: %s", self._query, err)
