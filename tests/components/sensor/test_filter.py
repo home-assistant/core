@@ -141,14 +141,14 @@ class TestFilterSensor(unittest.TestCase):
                            lower_bound=lower,
                            upper_bound=upper)
         for unf_state in self.values:
-            prev = float(unf_state.state)
+            unf = float(unf_state.state)
             filtered = filt.filter_state(unf_state)
-            if prev < lower:
+            if unf < lower:
                 self.assertEqual(lower, filtered.state)
-            elif prev > upper:
+            elif unf > upper:
                 self.assertEqual(upper, filtered.state)
             else:
-                self.assertEqual(prev, filtered.state)
+                self.assertEqual(unf, filtered.state)
 
     def test_throttle(self):
         """Test if lowpass filter works."""
