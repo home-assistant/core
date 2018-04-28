@@ -21,7 +21,7 @@ from homeassistant.config import (
 import homeassistant.util.yaml as yaml
 from homeassistant.exceptions import HomeAssistantError
 
-REQUIREMENTS = ('colorlog==3.1.2',)
+REQUIREMENTS = ('colorlog==3.1.4',)
 if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
     REQUIREMENTS += ('colorama<=1',)
 
@@ -58,7 +58,7 @@ def color(the_color, *args, reset=None):
 def run(script_args: List) -> int:
     """Handle ensure config commandline script."""
     parser = argparse.ArgumentParser(
-        description=("Check Home Assistant configuration."))
+        description="Check Home Assistant configuration.")
     parser.add_argument(
         '--script', choices=['check_config'])
     parser.add_argument(
