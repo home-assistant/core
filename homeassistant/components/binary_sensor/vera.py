@@ -19,17 +19,17 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for Vera controller devices."""
     add_devices(
-        VeraBinarySensor(device, hass.data[VERA_CONTROLLER])
+        VeraBinarySensor(device, hass.data[VERA_CONTROLLER], discovery_info['unique_entities'])
         for device in hass.data[VERA_DEVICES]['binary_sensor'])
 
 
 class VeraBinarySensor(VeraDevice, BinarySensorDevice):
     """Representation of a Vera Binary Sensor."""
 
-    def __init__(self, vera_device, controller):
+    def __init__(self, vera_device, controller, unique_entities):
         """Initialize the binary_sensor."""
         self._state = False
-        VeraDevice.__init__(self, vera_device, controller)
+        VeraDevice.__init__(self, vera_device, controller, unique_entities)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property

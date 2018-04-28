@@ -25,19 +25,19 @@ SCAN_INTERVAL = timedelta(seconds=5)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera controller devices."""
     add_devices(
-        VeraSensor(device, hass.data[VERA_CONTROLLER])
+        VeraSensor(device, hass.data[VERA_CONTROLLER], discovery_info['unique_entities'])
         for device in hass.data[VERA_DEVICES]['sensor'])
 
 
 class VeraSensor(VeraDevice, Entity):
     """Representation of a Vera Sensor."""
 
-    def __init__(self, vera_device, controller):
+    def __init__(self, vera_device, controller, unique_entities):
         """Initialize the sensor."""
         self.current_value = None
         self._temperature_units = None
         self.last_changed_time = None
-        VeraDevice.__init__(self, vera_device, controller)
+        VeraDevice.__init__(self, vera_device, controller, unique_entities)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property

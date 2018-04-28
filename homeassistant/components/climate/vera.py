@@ -32,16 +32,16 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up of Vera thermostats."""
     add_devices_callback(
-        VeraThermostat(device, hass.data[VERA_CONTROLLER]) for
+        VeraThermostat(device, hass.data[VERA_CONTROLLER], discovery_info['unique_entities']) for
         device in hass.data[VERA_DEVICES]['climate'])
 
 
 class VeraThermostat(VeraDevice, ClimateDevice):
     """Representation of a Vera Thermostat."""
 
-    def __init__(self, vera_device, controller):
+    def __init__(self, vera_device, controller, unique_entities):
         """Initialize the Vera device."""
-        VeraDevice.__init__(self, vera_device, controller)
+        VeraDevice.__init__(self, vera_device, controller, unique_entities)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property

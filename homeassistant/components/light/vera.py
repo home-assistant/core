@@ -22,19 +22,19 @@ DEPENDENCIES = ['vera']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera lights."""
     add_devices(
-        VeraLight(device, hass.data[VERA_CONTROLLER]) for
+        VeraLight(device, hass.data[VERA_CONTROLLER], discovery_info['unique_entities']) for
         device in hass.data[VERA_DEVICES]['light'])
 
 
 class VeraLight(VeraDevice, Light):
     """Representation of a Vera Light, including dimmable."""
 
-    def __init__(self, vera_device, controller):
+    def __init__(self, vera_device, controller, unique_entities):
         """Initialize the light."""
         self._state = False
         self._color = None
         self._brightness = None
-        VeraDevice.__init__(self, vera_device, controller)
+        VeraDevice.__init__(self, vera_device, controller, unique_entities)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property

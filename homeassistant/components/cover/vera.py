@@ -19,16 +19,16 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera covers."""
     add_devices(
-        VeraCover(device, hass.data[VERA_CONTROLLER]) for
+        VeraCover(device, hass.data[VERA_CONTROLLER], discovery_info['unique_entities']) for
         device in hass.data[VERA_DEVICES]['cover'])
 
 
 class VeraCover(VeraDevice, CoverDevice):
     """Representation a Vera Cover."""
 
-    def __init__(self, vera_device, controller):
+    def __init__(self, vera_device, controller, unique_entities):
         """Initialize the Vera device."""
-        VeraDevice.__init__(self, vera_device, controller)
+        VeraDevice.__init__(self, vera_device, controller, unique_entities)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
