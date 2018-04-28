@@ -13,7 +13,7 @@ from homeassistant.components.cover import (
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     ATTR_DEVICE_CLASS, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, ATTR_HIDDEN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
@@ -175,7 +175,8 @@ class HomeKit():
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
-        if not state or not self._filter(state.entity_id):
+        if not state or not self._filter(state.entity_id) or \
+                state.attributes.get(ATTR_HIDDEN):
             return
         aid = generate_aid(state.entity_id)
         conf = self._config.pop(state.entity_id, {})
