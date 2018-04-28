@@ -1116,7 +1116,7 @@ raincloudy==0.0.4
 # homeassistant.components.raspihats
 # raspihats==2.2.3
 
-# homeassistant.components.switch.rainmachine
+# homeassistant.components.rainmachine
 regenmaschine==0.4.1
 
 # homeassistant.components.python_script
