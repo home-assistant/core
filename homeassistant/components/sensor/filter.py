@@ -374,7 +374,7 @@ class RangeFilter(Filter):
                           self._entity, new_state)
             new_state.state = self._upper_bound
 
-        elif new_state < self._lower_bound:
+        elif new_state.state < self._lower_bound:
 
             self._stats_internal['erasures_low'] += 1
 
