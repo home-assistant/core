@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['qnapstats==0.2.5']
+REQUIREMENTS = ['qnapstats==0.2.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -352,7 +352,7 @@ class QNAPDriveSensor(QNAPSensor):
             return data['health']
 
         if self.var_id == 'drive_temp':
-            return int(data['temp_c'])
+            return int(data['temp_c']) if data['temp_c'] is not None else 0
 
     @property
     def name(self):
