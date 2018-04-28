@@ -141,6 +141,6 @@ async def async_unload_entry(hass, config_entry):
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
         await hass.config_entries.async_forward_entry_unload(
             config_entry, component)
-    for event in hass.data[DATA_DECONZ_EVENT]:
-        del event
+    hass.data[DATA_DECONZ_EVENT] = []
+    hass.data[DATA_DECONZ_ID] = []
     return True

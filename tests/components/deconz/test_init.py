@@ -116,6 +116,10 @@ async def test_unload_entry(hass):
     with patch('pydeconz.DeconzSession.async_load_parameters',
                return_value=mock_coro(True)):
         assert await deconz.async_setup_entry(hass, entry) is True
-
+    assert deconz.DATA_DECONZ_EVENT in hass.data
+    hass.data[deconz.DATA_DECONZ_EVENT].append(Mock())
+    hass.data[deconz.DATA_DECONZ_ID] = {'id': 'deconzid'}
     assert await deconz.async_unload_entry(hass, entry)
     assert deconz.DOMAIN not in hass.data
+    assert len(hass.data[deconz.DATA_DECONZ_EVENT]) == 0
+    assert len(hass.data[deconz.DATA_DECONZ_ID]) == 0
