@@ -13,7 +13,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 
 REQUIREMENTS = ['maxcube-api==0.1.0']
 
@@ -28,12 +28,11 @@ NOTIFICATION_ID = 'maxcube_notification'
 NOTIFICATION_TITLE = 'Max!Cube gateway setup'
 
 CONF_GATEWAYS = 'gateways'
-CONF_UPDATE_INTERVAL = 'update_interval'
 
 CONFIG_GATEWAY = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_UPDATE_INTERVAL, default=300): cv.positive_int,
+    vol.Optional(CONF_SCAN_INTERVAL, default=300): cv.positive_int,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -56,11 +55,11 @@ def setup(hass, config):
     for gateway in gateways:
         host = gateway[CONF_HOST]
         port = gateway[CONF_PORT]
-        update_interval = gateway[CONF_UPDATE_INTERVAL]
+        scan_interval = gateway[CONF_SCAN_INTERVAL]
 
         try:
             cube = MaxCube(MaxCubeConnection(host, port))
-            hass.data[DATA_KEY][host] = MaxCubeHandle(cube, update_interval)
+            hass.data[DATA_KEY][host] = MaxCubeHandle(cube, scan_interval)
         except timeout as ex:
             _LOGGER.error("Unable to connect to Max!Cube gateway: %s", str(ex))
             hass.components.persistent_notification.create(
@@ -83,10 +82,10 @@ def setup(hass, config):
 class MaxCubeHandle(object):
     """Keep the cube instance in one place and centralize the update."""
 
-    def __init__(self, cube, update_interval):
+    def __init__(self, cube, scan_interval):
         """Initialize the Cube Handle."""
         self.cube = cube
-        self.update_interval = update_interval
+        self.scan_interval = scan_interval
         self.mutex = Lock()
         self._updatets = time.time()
 
@@ -95,7 +94,7 @@ class MaxCubeHandle(object):
         # Acquire mutex to prevent simultaneous update from multiple threads
         with self.mutex:
             # Only update every update_interval
-            if (time.time() - self._updatets) >= self.update_interval:
+            if (time.time() - self._updatets) >= self.scan_interval:
                 _LOGGER.debug("Updating")
 
                 try:
