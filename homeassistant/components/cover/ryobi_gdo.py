@@ -1,17 +1,19 @@
 """
 Ryobi platform for the cover component.
+
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/ryobiGDO/
 """
 import logging
 import json
 import socket
-import requests
-import voluptuous as vol
 from datetime import timedelta
+import voluptuous as vol
+import requests
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE)
+from homeassistant.components.cover import (
+    CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
     CONF_DEVICE, CONF_USERNAME, CONF_PASSWORD,
@@ -32,62 +34,69 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-RYOBI_APIKEY_URL="https://tti.tiwiconnect.com/api/login"
-RYOBI_DEVICES_URL="https://tti.tiwiconnect.com/api/devices"
+RYOBI_API_KEY_URL = "https://tti.tiwiconnect.com/api/login"
+RYOBI_DEVICES_URL = "https://tti.tiwiconnect.com/api/devices"
 RYOBI_WS_URL = "wss://tti.tiwiconnect.com/api/wsrpc"
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Ryobi covers."""
-
     covers = []
     devices = config.get(CONF_COVERS)
 
     for device_id, device_config in devices.items():
-        apiKey = retrieve_apiKey(device_config.get(CONF_USERNAME),\
-                 device_config.get(CONF_PASSWORD),\
-                device_config.get(CONF_DEVICE, device_id))
-        device_id_valid = check_device_id(device_config.get(CONF_USERNAME),\
-                          device_config.get(CONF_PASSWORD),\
-                          device_config.get(CONF_DEVICE, device_id))
-        if apiKey != None and device_id_valid:
+        api_key = retrieve_api_key(device_config.get(CONF_USERNAME),
+                                   device_config.get(CONF_PASSWORD),
+                                   device_config.get(CONF_DEVICE, device_id))
+        device_id_valid = check_device_id(device_config.get(CONF_USERNAME),
+                                          device_config.get(CONF_PASSWORD),
+                                          device_config.get(CONF_DEVICE,
+                                                            device_id))
+        if api_key is not None and device_id_valid:
             args = {
-                'name': "ryobigdo_" + device_config.get(CONF_DEVICE, device_id),
+                'name': "ryobigdo_" + device_config.get(CONF_DEVICE,
+                                                        device_id),
                 'device_id': device_config.get(CONF_DEVICE, device_id),
                 'username': device_config.get(CONF_USERNAME),
                 'password': device_config.get(CONF_PASSWORD),
-                'apiKey': apiKey
+                'api_key': api_key
             }
-            covers.append(RyobiCover(hass, args, \
-                          supported_features=(SUPPORT_OPEN | SUPPORT_CLOSE)))
+            covers.append(RyobiCover(hass, args,
+                                     supported_features=(SUPPORT_OPEN |
+                                                         SUPPORT_CLOSE)))
 
     add_devices(covers)
 
-def retrieve_apiKey(username, password, device_id):
-    """Getting apiKey from Ryobi."""
-    _LOGGER.debug("Getting apiKey from Ryobi")
-    resp = requests.post(RYOBI_APIKEY_URL, params={
+
+def retrieve_api_key(username, password, device_id):
+    """Getting api_key from Ryobi."""
+    _LOGGER.debug("Getting api_key from Ryobi")
+    req = requests.post(RYOBI_API_KEY_URL, params={
         'username': username,
         'password': password
     })
-    _LOGGER.debug(resp.status_code)
-    if resp.status_code == 200:
-        _LOGGER.debug("auth OK. apiKey retrieved")
-        return resp.json()['result']['metaData']['wskAuthAttempts'][0]['apiKey']
+    _LOGGER.debug(req.status_code)
+    if req.status_code == 200:
+        _LOGGER.debug("auth OK. api_key retrieved")
+        local_api_key = req.json()['result']['metaData']['wskAuthAttempts'][0]['apiKey']
     else:
-        _LOGGER.error("auth KO. No apiKey retrieved. cover "\
-         + device_id +" will not be add")
-        return None
+        _LOGGER.error("auth KO. No api_key retrieved. cover %s will\
+                      not be add", str(device_id))
+        local_api_key = None
+    return local_api_key
 
-def check_device_id (username, password, device_id):
+def check_device_id(username, password, device_id):
     """Checking device_id from Ryobi."""
     device_found = False
+    device_to_add = False
     _LOGGER.debug("Checking device_id from Ryobi")
     resp = requests.get(RYOBI_DEVICES_URL, params={
         'username': username,
         'password': password
     })
     if resp.status_code == 200:
-        if len(resp.json()['result']) == 0:
+        len_result = len(resp.json()['result'])
+        if len_result == 0:
             _LOGGER.error("no device paired in your RyobiGDO account")
         else:
             _LOGGER.debug("device(s) paired in your RyobiGDO account")
@@ -96,13 +105,14 @@ def check_device_id (username, password, device_id):
                     device_found = True
     else:
         _LOGGER.error("Failed to retrieve devices information")
-    if device_found == True:
-        _LOGGER.info("Adding device " + device_id +" to RyobiGDO Covers")
-        return True
+    if device_found is True:
+        _LOGGER.info("Adding device %s to RyobiGDO Covers", device_id)
+        device_to_add = True
     else:
-        _LOGGER.error("Device_id " + device_id +\
-        " is not among your devices. It will not be add")
-        return False
+        _LOGGER.error("Device_id %s is not among your devices.\
+ It will not be add", device_id)
+        device_to_add = False
+    return device_to_add
 
 class RyobiCover(CoverDevice):
     """Representation of a ryobi cover."""
@@ -115,7 +125,7 @@ class RyobiCover(CoverDevice):
         self._device_id = args['device_id']
         self._username = args['username']
         self._password = args['password']
-        self._api_key = args['apiKey']
+        self._api_key = args['api_key']
         self._supported_features = supported_features
         self._door_state = STATE_UNKNOWN
         self.time_in_state = None
@@ -131,12 +141,16 @@ class RyobiCover(CoverDevice):
 
         if self._ws is None:
             try:
-                self._ws = self._connection((RYOBI_WS_URL),timeout=1)
-                authMssg=json.dumps({'jsonrpc':'2.0','id':3,'method':\
-                'srvWebSocketAuth','params': {'varName':self._username,\
-                'apiKey':self._api_key}})
-                _LOGGER.debug(authMssg)
-                self._ws.send(authMssg)
+                self._ws = self._connection((RYOBI_WS_URL), timeout=1)
+                auth_mssg = json.dumps(
+                    {'jsonrpc': '2.0',
+                     'id': 3,
+                     'method': 'srvWebSocketAuth',
+                     'params': {
+                         'varName': self._username,
+                         'apiKey': self._api_key}})
+                _LOGGER.debug(auth_mssg)
+                self._ws.send(auth_mssg)
                 result = self._ws.recv()
                 _LOGGER.debug("Answer")
                 _LOGGER.debug(result)
@@ -171,41 +185,45 @@ class RyobiCover(CoverDevice):
 
     @property
     def should_poll(self) -> bool:
+        """Should poll."""
         return True
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        _LOGGER.info("Closing garage door " + self._device_id)
-        self.send_message("doorCommand",0)
+        _LOGGER.info("Closing garage door %s", self._device_id)
+        self.send_message("doorCommand", 0)
         if self._door_state == STATE_CLOSED:
-            return
+            _LOGGER.debug("Door already on status closed")
         else:
+            _LOGGER.debug("Changing door status to closed")
             self._door_state = STATE_CLOSED
             self.schedule_update_ha_state()
-            return
         self._listen_cover()
         self.schedule_update_ha_state()
+        return
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        _LOGGER.info("Opening garage door " + self._device_id)
-        self.send_message("doorCommand",1)
+        _LOGGER.info("Opening garage door %s", self._device_id)
+        self.send_message("doorCommand", 1)
         if self._door_state == STATE_OPEN:
-            return
+            _LOGGER.debug("Door already on status open")
         else:
+            _LOGGER.debug("Changing door status to open")
             self._door_state = STATE_OPEN
             self.schedule_update_ha_state()
-            return
         self._listen_cover()
         self.schedule_update_ha_state()
+        return
 
     def _listen_cover(self):
         """Listen for changes in cover."""
         if self._unsub_listener_cover is None:
             self._unsub_listener_cover = track_utc_time_change(
-                self.hass, self._time_changed_cover)
+                self.hass)
 
     def send_message(self, command, value):
+        """Generic send message."""
         from websocket import _exceptions
         try:
             websocket = self.get_ws()
@@ -213,17 +231,17 @@ class RyobiCover(CoverDevice):
                 _LOGGER.error("No websocket available")
                 return
             _LOGGER.debug("Calling Ryobi opening door API")
-            payLoad = json.dumps({'jsonrpc': '2.0',\
-                                  'method': 'gdoModuleCommand',\
-                                  'params': \
-                                    {'msgType': 16,\
-                                     'moduleType': 5,\
-                                     'portId': 7,\
-                                     'moduleMsg': {command:value},\
-                                     'topic':self._device_id}})
-            _LOGGER.debug(payLoad)
-            websocket.send(payLoad)
-            payLoad = ""
+            pay_load = json.dumps({'jsonrpc': '2.0',
+                                   'method': 'gdoModuleCommand',
+                                   'params':
+                                   {'msgType': 16,
+                                    'moduleType': 5,
+                                    'portId': 7,
+                                    'moduleMsg': {command: value},
+                                    'topic': self._device_id}})
+            _LOGGER.debug(pay_load)
+            websocket.send(pay_load)
+            pay_load = ""
             _LOGGER.debug("answer")
             result = websocket.recv()
             _LOGGER.debug(result)
@@ -231,26 +249,27 @@ class RyobiCover(CoverDevice):
                 _exceptions.WebSocketTimeoutException,
                 _exceptions.WebSocketProtocolException,
                 _exceptions.WebSocketPayloadException,
-                _exceptions.WebSocketConnectionClosedException) as e:
-            _LOGGER.debug(format(e))
+                _exceptions.WebSocketConnectionClosedException) as excep:
+            _LOGGER.debug(format(excep))
         self._ws = None
 
     def update(self):
+        """Update status from the door."""
         _LOGGER.debug("Updating RyobiGDO status")
-        GDOstatus = self._get_status()
-        doorState = GDOstatus['result'][0]['deviceTypeMap']\
-                    ['garageDoor_7']['at']['doorState']['value']
-        lightState = GDOstatus['result'][0]['deviceTypeMap']\
-                    ['garageLight_7']['at']['lightState']['value']
-        backupBatteryLevel = GDOstatus['result'][0]['deviceTypeMap']\
-                            ['backupCharger_8']['at']['chargeLevel']['value']
-        _LOGGER.info("Cover " + self._device_id + " status: doorState: "\
-                    + str(doorState) + ", LightState: " + str(lightState)\
-                    + ", BackupBatteryLevel: " + str(backupBatteryLevel))
-        if doorState == 1:
+        gdo_status = self._get_status()
+        door_state = gdo_status['result'][0]['deviceTypeMap']\
+['garageDoor_7']['at']['doorState']['value']
+        light_state = gdo_status['result'][0]['deviceTypeMap']\
+['garageLight_7']['at']['lightState']['value']
+        backup_battery_level = gdo_status['result'][0]['deviceTypeMap']\
+['backupCharger_8']['at']['chargeLevel']['value']
+        _LOGGER.info("Cover " + self._device_id + " status: doorState: "
+                     + str(door_state) + ", LightState: " + str(light_state)
+                     + ", BackupBatteryLevel: " + str(backup_battery_level))
+        if door_state == 1:
             self._door_state = STATE_OPEN
             self.schedule_update_ha_state()
-        if doorState == 0:
+        if door_state == 0:
             self._door_state = STATE_CLOSED
             self.schedule_update_ha_state()
 
