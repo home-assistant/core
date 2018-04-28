@@ -40,9 +40,9 @@ def test_from_config_file(hass):
     assert components == hass.config.components
 
 
-@asyncio.coroutine
 @patch('homeassistant.bootstrap.async_enable_logging', Mock())
 @patch('homeassistant.bootstrap.async_register_signal_handling', Mock())
+@asyncio.coroutine
 def test_home_assistant_core_config_validation(hass):
     """Test if we pass in wrong information for HA conf."""
     # Extensive HA conf validation testing is done

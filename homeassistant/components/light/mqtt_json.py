@@ -4,7 +4,6 @@ Support for MQTT JSON lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mqtt_json/
 """
-import asyncio
 import logging
 import json
 import voluptuous as vol
@@ -26,6 +25,7 @@ from homeassistant.components.mqtt import (
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
     MqttAvailability)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,8 +79,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                               async_add_devices, discovery_info=None):
     """Set up a MQTT JSON Light."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -173,10 +173,9 @@ class MqttJson(MqttAvailability, Light):
         self._supported_features |= (xy and SUPPORT_COLOR)
         self._supported_features |= (hs and SUPPORT_COLOR)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        yield from super().async_added_to_hass()
+        await super().async_added_to_hass()
 
         @callback
         def state_received(topic, payload, qos):
@@ -257,7 +256,7 @@ class MqttJson(MqttAvailability, Light):
             self.async_schedule_update_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
-            yield from mqtt.async_subscribe(
+            await mqtt.async_subscribe(
                 self.hass, self._topic[CONF_STATE_TOPIC], state_received,
                 self._qos)
 
@@ -316,8 +315,7 @@ class MqttJson(MqttAvailability, Light):
         """Flag supported features."""
         return self._supported_features
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on.
 
         This method is a coroutine.
@@ -404,8 +402,7 @@ class MqttJson(MqttAvailability, Light):
         if should_update:
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off.
 
         This method is a coroutine.
