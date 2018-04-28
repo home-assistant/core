@@ -186,7 +186,7 @@ class BrSensor(Entity):
         self._attribution = None
         self._measured = None
         self._stationname = None
-        self._unique_id = self.uuid(coordinates)
+        self._unique_id = self.uid(coordinates)
 
         # All continuous sensors should be forced to be updated
         self._force_update = self.type != SYMBOL and \
@@ -195,18 +195,13 @@ class BrSensor(Entity):
         if self.type.startswith(PRECIPITATION_FORECAST):
             self._timeframe = None
 
-    def uuid(self, coordinates):
-        """Generate a UUID using coordinates, client name and sensor type."""
-        from hashlib import sha1
-        from uuid import UUID
+    def uid(self, coordinates):
+        """Generate a unique id using coordinates and sensor type."""
 
         # The combination of the location, name an sensor type is unique
-        unique_str = "%2.6f%2.6f%s" % (coordinates[CONF_LATITUDE],
-                                       coordinates[CONF_LONGITUDE],
-                                       self.type)
-
-        # Create UUID based on the hash of the unique string
-        return str(UUID(sha1(unique_str.encode()).hexdigest()[:32]))
+        return "%2.6f%2.6f%s" % (coordinates[CONF_LATITUDE],
+                                 coordinates[CONF_LONGITUDE],
+                                 self.type)
 
     def load_data(self, data):
         """Load the sensor with relevant data."""
