@@ -364,25 +364,24 @@ class RangeFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the range filter."""
-        new_state = float(new_state)
 
-        if new_state > self._upper_bound:
+        if new_state.state > self._upper_bound:
 
             self._stats_internal['erasures_up'] += 1
 
             _LOGGER.debug("Upper outlier nr. %s in %s: %s",
                           self._stats_internal['erasures_up'],
                           self._entity, new_state)
-            return self._upper_bound
+            new_state.state = self._upper_bound
 
-        if new_state < self._lower_bound:
+        elif new_state < self._lower_bound:
 
             self._stats_internal['erasures_low'] += 1
 
             _LOGGER.debug("Lower outlier nr. %s in %s: %s",
                           self._stats_internal['erasures_low'],
                           self._entity, new_state)
-            return self._lower_bound
+            new_state.state = self._upper_bound
 
         return new_state
 
