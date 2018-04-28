@@ -11,8 +11,8 @@ import voluptuous as vol
 
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR, PLATFORM_SCHEMA)
+    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP, SUPPORT_COLOR, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
@@ -90,15 +90,15 @@ class TPLinkSmartBulb(Light):
         if ATTR_COLOR_TEMP in kwargs:
             self.smartbulb.color_temp = \
                 mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
-        if ATTR_KELVIN in kwargs:
-            self.smartbulb.color_temp = kwargs[ATTR_KELVIN]
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
-            self.smartbulb.brightness = brightness_to_percentage(brightness)
+
+        brightness = brightness_to_percentage(
+            kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255))
         if ATTR_HS_COLOR in kwargs:
             hue, sat = kwargs.get(ATTR_HS_COLOR)
-            hsv = (hue, sat, 100)
+            hsv = (int(hue), int(sat), brightness)
             self.smartbulb.hsv = hsv
+        elif ATTR_BRIGHTNESS in kwargs:
+            self.smartbulb.brightness = brightness
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
