@@ -1,4 +1,5 @@
 """Helpers for config validation using voluptuous."""
+from collections import OrderedDict
 from datetime import (timedelta, datetime as datetime_sys,
                       time as time_sys, date as date_sys)
 import os
@@ -232,7 +233,7 @@ def date(value) -> date_sys:
 
 
 def time_period_str_colon(value: str) -> timedelta:
-    """Validate and transform time offset."""
+    """Validate and transform time offset with format HH:MM[:SS]."""
     if isinstance(value, int):
         raise vol.Invalid('Make sure you wrap time values in quotes')
     elif not isinstance(value, str):
@@ -267,32 +268,36 @@ def time_period_str_colon(value: str) -> timedelta:
 
 
 def time_period_str_unit(value: str) -> timedelta:
+    """Validate and transform time period with time unit and integer value."""
     value = string(value)
 
-    if value.endswith('ms'):
-        try:
-            return timedelta(milliseconds=float(value[:-2].rstrip()))
-        except ValueError:
-            raise vol.Invalid("Expected milliseconds, got {}".format(value))
-    elif value.endswith('min'):
-        try:
-            return timedelta(minutes=float(value[:-3].rstrip()))
-        except ValueError:
-            raise vol.Invalid("Expected minutes, got {}".format(value))
-    elif value.endswith('h'):
-        try:
-            return timedelta(hours=float(value[:-1].rstrip()))
-        except ValueError:
-            raise vol.Invalid("Expected hours, got {}".format(value))
-    else:
-        # Default to seconds
-        if value.endswith('s'):
-            value = value[-1].rstrip()
+    # OrderedDict because 's' check needs to happen after 'ms'
+    unit_to_kwarg = OrderedDict([
+        ('ms', 'milliseconds'),
+        ('s', 'seconds'),
+        ('sec', 'seconds'),
+        ('min', 'minutes'),
+        ('h', 'hours'),
+        ('d', 'days'),
+        ('', 'seconds'),
+    ])
+
+    for unit, kwarg in unit_to_kwarg.items():
+        if not value.endswith(unit):
+            continue
+
+        value_number = value
+        if unit:
+            value_number = value[:-len(unit)].rstrip()
 
         try:
-            return timedelta(seconds=float(value))
+            parsed = int(value_number)
         except ValueError:
-            raise vol.Invalid("Expected seconds, got {}".format(value))
+            raise vol.Invalid("Expected integer value for time unit")
+
+        return timedelta(**{kwarg: parsed})
+
+    # We're guaranteed to return or raise because every str ends with ''
 
 
 time_period = vol.Any(time_period_str_colon, time_period_str_unit, timedelta,
