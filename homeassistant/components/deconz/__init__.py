@@ -6,8 +6,9 @@ https://home-assistant.io/components/deconz/
 """
 import voluptuous as vol
 
-from homeassistant.const import (CONF_API_KEY, CONF_EVENT,
-    CONF_HOST, CONF_ID, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    CONF_API_KEY, CONF_EVENT, CONF_HOST,
+    CONF_ID, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.util import slugify
@@ -88,8 +89,9 @@ async def async_setup_entry(hass, config_entry):
         hass.async_add_job(hass.config_entries.async_forward_entry_setup(
             config_entry, component))
 
-    hass.data[DATA_DECONZ_EVENT] = [DeconzEvent(hass, sensor)
-        for sensor in deconz.sensors.values() if sensor.type in DECONZ_REMOTE]
+    hass.data[DATA_DECONZ_EVENT] = [DeconzEvent(
+        hass, sensor) for sensor in deconz.sensors.values()
+                                    if sensor.type in DECONZ_REMOTE]
 
     deconz.start()
 
