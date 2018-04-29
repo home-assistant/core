@@ -29,7 +29,7 @@ omit =
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
-    homeassistant/components/bmw_connected_drive.py
+    homeassistant/components/bmw_connected_drive/*.py
     homeassistant/components/*/bmw_connected_drive.py
 
     homeassistant/components/android_ip_webcam.py
