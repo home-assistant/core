@@ -4,43 +4,45 @@ Sensor for PostNL packages.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.postnl/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-                                 ATTR_ATTRIBUTION)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['postnl_api==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_NAME = 'postnl'
-ICON = 'mdi:package-variant-closed'
+
 ATTRIBUTION = 'Information provided by PostNL'
+
+DEFAULT_NAME = 'postnl'
+
+ICON = 'mdi:package-variant-closed'
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
+
 # pylint: disable=unused-argument
-
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the PostNL platform."""
+    """Set up the PostNL sensor platform."""
+    from postnl_api import PostNL_API, UnauthorizedException
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     name = config.get(CONF_NAME)
-
-    from postnl_api import PostNL_API, UnauthorizedException
 
     try:
         api = PostNL_API(username, password)
@@ -53,10 +55,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class PostNLSensor(Entity):
-    """PostNL Sensor."""
+    """Representation of a PostNL sensor."""
 
     def __init__(self, api, name):
-        """Initialize the sensor."""
+        """Initialize the PostNL sensor."""
         self._name = name
         self._attributes = None
         self._state = None
@@ -77,10 +79,19 @@ class PostNLSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return 'package(s)'
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return ICON
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update device state."""
-
         shipments = self._api.get_relevant_shipments()
         status_counts = {}
 
@@ -97,13 +108,3 @@ class PostNLSensor(Entity):
         }
 
         self._state = len(status_counts)
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return ICON
