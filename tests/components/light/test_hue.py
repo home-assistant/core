@@ -652,19 +652,6 @@ def test_hs_color():
 
     light = hue_light.HueLight(
         light=Mock(state={
-            'colormode': 'hs',
-            'hue': 1234,
-            'sat': 123,
-        }),
-        request_bridge_update=None,
-        bridge=Mock(),
-        is_group=False,
-    )
-
-    assert light.hs_color == (1234 / 65535 * 360, 123 / 255 * 100)
-
-    light = hue_light.HueLight(
-        light=Mock(state={
             'colormode': 'xy',
             'hue': 1234,
             'sat': 123,
