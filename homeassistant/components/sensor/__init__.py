@@ -41,3 +41,8 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Setup a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
