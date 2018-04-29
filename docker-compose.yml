@@ -4,6 +4,7 @@ services:
   home-assistant:
     image: homeassistant/home-assistant
     container_name: home-assistant
+    restart: unless-stopped
     network_mode: host
     ports:
       - 8123:8123
