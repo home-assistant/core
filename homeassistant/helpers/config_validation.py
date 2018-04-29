@@ -1,5 +1,4 @@
 """Helpers for config validation using voluptuous."""
-from collections import OrderedDict
 from datetime import (timedelta, datetime as datetime_sys,
                       time as time_sys, date as date_sys)
 import os
@@ -267,37 +266,29 @@ def time_period_str_colon(value: str) -> timedelta:
     return offset
 
 
-def time_period_str_unit(value: str) -> timedelta:
+def time_period_str_unit(value: Any) -> timedelta:
     """Validate and transform time period with time unit and integer value."""
-    value = string(value)
+    if isinstance(value, int):
+        value = str(value)
+    elif not isinstance(value, str):
+        raise vol.Invalid("Expected string for time period with unit.")
 
-    # OrderedDict because 's' check needs to happen after 'ms'
-    unit_to_kwarg = OrderedDict([
-        ('ms', 'milliseconds'),
-        ('s', 'seconds'),
-        ('sec', 'seconds'),
-        ('min', 'minutes'),
-        ('h', 'hours'),
-        ('d', 'days'),
-        ('', 'seconds'),
-    ])
+    unit_to_kwarg = {
+        'ms': 'milliseconds',
+        's': 'seconds', 'sec': 'seconds', '': 'seconds',
+        'min': 'minutes',
+        'h': 'hours',
+        'd': 'days',
+    }
 
-    for unit, kwarg in unit_to_kwarg.items():
-        if not value.endswith(unit):
-            continue
+    match = re.match(r"^([-+]?\d+)\s*(\w*)$", value)
 
-        value_number = value
-        if unit:
-            value_number = value[:-len(unit)].rstrip()
+    if match is None or match.group(2) not in unit_to_kwarg:
+        raise vol.Invalid("Expected time period with unit, "
+                          "got {}".format(value))
 
-        try:
-            parsed = int(value_number)
-        except ValueError:
-            raise vol.Invalid("Expected integer value for time unit")
-
-        return timedelta(**{kwarg: parsed})
-
-    # We're guaranteed to return or raise because every str ends with ''
+    kwarg = unit_to_kwarg[match.group(2)]
+    return timedelta(**{kwarg: int(match.group(1))})
 
 
 time_period = vol.Any(time_period_str_colon, time_period_str_unit, timedelta,
