@@ -619,6 +619,7 @@ omit =
     homeassistant/components/sensor/lyft.py
     homeassistant/components/sensor/metoffice.py
     homeassistant/components/sensor/miflora.py
+    homeassistant/components/sensor/mitemp_bt.py
     homeassistant/components/sensor/modem_callerid.py
     homeassistant/components/sensor/mopar.py
     homeassistant/components/sensor/mqtt_room.py
