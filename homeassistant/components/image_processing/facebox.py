@@ -14,7 +14,7 @@ from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, CONF_SOURCE, CONF_ENTITY_ID,
-    CONF_NAME, CONF_CONFIDENCE, DEFAULT_CONFIDENCE)
+    CONF_NAME)
 from homeassistant.components.image_processing.microsoft_face_identify import (
     ImageProcessingFaceEntity)
 
@@ -25,8 +25,6 @@ ROUNDING_DECIMALS = 2
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENDPOINT): cv.string,
-    vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
-        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 })
 
 
@@ -37,8 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         entities.append(Facebox(
             camera.get(CONF_NAME),
             config[CONF_ENDPOINT],
-            camera[CONF_ENTITY_ID],
-            config[CONF_CONFIDENCE],
+            camera[CONF_ENTITY_ID]
         ))
     add_devices(entities)
 
@@ -46,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class Facebox(ImageProcessingFaceEntity):
     """Perform a classification via a Facebox."""
 
-    def __init__(self, name, endpoint, camera_entity, confidence):
+    def __init__(self, name, endpoint, camera_entity):
         """Init with the API key and model id"""
         super().__init__()
         if name:  # Since name is optional.
@@ -54,12 +51,11 @@ class Facebox(ImageProcessingFaceEntity):
         else:
             self._name = "Facebox {0}".format(
                 split_entity_id(camera_entity)[1])
-        self._camera = camera_entity
-        self._confidence = confidence
         self._url = "http://{}/facebox/check".format(endpoint)
+        self._camera = camera_entity
+        self._response_time = None
         self.total_faces = 0
         self.faces = []
-        self._response_time = None
 
     def process_image(self, image):
         """Process an image."""
@@ -95,11 +91,6 @@ class Facebox(ImageProcessingFaceEntity):
     def camera_entity(self):
         """Return camera entity id from process pictures."""
         return self._camera
-
-    @property
-    def confidence(self):
-        """Return minimum confidence for send events."""
-        return self._confidence
 
     @property
     def name(self):
