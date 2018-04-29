@@ -275,7 +275,9 @@ def time_period_str_unit(value: Any) -> timedelta:
 
     unit_to_kwarg = {
         'ms': 'milliseconds',
-        's': 'seconds', 'sec': 'seconds', '': 'seconds',
+        's': 'seconds',
+        'sec': 'seconds',
+        '': 'seconds',
         'min': 'minutes',
         'h': 'hours',
         'd': 'days',

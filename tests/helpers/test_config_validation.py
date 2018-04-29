@@ -314,23 +314,23 @@ def test_time_period_with_unit():
     # Test with time_period to see if it plays nicely with other formats
     schema = vol.Schema(cv.time_period)
 
-    assert timedelta(seconds=70) == schema('70')
-    assert timedelta(seconds=0) == schema('0')
-    assert timedelta(seconds=70) == schema(70)
-    assert timedelta(seconds=0) == schema(0)
-    assert timedelta(seconds=70) == schema('70s')
-    assert timedelta(seconds=70) == schema('70 s')
-    assert timedelta(seconds=70) == schema('70\ts')
-    assert timedelta(seconds=70) == schema('70  s')
-    assert timedelta(seconds=10) == schema('10 sec')
-    assert timedelta(minutes=50) == schema('50 min')
-    assert timedelta(milliseconds=15) == schema('15ms')
-    assert timedelta(seconds=-15) == schema('-15')
-    assert timedelta(hours=-3) == schema('-3h')
-    assert timedelta(hours=3) == schema('+3h')
-    assert timedelta(days=14) == schema('14d')
+    assert schema('70') == timedelta(seconds=70)
+    assert schema('0') == timedelta(seconds=0)
+    assert schema(70) == timedelta(seconds=70)
+    assert schema(0) == timedelta(seconds=0)
+    assert schema('70s') == timedelta(seconds=70)
+    assert schema('70 s') == timedelta(seconds=70)
+    assert schema('70\ts') == timedelta(seconds=70)
+    assert schema('70  s') == timedelta(seconds=70)
+    assert schema('10 sec') == timedelta(seconds=10)
+    assert schema('50 min') == timedelta(minutes=50)
+    assert schema('15ms') == timedelta(milliseconds=15)
+    assert schema('-15') == timedelta(seconds=-15)
+    assert schema('-3h') == timedelta(hours=-3)
+    assert schema('+3h') == timedelta(hours=3)
+    assert schema('14d') == timedelta(days=14)
 
-    for value in ['3.5', '-4.5h', '3m', '70u', '4,6h', '']:
+    for value in ['3.5', '-4.5h', '3m', '70u', '4,6h', '', 3.5]:
         with pytest.raises(vol.Invalid):
             schema(value)
 
