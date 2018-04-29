@@ -276,9 +276,6 @@ dsmr_parser==0.11
 # homeassistant.components.sensor.dweet
 dweepy==0.3.0
 
-# homeassistant.components.sensor.eliqonline
-eliqonline==1.0.13
-
 # homeassistant.components.enocean
 enocean==0.40
 
