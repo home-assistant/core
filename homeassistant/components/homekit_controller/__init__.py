@@ -31,7 +31,7 @@ KNOWN_DEVICES = "{}-devices".format(DOMAIN)
 _LOGGER = logging.getLogger(__name__)
 
 
-def homekit_http_send(self, message_body=None):
+def homekit_http_send(self, message_body=None, encode_chunked=False):
     r"""Send the currently buffered request and clear the buffer.
 
     Appends an extra \r\n to the buffer.
