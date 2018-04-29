@@ -155,7 +155,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if not devices:
         for prop in mods:
-            if CONF_REGISTER not in mod:
+            if CONF_REGISTER not in mods[prop]:
                 _LOGGER.error("Invalid config %s/%s: no register", name, prop)
                 return
         devices.append(ModbusClimate(name, operation_list, fan_list,
