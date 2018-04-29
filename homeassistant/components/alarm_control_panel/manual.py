@@ -201,6 +201,10 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
+        """ Distinguish between a numeric code and a string"""
+        if self._code.isdigit():
+            digits = str(len(str(self._code)))
+            return '[0-9]{'+ digits + '}'
         """Return one or more characters."""
         return None if self._code is None else '.+'
 
