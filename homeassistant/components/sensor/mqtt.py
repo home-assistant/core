@@ -4,7 +4,6 @@ Support for MQTT sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mqtt/
 """
-import asyncio
 import logging
 import json
 from datetime import timedelta
@@ -22,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -48,8 +48,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                               async_add_devices, discovery_info=None):
     """Set up MQTT Sensor."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -100,10 +100,9 @@ class MqttSensor(MqttAvailability, Entity):
         self._unique_id = unique_id
         self._attributes = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        yield from super().async_added_to_hass()
+        await super().async_added_to_hass()
 
         @callback
         def message_received(topic, payload, qos):
@@ -142,8 +141,8 @@ class MqttSensor(MqttAvailability, Entity):
             self._state = payload
             self.async_schedule_update_ha_state()
 
-        yield from mqtt.async_subscribe(
-            self.hass, self._state_topic, message_received, self._qos)
+        await mqtt.async_subscribe(self.hass, self._state_topic,
+                                   message_received, self._qos)
 
     @callback
     def value_is_expired(self, *_):

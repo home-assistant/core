@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
         for device in gateway.devices['light']:
             model = device['model']
-            if model == 'gateway':
+            if model in ['gateway', 'gateway.v3']:
                 devices.append(XiaomiGatewayLight(device, 'Gateway Light',
                                                   gateway))
     add_devices(devices)

@@ -4,7 +4,6 @@ Support for MQTT switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.mqtt/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -39,8 +38,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the MQTT switch."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -88,10 +87,9 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
         self._optimistic = optimistic
         self._template = value_template
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        yield from super().async_added_to_hass()
+        await super().async_added_to_hass()
 
         @callback
         def state_message_received(topic, payload, qos):
@@ -110,7 +108,7 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            yield from mqtt.async_subscribe(
+            await mqtt.async_subscribe(
                 self.hass, self._state_topic, state_message_received,
                 self._qos)
 
@@ -139,8 +137,7 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
         """Return the icon."""
         return self._icon
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on.
 
         This method is a coroutine.
@@ -153,8 +150,7 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
             self._state = True
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off.
 
         This method is a coroutine.

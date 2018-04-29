@@ -19,7 +19,7 @@ from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['locationsharinglib==0.4.0']
+REQUIREMENTS = ['locationsharinglib==1.2.2']
 
 CREDENTIALS_FILE = '.google_maps_location_sharing.cookies'
 
@@ -79,5 +79,6 @@ class GoogleMapsScanner(object):
                 gps=(person.latitude, person.longitude),
                 picture=person.picture_url,
                 source_type=SOURCE_TYPE_GPS,
+                gps_accuracy=person.accuracy,
                 attributes=attrs
             )

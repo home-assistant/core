@@ -8,6 +8,8 @@ https://home-assistant.io/components/sensor/
 from datetime import timedelta
 import logging
 
+import voluptuous as vol
+
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
@@ -18,12 +20,24 @@ DOMAIN = 'sensor'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SCAN_INTERVAL = timedelta(seconds=30)
+DEVICE_CLASSES = [
+    'battery',  # % of battery that is left
+    'humidity',  # % of humidity in the air
+    'temperature',  # temperature (C/F)
+]
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 
 async def async_setup(hass, config):
     """Track states and offer events for sensors."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     await component.async_setup(config)
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)

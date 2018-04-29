@@ -7,7 +7,8 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service, debounce
+from .accessories import (
+    HomeAccessory, add_preload_service, debounce, setup_char)
 from .const import (
     CATEGORY_LIGHT, SERV_LIGHTBULB, CHAR_COLOR_TEMPERATURE,
     CHAR_BRIGHTNESS, CHAR_HUE, CHAR_ON, CHAR_SATURATION)
@@ -24,12 +25,9 @@ class Light(HomeAccessory):
     Currently supports: state, brightness, color temperature, rgb_color.
     """
 
-    def __init__(self, hass, entity_id, name, **kwargs):
+    def __init__(self, *args, config):
         """Initialize a new Light accessory object."""
-        super().__init__(name, entity_id, CATEGORY_LIGHT, **kwargs)
-
-        self.hass = hass
-        self.entity_id = entity_id
+        super().__init__(*args, category=CATEGORY_LIGHT)
         self._flag = {CHAR_ON: False, CHAR_BRIGHTNESS: False,
                       CHAR_HUE: False, CHAR_SATURATION: False,
                       CHAR_COLOR_TEMPERATURE: False, RGB_COLOR: False}
@@ -49,36 +47,29 @@ class Light(HomeAccessory):
             self._saturation = None
 
         serv_light = add_preload_service(self, SERV_LIGHTBULB, self.chars)
-        self.char_on = serv_light.get_characteristic(CHAR_ON)
-        self.char_on.setter_callback = self.set_state
-        self.char_on.value = self._state
+        self.char_on = setup_char(
+            CHAR_ON, serv_light, value=self._state, callback=self.set_state)
 
         if CHAR_BRIGHTNESS in self.chars:
-            self.char_brightness = serv_light \
-                .get_characteristic(CHAR_BRIGHTNESS)
-            self.char_brightness.setter_callback = self.set_brightness
-            self.char_brightness.value = 0
+            self.char_brightness = setup_char(
+                CHAR_BRIGHTNESS, serv_light, value=0,
+                callback=self.set_brightness)
         if CHAR_COLOR_TEMPERATURE in self.chars:
-            self.char_color_temperature = serv_light \
-                .get_characteristic(CHAR_COLOR_TEMPERATURE)
-            self.char_color_temperature.setter_callback = \
-                self.set_color_temperature
             min_mireds = self.hass.states.get(self.entity_id) \
                 .attributes.get(ATTR_MIN_MIREDS, 153)
             max_mireds = self.hass.states.get(self.entity_id) \
                 .attributes.get(ATTR_MAX_MIREDS, 500)
-            self.char_color_temperature.override_properties({
-                'minValue': min_mireds, 'maxValue': max_mireds})
-            self.char_color_temperature.value = min_mireds
+            self.char_color_temperature = setup_char(
+                CHAR_COLOR_TEMPERATURE, serv_light, value=min_mireds,
+                properties={'minValue': min_mireds, 'maxValue': max_mireds},
+                callback=self.set_color_temperature)
         if CHAR_HUE in self.chars:
-            self.char_hue = serv_light.get_characteristic(CHAR_HUE)
-            self.char_hue.setter_callback = self.set_hue
-            self.char_hue.value = 0
+            self.char_hue = setup_char(
+                CHAR_HUE, serv_light, value=0, callback=self.set_hue)
         if CHAR_SATURATION in self.chars:
-            self.char_saturation = serv_light \
-                .get_characteristic(CHAR_SATURATION)
-            self.char_saturation.setter_callback = self.set_saturation
-            self.char_saturation.value = 75
+            self.char_saturation = setup_char(
+                CHAR_SATURATION, serv_light, value=75,
+                callback=self.set_saturation)
 
     def set_state(self, value):
         """Set state if call came from HomeKit."""
@@ -136,11 +127,8 @@ class Light(HomeAccessory):
             self.hass.components.light.turn_on(
                 self.entity_id, hs_color=color)
 
-    def update_state(self, entity_id=None, old_state=None, new_state=None):
+    def update_state(self, new_state):
         """Update light after state change."""
-        if not new_state:
-            return
-
         # Handle State
         state = new_state.state
         if state in (STATE_ON, STATE_OFF):
@@ -162,7 +150,8 @@ class Light(HomeAccessory):
         if CHAR_COLOR_TEMPERATURE in self.chars:
             color_temperature = new_state.attributes.get(ATTR_COLOR_TEMP)
             if not self._flag[CHAR_COLOR_TEMPERATURE] \
-                    and isinstance(color_temperature, int):
+                and isinstance(color_temperature, int) and \
+                    self.char_color_temperature.value != color_temperature:
                 self.char_color_temperature.set_value(color_temperature)
             self._flag[CHAR_COLOR_TEMPERATURE] = False
 

@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                             'temperature', gateway))
                 devices.append(XiaomiSensor(device, 'Humidity',
                                             'humidity', gateway))
-            elif device['model'] == 'weather.v1':
+            elif device['model'] in ['weather', 'weather.v1']:
                 devices.append(XiaomiSensor(device, 'Temperature',
                                             'temperature', gateway))
                 devices.append(XiaomiSensor(device, 'Humidity',
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif device['model'] == 'sensor_motion.aq2':
                 devices.append(XiaomiSensor(device, 'Illumination',
                                             'lux', gateway))
-            elif device['model'] == 'gateway':
+            elif device['model'] in ['gateway', 'gateway.v3', 'acpartner.v3']:
                 devices.append(XiaomiSensor(device, 'Illumination',
                                             'illumination', gateway))
     add_devices(devices)

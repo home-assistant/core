@@ -71,7 +71,7 @@ def activate(hass, entity_id=None):
 async def async_setup(hass, config):
     """Set up the scenes."""
     logger = logging.getLogger(__name__)
-    component = EntityComponent(logger, DOMAIN, hass)
+    component = hass.data[DOMAIN] = EntityComponent(logger, DOMAIN, hass)
 
     await component.async_setup(config)
 
@@ -88,6 +88,11 @@ async def async_setup(hass, config):
         schema=SCENE_SERVICE_SCHEMA)
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
 class Scene(Entity):

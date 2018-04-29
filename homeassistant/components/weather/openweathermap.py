@@ -28,7 +28,6 @@ DEFAULT_NAME = 'OpenWeatherMap'
 
 MIN_TIME_BETWEEN_FORECAST_UPDATES = timedelta(minutes=30)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
-MIN_OFFSET_BETWEEN_FORECAST_CONDITIONS = 3
 
 CONDITION_CLASSES = {
     'cloudy': [804],
@@ -145,12 +144,11 @@ class OpenWeatherMapWeather(WeatherEntity):
                 ATTR_FORECAST_TIME: entry.get_reference_time('unix') * 1000,
                 ATTR_FORECAST_TEMP:
                     entry.get_temperature('celsius').get('temp'),
-                ATTR_FORECAST_PRECIPITATION: entry.get_rain().get('3h')
-            })
-            if (len(data) - 1) % MIN_OFFSET_BETWEEN_FORECAST_CONDITIONS == 0:
-                data[len(data) - 1][ATTR_FORECAST_CONDITION] = \
+                ATTR_FORECAST_PRECIPITATION: entry.get_rain().get('3h'),
+                ATTR_FORECAST_CONDITION:
                     [k for k, v in CONDITION_CLASSES.items()
                      if entry.get_weather_code() in v][0]
+            })
         return data
 
     def update(self):
