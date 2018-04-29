@@ -6,10 +6,11 @@ https://home-assistant.io/components/deconz/
 """
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import callback
+from homeassistant.const import (CONF_API_KEY, CONF_EVENT,
+    CONF_HOST, CONF_ID, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.util import slugify
 from homeassistant.util.json import load_json
 
 # Loading the config flow file will register the flow
@@ -67,6 +68,7 @@ async def async_setup_entry(hass, config_entry):
     Start websocket for push notification of state changes from deCONZ.
     """
     from pydeconz import DeconzSession
+    from pydeconz.sensor import SWITCH as DECONZ_REMOTE
     if DOMAIN in hass.data:
         _LOGGER.error(
             "Config entry failed since one deCONZ instance already exists")
@@ -80,12 +82,15 @@ async def async_setup_entry(hass, config_entry):
         return False
 
     hass.data[DOMAIN] = deconz
-    hass.data[DATA_DECONZ_EVENT] = []
     hass.data[DATA_DECONZ_ID] = {}
 
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
         hass.async_add_job(hass.config_entries.async_forward_entry_setup(
             config_entry, component))
+
+    hass.data[DATA_DECONZ_EVENT] = [DeconzEvent(hass, sensor)
+        for sensor in deconz.sensors.values() if sensor.type in DECONZ_REMOTE]
+
     deconz.start()
 
     async def async_configure(call):
@@ -144,3 +149,26 @@ async def async_unload_entry(hass, config_entry):
     hass.data[DATA_DECONZ_EVENT] = []
     hass.data[DATA_DECONZ_ID] = []
     return True
+
+
+class DeconzEvent(object):
+    """When you want signals instead of entities.
+
+    Stateless sensors such as remotes are expected to generate an event
+    instead of a sensor entity in hass.
+    """
+
+    def __init__(self, hass, device):
+        """Register callback that will be used for signals."""
+        self._hass = hass
+        self._device = device
+        self._device.register_async_callback(self.async_update_callback)
+        self._event = 'deconz_{}'.format(CONF_EVENT)
+        self._id = slugify(self._device.name)
+
+    @callback
+    def async_update_callback(self, reason):
+        """Fire the event if reason is that state is updated."""
+        if reason['state']:
+            data = {CONF_ID: self._id, CONF_EVENT: self._device.state}
+            self._hass.bus.async_fire(self._event, data, EventOrigin.remote)
