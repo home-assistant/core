@@ -22,7 +22,10 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_CONDITION_CLASS = 'condition_class'
 ATTR_FORECAST = 'forecast'
+ATTR_FORECAST_CONDITION = 'condition'
+ATTR_FORECAST_PRECIPITATION = 'precipitation'
 ATTR_FORECAST_TEMP = 'temperature'
+ATTR_FORECAST_TEMP_LOW = 'templow'
 ATTR_FORECAST_TIME = 'datetime'
 ATTR_WEATHER_ATTRIBUTION = 'attribution'
 ATTR_WEATHER_HUMIDITY = 'humidity'
@@ -144,6 +147,10 @@ class WeatherEntity(Entity):
                 forecast_entry[ATTR_FORECAST_TEMP] = show_temp(
                     self.hass, forecast_entry[ATTR_FORECAST_TEMP],
                     self.temperature_unit, self.precision)
+                if ATTR_FORECAST_TEMP_LOW in forecast_entry:
+                    forecast_entry[ATTR_FORECAST_TEMP_LOW] = show_temp(
+                        self.hass, forecast_entry[ATTR_FORECAST_TEMP_LOW],
+                        self.temperature_unit, self.precision)
                 forecast.append(forecast_entry)
 
             data[ATTR_FORECAST] = forecast
