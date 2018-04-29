@@ -4,7 +4,10 @@ services:
   home-assistant:
     image: homeassistant/home-assistant
     container_name: home-assistant
+    network_mode: host
     ports:
       - 8123:8123
     volumes:
       - ~/.homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+
