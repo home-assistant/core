@@ -63,26 +63,86 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # Define list of name,obis mappings to generate entities
     obis_mapping = [
-        ['Power Consumption', obis_ref.CURRENT_ELECTRICITY_USAGE],
-        ['Power Production', obis_ref.CURRENT_ELECTRICITY_DELIVERY],
-        ['Power Tariff', obis_ref.ELECTRICITY_ACTIVE_TARIFF],
-        ['Power Consumption (low)', obis_ref.ELECTRICITY_USED_TARIFF_1],
-        ['Power Consumption (normal)', obis_ref.ELECTRICITY_USED_TARIFF_2],
-        ['Power Production (low)', obis_ref.ELECTRICITY_DELIVERED_TARIFF_1],
-        ['Power Production (normal)', obis_ref.ELECTRICITY_DELIVERED_TARIFF_2],
-        ['Power Consumption Phase L1', obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE],
-        ['Power Consumption Phase L2', obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE],
-        ['Power Consumption Phase L3', obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE],
-        ['Power Production Phase L1', obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE],
-        ['Power Production Phase L2', obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE],
-        ['Power Production Phase L3', obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE],
-        ['Long Power Failure Count', obis_ref.LONG_POWER_FAILURE_COUNT],
-        ['Voltage Sags Phase L1', obis_ref.VOLTAGE_SAG_L1_COUNT],
-        ['Voltage Sags Phase L2', obis_ref.VOLTAGE_SAG_L2_COUNT],
-        ['Voltage Sags Phase L3', obis_ref.VOLTAGE_SAG_L3_COUNT],
-        ['Voltage Swells Phase L1', obis_ref.VOLTAGE_SWELL_L1_COUNT],
-        ['Voltage Swells Phase L2', obis_ref.VOLTAGE_SWELL_L2_COUNT],
-        ['Voltage Swells Phase L3', obis_ref.VOLTAGE_SWELL_L3_COUNT],
+        [
+            'Power Consumption',
+            obis_ref.CURRENT_ELECTRICITY_USAGE
+        ],
+        [
+            'Power Production',
+            obis_ref.CURRENT_ELECTRICITY_DELIVERY
+        ],
+        [
+            'Power Tariff',
+            obis_ref.ELECTRICITY_ACTIVE_TARIFF
+        ],
+        [
+            'Power Consumption (low)',
+            obis_ref.ELECTRICITY_USED_TARIFF_1
+        ],
+        [
+            'Power Consumption (normal)',
+            obis_ref.ELECTRICITY_USED_TARIFF_2
+        ],
+        [
+            'Power Production (low)',
+            obis_ref.ELECTRICITY_DELIVERED_TARIFF_1
+        ],
+        [
+            'Power Production (normal)',
+            obis_ref.ELECTRICITY_DELIVERED_TARIFF_2
+        ],
+        [
+            'Power Consumption Phase L1',
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE
+        ],
+        [
+            'Power Consumption Phase L2',
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE
+        ],
+        [
+            'Power Consumption Phase L3',
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE
+        ],
+        [
+            'Power Production Phase L1',
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE
+        ],
+        [
+            'Power Production Phase L2',
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE
+        ],
+        [
+            'Power Production Phase L3',
+            obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE
+        ],
+        [
+            'Long Power Failure Count',
+            obis_ref.LONG_POWER_FAILURE_COUNT
+        ],
+        [
+            'Voltage Sags Phase L1',
+            obis_ref.VOLTAGE_SAG_L1_COUNT
+        ],
+        [
+            'Voltage Sags Phase L2',
+            obis_ref.VOLTAGE_SAG_L2_COUNT
+        ],
+        [
+            'Voltage Sags Phase L3',
+            obis_ref.VOLTAGE_SAG_L3_COUNT
+        ],
+        [
+            'Voltage Swells Phase L1',
+            obis_ref.VOLTAGE_SWELL_L1_COUNT
+        ],
+        [
+            'Voltage Swells Phase L2',
+            obis_ref.VOLTAGE_SWELL_L2_COUNT
+        ],
+        [
+            'Voltage Swells Phase L3',
+            obis_ref.VOLTAGE_SWELL_L3_COUNT
+        ],
     ]
 
     # Generate device entities
