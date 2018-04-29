@@ -245,11 +245,8 @@ class HueLight(Light):
         mode = self._color_mode
         source = self.light.action if self.is_group else self.light.state
 
-        if mode == 'xy' and 'xy' in source:
+        if mode in ('xy', 'hs'):
             return color.color_xy_to_hs(*source['xy'])
-
-        if mode == 'hs' and 'hue' in source and 'sat' in source:
-            return source['hue'] / 65535 * 360, source['sat'] / 255 * 100
 
         return None
 
