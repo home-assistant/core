@@ -6,8 +6,6 @@ services:
     container_name: home-assistant
     restart: unless-stopped
     network_mode: host
-    ports:
-      - 8123:8123
     volumes:
       - ~/.homeassistant:/config
       - /etc/localtime:/etc/localtime:ro
