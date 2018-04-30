@@ -88,10 +88,9 @@ def async_setup(hass, config):
 
         if publish_attributes:
             for key, val in new_state.attributes.items():
-                if val:
-                    encoded_val = json.dumps(val, cls=JSONEncoder)
-                    hass.components.mqtt.async_publish(mybase + key,
-                                                       encoded_val, 1, True)
+                encoded_val = json.dumps(val, cls=JSONEncoder)
+                hass.components.mqtt.async_publish(mybase + key,
+                                                   encoded_val, 1, True)
 
     async_track_state_change(hass, MATCH_ALL, _state_publisher)
     return True
