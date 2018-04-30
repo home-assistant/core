@@ -126,7 +126,8 @@ class HomematicipConnector:
         We are only interested to check whether the access point
         is still connected. If not, device state changes cannot
         be forwarded to hass. So if access point is disconnected all devices
-        are set to unavailable."""
+        are set to unavailable.
+        """
         if not self.home.connected:
             _LOGGER.error(
                 "HMIP access point has lost connection with the cloud")
@@ -134,9 +135,8 @@ class HomematicipConnector:
             self.set_all_to_unavailable()
         else:
             if not self._accesspoint_connected:
-                """Explicitly getting an update as device states might have
-                changed during access point disconnect.
-                """
+                # Explicitly getting an update as device states might have
+                # changed during access point disconnect."""
 
                 job = self._hass.async_add_job(self.get_state())
                 job.add_done_callback(self.get_state_finished)
@@ -147,7 +147,7 @@ class HomematicipConnector:
         self.update_all()
 
     def get_state_finished(self, future):
-        """Executed when get_state coroutine has finished."""
+        """Execute when get_state coroutine has finished."""
         from homematicip.base.base_connection import HmipConnectionError
 
         try:
@@ -160,15 +160,13 @@ class HomematicipConnector:
             self._hass.async_add_job(self.home.disable_events())
 
     def set_all_to_unavailable(self):
-        """Set all devices to unavailable and tell Hass"""
-
+        """Set all devices to unavailable and tell Hass."""
         for device in self.home.devices:
             device.unreach = True
         self.update_all()
 
     def update_all(self):
         """Signal all devices to update their state."""
-
         for device in self.home.devices:
             device.fire_update_event()
 
