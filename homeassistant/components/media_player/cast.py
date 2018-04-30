@@ -306,12 +306,13 @@ class CastDevice(MediaPlayerDevice):
             _LOGGER.debug("Discovered chromecast with same UUID: %s", discover)
             self.hass.async_add_job(self.async_set_cast_info(discover))
 
-        async def stop(event):
-            await self.async_will_remove_from_hass()
+        async def async_stop(event):
+            """Disconnect socket on Home Assistant stop."""
+            await self._async_disconnect()
 
         async_dispatcher_connect(self.hass, SIGNAL_CAST_DISCOVERED,
                                  async_cast_discovered)
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
         self.hass.async_add_job(self.async_set_cast_info(self._cast_info))
 
     async def async_will_remove_from_hass(self) -> None:
@@ -368,8 +369,9 @@ class CastDevice(MediaPlayerDevice):
         self.cast_status = None
         self.media_status = None
         self.media_status_received = None
-        self._status_listener.invalidate()
-        self._status_listener = None
+        if self._status_listener is not None:
+            self._status_listener.invalidate()
+            self._status_listener = None
 
         self.async_schedule_update_ha_state()
 
