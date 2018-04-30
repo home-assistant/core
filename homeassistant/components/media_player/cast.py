@@ -306,13 +306,18 @@ class CastDevice(MediaPlayerDevice):
             _LOGGER.debug("Discovered chromecast with same UUID: %s", discover)
             self.hass.async_add_job(self.async_set_cast_info(discover))
 
+        async def async_stop(event):
+            """Disconnect socket on Home Assistant stop."""
+            await self._async_disconnect()
+
         async_dispatcher_connect(self.hass, SIGNAL_CAST_DISCOVERED,
                                  async_cast_discovered)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
         self.hass.async_add_job(self.async_set_cast_info(self._cast_info))
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect Chromecast object when removed."""
-        self._async_disconnect()
+        await self._async_disconnect()
         if self._cast_info.uuid is not None:
             # Remove the entity from the added casts so that it can dynamically
             # be re-added again.
@@ -328,7 +333,7 @@ class CastDevice(MediaPlayerDevice):
             if old_cast_info.host_port == cast_info.host_port:
                 # Nothing connection-related updated
                 return
-            self._async_disconnect()
+            await self._async_disconnect()
 
         # Failed connection will unfortunately never raise an exception, it
         # will instead just try connecting indefinitely.
@@ -348,22 +353,27 @@ class CastDevice(MediaPlayerDevice):
         _LOGGER.debug("Connection successful!")
         self.async_schedule_update_ha_state()
 
-    @callback
-    def _async_disconnect(self):
+    async def _async_disconnect(self):
         """Disconnect Chromecast object if it is set."""
         if self._chromecast is None:
             # Can't disconnect if not connected.
             return
-        _LOGGER.debug("Disconnecting from previous chromecast socket.")
+        _LOGGER.debug("Disconnecting from chromecast socket.")
         self._available = False
-        self._chromecast.disconnect(blocking=False)
+        self.async_schedule_update_ha_state()
+
+        await self.hass.async_add_job(self._chromecast.disconnect)
+
         # Invalidate some attributes
         self._chromecast = None
         self.cast_status = None
         self.media_status = None
         self.media_status_received = None
-        self._status_listener.invalidate()
-        self._status_listener = None
+        if self._status_listener is not None:
+            self._status_listener.invalidate()
+            self._status_listener = None
+
+        self.async_schedule_update_ha_state()
 
     # ========== Callbacks ==========
     def new_cast_status(self, cast_status):

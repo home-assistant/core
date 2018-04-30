@@ -346,8 +346,16 @@ async def test_switched_host(hass: HomeAssistantType):
         async_dispatcher_send(hass, cast.SIGNAL_CAST_DISCOVERED, changed)
         await hass.async_block_till_done()
         assert get_chromecast.call_count == 1
-        chromecast.disconnect.assert_called_once_with(blocking=False)
+        assert chromecast.disconnect.call_count == 1
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        await hass.async_block_till_done()
-        chromecast.disconnect.assert_called_once_with(blocking=False)
+
+async def test_disconnect_on_stop(hass: HomeAssistantType):
+    """Test cast device disconnects socket on stop."""
+    info = get_fake_chromecast_info()
+
+    with patch('pychromecast.dial.get_device_status', return_value=info):
+        chromecast, _ = await async_setup_media_player_cast(hass, info)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert chromecast.disconnect.call_count == 1
