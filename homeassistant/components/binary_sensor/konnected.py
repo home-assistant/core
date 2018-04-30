@@ -10,7 +10,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.konnected import (DOMAIN, PIN_TO_ZONE)
 from homeassistant.const import (
-    CONF_DEVICES, CONF_TYPE, CONF_NAME, CONF_SENSORS, ATTR_STATE)
+    CONF_DEVICES, CONF_TYPE, CONF_NAME, CONF_BINARY_SENSORS, ATTR_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     device_id = discovery_info['device_id']
     sensors = [KonnectedBinarySensor(device_id, pin_num, pin_data)
                for pin_num, pin_data in
-               data[CONF_DEVICES][device_id][CONF_SENSORS].items()]
+               data[CONF_DEVICES][device_id][CONF_BINARY_SENSORS].items()]
     async_add_devices(sensors)
 
 
