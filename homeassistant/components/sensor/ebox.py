@@ -6,10 +6,10 @@ Get data from 'My Usage Page' page: https://client.ebox.ca/myusage
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ebox/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
-import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -18,9 +18,9 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD,
     CONF_NAME, CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
-# pylint: disable=import-error
-REQUIREMENTS = []  # ['pyebox==0.1.0'] - disabled because it breaks pip10
+REQUIREMENTS = ['pyebox==1.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ PERCENT = '%'  # type: str
 DEFAULT_NAME = 'EBox'
 
 REQUESTS_TIMEOUT = 15
-SCAN_INTERVAL = timedelta(minutes=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SENSOR_TYPES = {
     'usage': ['Usage', PERCENT, 'mdi:percent'],
@@ -62,25 +62,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the EBox sensor."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    try:
-        ebox_data = EBoxData(username, password)
-        ebox_data.update()
-    except requests.exceptions.HTTPError as error:
-        _LOGGER.error("Failed login: %s", error)
-        return False
+    httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
+    ebox_data = EBoxData(username, password, httpsession)
 
     name = config.get(CONF_NAME)
 
     sensors = []
     for variable in config[CONF_MONITORED_VARIABLES]:
+        _LOGGER.error("EBOX %s", variable)
         sensors.append(EBoxSensor(ebox_data, variable, name))
 
-    add_devices(sensors, True)
+    async_add_devices(sensors, False)
 
 
 class EBoxSensor(Entity):
@@ -116,9 +114,10 @@ class EBoxSensor(Entity):
         """Icon to use in the frontend, if any."""
         return self._icon
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data from EBox and update the state."""
-        self.ebox_data.update()
+        yield from self.ebox_data.async_update()
         if self.type in self.ebox_data.data:
             self._state = round(self.ebox_data.data[self.type], 2)
 
@@ -126,18 +125,22 @@ class EBoxSensor(Entity):
 class EBoxData(object):
     """Get data from Ebox."""
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, httpsession):
         """Initialize the data object."""
         from pyebox import EboxClient
-        self.client = EboxClient(username, password, REQUESTS_TIMEOUT)
+        self.client = EboxClient(username, password,
+                                 REQUESTS_TIMEOUT, httpsession)
         self.data = {}
 
-    def update(self):
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def async_update(self):
         """Get the latest data from Ebox."""
         from pyebox.client import PyEboxError
         try:
-            self.client.fetch_data()
+            await self.client.fetch_data()
         except PyEboxError as exp:
             _LOGGER.error("Error on receive last EBox data: %s", exp)
-            return
+            return False
+        # Update data
         self.data = self.client.get_data()
+        return True
