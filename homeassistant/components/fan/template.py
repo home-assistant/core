@@ -164,9 +164,6 @@ class TemplateFan(FanEntity):
             self._supported_features |= SUPPORT_OSCILLATE
 
         self._entities = entity_ids
-        print('11111')
-        print(self._entities)
-        print('11111')
         # List of valid speeds
         self._speed_list = speed_list
 
@@ -244,7 +241,6 @@ class TemplateFan(FanEntity):
         )
         self._oscillating = oscillating
 
-
     async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
@@ -315,9 +311,9 @@ class TemplateFan(FanEntity):
                 self._state = None
 
             # Validate osc
-            if oscillating == 'True' or oscillating == True:
+            if oscillating == 'True' or oscillating is True:
                 self._oscillating = True
-            elif oscillating == 'False' or oscillating == False:
+            elif oscillating == 'False' or oscillating is False:
                 self._oscillating = False
             elif oscillating == STATE_UNKNOWN:
                 self._oscillating = None
