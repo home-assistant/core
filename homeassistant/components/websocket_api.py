@@ -18,7 +18,6 @@ from voluptuous.humanize import humanize_error
 from homeassistant.const import (
     MATCH_ALL, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
     __version__)
-from homeassistant.components import frontend
 from homeassistant.core import callback
 from homeassistant.remote import JSONEncoder
 from homeassistant.helpers import config_validation as cv
@@ -27,6 +26,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import validate_password
 from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components.http.ban import process_wrong_login
+from homeassistant.util.decorator import Registry
 
 DOMAIN = 'websocket_api'
 
@@ -46,7 +46,6 @@ TYPE_AUTH_REQUIRED = 'auth_required'
 TYPE_CALL_SERVICE = 'call_service'
 TYPE_EVENT = 'event'
 TYPE_GET_CONFIG = 'get_config'
-TYPE_GET_PANELS = 'get_panels'
 TYPE_GET_SERVICES = 'get_services'
 TYPE_GET_STATES = 'get_states'
 TYPE_PING = 'ping'
@@ -54,6 +53,7 @@ TYPE_PONG = 'pong'
 TYPE_RESULT = 'result'
 TYPE_SUBSCRIBE_EVENTS = 'subscribe_events'
 TYPE_UNSUBSCRIBE_EVENTS = 'unsubscribe_events'
+COMMANDS = Registry()
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,62 +64,15 @@ AUTH_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('api_password'): str,
 })
 
-SUBSCRIBE_EVENTS_MESSAGE_SCHEMA = vol.Schema({
+# Minimal requirements of a message
+MINIMAL_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('id'): cv.positive_int,
-    vol.Required('type'): TYPE_SUBSCRIBE_EVENTS,
-    vol.Optional('event_type', default=MATCH_ALL): str,
-})
-
-UNSUBSCRIBE_EVENTS_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'): cv.positive_int,
-    vol.Required('type'): TYPE_UNSUBSCRIBE_EVENTS,
-    vol.Required('subscription'): cv.positive_int,
-})
-
-CALL_SERVICE_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'): cv.positive_int,
-    vol.Required('type'): TYPE_CALL_SERVICE,
-    vol.Required('domain'): str,
-    vol.Required('service'): str,
-    vol.Optional('service_data'): dict
-})
-
-GET_STATES_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'): cv.positive_int,
-    vol.Required('type'): TYPE_GET_STATES,
-})
-
-GET_SERVICES_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'): cv.positive_int,
-    vol.Required('type'): TYPE_GET_SERVICES,
-})
-
-GET_CONFIG_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'): cv.positive_int,
-    vol.Required('type'): TYPE_GET_CONFIG,
-})
-
-GET_PANELS_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'): cv.positive_int,
-    vol.Required('type'): TYPE_GET_PANELS,
-})
-
-PING_MESSAGE_SCHEMA = vol.Schema({
-    vol.Required('id'): cv.positive_int,
-    vol.Required('type'): TYPE_PING,
-})
-
+    vol.Required('type'): cv.string,
+}, extra=vol.ALLOW_EXTRA)
+# Base schema to extend by message handlers
 BASE_COMMAND_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('id'): cv.positive_int,
-    vol.Required('type'): vol.Any(TYPE_CALL_SERVICE,
-                                  TYPE_SUBSCRIBE_EVENTS,
-                                  TYPE_UNSUBSCRIBE_EVENTS,
-                                  TYPE_GET_STATES,
-                                  TYPE_GET_SERVICES,
-                                  TYPE_GET_CONFIG,
-                                  TYPE_GET_PANELS,
-                                  TYPE_PING)
-}, extra=vol.ALLOW_EXTRA)
+})
 
 # Define the possible errors that occur when connections are cancelled.
 # Originally, this was just asyncio.CancelledError, but issue #9546 showed
@@ -319,7 +272,7 @@ class ActiveConnection:
 
             while msg:
                 self.debug("Received", msg)
-                msg = BASE_COMMAND_MESSAGE_SCHEMA(msg)
+                msg = MINIMAL_MESSAGE_SCHEMA(msg)
                 cur_id = msg['id']
 
                 if cur_id <= last_id:
@@ -327,9 +280,13 @@ class ActiveConnection:
                         cur_id, ERR_ID_REUSE,
                         'Identifier values have to increase.'))
 
+                elif msg['type'] not in COMMANDS:
+                    # Unknown command
+                    break
+
                 else:
-                    handler_name = 'handle_{}'.format(msg['type'])
-                    getattr(self, handler_name)(msg)
+                    handler = COMMANDS[msg['type']]
+                    handler(self, handler.schema(msg))
 
                 last_id = cur_id
                 msg = await wsock.receive_json()
@@ -403,109 +360,136 @@ class ActiveConnection:
 
         return wsock
 
-    def handle_subscribe_events(self, msg):
-        """Handle subscribe events command.
 
-        Async friendly.
-        """
-        msg = SUBSCRIBE_EVENTS_MESSAGE_SCHEMA(msg)
+@COMMANDS.register(TYPE_SUBSCRIBE_EVENTS)
+def handle_subscribe_events(connection, msg):
+    """Handle subscribe events command.
 
-        async def forward_events(event):
-            """Forward events to websocket."""
-            if event.event_type == EVENT_TIME_CHANGED:
-                return
+    Async friendly.
+    """
+    async def forward_events(event):
+        """Forward events to websocket."""
+        if event.event_type == EVENT_TIME_CHANGED:
+            return
 
-            self.send_message_outside(event_message(msg['id'], event))
+        connection.send_message_outside(event_message(msg['id'], event))
 
-        self.event_listeners[msg['id']] = self.hass.bus.async_listen(
-            msg['event_type'], forward_events)
+    connection.event_listeners[msg['id']] = connection.hass.bus.async_listen(
+        msg['event_type'], forward_events)
 
-        self.to_write.put_nowait(result_message(msg['id']))
+    connection.to_write.put_nowait(result_message(msg['id']))
 
-    def handle_unsubscribe_events(self, msg):
-        """Handle unsubscribe events command.
 
-        Async friendly.
-        """
-        msg = UNSUBSCRIBE_EVENTS_MESSAGE_SCHEMA(msg)
+handle_subscribe_events.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_SUBSCRIBE_EVENTS,
+    vol.Optional('event_type', default=MATCH_ALL): str,
+})
 
-        subscription = msg['subscription']
 
-        if subscription in self.event_listeners:
-            self.event_listeners.pop(subscription)()
-            self.to_write.put_nowait(result_message(msg['id']))
-        else:
-            self.to_write.put_nowait(error_message(
-                msg['id'], ERR_NOT_FOUND,
-                'Subscription not found.'))
+@COMMANDS.register(TYPE_UNSUBSCRIBE_EVENTS)
+def handle_unsubscribe_events(connection, msg):
+    """Handle unsubscribe events command.
 
-    def handle_call_service(self, msg):
-        """Handle call service command.
+    Async friendly.
+    """
+    subscription = msg['subscription']
 
-        Async friendly.
-        """
-        msg = CALL_SERVICE_MESSAGE_SCHEMA(msg)
+    if subscription in connection.event_listeners:
+        connection.event_listeners.pop(subscription)()
+        connection.to_write.put_nowait(result_message(msg['id']))
+    else:
+        connection.to_write.put_nowait(error_message(
+            msg['id'], ERR_NOT_FOUND,
+            'Subscription not found.'))
 
-        async def call_service_helper(msg):
-            """Call a service and fire complete message."""
-            await self.hass.services.async_call(
-                msg['domain'], msg['service'], msg.get('service_data'), True)
-            self.send_message_outside(result_message(msg['id']))
 
-        self.hass.async_add_job(call_service_helper(msg))
+handle_unsubscribe_events.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_UNSUBSCRIBE_EVENTS,
+    vol.Required('subscription'): cv.positive_int,
+})
 
-    def handle_get_states(self, msg):
-        """Handle get states command.
 
-        Async friendly.
-        """
-        msg = GET_STATES_MESSAGE_SCHEMA(msg)
+@COMMANDS.register(TYPE_CALL_SERVICE)
+def handle_call_service(connection, msg):
+    """Handle call service command.
 
-        self.to_write.put_nowait(result_message(
-            msg['id'], self.hass.states.async_all()))
+    Async friendly.
+    """
+    async def call_service_helper(msg):
+        """Call a service and fire complete message."""
+        await connection.hass.services.async_call(
+            msg['domain'], msg['service'], msg.get('service_data'), True)
+        connection.send_message_outside(result_message(msg['id']))
 
-    def handle_get_services(self, msg):
-        """Handle get services command.
+    connection.hass.async_add_job(call_service_helper(msg))
 
-        Async friendly.
-        """
-        msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
 
-        async def get_services_helper(msg):
-            """Get available services and fire complete message."""
-            descriptions = await async_get_all_descriptions(self.hass)
-            self.send_message_outside(result_message(msg['id'], descriptions))
+handle_call_service.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_CALL_SERVICE,
+    vol.Required('domain'): str,
+    vol.Required('service'): str,
+    vol.Optional('service_data'): dict
+})
 
-        self.hass.async_add_job(get_services_helper(msg))
 
-    def handle_get_config(self, msg):
-        """Handle get config command.
+@COMMANDS.register(TYPE_GET_STATES)
+def handle_get_states(connection, msg):
+    """Handle get states command.
 
-        Async friendly.
-        """
-        msg = GET_CONFIG_MESSAGE_SCHEMA(msg)
+    Async friendly.
+    """
+    connection.to_write.put_nowait(result_message(
+        msg['id'], connection.hass.states.async_all()))
 
-        self.to_write.put_nowait(result_message(
-            msg['id'], self.hass.config.as_dict()))
 
-    def handle_get_panels(self, msg):
-        """Handle get panels command.
+handle_get_states.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_GET_STATES,
+})
 
-        Async friendly.
-        """
-        msg = GET_PANELS_MESSAGE_SCHEMA(msg)
-        panels = {
-            panel:
-            self.hass.data[frontend.DATA_PANELS][panel].to_response(
-                self.hass, self.request)
-            for panel in self.hass.data[frontend.DATA_PANELS]}
 
-        self.to_write.put_nowait(result_message(
-            msg['id'], panels))
+@COMMANDS.register(TYPE_GET_SERVICES)
+def handle_get_services(connection, msg):
+    """Handle get services command.
 
-    def handle_ping(self, msg):
-        """Handle ping command.
+    Async friendly.
+    """
+    async def get_services_helper(msg):
+        """Get available services and fire complete message."""
+        descriptions = await async_get_all_descriptions(connection.hass)
+        connection.send_message_outside(result_message(msg['id'], descriptions))
 
-        Async friendly.
-        """
-        self.to_write.put_nowait(pong_message(msg['id']))
+    connection.hass.async_add_job(get_services_helper(msg))
+
+
+handle_get_services.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_GET_SERVICES,
+})
+
+
+@COMMANDS.register(TYPE_GET_CONFIG)
+def handle_get_config(connection, msg):
+    """Handle get config command.
+
+    Async friendly.
+    """
+    connection.to_write.put_nowait(result_message(
+        msg['id'], connection.hass.config.as_dict()))
+
+
+handle_get_config.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_GET_CONFIG,
+})
+
+
+@COMMANDS.register(TYPE_PING)
+def handle_ping(connection, msg):
+    """Handle ping command.
+
+    Async friendly.
+    """
+    connection.to_write.put_nowait(pong_message(msg['id']))
+
+
+handle_ping.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_PING,
+})

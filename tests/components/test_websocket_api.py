@@ -297,7 +297,7 @@ def test_get_panels(hass, websocket_client):
     hass.data[frontend.DATA_JS_VERSION] = 'es5'
     yield from websocket_client.send_json({
         'id': 5,
-        'type': wapi.TYPE_GET_PANELS,
+        'type': 'get_panels',
     })
 
     msg = yield from websocket_client.receive_json()
@@ -335,5 +335,17 @@ def test_pending_msg_overflow(hass, mock_low_queue, websocket_client):
             'id': idx + 1,
             'type': wapi.TYPE_PING,
         })
+    msg = yield from websocket_client.receive()
+    assert msg.type == WSMsgType.close
+
+
+@asyncio.coroutine
+def test_unknown_command(websocket_client):
+    """Test get_panels command."""
+    yield from websocket_client.send_json({
+        'id': 5,
+        'type': 'unknown_command',
+    })
+
     msg = yield from websocket_client.receive()
     assert msg.type == WSMsgType.close

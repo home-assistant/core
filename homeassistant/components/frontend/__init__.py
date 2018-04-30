@@ -16,8 +16,9 @@ import voluptuous as vol
 import jinja2
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.http.const import KEY_AUTHENTICATED
+from homeassistant.components import websocket_api
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
@@ -94,7 +95,7 @@ SERVICE_RELOAD_THEMES = 'reload_themes'
 SERVICE_SET_THEME_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
 })
-
+WS_TYPE_GET_PANELS = 'get_panels'
 
 class AbstractPanel:
     """Abstract class for panels."""
@@ -597,3 +598,24 @@ def _is_latest(js_option, request):
     useragent = request.headers.get('User-Agent')
 
     return useragent and hass_frontend.version(useragent)
+
+
+@websocket_api.COMMANDS.register(WS_TYPE_GET_PANELS)
+def handle_get_panels(connection, msg):
+    """Handle get panels command.
+
+    Async friendly.
+    """
+    panels = {
+        panel:
+        connection.hass.data[DATA_PANELS][panel].to_response(
+            connection.hass, connection.request)
+        for panel in connection.hass.data[DATA_PANELS]}
+
+    connection.to_write.put_nowait(websocket_api.result_message(
+        msg['id'], panels))
+
+
+handle_get_panels.schema = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_GET_PANELS,
+})
