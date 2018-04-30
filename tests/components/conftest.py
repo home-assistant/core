@@ -1,21 +1,22 @@
+"""Fixtures for component testing."""
 import pytest
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components import websocket_api as wapi
 
 
 @pytest.fixture
-def websocket_client(loop, hass, aiohttp_client):
+def hass_ws_client(aiohttp_client):
     """Websocket client fixture connected to websocket server."""
-    assert loop.run_until_complete(
-        async_setup_component(hass, 'websocket_api'))
+    async def create_client(hass):
+        """Create a websocket client."""
+        wapi = hass.components.websocket_api
+        assert await async_setup_component(hass, 'websocket_api')
 
-    client = loop.run_until_complete(aiohttp_client(hass.http.app))
-    ws = loop.run_until_complete(client.ws_connect(wapi.URL))
-    auth_ok = loop.run_until_complete(ws.receive_json())
-    assert auth_ok['type'] == wapi.TYPE_AUTH_OK
+        client = await aiohttp_client(hass.http.app)
+        websocket = await client.ws_connect(wapi.URL)
+        auth_ok = await websocket.receive_json()
+        assert auth_ok['type'] == wapi.TYPE_AUTH_OK
 
-    yield ws
+        return websocket
 
-    if not ws.closed:
-        loop.run_until_complete(ws.close())
+    return create_client

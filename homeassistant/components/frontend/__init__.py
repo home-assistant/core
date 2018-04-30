@@ -96,6 +96,10 @@ SERVICE_SET_THEME_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
 })
 WS_TYPE_GET_PANELS = 'get_panels'
+SCHEMA_GET_PANELS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_GET_PANELS,
+})
+
 
 class AbstractPanel:
     """Abstract class for panels."""
@@ -292,6 +296,8 @@ def add_manifest_json_key(key, val):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the serving of the frontend."""
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_GET_PANELS, websocket_handle_get_panels, SCHEMA_GET_PANELS)
     hass.http.register_view(ManifestJSONView)
 
     conf = config.get(DOMAIN, {})
@@ -600,8 +606,7 @@ def _is_latest(js_option, request):
     return useragent and hass_frontend.version(useragent)
 
 
-@websocket_api.COMMANDS.register(WS_TYPE_GET_PANELS)
-def handle_get_panels(connection, msg):
+def websocket_handle_get_panels(hass, connection, msg):
     """Handle get panels command.
 
     Async friendly.
@@ -614,8 +619,3 @@ def handle_get_panels(connection, msg):
 
     connection.to_write.put_nowait(websocket_api.result_message(
         msg['id'], panels))
-
-
-handle_get_panels.schema = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): WS_TYPE_GET_PANELS,
-})

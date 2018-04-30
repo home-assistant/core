@@ -8,7 +8,7 @@ import pytest
 from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import (
     DOMAIN, CONF_JS_VERSION, CONF_THEMES, CONF_EXTRA_HTML_URL,
-    CONF_EXTRA_HTML_URL_ES5, DATA_PANELS, DATA_JS_VERSION)
+    CONF_EXTRA_HTML_URL_ES5, DATA_PANELS)
 from homeassistant.components import websocket_api as wapi
 
 
@@ -192,26 +192,24 @@ def test_panel_without_path(hass):
     assert 'test_component' not in hass.data[DATA_PANELS]
 
 
-@asyncio.coroutine
-def test_get_panels(hass, websocket_client):
+async def test_get_panels(hass, hass_ws_client):
     """Test get_panels command."""
-    yield from hass.components.frontend.async_register_built_in_panel(
+    await async_setup_component(hass, 'frontend')
+    await hass.components.frontend.async_register_built_in_panel(
         'map', 'Map', 'mdi:account-location')
-    hass.data[DATA_JS_VERSION] = 'es5'
-    yield from websocket_client.send_json({
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
         'id': 5,
         'type': 'get_panels',
     })
 
-    msg = yield from websocket_client.receive_json()
+    msg = await client.receive_json()
+
     assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
-    assert msg['result'] == {'map': {
-        'component_name': 'map',
-        'url_path': 'map',
-        'config': None,
-        'url': None,
-        'icon': 'mdi:account-location',
-        'title': 'Map',
-    }}
+    assert msg['result']['map']['component_name'] == 'map'
+    assert msg['result']['map']['url_path'] == 'map'
+    assert msg['result']['map']['icon'] == 'mdi:account-location'
+    assert msg['result']['map']['title'] == 'Map'

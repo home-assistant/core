@@ -19,6 +19,7 @@ from homeassistant.const import (
     MATCH_ALL, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
     __version__)
 from homeassistant.core import callback
+from homeassistant.loader import bind_hass
 from homeassistant.remote import JSONEncoder
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_get_all_descriptions
@@ -26,7 +27,6 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import validate_password
 from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components.http.ban import process_wrong_login
-from homeassistant.util.decorator import Registry
 
 DOMAIN = 'websocket_api'
 
@@ -53,7 +53,6 @@ TYPE_PONG = 'pong'
 TYPE_RESULT = 'result'
 TYPE_SUBSCRIBE_EVENTS = 'subscribe_events'
 TYPE_UNSUBSCRIBE_EVENTS = 'unsubscribe_events'
-COMMANDS = Registry()
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +72,47 @@ MINIMAL_MESSAGE_SCHEMA = vol.Schema({
 BASE_COMMAND_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('id'): cv.positive_int,
 })
+
+
+SCHEMA_SUBSCRIBE_EVENTS = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_SUBSCRIBE_EVENTS,
+    vol.Optional('event_type', default=MATCH_ALL): str,
+})
+
+
+SCHEMA_UNSUBSCRIBE_EVENTS = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_UNSUBSCRIBE_EVENTS,
+    vol.Required('subscription'): cv.positive_int,
+})
+
+
+SCHEMA_CALL_SERVICE = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_CALL_SERVICE,
+    vol.Required('domain'): str,
+    vol.Required('service'): str,
+    vol.Optional('service_data'): dict
+})
+
+
+SCHEMA_GET_STATES = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_GET_STATES,
+})
+
+
+SCHEMA_GET_SERVICES = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_GET_SERVICES,
+})
+
+
+SCHEMA_GET_CONFIG = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_GET_CONFIG,
+})
+
+
+SCHEMA_PING = BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): TYPE_PING,
+})
+
 
 # Define the possible errors that occur when connections are cancelled.
 # Originally, this was just asyncio.CancelledError, but issue #9546 showed
@@ -144,9 +184,36 @@ def result_message(iden, result=None):
     }
 
 
+@bind_hass
+@callback
+def async_register_command(hass, command, handler, schema):
+    """Register a websocket command."""
+    handlers = hass.data.get(DOMAIN)
+    if handlers is None:
+        handlers = hass.data[DOMAIN] = {}
+    handlers[command] = (handler, schema)
+
+
 async def async_setup(hass, config):
     """Initialize the websocket API."""
     hass.http.register_view(WebsocketAPIView)
+
+    async_register_command(hass, TYPE_SUBSCRIBE_EVENTS,
+                           handle_subscribe_events, SCHEMA_SUBSCRIBE_EVENTS)
+    async_register_command(hass, TYPE_UNSUBSCRIBE_EVENTS,
+                           handle_unsubscribe_events,
+                           SCHEMA_UNSUBSCRIBE_EVENTS)
+    async_register_command(hass, TYPE_CALL_SERVICE,
+                           handle_call_service, SCHEMA_CALL_SERVICE)
+    async_register_command(hass, TYPE_GET_STATES,
+                           handle_get_states, SCHEMA_GET_STATES)
+    async_register_command(hass, TYPE_GET_SERVICES,
+                           handle_get_services, SCHEMA_GET_SERVICES)
+    async_register_command(hass, TYPE_GET_CONFIG,
+                           handle_get_config, SCHEMA_GET_CONFIG)
+    async_register_command(hass, TYPE_PING,
+                           handle_ping, SCHEMA_PING)
+
     return True
 
 
@@ -269,6 +336,7 @@ class ActiveConnection:
 
             msg = await wsock.receive_json()
             last_id = 0
+            handlers = self.hass.data[DOMAIN]
 
             while msg:
                 self.debug("Received", msg)
@@ -280,13 +348,13 @@ class ActiveConnection:
                         cur_id, ERR_ID_REUSE,
                         'Identifier values have to increase.'))
 
-                elif msg['type'] not in COMMANDS:
+                elif msg['type'] not in handlers:
                     # Unknown command
                     break
 
                 else:
-                    handler = COMMANDS[msg['type']]
-                    handler(self, handler.schema(msg))
+                    handler, schema = handlers[msg['type']]
+                    handler(self.hass, self, schema(msg))
 
                 last_id = cur_id
                 msg = await wsock.receive_json()
@@ -361,8 +429,7 @@ class ActiveConnection:
         return wsock
 
 
-@COMMANDS.register(TYPE_SUBSCRIBE_EVENTS)
-def handle_subscribe_events(connection, msg):
+def handle_subscribe_events(hass, connection, msg):
     """Handle subscribe events command.
 
     Async friendly.
@@ -374,20 +441,13 @@ def handle_subscribe_events(connection, msg):
 
         connection.send_message_outside(event_message(msg['id'], event))
 
-    connection.event_listeners[msg['id']] = connection.hass.bus.async_listen(
+    connection.event_listeners[msg['id']] = hass.bus.async_listen(
         msg['event_type'], forward_events)
 
     connection.to_write.put_nowait(result_message(msg['id']))
 
 
-handle_subscribe_events.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_SUBSCRIBE_EVENTS,
-    vol.Optional('event_type', default=MATCH_ALL): str,
-})
-
-
-@COMMANDS.register(TYPE_UNSUBSCRIBE_EVENTS)
-def handle_unsubscribe_events(connection, msg):
+def handle_unsubscribe_events(hass, connection, msg):
     """Handle unsubscribe events command.
 
     Async friendly.
@@ -399,98 +459,58 @@ def handle_unsubscribe_events(connection, msg):
         connection.to_write.put_nowait(result_message(msg['id']))
     else:
         connection.to_write.put_nowait(error_message(
-            msg['id'], ERR_NOT_FOUND,
-            'Subscription not found.'))
+            msg['id'], ERR_NOT_FOUND, 'Subscription not found.'))
 
 
-handle_unsubscribe_events.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_UNSUBSCRIBE_EVENTS,
-    vol.Required('subscription'): cv.positive_int,
-})
-
-
-@COMMANDS.register(TYPE_CALL_SERVICE)
-def handle_call_service(connection, msg):
+def handle_call_service(hass, connection, msg):
     """Handle call service command.
 
     Async friendly.
     """
     async def call_service_helper(msg):
         """Call a service and fire complete message."""
-        await connection.hass.services.async_call(
+        await hass.services.async_call(
             msg['domain'], msg['service'], msg.get('service_data'), True)
         connection.send_message_outside(result_message(msg['id']))
 
-    connection.hass.async_add_job(call_service_helper(msg))
+    hass.async_add_job(call_service_helper(msg))
 
 
-handle_call_service.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_CALL_SERVICE,
-    vol.Required('domain'): str,
-    vol.Required('service'): str,
-    vol.Optional('service_data'): dict
-})
-
-
-@COMMANDS.register(TYPE_GET_STATES)
-def handle_get_states(connection, msg):
+def handle_get_states(hass, connection, msg):
     """Handle get states command.
 
     Async friendly.
     """
     connection.to_write.put_nowait(result_message(
-        msg['id'], connection.hass.states.async_all()))
+        msg['id'], hass.states.async_all()))
 
 
-handle_get_states.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_GET_STATES,
-})
-
-
-@COMMANDS.register(TYPE_GET_SERVICES)
-def handle_get_services(connection, msg):
+def handle_get_services(hass, connection, msg):
     """Handle get services command.
 
     Async friendly.
     """
     async def get_services_helper(msg):
         """Get available services and fire complete message."""
-        descriptions = await async_get_all_descriptions(connection.hass)
+        descriptions = await async_get_all_descriptions(hass)
         connection.send_message_outside(result_message(msg['id'],
                                         descriptions))
 
-    connection.hass.async_add_job(get_services_helper(msg))
+    hass.async_add_job(get_services_helper(msg))
 
 
-handle_get_services.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_GET_SERVICES,
-})
-
-
-@COMMANDS.register(TYPE_GET_CONFIG)
-def handle_get_config(connection, msg):
+def handle_get_config(hass, connection, msg):
     """Handle get config command.
 
     Async friendly.
     """
     connection.to_write.put_nowait(result_message(
-        msg['id'], connection.hass.config.as_dict()))
+        msg['id'], hass.config.as_dict()))
 
 
-handle_get_config.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_GET_CONFIG,
-})
-
-
-@COMMANDS.register(TYPE_PING)
-def handle_ping(connection, msg):
+def handle_ping(hass, connection, msg):
     """Handle ping command.
 
     Async friendly.
     """
     connection.to_write.put_nowait(pong_message(msg['id']))
-
-
-handle_ping.schema = BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    vol.Required('type'): TYPE_PING,
-})
