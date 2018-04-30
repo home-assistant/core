@@ -55,6 +55,7 @@ class FeedManager(object):
         self._firstrun = True
         self._storage = storage
         self._last_entry_timestamp = None
+        self._last_update_successful = False
         self._has_published_parsed = False
         self._event_type = EVENT_FEEDREADER
         self._feed_id = url
@@ -71,6 +72,10 @@ class FeedManager(object):
         track_utc_time_change(
             hass, lambda now: self._update(), minute=0, second=0)
 
+    @property
+    def last_update_successful(self):
+        return self._last_update_successful
+
     def _update(self):
         """Update the feed and publish new entries to the event bus."""
         import feedparser
@@ -82,12 +87,16 @@ class FeedManager(object):
                                       else self._feed.get('modified'))
         if not self._feed:
             _LOGGER.error("Error fetching feed data from %s", self._url)
+            self._last_update_successful = False
         else:
+            # If an error is detected, output message but continue processing
+            # the feed entries.
             if self._feed.bozo != 0:
-                _LOGGER.error("Error parsing feed %s", self._url)
+                _LOGGER.error("Error parsing feed %s: %s", self._url,
+                              self._feed.bozo_exception)
             # Using etag and modified, if there's no new data available,
             # the entries list will be empty
-            elif self._feed.entries:
+            if self._feed.entries:
                 _LOGGER.debug("%s entri(es) available in feed %s",
                               len(self._feed.entries), self._url)
                 self._filter_entries()
@@ -97,6 +106,7 @@ class FeedManager(object):
                         self._feed_id, self._last_entry_timestamp)
             else:
                 self._log_no_entries()
+            self._last_update_successful = True
         _LOGGER.info("Fetch from feed %s completed", self._url)
 
     def _filter_entries(self):
