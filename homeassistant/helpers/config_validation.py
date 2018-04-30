@@ -287,6 +287,8 @@ def platform_validator(domain):
     """Validate if platform exists for given domain."""
     def validator(value):
         """Test if platform exists."""
+        # TEMP
+        return value
         if value is None:
             raise vol.Invalid('platform cannot be None')
         if get_platform(domain, str(value)):

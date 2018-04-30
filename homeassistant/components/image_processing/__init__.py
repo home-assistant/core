@@ -17,7 +17,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,7 +120,7 @@ class ImageProcessingEntity(Entity):
 
         This method is a coroutine.
         """
-        camera = get_component('camera')
+        camera = self.hass.components.camera
         image = None
 
         try:

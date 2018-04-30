@@ -10,7 +10,6 @@ import json
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.loader as loader
 from homeassistant.components.mqtt import (
     valid_publish_topic, valid_subscribe_topic)
 from homeassistant.const import (
@@ -42,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the MQTT eventstream component."""
-    mqtt = loader.get_component('mqtt')
+    mqtt = hass.components.mqtt
     conf = config.get(DOMAIN, {})
     pub_topic = conf.get(CONF_PUBLISH_TOPIC)
     sub_topic = conf.get(CONF_SUBSCRIBE_TOPIC)

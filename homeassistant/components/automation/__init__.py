@@ -58,6 +58,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def _platform_validator(config):
     """Validate it is a valid  platform."""
+    # TEMP
+    return config
     platform = get_platform(DOMAIN, config[CONF_PLATFORM])
 
     if not hasattr(platform, 'TRIGGER_SCHEMA'):

@@ -349,7 +349,7 @@ class TemplateMethods(object):
             else:
                 gr_entity_id = str(entities)
 
-            group = get_component('group')
+            group = self._hass.components.group
 
             states = [self._hass.states.get(entity_id) for entity_id
                       in group.expand_entity_ids(self._hass, [gr_entity_id])]

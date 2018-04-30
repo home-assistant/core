@@ -16,7 +16,6 @@ from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_state_change)
 from homeassistant.helpers.sun import is_up, get_astral_event_next
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'device_sun_light_trigger'
@@ -48,9 +47,9 @@ CONFIG_SCHEMA = vol.Schema({
 def async_setup(hass, config):
     """Set up the triggers to control lights based on device presence."""
     logger = logging.getLogger(__name__)
-    device_tracker = get_component('device_tracker')
-    group = get_component('group')
-    light = get_component('light')
+    device_tracker = hass.components.device_tracker
+    group = hass.components.group
+    light = hass.components.light
     conf = config[DOMAIN]
     disable_turn_off = conf.get(CONF_DISABLE_TURN_OFF)
     light_group = conf.get(CONF_LIGHT_GROUP, light.ENTITY_ID_ALL_LIGHTS)
