@@ -18,8 +18,7 @@ API_PASSWORD = 'test1234'
 @pytest.fixture
 def websocket_client(hass, hass_ws_client):
     """Create a websocket client."""
-    client = hass.loop.run_until_complete(hass_ws_client(hass))
-    return client
+    return hass.loop.run_until_complete(hass_ws_client(hass))
 
 
 @pytest.fixture
