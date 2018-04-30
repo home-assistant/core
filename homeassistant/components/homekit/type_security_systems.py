@@ -4,7 +4,7 @@ import logging
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
-    ATTR_ENTITY_ID, ATTR_CODE)
+    STATE_ALARM_TRIGGERED, ATTR_ENTITY_ID, ATTR_CODE)
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service, setup_char
@@ -14,13 +14,16 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-HASS_TO_HOMEKIT = {STATE_ALARM_DISARMED: 3, STATE_ALARM_ARMED_HOME: 0,
-                   STATE_ALARM_ARMED_AWAY: 1, STATE_ALARM_ARMED_NIGHT: 2}
+HASS_TO_HOMEKIT = {STATE_ALARM_ARMED_HOME: 0,
+                   STATE_ALARM_ARMED_AWAY: 1,
+                   STATE_ALARM_ARMED_NIGHT: 2,
+                   STATE_ALARM_DISARMED: 3,
+                   STATE_ALARM_TRIGGERED: 4}
 HOMEKIT_TO_HASS = {c: s for s, c in HASS_TO_HOMEKIT.items()}
-STATE_TO_SERVICE = {STATE_ALARM_DISARMED: 'alarm_disarm',
-                    STATE_ALARM_ARMED_HOME: 'alarm_arm_home',
+STATE_TO_SERVICE = {STATE_ALARM_ARMED_HOME: 'alarm_arm_home',
                     STATE_ALARM_ARMED_AWAY: 'alarm_arm_away',
-                    STATE_ALARM_ARMED_NIGHT: 'alarm_arm_night'}
+                    STATE_ALARM_ARMED_NIGHT: 'alarm_arm_night',
+                    STATE_ALARM_DISARMED: 'alarm_disarm'}
 
 
 @TYPES.register('SecuritySystem')
@@ -62,7 +65,9 @@ class SecuritySystem(HomeAccessory):
             _LOGGER.debug('%s: Updated current state to %s (%d)',
                           self.entity_id, hass_state, current_security_state)
 
-            if not self.flag_target_state:
-                self.char_target_state.set_value(current_security_state)
-            if self.char_target_state.value == self.char_current_state.value:
+            # SecuritySystemTargetSTate does not support triggered
+            if hass_state in (STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
+                              STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED):
+                if not self.flag_target_state:
+                    self.char_target_state.set_value(current_security_state)
                 self.flag_target_state = False
