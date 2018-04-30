@@ -100,12 +100,12 @@ class MyGogogate2Device(CoverDevice):
     def close_cover(self, **kwargs):
         """Issue close command to cover."""
         if self._status != STATE_CLOSED:
-          self.mygogogate2.close_device(self.device_id)
+            self.mygogogate2.close_device(self.device_id)
 
     def open_cover(self, **kwargs):
         """Issue open command to cover."""
         if self._status == STATE_CLOSED:
-          self.mygogogate2.open_device(self.device_id)
+            self.mygogogate2.open_device(self.device_id)
 
     def update(self):
         """Update status of cover."""
