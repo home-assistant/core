@@ -493,8 +493,8 @@ def handle_get_services(hass, connection, msg):
     async def get_services_helper(msg):
         """Get available services and fire complete message."""
         descriptions = await async_get_all_descriptions(hass)
-        connection.send_message_outside(result_message(msg['id'],
-                                        descriptions))
+        connection.send_message_outside(
+            result_message(msg['id'], descriptions))
 
     hass.async_add_job(get_services_helper(msg))
 
