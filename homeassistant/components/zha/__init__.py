@@ -221,44 +221,78 @@ class ApplicationListener:
                     self._config,
                 )
 
-            for cluster_id, cluster in endpoint.in_clusters.items():
-                cluster_type = type(cluster)
-                if cluster_id in profile_clusters[0]:
-                    continue
-                if cluster_type not in zha_const.SINGLE_CLUSTER_DEVICE_CLASS:
-                    continue
+            for cluster in endpoint.in_clusters.values():
+                await self._attempt_single_cluster_device(
+                    endpoint,
+                    cluster,
+                    profile_clusters[0],
+                    device_key,
+                    zha_const.SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
+                    'in_clusters',
+                    discovered_info,
+                    join,
+                )
 
-                component = zha_const.SINGLE_CLUSTER_DEVICE_CLASS[cluster_type]
-                cluster_key = "{}-{}".format(device_key, cluster_id)
-                discovery_info = {
-                    'application_listener': self,
-                    'endpoint': endpoint,
-                    'in_clusters': {cluster.cluster_id: cluster},
-                    'out_clusters': {},
-                    'new_join': join,
-                    'unique_id': cluster_key,
-                    'entity_suffix': '_{}'.format(cluster_id),
-                }
-                discovery_info.update(discovered_info)
-                self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
-
-                await discovery.async_load_platform(
-                    self._hass,
-                    component,
-                    DOMAIN,
-                    {'discovery_key': cluster_key},
-                    self._config,
+            for cluster in endpoint.out_clusters.values():
+                await self._attempt_single_cluster_device(
+                    endpoint,
+                    cluster,
+                    profile_clusters[1],
+                    device_key,
+                    zha_const.SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
+                    'out_clusters',
+                    discovered_info,
+                    join,
                 )
 
     def register_entity(self, ieee, entity_obj):
         """Record the creation of a hass entity associated with ieee."""
         self._device_registry[ieee].append(entity_obj)
 
+    async def _attempt_single_cluster_device(self, endpoint, cluster,
+                                             profile_clusters, device_key,
+                                             device_classes, discovery_attr,
+                                             entity_info, is_new_join):
+        """Try to set up an entity from a "bare" cluster."""
+        if cluster.cluster_id in profile_clusters:
+            return
+        # pylint: disable=unidiomatic-typecheck
+        if type(cluster) not in device_classes:
+            return
+
+        component = device_classes[type(cluster)]
+        cluster_key = "{}-{}".format(device_key, cluster.cluster_id)
+        discovery_info = {
+            'application_listener': self,
+            'endpoint': endpoint,
+            'in_clusters': {},
+            'out_clusters': {},
+            'new_join': is_new_join,
+            'unique_id': cluster_key,
+            'entity_suffix': '_{}'.format(cluster.cluster_id),
+        }
+        discovery_info[discovery_attr] = {cluster.cluster_id: cluster}
+        discovery_info.update(entity_info)
+        self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
+
+        await discovery.async_load_platform(
+            self._hass,
+            component,
+            DOMAIN,
+            {'discovery_key': cluster_key},
+            self._config,
+        )
+
 
 class Entity(entity.Entity):
     """A base class for ZHA entities."""
 
     _domain = None  # Must be overridden by subclasses
+    # Normally the entity itself is the listener. Base classes may set this to
+    # a dict of cluster ID -> listener to receive messages for specific
+    # clusters separately
+    _in_listeners = {}
+    _out_listeners = {}
 
     def __init__(self, endpoint, in_clusters, out_clusters, manufacturer,
                  model, application_listener, unique_id, **kwargs):
@@ -287,10 +321,11 @@ class Entity(entity.Entity):
                 kwargs.get('entity_suffix', ''),
             )
 
-        for cluster in in_clusters.values():
-            cluster.add_listener(self)
-        for cluster in out_clusters.values():
-            cluster.add_listener(self)
+        for cluster_id, cluster in in_clusters.items():
+            cluster.add_listener(self._in_listeners.get(cluster_id, self))
+        for cluster_id, cluster in out_clusters.items():
+            cluster.add_listener(self._out_listeners.get(cluster_id, self))
+
         self._endpoint = endpoint
         self._in_clusters = in_clusters
         self._out_clusters = out_clusters
@@ -379,7 +414,7 @@ async def safe_read(cluster, attributes):
     try:
         result, _ = await cluster.read_attributes(
             attributes,
-            allow_cache=False,
+            allow_cache=True,
         )
         return result
     except Exception:  # pylint: disable=broad-except
