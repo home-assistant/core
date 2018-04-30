@@ -6,7 +6,6 @@ Get data from 'My Usage Page' page: https://client.ebox.ca/myusage
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ebox/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -20,7 +19,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyebox==1.1.2']
+REQUIREMENTS = ['pyebox==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,8 +61,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the EBox sensor."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -75,10 +74,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     sensors = []
     for variable in config[CONF_MONITORED_VARIABLES]:
-        _LOGGER.error("EBOX %s", variable)
         sensors.append(EBoxSensor(ebox_data, variable, name))
 
-    async_add_devices(sensors, False)
+    async_add_devices(sensors, True)
 
 
 class EBoxSensor(Entity):
@@ -114,10 +112,9 @@ class EBoxSensor(Entity):
         """Icon to use in the frontend, if any."""
         return self._icon
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from EBox and update the state."""
-        yield from self.ebox_data.async_update()
+        await self.ebox_data.async_update()
         if self.type in self.ebox_data.data:
             self._state = round(self.ebox_data.data[self.type], 2)
 
@@ -140,7 +137,7 @@ class EBoxData(object):
             await self.client.fetch_data()
         except PyEboxError as exp:
             _LOGGER.error("Error on receive last EBox data: %s", exp)
-            return False
+            return
         # Update data
         self.data = self.client.get_data()
-        return True
+        return
