@@ -113,8 +113,11 @@ class WeatherEntity(Entity):
             ATTR_WEATHER_TEMPERATURE: show_temp(
                 self.hass, self.temperature, self.temperature_unit,
                 self.precision),
-            ATTR_WEATHER_HUMIDITY: round(self.humidity)
         }
+
+        humidity = self.humidity
+        if humidity is not None:
+            data[ATTR_WEATHER_HUMIDITY] = round(humidity)
 
         ozone = self.ozone
         if ozone is not None:
