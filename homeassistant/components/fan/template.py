@@ -38,7 +38,8 @@ CONF_OFF_ACTION = 'turn_off'
 CONF_SET_SPEED_ACTION = 'set_speed'
 CONF_SET_OSCILLATING_ACTION = 'set_oscillating'
 
-_VALID_STATES = [STATE_ON, STATE_OFF, 'true', 'false']
+_VALID_STATES = [STATE_ON, STATE_OFF]
+_VALID_OSC = [True, False]
 
 FAN_SCHEMA = vol.Schema({
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
@@ -87,26 +88,27 @@ async def async_setup_platform(
 
         speed_list = device_config[CONF_SPEED_LIST]
 
-        template_entity_ids = set()
+        entity_ids = set()
+        manual_entity_ids = device_config.get(CONF_ENTITY_ID)
 
-        temp_ids = state_template.extract_entities()
-        if temp_ids != MATCH_ALL:
-            template_entity_ids |= set(temp_ids)
+        for template in (state_template, speed_template, oscillating_template):
+            if template is None:
+                continue
+            template.hass = hass
 
-        if speed_template:
-            temp_ids = speed_template.extract_entities()
-            if temp_ids != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
+            if entity_ids == MATCH_ALL or manual_entity_ids is not None:
+                continue
 
-        if oscillating_template:
-            temp_ids = oscillating_template.extract_entities()
-            if temp_ids != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
+            template_entity_ids = template.extract_entities()
+            if template_entity_ids == MATCH_ALL:
+                entity_ids = MATCH_ALL
+            else:
+                entity_ids |= set(template_entity_ids)
 
-        if not template_entity_ids:
-            template_entity_ids = MATCH_ALL
-
-        entity_ids = device_config.get(CONF_ENTITY_ID, template_entity_ids)
+        if manual_entity_ids is not None:
+            entity_ids = manual_entity_ids
+        elif entity_ids != MATCH_ALL:
+            entity_ids = list(entity_ids)
 
         fans.append(
             TemplateFan(
@@ -149,7 +151,7 @@ class TemplateFan(FanEntity):
         if set_oscillating_action:
             self._set_oscillating_script = Script(hass, set_oscillating_action)
 
-        self._state = False
+        self._state = STATE_OFF
         self._speed = None
         self._oscillating = None
 
@@ -162,6 +164,9 @@ class TemplateFan(FanEntity):
             self._supported_features |= SUPPORT_OSCILLATE
 
         self._entities = entity_ids
+        print('11111')
+        print(self._entities)
+        print('11111')
         # List of valid speeds
         self._speed_list = speed_list
 
@@ -183,7 +188,7 @@ class TemplateFan(FanEntity):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state
+        return self._state == STATE_ON
 
     @property
     def speed(self):
@@ -202,30 +207,21 @@ class TemplateFan(FanEntity):
 
     # pylint: disable=arguments-differ
     async def async_turn_on(self, speed: str = None) -> None:
-        """Turn on the fan.
-
-        This method is a coroutine.
-        """
-        self._state = True
+        """Turn on the fan."""
         await self._on_script.async_run()
+        self._state = STATE_ON
 
-        if speed:
+        if speed is not None:
             await self.async_set_speed(speed)
 
     # pylint: disable=arguments-differ
     async def async_turn_off(self) -> None:
-        """Turn off the fan.
-
-        This method is a coroutine.
-        """
-        self._state = False
+        """Turn off the fan."""
         await self._off_script.async_run()
+        self._state = STATE_OFF
 
     async def async_set_speed(self, speed: str) -> None:
-        """Set the speed of the fan.
-
-        This method is a coroutine.
-        """
+        """Set the speed of the fan."""
         if self._set_speed_script is None:
             return
 
@@ -239,22 +235,15 @@ class TemplateFan(FanEntity):
                 speed, self._speed_list)
 
     async def async_oscillate(self, oscillating: bool) -> None:
-        """Set oscillation of the fan.
-
-        This method is a coroutine.
-        """
+        """Set oscillation of the fan."""
         if self._set_oscillating_script is None:
             return
 
-        if oscillating is True or oscillating is False:
-            self._oscillating = oscillating
-            await self._set_oscillating_script.async_run(
-                {ATTR_OSCILLATING: oscillating}
-            )
-        else:
-            _LOGGER.error(
-                'Received invalid oscillating: %s. ' +
-                'Expected True/False.', oscillating)
+        await self._set_oscillating_script.async_run(
+            {ATTR_OSCILLATING: oscillating}
+        )
+        self._oscillating = oscillating
+
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -276,18 +265,17 @@ class TemplateFan(FanEntity):
 
     async def async_update(self):
         """Update the state from the template."""
-        _LOGGER.info('Updating fan %s', self._name)
-
         # Update state
         try:
-            state = self._template.async_render().lower()
+            state = self._template.async_render()
         except TemplateError as ex:
             _LOGGER.error(ex)
+            state = None
             self._state = None
 
         # Validate state
         if state in _VALID_STATES:
-            self._state = state in ('true', STATE_ON)
+            self._state = state
         elif state == STATE_UNKNOWN:
             self._state = None
         else:
@@ -298,11 +286,12 @@ class TemplateFan(FanEntity):
             self._state = None
 
         # Update speed if 'speed_template' is configured
-        if self._speed_template:
+        if self._speed_template is not None:
             try:
-                speed = self._speed_template.async_render().lower()
+                speed = self._speed_template.async_render()
             except TemplateError as ex:
                 _LOGGER.error(ex)
+                speed = None
                 self._state = None
 
             # Validate speed
@@ -318,22 +307,22 @@ class TemplateFan(FanEntity):
                 self._speed = None
 
         # Update oscillating if 'oscillating_template' is configured
-        if self._oscillating_template:
+        if self._oscillating_template is not None:
             try:
-                oscillating = self._oscillating_template.async_render().lower()
+                oscillating = self._oscillating_template.async_render()
             except TemplateError as ex:
                 _LOGGER.error(ex)
                 self._state = None
 
             # Validate osc
-            if oscillating == 'true':
+            if oscillating == 'True' or oscillating == True:
                 self._oscillating = True
-            elif oscillating == 'false':
+            elif oscillating == 'False' or oscillating == False:
                 self._oscillating = False
             elif oscillating == STATE_UNKNOWN:
                 self._oscillating = None
             else:
                 _LOGGER.error(
                     'Received invalid oscillating: %s. ' +
-                    'Expected True/False.', oscillating)
+                    'Expected: True/False.', oscillating)
                 self._oscillating = None

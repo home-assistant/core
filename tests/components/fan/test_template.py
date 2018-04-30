@@ -19,7 +19,7 @@ _STATE_INPUT_BOOLEAN = 'input_boolean.state'
 # Represent for fan's speed
 _SPEED_INPUT_SELECT = 'input_select.speed'
 # Represent for fan's oscillating
-_OSC_INPUT_SELECT = 'input_select.osc'
+_OSC_INPUT = 'input_select.osc'
 
 
 class TestTemplateFan:
@@ -166,19 +166,25 @@ class TestTemplateFan:
     # Template tests #
     def test_templates_with_entities(self):
         """Test tempalates with values from other entities."""
+        value_template = """
+            {% if is_state('input_boolean.state', 'True') %}
+                {{ 'on' }}
+            {% else %}
+                {{ 'off' }}
+            {% endif %}
+        """
+
         with assert_setup_component(1, 'fan'):
             assert setup.setup_component(self.hass, 'fan', {
                 'fan': {
                     'platform': 'template',
                     'fans': {
                         'test_fan': {
-                            'value_template':
-                                "{{ states('input_boolean.state') }}",
+                            'value_template': value_template,
                             'speed_template':
                                 "{{ states('input_select.speed') }}",
                             'oscillating_template':
                                 "{{ states('input_select.osc') }}",
-
                             'turn_on': {
                                 'service': 'script.fan_on'
                             },
@@ -197,7 +203,7 @@ class TestTemplateFan:
 
         self.hass.states.set(_STATE_INPUT_BOOLEAN, True)
         self.hass.states.set(_SPEED_INPUT_SELECT, SPEED_MEDIUM)
-        self.hass.states.set(_OSC_INPUT_SELECT, 'True')
+        self.hass.states.set(_OSC_INPUT, 'True')
         self.hass.block_till_done()
 
         self._verify(STATE_ON, SPEED_MEDIUM, True)
@@ -401,7 +407,7 @@ class TestTemplateFan:
         self.hass.block_till_done()
 
         # verify
-        assert self.hass.states.get(_OSC_INPUT_SELECT).state == 'True'
+        assert self.hass.states.get(_OSC_INPUT).state == 'True'
         self._verify(STATE_ON, None, True)
 
         # Set fan's osc to False
@@ -409,7 +415,7 @@ class TestTemplateFan:
         self.hass.block_till_done()
 
         # verify
-        assert self.hass.states.get(_OSC_INPUT_SELECT).state == 'False'
+        assert self.hass.states.get(_OSC_INPUT).state == 'False'
         self._verify(STATE_ON, None, False)
 
     def test_set_invalid_osc_from_initial_state(self):
@@ -425,7 +431,7 @@ class TestTemplateFan:
         self.hass.block_till_done()
 
         # verify
-        assert self.hass.states.get(_OSC_INPUT_SELECT).state == ''
+        assert self.hass.states.get(_OSC_INPUT).state == ''
         self._verify(STATE_ON, None, None)
 
     def test_set_invalid_osc(self):
@@ -441,7 +447,7 @@ class TestTemplateFan:
         self.hass.block_till_done()
 
         # verify
-        assert self.hass.states.get(_OSC_INPUT_SELECT).state == 'True'
+        assert self.hass.states.get(_OSC_INPUT).state == 'True'
         self._verify(STATE_ON, None, True)
 
         # Set fan's osc to False
@@ -449,7 +455,7 @@ class TestTemplateFan:
         self.hass.block_till_done()
 
         # verify osc is unchanged
-        assert self.hass.states.get(_OSC_INPUT_SELECT).state == 'True'
+        assert self.hass.states.get(_OSC_INPUT).state == 'True'
         self._verify(STATE_ON, None, True)
 
     def _verify(self, expected_state, expected_speed, expected_oscillating):
@@ -486,9 +492,16 @@ class TestTemplateFan:
             })
 
         with assert_setup_component(1, 'fan'):
+            value_template = """
+            {% if is_state('input_boolean.state', 'on') %}
+                {{ 'on' }}
+            {% else %}
+                {{ 'off' }}
+            {% endif %}
+            """
+
             test_fan_config = {
-                'value_template':
-                    "{{ states('input_boolean.state') }}",
+                'value_template': value_template,
                 'speed_template':
                     "{{ states('input_select.speed') }}",
                 'oscillating_template':
@@ -514,7 +527,7 @@ class TestTemplateFan:
                     'service': 'input_select.select_option',
 
                     'data_template': {
-                        'entity_id': _OSC_INPUT_SELECT,
+                        'entity_id': _OSC_INPUT,
                         'option': '{{ oscillating }}'
                     }
                 }
