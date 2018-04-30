@@ -9,4 +9,3 @@ services:
     volumes:
       - ~/.homeassistant:/config
       - /etc/localtime:/etc/localtime:ro
-
