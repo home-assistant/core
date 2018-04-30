@@ -33,7 +33,7 @@ DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
 
 ALERT_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_DONE_MESSAGE): cv.string,
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_STATE, default=STATE_ON): cv.string,
@@ -246,11 +246,12 @@ class Alert(ToggleEntity):
             return
 
         if not self._ack:
-            _LOGGER.info("Alerting: %s", self._name)
             self._send_done_message = True
-            for target in self._notifiers:
-                yield from self.hass.services.async_call(
-                    'notify', target, {'message': self._name})
+            if self._name:
+                _LOGGER.info("Alerting: %s", self._name)
+                for target in self._notifiers:
+                    yield from self.hass.services.async_call(
+                        'notify', target, {'message': self._name})
         yield from self._schedule_notify()
 
     @asyncio.coroutine
