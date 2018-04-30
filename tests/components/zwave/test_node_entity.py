@@ -357,3 +357,8 @@ class TestZWaveNodeEntity(unittest.TestCase):
     def test_not_polled(self):
         """Test should_poll property."""
         self.assertFalse(self.entity.should_poll)
+
+    def test_unique_id(self):
+        """Test unique_id."""
+        self.assertEqual('567-test_manufacturer-test_product',
+                         self.entity.unique_id)

@@ -4,6 +4,7 @@ import logging
 from homeassistant.core import callback
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 from .const import (
     ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_SCENE_DATA,
@@ -94,6 +95,14 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             self.network_node_event, ZWaveNetwork.SIGNAL_NODE_EVENT)
         dispatcher.connect(
             self.network_scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT)
+
+    @property
+    def unique_id(self):
+        """Unique ID of Z-wave node."""
+        return '{}-{}-{}'.format(
+            self.node_id,
+            slugify(self._manufacturer_name),
+            slugify(self._product_name))
 
     def network_node_changed(self, node=None, value=None, args=None):
         """Handle a changed node on the network."""
