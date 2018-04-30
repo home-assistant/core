@@ -1,6 +1,7 @@
 """Provide configuration end points for Automations."""
 import asyncio
 from collections import OrderedDict
+import uuid
 
 from homeassistant.const import CONF_ID
 from homeassistant.components.config import EditIdBasedConfigView
@@ -29,7 +30,12 @@ class EditAutomationConfigView(EditIdBasedConfigView):
         """Set value."""
         index = None
         for index, cur_value in enumerate(data):
-            if cur_value[CONF_ID] == config_key:
+            # When people copy paste their automations to the config file,
+            # they sometimes forget to add IDs. Fix it here.
+            if CONF_ID not in cur_value:
+                cur_value[CONF_ID] = uuid.uuid4().hex
+
+            elif cur_value[CONF_ID] == config_key:
                 break
         else:
             cur_value = OrderedDict()
