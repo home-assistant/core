@@ -32,6 +32,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         return
 
     from zigpy.zcl.clusters.general import OnOff
+    from zigpy.zcl.clusters.measurement import OccupancySensing
     from zigpy.zcl.clusters.security import IasZone
     if IasZone.cluster_id in discovery_info['in_clusters']:
         await _async_setup_iaszone(hass, config, async_add_devices,
@@ -39,6 +40,9 @@ async def async_setup_platform(hass, config, async_add_devices,
     elif OnOff.cluster_id in discovery_info['out_clusters']:
         await _async_setup_remote(hass, config, async_add_devices,
                                   discovery_info)
+    elif OccupancySensing.cluster_id in discovery_info['in_clusters']:
+        await _async_setup_occupancy(hass, config, async_add_devices,
+                                     discovery_info)
 
 
 async def _async_setup_iaszone(hass, config, async_add_devices,
@@ -86,6 +90,12 @@ async def _async_setup_remote(hass, config, async_add_devices, discovery_info):
 
     sensor = Switch(**discovery_info)
     async_add_devices([sensor], update_before_add=True)
+
+
+async def _async_setup_occupancy(hass, config, async_add_devices,
+                                 discovery_info):
+    sensor = OccupancySensor(**discovery_info)
+    async_add_devices([sensor])
 
 
 class BinarySensor(zha.Entity, BinarySensorDevice):
@@ -137,6 +147,25 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
         state = result.get('zone_status', self._state)
         if isinstance(state, (int, uint16_t)):
             self._state = result.get('zone_status', self._state) & 3
+
+
+class OccupancySensor(zha.Entity, BinarySensorDevice):
+    """ZHA occupancy sensor."""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._state = False
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if the entity is on."""
+        return bool(self._state)
+
+    def attribute_updated(self, attribute, value):
+        """Handle attribute update from device."""
+        _LOGGER.debug("Attribute updated: %s %s %s", self, attribute, value)
+        if attribute == 0:
+            self._state = value
+            self.schedule_update_ha_state()
 
 
 class Switch(zha.Entity, BinarySensorDevice):
