@@ -29,12 +29,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
+from homeassistant.loader import bind_hass
 
 from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.2']
+REQUIREMENTS = ['sqlalchemy==1.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,9 +47,8 @@ ATTR_KEEP_DAYS = 'keep_days'
 ATTR_REPACK = 'repack'
 
 SERVICE_PURGE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_KEEP_DAYS):
-        vol.All(vol.Coerce(int), vol.Range(min=0)),
-    vol.Optional(ATTR_REPACK, default=False): cv.boolean
+    vol.Optional(ATTR_KEEP_DAYS): vol.All(vol.Coerce(int), vol.Range(min=0)),
+    vol.Optional(ATTR_REPACK, default=False): cv.boolean,
 })
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
@@ -63,16 +63,13 @@ CONNECT_RETRY_WAIT = 3
 
 FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
+        vol.Optional(CONF_DOMAINS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ENTITIES): cv.entity_ids,
-        vol.Optional(CONF_DOMAINS):
-            vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_EVENT_TYPES):
-            vol.All(cv.ensure_list, [cv.string])
+        vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string]),
     }),
     vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
+        vol.Optional(CONF_DOMAINS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ENTITIES): cv.entity_ids,
-        vol.Optional(CONF_DOMAINS):
-            vol.All(cv.ensure_list, [cv.string])
     })
 })
 
@@ -87,14 +84,10 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def wait_connection_ready(hass):
-    """
-    Wait till the connection is ready.
-
-    Returns a coroutine object.
-    """
-    return (yield from hass.data[DATA_INSTANCE].async_db_ready)
+@bind_hass
+async def wait_connection_ready(hass):
+    """Wait till the connection is ready."""
+    return await hass.data[DATA_INSTANCE].async_db_ready
 
 
 def run_information(hass, point_in_time: Optional[datetime] = None):
@@ -118,8 +111,7 @@ def run_information(hass, point_in_time: Optional[datetime] = None):
         return res
 
 
-@asyncio.coroutine
-def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config.get(DOMAIN, {})
     keep_days = conf.get(CONF_PURGE_KEEP_DAYS)
@@ -138,8 +130,7 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.async_initialize()
     instance.start()
 
-    @asyncio.coroutine
-    def async_handle_purge_service(service):
+    async def async_handle_purge_service(service):
         """Handle calls to the purge service."""
         instance.do_adhoc_purge(**service.data)
 
@@ -147,7 +138,7 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN, SERVICE_PURGE, async_handle_purge_service,
         schema=SERVICE_PURGE_SCHEMA)
 
-    return (yield from instance.async_db_ready)
+    return await instance.async_db_ready
 
 
 PurgeTask = namedtuple('PurgeTask', ['keep_days', 'repack'])
@@ -258,7 +249,7 @@ class Recorder(threading.Thread):
         self.hass.add_job(register)
         result = hass_started.result()
 
-        # If shutdown happened before HASS finished starting
+        # If shutdown happened before Home Assistant finished starting
         if result is shutdown_task:
             return
 

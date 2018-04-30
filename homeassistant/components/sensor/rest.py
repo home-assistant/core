@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
     vol.Optional(CONF_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
-    vol.Optional(CONF_HEADERS): {cv.string: cv.string},
+    vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -130,18 +130,20 @@ class RestSensor(Entity):
 
         if self._json_attrs:
             self._attributes = {}
-            try:
-                json_dict = json.loads(value)
-                if isinstance(json_dict, dict):
-                    attrs = {k: json_dict[k] for k in self._json_attrs
-                             if k in json_dict}
-                    self._attributes = attrs
-                else:
-                    _LOGGER.warning("JSON result was not a dictionary")
-            except ValueError:
-                _LOGGER.warning("REST result could not be parsed as JSON")
-                _LOGGER.debug("Erroneous JSON: %s", value)
-
+            if value:
+                try:
+                    json_dict = json.loads(value)
+                    if isinstance(json_dict, dict):
+                        attrs = {k: json_dict[k] for k in self._json_attrs
+                                 if k in json_dict}
+                        self._attributes = attrs
+                    else:
+                        _LOGGER.warning("JSON result was not a dictionary")
+                except ValueError:
+                    _LOGGER.warning("REST result could not be parsed as JSON")
+                    _LOGGER.debug("Erroneous JSON: %s", value)
+            else:
+                _LOGGER.warning("Empty reply found when expecting JSON data")
         if value is None:
             value = STATE_UNKNOWN
         elif self._value_template is not None:

@@ -15,11 +15,11 @@ from homeassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_PLAY, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    CONF_HOST, CONF_NAME, CONF_API_VERSION, STATE_OFF, STATE_ON, STATE_UNKNOWN)
 from homeassistant.helpers.script import Script
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['ha-philipsjs==0.0.1']
+REQUIREMENTS = ['ha-philipsjs==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,10 +36,12 @@ CONF_ON_ACTION = 'turn_on_action'
 DEFAULT_DEVICE = 'default'
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_NAME = 'Philips TV'
+DEFAULT_API_VERSION = '1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): cv.string,
     vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
 })
 
@@ -51,9 +53,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
+    api_version = config.get(CONF_API_VERSION)
     turn_on_action = config.get(CONF_ON_ACTION)
 
-    tvapi = haphilipsjs.PhilipsTV(host)
+    tvapi = haphilipsjs.PhilipsTV(host, api_version)
     on_script = Script(hass, turn_on_action) if turn_on_action else None
 
     add_devices([PhilipsTV(tvapi, name, on_script)])

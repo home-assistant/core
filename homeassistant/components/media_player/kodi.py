@@ -8,6 +8,7 @@ import asyncio
 from collections import OrderedDict
 from functools import wraps
 import logging
+import socket
 import urllib
 import re
 
@@ -19,8 +20,8 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, SUPPORT_SHUFFLE_SET,
     MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO, MEDIA_TYPE_CHANNEL, MEDIA_TYPE_PLAYLIST,
-    MEDIA_PLAYER_SCHEMA, DOMAIN, SUPPORT_TURN_ON)
+    MEDIA_TYPE_MOVIE, MEDIA_TYPE_VIDEO, MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN, SUPPORT_TURN_ON)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
     CONF_PORT, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
@@ -31,7 +32,7 @@ from homeassistant.helpers import script, config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.util.yaml import dump
 
-REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
+REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,12 +68,14 @@ MEDIA_TYPES = {
     'video': MEDIA_TYPE_VIDEO,
     'set': MEDIA_TYPE_PLAYLIST,
     'musicvideo': MEDIA_TYPE_VIDEO,
-    'movie': MEDIA_TYPE_VIDEO,
+    'movie': MEDIA_TYPE_MOVIE,
     'tvshow': MEDIA_TYPE_TVSHOW,
     'season': MEDIA_TYPE_TVSHOW,
     'episode': MEDIA_TYPE_TVSHOW,
     # Type 'channel' is used for radio or tv streams from pvr
     'channel': MEDIA_TYPE_CHANNEL,
+    # Type 'audio' is used for audio media, that Kodi couldn't scroblle
+    'audio': MEDIA_TYPE_MUSIC,
 }
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -155,13 +158,29 @@ def _check_deprecated_turn_off(hass, turn_off_action):
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Kodi platform."""
     if DATA_KODI not in hass.data:
-        hass.data[DATA_KODI] = []
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    tcp_port = config.get(CONF_TCP_PORT)
-    encryption = config.get(CONF_PROXY_SSL)
-    websocket = config.get(CONF_ENABLE_WEBSOCKET)
+        hass.data[DATA_KODI] = dict()
+
+    # Is this a manual configuration?
+    if discovery_info is None:
+        name = config.get(CONF_NAME)
+        host = config.get(CONF_HOST)
+        port = config.get(CONF_PORT)
+        tcp_port = config.get(CONF_TCP_PORT)
+        encryption = config.get(CONF_PROXY_SSL)
+        websocket = config.get(CONF_ENABLE_WEBSOCKET)
+    else:
+        name = "{} ({})".format(DEFAULT_NAME, discovery_info.get('hostname'))
+        host = discovery_info.get('host')
+        port = discovery_info.get('port')
+        tcp_port = DEFAULT_TCP_PORT
+        encryption = DEFAULT_PROXY_SSL
+        websocket = DEFAULT_ENABLE_WEBSOCKET
+
+    # Only add a device once, so discovered devices do not override manual
+    # config.
+    ip_addr = socket.gethostbyname(host)
+    if ip_addr in hass.data[DATA_KODI]:
+        return
 
     entity = KodiDevice(
         hass,
@@ -173,7 +192,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         turn_off_action=config.get(CONF_TURN_OFF_ACTION),
         timeout=config.get(CONF_TIMEOUT), websocket=websocket)
 
-    hass.data[DATA_KODI].append(entity)
+    hass.data[DATA_KODI][ip_addr] = entity
     async_add_devices([entity], update_before_add=True)
 
     @asyncio.coroutine
@@ -187,10 +206,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                   if key != 'entity_id'}
         entity_ids = service.data.get('entity_id')
         if entity_ids:
-            target_players = [player for player in hass.data[DATA_KODI]
+            target_players = [player
+                              for player in hass.data[DATA_KODI].values()
                               if player.entity_id in entity_ids]
         else:
-            target_players = hass.data[DATA_KODI]
+            target_players = hass.data[DATA_KODI].values()
 
         update_tasks = []
         for player in target_players:
@@ -480,7 +500,12 @@ class KodiDevice(MediaPlayerDevice):
 
     @property
     def media_content_type(self):
-        """Content type of current playing media."""
+        """Content type of current playing media.
+
+        If the media type cannot be detected, the player type is used.
+        """
+        if MEDIA_TYPES.get(self._item.get('type')) is None and self._players:
+            return MEDIA_TYPES.get(self._players[0]['type'])
         return MEDIA_TYPES.get(self._item.get('type'))
 
     @property

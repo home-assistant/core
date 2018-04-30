@@ -2,19 +2,24 @@
 # pylint: disable=protected-access
 import asyncio
 import json
+from unittest.mock import patch
 
+from aiohttp import web
 import pytest
 
 from homeassistant import const
+from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
+from tests.common import mock_coro
+
 
 @pytest.fixture
-def mock_api_client(hass, test_client):
+def mock_api_client(hass, aiohttp_client):
     """Start the Hass HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, 'api', {}))
-    return hass.loop.run_until_complete(test_client(hass.http.app))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @asyncio.coroutine
@@ -398,3 +403,31 @@ def _stream_next_event(stream):
 def _listen_count(hass):
     """Return number of event listeners."""
     return sum(hass.bus.async_listeners().values())
+
+
+async def test_api_error_log(hass, aiohttp_client):
+    """Test if we can fetch the error log."""
+    hass.data[DATA_LOGGING] = '/some/path'
+    await async_setup_component(hass, 'api', {
+        'http': {
+            'api_password': 'yolo'
+        }
+    })
+    client = await aiohttp_client(hass.http.app)
+
+    resp = await client.get(const.URL_API_ERROR_LOG)
+    # Verufy auth required
+    assert resp.status == 401
+
+    with patch(
+                'homeassistant.components.http.view.HomeAssistantView.file',
+                return_value=mock_coro(web.Response(status=200, text='Hello'))
+            ) as mock_file:
+        resp = await client.get(const.URL_API_ERROR_LOG, headers={
+            'x-ha-access': 'yolo'
+        })
+
+    assert len(mock_file.mock_calls) == 1
+    assert mock_file.mock_calls[0][1][1] == hass.data[DATA_LOGGING]
+    assert resp.status == 200
+    assert await resp.text() == 'Hello'

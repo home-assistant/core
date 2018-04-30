@@ -8,8 +8,8 @@ import asyncio
 import colorsys
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP, SUPPORT_COLOR, Light)
 from homeassistant.components.wink import DOMAIN, WinkDevice
 from homeassistant.util import color as color_util
 from homeassistant.util.color import \
@@ -17,7 +17,7 @@ from homeassistant.util.color import \
 
 DEPENDENCIES = ['wink']
 
-SUPPORT_WINK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
+SUPPORT_WINK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -72,11 +72,11 @@ class WinkLight(WinkDevice, Light):
             return r_value, g_value, b_value
 
     @property
-    def xy_color(self):
-        """Define current bulb color in CIE 1931 (XY) color space."""
+    def hs_color(self):
+        """Define current bulb color."""
         if not self.wink.supports_xy_color():
             return None
-        return self.wink.color_xy()
+        return color_util.color_xy_to_hs(*self.wink.color_xy())
 
     @property
     def color_temp(self):
@@ -94,21 +94,17 @@ class WinkLight(WinkDevice, Light):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        rgb_color = kwargs.get(ATTR_RGB_COLOR)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
         color_temp_mired = kwargs.get(ATTR_COLOR_TEMP)
 
-        state_kwargs = {
-        }
+        state_kwargs = {}
 
-        if rgb_color:
+        if hs_color:
             if self.wink.supports_xy_color():
-                xyb = color_util.color_RGB_to_xy(*rgb_color)
-                state_kwargs['color_xy'] = xyb[0], xyb[1]
-                state_kwargs['brightness'] = xyb[2]
+                xy_color = color_util.color_hs_to_xy(*hs_color)
+                state_kwargs['color_xy'] = xy_color
             if self.wink.supports_hue_saturation():
-                hsv = colorsys.rgb_to_hsv(
-                    rgb_color[0], rgb_color[1], rgb_color[2])
-                state_kwargs['color_hue_saturation'] = hsv[0], hsv[1]
+                state_kwargs['color_hue_saturation'] = hs_color
 
         if color_temp_mired:
             state_kwargs['color_kelvin'] = mired_to_kelvin(color_temp_mired)

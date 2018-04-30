@@ -4,7 +4,6 @@ Support for local control of entities by emulating the Phillips Hue bridge.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/emulated_hue/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -21,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
-    HueOneLightChangeView)
+    HueOneLightChangeView, HueGroupView)
 from .upnp import DescriptionXmlView, UPNPResponderThread
 
 DOMAIN = 'emulated_hue'
@@ -105,23 +104,22 @@ def setup(hass, yaml_config):
     server.register_view(HueAllLightsStateView(config))
     server.register_view(HueOneLightStateView(config))
     server.register_view(HueOneLightChangeView(config))
+    server.register_view(HueGroupView(config))
 
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr, config.listen_port,
         config.upnp_bind_multicast, config.advertise_ip,
         config.advertise_port)
 
-    @asyncio.coroutine
-    def stop_emulated_hue_bridge(event):
+    async def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
         upnp_listener.stop()
-        yield from server.stop()
+        await server.stop()
 
-    @asyncio.coroutine
-    def start_emulated_hue_bridge(event):
+    async def start_emulated_hue_bridge(event):
         """Start the emulated hue bridge."""
         upnp_listener.start()
-        yield from server.start()
+        await server.start()
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge)
 
@@ -160,10 +158,6 @@ class Config(object):
             _LOGGER.info(
                 "Listen port not specified, defaulting to %s",
                 self.listen_port)
-
-        if self.type == TYPE_GOOGLE and self.listen_port != 80:
-            _LOGGER.warning("When targeting Google Home, listening port has "
-                            "to be port 80")
 
         # Get whether or not UPNP binds to multicast address (239.255.255.250)
         # or to the unicast address (host_ip_addr)

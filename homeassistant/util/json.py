@@ -32,13 +32,13 @@ def load_json(filename: str, default: Union[List, Dict] = _UNDEFINED) \
     return {} if default is _UNDEFINED else default
 
 
-def save_json(filename: str, config: Union[List, Dict]):
+def save_json(filename: str, data: Union[List, Dict]):
     """Save JSON data to a file.
 
     Returns True on success.
     """
     try:
-        data = json.dumps(config, sort_keys=True, indent=4)
+        data = json.dumps(data, sort_keys=True, indent=4)
         with open(filename, 'w', encoding='utf-8') as fdesc:
             fdesc.write(data)
             return True

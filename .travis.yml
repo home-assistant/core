@@ -28,4 +28,15 @@ cache:
 install: pip install -U tox coveralls
 language: python
 script: travis_wait 30 tox --develop
+services:
+  - docker
+before_deploy:
+  - docker pull lokalise/lokalise-cli@sha256:2198814ebddfda56ee041a4b427521757dd57f75415ea9693696a64c550cef21
+deploy:
+  skip_cleanup: true
+  provider: script
+  script: script/travis_deploy
+  on:
+    branch: dev
+    condition: $TOXENV = lint
 after_success: coveralls

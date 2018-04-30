@@ -127,6 +127,10 @@ def get_arguments() -> argparse.Namespace:
         help='Log file to write to.  If not set, CONFIG/home-assistant.log '
              'is used')
     parser.add_argument(
+        '--log-no-color',
+        action='store_true',
+        help="Disable color logs")
+    parser.add_argument(
         '--runner',
         action='store_true',
         help='On restart exit with code {}'.format(RESTART_EXIT_CODE))
@@ -259,20 +263,21 @@ def setup_and_run_hass(config_dir: str,
         hass = bootstrap.from_config_dict(
             config, config_dir=config_dir, verbose=args.verbose,
             skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days,
-            log_file=args.log_file)
+            log_file=args.log_file, log_no_color=args.log_no_color)
     else:
         config_file = ensure_config_file(config_dir)
         print('Config directory:', config_dir)
         hass = bootstrap.from_config_file(
             config_file, verbose=args.verbose, skip_pip=args.skip_pip,
-            log_rotate_days=args.log_rotate_days, log_file=args.log_file)
+            log_rotate_days=args.log_rotate_days, log_file=args.log_file,
+            log_no_color=args.log_no_color)
 
     if hass is None:
         return None
 
     if args.open_ui:
         # Imported here to avoid importing asyncio before monkey patch
-        from homeassistant.util.async import run_callback_threadsafe
+        from homeassistant.util.async_ import run_callback_threadsafe
 
         def open_browser(event):
             """Open the webinterface in a browser."""
@@ -335,7 +340,8 @@ def main() -> int:
     """Start Home Assistant."""
     validate_python()
 
-    if os.environ.get('HASS_NO_MONKEY') != '1':
+    monkey_patch_needed = sys.version_info[:3] < (3, 6, 3)
+    if monkey_patch_needed and os.environ.get('HASS_NO_MONKEY') != '1':
         if sys.version_info[:2] >= (3, 6):
             monkey_patch.disable_c_asyncio()
         monkey_patch.patch_weakref_tasks()

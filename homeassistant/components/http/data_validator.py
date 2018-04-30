@@ -1,5 +1,5 @@
 """Decorator for view methods to help with data validation."""
-import asyncio
+
 from functools import wraps
 import logging
 
@@ -24,16 +24,15 @@ class RequestDataValidator:
 
     def __call__(self, method):
         """Decorate a function."""
-        @asyncio.coroutine
         @wraps(method)
-        def wrapper(view, request, *args, **kwargs):
+        async def wrapper(view, request, *args, **kwargs):
             """Wrap a request handler with data validation."""
             data = None
             try:
-                data = yield from request.json()
+                data = await request.json()
             except ValueError:
                 if not self._allow_empty or \
-                   (yield from request.content.read()) != b'':
+                   (await request.content.read()) != b'':
                     _LOGGER.error('Invalid JSON received.')
                     return view.json_message('Invalid JSON.', 400)
                 data = {}
@@ -45,7 +44,7 @@ class RequestDataValidator:
                 return view.json_message(
                     'Message format incorrect: {}'.format(err), 400)
 
-            result = yield from method(view, request, *args, **kwargs)
+            result = await method(view, request, *args, **kwargs)
             return result
 
         return wrapper

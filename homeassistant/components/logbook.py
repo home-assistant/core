@@ -4,7 +4,6 @@ Event parser and human readable log generator.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logbook/
 """
-import asyncio
 import logging
 from datetime import timedelta
 from itertools import groupby
@@ -47,6 +46,11 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+ALL_EVENT_TYPES = [
+    EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+]
+
 GROUP_BY_MINUTES = 15
 
 CONTINUOUS_DOMAINS = ['proximity', 'sensor']
@@ -83,8 +87,7 @@ def async_log_entry(hass, name, message, domain=None, entity_id=None):
     hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data)
 
 
-@asyncio.coroutine
-def setup(hass, config):
+async def setup(hass, config):
     """Listen for download events to download files."""
     @callback
     def log_message(service):
@@ -100,7 +103,7 @@ def setup(hass, config):
 
     hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
 
-    yield from hass.components.frontend.async_register_built_in_panel(
+    await hass.components.frontend.async_register_built_in_panel(
         'logbook', 'logbook', 'mdi:format-list-bulleted-type')
 
     hass.services.async_register(
@@ -119,8 +122,7 @@ class LogbookView(HomeAssistantView):
         """Initialize the logbook view."""
         self.config = config
 
-    @asyncio.coroutine
-    def get(self, request, datetime=None):
+    async def get(self, request, datetime=None):
         """Retrieve logbook entries."""
         if datetime:
             datetime = dt_util.parse_datetime(datetime)
@@ -134,10 +136,12 @@ class LogbookView(HomeAssistantView):
         end_day = start_day + timedelta(days=1)
         hass = request.app['hass']
 
-        events = yield from hass.async_add_job(
-            _get_events, hass, self.config, start_day, end_day)
-        response = yield from hass.async_add_job(self.json, events)
-        return response
+        def json_events():
+            """Fetch events and generate JSON."""
+            return self.json(list(
+                _get_events(hass, self.config, start_day, end_day)))
+
+        return await hass.async_add_job(json_events)
 
 
 class Entry(object):
@@ -266,15 +270,18 @@ def humanify(events):
 
 def _get_events(hass, config, start_day, end_day):
     """Get events for a period of time."""
-    from homeassistant.components.recorder.models import Events
+    from homeassistant.components.recorder.models import Events, States
     from homeassistant.components.recorder.util import (
         execute, session_scope)
 
     with session_scope(hass=hass) as session:
-        query = session.query(Events).order_by(
-            Events.time_fired).filter(
-                (Events.time_fired > start_day) &
-                (Events.time_fired < end_day))
+        query = session.query(Events).order_by(Events.time_fired) \
+            .outerjoin(States, (Events.event_id == States.event_id))  \
+            .filter(Events.event_type.in_(ALL_EVENT_TYPES)) \
+            .filter((Events.time_fired > start_day)
+                    & (Events.time_fired < end_day)) \
+            .filter((States.last_updated == States.last_changed)
+                    | (States.state_id.is_(None)))
         events = execute(query)
     return humanify(_exclude_events(events, config))
 

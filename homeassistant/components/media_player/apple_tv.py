@@ -25,6 +25,10 @@ DEPENDENCIES = ['apple_tv']
 
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORT_APPLE_TV = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
+                   SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_SEEK | \
+                   SUPPORT_STOP | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -79,7 +83,7 @@ class AppleTvDevice(MediaPlayerDevice):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self.atv.metadata.device_id
 
     @property
@@ -196,14 +200,7 @@ class AppleTvDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        features = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA
-        if self._playing is None or self.state == STATE_IDLE:
-            return features
-
-        features |= SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_SEEK | \
-            SUPPORT_STOP | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
-
-        return features
+        return SUPPORT_APPLE_TV
 
     @asyncio.coroutine
     def async_turn_on(self):

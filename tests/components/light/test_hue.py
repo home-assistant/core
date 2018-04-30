@@ -1,503 +1,665 @@
 """Philips Hue lights platform tests."""
-
+import asyncio
+from collections import deque
 import logging
-import unittest
-import unittest.mock as mock
-from unittest.mock import call, MagicMock, patch
+from unittest.mock import Mock
 
+import aiohue
+from aiohue.lights import Lights
+from aiohue.groups import Groups
+import pytest
+
+from homeassistant import config_entries
 from homeassistant.components import hue
 import homeassistant.components.light.hue as hue_light
-
-from tests.common import get_test_home_assistant, MockDependency
+from homeassistant.util import color
 
 _LOGGER = logging.getLogger(__name__)
 
 HUE_LIGHT_NS = 'homeassistant.components.light.hue.'
-
-
-class TestSetup(unittest.TestCase):
-    """Test the Hue light platform."""
-
-    def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.skip_teardown_stop = False
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        if not self.skip_teardown_stop:
-            self.hass.stop()
-
-    def setup_mocks_for_update_lights(self):
-        """Set up all mocks for update_lights tests."""
-        self.mock_bridge = MagicMock()
-        self.mock_bridge.bridge_id = 'bridge-id'
-        self.mock_bridge.allow_hue_groups = False
-        self.mock_api = MagicMock()
-        self.mock_bridge.get_api.return_value = self.mock_api
-        self.mock_add_devices = MagicMock()
-
-    def setup_mocks_for_process_lights(self):
-        """Set up all mocks for process_lights tests."""
-        self.mock_bridge = self.create_mock_bridge('host')
-        self.mock_api = MagicMock()
-        self.mock_api.get.return_value = {}
-        self.mock_bridge.get_api.return_value = self.mock_api
-
-    def setup_mocks_for_process_groups(self):
-        """Set up all mocks for process_groups tests."""
-        self.mock_bridge = self.create_mock_bridge('host')
-        self.mock_bridge.get_group.return_value = {
-            'name': 'Group 0', 'state': {'any_on': True}}
-
-        self.mock_api = MagicMock()
-        self.mock_api.get.return_value = {}
-        self.mock_bridge.get_api.return_value = self.mock_api
-
-    def create_mock_bridge(self, host, allow_hue_groups=True):
-        """Return a mock HueBridge with reasonable defaults."""
-        mock_bridge = MagicMock()
-        mock_bridge.bridge_id = 'bridge-id'
-        mock_bridge.host = host
-        mock_bridge.allow_hue_groups = allow_hue_groups
-        mock_bridge.lights = {}
-        mock_bridge.lightgroups = {}
-        return mock_bridge
-
-    def create_mock_lights(self, lights):
-        """Return a dict suitable for mocking api.get('lights')."""
-        mock_bridge_lights = lights
-
-        for info in mock_bridge_lights.values():
-            if 'state' not in info:
-                info['state'] = {'on': False}
-
-        return mock_bridge_lights
-
-    def build_mock_light(self, bridge, light_id, name):
-        """Return a mock HueLight."""
-        light = MagicMock()
-        light.bridge = bridge
-        light.light_id = light_id
-        light.name = name
-        return light
-
-    def test_setup_platform_no_discovery_info(self):
-        """Test setup_platform without discovery info."""
-        self.hass.data[hue.DOMAIN] = {}
-        mock_add_devices = MagicMock()
-
-        hue_light.setup_platform(self.hass, {}, mock_add_devices)
-
-        mock_add_devices.assert_not_called()
-
-    def test_setup_platform_no_bridge_id(self):
-        """Test setup_platform without a bridge."""
-        self.hass.data[hue.DOMAIN] = {}
-        mock_add_devices = MagicMock()
-
-        hue_light.setup_platform(self.hass, {}, mock_add_devices, {})
-
-        mock_add_devices.assert_not_called()
-
-    def test_setup_platform_one_bridge(self):
-        """Test setup_platform with one bridge."""
-        mock_bridge = MagicMock()
-        self.hass.data[hue.DOMAIN] = {'10.0.0.1': mock_bridge}
-        mock_add_devices = MagicMock()
-
-        with patch(HUE_LIGHT_NS + 'unthrottled_update_lights') \
-                as mock_update_lights:
-            hue_light.setup_platform(
-                self.hass, {}, mock_add_devices,
-                {'bridge_id': '10.0.0.1'})
-            mock_update_lights.assert_called_once_with(
-                self.hass, mock_bridge, mock_add_devices)
-
-    def test_setup_platform_multiple_bridges(self):
-        """Test setup_platform wuth multiple bridges."""
-        mock_bridge = MagicMock()
-        mock_bridge2 = MagicMock()
-        self.hass.data[hue.DOMAIN] = {
-            '10.0.0.1': mock_bridge,
-            '192.168.0.10': mock_bridge2,
+GROUP_RESPONSE = {
+    "1": {
+        "name": "Group 1",
+        "lights": [
+            "1",
+            "2"
+        ],
+        "type": "LightGroup",
+        "action": {
+            "on": True,
+            "bri": 254,
+            "hue": 10000,
+            "sat": 254,
+            "effect": "none",
+            "xy": [
+                0.5,
+                0.5
+            ],
+            "ct": 250,
+            "alert": "select",
+            "colormode": "ct"
+        },
+        "state": {
+            "any_on": True,
+            "all_on": False,
         }
-        mock_add_devices = MagicMock()
-
-        with patch(HUE_LIGHT_NS + 'unthrottled_update_lights') \
-                as mock_update_lights:
-            hue_light.setup_platform(
-                self.hass, {}, mock_add_devices,
-                {'bridge_id': '10.0.0.1'})
-            hue_light.setup_platform(
-                self.hass, {}, mock_add_devices,
-                {'bridge_id': '192.168.0.10'})
-
-            mock_update_lights.assert_has_calls([
-                call(self.hass, mock_bridge, mock_add_devices),
-                call(self.hass, mock_bridge2, mock_add_devices),
-            ])
-
-    @MockDependency('phue')
-    def test_update_lights_with_no_lights(self, mock_phue):
-        """Test the update_lights function when no lights are found."""
-        self.setup_mocks_for_update_lights()
-
-        with patch(HUE_LIGHT_NS + 'process_lights', return_value=[]) \
-                as mock_process_lights:
-            with patch(HUE_LIGHT_NS + 'process_groups', return_value=[]) \
-                    as mock_process_groups:
-                with patch.object(self.hass.helpers.dispatcher,
-                                  'dispatcher_send') as dispatcher_send:
-                    hue_light.unthrottled_update_lights(
-                        self.hass, self.mock_bridge, self.mock_add_devices)
-
-                    mock_process_lights.assert_called_once_with(
-                        self.hass, self.mock_api, self.mock_bridge, mock.ANY)
-                    mock_process_groups.assert_not_called()
-                    self.mock_add_devices.assert_not_called()
-                    dispatcher_send.assert_not_called()
-
-    @MockDependency('phue')
-    def test_update_lights_with_some_lights(self, mock_phue):
-        """Test the update_lights function with some lights."""
-        self.setup_mocks_for_update_lights()
-        mock_lights = [
-            self.build_mock_light(self.mock_bridge, 42, 'some'),
-            self.build_mock_light(self.mock_bridge, 84, 'light'),
-        ]
-
-        with patch(HUE_LIGHT_NS + 'process_lights',
-                   return_value=mock_lights) as mock_process_lights:
-            with patch(HUE_LIGHT_NS + 'process_groups', return_value=[]) \
-                    as mock_process_groups:
-                with patch.object(self.hass.helpers.dispatcher,
-                                  'dispatcher_send') as dispatcher_send:
-                    hue_light.unthrottled_update_lights(
-                        self.hass, self.mock_bridge, self.mock_add_devices)
-
-                    mock_process_lights.assert_called_once_with(
-                        self.hass, self.mock_api, self.mock_bridge, mock.ANY)
-                    mock_process_groups.assert_not_called()
-                    self.mock_add_devices.assert_called_once_with(
-                        mock_lights)
-                    dispatcher_send.assert_not_called()
-
-    @MockDependency('phue')
-    def test_update_lights_no_groups(self, mock_phue):
-        """Test the update_lights function when no groups are found."""
-        self.setup_mocks_for_update_lights()
-        self.mock_bridge.allow_hue_groups = True
-        mock_lights = [
-            self.build_mock_light(self.mock_bridge, 42, 'some'),
-            self.build_mock_light(self.mock_bridge, 84, 'light'),
-        ]
-
-        with patch(HUE_LIGHT_NS + 'process_lights',
-                   return_value=mock_lights) as mock_process_lights:
-            with patch(HUE_LIGHT_NS + 'process_groups', return_value=[]) \
-                    as mock_process_groups:
-                with patch.object(self.hass.helpers.dispatcher,
-                                  'dispatcher_send') as dispatcher_send:
-                    hue_light.unthrottled_update_lights(
-                        self.hass, self.mock_bridge, self.mock_add_devices)
-
-                    mock_process_lights.assert_called_once_with(
-                        self.hass, self.mock_api, self.mock_bridge, mock.ANY)
-                    mock_process_groups.assert_called_once_with(
-                        self.hass, self.mock_api, self.mock_bridge, mock.ANY)
-                    self.mock_add_devices.assert_called_once_with(
-                        mock_lights)
-                    dispatcher_send.assert_not_called()
-
-    @MockDependency('phue')
-    def test_update_lights_with_lights_and_groups(self, mock_phue):
-        """Test the update_lights function with both lights and groups."""
-        self.setup_mocks_for_update_lights()
-        self.mock_bridge.allow_hue_groups = True
-        mock_lights = [
-            self.build_mock_light(self.mock_bridge, 42, 'some'),
-            self.build_mock_light(self.mock_bridge, 84, 'light'),
-        ]
-        mock_groups = [
-            self.build_mock_light(self.mock_bridge, 15, 'and'),
-            self.build_mock_light(self.mock_bridge, 72, 'groups'),
-        ]
-
-        with patch(HUE_LIGHT_NS + 'process_lights',
-                   return_value=mock_lights) as mock_process_lights:
-            with patch(HUE_LIGHT_NS + 'process_groups',
-                       return_value=mock_groups) as mock_process_groups:
-                with patch.object(self.hass.helpers.dispatcher,
-                                  'dispatcher_send') as dispatcher_send:
-                    hue_light.unthrottled_update_lights(
-                        self.hass, self.mock_bridge, self.mock_add_devices)
-
-                    mock_process_lights.assert_called_once_with(
-                        self.hass, self.mock_api, self.mock_bridge, mock.ANY)
-                    mock_process_groups.assert_called_once_with(
-                        self.hass, self.mock_api, self.mock_bridge, mock.ANY)
-                    # note that mock_lights has been modified in place and
-                    # now contains both lights and groups
-                    self.mock_add_devices.assert_called_once_with(
-                        mock_lights)
-                    dispatcher_send.assert_not_called()
-
-    @MockDependency('phue')
-    def test_update_lights_with_two_bridges(self, mock_phue):
-        """Test the update_lights function with two bridges."""
-        self.setup_mocks_for_update_lights()
-
-        mock_bridge_one = self.create_mock_bridge('one', False)
-        mock_bridge_one_lights = self.create_mock_lights(
-            {1: {'name': 'b1l1'}, 2: {'name': 'b1l2'}})
-
-        mock_bridge_two = self.create_mock_bridge('two', False)
-        mock_bridge_two_lights = self.create_mock_lights(
-            {1: {'name': 'b2l1'}, 3: {'name': 'b2l3'}})
-
-        with patch('homeassistant.components.light.hue.HueLight.'
-                   'schedule_update_ha_state'):
-            mock_api = MagicMock()
-            mock_api.get.return_value = mock_bridge_one_lights
-            with patch.object(mock_bridge_one, 'get_api',
-                              return_value=mock_api):
-                hue_light.unthrottled_update_lights(
-                    self.hass, mock_bridge_one, self.mock_add_devices)
-
-            mock_api = MagicMock()
-            mock_api.get.return_value = mock_bridge_two_lights
-            with patch.object(mock_bridge_two, 'get_api',
-                              return_value=mock_api):
-                hue_light.unthrottled_update_lights(
-                    self.hass, mock_bridge_two, self.mock_add_devices)
-
-        self.assertEqual(sorted(mock_bridge_one.lights.keys()), [1, 2])
-        self.assertEqual(sorted(mock_bridge_two.lights.keys()), [1, 3])
-
-        self.assertEqual(len(self.mock_add_devices.mock_calls), 2)
-
-        # first call
-        name, args, kwargs = self.mock_add_devices.mock_calls[0]
-        self.assertEqual(len(args), 1)
-        self.assertEqual(len(kwargs), 0)
-
-        # second call works the same
-        name, args, kwargs = self.mock_add_devices.mock_calls[1]
-        self.assertEqual(len(args), 1)
-        self.assertEqual(len(kwargs), 0)
-
-    def test_process_lights_api_error(self):
-        """Test the process_lights function when the bridge errors out."""
-        self.setup_mocks_for_process_lights()
-        self.mock_api.get.return_value = None
-
-        ret = hue_light.process_lights(
-            self.hass, self.mock_api, self.mock_bridge, None)
-
-        self.assertEqual([], ret)
-        self.assertEqual(self.mock_bridge.lights, {})
-
-    def test_process_lights_no_lights(self):
-        """Test the process_lights function when bridge returns no lights."""
-        self.setup_mocks_for_process_lights()
-
-        with patch.object(self.hass.helpers.dispatcher, 'dispatcher_send') \
-                as mock_dispatcher_send:
-            ret = hue_light.process_lights(
-                self.hass, self.mock_api, self.mock_bridge, None)
-
-            self.assertEqual([], ret)
-            mock_dispatcher_send.assert_not_called()
-            self.assertEqual(self.mock_bridge.lights, {})
-
-    @patch(HUE_LIGHT_NS + 'HueLight')
-    def test_process_lights_some_lights(self, mock_hue_light):
-        """Test the process_lights function with multiple groups."""
-        self.setup_mocks_for_process_lights()
-        self.mock_api.get.return_value = {
-            1: {'state': 'on'}, 2: {'state': 'off'}}
-
-        with patch.object(self.hass.helpers.dispatcher, 'dispatcher_send') \
-                as mock_dispatcher_send:
-            ret = hue_light.process_lights(
-                self.hass, self.mock_api, self.mock_bridge, None)
-
-            self.assertEqual(len(ret), 2)
-            mock_hue_light.assert_has_calls([
-                call(
-                    1, {'state': 'on'}, self.mock_bridge, mock.ANY,
-                    self.mock_bridge.allow_unreachable,
-                    self.mock_bridge.allow_in_emulated_hue),
-                call(
-                    2, {'state': 'off'}, self.mock_bridge, mock.ANY,
-                    self.mock_bridge.allow_unreachable,
-                    self.mock_bridge.allow_in_emulated_hue),
-            ])
-            mock_dispatcher_send.assert_not_called()
-            self.assertEqual(len(self.mock_bridge.lights), 2)
-
-    @patch(HUE_LIGHT_NS + 'HueLight')
-    def test_process_lights_new_light(self, mock_hue_light):
-        """
-        Test the process_lights function with new groups.
-
-        Test what happens when we already have a light and a new one shows up.
-        """
-        self.setup_mocks_for_process_lights()
-        self.mock_api.get.return_value = {
-            1: {'state': 'on'}, 2: {'state': 'off'}}
-        self.mock_bridge.lights = {
-            1: self.build_mock_light(self.mock_bridge, 1, 'foo')}
-
-        with patch.object(self.hass.helpers.dispatcher, 'dispatcher_send') \
-                as mock_dispatcher_send:
-            ret = hue_light.process_lights(
-                self.hass, self.mock_api, self.mock_bridge, None)
-
-            self.assertEqual(len(ret), 1)
-            mock_hue_light.assert_has_calls([
-                call(
-                    2, {'state': 'off'}, self.mock_bridge, mock.ANY,
-                    self.mock_bridge.allow_unreachable,
-                    self.mock_bridge.allow_in_emulated_hue),
-            ])
-            mock_dispatcher_send.assert_called_once_with(
-                'hue_light_callback_bridge-id_1')
-            self.assertEqual(len(self.mock_bridge.lights), 2)
-
-    def test_process_groups_api_error(self):
-        """Test the process_groups function when the bridge errors out."""
-        self.setup_mocks_for_process_groups()
-        self.mock_api.get.return_value = None
-
-        ret = hue_light.process_groups(
-            self.hass, self.mock_api, self.mock_bridge, None)
-
-        self.assertEqual([], ret)
-        self.assertEqual(self.mock_bridge.lightgroups, {})
-
-    def test_process_groups_no_state(self):
-        """Test the process_groups function when bridge returns no status."""
-        self.setup_mocks_for_process_groups()
-        self.mock_bridge.get_group.return_value = {'name': 'Group 0'}
-
-        with patch.object(self.hass.helpers.dispatcher, 'dispatcher_send') \
-                as mock_dispatcher_send:
-            ret = hue_light.process_groups(
-                self.hass, self.mock_api, self.mock_bridge, None)
-
-            self.assertEqual([], ret)
-            mock_dispatcher_send.assert_not_called()
-            self.assertEqual(self.mock_bridge.lightgroups, {})
-
-    @patch(HUE_LIGHT_NS + 'HueLight')
-    def test_process_groups_some_groups(self, mock_hue_light):
-        """Test the process_groups function with multiple groups."""
-        self.setup_mocks_for_process_groups()
-        self.mock_api.get.return_value = {
-            1: {'state': 'on'}, 2: {'state': 'off'}}
-
-        with patch.object(self.hass.helpers.dispatcher, 'dispatcher_send') \
-                as mock_dispatcher_send:
-            ret = hue_light.process_groups(
-                self.hass, self.mock_api, self.mock_bridge, None)
-
-            self.assertEqual(len(ret), 2)
-            mock_hue_light.assert_has_calls([
-                call(
-                    1, {'state': 'on'}, self.mock_bridge, mock.ANY,
-                    self.mock_bridge.allow_unreachable,
-                    self.mock_bridge.allow_in_emulated_hue, True),
-                call(
-                    2, {'state': 'off'}, self.mock_bridge, mock.ANY,
-                    self.mock_bridge.allow_unreachable,
-                    self.mock_bridge.allow_in_emulated_hue, True),
-            ])
-            mock_dispatcher_send.assert_not_called()
-            self.assertEqual(len(self.mock_bridge.lightgroups), 2)
-
-    @patch(HUE_LIGHT_NS + 'HueLight')
-    def test_process_groups_new_group(self, mock_hue_light):
-        """
-        Test the process_groups function with new groups.
-
-        Test what happens when we already have a light and a new one shows up.
-        """
-        self.setup_mocks_for_process_groups()
-        self.mock_api.get.return_value = {
-            1: {'state': 'on'}, 2: {'state': 'off'}}
-        self.mock_bridge.lightgroups = {
-                1: self.build_mock_light(self.mock_bridge, 1, 'foo')}
-
-        with patch.object(self.hass.helpers.dispatcher, 'dispatcher_send') \
-                as mock_dispatcher_send:
-            ret = hue_light.process_groups(
-                self.hass, self.mock_api, self.mock_bridge, None)
-
-            self.assertEqual(len(ret), 1)
-            mock_hue_light.assert_has_calls([
-                call(
-                    2, {'state': 'off'}, self.mock_bridge, mock.ANY,
-                    self.mock_bridge.allow_unreachable,
-                    self.mock_bridge.allow_in_emulated_hue, True),
-            ])
-            mock_dispatcher_send.assert_called_once_with(
-                'hue_light_callback_bridge-id_1')
-            self.assertEqual(len(self.mock_bridge.lightgroups), 2)
+    },
+    "2": {
+        "name": "Group 2",
+        "lights": [
+            "3",
+            "4",
+            "5"
+        ],
+        "type": "LightGroup",
+        "action": {
+            "on": True,
+            "bri": 153,
+            "hue": 4345,
+            "sat": 254,
+            "effect": "none",
+            "xy": [
+                0.5,
+                0.5
+            ],
+            "ct": 250,
+            "alert": "select",
+            "colormode": "ct"
+        },
+        "state": {
+            "any_on": True,
+            "all_on": False,
+        }
+    }
+}
+LIGHT_1_ON = {
+    "state": {
+        "on": True,
+        "bri": 144,
+        "hue": 13088,
+        "sat": 212,
+        "xy": [0.5128, 0.4147],
+        "ct": 467,
+        "alert": "none",
+        "effect": "none",
+        "colormode": "xy",
+        "reachable": True
+    },
+    "type": "Extended color light",
+    "name": "Hue Lamp 1",
+    "modelid": "LCT001",
+    "swversion": "66009461",
+    "manufacturername": "Philips",
+    "uniqueid": "456",
+}
+LIGHT_1_OFF = {
+    "state": {
+        "on": False,
+        "bri": 0,
+        "hue": 0,
+        "sat": 0,
+        "xy": [0, 0],
+        "ct": 0,
+        "alert": "none",
+        "effect": "none",
+        "colormode": "xy",
+        "reachable": True
+    },
+    "type": "Extended color light",
+    "name": "Hue Lamp 1",
+    "modelid": "LCT001",
+    "swversion": "66009461",
+    "manufacturername": "Philips",
+    "uniqueid": "456",
+}
+LIGHT_2_OFF = {
+    "state": {
+        "on": False,
+        "bri": 0,
+        "hue": 0,
+        "sat": 0,
+        "xy": [0, 0],
+        "ct": 0,
+        "alert": "none",
+        "effect": "none",
+        "colormode": "hs",
+        "reachable": True
+    },
+    "type": "Extended color light",
+    "name": "Hue Lamp 2",
+    "modelid": "LCT001",
+    "swversion": "66009461",
+    "manufacturername": "Philips",
+    "uniqueid": "123",
+}
+LIGHT_2_ON = {
+    "state": {
+        "on": True,
+        "bri": 100,
+        "hue": 13088,
+        "sat": 210,
+        "xy": [.5, .4],
+        "ct": 420,
+        "alert": "none",
+        "effect": "none",
+        "colormode": "hs",
+        "reachable": True
+    },
+    "type": "Extended color light",
+    "name": "Hue Lamp 2 new",
+    "modelid": "LCT001",
+    "swversion": "66009461",
+    "manufacturername": "Philips",
+    "uniqueid": "123",
+}
+LIGHT_RESPONSE = {
+    "1": LIGHT_1_ON,
+    "2": LIGHT_2_OFF,
+}
 
 
-class TestHueLight(unittest.TestCase):
-    """Test the HueLight class."""
+@pytest.fixture
+def mock_bridge(hass):
+    """Mock a Hue bridge."""
+    bridge = Mock(
+        available=True,
+        allow_unreachable=False,
+        allow_groups=False,
+        api=Mock(),
+        spec=hue.HueBridge
+    )
+    bridge.mock_requests = []
+    # We're using a deque so we can schedule multiple responses
+    # and also means that `popleft()` will blow up if we get more updates
+    # than expected.
+    bridge.mock_light_responses = deque()
+    bridge.mock_group_responses = deque()
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.skip_teardown_stop = False
+    async def mock_request(method, path, **kwargs):
+        kwargs['method'] = method
+        kwargs['path'] = path
+        bridge.mock_requests.append(kwargs)
 
-        self.light_id = 42
-        self.mock_info = MagicMock()
-        self.mock_bridge = MagicMock()
-        self.mock_update_lights = MagicMock()
-        self.mock_allow_unreachable = MagicMock()
-        self.mock_is_group = MagicMock()
-        self.mock_allow_in_emulated_hue = MagicMock()
-        self.mock_is_group = False
+        if path == 'lights':
+            return bridge.mock_light_responses.popleft()
+        elif path == 'groups':
+            return bridge.mock_group_responses.popleft()
+        return None
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        if not self.skip_teardown_stop:
-            self.hass.stop()
+    bridge.api.config.apiversion = '9.9.9'
+    bridge.api.lights = Lights({}, mock_request)
+    bridge.api.groups = Groups({}, mock_request)
 
-    def buildLight(
-            self, light_id=None, info=None, update_lights=None, is_group=None):
-        """Helper to build a HueLight object with minimal fuss."""
-        if 'state' not in info:
-            on_key = 'any_on' if is_group is not None else 'on'
-            info['state'] = {on_key: False}
+    return bridge
 
-        return hue_light.HueLight(
-            light_id if light_id is not None else self.light_id,
-            info if info is not None else self.mock_info,
-            self.mock_bridge,
-            (update_lights
-             if update_lights is not None
-             else self.mock_update_lights),
-            self.mock_allow_unreachable, self.mock_allow_in_emulated_hue,
-            is_group if is_group is not None else self.mock_is_group)
 
-    def test_unique_id_for_light(self):
-        """Test the unique_id method with lights."""
-        light = self.buildLight(info={'uniqueid': 'foobar'})
-        self.assertEqual('foobar', light.unique_id)
+async def setup_bridge(hass, mock_bridge):
+    """Load the Hue light platform with the provided bridge."""
+    hass.config.components.add(hue.DOMAIN)
+    hass.data[hue.DOMAIN] = {'mock-host': mock_bridge}
+    config_entry = config_entries.ConfigEntry(1, hue.DOMAIN, 'Mock Title', {
+        'host': 'mock-host'
+    }, 'test')
+    await hass.config_entries.async_forward_entry_setup(config_entry, 'light')
+    # To flush out the service call to update the group
+    await hass.async_block_till_done()
 
-        light = self.buildLight(info={})
-        self.assertIsNone(light.unique_id)
 
-    def test_unique_id_for_group(self):
-        """Test the unique_id method with groups."""
-        light = self.buildLight(info={'uniqueid': 'foobar'}, is_group=True)
-        self.assertEqual('foobar', light.unique_id)
+async def test_not_load_groups_if_old_bridge(hass, mock_bridge):
+    """Test that we don't try to load gorups if bridge runs old software."""
+    mock_bridge.api.config.apiversion = '1.12.0'
+    mock_bridge.mock_light_responses.append({})
+    mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 1
+    assert len(hass.states.async_all()) == 0
 
-        light = self.buildLight(info={}, is_group=True)
-        self.assertIsNone(light.unique_id)
+
+async def test_no_lights_or_groups(hass, mock_bridge):
+    """Test the update_lights function when no lights are found."""
+    mock_bridge.allow_groups = True
+    mock_bridge.mock_light_responses.append({})
+    mock_bridge.mock_group_responses.append({})
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 2
+    assert len(hass.states.async_all()) == 0
+
+
+async def test_lights(hass, mock_bridge):
+    """Test the update_lights function with some lights."""
+    mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 1
+    # 1 All Lights group, 2 lights
+    assert len(hass.states.async_all()) == 3
+
+    lamp_1 = hass.states.get('light.hue_lamp_1')
+    assert lamp_1 is not None
+    assert lamp_1.state == 'on'
+    assert lamp_1.attributes['brightness'] == 144
+    assert lamp_1.attributes['hs_color'] == (36.067, 69.804)
+
+    lamp_2 = hass.states.get('light.hue_lamp_2')
+    assert lamp_2 is not None
+    assert lamp_2.state == 'off'
+
+
+async def test_lights_color_mode(hass, mock_bridge):
+    """Test that lights only report appropriate color mode."""
+    mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+    await setup_bridge(hass, mock_bridge)
+
+    lamp_1 = hass.states.get('light.hue_lamp_1')
+    assert lamp_1 is not None
+    assert lamp_1.state == 'on'
+    assert lamp_1.attributes['brightness'] == 144
+    assert lamp_1.attributes['hs_color'] == (36.067, 69.804)
+    assert 'color_temp' not in lamp_1.attributes
+
+    new_light1_on = LIGHT_1_ON.copy()
+    new_light1_on['state'] = new_light1_on['state'].copy()
+    new_light1_on['state']['colormode'] = 'ct'
+    mock_bridge.mock_light_responses.append({
+        "1": new_light1_on,
+    })
+    mock_bridge.mock_group_responses.append({})
+
+    # Calling a service will trigger the updates to run
+    await hass.services.async_call('light', 'turn_on', {
+        'entity_id': 'light.hue_lamp_2'
+    }, blocking=True)
+    # 2x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 3
+
+    lamp_1 = hass.states.get('light.hue_lamp_1')
+    assert lamp_1 is not None
+    assert lamp_1.state == 'on'
+    assert lamp_1.attributes['brightness'] == 144
+    assert lamp_1.attributes['color_temp'] == 467
+    assert 'hs_color' not in lamp_1.attributes
+
+
+async def test_groups(hass, mock_bridge):
+    """Test the update_lights function with some lights."""
+    mock_bridge.allow_groups = True
+    mock_bridge.mock_light_responses.append({})
+    mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
+
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 2
+    # 1 all lights group, 2 hue group lights
+    assert len(hass.states.async_all()) == 3
+
+    lamp_1 = hass.states.get('light.group_1')
+    assert lamp_1 is not None
+    assert lamp_1.state == 'on'
+    assert lamp_1.attributes['brightness'] == 254
+    assert lamp_1.attributes['color_temp'] == 250
+
+    lamp_2 = hass.states.get('light.group_2')
+    assert lamp_2 is not None
+    assert lamp_2.state == 'on'
+
+
+async def test_new_group_discovered(hass, mock_bridge):
+    """Test if 2nd update has a new group."""
+    mock_bridge.allow_groups = True
+    mock_bridge.mock_light_responses.append({})
+    mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
+
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 2
+    assert len(hass.states.async_all()) == 3
+
+    new_group_response = dict(GROUP_RESPONSE)
+    new_group_response['3'] = {
+        "name": "Group 3",
+        "lights": [
+            "3",
+            "4",
+            "5"
+        ],
+        "type": "LightGroup",
+        "action": {
+            "on": True,
+            "bri": 153,
+            "hue": 4345,
+            "sat": 254,
+            "effect": "none",
+            "xy": [
+                0.5,
+                0.5
+            ],
+            "ct": 250,
+            "alert": "select",
+            "colormode": "ct"
+        },
+        "state": {
+            "any_on": True,
+            "all_on": False,
+        }
+    }
+
+    mock_bridge.mock_light_responses.append({})
+    mock_bridge.mock_group_responses.append(new_group_response)
+
+    # Calling a service will trigger the updates to run
+    await hass.services.async_call('light', 'turn_on', {
+        'entity_id': 'light.group_1'
+    }, blocking=True)
+    # 2x group update, 2x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 5
+    assert len(hass.states.async_all()) == 4
+
+    new_group = hass.states.get('light.group_3')
+    assert new_group is not None
+    assert new_group.state == 'on'
+    assert new_group.attributes['brightness'] == 153
+    assert new_group.attributes['color_temp'] == 250
+
+
+async def test_new_light_discovered(hass, mock_bridge):
+    """Test if 2nd update has a new light."""
+    mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 1
+    assert len(hass.states.async_all()) == 3
+
+    new_light_response = dict(LIGHT_RESPONSE)
+    new_light_response['3'] = {
+        "state": {
+            "on": False,
+            "bri": 0,
+            "hue": 0,
+            "sat": 0,
+            "xy": [0, 0],
+            "ct": 0,
+            "alert": "none",
+            "effect": "none",
+            "colormode": "hs",
+            "reachable": True
+        },
+        "type": "Extended color light",
+        "name": "Hue Lamp 3",
+        "modelid": "LCT001",
+        "swversion": "66009461",
+        "manufacturername": "Philips",
+        "uniqueid": "789",
+    }
+
+    mock_bridge.mock_light_responses.append(new_light_response)
+
+    # Calling a service will trigger the updates to run
+    await hass.services.async_call('light', 'turn_on', {
+        'entity_id': 'light.hue_lamp_1'
+    }, blocking=True)
+    # 2x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 3
+    assert len(hass.states.async_all()) == 4
+
+    light = hass.states.get('light.hue_lamp_3')
+    assert light is not None
+    assert light.state == 'off'
+
+
+async def test_other_group_update(hass, mock_bridge):
+    """Test changing one group that will impact the state of other light."""
+    mock_bridge.allow_groups = True
+    mock_bridge.mock_light_responses.append({})
+    mock_bridge.mock_group_responses.append(GROUP_RESPONSE)
+
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 2
+    assert len(hass.states.async_all()) == 3
+
+    group_2 = hass.states.get('light.group_2')
+    assert group_2 is not None
+    assert group_2.name == 'Group 2'
+    assert group_2.state == 'on'
+    assert group_2.attributes['brightness'] == 153
+    assert group_2.attributes['color_temp'] == 250
+
+    updated_group_response = dict(GROUP_RESPONSE)
+    updated_group_response['2'] = {
+        "name": "Group 2 new",
+        "lights": [
+            "3",
+            "4",
+            "5"
+        ],
+        "type": "LightGroup",
+        "action": {
+            "on": False,
+            "bri": 0,
+            "hue": 0,
+            "sat": 0,
+            "effect": "none",
+            "xy": [
+                0,
+                0
+            ],
+            "ct": 0,
+            "alert": "none",
+            "colormode": "ct"
+        },
+        "state": {
+            "any_on": False,
+            "all_on": False,
+        }
+    }
+
+    mock_bridge.mock_light_responses.append({})
+    mock_bridge.mock_group_responses.append(updated_group_response)
+
+    # Calling a service will trigger the updates to run
+    await hass.services.async_call('light', 'turn_on', {
+        'entity_id': 'light.group_1'
+    }, blocking=True)
+    # 2x group update, 2x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 5
+    assert len(hass.states.async_all()) == 3
+
+    group_2 = hass.states.get('light.group_2')
+    assert group_2 is not None
+    assert group_2.name == 'Group 2 new'
+    assert group_2.state == 'off'
+
+
+async def test_other_light_update(hass, mock_bridge):
+    """Test changing one light that will impact state of other light."""
+    mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 1
+    assert len(hass.states.async_all()) == 3
+
+    lamp_2 = hass.states.get('light.hue_lamp_2')
+    assert lamp_2 is not None
+    assert lamp_2.name == 'Hue Lamp 2'
+    assert lamp_2.state == 'off'
+
+    updated_light_response = dict(LIGHT_RESPONSE)
+    updated_light_response['2'] = {
+        "state": {
+            "on": True,
+            "bri": 100,
+            "hue": 13088,
+            "sat": 210,
+            "xy": [.5, .4],
+            "ct": 420,
+            "alert": "none",
+            "effect": "none",
+            "colormode": "hs",
+            "reachable": True
+        },
+        "type": "Extended color light",
+        "name": "Hue Lamp 2 new",
+        "modelid": "LCT001",
+        "swversion": "66009461",
+        "manufacturername": "Philips",
+        "uniqueid": "123",
+    }
+
+    mock_bridge.mock_light_responses.append(updated_light_response)
+
+    # Calling a service will trigger the updates to run
+    await hass.services.async_call('light', 'turn_on', {
+        'entity_id': 'light.hue_lamp_1'
+    }, blocking=True)
+    # 2x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 3
+    assert len(hass.states.async_all()) == 3
+
+    lamp_2 = hass.states.get('light.hue_lamp_2')
+    assert lamp_2 is not None
+    assert lamp_2.name == 'Hue Lamp 2 new'
+    assert lamp_2.state == 'on'
+    assert lamp_2.attributes['brightness'] == 100
+
+
+async def test_update_timeout(hass, mock_bridge):
+    """Test bridge marked as not available if timeout error during update."""
+    mock_bridge.api.lights.update = Mock(side_effect=asyncio.TimeoutError)
+    mock_bridge.api.groups.update = Mock(side_effect=asyncio.TimeoutError)
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 0
+    assert len(hass.states.async_all()) == 0
+    assert mock_bridge.available is False
+
+
+async def test_update_unauthorized(hass, mock_bridge):
+    """Test bridge marked as not available if unauthorized during update."""
+    mock_bridge.api.lights.update = Mock(side_effect=aiohue.Unauthorized)
+    mock_bridge.api.groups.update = Mock(side_effect=aiohue.Unauthorized)
+    await setup_bridge(hass, mock_bridge)
+    assert len(mock_bridge.mock_requests) == 0
+    assert len(hass.states.async_all()) == 0
+    assert mock_bridge.available is False
+
+
+async def test_light_turn_on_service(hass, mock_bridge):
+    """Test calling the turn on service on a light."""
+    mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+    await setup_bridge(hass, mock_bridge)
+    light = hass.states.get('light.hue_lamp_2')
+    assert light is not None
+    assert light.state == 'off'
+
+    updated_light_response = dict(LIGHT_RESPONSE)
+    updated_light_response['2'] = LIGHT_2_ON
+
+    mock_bridge.mock_light_responses.append(updated_light_response)
+
+    await hass.services.async_call('light', 'turn_on', {
+        'entity_id': 'light.hue_lamp_2',
+        'brightness': 100,
+        'color_temp': 300,
+    }, blocking=True)
+    # 2x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 3
+
+    assert mock_bridge.mock_requests[1]['json'] == {
+        'bri': 100,
+        'on': True,
+        'ct': 300,
+        'effect': 'none',
+        'alert': 'none',
+    }
+
+    assert len(hass.states.async_all()) == 3
+
+    light = hass.states.get('light.hue_lamp_2')
+    assert light is not None
+    assert light.state == 'on'
+
+
+async def test_light_turn_off_service(hass, mock_bridge):
+    """Test calling the turn on service on a light."""
+    mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
+    await setup_bridge(hass, mock_bridge)
+    light = hass.states.get('light.hue_lamp_1')
+    assert light is not None
+    assert light.state == 'on'
+
+    updated_light_response = dict(LIGHT_RESPONSE)
+    updated_light_response['1'] = LIGHT_1_OFF
+
+    mock_bridge.mock_light_responses.append(updated_light_response)
+
+    await hass.services.async_call('light', 'turn_off', {
+        'entity_id': 'light.hue_lamp_1',
+    }, blocking=True)
+    # 2x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 3
+
+    assert mock_bridge.mock_requests[1]['json'] == {
+        'on': False,
+        'alert': 'none',
+    }
+
+    assert len(hass.states.async_all()) == 3
+
+    light = hass.states.get('light.hue_lamp_1')
+    assert light is not None
+    assert light.state == 'off'
+
+
+def test_available():
+    """Test available property."""
+    light = hue_light.HueLight(
+        light=Mock(state={'reachable': False}),
+        request_bridge_update=None,
+        bridge=Mock(allow_unreachable=False),
+        is_group=False,
+    )
+
+    assert light.available is False
+
+    light = hue_light.HueLight(
+        light=Mock(state={'reachable': False}),
+        request_bridge_update=None,
+        bridge=Mock(allow_unreachable=True),
+        is_group=False,
+    )
+
+    assert light.available is True
+
+    light = hue_light.HueLight(
+        light=Mock(state={'reachable': False}),
+        request_bridge_update=None,
+        bridge=Mock(allow_unreachable=False),
+        is_group=True,
+    )
+
+    assert light.available is True
+
+
+def test_hs_color():
+    """Test hs_color property."""
+    light = hue_light.HueLight(
+        light=Mock(state={
+            'colormode': 'ct',
+            'hue': 1234,
+            'sat': 123,
+        }),
+        request_bridge_update=None,
+        bridge=Mock(),
+        is_group=False,
+    )
+
+    assert light.hs_color is None
+
+    light = hue_light.HueLight(
+        light=Mock(state={
+            'colormode': 'xy',
+            'hue': 1234,
+            'sat': 123,
+            'xy': [0.4, 0.5]
+        }),
+        request_bridge_update=None,
+        bridge=Mock(),
+        is_group=False,
+    )
+
+    assert light.hs_color == color.color_xy_to_hs(0.4, 0.5)

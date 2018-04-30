@@ -89,6 +89,7 @@ class CrimeReportsSensor(Entity):
         return self._attributes
 
     def _incident_event(self, incident):
+        """Fire if an event occurs."""
         data = {
             'type': incident.get('type'),
             'description': incident.get('friendly_description'),

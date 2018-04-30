@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_SSL, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
     ATTR_LAST_TRIP_TIME, CONF_CUSTOMIZE)
 
-REQUIREMENTS = ['pyhik==0.1.4']
+REQUIREMENTS = ['pyhik==0.1.8']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IGNORED = 'ignored'
@@ -48,6 +48,9 @@ DEVICE_CLASS_MAP = {
     'Face Detection': 'motion',
     'Scene Change Detection': 'motion',
     'I/O': None,
+    'Unattended Baggage': 'motion',
+    'Attended Baggage': 'motion',
+    'Recording Failure': None,
 }
 
 CUSTOMIZE_SCHEMA = vol.Schema({
@@ -211,7 +214,7 @@ class HikvisionBinarySensor(BinarySensorDevice):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._id
 
     @property
