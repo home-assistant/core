@@ -107,8 +107,6 @@ class RainMachineEntity(Entity):
                  rainmachine_entity_id,
                  icon=DEFAULT_ICON):
         """Initialize."""
-        self._client = self.hass.data[DATA_RAINMACHINE]
-
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._icon = icon
         self._rainmachine_type = rainmachine_type

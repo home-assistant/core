@@ -210,10 +210,6 @@ class RainMachineProgram(RainMachineSwitch):
 
             self._attrs.update({
                 ATTR_ID: self._obj['uid'],
-                ATTR_CS_ON: self._obj.get('cs_on'),
-                ATTR_CYCLES: self._obj.get('cycles'),
-                ATTR_DELAY: self._obj.get('delay'),
-                ATTR_DELAY_ON: self._obj.get('delay_on'),
                 ATTR_SOAK: self._obj.get('soak'),
                 ATTR_STATUS:
                     PROGRAM_STATUS_MAP[self._obj.get('status')],
