@@ -65,15 +65,15 @@ DEVICESTATUSCODES = {
 SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ACCOUNTNAME): vol.All(cv.ensure_list, [cv.slugify]),
     vol.Optional(ATTR_DEVICENAME): cv.slugify,
-    vol.Optional(ATTR_INTERVAL): cv.positive_int,
-    vol.Optional(CONF_MAX_INTERVAL): cv.positive_int,
-    vol.Optional(CONF_GPS_ACCURACY_THRESHOLD): cv.positive_int
+    vol.Optional(ATTR_INTERVAL): cv.positive_int
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(ATTR_ACCOUNTNAME): cv.slugify,
+    vol.Optional(CONF_MAX_INTERVAL, default=30): cv.positive_int,
+    vol.Optional(CONF_GPS_ACCURACY_THRESHOLD, default=1000): cv.positive_int
 })
 
 
@@ -82,8 +82,8 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     account = config.get(CONF_ACCOUNTNAME, slugify(username.partition('@')[0]))
-    max_interval = config.get(CONF_MAX_INTERVAL, 30)
-    gps_accuracy_threshold = config.get(CONF_GPS_ACCURACY_THRESHOLD, 1000)
+    max_interval = config.get(CONF_MAX_INTERVAL)
+    gps_accuracy_threshold = config.get(CONF_GPS_ACCURACY_THRESHOLD)
 
     icloudaccount = Icloud(hass, username, password, account, max_interval,
                            gps_accuracy_threshold, see)
