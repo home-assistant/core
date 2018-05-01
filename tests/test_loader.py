@@ -27,37 +27,40 @@ class TestLoader(unittest.TestCase):
 
     def test_set_component(self):
         """Test if set_component works."""
-        loader.set_component('switch.test_set', http)
+        comp = object()
+        loader.set_component(self.hass, 'switch.test_set', comp)
 
-        self.assertEqual(http, loader.get_component('switch.test_set'))
+        self.assertEqual(comp,
+                         loader.get_component(self.hass, 'switch.test_set'))
 
     def test_get_component(self):
         """Test if get_component works."""
-        self.assertEqual(http, loader.get_component('http'))
-
-        self.assertIsNotNone(loader.get_component('switch.test'))
+        self.assertEqual(http, loader.get_component(self.hass, 'http'))
+        self.assertIsNotNone(loader.get_component(self.hass, 'light.hue'))
 
     def test_load_order_component(self):
         """Test if we can get the proper load order of components."""
-        loader.set_component('mod1', MockModule('mod1'))
-        loader.set_component('mod2', MockModule('mod2', ['mod1']))
-        loader.set_component('mod3', MockModule('mod3', ['mod2']))
+        loader.set_component(self.hass, 'mod1', MockModule('mod1'))
+        loader.set_component(self.hass, 'mod2', MockModule('mod2', ['mod1']))
+        loader.set_component(self.hass, 'mod3', MockModule('mod3', ['mod2']))
 
         self.assertEqual(
-            ['mod1', 'mod2', 'mod3'], loader.load_order_component('mod3'))
+            ['mod1', 'mod2', 'mod3'],
+            loader.load_order_component(self.hass, 'mod3'))
 
         # Create circular dependency
-        loader.set_component('mod1', MockModule('mod1', ['mod3']))
+        loader.set_component(self.hass, 'mod1', MockModule('mod1', ['mod3']))
 
-        self.assertEqual([], loader.load_order_component('mod3'))
+        self.assertEqual([], loader.load_order_component(self.hass, 'mod3'))
 
         # Depend on non-existing component
-        loader.set_component('mod1', MockModule('mod1', ['nonexisting']))
+        loader.set_component(self.hass, 'mod1',
+                             MockModule('mod1', ['nonexisting']))
 
-        self.assertEqual([], loader.load_order_component('mod1'))
+        self.assertEqual([], loader.load_order_component(self.hass, 'mod1'))
 
         # Try to get load order for non-existing component
-        self.assertEqual([], loader.load_order_component('mod1'))
+        self.assertEqual([], loader.load_order_component(self.hass, 'mod1'))
 
 
 def test_component_loader(hass):

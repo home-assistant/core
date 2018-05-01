@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import State, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
-from homeassistant.loader import bind_hass, get_component
+from homeassistant.loader import bind_hass
 from homeassistant.util import convert
 from homeassistant.util import dt as dt_util
 from homeassistant.util import location as loc_util
@@ -349,10 +349,10 @@ class TemplateMethods(object):
             else:
                 gr_entity_id = str(entities)
 
-            group = get_component('group')
+            group = self._hass.components.group
 
             states = [self._hass.states.get(entity_id) for entity_id
-                      in group.expand_entity_ids(self._hass, [gr_entity_id])]
+                      in group.expand_entity_ids([gr_entity_id])]
 
         return _wrap_state(loc_helper.closest(latitude, longitude, states))
 
