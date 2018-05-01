@@ -162,7 +162,7 @@ pythonwhois==2.4.3
 pyunifi==2.13
 
 # homeassistant.components.upnp
-pyupnp-async==0.1.0.1
+pyupnp-async==0.1.0.2
 
 # homeassistant.components.notify.html5
 pywebpush==1.6.0
