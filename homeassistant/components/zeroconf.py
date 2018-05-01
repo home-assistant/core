@@ -12,6 +12,7 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP, __version__)
+from homeassistant.helpers import config_validation as cv
 
 REQUIREMENTS = ['zeroconf==0.20.0']
 
@@ -25,7 +26,7 @@ ZEROCONF_TYPE = '_home-assistant._tcp.local.'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_LOCAL_IP): ip_address,
+        vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -48,10 +49,11 @@ def setup(hass, config):
     }
 
     host_ip = config.get(CONF_LOCAL_IP)
-    if host_ip is not None:
-        host_ip = str(host_ip)
-    else:
+    if host_ip is None:
         host_ip = util.get_local_ip()
+        _LOGGER.info(
+            "Listen IP address not specified, auto-detected address is %s",
+            host_ip)
 
     _LOGGER.debug("Using %s to annouce %s", host_ip, ZEROCONF_TYPE)
 
