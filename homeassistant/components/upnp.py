@@ -90,10 +90,11 @@ async def async_setup(hass, config):
                 service = device.find_first_service(IP_SERVICE)
             if _service['serviceType'] == CIC_SERVICE:
                 unit = config.get(CONF_UNITS)
-                discovery.load_platform(hass, 'sensor',
+                hass.async_add_job(discovery.async_load_platform(hass,
+                                        'sensor',
                                         DOMAIN,
                                         {'unit': unit},
-                                        config)
+                                        config))
     except UpnpSoapError as error:
         _LOGGER.error(error)
         return False
@@ -140,5 +141,5 @@ async def async_setup(hass, config):
             await asyncio.wait(tasks)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
-
+    
     return True
