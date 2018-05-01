@@ -206,7 +206,6 @@ def check(config_dir, secrets=False):
 
         res['components'] = check_ha_config_file(hass)
         res['secret_cache'] = OrderedDict(yaml.__SECRET_CACHE)
-        print("BEER")
 
         for err in res['components'].errors:
             domain = err.domain or ERROR_STR
