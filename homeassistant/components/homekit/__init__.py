@@ -57,7 +57,7 @@ async def async_setup(hass, config):
     entity_config = conf[CONF_ENTITY_CONFIG]
 
     homekit = HomeKit(hass, port, ip_address, entity_filter, entity_config)
-    homekit.setup()
+    await hass.async_add_job(homekit.setup)
 
     if auto_start:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, homekit.start)
@@ -208,7 +208,7 @@ class HomeKit():
             show_setup_message(self.hass, self.bridge)
 
         _LOGGER.debug('Driver start')
-        self.driver.start()
+        self.hass.add_job(self.driver.start)
 
     def stop(self, *args):
         """Stop the accessory driver."""
@@ -217,4 +217,4 @@ class HomeKit():
 
         _LOGGER.debug('Driver stop')
         if self.driver and self.driver.run_sentinel:
-            self.driver.stop()
+            self.hass.add_job(self.driver.stop)

@@ -180,6 +180,7 @@ class TestHomeKit(unittest.TestCase):
         state = self.hass.states.all()[0]
 
         homekit.start()
+        self.hass.block_till_done()
 
         self.assertEqual(mock_add_bridge_acc.mock_calls, [call(state)])
         self.assertEqual(mock_show_setup_msg.mock_calls, [
@@ -190,11 +191,12 @@ class TestHomeKit(unittest.TestCase):
         # Test start() if already started
         homekit.driver.reset_mock()
         homekit.start()
+        self.hass.block_till_done()
         self.assertEqual(homekit.driver.mock_calls, [])
 
     def test_homekit_stop(self):
         """Test HomeKit stop method."""
-        homekit = HomeKit(None, None, None, None, None)
+        homekit = HomeKit(self.hass, None, None, None, None)
         homekit.driver = Mock()
 
         # Test if started = False
