@@ -71,7 +71,7 @@ class Sensor(zha.Entity):
         _LOGGER.debug("Attribute updated: %s %s %s", self, attribute, value)
         if attribute == self.value_attribute:
             self._state = value
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
 
 class TemperatureSensor(Sensor):
