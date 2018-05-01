@@ -136,11 +136,11 @@ class HomematicipConnector:
             self._accesspoint_connected = False
             self.set_all_to_unavailable()
         elif not self._accesspoint_connected:
-                # Explicitly getting an update as device states might have
-                # changed during access point disconnect."""
+            # Explicitly getting an update as device states might have
+            # changed during access point disconnect."""
 
-                job = self._hass.async_add_job(self.get_state())
-                job.add_done_callback(self.get_state_finished)
+            job = self._hass.async_add_job(self.get_state())
+            job.add_done_callback(self.get_state_finished)
 
     async def get_state(self):
         """Update hmip state and tell hass."""
