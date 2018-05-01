@@ -788,7 +788,7 @@ class ZWaveDeviceEntityValues():
         if polling_intensity:
             self.primary.enable_poll(polling_intensity)
 
-        platform = get_platform(component, DOMAIN)
+        platform = get_platform(self._hass, component, DOMAIN)
         device = platform.get_device(
             node=self._node, values=self,
             node_config=node_config, hass=self._hass)
