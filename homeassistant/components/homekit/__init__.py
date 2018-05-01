@@ -210,7 +210,7 @@ class HomeKit():
 
         for state in self.hass.states.all():
             self.add_bridge_accessory(state)
-        self.bridge.set_broker(self.driver)
+        self.bridge.set_driver(self.driver)
 
         if not self.bridge.paired:
             show_setup_message(self.hass, self.bridge)
