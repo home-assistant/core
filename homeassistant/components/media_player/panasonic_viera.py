@@ -56,8 +56,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = discovery_info.get('name')
         host = discovery_info.get('host')
         port = discovery_info.get('port')
+        udn = discovery_info.get('udn')
+        if udn and udn.startswith('uuid:'):
+            uuid = udn[len('uuid:'):]
+        else:
+            uuid = None
         remote = RemoteControl(host, port)
-        add_devices([PanasonicVieraTVDevice(mac, name, remote)])
+        add_devices([PanasonicVieraTVDevice(mac, name, remote, uuid)])
         return True
 
     host = config.get(CONF_HOST)
@@ -70,18 +75,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class PanasonicVieraTVDevice(MediaPlayerDevice):
     """Representation of a Panasonic Viera TV."""
 
-    def __init__(self, mac, name, remote):
+    def __init__(self, mac, name, remote, uuid=None):
         """Initialize the Panasonic device."""
         import wakeonlan
         # Save a reference to the imported class
         self._wol = wakeonlan
         self._mac = mac
         self._name = name
+        self._uuid = uuid
         self._muted = False
         self._playing = True
         self._state = STATE_UNKNOWN
         self._remote = remote
         self._volume = 0
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of this Viera TV."""
+        return self._uuid
 
     def update(self):
         """Retrieve the latest data."""
