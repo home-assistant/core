@@ -11,13 +11,14 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS
 from homeassistant.util import Throttle
 
-_LOGGER = getLogger(__name__)
 DEPENDENCIES = ['rainmachine']
 
-DEFAULT_ZONE_RUN = 60 * 10
+_LOGGER = getLogger(__name__)
 
 ATTR_CYCLES = 'cycles'
 ATTR_TOTAL_DURATION = 'total_duration'
+
+DEFAULT_ZONE_RUN = 60 * 10
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -25,13 +26,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    client = hass.data.get(DATA_RAINMACHINE)
-    device_name = client.provision.device_name()['name']
-    device_mac = client.provision.wifi()['macAddress']
-
     _LOGGER.debug('Config received: %s', discovery_info)
 
     zone_run_time = discovery_info.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN)
+
+    client = hass.data.get(DATA_RAINMACHINE)
+    device_name = client.provision.device_name()['name']
+    device_mac = client.provision.wifi()['macAddress']
 
     entities = []
     for program in client.programs.all().get('programs', {}):

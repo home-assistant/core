@@ -23,14 +23,14 @@ DOMAIN = 'rainmachine'
 NOTIFICATION_ID = 'rainmachine_notification'
 NOTIFICATION_TITLE = 'RainMachine Component Setup'
 
+CONF_ZONE_RUN_TIME = 'zone_run_time'
+
 DEFAULT_ATTRIBUTION = 'Data provided by Green Electronics LLC'
 DEFAULT_PORT = 8080
 DEFAULT_SSL = True
 
 MIN_SCAN_TIME = timedelta(seconds=1)
 MIN_SCAN_TIME_FORCED = timedelta(milliseconds=100)
-
-CONF_ZONE_RUN_TIME = 'zone_run_time'
 
 SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_ZONE_RUN_TIME):
