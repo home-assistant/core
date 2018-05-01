@@ -4,38 +4,34 @@ from logging import getLogger
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.rainmachine import (
-    DATA_RAINMACHINE, DEFAULT_ATTRIBUTION, MIN_SCAN_TIME, MIN_SCAN_TIME_FORCED)
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+    CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DEFAULT_ATTRIBUTION, MIN_SCAN_TIME,
+    MIN_SCAN_TIME_FORCED)
+from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS
 from homeassistant.util import Throttle
 
 _LOGGER = getLogger(__name__)
 DEPENDENCIES = ['rainmachine']
 
+DEFAULT_ZONE_RUN = 60 * 10
+
 ATTR_CYCLES = 'cycles'
 ATTR_TOTAL_DURATION = 'total_duration'
-
-CONF_ZONE_RUN_TIME = 'zone_run_time'
-
-DEFAULT_ZONE_RUN_SECONDS = 60 * 10
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN_SECONDS):
-        cv.positive_int
-})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set this component up under its platform."""
+    if discovery_info is None:
+        return
+
     client = hass.data.get(DATA_RAINMACHINE)
     device_name = client.provision.device_name()['name']
     device_mac = client.provision.wifi()['macAddress']
 
-    _LOGGER.debug('Config received: %s', config)
+    _LOGGER.debug('Config received: %s', discovery_info)
 
-    zone_run_time = config[CONF_ZONE_RUN_TIME]
+    zone_run_time = discovery_info.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN)
 
     entities = []
     for program in client.programs.all().get('programs', {}):
