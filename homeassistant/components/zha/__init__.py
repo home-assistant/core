@@ -288,11 +288,6 @@ class Entity(entity.Entity):
     """A base class for ZHA entities."""
 
     _domain = None  # Must be overridden by subclasses
-    # Normally the entity itself is the listener. Base classes may set this to
-    # a dict of cluster ID -> listener to receive messages for specific
-    # clusters separately
-    _in_listeners = {}
-    _out_listeners = {}
 
     def __init__(self, endpoint, in_clusters, out_clusters, manufacturer,
                  model, application_listener, unique_id, **kwargs):
@@ -321,18 +316,29 @@ class Entity(entity.Entity):
                 kwargs.get('entity_suffix', ''),
             )
 
-        for cluster_id, cluster in in_clusters.items():
-            cluster.add_listener(self._in_listeners.get(cluster_id, self))
-        for cluster_id, cluster in out_clusters.items():
-            cluster.add_listener(self._out_listeners.get(cluster_id, self))
-
         self._endpoint = endpoint
         self._in_clusters = in_clusters
         self._out_clusters = out_clusters
         self._state = ha_const.STATE_UNKNOWN
         self._unique_id = unique_id
 
+        # Normally the entity itself is the listener. Sub-classes may set this
+        # to a dict of cluster ID -> listener to receive messages for specific
+        # clusters separately
+        self._in_listeners = {}
+        self._out_listeners = {}
+
         application_listener.register_entity(ieee, self)
+
+    async def async_added_to_hass(self):
+        """Callback once the entity is added to hass.
+
+        It is now safe to update the entity state
+        """
+        for cluster_id, cluster in self._in_clusters.items():
+            cluster.add_listener(self._in_listeners.get(cluster_id, self))
+        for cluster_id, cluster in self._out_clusters.items():
+            cluster.add_listener(self._out_listeners.get(cluster_id, self))
 
     @property
     def unique_id(self) -> str:
