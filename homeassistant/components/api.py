@@ -51,6 +51,7 @@ def setup(hass, config):
     hass.http.register_view(APIDomainServicesView)
     hass.http.register_view(APIComponentsView)
     hass.http.register_view(APITemplateView)
+    hass.http.register_view(APILoggerView)
 
     if DATA_LOGGING in hass.data:
         hass.http.register_view(APIErrorLog)
@@ -69,6 +70,66 @@ class APIStatusView(HomeAssistantView):
         """Retrieve if API is running."""
         return self.json_message('API running.')
 
+
+class APILoggerView(HomeAssistantView):
+    """View to handle logger settings."""
+
+    url = "/api/logger"
+    name = "api:logger"
+
+    # NOTE, this is a dupe from components.logger
+    LOGSEVERITY = {
+        50: 'CRITICAL',
+        50: 'FATAL',
+        40: 'ERROR',
+        30: 'WARNING',
+        30: 'WARN',
+        20: 'INFO',
+        10: 'DEBUG',
+        0: 'NOTSET'
+    }
+
+    @asyncio.coroutine
+    def get(self, request):
+        """Return all the available loggers as a JSON object."""
+        loggers = {k: APILoggerView.LOGSEVERITY[v.getEffectiveLevel()]
+                   for k, v in logging.Logger.manager.loggerDict.items()
+                   if isinstance(v, logging.Logger)}
+        return self.json(loggers)
+
+    @asyncio.coroutine
+    def post(self, request):
+        """Update the given loggers with accompanying log levels."""
+        hass = request.app['hass']
+        try:
+            data = yield from request.json()
+        except ValueError:
+            return self.json_message('Invalid JSON specified',
+                                     HTTP_BAD_REQUEST)
+
+        current_loggers = logging.Logger.manager.loggerDict
+        loggers_to_update = {}
+        for to_change, new_level in data.items():
+            if new_level not in APILoggerView.LOGSEVERITY.values():
+                return self.json_message('Invalid log level: %s' % new_level,
+                                         HTTP_BAD_REQUEST)
+
+            if to_change not in current_loggers:
+                return self.json_message(
+                    'Invalid logger specified: %s' % to_change,
+                    HTTP_BAD_REQUEST)
+
+            loggers_to_update[to_change] = new_level
+
+        # After verifying the changes we will go through and update the
+        # log levels as requested.
+        # TODO This should probably be done in the logger.set_level?
+        for logger, level in loggers_to_update.items():
+            logging.getLogger(to_change).setLevel(level)
+
+        yield from hass.services.async_call("logger", "set_level", data, True)
+
+        return self.json({"changed": data})
 
 class APIEventStream(HomeAssistantView):
     """View to handle EventStream requests."""
