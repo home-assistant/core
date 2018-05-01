@@ -108,7 +108,8 @@ class Iperf3Sensor(Entity):
     @property
     def service_name(self):
         """Return the service name of the sensor."""
-        return slugify("{} {}".format('update_iperf3', self.iperf3_client.server))
+        return slugify("{} {}".format(
+            'update_iperf3', self.iperf3_client.server))
 
     @property
     def state(self):
@@ -168,6 +169,7 @@ class Iperf3Data(object):
                 hass, self.update, second=config.get(CONF_SECOND),
                 minute=config.get(CONF_MINUTE), hour=config.get(CONF_HOUR),
                 day=config.get(CONF_DAY))
+
     @property
     def server(self):
         """Return server attribute."""
