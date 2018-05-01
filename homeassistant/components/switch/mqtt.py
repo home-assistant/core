@@ -120,7 +120,6 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
                                                          self.entity_id)
             if last_state:
                 self._state = last_state.state
-                self.async_schedule_update_ha_state()
 
     @property
     def should_poll(self):
