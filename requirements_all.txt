@@ -362,6 +362,7 @@ gstreamer-player==1.1.0
 ha-ffmpeg==1.9
 
 # homeassistant.components.media_player.philips_js
+# homeassistant.components.media_player.philips_js_v5
 ha-philipsjs==0.0.3
 
 # homeassistant.components.sensor.geo_rss_events
