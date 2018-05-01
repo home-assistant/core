@@ -356,20 +356,20 @@ class Camera(Entity):
     @property
     def state_attributes(self):
         """Return the camera state attributes."""
-        attr = {
+        attrs = {
             'access_token': self.access_tokens[-1],
         }
 
         if self.model:
-            attr['model_name'] = self.model
+            attrs['model_name'] = self.model
 
         if self.brand:
-            attr['brand'] = self.brand
+            attrs['brand'] = self.brand
 
         if self.motion_detection_enabled:
-            attr['motion_detection'] = self.motion_detection_enabled
+            attrs['motion_detection'] = self.motion_detection_enabled
 
-        return attr
+        return attrs
 
     @callback
     def async_update_token(self):
