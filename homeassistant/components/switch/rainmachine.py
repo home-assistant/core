@@ -143,7 +143,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     zone_run_time = discovery_info.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN)
 
-    client = hass.data.get(DATA_RAINMACHINE)
+    client = hass.data[DATA_RAINMACHINE]
 
     entities = []
     for program in client.programs.all().get('programs', {}):
@@ -151,14 +151,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             continue
 
         _LOGGER.debug('Adding program: %s', program)
-        entities.append(RainMachineProgram(client, program))
+        entities.append(RainMachineProgram(program))
 
     for zone in client.zones.all().get('zones', {}):
         if not zone.get('active'):
             continue
 
         _LOGGER.debug('Adding zone: %s', zone)
-        entities.append(RainMachineZone(client, zone, zone_run_time))
+        entities.append(RainMachineZone(zone, zone_run_time))
 
     add_devices(entities, True)
 
@@ -166,14 +166,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RainMachineSwitch(RainMachineEntity, SwitchDevice):
     """A class to represent a generic RainMachine entity."""
 
-    def __init__(self, client, rainmachine_type, entity_attrs):
+    def __init__(self, rainmachine_type, entity_attrs):
         """Initialize a generic RainMachine entity."""
-        self._client = client
         self._entity_attrs = entity_attrs
         self._type = rainmachine_type
 
-        super().__init__(self._client.provision.wifi()['macAddress'],
-                         rainmachine_type, entity_attrs.get('uid'))
+        super().__init__(rainmachine_type, entity_attrs.get('uid'))
 
     @property
     def is_enabled(self) -> bool:
@@ -184,9 +182,9 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
 class RainMachineProgram(RainMachineSwitch):
     """A RainMachine program."""
 
-    def __init__(self, client, program_json):
+    def __init__(self, program_json):
         """Initialize."""
-        super().__init__(client, 'program', program_json)
+        super().__init__('program', program_json)
 
     @property
     def is_on(self) -> bool:
@@ -284,9 +282,9 @@ class RainMachineProgram(RainMachineSwitch):
 class RainMachineZone(RainMachineSwitch):
     """A RainMachine zone."""
 
-    def __init__(self, client, zone_json, zone_run_time):
+    def __init__(self, zone_json, zone_run_time):
         """Initialize a RainMachine zone."""
-        super().__init__(client, 'zone', zone_json)
+        super().__init__('zone', zone_json)
 
         self._properties_json = {}
         self._run_time = zone_run_time

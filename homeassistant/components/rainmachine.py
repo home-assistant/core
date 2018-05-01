@@ -93,14 +93,15 @@ class RainMachineEntity(Entity):
     """Define a generic RainMachine entity."""
 
     def __init__(self,
-                 device_mac,
                  rainmachine_type,
                  rainmachine_entity_id,
                  icon=DEFAULT_ICON):
         """Initialize."""
+        self._client = self.hass.data[DATA_RAINMACHINE]
+
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._icon = icon
-        self._device_mac = device_mac
+        self._device_mac = self._client.provision.wifi()['macAddress']
         self._rainmachine_type = rainmachine_type
         self._rainmachine_entity_id = rainmachine_entity_id
 
