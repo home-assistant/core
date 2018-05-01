@@ -1203,6 +1203,9 @@ smappy==0.2.15
 # homeassistant.components.media_player.snapcast
 snapcast==2.0.8
 
+# homeassistant.components.sensor.socialblade
+socialbladeclient==0.2
+
 # homeassistant.components.climate.honeywell
 somecomfort==0.5.2
 
