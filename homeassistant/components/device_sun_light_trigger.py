@@ -84,9 +84,9 @@ def async_setup(hass, config):
 
     def async_turn_on_before_sunset(light_id):
         """Turn on lights."""
-        if not device_tracker.is_on(hass) or light.is_on(hass, light_id):
+        if not device_tracker.is_on() or light.is_on(light_id):
             return
-        light.async_turn_on(hass, light_id,
+        light.async_turn_on(light_id,
                             transition=LIGHT_TRANSITION_TIME.seconds,
                             profile=light_profile)
 
@@ -128,7 +128,7 @@ def async_setup(hass, config):
     @callback
     def check_light_on_dev_state_change(entity, old_state, new_state):
         """Handle tracked device state changes."""
-        lights_are_on = group.is_on(hass, light_group)
+        lights_are_on = group.is_on(light_group)
         light_needed = not (lights_are_on or is_up(hass))
 
         # These variables are needed for the elif check
@@ -138,7 +138,7 @@ def async_setup(hass, config):
         # Do we need lights?
         if light_needed:
             logger.info("Home coming event for %s. Turning lights on", entity)
-            light.async_turn_on(hass, light_ids, profile=light_profile)
+            light.async_turn_on(light_ids, profile=light_profile)
 
         # Are we in the time span were we would turn on the lights
         # if someone would be home?
@@ -151,7 +151,7 @@ def async_setup(hass, config):
             # when the fading in started and turn it on if so
             for index, light_id in enumerate(light_ids):
                 if now > start_point + index * LIGHT_TRANSITION_TIME:
-                    light.async_turn_on(hass, light_id)
+                    light.async_turn_on(light_id)
 
                 else:
                     # If this light didn't happen to be turned on yet so
@@ -168,12 +168,12 @@ def async_setup(hass, config):
     @callback
     def turn_off_lights_when_all_leave(entity, old_state, new_state):
         """Handle device group state change."""
-        if not group.is_on(hass, light_group):
+        if not group.is_on(light_group):
             return
 
         logger.info(
             "Everyone has left but there are lights on. Turning them off")
-        light.async_turn_off(hass, light_ids)
+        light.async_turn_off(light_ids)
 
     async_track_state_change(
         hass, device_group, turn_off_lights_when_all_leave,

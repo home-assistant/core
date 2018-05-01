@@ -172,7 +172,8 @@ def test_abort(hass, client):
 def test_create_account(hass, client):
     """Test a flow that creates an account."""
     set_component(
-        'test', MockModule('test', async_setup_entry=mock_coro_func(True)))
+        hass, 'test',
+        MockModule('test', async_setup_entry=mock_coro_func(True)))
 
     class TestFlow(FlowHandler):
         VERSION = 1
@@ -204,7 +205,8 @@ def test_create_account(hass, client):
 def test_two_step_flow(hass, client):
     """Test we can finish a two step flow."""
     set_component(
-        'test', MockModule('test', async_setup_entry=mock_coro_func(True)))
+        hass, 'test',
+        MockModule('test', async_setup_entry=mock_coro_func(True)))
 
     class TestFlow(FlowHandler):
         VERSION = 1

@@ -10,8 +10,6 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 
-from tests.common import get_test_home_assistant
-
 
 def test_boolean():
     """Test boolean validation."""

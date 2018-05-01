@@ -12,7 +12,6 @@ from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
 import voluptuous as vol
 
-from homeassistant.loader import get_platform
 from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,

@@ -82,7 +82,7 @@ class TestSwitch(unittest.TestCase):
         test_platform = loader.get_component(self.hass, 'switch.test')
         test_platform.init(True)
 
-        loader.set_component('switch.test2', test_platform)
+        loader.set_component(self.hass, 'switch.test2', test_platform)
         test_platform.init(False)
 
         self.assertTrue(setup_component(

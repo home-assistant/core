@@ -6,6 +6,7 @@ https://home-assistant.io/components/automation/
 """
 import asyncio
 from functools import partial
+import importlib
 import logging
 
 import voluptuous as vol
@@ -25,8 +26,6 @@ from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.loader import get_platform
 from homeassistant.util.dt import utcnow
 import homeassistant.helpers.config_validation as cv
-
-from . import event, time
 
 DOMAIN = 'automation'
 DEPENDENCIES = ['group']
@@ -57,33 +56,26 @@ SERVICE_TRIGGER = 'trigger'
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = {
-    'time': time,
-    'event': event,
-}
-
 
 def _platform_validator(config):
     """Validate it is a valid  platform."""
-    if config[CONF_PLATFORM] not in PLATFORMS:
-        return  # TODO how to do platform validation ? -> USE importlib!!
-    # TEMP
-    return config
-    platform = get_platform(DOMAIN, config[CONF_PLATFORM])
+    try:
+        platform = importlib.import_module(
+            'homeassistant.components.automation.{}'.format(
+                config[CONF_PLATFORM]))
+    except ImportError:
+        raise vol.Invalid('Invalid platform specified') from None
 
-    if not hasattr(platform, 'TRIGGER_SCHEMA'):
-        return config
-
-    return getattr(platform, 'TRIGGER_SCHEMA')(config)
+    return platform.TRIGGER_SCHEMA(config)
 
 
 _TRIGGER_SCHEMA = vol.All(
     cv.ensure_list,
     [
         vol.All(
-            # vol.Schema({
-            #     vol.Required(CONF_PLATFORM): cv.platform_validator(DOMAIN)
-            # }, extra=vol.ALLOW_EXTRA),
+            vol.Schema({
+                vol.Required(CONF_PLATFORM): str
+            }, extra=vol.ALLOW_EXTRA),
             _platform_validator
         ),
     ]
