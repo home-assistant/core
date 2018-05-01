@@ -12,8 +12,7 @@ from typing import Any, Optional, Dict
 import voluptuous as vol
 
 from homeassistant import (
-    core, config as conf_util, config_entries, loader,
-    components as core_components)
+    core, config as conf_util, config_entries, components as core_components)
 from homeassistant.components import persistent_notification
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
@@ -103,15 +102,12 @@ async def async_from_config_dict(config: Dict[str, Any],
         _LOGGER.warning("Skipping pip installation of required modules. "
                         "This may cause issues")
 
-    if not loader.PREPARED:
-        await hass.async_add_job(loader.prepare, hass)
-
     # Make a copy because we are mutating it.
     config = OrderedDict(config)
 
     # Merge packages
     conf_util.merge_packages_config(
-        config, core_config.get(conf_util.CONF_PACKAGES, {}))
+        hass, config, core_config.get(conf_util.CONF_PACKAGES, {}))
 
     # Ensure we have no None values after merge
     for key, value in config.items():

@@ -116,7 +116,7 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
 
     def test_heater_switch(self):
         """Test heater switching test switch."""
-        platform = loader.get_component('switch.test')
+        platform = loader.get_component(self.hass, 'switch.test')
         platform.init()
         self.switch_1 = platform.DEVICES[1]
         assert setup_component(self.hass, switch.DOMAIN, {'switch': {
