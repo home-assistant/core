@@ -53,6 +53,9 @@ ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 TOKEN_CHANGE_INTERVAL = timedelta(minutes=5)
 _RND = SystemRandom()
 
+FALLBACK_STREAM_INTERVAL = 1  # seconds
+MIN_STREAM_INTERVAL = 0.5  # seconds
+
 CAMERA_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
@@ -252,19 +255,21 @@ class Camera(Entity):
         """
         return self.hass.async_add_job(self.camera_image)
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
+    async def handle_async_still_stream(self, request, interval):
         """Generate an HTTP MJPEG stream from camera images.
 
         This method must be run in the event loop.
         """
-        response = web.StreamResponse()
+        if interval < MIN_STREAM_INTERVAL:
+            raise ValueError("Stream interval must be be > {}"
+                             .format(MIN_STREAM_INTERVAL))
 
+        response = web.StreamResponse()
         response.content_type = ('multipart/x-mixed-replace; '
                                  'boundary=--frameboundary')
-        yield from response.prepare(request)
+        await response.prepare(request)
 
-        async def write(img_bytes):
+        async def write_to_mjpeg_stream(img_bytes):
             """Write image to stream."""
             await response.write(bytes(
                 '--frameboundary\r\n'
@@ -277,21 +282,21 @@ class Camera(Entity):
 
         try:
             while True:
-                img_bytes = yield from self.async_camera_image()
+                img_bytes = await self.async_camera_image()
                 if not img_bytes:
                     break
 
                 if img_bytes and img_bytes != last_image:
-                    yield from write(img_bytes)
+                    await write_to_mjpeg_stream(img_bytes)
 
                     # Chrome seems to always ignore first picture,
                     # print it twice.
                     if last_image is None:
-                        yield from write(img_bytes)
+                        await write_to_mjpeg_stream(img_bytes)
 
                     last_image = img_bytes
 
-                yield from asyncio.sleep(.5)
+                await asyncio.sleep(interval)
 
         except asyncio.CancelledError:
             _LOGGER.debug("Stream closed by frontend.")
@@ -299,7 +304,17 @@ class Camera(Entity):
 
         finally:
             if response is not None:
-                yield from response.write_eof()
+                await response.write_eof()
+
+    async def handle_async_mjpeg_stream(self, request):
+        """Serve an HTTP MJPEG stream from the camera.
+
+        This method can be overridden by camera plaforms to proxy
+        a direct stream from the camera.
+        This method must be run in the event loop.
+        """
+        await self.handle_async_still_stream(request,
+                                             FALLBACK_STREAM_INTERVAL)
 
     @property
     def state(self):
@@ -411,7 +426,17 @@ class CameraMjpegStream(CameraView):
     url = '/api/camera_proxy_stream/{entity_id}'
     name = 'api:camera:stream'
 
-    @asyncio.coroutine
-    def handle(self, request, camera):
-        """Serve camera image."""
-        yield from camera.handle_async_mjpeg_stream(request)
+    async def handle(self, request, camera):
+        """Serve camera stream, possibly with interval."""
+        interval = request.query.get('interval')
+        if interval is None:
+            await camera.handle_async_mjpeg_stream(request)
+            return
+
+        try:
+            # Compose camera stream from stills
+            interval = float(request.query.get('interval'))
+            await camera.handle_async_still_stream(request, interval)
+            return
+        except ValueError:
+            return web.Response(status=400)
