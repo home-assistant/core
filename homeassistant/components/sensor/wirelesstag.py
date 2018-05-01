@@ -10,9 +10,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
+    CONF_MONITORED_CONDITIONS)
 from homeassistant.components.wirelesstag import (
-    DEFAULT_ENTITY_NAMESPACE, DOMAIN as WIRELESSTAG_DOMAIN,
+    DOMAIN as WIRELESSTAG_DOMAIN,
     WIRELESSTAG_TYPE_13BIT, WIRELESSTAG_TYPE_WATER,
     WIRELESSTAG_TYPE_ALSPRO,
     WirelessTagBaseSensor)
@@ -28,34 +28,26 @@ SENSOR_HUMIDITY = 'humidity'
 SENSOR_MOISTURE = 'moisture'
 SENSOR_LIGHT = 'light'
 
-SENSOR_TEMPERATURE_F_ICON = 'temperature-fahrenheit'
-
 SENSOR_TYPES = {
     SENSOR_TEMPERATURE: {
         'unit': TEMP_CELSIUS,
-        'icon': 'temperature-celsius',
         'attr': 'temperature'
     },
     SENSOR_HUMIDITY: {
         'unit': '%',
-        'icon': 'water-percent',
         'attr': 'humidity'
     },
     SENSOR_MOISTURE: {
         'unit': '%',
-        'icon': 'water',
         'attr': 'moisture'
     },
     SENSOR_LIGHT: {
         'unit': 'lux',
-        'icon': 'brightness-6',
         'attr': 'light'
     }
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
-        cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
@@ -66,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     platform = hass.data.get(WIRELESSTAG_DOMAIN)
     sensors = []
     tags = platform.tags
-    for _, tag in tags.items():
+    for tag in tags.values():
         for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
             if sensor_type in WirelessTagSensor.allowed_sensors(tag):
                 sensors.append(WirelessTagSensor(
@@ -107,21 +99,17 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         self._sensor_type = sensor_type
         self._tag_attr = SENSOR_TYPES[self._sensor_type]['attr']
         self._unit_of_measurement = SENSOR_TYPES[self._sensor_type]['unit']
-        self._icon = 'mdi:{}'.format(SENSOR_TYPES[self._sensor_type]['icon'])
-        if sensor_type == SENSOR_TEMPERATURE and not config.units.is_metric:
-            self._icon = 'mdi:{}'.format(SENSOR_TEMPERATURE_F_ICON)
-        self.define_name(self._tag.name)
+        self._name = self._tag.name
 
         # sensor.wirelesstag_bedroom_temperature
         self._entity_id = '{}.{}_{}_{}'.format('sensor', WIRELESSTAG_DOMAIN,
                                                self.underscored_name,
                                                self._sensor_type)
-        self._state = self.updated_state_value()
         self._api.register_entity(self)
 
     @property
     def entity_id(self):
-        """Ovverriden version."""
+        """Overriden version."""
         return self._entity_id
 
     @property
@@ -135,9 +123,9 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         return self._state
 
     @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return self._icon
+    def device_class(self):
+        """Return the class of the sensor."""
+        return self._sensor_type
 
     @property
     def unit_of_measurement(self):

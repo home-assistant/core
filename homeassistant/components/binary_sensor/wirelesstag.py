@@ -11,12 +11,12 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.wirelesstag import (
-    DEFAULT_ENTITY_NAMESPACE, DOMAIN as WIRELESSTAG_DOMAIN,
+    DOMAIN as WIRELESSTAG_DOMAIN,
     WIRELESSTAG_TYPE_13BIT, WIRELESSTAG_TYPE_WATER,
     WIRELESSTAG_TYPE_ALSPRO,
     WirelessTagBaseSensor)
 from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS, STATE_ON, STATE_OFF)
+    CONF_MONITORED_CONDITIONS, STATE_ON, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['wirelesstag']
@@ -98,8 +98,6 @@ SENSOR_TYPES = {
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
-        cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
@@ -111,7 +109,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
     tags = platform.tags
-    for _, tag in tags.items():
+    for tag in tags.values():
         allowed_sensor_types = WirelessTagBinarySensor.allowed_sensors(tag)
         for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
             if sensor_type in allowed_sensor_types:
@@ -161,13 +159,12 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
         """Initialize a binary sensor for a Wireless Sensor Tags."""
         super().__init__(api, tag)
         self._sensor_type = sensor_type
-        self.define_name('{0} {1}'.format(self._tag.name,
-                                          SENSOR_TYPES[self._sensor_type][0]))
+        self._name = '{0} {1}'.format(self._tag.name,
+                                      SENSOR_TYPES[self._sensor_type][0])
         self._device_class = SENSOR_TYPES[self._sensor_type][1]
         self._tag_attr = SENSOR_TYPES[self._sensor_type][2]
         self.binary_spec = SENSOR_TYPES[self._sensor_type][3]
         self.tag_id_index_template = SENSOR_TYPES[self._sensor_type][4]
-        self._state = self.updated_state_value()
         self._api.register_entity(self)
 
     @property

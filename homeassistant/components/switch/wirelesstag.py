@@ -10,13 +10,13 @@ import voluptuous as vol
 
 
 from homeassistant.components.wirelesstag import (
-    DEFAULT_ENTITY_NAMESPACE, DOMAIN as WIRELESSTAG_DOMAIN,
+    DOMAIN as WIRELESSTAG_DOMAIN,
     WIRELESSTAG_TYPE_13BIT, WIRELESSTAG_TYPE_WATER,
     WIRELESSTAG_TYPE_ALSPRO,
     WirelessTagBaseSensor)
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON)
+    CONF_MONITORED_CONDITIONS)
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['wirelesstag']
@@ -39,8 +39,6 @@ SWITCH_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
-        cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SWITCH_TYPES)]),
 })
@@ -91,19 +89,9 @@ class WirelessTagSwitch(WirelessTagBaseSensor, SwitchDevice):
         super().__init__(api, tag)
         self._switch_type = switch_type
         self.sensor_type = SWITCH_TYPES[self._switch_type][1]
-        self.define_name('{} {}'.format(self._tag.name,
-                                        SWITCH_TYPES[self._switch_type][0]))
+        self._name = '{} {}'.format(self._tag.name,
+                                    SWITCH_TYPES[self._switch_type][0])
         self._api.register_entity(self)
-
-    @property
-    def assumed_state(self):
-        """Return true if unable to access real state of entity."""
-        return False
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return STATE_ON if self.is_on else STATE_OFF
 
     def turn_on(self, **kwargs):
         """Turn on the switch."""

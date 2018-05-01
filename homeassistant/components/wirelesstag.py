@@ -82,7 +82,6 @@ class WirelessTagPlatform:
         arm_func = getattr(self.api, func_name)
         if arm_func is not None:
             arm_func(switch.tag_id)
-            switch.async_schedule_update_ha_state()
 
     def disarm(self, switch):
         """Disarm entity sensor monitoring."""
@@ -90,7 +89,6 @@ class WirelessTagPlatform:
         disarm_func = getattr(self.api, func_name)
         if disarm_func is not None:
             disarm_func(switch.tag_id)
-            switch.async_schedule_update_ha_state()
 
     def register_entity(self, entity):
         """Resiter new enity for local push notification."""
@@ -138,13 +136,13 @@ class WirelessTagPlatform:
     @property
     def update_callback_url(self):
         """Return url for local push notifications(update event)."""
-        return '{}/api/events/update_tags'.format(
+        return '{}/api/events/wirelesstag_update_tags'.format(
             self.hass.config.api.base_url)
 
     @property
     def binary_event_callback_url(self):
         """Return url for local push notifications(binary event)."""
-        return '{}/api/events/tag_binary_event'.format(
+        return '{}/api/events/wirelesstag_binary_event'.format(
             self.hass.config.api.base_url)
 
     def handle_update_tags_event(self, event):
@@ -196,8 +194,10 @@ def setup(hass, config):
         return False
 
     # listen to custom event
-    hass.bus.listen('update_tags', hass.data[DOMAIN].handle_update_tags_event)
-    hass.bus.listen('tag_binary_event', hass.data[DOMAIN].handle_binary_event)
+    hass.bus.listen('wirelesstag_update_tags',
+                    hass.data[DOMAIN].handle_update_tags_event)
+    hass.bus.listen('wirelesstag_binary_event',
+                    hass.data[DOMAIN].handle_binary_event)
 
     return True
 
@@ -225,15 +225,6 @@ class WirelessTagBaseSensor(Entity):
         return self._name
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    def define_name(self, new_name):
-        """Allow to set new name for base sensor implementation."""
-        self._name = new_name
-
-    @property
     def principal_value(self):
         """Return base value.
 
@@ -249,6 +240,11 @@ class WirelessTagBaseSensor(Entity):
     def decorate_value(self, value):
         """Decorate input value to be well presented for end user."""
         return '{:.1f}'.format(value)
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._tag.is_alive
 
     def update(self):
         """Update state."""
@@ -285,15 +281,11 @@ class WirelessTagBaseSensor(Entity):
         return {
             ATTR_BATTERY_LEVEL: self._tag.battery_remaining,
             ATTR_VOLTAGE: '{:.2f}V'.format(self._tag.battery_volts),
-            ATTR_TAG_TYPE: self._tag.tag_type,
             ATTR_TAG_COMMENT: self._tag.comment,
-            ATTR_TAG_IS_ALIVE: self._tag.is_alive,
             ATTR_TAG_SIGNAL_STRAIGHT: '{}dBm'.format(
                 self._tag.signal_straight),
             ATTR_TAG_BEEP_DURATION: self._tag.beep_option,
             ATTR_TAG_OUT_OF_RANGE: not self._tag.is_in_range,
-            ATTR_TAG_HW_REVISION: self._tag.hw_revision,
-            ATTR_TAG_FW_VERSION: self._tag.sw_version,
             ATTR_TAG_POWER_CONSUMPTION: '{:.2f}%'.format(
                 self._tag.power_consumption)
         }
