@@ -6,16 +6,18 @@ https://home-assistant.io/components/sensor.template/
 """
 import asyncio
 import logging
+from typing import Optional
 
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
+from homeassistant.components.sensor import ENTITY_ID_FORMAT, \
+    PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
     CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE, ATTR_ENTITY_ID,
     CONF_SENSORS, EVENT_HOMEASSISTANT_START, CONF_FRIENDLY_NAME_TEMPLATE,
-    MATCH_ALL)
+    MATCH_ALL, CONF_DEVICE_CLASS)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
@@ -30,6 +32,7 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_FRIENDLY_NAME_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })
 
@@ -52,6 +55,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         friendly_name_template = device_config.get(CONF_FRIENDLY_NAME_TEMPLATE)
         unit_of_measurement = device_config.get(ATTR_UNIT_OF_MEASUREMENT)
+        device_class = device_config.get(CONF_DEVICE_CLASS)
 
         entity_ids = set()
         manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
@@ -86,7 +90,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 state_template,
                 icon_template,
                 entity_picture_template,
-                entity_ids)
+                entity_ids,
+                device_class)
             )
     if not sensors:
         _LOGGER.error("No sensors added")
@@ -101,7 +106,7 @@ class SensorTemplate(Entity):
 
     def __init__(self, hass, device_id, friendly_name, friendly_name_template,
                  unit_of_measurement, state_template, icon_template,
-                 entity_picture_template, entity_ids):
+                 entity_picture_template, entity_ids, device_class):
         """Initialize the sensor."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device_id,
@@ -116,6 +121,7 @@ class SensorTemplate(Entity):
         self._icon = None
         self._entity_picture = None
         self._entities = entity_ids
+        self._device_class = device_class
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -150,6 +156,11 @@ class SensorTemplate(Entity):
     def icon(self):
         """Return the icon to use in the frontend, if any."""
         return self._icon
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the device class of the sensor."""
+        return self._device_class
 
     @property
     def entity_picture(self):

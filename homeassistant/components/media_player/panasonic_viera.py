@@ -56,8 +56,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = discovery_info.get('name')
         host = discovery_info.get('host')
         port = discovery_info.get('port')
+        udn = discovery_info.get('udn')
+        if udn and udn.startswith('uuid:'):
+            uuid = udn[len('uuid:'):]
+        else:
+            uuid = None
         remote = RemoteControl(host, port)
-        add_devices([PanasonicVieraTVDevice(mac, name, remote)])
+        add_devices([PanasonicVieraTVDevice(mac, name, remote, uuid)])
         return True
 
     host = config.get(CONF_HOST)
@@ -70,18 +75,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class PanasonicVieraTVDevice(MediaPlayerDevice):
     """Representation of a Panasonic Viera TV."""
 
-    def __init__(self, mac, name, remote):
+    def __init__(self, mac, name, remote, uuid=None):
         """Initialize the Panasonic device."""
         import wakeonlan
         # Save a reference to the imported class
         self._wol = wakeonlan
         self._mac = mac
         self._name = name
+        self._uuid = uuid
         self._muted = False
         self._playing = True
         self._state = STATE_UNKNOWN
         self._remote = remote
         self._volume = 0
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID of this Viera TV."""
+        return self._uuid
 
     def update(self):
         """Retrieve the latest data."""
@@ -138,20 +149,20 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     def turn_off(self):
         """Turn off media player."""
         if self._state != STATE_OFF:
-            self.send_key('NRC_POWER-ONOFF')
+            self._remote.turn_off()
             self._state = STATE_OFF
 
     def volume_up(self):
         """Volume up the media player."""
-        self.send_key('NRC_VOLUP-ONOFF')
+        self._remote.volume_up()
 
     def volume_down(self):
         """Volume down media player."""
-        self.send_key('NRC_VOLDOWN-ONOFF')
+        self._remote.volume_down()
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self.send_key('NRC_MUTE-ONOFF')
+        self._remote.set_mute(mute)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -172,20 +183,20 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
     def media_play(self):
         """Send play command."""
         self._playing = True
-        self.send_key('NRC_PLAY-ONOFF')
+        self._remote.media_play()
 
     def media_pause(self):
         """Send media pause command to media player."""
         self._playing = False
-        self.send_key('NRC_PAUSE-ONOFF')
+        self._remote.media_pause()
 
     def media_next_track(self):
         """Send next track command."""
-        self.send_key('NRC_FF-ONOFF')
+        self._remote.media_next_track()
 
     def media_previous_track(self):
         """Send the previous track command."""
-        self.send_key('NRC_REW-ONOFF')
+        self._remote.media_previous_track()
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media."""

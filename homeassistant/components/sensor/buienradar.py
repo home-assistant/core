@@ -161,7 +161,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(BrSensor(sensor_type, config.get(CONF_NAME, 'br')))
+        dev.append(BrSensor(sensor_type, config.get(CONF_NAME, 'br'),
+                            coordinates))
     async_add_devices(dev)
 
     data = BrData(hass, coordinates, timeframe, dev)
@@ -172,9 +173,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class BrSensor(Entity):
     """Representation of an Buienradar sensor."""
 
-    def __init__(self, sensor_type, client_name):
+    def __init__(self, sensor_type, client_name, coordinates):
         """Initialize the sensor."""
-        from buienradar.buienradar import (PRECIPITATION_FORECAST)
+        from buienradar.buienradar import (PRECIPITATION_FORECAST, CONDITION)
 
         self.client_name = client_name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -185,9 +186,21 @@ class BrSensor(Entity):
         self._attribution = None
         self._measured = None
         self._stationname = None
+        self._unique_id = self.uid(coordinates)
+
+        # All continuous sensors should be forced to be updated
+        self._force_update = self.type != SYMBOL and \
+            not self.type.startswith(CONDITION)
 
         if self.type.startswith(PRECIPITATION_FORECAST):
             self._timeframe = None
+
+    def uid(self, coordinates):
+        """Generate a unique id using coordinates and sensor type."""
+        # The combination of the location, name an sensor type is unique
+        return "%2.6f%2.6f%s" % (coordinates[CONF_LATITUDE],
+                                 coordinates[CONF_LONGITUDE],
+                                 self.type)
 
     def load_data(self, data):
         """Load the sensor with relevant data."""
@@ -197,6 +210,11 @@ class BrSensor(Entity):
                                            IMAGE, MEASURED,
                                            PRECIPITATION_FORECAST, STATIONNAME,
                                            TIMEFRAME)
+
+        # Check if we have a new measurement,
+        # otherwise we do not have to update the sensor
+        if self._measured == data.get(MEASURED):
+            return False
 
         self._attribution = data.get(ATTRIBUTION)
         self._stationname = data.get(STATIONNAME)
@@ -246,17 +264,11 @@ class BrSensor(Entity):
                 return False
             else:
                 try:
-                    new_state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                    self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                    return True
                 except IndexError:
                     _LOGGER.warning("No forecast for fcday=%s...", fcday)
                     return False
-
-                if new_state != self._state:
-                    self._state = new_state
-                    return True
-                return False
-
-            return False
 
         if self.type == SYMBOL or self.type.startswith(CONDITION):
             # update weather symbol & status text
@@ -286,26 +298,25 @@ class BrSensor(Entity):
         if self.type.startswith(PRECIPITATION_FORECAST):
             # update nested precipitation forecast sensors
             nested = data.get(PRECIPITATION_FORECAST)
-            new_state = nested.get(self.type[len(PRECIPITATION_FORECAST)+1:])
             self._timeframe = nested.get(TIMEFRAME)
             # pylint: disable=protected-access
-            if new_state != self._state:
-                self._state = new_state
-                return True
-            return False
+            self._state = nested.get(self.type[len(PRECIPITATION_FORECAST)+1:])
+            return True
 
         # update all other sensors
-        new_state = data.get(self.type)
         # pylint: disable=protected-access
-        if new_state != self._state:
-            self._state = new_state
-            return True
-        return False
+        self._state = data.get(self.type)
+        return True
 
     @property
     def attribution(self):
         """Return the attribution."""
         return self._attribution
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def name(self):
@@ -359,6 +370,11 @@ class BrSensor(Entity):
     def icon(self):
         """Return possible sensor specific icon."""
         return SENSOR_TYPES[self.type][2]
+
+    @property
+    def force_update(self):
+        """Return true for continuous sensors, false for discrete sensors."""
+        return self._force_update
 
 
 class BrData(object):

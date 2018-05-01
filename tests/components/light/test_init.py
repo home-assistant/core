@@ -118,7 +118,7 @@ class TestLight(unittest.TestCase):
 
     def test_services(self):
         """Test the provided services."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
 
         platform.init()
         self.assertTrue(
@@ -267,7 +267,7 @@ class TestLight(unittest.TestCase):
 
     def test_broken_light_profiles(self):
         """Test light profiles."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -282,7 +282,7 @@ class TestLight(unittest.TestCase):
 
     def test_light_profiles(self):
         """Test light profiles."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)

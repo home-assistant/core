@@ -6,6 +6,7 @@ https://home-assistant.io/components/automation/
 """
 import asyncio
 from functools import partial
+import importlib
 import logging
 
 import voluptuous as vol
@@ -22,7 +23,6 @@ from homeassistant.helpers import extract_domain_configs, script, condition
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
-from homeassistant.loader import get_platform
 from homeassistant.util.dt import utcnow
 import homeassistant.helpers.config_validation as cv
 
@@ -58,12 +58,14 @@ _LOGGER = logging.getLogger(__name__)
 
 def _platform_validator(config):
     """Validate it is a valid  platform."""
-    platform = get_platform(DOMAIN, config[CONF_PLATFORM])
+    try:
+        platform = importlib.import_module(
+            'homeassistant.components.automation.{}'.format(
+                config[CONF_PLATFORM]))
+    except ImportError:
+        raise vol.Invalid('Invalid platform specified') from None
 
-    if not hasattr(platform, 'TRIGGER_SCHEMA'):
-        return config
-
-    return getattr(platform, 'TRIGGER_SCHEMA')(config)
+    return platform.TRIGGER_SCHEMA(config)
 
 
 _TRIGGER_SCHEMA = vol.All(
@@ -71,7 +73,7 @@ _TRIGGER_SCHEMA = vol.All(
     [
         vol.All(
             vol.Schema({
-                vol.Required(CONF_PLATFORM): cv.platform_validator(DOMAIN)
+                vol.Required(CONF_PLATFORM): str
             }, extra=vol.ALLOW_EXTRA),
             _platform_validator
         ),

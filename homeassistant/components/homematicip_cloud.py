@@ -7,13 +7,15 @@ https://home-assistant.io/components/homematicip_cloud/
 
 import asyncio
 import logging
+
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
+from homeassistant.core import callback
 
 REQUIREMENTS = ['homematicip==0.9.2.4']
 
@@ -96,6 +98,7 @@ class HomematicipConnector:
     def __init__(self, hass, config, websession):
         """Initialize HomematicIP cloud connection."""
         from homematicip.async.home import AsyncHome
+
         self._hass = hass
         self._ws_close_requested = False
         self._retry_task = None
@@ -106,12 +109,67 @@ class HomematicipConnector:
         self.home = AsyncHome(hass.loop, websession)
         self.home.set_auth_token(_authtoken)
 
+        self.home.on_update(self.async_update)
+        self._accesspoint_connected = True
+
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.close())
 
     async def init(self):
         """Initialize connection."""
         await self.home.init(self._accesspoint)
         await self.home.get_current_state()
+
+    @callback
+    def async_update(self, *args, **kwargs):
+        """Async update the home device.
+
+        Triggered when the hmip HOME_CHANGED event has fired.
+        There are several occasions for this event to happen.
+        We are only interested to check whether the access point
+        is still connected. If not, device state changes cannot
+        be forwarded to hass. So if access point is disconnected all devices
+        are set to unavailable.
+        """
+        if not self.home.connected:
+            _LOGGER.error(
+                "HMIP access point has lost connection with the cloud")
+            self._accesspoint_connected = False
+            self.set_all_to_unavailable()
+        elif not self._accesspoint_connected:
+            # Explicitly getting an update as device states might have
+            # changed during access point disconnect."""
+
+            job = self._hass.async_add_job(self.get_state())
+            job.add_done_callback(self.get_state_finished)
+
+    async def get_state(self):
+        """Update hmip state and tell hass."""
+        await self.home.get_current_state()
+        self.update_all()
+
+    def get_state_finished(self, future):
+        """Execute when get_state coroutine has finished."""
+        from homematicip.base.base_connection import HmipConnectionError
+
+        try:
+            future.result()
+        except HmipConnectionError:
+            # Somehow connection could not recover. Will disconnect and
+            # so reconnect loop is taking over.
+            _LOGGER.error(
+                "updating state after himp access point reconnect failed.")
+            self._hass.async_add_job(self.home.disable_events())
+
+    def set_all_to_unavailable(self):
+        """Set all devices to unavailable and tell Hass."""
+        for device in self.home.devices:
+            device.unreach = True
+        self.update_all()
+
+    def update_all(self):
+        """Signal all devices to update their state."""
+        for device in self.home.devices:
+            device.fire_update_event()
 
     async def _handle_connection(self):
         """Handle websocket connection."""

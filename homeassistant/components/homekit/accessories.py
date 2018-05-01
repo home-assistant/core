@@ -7,15 +7,17 @@ import logging
 from pyhap.accessory import Accessory, Bridge, Category
 from pyhap.accessory_driver import AccessoryDriver
 
+from homeassistant.const import __version__
 from homeassistant.core import callback as ha_callback
+from homeassistant.core import split_entity_id
 from homeassistant.helpers.event import (
     async_track_state_change, track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DEBOUNCE_TIMEOUT, BRIDGE_MODEL, BRIDGE_NAME, MANUFACTURER,
-    SERV_ACCESSORY_INFO, CHAR_MANUFACTURER,
-    CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
+    DEBOUNCE_TIMEOUT, BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER,
+    MANUFACTURER, SERV_ACCESSORY_INFO, CHAR_FIRMWARE_REVISION,
+    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
 from .util import (
     show_setup_message, dismiss_setup_message)
 
@@ -84,14 +86,17 @@ def setup_char(char_name, service, value=None, properties=None, callback=None):
     return char
 
 
-def set_accessory_info(acc, name, model, manufacturer=MANUFACTURER,
-                       serial_number='0000'):
+def set_accessory_info(acc, name, model, serial_number,
+                       manufacturer=MANUFACTURER,
+                       firmware_revision=__version__):
     """Set the default accessory information."""
     service = acc.get_service(SERV_ACCESSORY_INFO)
     service.get_characteristic(CHAR_NAME).set_value(name)
     service.get_characteristic(CHAR_MODEL).set_value(model)
     service.get_characteristic(CHAR_MANUFACTURER).set_value(manufacturer)
     service.get_characteristic(CHAR_SERIAL_NUMBER).set_value(serial_number)
+    service.get_characteristic(CHAR_FIRMWARE_REVISION) \
+        .set_value(firmware_revision)
 
 
 class HomeAccessory(Accessory):
@@ -100,7 +105,8 @@ class HomeAccessory(Accessory):
     def __init__(self, hass, name, entity_id, aid, category):
         """Initialize a Accessory object."""
         super().__init__(name, aid=aid)
-        set_accessory_info(self, name, model=entity_id)
+        domain = split_entity_id(entity_id)[0].replace("_", " ").title()
+        set_accessory_info(self, name, model=domain, serial_number=entity_id)
         self.category = getattr(Category, category, Category.OTHER)
         self.entity_id = entity_id
         self.hass = hass
@@ -137,7 +143,8 @@ class HomeBridge(Bridge):
     def __init__(self, hass, name=BRIDGE_NAME):
         """Initialize a Bridge object."""
         super().__init__(name)
-        set_accessory_info(self, name, model=BRIDGE_MODEL)
+        set_accessory_info(self, name, model=BRIDGE_MODEL,
+                           serial_number=BRIDGE_SERIAL_NUMBER)
         self.hass = hass
 
     def _set_services(self):

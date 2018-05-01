@@ -19,12 +19,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 CONF_MAX_ENTRIES = 'max_entries'
+CONF_FIRE_EVENT = 'fire_event'
 CONF_MESSAGE = 'message'
 CONF_LEVEL = 'level'
 CONF_LOGGER = 'logger'
 
 DATA_SYSTEM_LOG = 'system_log'
 DEFAULT_MAX_ENTRIES = 50
+DEFAULT_FIRE_EVENT = False
 DEPENDENCIES = ['http']
 DOMAIN = 'system_log'
 
@@ -37,6 +39,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_MAX_ENTRIES, default=DEFAULT_MAX_ENTRIES):
             cv.positive_int,
+        vol.Optional(CONF_FIRE_EVENT, default=DEFAULT_FIRE_EVENT): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -97,11 +100,12 @@ def _exception_as_string(exc_info):
 class LogErrorHandler(logging.Handler):
     """Log handler for error messages."""
 
-    def __init__(self, hass, maxlen):
+    def __init__(self, hass, maxlen, fire_event):
         """Initialize a new LogErrorHandler."""
         super().__init__()
         self.hass = hass
         self.records = deque(maxlen=maxlen)
+        self.fire_event = fire_event
 
     def _create_entry(self, record, call_stack):
         return {
@@ -130,7 +134,8 @@ class LogErrorHandler(logging.Handler):
 
             entry = self._create_entry(record, stack)
             self.records.appendleft(entry)
-            self.hass.bus.fire(EVENT_SYSTEM_LOG, entry)
+            if self.fire_event:
+                self.hass.bus.fire(EVENT_SYSTEM_LOG, entry)
 
 
 @asyncio.coroutine
@@ -140,7 +145,8 @@ def async_setup(hass, config):
     if conf is None:
         conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
-    handler = LogErrorHandler(hass, conf.get(CONF_MAX_ENTRIES))
+    handler = LogErrorHandler(hass, conf[CONF_MAX_ENTRIES],
+                              conf[CONF_FIRE_EVENT])
     logging.getLogger().addHandler(handler)
 
     hass.http.register_view(AllErrorsView(handler))

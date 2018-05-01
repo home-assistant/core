@@ -243,7 +243,7 @@ defusedxml==0.5.0
 
 # homeassistant.components.sensor.deluge
 # homeassistant.components.switch.deluge
-deluge-client==1.0.5
+deluge-client==1.4.0
 
 # homeassistant.components.media_player.denonavr
 denonavr==0.6.1
@@ -275,9 +275,6 @@ dsmr_parser==0.11
 # homeassistant.components.dweet
 # homeassistant.components.sensor.dweet
 dweepy==0.3.0
-
-# homeassistant.components.sensor.eliqonline
-eliqonline==1.0.13
 
 # homeassistant.components.enocean
 enocean==0.40
@@ -553,7 +550,7 @@ nad_receiver==0.0.9
 nanoleaf==0.4.1
 
 # homeassistant.components.discovery
-netdisco==1.3.1
+netdisco==1.4.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -566,7 +563,7 @@ nuheat==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
-numpy==1.14.2
+numpy==1.14.3
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -642,7 +639,7 @@ proliphix==0.4.1
 prometheus_client==0.1.0
 
 # homeassistant.components.sensor.systemmonitor
-psutil==5.4.3
+psutil==5.4.5
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.2
@@ -823,7 +820,7 @@ pykwb==0.0.8
 pylacrosse==0.3.1
 
 # homeassistant.components.sensor.lastfm
-pylast==2.1.0
+pylast==2.2.0
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
@@ -1027,7 +1024,7 @@ python-synology==0.1.0
 python-tado==0.2.3
 
 # homeassistant.components.telegram_bot
-python-telegram-bot==10.0.1
+python-telegram-bot==10.0.2
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
@@ -1072,7 +1069,7 @@ pytradfri[async]==5.4.2
 pyunifi==2.13
 
 # homeassistant.components.upnp
-pyupnp-async==0.1.0.1
+pyupnp-async==0.1.0.2
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
@@ -1218,7 +1215,7 @@ spotcrime==1.0.3
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.6
+sqlalchemy==1.2.7
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -1236,7 +1233,7 @@ tahoma-api==0.0.13
 tank_utility==1.4.0
 
 # homeassistant.components.binary_sensor.tapsaff
-tapsaff==0.1.3
+tapsaff==0.2.0
 
 # homeassistant.components.tellstick
 tellcore-net==0.4
@@ -1364,7 +1361,7 @@ yeelight==0.4.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.04.16
+youtube_dl==2018.04.25
 
 # homeassistant.components.light.zengge
 zengge==0.2
