@@ -33,8 +33,7 @@ CONF_STATION = 'station'
 CONF_ZONE_ID = 'zone_id'
 CONF_WMO_ID = 'wmo_id'
 
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=60)
-LAST_UPDATE = 0
+MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=35)
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
@@ -114,13 +113,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error("Could not get BOM weather station from lat/lon")
             return False
 
-    rest = BOMCurrentData(hass, station)
+    bom_data = BOMCurrentData(hass, station)
     try:
-        rest.update()
+        bom_data.update()
     except ValueError as err:
         _LOGGER.error("Received error from BOM_Current: %s", err)
         return False
-    add_devices([BOMCurrentSensor(rest, variable, config.get(CONF_NAME))
+    add_devices([BOMCurrentSensor(bom_data, variable, config.get(CONF_NAME))
                  for variable in config[CONF_MONITORED_CONDITIONS]])
     return True
 
@@ -128,9 +127,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class BOMCurrentSensor(Entity):
     """Implementation of a BOM current sensor."""
 
-    def __init__(self, rest, condition, stationname):
+    def __init__(self, bom_data, condition, stationname):
         """Initialize the sensor."""
-        self.rest = rest
+        self.bom_data = bom_data
         self._condition = condition
         self.stationname = stationname
 
@@ -146,8 +145,8 @@ class BOMCurrentSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.rest.data and self._condition in self.rest.data:
-            return self.rest.data[self._condition]
+        if self.bom_data.data and self._condition in self.bom_data.data:
+            return self.bom_data.data[self._condition]
 
         return STATE_UNKNOWN
 
@@ -156,11 +155,11 @@ class BOMCurrentSensor(Entity):
         """Return the state attributes of the device."""
         attr = {}
         attr['Sensor Id'] = self._condition
-        attr['Zone Id'] = self.rest.data['history_product']
-        attr['Station Id'] = self.rest.data['wmo']
-        attr['Station Name'] = self.rest.data['name']
+        attr['Zone Id'] = self.bom_data.data['history_product']
+        attr['Station Id'] = self.bom_data.data['wmo']
+        attr['Station Name'] = self.bom_data.data['name']
         attr['Last Update'] = datetime.datetime.strptime(str(
-            self.rest.data['local_date_time_full']), '%Y%m%d%H%M%S')
+            self.bom_data.data['local_date_time_full']), '%Y%m%d%H%M%S')
         attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         return attr
 
@@ -171,7 +170,7 @@ class BOMCurrentSensor(Entity):
 
     def update(self):
         """Update current conditions."""
-        self.rest.update()
+        self.bom_data.update()
 
 
 class BOMCurrentData(object):
@@ -182,7 +181,6 @@ class BOMCurrentData(object):
         self._hass = hass
         self._zone_id, self._wmo_id = station_id.split('.')
         self.data = None
-        self._lastupdate = LAST_UPDATE
 
     def _build_url(self):
         url = _RESOURCE.format(self._zone_id, self._zone_id, self._wmo_id)
@@ -192,20 +190,9 @@ class BOMCurrentData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from BOM."""
-        if self._lastupdate != 0 and \
-            ((datetime.datetime.now() - self._lastupdate) <
-             datetime.timedelta(minutes=35)):
-            _LOGGER.info(
-                "BOM was updated %s minutes ago, skipping update as"
-                " < 35 minutes", (datetime.datetime.now() - self._lastupdate))
-            return self._lastupdate
-
         try:
             result = requests.get(self._build_url(), timeout=10).json()
             self.data = result['observations']['data'][0]
-            self._lastupdate = datetime.datetime.strptime(
-                str(self.data['local_date_time_full']), '%Y%m%d%H%M%S')
-            return self._lastupdate
         except ValueError as err:
             _LOGGER.error("Check BOM %s", err.args)
             self.data = None
