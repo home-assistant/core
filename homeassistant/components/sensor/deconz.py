@@ -8,6 +8,7 @@ from homeassistant.components.deconz import (
     DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_VOLTAGE
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
@@ -32,13 +33,27 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     entities = []
 
     for sensor in sensors.values():
-        if sensor and sensor.type in DECONZ_SENSOR:
+        if sensor.type in DECONZ_SENSOR:
             if sensor.type in DECONZ_REMOTE:
                 if sensor.battery:
                     entities.append(DeconzBattery(sensor))
             else:
                 entities.append(DeconzSensor(sensor))
     async_add_devices(entities, True)
+
+    async def async_new_sensor(sensor):
+        """Called when a new sensor device has been added to deCONZ."""
+        if sensor.type in DECONZ_SENSOR:
+            print(sensor.__dict__)
+            if sensor.type in DECONZ_REMOTE:
+                if sensor.battery:
+                    print('battery')
+                    async_add_devices(DeconzBattery(sensor), True)
+            else:
+                print('sensor')
+                async_add_devices(DeconzSensor(sensor), True)
+    async_dispatcher_connect(
+        hass, DATA_DECONZ + '_new_sensor', async_new_sensor)
 
 
 class DeconzSensor(Entity):

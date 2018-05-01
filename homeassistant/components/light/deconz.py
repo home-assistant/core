@@ -12,6 +12,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
     SUPPORT_FLASH, SUPPORT_TRANSITION, Light)
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['deconz']
@@ -36,6 +37,14 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         if group.lights:  # Don't create entity for group not containing light
             entities.append(DeconzLight(group))
     async_add_devices(entities, True)
+
+    async def async_new_light(light):
+        """Called when a new light has been added to deCONZ."""
+        print(light.__dict__)
+        print('light')
+        async_add_devices(DeconzLight(light), True)
+    async_dispatcher_connect(
+        hass, DATA_DECONZ + '_new_light', async_new_light)
 
 
 class DeconzLight(Light):

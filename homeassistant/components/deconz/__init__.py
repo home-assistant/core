@@ -11,6 +11,8 @@ from homeassistant.const import (
     CONF_ID, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.util import slugify
 from homeassistant.util.json import load_json
 
@@ -19,7 +21,7 @@ from .config_flow import configured_hosts
 from .const import (
     CONFIG_FILE, DATA_DECONZ_EVENT, DATA_DECONZ_ID, DOMAIN, _LOGGER)
 
-REQUIREMENTS = ['pydeconz==36']
+REQUIREMENTS = ['pydeconz==37']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -75,8 +77,14 @@ async def async_setup_entry(hass, config_entry):
             "Config entry failed since one deCONZ instance already exists")
         return False
 
+    @callback
+    def async_add_device_callback(device_type, device):
+        """Called when a new device has been created in deCONZ."""
+        async_dispatcher_send(hass, DOMAIN + '_new_' + device_type, device)
+
     session = aiohttp_client.async_get_clientsession(hass)
-    deconz = DeconzSession(hass.loop, session, **config_entry.data)
+    deconz = DeconzSession(hass.loop, session, **config_entry.data,
+                           async_add_device=async_add_device_callback)
     result = await deconz.async_load_parameters()
     if result is False:
         _LOGGER.error("Failed to communicate with deCONZ")
@@ -92,6 +100,14 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DATA_DECONZ_EVENT] = [DeconzEvent(
         hass, sensor) for sensor in deconz.sensors.values()
                                     if sensor.type in DECONZ_REMOTE]
+
+    async def async_new_remote(remote):
+        """Create deCONZ event if new sensor is a remote."""
+        if remote.type in DECONZ_REMOTE:
+            print(remote.__dict__)
+            print('remote')
+            hass.data[DATA_DECONZ_EVENT] = DeconzEvent(hass, remote)
+    async_dispatcher_connect(hass, DOMAIN + '_new_sensor', async_new_remote)
 
     deconz.start()
 
