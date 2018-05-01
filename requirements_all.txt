@@ -1069,7 +1069,7 @@ pytradfri[async]==5.4.2
 pyunifi==2.13
 
 # homeassistant.components.upnp
-pyupnp-async==0.1.0.1
+pyupnp-async==0.1.0.2
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
