@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/media_player/
 """
 import asyncio
+import base64
 from datetime import timedelta
 import functools as ft
 import collections
@@ -17,6 +18,7 @@ from aiohttp.hdrs import CONTENT_TYPE, CACHE_CONTROL
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.const import (
     STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, ATTR_ENTITY_ID,
@@ -31,6 +33,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
+from homeassistant.components import websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
@@ -361,11 +364,22 @@ def set_shuffle(hass, shuffle, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_SHUFFLE_SET, data)
 
 
+WS_TYPE_MEDIA_PLAYER_THUMBNAIL = 'media_player_thumbnail'
+SCHEMA_WEBSOCKET_GET_THUMBNAIL = \
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+        'type': WS_TYPE_MEDIA_PLAYER_THUMBNAIL,
+        'entity_id': cv.entity_id
+    })
+
+
 async def async_setup(hass, config):
     """Track states and offer events for media_players."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_MEDIA_PLAYER_THUMBNAIL, websocket_handle_thumbnail,
+        SCHEMA_WEBSOCKET_GET_THUMBNAIL)
     hass.http.register_view(MediaPlayerImageView(component))
 
     await component.async_setup(config)
@@ -942,3 +956,36 @@ class MediaPlayerImageView(HomeAssistantView):
         headers = {CACHE_CONTROL: 'max-age=3600'}
         return web.Response(
             body=data, content_type=content_type, headers=headers)
+
+
+@callback
+def websocket_handle_thumbnail(hass, connection, msg):
+    """Handle get media player cover command.
+
+    Async friendly.
+    """
+    component = hass.data[DOMAIN]
+    player = component.get_entity(msg['entity_id'])
+
+    if player is None:
+        connection.send_message_outside(websocket_api.error_message(
+            msg['id'], 'entity_not_found', 'Entity not found'))
+        return
+
+    async def send_image():
+        """Send image."""
+        data, content_type = await player.async_get_media_image()
+
+        if data is None:
+            connection.send_message_outside(websocket_api.error_message(
+                msg['id'], 'thumbnail_fetch_failed',
+                'Failed to fetch thumbnail'))
+            return
+
+        connection.send_message_outside(websocket_api.result_message(
+            msg['id'], {
+                'content_type': content_type,
+                'content': base64.b64encode(data).decode('utf-8')
+            }))
+
+    hass.async_add_job(send_image())
