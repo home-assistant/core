@@ -8,6 +8,7 @@ Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
 """
 from datetime import timedelta
 import logging
+import socket
 import asyncio
 import aiohttp
 
