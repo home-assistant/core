@@ -10,8 +10,7 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from homeassistant import (
-    auth, core as ha, loader, data_entry_flow, config_entries)
+from homeassistant import auth, core as ha, data_entry_flow, config_entries
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
@@ -137,9 +136,6 @@ def async_test_home_assistant(loop):
     hass.config.time_zone = date_util.get_time_zone('US/Pacific')
     hass.config.units = METRIC_SYSTEM
     hass.config.skip_pip = True
-
-    if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
-        yield from loop.run_in_executor(None, loader.prepare, hass)
 
     hass.state = ha.CoreState.running
 

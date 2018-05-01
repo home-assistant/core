@@ -548,7 +548,8 @@ def _identify_config_schema(module):
     return '', schema
 
 
-def merge_packages_config(config, packages, _log_pkg_error=_log_pkg_error):
+def merge_packages_config(hass, config, packages,
+                          _log_pkg_error=_log_pkg_error):
     """Merge packages into the top-level configuration. Mutate config."""
     # pylint: disable=too-many-nested-blocks
     PACKAGES_CONFIG_SCHEMA(packages)
@@ -556,7 +557,7 @@ def merge_packages_config(config, packages, _log_pkg_error=_log_pkg_error):
         for comp_name, comp_conf in pack_conf.items():
             if comp_name == CONF_CORE:
                 continue
-            component = get_component(comp_name)
+            component = get_component(hass, comp_name)
 
             if component is None:
                 _log_pkg_error(pack_name, comp_name, config, "does not exist")
@@ -625,7 +626,7 @@ def async_process_component_config(hass, config, domain):
 
     This method must be run in the event loop.
     """
-    component = get_component(domain)
+    component = get_component(hass, domain)
 
     if hasattr(component, 'CONFIG_SCHEMA'):
         try:
@@ -651,7 +652,7 @@ def async_process_component_config(hass, config, domain):
                 platforms.append(p_validated)
                 continue
 
-            platform = get_platform(domain, p_name)
+            platform = get_platform(hass, domain, p_name)
 
             if platform is None:
                 continue
