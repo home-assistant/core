@@ -10,7 +10,8 @@ import homeassistant.components.sensor as sensor
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 import homeassistant.util.dt as dt_util
 
-from tests.common import mock_mqtt_component, fire_mqtt_message
+from tests.common import mock_mqtt_component, fire_mqtt_message, \
+    assert_setup_component
 from tests.common import get_test_home_assistant, mock_component
 
 
@@ -350,3 +351,36 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         assert len(self.hass.states.all()) == 1
+
+    def test_invalid_device_class(self):
+        """Test device_class option with invalid value."""
+        with assert_setup_component(0):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'mqtt',
+                    'name': 'Test 1',
+                    'state_topic': 'test-topic',
+                    'device_class': 'foobarnotreal'
+                }
+            })
+
+    def test_valid_device_class(self):
+        """Test device_class option with valid values."""
+        assert setup_component(self.hass, 'sensor', {
+            'sensor': [{
+                'platform': 'mqtt',
+                'name': 'Test 1',
+                'state_topic': 'test-topic',
+                'device_class': 'temperature'
+            }, {
+                'platform': 'mqtt',
+                'name': 'Test 2',
+                'state_topic': 'test-topic',
+            }]
+        })
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_1')
+        assert state.attributes['device_class'] == 'temperature'
+        state = self.hass.states.get('sensor.test_2')
+        assert 'device_class' not in state.attributes
