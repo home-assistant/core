@@ -52,10 +52,12 @@ async def _verify_client(request):
 
     if client is None:
         # Still do a compare so we run same time as if a client was found.
-        hmac.compare_digest(client_secret, client_secret)
+        hmac.compare_digest(client_secret.encode('utf-8'),
+                            client_secret.encode('utf-8'))
         return None
 
-    if hmac.compare_digest(client_secret, client.secret):
+    if hmac.compare_digest(client_secret.encode('utf-8'),
+                           client.secret.encode('utf-8')):
         return client_id
 
     return None
