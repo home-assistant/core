@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'postnl'
 ICON = 'mdi:package-variant-closed'
 ATTRIBUTION = 'Information provided by PostNL'
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
