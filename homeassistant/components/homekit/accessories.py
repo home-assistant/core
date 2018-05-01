@@ -65,11 +65,11 @@ def debounce(func):
 def add_preload_service(acc, service, chars=None):
     """Define and return a service to be available for the accessory."""
     from pyhap.loader import get_serv_loader, get_char_loader
-    service = get_serv_loader().get(service)
+    service = get_serv_loader().get_service(service)
     if chars:
         chars = chars if isinstance(chars, list) else [chars]
         for char_name in chars:
-            char = get_char_loader().get(char_name)
+            char = get_char_loader().get_char(char_name)
             service.add_characteristic(char)
     acc.add_service(service)
     return service
