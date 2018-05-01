@@ -104,8 +104,6 @@ async def async_setup_entry(hass, config_entry):
     async def async_new_remote(remote):
         """Create deCONZ event if new sensor is a remote."""
         if remote.type in DECONZ_REMOTE:
-            print(remote.__dict__)
-            print('remote')
             hass.data[DATA_DECONZ_EVENT] = DeconzEvent(hass, remote)
     async_dispatcher_connect(hass, DOMAIN + '_new_sensor', async_new_remote)
 

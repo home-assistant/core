@@ -40,8 +40,6 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     async def async_new_light(light):
         """Called when a new light has been added to deCONZ."""
-        print(light.__dict__)
-        print('light')
         async_add_devices(DeconzLight(light), True)
     async_dispatcher_connect(
         hass, DATA_DECONZ + '_new_light', async_new_light)

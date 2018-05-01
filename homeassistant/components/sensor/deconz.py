@@ -44,13 +44,10 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     async def async_new_sensor(sensor):
         """Called when a new sensor device has been added to deCONZ."""
         if sensor.type in DECONZ_SENSOR:
-            print(sensor.__dict__)
             if sensor.type in DECONZ_REMOTE:
                 if sensor.battery:
-                    print('battery')
                     async_add_devices(DeconzBattery(sensor), True)
             else:
-                print('sensor')
                 async_add_devices(DeconzSensor(sensor), True)
     async_dispatcher_connect(
         hass, DATA_DECONZ + '_new_sensor', async_new_sensor)
