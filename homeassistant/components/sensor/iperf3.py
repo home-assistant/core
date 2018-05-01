@@ -29,7 +29,7 @@ ATTR_REMOTE_PORT = 'Remote Port'
 ATTR_TEST_STATUS = 'Test Status'
 ATTR_VERSION = 'Version'
 
-CONF_ATTRIBUTION = 'Data retrived using Iperf3'
+CONF_ATTRIBUTION = 'Data retrieved using Iperf3'
 CONF_SECOND = 'second'
 CONF_MINUTE = 'minute'
 CONF_HOUR = 'hour'
