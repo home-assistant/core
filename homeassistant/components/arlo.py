@@ -8,6 +8,7 @@ import logging
 
 import voluptuous as vol
 from requests.exceptions import HTTPError, ConnectTimeout
+from requests.adapters import HTTPAdapter
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
@@ -43,6 +44,8 @@ def setup(hass, config):
         from pyarlo import PyArlo
 
         arlo = PyArlo(username, password, preload=False)
+        arlo.session.mount(
+                'https://', HTTPAdapter(pool_maxsize=10, pool_block=True))
         if not arlo.is_connected:
             return False
         hass.data[DATA_ARLO] = arlo
