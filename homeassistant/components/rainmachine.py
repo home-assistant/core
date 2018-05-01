@@ -62,7 +62,7 @@ def setup(hass, config):
     port = conf[CONF_PORT]
     ssl = conf[CONF_SSL]
 
-    _LOGGER.debug('Setting up client')
+    _LOGGER.debug('Setting up RainMachine client')
 
     try:
         auth = Authenticator.create_local(
