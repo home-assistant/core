@@ -32,13 +32,15 @@ def setup_auth(app, trusted_networks, api_password):
 
         if (HTTP_HEADER_HA_AUTH in request.headers and
                 hmac.compare_digest(
-                    api_password, request.headers[HTTP_HEADER_HA_AUTH])):
+                    api_password.encode('utf-8'),
+                    request.headers[HTTP_HEADER_HA_AUTH].encode('utf-8'))):
             # A valid auth header has been set
             authenticated = True
 
         elif (DATA_API_PASSWORD in request.query and
-              hmac.compare_digest(api_password,
-                                  request.query[DATA_API_PASSWORD])):
+              hmac.compare_digest(
+                  api_password.encode('utf-8'),
+                  request.query[DATA_API_PASSWORD].encode('utf-8'))):
             authenticated = True
 
         elif (hdrs.AUTHORIZATION in request.headers and
@@ -70,7 +72,8 @@ def _is_trusted_ip(request, trusted_networks):
 def validate_password(request, api_password):
     """Test if password is valid."""
     return hmac.compare_digest(
-        api_password, request.app['hass'].http.api_password)
+        api_password.encode('utf-8'),
+        request.app['hass'].http.api_password.encode('utf-8'))
 
 
 async def async_validate_auth_header(api_password, request):
@@ -91,7 +94,8 @@ async def async_validate_auth_header(api_password, request):
         if username != 'homeassistant':
             return False
 
-        return hmac.compare_digest(api_password, password)
+        return hmac.compare_digest(api_password.encode('utf-8'),
+                                   password.encode('utf-8'))
 
     if auth_type != 'Bearer':
         return False
