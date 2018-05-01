@@ -135,7 +135,7 @@ VEGETATION_MAP = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set this component up under its platform."""
+    """Set up the RainMachine Switch platform."""
     if discovery_info is None:
         return
 
