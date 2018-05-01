@@ -164,7 +164,6 @@ class Switch(zha.Entity, BinarySensorDevice):
             """Handle attribute updates on this cluster."""
             if attrid == 0:
                 self._entity.set_state(value)
-                self._entity.schedule_update_ha_state()
 
         def zdo_command(self, *args, **kwargs):
             """Handle ZDO commands on this cluster."""
@@ -202,6 +201,7 @@ class Switch(zha.Entity, BinarySensorDevice):
 
     def __init__(self, **kwargs):
         """Initialize Switch."""
+        super().__init__(**kwargs)
         self._state = True
         self._level = 255
         from zigpy.zcl.clusters import general
@@ -209,7 +209,6 @@ class Switch(zha.Entity, BinarySensorDevice):
             general.OnOff.cluster_id: self.OnOffListener(self),
             general.LevelControl.cluster_id: self.LevelListener(self),
         }
-        super().__init__(**kwargs)
 
     @property
     def is_on(self) -> bool:
@@ -227,20 +226,20 @@ class Switch(zha.Entity, BinarySensorDevice):
             self._level = 0
         self._level = min(255, max(0, self._level + change))
         self._state = bool(self._level)
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     def set_level(self, level):
         """Set the level, setting state if appropriate."""
         self._level = level
         self._state = bool(self._level)
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     def set_state(self, state):
         """Set the state."""
         self._state = state
         if self._level == 0:
             self._level = 255
-        self.schedule_update_ha_state()
+        self.async_schedule_update_ha_state()
 
     async def async_update(self):
         """Retrieve latest state."""
