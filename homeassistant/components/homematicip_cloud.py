@@ -15,6 +15,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
+from homeassistant.core import callback
 
 REQUIREMENTS = ['homematicip==0.9.2.4']
 
@@ -108,7 +109,7 @@ class HomematicipConnector:
         self.home = AsyncHome(hass.loop, websession)
         self.home.set_auth_token(_authtoken)
 
-        self.home.on_update(self.update)
+        self.home.on_update(self.async_update)
         self._accesspoint_connected = True
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.close())
@@ -118,8 +119,9 @@ class HomematicipConnector:
         await self.home.init(self._accesspoint)
         await self.home.get_current_state()
 
-    def update(self, *args, **kwargs):
-        """Update the home device.
+    @callback
+    def async_update(self, *args, **kwargs):
+        """Async update the home device.
 
         Triggered when the hmip HOME_CHANGED event has fired.
         There are several occasions for this event to happen.
@@ -133,8 +135,7 @@ class HomematicipConnector:
                 "HMIP access point has lost connection with the cloud")
             self._accesspoint_connected = False
             self.set_all_to_unavailable()
-        else:
-            if not self._accesspoint_connected:
+        elif not self._accesspoint_connected:
                 # Explicitly getting an update as device states might have
                 # changed during access point disconnect."""
 
