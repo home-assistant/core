@@ -8,7 +8,7 @@ from homeassistant.components.rainmachine import (
     CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DEFAULT_ATTRIBUTION, MIN_SCAN_TIME,
     MIN_SCAN_TIME_FORCED)
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.util import Throttle
 
 DEPENDENCIES = ['rainmachine']
