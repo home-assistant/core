@@ -81,9 +81,9 @@ _TRIGGER_SCHEMA = vol.All(
     cv.ensure_list,
     [
         vol.All(
-            vol.Schema({
-                vol.Required(CONF_PLATFORM): cv.platform_validator(DOMAIN)
-            }, extra=vol.ALLOW_EXTRA),
+            # vol.Schema({
+            #     vol.Required(CONF_PLATFORM): cv.platform_validator(DOMAIN)
+            # }, extra=vol.ALLOW_EXTRA),
             _platform_validator
         ),
     ]

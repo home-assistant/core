@@ -34,6 +34,7 @@ def _hass_domain_validator(config):
 
 def _platform_validator(config):
     """Validate it is a valid  platform."""
+    return config
     p_name = config[CONF_PLATFORM]
     platform = get_platform(DOMAIN, p_name)
 
@@ -46,9 +47,9 @@ def _platform_validator(config):
 PLATFORM_SCHEMA = vol.Schema(
     vol.All(
         _hass_domain_validator,
-        vol.Schema({
-            vol.Required(CONF_PLATFORM): cv.platform_validator(DOMAIN)
-        }, extra=vol.ALLOW_EXTRA),
+        # vol.Schema({
+        #     vol.Required(CONF_PLATFORM): cv.platform_validator(DOMAIN)
+        # }, extra=vol.ALLOW_EXTRA),
         _platform_validator
     ), extra=vol.ALLOW_EXTRA)
 
