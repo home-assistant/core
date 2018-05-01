@@ -56,7 +56,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if DATA_VOLUMIO not in hass.data:
         hass.data[DATA_VOLUMIO] = dict()
 
-    # Is this a manual configuration?
+    # This is a manual configuration?
     if discovery_info is None:
         name = config.get(CONF_NAME)
         host = config.get(CONF_HOST)
