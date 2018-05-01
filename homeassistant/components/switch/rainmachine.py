@@ -2,8 +2,6 @@
 
 from logging import getLogger
 
-import voluptuous as vol
-
 from homeassistant.components.rainmachine import (
     CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DEFAULT_ATTRIBUTION, MIN_SCAN_TIME,
     MIN_SCAN_TIME_FORCED)
