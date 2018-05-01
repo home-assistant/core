@@ -32,6 +32,12 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['HAP-python==1.1.9']
 
+# #### Driver Status ####
+STATUS_READY = 0
+STATUS_RUNNING = 1
+STATUS_STOPPED = 2
+STATUS_WAIT = 3
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
@@ -65,8 +71,10 @@ async def async_setup(hass, config):
 
     def handle_homekit_service_start(service):
         """Handle start HomeKit service call."""
-        if homekit.started:
-            _LOGGER.warning('HomeKit is already running')
+        if homekit.status != STATUS_READY:
+            _LOGGER.warning(
+                'HomeKit is not ready. Either it is already running or has '
+                'been stopped.')
             return
         homekit.start()
 
@@ -162,7 +170,7 @@ class HomeKit():
         self._ip_address = ip_address
         self._filter = entity_filter
         self._config = entity_config
-        self.started = False
+        self.status = STATUS_READY
 
         self.bridge = None
         self.driver = None
@@ -191,9 +199,9 @@ class HomeKit():
 
     def start(self, *args):
         """Start the accessory driver."""
-        if self.started:
+        if self.status != STATUS_READY:
             return
-        self.started = True
+        self.status = STATUS_WAIT
 
         # pylint: disable=unused-variable
         from . import (  # noqa F401
@@ -209,12 +217,13 @@ class HomeKit():
 
         _LOGGER.debug('Driver start')
         self.hass.add_job(self.driver.start)
+        self.status = STATUS_RUNNING
 
     def stop(self, *args):
         """Stop the accessory driver."""
-        if not self.started:
+        if self.status != STATUS_RUNNING:
             return
+        self.status = STATUS_STOPPED
 
         _LOGGER.debug('Driver stop')
-        if self.driver and self.driver.run_sentinel:
-            self.hass.add_job(self.driver.stop)
+        self.hass.add_job(self.driver.stop)
