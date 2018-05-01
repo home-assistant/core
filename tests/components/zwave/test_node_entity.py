@@ -182,8 +182,6 @@ class TestZWaveNodeEntity(unittest.TestCase):
             query_stage='Dynamic', is_awake=True, is_ready=False,
             is_failed=False, is_info_received=True, max_baud_rate=40000,
             is_zwave_plus=False, capabilities=[], neighbors=[], location=None)
-        self.node.manufacturer_name = 'Test Manufacturer'
-        self.node.product_name = 'Test Product'
         self.entity = node_entity.ZWaveNodeEntity(self.node,
                                                   self.zwave_network)
 
@@ -362,3 +360,10 @@ class TestZWaveNodeEntity(unittest.TestCase):
         """Test unique_id."""
         self.assertEqual('567-test_manufacturer-test_product',
                          self.entity.unique_id)
+
+    def test_unique_id_missing_data(self):
+        """Test unique_id."""
+        self.node.manufacturer_name = None
+        entity = node_entity.ZWaveNodeEntity(self.node, self.zwave_network)
+
+        self.assertIsNone(entity.unique_id)

@@ -297,15 +297,46 @@ def setup(hass, config):
     def node_added(node):
         """Handle a new node on the network."""
         entity = ZWaveNodeEntity(node, network)
-        name = node_name(node)
-        generated_id = generate_entity_id(DOMAIN + '.{}', name, [])
-        node_config = device_config.get(generated_id)
-        if node_config.get(CONF_IGNORED):
-            _LOGGER.info(
-                "Ignoring node entity %s due to device settings",
-                generated_id)
+
+        def _add_node_to_component():
+            name = node_name(node)
+            generated_id = generate_entity_id(DOMAIN + '.{}', name, [])
+            node_config = device_config.get(generated_id)
+            if node_config.get(CONF_IGNORED):
+                _LOGGER.info(
+                    "Ignoring node entity %s due to device settings",
+                    generated_id)
+                return
+            component.add_entities([entity])
+
+        if entity.unique_id:
+            _add_node_to_component()
             return
-        component.add_entities([entity])
+
+        async def _check_node_ready():
+            """Wait for node to be parsed."""
+            start_time = dt_util.utcnow()
+            while True:
+                waited = int((dt_util.utcnow()-start_time).total_seconds())
+
+                if entity.unique_id:
+                    _LOGGER.info("Z-Wave node %d ready after %d seconds",
+                                 entity.node_id, waited)
+                    break
+                elif waited >= const.NODE_READY_WAIT_SECS:
+                    # Wait up to NODE_READY_WAIT_SECS seconds for the Z-Wave
+                    # node to be ready.
+                    _LOGGER.warning(
+                        "Z-Wave node %d not ready after %d seconds, "
+                        "continuing anyway",
+                        entity.node_id, waited)
+                    break
+                else:
+                    await asyncio.sleep(1, loop=hass.loop)
+
+            hass.async_add_job(_add_node_to_component)
+
+        hass.add_job(_check_node_ready)
 
     def network_ready():
         """Handle the query of all awake nodes."""
