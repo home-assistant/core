@@ -79,6 +79,7 @@ SERVICE_HANDLERS = {
     'bluesound': ('media_player', 'bluesound'),
     'songpal': ('media_player', 'songpal'),
     'kodi': ('media_player', 'kodi'),
+    'volumio': ('media_player', 'volumio'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
