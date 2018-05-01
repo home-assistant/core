@@ -661,6 +661,7 @@ omit =
     homeassistant/components/sensor/sma.py
     homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/sochain.py
+    homeassistant/components/sensor/socialblade.py
     homeassistant/components/sensor/sonarr.py
     homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/spotcrime.py
