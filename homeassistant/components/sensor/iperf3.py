@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensor.update()
 
     for sensor in dev:
-        hass.services.register(DOMAIN, sensor._service_name, update)
+        hass.services.register(DOMAIN, sensor.service_name, update)
 
 
 class Iperf3Sensor(Entity):
@@ -94,11 +94,9 @@ class Iperf3Sensor(Entity):
     def __init__(self, iperf3_data, sensor_type):
         """Initialize the sensor."""
         self._name = \
-            "{} {}".format(SENSOR_TYPES[sensor_type][0], iperf3_data._server)
+            "{} {}".format(SENSOR_TYPES[sensor_type][0], iperf3_data.server)
         self._state = None
         self._sensor_type = sensor_type
-        self._service_name = \
-            slugify("{} {}".format('update_iperf3', iperf3_data._server))
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self.iperf3_client = iperf3_data
 
@@ -106,6 +104,11 @@ class Iperf3Sensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def service_name(self):
+        """Return the service name of the sensor."""
+        return slugify("{} {}".format('update_iperf3', self.iperf3_client.server))
 
     @property
     def state(self):
@@ -165,6 +168,10 @@ class Iperf3Data(object):
                 hass, self.update, second=config.get(CONF_SECOND),
                 minute=config.get(CONF_MINUTE), hour=config.get(CONF_HOUR),
                 day=config.get(CONF_DAY))
+    @property
+    def server(self):
+        """Return server attribute."""
+        return self._server
 
     def update(self, now):
         """Get the latest data using Iperf3."""
