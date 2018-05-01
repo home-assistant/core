@@ -547,7 +547,7 @@ def test_bad_platform(hass):
 
 async def test_adding_unknown_device_to_config(mock_device_tracker_conf, hass):
     """Test the adding of unknown devices to configuration file."""
-    scanner = get_component(self.hass, 'device_tracker.test').SCANNER
+    scanner = get_component(hass, 'device_tracker.test').SCANNER
     scanner.reset()
     scanner.come_home('DEV1')
 

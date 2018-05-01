@@ -125,7 +125,7 @@ class ImageProcessingEntity(Entity):
 
         try:
             image = yield from camera.async_get_image(
-                self.hass, self.camera_entity, timeout=self.timeout)
+                self.camera_entity, timeout=self.timeout)
 
         except HomeAssistantError as err:
             _LOGGER.error("Error on receive image from entity: %s", err)

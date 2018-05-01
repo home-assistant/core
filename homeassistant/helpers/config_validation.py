@@ -283,21 +283,6 @@ def match_all(value):
     return value
 
 
-def platform_validator(domain):
-    """Validate if platform exists for given domain."""
-    def validator(value):
-        """Test if platform exists."""
-        # TEMP
-        return value
-        if value is None:
-            raise vol.Invalid('platform cannot be None')
-        if get_platform(domain, str(value)):
-            return value
-        raise vol.Invalid(
-            'platform {} does not exist for {}'.format(value, domain))
-    return validator
-
-
 def positive_timedelta(value: timedelta) -> timedelta:
     """Validate timedelta is positive."""
     if value < timedelta(0):

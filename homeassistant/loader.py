@@ -223,7 +223,8 @@ def _load_order_component(hass, comp_name: str, load_order: OrderedSet,
                           comp_name, dependency)
             return OrderedSet()
 
-        dep_load_order = _load_order_component(hass, dependency, load_order, loading)
+        dep_load_order = _load_order_component(
+            hass, dependency, load_order, loading)
 
         # length == 0 means error loading dependency or children
         if not dep_load_order:
