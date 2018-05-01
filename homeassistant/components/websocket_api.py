@@ -429,6 +429,7 @@ class ActiveConnection:
         return wsock
 
 
+@callback
 def handle_subscribe_events(hass, connection, msg):
     """Handle subscribe events command.
 
@@ -447,6 +448,7 @@ def handle_subscribe_events(hass, connection, msg):
     connection.to_write.put_nowait(result_message(msg['id']))
 
 
+@callback
 def handle_unsubscribe_events(hass, connection, msg):
     """Handle unsubscribe events command.
 
@@ -462,6 +464,7 @@ def handle_unsubscribe_events(hass, connection, msg):
             msg['id'], ERR_NOT_FOUND, 'Subscription not found.'))
 
 
+@callback
 def handle_call_service(hass, connection, msg):
     """Handle call service command.
 
@@ -476,6 +479,7 @@ def handle_call_service(hass, connection, msg):
     hass.async_add_job(call_service_helper(msg))
 
 
+@callback
 def handle_get_states(hass, connection, msg):
     """Handle get states command.
 
@@ -485,6 +489,7 @@ def handle_get_states(hass, connection, msg):
         msg['id'], hass.states.async_all()))
 
 
+@callback
 def handle_get_services(hass, connection, msg):
     """Handle get services command.
 
@@ -499,6 +504,7 @@ def handle_get_services(hass, connection, msg):
     hass.async_add_job(get_services_helper(msg))
 
 
+@callback
 def handle_get_config(hass, connection, msg):
     """Handle get config command.
 
@@ -508,6 +514,7 @@ def handle_get_config(hass, connection, msg):
         msg['id'], hass.config.as_dict()))
 
 
+@callback
 def handle_ping(hass, connection, msg):
     """Handle ping command.
 

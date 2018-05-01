@@ -132,4 +132,4 @@ class ImageProcessingEntity(Entity):
             return
 
         # process image data
-        yield from self.async_process_image(image)
+        yield from self.async_process_image(image.content)
