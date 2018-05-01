@@ -68,7 +68,8 @@ def setup(hass, config):
         auth = Authenticator.create_local(
             ip_address, password, port=port, https=ssl)
         client = Client(auth)
-        hass.data[DATA_RAINMACHINE] = client
+        mac = client.provision.wifi()['macAddress']
+        hass.data[DATA_RAINMACHINE] = (client, mac)
     except (HTTPError, ConnectTimeout, UnboundLocalError) as exc_info:
         _LOGGER.error('An error occurred: %s', str(exc_info))
         hass.components.persistent_notification.create(
