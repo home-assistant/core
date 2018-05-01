@@ -10,10 +10,9 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON, ATTR_LATITUDE,
-    ATTR_LOCATION, ATTR_LONGITUDE, ATTR_STATE, ATTR_UNIT_OF_MEASUREMENT,
-    CONF_ADDRESS, CONF_EMAIL, CONF_ENTITY_ID, CONF_SENSORS, CONF_STATE,
-    CONF_URL)
+    ATTR_ENTITY_ID, ATTR_ICON, ATTR_LATITUDE, ATTR_LOCATION, ATTR_LONGITUDE,
+    ATTR_STATE, ATTR_UNIT_OF_MEASUREMENT, CONF_ADDRESS, CONF_EMAIL,
+    CONF_ENTITY_ID, CONF_SENSORS, CONF_STATE, CONF_URL)
 import homeassistant.core as ha
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
@@ -74,8 +73,8 @@ CONTACT_SCHEMA = vol.Schema({
 
 STATE_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Optional(CONF_ICON_CLOSED): cv.string,
-    vol.Optional(CONF_ICON_OPEN): cv.string,
+    vol.Inclusive(CONF_ICON_CLOSED, 'icons'): cv.url,
+    vol.Inclusive(CONF_ICON_OPEN, 'icons'): cv.url,
 }, required=False)
 
 SENSOR_SCHEMA = vol.Schema(
@@ -88,7 +87,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_ISSUE_REPORT_CHANNELS):
             vol.All(cv.ensure_list, [vol.In(ISSUE_REPORT_CHANNELS)]),
         vol.Required(CONF_LOCATION): LOCATION_SCHEMA,
-        vol.Required(CONF_LOGO): cv.string,
+        vol.Required(CONF_LOGO): cv.url,
         vol.Required(CONF_SPACE): cv.string,
         vol.Required(CONF_STATE): STATE_SCHEMA,
         vol.Required(CONF_URL): cv.string,
@@ -124,35 +123,24 @@ class APISpaceApiView(HomeAssistantView):
         }
 
         state_entity = spaceapi['state'][ATTR_ENTITY_ID]
-        state = request.app['hass'].states.get(state_entity)
-        last_changed = request.app['hass'].states.get(
-            state_entity).last_updated
+        space_state = request.app['hass'].states.get(state_entity)
 
-        state = {
-            ATTR_ICON: {
+        if space_state is not None:
+            state = {
+                ATTR_OPEN: bool(space_state),
+                ATTR_LASTCHANGE:
+                    dt_util.as_timestamp(space_state.last_updated),
+            }
+        else:
+            state = {ATTR_OPEN: 'null', ATTR_LASTCHANGE: 0}
+
+        try:
+            state[ATTR_ICON] = {
                 ATTR_OPEN: spaceapi['state'][CONF_ICON_OPEN],
                 ATTR_CLOSE: spaceapi['state'][CONF_ICON_CLOSED],
-            },
-            ATTR_OPEN: bool(state),
-            ATTR_LASTCHANGE: dt_util.as_timestamp(last_changed),
-        }
-
-        if is_sensors is not None:
-            sensors = {}
-            for sensor_type in SENSOR_TYPES:
-                sensors[sensor_type] = []
-                for sensor in spaceapi['sensors'][sensor_type]:
-                    sensor_state = request.app['hass'].states.get(sensor)
-                    name = sensor_state.attributes[ATTR_FRIENDLY_NAME]
-                    unit = sensor_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
-                    value = sensor_state.state
-                    sensor_data = {
-                        ATTR_LOCATION: spaceapi[CONF_SPACE],
-                        ATTR_NAME: sensor if name is None else name,
-                        ATTR_UNIT: unit,
-                        ATTR_VALUE: value,
-                    }
-                    sensors[sensor_type].append(sensor_data)
+            }
+        except KeyError:
+            pass
 
         data = {
             ATTR_API: SPACEAPI_VERSION,
@@ -166,6 +154,20 @@ class APISpaceApiView(HomeAssistantView):
         }
 
         if is_sensors is not None:
+            sensors = {}
+            for sensor_type in is_sensors.keys():
+                sensors[sensor_type] = []
+                for sensor in spaceapi['sensors'][sensor_type]:
+                    sensor_state = request.app['hass'].states.get(sensor)
+                    unit = sensor_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+                    value = sensor_state.state
+                    sensor_data = {
+                        ATTR_LOCATION: spaceapi[CONF_SPACE],
+                        ATTR_NAME: sensor_state.name,
+                        ATTR_UNIT: unit,
+                        ATTR_VALUE: value,
+                    }
+                    sensors[sensor_type].append(sensor_data)
             data[ATTR_SENSORS] = sensors
 
         return self.json(data)
