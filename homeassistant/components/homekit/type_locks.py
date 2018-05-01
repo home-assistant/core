@@ -1,13 +1,15 @@
 """Class to hold all lock accessories."""
 import logging
 
+from pyhap.const import CATEGORY_DOOR_LOCK
+
 from homeassistant.components.lock import (
     ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN)
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service, setup_char
 from .const import (
-    CATEGORY_LOCK, SERV_LOCK, CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE)
+    SERV_LOCK, CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +31,7 @@ class Lock(HomeAccessory):
 
     def __init__(self, *args, config):
         """Initialize a Lock accessory object."""
-        super().__init__(*args, category=CATEGORY_LOCK)
+        super().__init__(*args, category=CATEGORY_DOOR_LOCK)
         self.flag_target_state = False
 
         serv_lock_mechanism = add_preload_service(self, SERV_LOCK)

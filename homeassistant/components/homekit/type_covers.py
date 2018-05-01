@@ -1,6 +1,8 @@
 """Class to hold all cover accessories."""
 import logging
 
+from pyhap.const import CATEGORY_WINDOW_COVERING, CATEGORY_GARAGE_DOOR_OPENER
+
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN, SUPPORT_STOP)
 from homeassistant.const import (
@@ -11,10 +13,9 @@ from homeassistant.const import (
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service, setup_char
 from .const import (
-    CATEGORY_WINDOW_COVERING, SERV_WINDOW_COVERING,
-    CHAR_CURRENT_POSITION, CHAR_TARGET_POSITION, CHAR_POSITION_STATE,
-    CATEGORY_GARAGE_DOOR_OPENER, SERV_GARAGE_DOOR_OPENER,
-    CHAR_CURRENT_DOOR_STATE, CHAR_TARGET_DOOR_STATE)
+    SERV_WINDOW_COVERING, CHAR_CURRENT_POSITION,
+    CHAR_TARGET_POSITION, CHAR_POSITION_STATE,
+    SERV_GARAGE_DOOR_OPENER, CHAR_CURRENT_DOOR_STATE, CHAR_TARGET_DOOR_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,13 +1,15 @@
 """Class to hold all switch accessories."""
 import logging
 
+from pyhap.const import CATEGORY_SWITCH
+
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON)
 from homeassistant.core import split_entity_id
 
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service, setup_char
-from .const import CATEGORY_SWITCH, SERV_SWITCH, CHAR_ON
+from .const import SERV_SWITCH, CHAR_ON
 
 _LOGGER = logging.getLogger(__name__)
 

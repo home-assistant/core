@@ -1,6 +1,8 @@
 """Class to hold all light accessories."""
 import logging
 
+from pyhap.const import CATEGORY_LIGHTBULB
+
 from homeassistant.components.light import (
     ATTR_HS_COLOR, ATTR_COLOR_TEMP, ATTR_BRIGHTNESS, ATTR_MIN_MIREDS,
     ATTR_MAX_MIREDS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_BRIGHTNESS)
@@ -10,7 +12,7 @@ from . import TYPES
 from .accessories import (
     HomeAccessory, add_preload_service, debounce, setup_char)
 from .const import (
-    CATEGORY_LIGHT, SERV_LIGHTBULB, CHAR_COLOR_TEMPERATURE,
+    SERV_LIGHTBULB, CHAR_COLOR_TEMPERATURE,
     CHAR_BRIGHTNESS, CHAR_HUE, CHAR_ON, CHAR_SATURATION)
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +29,7 @@ class Light(HomeAccessory):
 
     def __init__(self, *args, config):
         """Initialize a new Light accessory object."""
-        super().__init__(*args, category=CATEGORY_LIGHT)
+        super().__init__(*args, category=CATEGORY_LIGHTBULB)
         self._flag = {CHAR_ON: False, CHAR_BRIGHTNESS: False,
                       CHAR_HUE: False, CHAR_SATURATION: False,
                       CHAR_COLOR_TEMPERATURE: False, RGB_COLOR: False}

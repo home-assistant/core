@@ -1,6 +1,8 @@
 """Class to hold all sensor accessories."""
 import logging
 
+from pyhap.const import CATEGORY_SENSOR
+
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS,
     ATTR_DEVICE_CLASS, STATE_ON, STATE_HOME)
@@ -8,7 +10,7 @@ from homeassistant.const import (
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service, setup_char
 from .const import (
-    CATEGORY_SENSOR, SERV_HUMIDITY_SENSOR, SERV_TEMPERATURE_SENSOR,
+    SERV_HUMIDITY_SENSOR, SERV_TEMPERATURE_SENSOR,
     CHAR_CURRENT_HUMIDITY, CHAR_CURRENT_TEMPERATURE, PROP_CELSIUS,
     SERV_AIR_QUALITY_SENSOR, CHAR_AIR_QUALITY, CHAR_AIR_PARTICULATE_DENSITY,
     CHAR_CARBON_DIOXIDE_LEVEL, CHAR_CARBON_DIOXIDE_PEAK_LEVEL,

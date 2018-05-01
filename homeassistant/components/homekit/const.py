@@ -23,17 +23,6 @@ BRIDGE_NAME = 'Home Assistant Bridge'
 BRIDGE_SERIAL_NUMBER = 'homekit.bridge'
 MANUFACTURER = 'Home Assistant'
 
-# #### Categories ####
-CATEGORY_ALARM_SYSTEM = 'ALARM_SYSTEM'
-CATEGORY_GARAGE_DOOR_OPENER = 'GARAGE_DOOR_OPENER'
-CATEGORY_LIGHT = 'LIGHTBULB'
-CATEGORY_LOCK = 'DOOR_LOCK'
-CATEGORY_SENSOR = 'SENSOR'
-CATEGORY_SWITCH = 'SWITCH'
-CATEGORY_THERMOSTAT = 'THERMOSTAT'
-CATEGORY_WINDOW_COVERING = 'WINDOW_COVERING'
-
-
 # #### Services ####
 SERV_ACCESSORY_INFO = 'AccessoryInformation'
 SERV_AIR_QUALITY_SENSOR = 'AirQualitySensor'
@@ -55,7 +44,6 @@ SERV_TEMPERATURE_SENSOR = 'TemperatureSensor'
 SERV_THERMOSTAT = 'Thermostat'
 SERV_WINDOW_COVERING = 'WindowCovering'
 # CurrentPosition, TargetPosition, PositionState
-
 
 # #### Characteristics ####
 CHAR_AIR_PARTICULATE_DENSITY = 'AirParticulateDensity'

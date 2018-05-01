@@ -1,6 +1,8 @@
 """Class to hold all thermostat accessories."""
 import logging
 
+from pyhap.const import CATEGORY_THERMOSTAT
+
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE, ATTR_TEMPERATURE,
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
@@ -15,7 +17,7 @@ from . import TYPES
 from .accessories import (
     HomeAccessory, add_preload_service, debounce, setup_char)
 from .const import (
-    CATEGORY_THERMOSTAT, SERV_THERMOSTAT, CHAR_CURRENT_HEATING_COOLING,
+    SERV_THERMOSTAT, CHAR_CURRENT_HEATING_COOLING,
     CHAR_TARGET_HEATING_COOLING, CHAR_CURRENT_TEMPERATURE,
     CHAR_TARGET_TEMPERATURE, CHAR_TEMP_DISPLAY_UNITS,
     CHAR_COOLING_THRESHOLD_TEMPERATURE, CHAR_HEATING_THRESHOLD_TEMPERATURE)

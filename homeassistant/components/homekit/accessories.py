@@ -4,8 +4,9 @@ from functools import wraps
 from inspect import getmodule
 import logging
 
-from pyhap.accessory import Accessory, Bridge, Category
+from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
+from pyhap.const import CATEGORY_OTHER
 
 from homeassistant.const import __version__
 from homeassistant.core import callback as ha_callback
@@ -102,12 +103,12 @@ def set_accessory_info(acc, name, model, serial_number,
 class HomeAccessory(Accessory):
     """Adapter class for Accessory."""
 
-    def __init__(self, hass, name, entity_id, aid, category):
+    def __init__(self, hass, name, entity_id, aid, category=CATEGORY_OTHER):
         """Initialize a Accessory object."""
         super().__init__(name, aid=aid)
         domain = split_entity_id(entity_id)[0].replace("_", " ").title()
         set_accessory_info(self, name, model=domain, serial_number=entity_id)
-        self.category = getattr(Category, category, Category.OTHER)
+        self.category = category
         self.entity_id = entity_id
         self.hass = hass
 

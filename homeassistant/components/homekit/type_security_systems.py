@@ -1,6 +1,8 @@
 """Class to hold all alarm control panel accessories."""
 import logging
 
+from pyhap.const import CATEGORY_ALARM_SYSTEM
+
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
@@ -9,8 +11,8 @@ from homeassistant.const import (
 from . import TYPES
 from .accessories import HomeAccessory, add_preload_service, setup_char
 from .const import (
-    CATEGORY_ALARM_SYSTEM, SERV_SECURITY_SYSTEM,
-    CHAR_CURRENT_SECURITY_STATE, CHAR_TARGET_SECURITY_STATE)
+    SERV_SECURITY_SYSTEM, CHAR_CURRENT_SECURITY_STATE,
+    CHAR_TARGET_SECURITY_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
