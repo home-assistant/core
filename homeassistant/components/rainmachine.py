@@ -69,7 +69,7 @@ def setup(hass, config):
         auth = Authenticator.create_local(
             ip_address, password, port=port, https=ssl)
         client = Client(auth)
-        hass.data[DATA_RAINMACHINE] = client
+        hass.data[DATA_RAINMACHINE] = RainMachine(client)
     except (HTTPError, ConnectTimeout, UnboundLocalError) as exc_info:
         _LOGGER.error('An error occurred: %s', str(exc_info))
         hass.components.persistent_notification.create(
@@ -89,21 +89,29 @@ def setup(hass, config):
     return True
 
 
+class RainMachine(object):
+    """Define a generic RainMachine object."""
+
+    def __init__(self, client):
+        """Initialize."""
+        self.client = client
+        self.device_mac = self.client.provision.wifi()['macAddress']
+
+
 class RainMachineEntity(Entity):
     """Define a generic RainMachine entity."""
 
     def __init__(self,
+                 rainmachine,
                  rainmachine_type,
                  rainmachine_entity_id,
                  icon=DEFAULT_ICON):
         """Initialize."""
-        self._client = self.hass.data[DATA_RAINMACHINE]
-
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._icon = icon
-        self._device_mac = self._client.provision.wifi()['macAddress']
         self._rainmachine_type = rainmachine_type
         self._rainmachine_entity_id = rainmachine_entity_id
+        self.rainmachine = rainmachine
 
     @property
     def device_state_attributes(self) -> dict:
@@ -119,5 +127,6 @@ class RainMachineEntity(Entity):
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
         return '{0}_{1}_{2}'.format(
-            self._device_mac.replace(':', ''), self._rainmachine_type,
+            self.rainmachine.device_mac.replace(
+                ':', ''), self._rainmachine_type,
             self._rainmachine_entity_id)

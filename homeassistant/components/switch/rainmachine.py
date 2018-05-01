@@ -143,22 +143,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     zone_run_time = discovery_info.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN)
 
-    client = hass.data[DATA_RAINMACHINE]
+    rainmachine = hass.data[DATA_RAINMACHINE]
 
     entities = []
-    for program in client.programs.all().get('programs', {}):
+    for program in rainmachine.client.programs.all().get('programs', {}):
         if not program.get('active'):
             continue
 
         _LOGGER.debug('Adding program: %s', program)
-        entities.append(RainMachineProgram(program))
+        entities.append(RainMachineProgram(rainmachine, program))
 
-    for zone in client.zones.all().get('zones', {}):
+    for zone in rainmachine.client.zones.all().get('zones', {}):
         if not zone.get('active'):
             continue
 
         _LOGGER.debug('Adding zone: %s', zone)
-        entities.append(RainMachineZone(zone, zone_run_time))
+        entities.append(RainMachineZone(rainmachine, zone, zone_run_time))
 
     add_devices(entities, True)
 
@@ -166,45 +166,45 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RainMachineSwitch(RainMachineEntity, SwitchDevice):
     """A class to represent a generic RainMachine entity."""
 
-    def __init__(self, rainmachine_type, entity_attrs):
+    def __init__(self, rainmachine, rainmachine_type, obj):
         """Initialize a generic RainMachine entity."""
-        self._entity_attrs = entity_attrs
+        self._obj = obj
         self._type = rainmachine_type
 
-        super().__init__(rainmachine_type, entity_attrs.get('uid'))
+        super().__init__(rainmachine, rainmachine_type, obj.get('uid'))
 
     @property
     def is_enabled(self) -> bool:
         """Return whether the entity is enabled."""
-        return self._entity_attrs.get('active')
+        return self._obj.get('active')
 
 
 class RainMachineProgram(RainMachineSwitch):
     """A RainMachine program."""
 
-    def __init__(self, program_json):
+    def __init__(self, rainmachine, obj):
         """Initialize."""
-        super().__init__('program', program_json)
+        super().__init__(rainmachine, 'program', obj)
 
     @property
     def is_on(self) -> bool:
         """Return whether the program is running."""
-        return bool(self._entity_attrs.get('status'))
+        return bool(self._obj.get('status'))
 
     @property
     def name(self) -> str:
         """Return the name of the program."""
-        return 'Program: {0}'.format(self._entity_attrs.get('name'))
+        return 'Program: {0}'.format(self._obj.get('name'))
 
     @property
     def zones(self) -> list:
         """Return a list of active zones associated with this program."""
-        return [z for z in self._entity_attrs['wateringTimes'] if z['active']]
+        return [z for z in self._obj['wateringTimes'] if z['active']]
 
     def _calculate_running_days(self) -> str:
         """Calculate running days from an RM string ("0010001100")."""
-        freq_type = self._entity_attrs['frequency']['type']
-        freq_param = self._entity_attrs['frequency']['param']
+        freq_type = self._obj['frequency']['type']
+        freq_param = self._obj['frequency']['param']
         if freq_type == 0:
             return 'Daily'
 
@@ -227,7 +227,7 @@ class RainMachineProgram(RainMachineSwitch):
         from regenmaschine.exceptions import HTTPError
 
         try:
-            self._client.programs.stop(self._rainmachine_entity_id)
+            self.rainmachine.client.programs.stop(self._rainmachine_entity_id)
             dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
         except HTTPError as exc_info:
             _LOGGER.error('Unable to turn off program "%s"', self.unique_id)
@@ -238,7 +238,7 @@ class RainMachineProgram(RainMachineSwitch):
         from regenmaschine.exceptions import HTTPError
 
         try:
-            self._client.programs.start(self._rainmachine_entity_id)
+            self.rainmachine.client.programs.start(self._rainmachine_entity_id)
             dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
         except HTTPError as exc_info:
             _LOGGER.error('Unable to turn on program "%s"', self.unique_id)
@@ -249,28 +249,28 @@ class RainMachineProgram(RainMachineSwitch):
         from regenmaschine.exceptions import HTTPError
 
         try:
-            self._entity_attrs = self._client.programs.get(
+            self._obj = self.rainmachine.client.programs.get(
                 self._rainmachine_entity_id)
 
             self._attrs.update({
-                ATTR_CS_ON: self._entity_attrs.get('cs_on'),
-                ATTR_CYCLES: self._entity_attrs.get('cycles'),
-                ATTR_DELAY: self._entity_attrs.get('delay'),
-                ATTR_DELAY_ON: self._entity_attrs.get('delay_on'),
+                ATTR_CS_ON: self._obj.get('cs_on'),
+                ATTR_CYCLES: self._obj.get('cycles'),
+                ATTR_DELAY: self._obj.get('delay'),
+                ATTR_DELAY_ON: self._obj.get('delay_on'),
                 ATTR_FREQUENCY: self._calculate_running_days(),
                 ATTR_IGNORE_WEATHER:
-                    self._entity_attrs.get('ignoreInternetWeather'),
-                ATTR_NEXT_RUN: self._entity_attrs.get('nextRun'),
+                    self._obj.get('ignoreInternetWeather'),
+                ATTR_NEXT_RUN: self._obj.get('nextRun'),
                 ATTR_SIMULATION_EXPIRED:
-                    self._entity_attrs.get('simulationExpired'),
-                ATTR_SOAK: self._entity_attrs.get('soak'),
-                ATTR_START_TIME: self._entity_attrs.get('startTime'),
+                    self._obj.get('simulationExpired'),
+                ATTR_SOAK: self._obj.get('soak'),
+                ATTR_START_TIME: self._obj.get('startTime'),
                 ATTR_STATUS:
-                    PROGRAM_STATUS_MAP[self._entity_attrs.get('status')],
-                ATTR_USE_WATERSENSE: self._entity_attrs.get('useWaterSense'),
-                ATTR_WATER_SKIP: self._entity_attrs.get('freq_modified'),
+                    PROGRAM_STATUS_MAP[self._obj.get('status')],
+                ATTR_USE_WATERSENSE: self._obj.get('useWaterSense'),
+                ATTR_WATER_SKIP: self._obj.get('freq_modified'),
                 ATTR_YEARLY_RECURRING:
-                    self._entity_attrs.get('yearlyRecurring'),
+                    self._obj.get('yearlyRecurring'),
                 ATTR_ZONES: ', '.join(z['name'] for z in self.zones)
             })
         except HTTPError as exc_info:
@@ -282,9 +282,9 @@ class RainMachineProgram(RainMachineSwitch):
 class RainMachineZone(RainMachineSwitch):
     """A RainMachine zone."""
 
-    def __init__(self, zone_json, zone_run_time):
+    def __init__(self, rainmachine, obj, zone_run_time):
         """Initialize a RainMachine zone."""
-        super().__init__('zone', zone_json)
+        super().__init__(rainmachine, 'zone', obj)
 
         self._properties_json = {}
         self._run_time = zone_run_time
@@ -292,12 +292,12 @@ class RainMachineZone(RainMachineSwitch):
     @property
     def is_on(self) -> bool:
         """Return whether the zone is running."""
-        return bool(self._entity_attrs.get('state'))
+        return bool(self._obj.get('state'))
 
     @property
     def name(self) -> str:
         """Return the name of the zone."""
-        return 'Zone: {0}'.format(self._entity_attrs.get('name'))
+        return 'Zone: {0}'.format(self._obj.get('name'))
 
     @callback
     def _program_updated(self):
@@ -314,7 +314,7 @@ class RainMachineZone(RainMachineSwitch):
         from regenmaschine.exceptions import HTTPError
 
         try:
-            self._client.zones.stop(self._rainmachine_entity_id)
+            self.rainmachine.client.zones.stop(self._rainmachine_entity_id)
         except HTTPError as exc_info:
             _LOGGER.error('Unable to turn off zone "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
@@ -324,8 +324,8 @@ class RainMachineZone(RainMachineSwitch):
         from regenmaschine.exceptions import HTTPError
 
         try:
-            self._client.zones.start(self._rainmachine_entity_id,
-                                     self._run_time)
+            self.rainmachine.client.zones.start(self._rainmachine_entity_id,
+                                                self._run_time)
         except HTTPError as exc_info:
             _LOGGER.error('Unable to turn on zone "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
@@ -335,15 +335,15 @@ class RainMachineZone(RainMachineSwitch):
         from regenmaschine.exceptions import HTTPError
 
         try:
-            self._entity_attrs = self._client.zones.get(
+            self._obj = self.rainmachine.client.zones.get(
                 self._rainmachine_entity_id)
 
-            self._properties_json = self._client.zones.get(
+            self._properties_json = self.rainmachine.client.zones.get(
                 self._rainmachine_entity_id, properties=True)
 
             self._attrs.update({
                 ATTR_AREA: self._properties_json.get('waterSense').get('area'),
-                ATTR_CURRENT_CYCLE: self._entity_attrs.get('cycle'),
+                ATTR_CURRENT_CYCLE: self._obj.get('cycle'),
                 ATTR_CURRENT_FIELD_CAPACITY:
                     self._properties_json.get(
                         'waterSense').get('currentFieldCapacity'),
@@ -359,12 +359,12 @@ class RainMachineZone(RainMachineSwitch):
                     self._properties_json.get(
                         'waterSense').get('soilIntakeRate'),
                 ATTR_MACHINE_DURATION:
-                    self._entity_attrs.get('machineDuration'),
-                ATTR_MASTER_VALVE: self._entity_attrs.get('master'),
+                    self._obj.get('machineDuration'),
+                ATTR_MASTER_VALVE: self._obj.get('master'),
                 ATTR_MAX_DEPLETION:
                     self._properties_json.get(
                         'waterSense').get('maxAllowedDepletion'),
-                ATTR_NO_CYCLES: self._entity_attrs.get('noOfCycles'),
+                ATTR_NO_CYCLES: self._obj.get('noOfCycles'),
                 ATTR_PERM_WILTING:
                     self._properties_json.get('waterSense').get('permWilting'),
                 ATTR_PRECIP_RATE:
@@ -373,11 +373,11 @@ class RainMachineZone(RainMachineSwitch):
                 ATTR_REFERENCE_TIME:
                     self._properties_json.get(
                         'waterSense').get('referenceTime'),
-                ATTR_RESTRICTIONS: self._entity_attrs.get('restriction'),
+                ATTR_RESTRICTIONS: self._obj.get('restriction'),
                 ATTR_ROOT_DEPTH:
                     self._properties_json.get('waterSense').get('rootDepth'),
                 ATTR_SAVINGS: self._properties_json.get('savings'),
-                ATTR_SECONDS_REMAINING: self._entity_attrs.get('remaining'),
+                ATTR_SECONDS_REMAINING: self._obj.get('remaining'),
                 ATTR_SLOPE: SLOPE_TYPE_MAP[self._properties_json.get('slope')],
                 ATTR_SOIL_TYPE:
                     SOIL_TYPE_MAP[self._properties_json.get('sun')],
@@ -390,9 +390,9 @@ class RainMachineZone(RainMachineSwitch):
                         'waterSense').get('allowedSurfaceAcc'),
                 ATTR_TALL:
                     self._properties_json.get('waterSense').get('isTallPlant'),
-                ATTR_USER_DURATION: self._entity_attrs.get('userDuration'),
+                ATTR_USER_DURATION: self._obj.get('userDuration'),
                 ATTR_VEGETATION_TYPE:
-                    VEGETATION_MAP[self._entity_attrs.get('type')],
+                    VEGETATION_MAP[self._obj.get('type')],
             })
         except HTTPError as exc_info:
             _LOGGER.error('Unable to update info for zone "%s"',
