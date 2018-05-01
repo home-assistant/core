@@ -54,8 +54,11 @@ homeassistant/components/device_tracker/tile.py @bachya
 homeassistant/components/history_graph.py @andrey-git
 homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/light/yeelight.py @rytilahti
+homeassistant/components/lock/nello.py @pschmitt
+homeassistant/components/lock/nuki.py @pschmitt
 homeassistant/components/media_player/emby.py @mezz64
 homeassistant/components/media_player/kodi.py @armills
+homeassistant/components/media_player/liveboxplaytv.py @pschmitt
 homeassistant/components/media_player/mediaroom.py @dgomes
 homeassistant/components/media_player/monoprice.py @etsinko
 homeassistant/components/media_player/sonos.py @amelchio
@@ -77,6 +80,7 @@ homeassistant/components/sensor/upnp.py @dgomes
 homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/switch/rainmachine.py @bachya
 homeassistant/components/switch/tplink.py @rytilahti
+homeassistant/components/vacuum/roomba.py @pschmitt
 homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 
 homeassistant/components/*/axis.py @kane610
