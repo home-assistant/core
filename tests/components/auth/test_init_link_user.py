@@ -24,14 +24,14 @@ async def async_get_code(hass, aiohttp_client):
     }]
     client = await async_setup_auth(hass, aiohttp_client, config)
 
-    resp = await client.post('/api/auth/login_flow', json={
+    resp = await client.post('/auth/login_flow', json={
         'handler': ['insecure_example', None]
     }, auth=CLIENT_AUTH)
     assert resp.status == 200
     step = await resp.json()
 
     resp = await client.post(
-        '/api/auth/login_flow/{}'.format(step['flow_id']), json={
+        '/auth/login_flow/{}'.format(step['flow_id']), json={
             'username': 'test-user',
             'password': 'test-pass',
         }, auth=CLIENT_AUTH)
@@ -41,7 +41,7 @@ async def async_get_code(hass, aiohttp_client):
     code = step['result']
 
     # Exchange code for tokens
-    resp = await client.post('/api/auth/token', data={
+    resp = await client.post('/auth/token', data={
             'grant_type': 'authorization_code',
             'code': code
         }, auth=CLIENT_AUTH)
@@ -55,14 +55,14 @@ async def async_get_code(hass, aiohttp_client):
     assert len(user.credentials) == 1
 
     # Now authenticate with the 2nd flow
-    resp = await client.post('/api/auth/login_flow', json={
+    resp = await client.post('/auth/login_flow', json={
         'handler': ['insecure_example', '2nd auth']
     }, auth=CLIENT_AUTH)
     assert resp.status == 200
     step = await resp.json()
 
     resp = await client.post(
-        '/api/auth/login_flow/{}'.format(step['flow_id']), json={
+        '/auth/login_flow/{}'.format(step['flow_id']), json={
             'username': '2nd-user',
             'password': '2nd-pass',
         }, auth=CLIENT_AUTH)
@@ -86,7 +86,7 @@ async def test_link_user(hass, aiohttp_client):
     tokens = info['tokens']
 
     # Link user
-    resp = await client.post('/api/auth/link_user', json={
+    resp = await client.post('/auth/link_user', json={
             'client_id': CLIENT_ID,
             'code': code
         }, headers={
@@ -105,7 +105,7 @@ async def test_link_user_invalid_client_id(hass, aiohttp_client):
     tokens = info['tokens']
 
     # Link user
-    resp = await client.post('/api/auth/link_user', json={
+    resp = await client.post('/auth/link_user', json={
             'client_id': 'invalid',
             'code': code
         }, headers={
@@ -123,7 +123,7 @@ async def test_link_user_invalid_code(hass, aiohttp_client):
     tokens = info['tokens']
 
     # Link user
-    resp = await client.post('/api/auth/link_user', json={
+    resp = await client.post('/auth/link_user', json={
             'client_id': CLIENT_ID,
             'code': 'invalid'
         }, headers={
@@ -141,7 +141,7 @@ async def test_link_user_invalid_auth(hass, aiohttp_client):
     code = info['code']
 
     # Link user
-    resp = await client.post('/api/auth/link_user', json={
+    resp = await client.post('/auth/link_user', json={
             'client_id': CLIENT_ID,
             'code': code,
         }, headers={'authorization': 'Bearer invalid'})

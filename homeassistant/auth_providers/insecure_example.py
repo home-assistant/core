@@ -35,15 +35,18 @@ class ExampleAuthProvider(auth.AuthProvider):
 
         # Compare all users to avoid timing attacks.
         for usr in self.config['users']:
-            if hmac.compare_digest(username, usr['username']):
+            if hmac.compare_digest(username.encode('utf-8'),
+                                   usr['username'].encode('utf-8')):
                 user = usr
 
         if user is None:
             # Do one more compare to make timing the same as if user was found.
-            hmac.compare_digest(password, password)
+            hmac.compare_digest(password.encode('utf-8'),
+                                password.encode('utf-8'))
             raise auth.InvalidUser
 
-        if not hmac.compare_digest(user['password'], password):
+        if not hmac.compare_digest(user['password'].encode('utf-8'),
+                                   password.encode('utf-8')):
             raise auth.InvalidPassword
 
     async def async_get_or_create_credentials(self, flow_result):
@@ -93,10 +96,8 @@ class LoginFlow(data_entry_flow.FlowHandler):
             try:
                 self._auth_provider.async_validate_login(
                     user_input['username'], user_input['password'])
-            except auth.InvalidUser:
-                errors['username'] = 'Invalid username'
-            except auth.InvalidPassword:
-                errors['password'] = 'Invalid password'
+            except (auth.InvalidUser, auth.InvalidPassword):
+                errors['base'] = 'invalid_auth'
 
             if not errors:
                 return self.async_create_entry(

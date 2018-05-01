@@ -24,7 +24,11 @@ def provider(store):
         'users': [
             {
                 'username': 'user-test',
-                'password': 'password-test'
+                'password': 'password-test',
+            },
+            {
+                'username': '🎉',
+                'password': '😎',
             }
         ]
     })
@@ -74,3 +78,12 @@ async def test_verify_password(provider):
             'username': 'user-test',
             'password': 'incorrect-password',
         })
+
+
+async def test_utf_8_username_password(provider):
+    """Test that we create a new credential."""
+    credentials = await provider.async_get_or_create_credentials({
+        'username': '🎉',
+        'password': '😎',
+    })
+    assert credentials.is_new is True

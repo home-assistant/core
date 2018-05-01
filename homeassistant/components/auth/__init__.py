@@ -3,7 +3,7 @@
 All requests will require passing in a valid client ID and secret via HTTP
 Basic Auth.
 
-# GET /api/auth/providers
+# GET /auth/providers
 
 Return a list of auth providers. Example:
 
@@ -15,7 +15,7 @@ Return a list of auth providers. Example:
     }
 ]
 
-# POST /api/auth/login_flow
+# POST /auth/login_flow
 
 Create a login flow. Will return the first step of the flow.
 
@@ -41,7 +41,7 @@ flow for details.
     "type": "form"
 }
 
-# POST /api/auth/login_flow/{flow_id}
+# POST /auth/login_flow/{flow_id}
 
 Progress the flow. Most flows will be 1 page, but could optionally add extra
 login challenges, like TFA. Once the flow has finished, the returned step will
@@ -57,7 +57,7 @@ have type "create_entry" and "result" key will contain an authorization code.
     "version": 1
 }
 
-# POST /api/auth/token
+# POST /auth/token
 
 This is an OAuth2 endpoint for granting tokens. We currently support the grant
 types "authorization_code" and "refresh_token". Because we follow the OAuth2
@@ -139,7 +139,7 @@ async def async_setup(hass, config):
 class AuthProvidersView(HomeAssistantView):
     """View to get available auth providers."""
 
-    url = '/api/auth/providers'
+    url = '/auth/providers'
     name = 'api:auth:providers'
     requires_auth = False
 
@@ -156,7 +156,7 @@ class AuthProvidersView(HomeAssistantView):
 class LoginFlowIndexView(FlowManagerIndexView):
     """View to create a config flow."""
 
-    url = '/api/auth/login_flow'
+    url = '/auth/login_flow'
     name = 'api:auth:login_flow'
     requires_auth = False
 
@@ -175,7 +175,7 @@ class LoginFlowIndexView(FlowManagerIndexView):
 class LoginFlowResourceView(FlowManagerResourceView):
     """View to interact with the flow manager."""
 
-    url = '/api/auth/login_flow/{flow_id}'
+    url = '/auth/login_flow/{flow_id}'
     name = 'api:auth:login_flow:resource'
     requires_auth = False
 
@@ -213,7 +213,7 @@ class LoginFlowResourceView(FlowManagerResourceView):
 class GrantTokenView(HomeAssistantView):
     """View to grant tokens."""
 
-    url = '/api/auth/token'
+    url = '/auth/token'
     name = 'api:auth:token'
     requires_auth = False
 
@@ -298,7 +298,7 @@ class GrantTokenView(HomeAssistantView):
 class LinkUserView(HomeAssistantView):
     """View to link existing users to new credentials."""
 
-    url = '/api/auth/link_user'
+    url = '/auth/link_user'
     name = 'api:auth:link_user'
 
     def __init__(self, retrieve_credentials):
