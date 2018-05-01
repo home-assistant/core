@@ -111,7 +111,6 @@ class TeleinfoSensor(Entity):
             return
         _LOGGER.info("Frame read: %s", self._data.frame)
         for info in self._data.frame:
-            print("|||||||||||||||||||||||||%s" % info)
             if info['name'] in TELEINFO_AVAILABLE_VALUES:
                 self._attributes[info['name']] = int(info['value'])
             else:
@@ -133,12 +132,12 @@ class TeleinfoData(object):
 
     @property
     def teleinfo(self):
-        """Retour Teleinfo object."""
+        """Return the Teleinfo object."""
         return self._teleinfo
 
     @property
     def frame(self):
-        """Retour Teleinfo frame data."""
+        """Return the Teleinfo frame data."""
         return self._frame
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
