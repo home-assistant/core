@@ -352,7 +352,7 @@ class TemplateMethods(object):
             group = self._hass.components.group
 
             states = [self._hass.states.get(entity_id) for entity_id
-                      in group.expand_entity_ids(self._hass, [gr_entity_id])]
+                      in group.expand_entity_ids([gr_entity_id])]
 
         return _wrap_state(loc_helper.closest(latitude, longitude, states))
 

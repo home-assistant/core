@@ -321,7 +321,7 @@ class DeviceTracker(object):
         # During init, we ignore the group
         if self.group and self.track_new:
             self.group.async_set_group(
-                self.hass, util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
+                util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
                 name=GROUP_NAME_ALL_DEVICES, add=[device.entity_id])
 
         self.hass.bus.async_fire(EVENT_NEW_DEVICE, {
@@ -358,7 +358,7 @@ class DeviceTracker(object):
 
         self.group = self.hass.components.group
         self.group.async_set_group(
-            self.hass, util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
+            util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
             name=GROUP_NAME_ALL_DEVICES, entity_ids=entity_ids)
 
     @callback

@@ -256,24 +256,6 @@ def test_event_schema():
         cv.EVENT_SCHEMA(value)
 
 
-def test_platform_validator():
-    """Test platform validation."""
-    hass = None
-
-    try:
-        hass = get_test_home_assistant()
-
-        schema = vol.Schema(cv.platform_validator('light'))
-
-        with pytest.raises(vol.MultipleInvalid):
-            schema('platform_that_does_not_exist')
-
-        schema('hue')
-    finally:
-        if hass is not None:
-            hass.stop()
-
-
 def test_icon():
     """Test icon validation."""
     schema = vol.Schema(cv.icon)

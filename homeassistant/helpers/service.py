@@ -100,10 +100,10 @@ def extract_entity_ids(hass, service_call, expand_group=True):
     if expand_group:
 
         if isinstance(service_ent_id, str):
-            return group.expand_entity_ids(hass, [service_ent_id])
+            return group.expand_entity_ids([service_ent_id])
 
         return [ent_id for ent_id in
-                group.expand_entity_ids(hass, service_ent_id)]
+                group.expand_entity_ids(service_ent_id)]
 
     else:
 

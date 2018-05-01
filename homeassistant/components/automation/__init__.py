@@ -26,6 +26,8 @@ from homeassistant.loader import get_platform
 from homeassistant.util.dt import utcnow
 import homeassistant.helpers.config_validation as cv
 
+from . import event, time
+
 DOMAIN = 'automation'
 DEPENDENCIES = ['group']
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -55,9 +57,16 @@ SERVICE_TRIGGER = 'trigger'
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = {
+    'time': time,
+    'event': event,
+}
+
 
 def _platform_validator(config):
     """Validate it is a valid  platform."""
+    if config[CONF_PLATFORM] not in PLATFORMS:
+        return  # TODO how to do platform validation ? -> USE importlib!!
     # TEMP
     return config
     platform = get_platform(DOMAIN, config[CONF_PLATFORM])

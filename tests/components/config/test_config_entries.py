@@ -17,10 +17,10 @@ from homeassistant.loader import set_component
 from tests.common import MockConfigEntry, MockModule, mock_coro_func
 
 
-@pytest.fixture(scope='session', autouse=True)
-def mock_test_component():
+@pytest.fixture(autouse=True)
+def mock_test_component(hass):
     """Ensure a component called 'test' exists."""
-    set_component('test', MockModule('test'))
+    set_component(hass, 'test', MockModule('test'))
 
 
 @pytest.fixture

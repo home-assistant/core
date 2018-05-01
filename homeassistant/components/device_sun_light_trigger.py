@@ -57,14 +57,14 @@ def async_setup(hass, config):
     device_group = conf.get(
         CONF_DEVICE_GROUP, device_tracker.ENTITY_ID_ALL_DEVICES)
     device_entity_ids = group.get_entity_ids(
-        hass, device_group, device_tracker.DOMAIN)
+        device_group, device_tracker.DOMAIN)
 
     if not device_entity_ids:
         logger.error("No devices found to track")
         return False
 
     # Get the light IDs from the specified group
-    light_ids = group.get_entity_ids(hass, light_group, light.DOMAIN)
+    light_ids = group.get_entity_ids(light_group, light.DOMAIN)
 
     if not light_ids:
         logger.error("No lights found to turn on")

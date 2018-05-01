@@ -90,21 +90,30 @@ def get_component(hass, comp_or_platform):
     return module
 
 
+def _find_spec(path, name):
+    for finder in sys.meta_path:
+        try:
+            spec = finder.find_spec(name, path=path)
+            if spec is not None:
+                return spec
+        except AttributeError:
+            # Not all finders have the find_spec method
+            pass
+    return None
+
+
 def _load_module(path, name):
     """Load a module based on a folder and a name."""
-    finder = sys.meta_path[2]
-
-    spec = finder.find_spec(name, path=[path])
+    spec = _find_spec([path], name)
 
     # Special handling if loading platforms and the folder is a namespace
     # (namespace is a folder without __init__.py)
     if spec is None and '.' in name:
-        parent_spec = finder.find_spec(name.split('.')[0], path=[path])
+        parent_spec = _find_spec([path], name.split('.')[0])
         if (parent_spec is None or
                 parent_spec.submodule_search_locations is None):
             return None
-        spec = finder.find_spec(
-            name, path=parent_spec.submodule_search_locations)
+        spec = _find_spec(parent_spec.submodule_search_locations, name)
 
     # Not found
     if spec is None:

@@ -81,7 +81,7 @@ def async_setup(hass, config):
 
         event_info = {'event_type': event.event_type, 'event_data': event.data}
         msg = json.dumps(event_info, cls=JSONEncoder)
-        mqtt.async_publish(hass, pub_topic, msg)
+        mqtt.async_publish(pub_topic, msg)
 
     # Only listen for local events if you are going to publish them.
     if pub_topic:
@@ -114,7 +114,7 @@ def async_setup(hass, config):
 
     # Only subscribe if you specified a topic.
     if sub_topic:
-        yield from mqtt.async_subscribe(hass, sub_topic, _event_receiver)
+        yield from mqtt.async_subscribe(sub_topic, _event_receiver)
 
     hass.states.async_set('{domain}.initialized'.format(domain=DOMAIN), True)
     return True

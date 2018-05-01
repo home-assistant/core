@@ -138,9 +138,6 @@ def async_test_home_assistant(loop):
     hass.config.units = METRIC_SYSTEM
     hass.config.skip_pip = True
 
-    if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
-        yield from loop.run_in_executor(None, loader.prepare, hass)
-
     hass.state = ha.CoreState.running
 
     # Mock async_start
