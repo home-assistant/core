@@ -166,7 +166,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
             template_hlpr.Template('{{ 1 > 1 }}', self.hass),
-            None, None, MATCH_ALL, None, None
+            None, None, None, None, MATCH_ALL, None, None
         ).result()
         self.assertFalse(vs.should_poll)
         self.assertEqual('motion', vs.device_class)
@@ -212,6 +212,55 @@ class TestBinarySensorTemplate(unittest.TestCase):
         state = self.hass.states.get('binary_sensor.test')
         assert state.state == 'on'
 
+    def test_availability(self):
+        """"Test the event."""
+        config = {
+            'binary_sensor': {
+                'platform': 'template',
+                'sensors': {
+                    'test': {
+                        'friendly_name': 'virtual thingy',
+                        'value_template':
+                            "{{ states.sensor.test_state.state == 'on' }}",
+                        # available if sensor.test_state exists and its state
+                        # is not 'unavailable'
+                        'availability_template':
+                            "{{ states.sensor.test_state.state and "
+                            "states.sensor.test_state.state != "
+                            " 'unavailable' }}",
+                        'device_class': 'motion',
+                    },
+                },
+            },
+        }
+        with assert_setup_component(1):
+            assert setup.setup_component(
+                self.hass, 'binary_sensor', config)
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test')
+        assert state.state == 'unavailable'
+
+        self.hass.states.set('sensor.test_state', 'on')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test')
+        assert state.state == 'on'
+
+        self.hass.states.set('sensor.test_state', 'unavailable')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test')
+        assert state.state == 'unavailable'
+
+        self.hass.states.set('sensor.test_state', 'on')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test')
+        assert state.state == 'on'
+
     @mock.patch('homeassistant.helpers.template.Template.render')
     def test_update_template_error(self, mock_render):
         """"Test the template update error."""
@@ -219,7 +268,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
             template_hlpr.Template('{{ 1 > 1 }}', self.hass),
-            None, None, MATCH_ALL, None, None
+            None, None, None, None, MATCH_ALL, None, None
         ).result()
         mock_render.side_effect = TemplateError('foo')
         run_callback_threadsafe(self.hass.loop, vs.async_check_state).result()
