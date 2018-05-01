@@ -58,7 +58,7 @@ async def setup_bridge(hass, data):
 
 
 async def test_no_lights_or_groups(hass):
-    """Test the update_lights function with some lights."""
+    """Test that no lights or groups entities are created."""
     data = {}
     await setup_bridge(hass, data)
     assert len(hass.data[deconz.DATA_DECONZ_ID]) == 0
@@ -66,7 +66,7 @@ async def test_no_lights_or_groups(hass):
 
 
 async def test_lights_and_groups(hass):
-    """Test the update_lights function with some lights."""
+    """Test that lights or groups entities are created."""
     await setup_bridge(hass, {"lights": LIGHT, "groups": GROUP})
     assert "light.light_1_name" in hass.data[deconz.DATA_DECONZ_ID]
     assert "light.group_1_name" in hass.data[deconz.DATA_DECONZ_ID]

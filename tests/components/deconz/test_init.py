@@ -1,6 +1,7 @@
 """Test deCONZ component setup process."""
 from unittest.mock import Mock, patch
 
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 from homeassistant.components import deconz
 
@@ -123,3 +124,53 @@ async def test_unload_entry(hass):
     assert deconz.DOMAIN not in hass.data
     assert len(hass.data[deconz.DATA_DECONZ_EVENT]) == 0
     assert len(hass.data[deconz.DATA_DECONZ_ID]) == 0
+
+
+async def test_add_new_device(hass):
+    """Test adding a new device generates a signal for platforms."""
+    new_event = {
+        "t": "event",
+        "e": "added",
+        "r": "sensors",
+        "id": "1",
+        "sensor": {
+            "config": {
+                "on": "True",
+                "reachable": "True"
+            },
+            "name": "event",
+            "state": {},
+            "type": "ZHASwitch"
+        }
+    }
+    entry = Mock()
+    entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
+    with patch.object(hass, 'async_add_job') as mock_add_job, \
+        patch.object(hass, 'config_entries') as mock_config_entries, \
+        patch.object(deconz, 'async_dispatcher_send') as mock_dispatch_send, \
+        patch('pydeconz.DeconzSession.async_load_parameters',
+              return_value=mock_coro(True)):
+        assert await deconz.async_setup_entry(hass, entry) is True
+        hass.data[deconz.DOMAIN].async_event_handler(new_event)
+        await hass.async_block_till_done()
+        assert len(mock_dispatch_send.mock_calls) == 1
+        assert len(mock_dispatch_send.mock_calls[0]) == 3
+
+
+async def test_add_new_remote(hass):
+    """Test new added device creates a new remote."""
+    entry = Mock()
+    entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
+    remote = Mock()
+    remote.name = 'name'
+    remote.type = 'ZHASwitch'
+    remote.register_async_callback = Mock()
+    with patch.object(hass, 'async_add_job') as mock_add_job, \
+        patch.object(hass, 'config_entries') as mock_config_entries, \
+        patch('pydeconz.DeconzSession.async_load_parameters',
+              return_value=mock_coro(True)):
+        assert await deconz.async_setup_entry(hass, entry) is True
+
+    async_dispatcher_send(hass, 'deconz_new_sensor', remote)
+    await hass.async_block_till_done()
+    assert len(hass.data[deconz.DATA_DECONZ_EVENT]) == 1

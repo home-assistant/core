@@ -80,7 +80,8 @@ async def async_setup_entry(hass, config_entry):
     @callback
     def async_add_device_callback(device_type, device):
         """Called when a new device has been created in deCONZ."""
-        async_dispatcher_send(hass, DOMAIN + '_new_' + device_type, device)
+        async_dispatcher_send(
+            hass, 'deconz_new_{}'.format(device_type), device)
 
     session = aiohttp_client.async_get_clientsession(hass)
     deconz = DeconzSession(hass.loop, session, **config_entry.data,
@@ -104,8 +105,8 @@ async def async_setup_entry(hass, config_entry):
     async def async_new_remote(remote):
         """Create deCONZ event if new sensor is a remote."""
         if remote.type in DECONZ_REMOTE:
-            hass.data[DATA_DECONZ_EVENT] = DeconzEvent(hass, remote)
-    async_dispatcher_connect(hass, DOMAIN + '_new_sensor', async_new_remote)
+            hass.data[DATA_DECONZ_EVENT].append(DeconzEvent(hass, remote))
+    async_dispatcher_connect(hass, 'deconz_new_sensor', async_new_remote)
 
     deconz.start()
 

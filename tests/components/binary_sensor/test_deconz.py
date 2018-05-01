@@ -40,7 +40,7 @@ async def setup_bridge(hass, data):
 
 
 async def test_no_binary_sensors(hass):
-    """Test the update_lights function with some lights."""
+    """Test that no sensors in deconz results in no sensor entities."""
     data = {}
     await setup_bridge(hass, data)
     assert len(hass.data[deconz.DATA_DECONZ_ID]) == 0
@@ -48,7 +48,7 @@ async def test_no_binary_sensors(hass):
 
 
 async def test_binary_sensors(hass):
-    """Test the update_lights function with some lights."""
+    """Test successful creation of binary sensor entities."""
     data = {"sensors": SENSOR}
     await setup_bridge(hass, data)
     assert "binary_sensor.sensor_1_name" in hass.data[deconz.DATA_DECONZ_ID]

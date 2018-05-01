@@ -38,11 +38,11 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             entities.append(DeconzLight(group))
     async_add_devices(entities, True)
 
-    async def async_new_light(light):
+    @callback
+    def async_new_light(light):
         """Called when a new light has been added to deCONZ."""
         async_add_devices(DeconzLight(light), True)
-    async_dispatcher_connect(
-        hass, DATA_DECONZ + '_new_light', async_new_light)
+    async_dispatcher_connect(hass, 'deconz_new_light', async_new_light)
 
 
 class DeconzLight(Light):

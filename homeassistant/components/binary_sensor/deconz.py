@@ -31,12 +31,13 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             entities.append(DeconzBinarySensor(sensor))
     async_add_devices(entities, True)
 
-    async def async_new_sensor(sensor):
+    @callback
+    def async_new_sensor(sensor):
         """Called when a new sensor device has been added to deCONZ."""
         if sensor.type in DECONZ_BINARY_SENSOR:
             async_add_devices(DeconzBinarySensor(sensor), True)
     async_dispatcher_connect(
-        hass, DATA_DECONZ + '_new_sensor', async_new_sensor)
+        hass, 'deconz_new_sensor', async_new_sensor)
 
 
 class DeconzBinarySensor(BinarySensorDevice):

@@ -41,7 +41,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
                 entities.append(DeconzSensor(sensor))
     async_add_devices(entities, True)
 
-    async def async_new_sensor(sensor):
+    @callback
+    def async_new_sensor(sensor):
         """Called when a new sensor device has been added to deCONZ."""
         if sensor.type in DECONZ_SENSOR:
             if sensor.type in DECONZ_REMOTE:
@@ -49,8 +50,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
                     async_add_devices(DeconzBattery(sensor), True)
             else:
                 async_add_devices(DeconzSensor(sensor), True)
-    async_dispatcher_connect(
-        hass, DATA_DECONZ + '_new_sensor', async_new_sensor)
+    async_dispatcher_connect(hass, 'deconz_new_sensor', async_new_sensor)
 
 
 class DeconzSensor(Entity):
