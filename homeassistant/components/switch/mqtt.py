@@ -39,7 +39,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the MQTT switch."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -114,7 +115,7 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
 
         if self._optimistic:
             last_state = await async_get_last_state(self.hass,
-                                                         self.entity_id)
+                                                    self.entity_id)
             if last_state:
                 self._state = last_state.state == STATE_ON
 
