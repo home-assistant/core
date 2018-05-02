@@ -358,8 +358,7 @@ class TestZWaveNodeEntity(unittest.TestCase):
 
     def test_unique_id(self):
         """Test unique_id."""
-        self.assertEqual('567-test_manufacturer-test_product',
-                         self.entity.unique_id)
+        self.assertEqual('node-567', self.entity.unique_id)
 
     def test_unique_id_missing_data(self):
         """Test unique_id."""

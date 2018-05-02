@@ -4,7 +4,6 @@ import logging
 from homeassistant.core import callback
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
 
 from .const import (
     ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_SCENE_DATA,
@@ -145,6 +144,9 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             self.wakeup_interval = None
 
         self.battery_level = self.node.get_battery_level()
+        self._product_name = self.node.product_name
+        self._manufacturer_name = self.node.manufacturer_name
+        self._name = node_name(self.node)
         self._attributes = attributes
 
         if not self._unique_id:
@@ -242,7 +244,5 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def _compute_unique_id(self):
         if self._manufacturer_name and self._product_name:
-            return '{}-{}-{}'.format(self.node_id,
-                                     slugify(self._manufacturer_name),
-                                     slugify(self._product_name))
+            return 'node-{}'.format(self.node_id)
         return None
