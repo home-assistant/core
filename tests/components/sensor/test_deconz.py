@@ -82,3 +82,17 @@ async def test_sensors(hass):
     assert "sensor.sensor_4_name_battery_level" in \
         hass.data[deconz.DATA_DECONZ_ID]
     assert len(hass.states.async_all()) == 2
+
+
+async def test_add_new_sensor(hass):
+    """Test successful creation of sensor entities."""
+    data = {}
+    await setup_bridge(hass, data)
+    sensor = Mock()
+    sensor.deconzid = 'deconzid'
+    sensor.name = 'name'
+    sensor.type = 'ZHATemperature'
+    sensor.register_async_callback = Mock()
+    async_dispatcher_send(hass, 'deconz_new_sensor', sensor)
+    await hass.async_block_till_done()
+    assert "sensor.name" in hass.data[deconz.DATA_DECONZ_ID]

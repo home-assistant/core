@@ -145,9 +145,7 @@ async def test_add_new_device(hass):
     }
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
-    with patch.object(hass, 'async_add_job') as mock_add_job, \
-        patch.object(hass, 'config_entries') as mock_config_entries, \
-        patch.object(deconz, 'async_dispatcher_send') as mock_dispatch_send, \
+    with patch.object(deconz, 'async_dispatcher_send') as mock_dispatch_send, \
         patch('pydeconz.DeconzSession.async_load_parameters',
               return_value=mock_coro(True)):
         assert await deconz.async_setup_entry(hass, entry) is True
@@ -165,10 +163,8 @@ async def test_add_new_remote(hass):
     remote.name = 'name'
     remote.type = 'ZHASwitch'
     remote.register_async_callback = Mock()
-    with patch.object(hass, 'async_add_job') as mock_add_job, \
-        patch.object(hass, 'config_entries') as mock_config_entries, \
-        patch('pydeconz.DeconzSession.async_load_parameters',
-              return_value=mock_coro(True)):
+    with patch('pydeconz.DeconzSession.async_load_parameters',
+               return_value=mock_coro(True)):
         assert await deconz.async_setup_entry(hass, entry) is True
 
     async_dispatcher_send(hass, 'deconz_new_sensor', remote)
