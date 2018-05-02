@@ -224,6 +224,47 @@ def test_node_discovery(hass, mock_openzwave):
     assert hass.states.get('zwave.mock_node').state is 'unknown'
 
 
+async def test_unparsed_node_discovery(hass, mock_openzwave):
+    """Test discovery of a node."""
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == MockNetwork.SIGNAL_NODE_ADDED:
+            mock_receivers.append(receiver)
+
+    with patch('pydispatch.dispatcher.connect', new=mock_connect):
+        await async_setup_component(hass, 'zwave', {'zwave': {}})
+
+    assert len(mock_receivers) == 1
+
+    node = MockNode(node_id=14, manufacturer_name=None)
+
+    sleeps = []
+
+    def utcnow():
+        return datetime.fromtimestamp(len(sleeps))
+
+    asyncio_sleep = asyncio.sleep
+
+    async def sleep(duration, loop):
+        if duration > 0:
+            sleeps.append(duration)
+        await asyncio_sleep(0, loop=loop)
+
+    with patch('homeassistant.components.zwave.dt_util.utcnow', new=utcnow):
+        with patch('asyncio.sleep', new=sleep):
+            with patch.object(zwave, '_LOGGER') as mock_logger:
+                hass.async_add_job(mock_receivers[0], node)
+                await hass.async_block_till_done()
+
+                assert len(sleeps) == const.NODE_READY_WAIT_SECS
+                assert mock_logger.warning.called
+                assert len(mock_logger.warning.mock_calls) == 1
+                assert mock_logger.warning.mock_calls[0][1][1:] == \
+                    (14, const.NODE_READY_WAIT_SECS)
+    assert hass.states.get('zwave.mock_node').state is 'unknown'
+
+
 @asyncio.coroutine
 def test_node_ignored(hass, mock_openzwave):
     """Test discovery of a node."""
