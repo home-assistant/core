@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  home-assistant:
+    image: homeassistant/home-assistant
+    container_name: home-assistant
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ~/.homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
