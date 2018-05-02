@@ -509,16 +509,24 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_update(self):
-        """Update state in HA. 1. Search for first active playing child."""
+        """Update state in HA."""
+        # Search for child in 'playing' state first
         for child_name in self._children:
             child_state = self.hass.states.get(child_name)
-            if child_state and child_state.state not in OFF_STATES:
+            if child_state and child_state.state is STATE_PLAYING:
                 self._child_state = child_state
                 return
-        """2. No active playing child found. Find first paused child."""
+        # Search for child in 'paused' state if no playing one found
         for child_name in self._children:
             child_state = self.hass.states.get(child_name)
             if child_state and child_state.state is STATE_PAUSED:
                 self._child_state = child_state
                 return
+        # Search for child in 'on' state if no playing or paused found
+        for child_name in self._children:
+            child_state = self.hass.states.get(child_name)
+            if child_state and child_state.state is STATE_ON:
+                self._child_state = child_state
+                return
+        # None playing, paused or on found
         self._child_state = None
