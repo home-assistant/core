@@ -1,0 +1,27 @@
+#!/bin/bash
+# Sets up chrome for headless use.
+# https://gist.github.com/ziadoz/3e8ab7e944d02fe872c3454d17af31a5
+
+# Stop on errors
+set -e
+
+cd /usr/src/app/
+mkdir -p build && cd build
+
+# Versions
+CHROME_DRIVER_VERSION=`curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE`
+
+# Install Chrome.
+curl -sS -o - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list
+apt-get -y update
+apt-get -y install google-chrome-stable --no-install-recommends
+
+google-chrome --version
+
+# Install ChromeDriver
+curl -sS http://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip -o chromedriver_linux64.zip
+unzip chromedriver_linux64.zip -d ./
+rm chromedriver_linux64.zip
+mv -f chromedriver /usr/local/bin/chromedriver
+chmod +x /usr/local/bin/chromedriver
