@@ -1,5 +1,5 @@
 """
-Component that will perform facial recognition via a local machinebox instance.
+Component that will perform facial detection via a local machinebox instance.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.facebox
@@ -15,16 +15,17 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, CONF_SOURCE, CONF_ENTITY_ID,
     CONF_NAME)
+from homeassistant.const import (CONF_IP_ADDRESS, CONF_PORT)
 from homeassistant.components.image_processing.microsoft_face_identify import (
     ImageProcessingFaceEntity)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ENDPOINT = 'endpoint'
 ROUNDING_DECIMALS = 2
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ENDPOINT): cv.string,
+    vol.Required(CONF_IP_ADDRESS): cv.string,
+    vol.Required(CONF_PORT): cv.string,
 })
 
 
@@ -34,7 +35,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for camera in config[CONF_SOURCE]:
         entities.append(Facebox(
             camera.get(CONF_NAME),
-            config[CONF_ENDPOINT],
+            config[CONF_IP_ADDRESS],
+            config[CONF_PORT],
             camera[CONF_ENTITY_ID]
         ))
     add_devices(entities)
@@ -43,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class Facebox(ImageProcessingFaceEntity):
     """Perform a classification via a Facebox."""
 
-    def __init__(self, name, endpoint, camera_entity):
+    def __init__(self, name, ip, port, camera_entity):
         """Init with the API key and model id"""
         super().__init__()
         if name:  # Since name is optional.
@@ -51,7 +53,7 @@ class Facebox(ImageProcessingFaceEntity):
         else:
             self._name = "Facebox {0}".format(
                 split_entity_id(camera_entity)[1])
-        self._url = "http://{}/facebox/check".format(endpoint)
+        self._url = "http://{}:{}/facebox/check".format(ip, port)
         self._camera = camera_entity
         self._response_time = None
         self.total_faces = 0
