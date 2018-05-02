@@ -1313,9 +1313,11 @@ waterfurnace==0.4.0
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0
 
-# homeassistant.components.remote_homeassistant
 # homeassistant.components.spc
 # homeassistant.components.media_player.webostv
+websockets==3.2
+
+# homeassistant.components.remote_homeassistant
 websockets==4.0.1
 
 # homeassistant.components.zigbee
