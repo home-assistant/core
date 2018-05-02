@@ -119,6 +119,8 @@ class MockNode(MagicMock):
                  product_type='678',
                  command_classes=None,
                  can_wake_up_value=True,
+                 manufacturer_name='Test Manufacturer',
+                 product_name='Test Product',
                  network=None,
                  **kwargs):
         """Initialize a Z-Wave mock node."""
@@ -128,6 +130,8 @@ class MockNode(MagicMock):
         self.manufacturer_id = manufacturer_id
         self.product_id = product_id
         self.product_type = product_type
+        self.manufacturer_name = manufacturer_name
+        self.product_name = product_name
         self.can_wake_up_value = can_wake_up_value
         self._command_classes = command_classes or []
         if network is not None:
