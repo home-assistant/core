@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO,
     ATTR_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_SWING_MODE, SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE,
-    SUPPORT_AUX_HEAT)
+    SUPPORT_AUX_HEAT, ATTR_MAX_TEMP, ATTR_MIN_TEMP, ATTR_TARGET_TEMP_STEP)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME, CONF_VALUE_TEMPLATE)
 from homeassistant.components.mqtt import (
@@ -68,6 +68,9 @@ CONF_FAN_MODE_LIST = 'fan_modes'
 CONF_MODE_LIST = 'modes'
 CONF_SWING_MODE_LIST = 'swing_modes'
 CONF_INITIAL = 'initial'
+CONF_INITIAL_FAN_MODE = 'initial_fan_mode'
+CONF_INITIAL_MODE = 'initial_mode'
+CONF_INITIAL_SWING_MODE = 'initial_swing_mode'
 CONF_SEND_IF_OFF = 'send_if_off'
 
 SCHEMA_BASE = CLIMATE_PLATFORM_SCHEMA.extend(MQTT_BASE_PLATFORM_SCHEMA.schema)
@@ -113,6 +116,12 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
                           STATE_DRY, STATE_FAN_ONLY]): cv.ensure_list,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_INITIAL, default=21): cv.positive_int,
+    vol.Optional(CONF_INITIAL_FAN_MODE, default=SPEED_LOW): cv.string,
+    vol.Optional(CONF_INITIAL_MODE, default=STATE_OFF): cv.string,
+    vol.Optional(CONF_INITIAL_SWING_MODE, default=STATE_OFF): cv.string,
+    vol.Optional(ATTR_MIN_TEMP, default=7): cv.positive_int,
+    vol.Optional(ATTR_MAX_TEMP, default=30): cv.positive_int,
+    vol.Optional(ATTR_TARGET_TEMP_STEP, default=1): cv.positive_int,
     vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
     vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
@@ -174,8 +183,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             config.get(CONF_FAN_MODE_LIST),
             config.get(CONF_SWING_MODE_LIST),
             config.get(CONF_INITIAL),
-            False, None, SPEED_LOW,
-            STATE_OFF, STATE_OFF, False,
+            config.get(CONF_INITIAL_FAN_MODE),
+            config.get(CONF_INITIAL_SWING_MODE),
+            config.get(CONF_INITIAL_MODE),
+            False,
+            None,
+            False,
+            config.get(ATTR_MIN_TEMP),
+            config.get(ATTR_MAX_TEMP),
+            config.get(ATTR_TARGET_TEMP_STEP),
             config.get(CONF_SEND_IF_OFF),
             config.get(CONF_PAYLOAD_ON),
             config.get(CONF_PAYLOAD_OFF),
@@ -190,8 +206,9 @@ class MqttClimate(MqttAvailability, ClimateDevice):
 
     def __init__(self, hass, name, topic, value_templates, qos, retain,
                  mode_list, fan_mode_list, swing_mode_list,
-                 target_temperature, away, hold, current_fan_mode,
-                 current_swing_mode, current_operation, aux, send_if_off,
+                 target_temperature, current_fan_mode, current_swing_mode,
+                 current_operation, away, hold, aux, min_temp,
+                 max_temp, target_temp_step, send_if_off,
                  payload_on, payload_off, availability_topic,
                  payload_available, payload_not_available):
         """Initialize the climate device."""
@@ -215,10 +232,12 @@ class MqttClimate(MqttAvailability, ClimateDevice):
         self._fan_list = fan_mode_list
         self._operation_list = mode_list
         self._swing_list = swing_mode_list
-        self._target_temperature_step = 1
+        self._target_temperature_step = target_temp_step
         self._send_if_off = send_if_off
         self._payload_on = payload_on
         self._payload_off = payload_off
+        self._min_temp = min_temp
+        self._max_temp = max_temp
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -424,6 +443,16 @@ class MqttClimate(MqttAvailability, ClimateDevice):
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
         return self._target_temperature_step
+
+    @property
+    def min_temp(self):
+        """Return the minimum target temperature."""
+        return self._min_temp
+
+    @property
+    def max_temp(self):
+        """Return the maximum target temperature."""
+        return self._max_temp
 
     @property
     def is_away_mode_on(self):
