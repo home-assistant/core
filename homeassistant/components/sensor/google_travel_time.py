@@ -10,11 +10,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, EVENT_HOMEASSISTANT_START, ATTR_LATITUDE,
-    ATTR_LONGITUDE, CONF_MODE)
+    CONF_API_KEY, CONF_NAME, EVENT_HOMEASSISTANT_START, ATTR_ENTITY_ID,
+    ATTR_LATITUDE, ATTR_LONGITUDE, CONF_MODE)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.location as location
@@ -24,14 +24,18 @@ REQUIREMENTS = ['googlemaps==2.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_TRAFFIC_MODEL = 'traffic_model'
+ATTR_AVOID = 'avoid'
+
 CONF_DESTINATION = 'destination'
 CONF_OPTIONS = 'options'
 CONF_ORIGIN = 'origin'
 CONF_TRAVEL_MODE = 'travel_mode'
+CONF_UPDATE_INTERVAL = 'update_interval'
+
+DATA_GOOGLE_TRAVEL_TIME = "goolge_travel_time"
 
 DEFAULT_NAME = 'Google Travel Time'
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 ALL_LANGUAGES = ['ar', 'bg', 'bn', 'ca', 'cs', 'da', 'de', 'el', 'en', 'es',
                  'eu', 'fa', 'fi', 'fr', 'gl', 'gu', 'hi', 'hr', 'hu', 'id',
@@ -53,21 +57,36 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ORIGIN): cv.string,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_TRAVEL_MODE): vol.In(TRAVEL_MODE),
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
+        vol.All(cv.time_period, cv.positive_timedelta)),
     vol.Optional(CONF_OPTIONS, default={CONF_MODE: 'driving'}): vol.All(
         dict, vol.Schema({
             vol.Optional(CONF_MODE, default='driving'): vol.In(TRAVEL_MODE),
             vol.Optional('language'): vol.In(ALL_LANGUAGES),
-            vol.Optional('avoid'): vol.In(AVOID),
+            vol.Optional(ATTR_AVOID): vol.In(AVOID),
             vol.Optional('units'): vol.In(UNITS),
             vol.Exclusive('arrival_time', 'time'): cv.string,
             vol.Exclusive('departure_time', 'time'): cv.string,
-            vol.Optional('traffic_model'): vol.In(TRAVEL_MODEL),
+            vol.Optional(ATTR_TRAFFIC_MODEL): vol.In(TRAVEL_MODEL),
             vol.Optional('transit_mode'): vol.In(TRANSPORT_TYPE),
             vol.Optional('transit_routing_preference'): vol.In(TRANSIT_PREFS)
         }))
 })
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
+
+SERVICE_SET_TRAFFIC_MODEL = 'google_travel_time_set_traffic_model'
+SERVICE_SET_AVOID = 'google_travel_time_set_avoid'
+
+SET_TRAFFIC_MODEL_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_TRAFFIC_MODEL): vol.In(TRAVEL_MODEL)
+})
+
+SET_AVOID_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_AVOID): vol.In(AVOID)
+})
 
 
 def convert_time_to_utc(timestr):
@@ -81,6 +100,9 @@ def convert_time_to_utc(timestr):
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up the Google travel time platform."""
+    if DATA_GOOGLE_TRAVEL_TIME not in hass.data:
+        hass.data[DATA_GOOGLE_TRAVEL_TIME] = []
+
     def run_setup(event):
         """Delay the setup until Home Assistant is fully initialized.
 
@@ -107,12 +129,53 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         api_key = config.get(CONF_API_KEY)
         origin = config.get(CONF_ORIGIN)
         destination = config.get(CONF_DESTINATION)
+        interval = config.get(CONF_UPDATE_INTERVAL)
 
         sensor = GoogleTravelTimeSensor(
-            hass, name, api_key, origin, destination, options)
+            hass, name, api_key, origin, destination, options, interval)
 
         if sensor.valid_api_connection:
             add_devices_callback([sensor])
+            hass.data[DATA_GOOGLE_TRAVEL_TIME].append(sensor)
+
+        def traffic_model_set_service(service):
+            """Set the travel model on the target sensor(s)."""
+            entity_ids = service.data.get(ATTR_ENTITY_ID)
+            traffic_model = service.data[ATTR_TRAFFIC_MODEL]
+
+            if entity_ids:
+                targets = [target for target
+                           in hass.data[DATA_GOOGLE_TRAVEL_TIME]
+                           if target.entity_id in entity_ids]
+            else:
+                targets = hass.data[DATA_GOOGLE_TRAVEL_TIME]
+
+            _LOGGER.debug("Targets = %s", targets)
+            for target in targets:
+                target.set_traffic_model(traffic_model)
+
+        def avoid_set_service(service):
+            """Set the avoid option on the target sensor(s)."""
+            entity_ids = service.data.get(ATTR_ENTITY_ID)
+            avoid = service.data[ATTR_AVOID]
+
+            if entity_ids:
+                targets = [target for target
+                           in hass.data[DATA_GOOGLE_TRAVEL_TIME]
+                           if target.entity_id in entity_ids]
+            else:
+                targets = hass.data[DATA_GOOGLE_TRAVEL_TIME]
+
+            _LOGGER.debug("Targets = %s", targets)
+            for target in targets:
+                target.set_avoid(avoid)
+
+        hass.services.register(
+            DOMAIN, SERVICE_SET_TRAFFIC_MODEL, traffic_model_set_service,
+            schema=SET_TRAFFIC_MODEL_SCHEMA)
+        hass.services.register(
+            DOMAIN, SERVICE_SET_AVOID, avoid_set_service,
+            schema=SET_AVOID_SCHEMA)
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
@@ -121,11 +184,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class GoogleTravelTimeSensor(Entity):
     """Representation of a Google travel time sensor."""
 
-    def __init__(self, hass, name, api_key, origin, destination, options):
+    def __init__(self, hass, name, api_key, origin, destination, options,
+                 interval):
         """Initialize the sensor."""
         self._hass = hass
         self._name = name
-        self._options = options
+        self._options = options.copy()
         self._unit_of_measurement = 'min'
         self._matrix = None
         self.valid_api_connection = True
@@ -140,6 +204,9 @@ class GoogleTravelTimeSensor(Entity):
             self._destination_entity_id = destination
         else:
             self._destination = destination
+
+        # Apply throttling to methods using configured interval
+        self.update = Throttle(interval)(self._update)
 
         import googlemaps
         self._client = googlemaps.Client(api_key, timeout=10)
@@ -191,8 +258,17 @@ class GoogleTravelTimeSensor(Entity):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def set_traffic_model(self, traffic_model):
+        """Set the traffic model used by the sensor."""
+        self._options[ATTR_TRAFFIC_MODEL] = traffic_model
+        _LOGGER.debug("Set %s Options = %s", self.name, self._options)
+
+    def set_avoid(self, avoid):
+        """Set the avoid used by the sensor."""
+        self._options[ATTR_AVOID] = avoid
+        _LOGGER.debug("Set %s Options = %s", self.name, self._options)
+
+    def _update(self):
         """Get the latest data from Google."""
         options_copy = self._options.copy()
         dtime = options_copy.get('departure_time')
@@ -223,6 +299,7 @@ class GoogleTravelTimeSensor(Entity):
         self._destination = self._resolve_zone(self._destination)
         self._origin = self._resolve_zone(self._origin)
 
+        _LOGGER.debug("%s Options: %s", self.name, options_copy)
         if self._destination is not None and self._origin is not None:
             self._matrix = self._client.distance_matrix(
                 self._origin, self._destination, **options_copy)

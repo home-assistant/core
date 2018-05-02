@@ -1,0 +1,21 @@
+# Describes the format for available component services
+
+google_travel_time_set_traffic_model:
+  description: Sets the travel model of the sensor
+  fields:
+    entity_id:
+      description: The entity to set the travel model for
+      example: sensor.google_travel_time
+    traffic_model:
+      description: The travel model to use
+      example: pessimistic
+google_travel_time_set_avoid:
+  description: Sets the avoid option of the sensor
+  fields:
+    entity_id:
+      description: The entity to set the travel model for
+      example: sensor.google_travel_time
+    avoid:
+      description: The avoid option to use
+      example: tolls
+
