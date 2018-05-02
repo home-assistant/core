@@ -12,6 +12,7 @@ import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.const import (
+    ATTR_PRE_PENDING_STATE, ATTR_POST_PENDING_STATE,
     CONF_CODE, CONF_DELAY_TIME, CONF_DISARM_AFTER_TRIGGER, CONF_NAME,
     CONF_PENDING_TIME, CONF_PLATFORM, CONF_TRIGGER_TIME,
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_CUSTOM_BYPASS,
@@ -40,9 +41,6 @@ SUPPORTED_PRETRIGGER_STATES = [state for state in SUPPORTED_STATES
 
 SUPPORTED_PENDING_STATES = [state for state in SUPPORTED_STATES
                             if state != STATE_ALARM_DISARMED]
-
-ATTR_PRE_PENDING_STATE = 'pre_pending_state'
-ATTR_POST_PENDING_STATE = 'post_pending_state'
 
 
 def _state_validator(config):
