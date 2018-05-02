@@ -66,21 +66,27 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema({
 
 def setup(hass, config):
     """Set up the Matrix bot component."""
+    from matrix_client.client import MatrixRequestError
+
     if not config[DOMAIN]:
         return False
 
     config = config[DOMAIN][0]
 
-    bot = MatrixBot(
-        hass,
-        os.path.join(hass.config.path(), SESSION_FILE),
-        config.get(CONF_HOMESERVER),
-        config.get(CONF_VERIFY_SSL),
-        config.get(CONF_USERNAME),
-        config.get(CONF_PASSWORD),
-        config.get(CONF_ROOMS, []),
-        config.get(CONF_COMMANDS, []))
-    hass.data[DOMAIN] = bot
+    try:
+        bot = MatrixBot(
+            hass,
+            os.path.join(hass.config.path(), SESSION_FILE),
+            config.get(CONF_HOMESERVER),
+            config.get(CONF_VERIFY_SSL),
+            config.get(CONF_USERNAME),
+            config.get(CONF_PASSWORD),
+            config.get(CONF_ROOMS, []),
+            config.get(CONF_COMMANDS, []))
+        hass.data[DOMAIN] = bot
+    except MatrixRequestError as exception:
+        _LOGGER.error("Matrix failed to log in: %s", str(exception))
+        return False
 
     def send_message_handler(service):
         """Handle the send_message service."""
@@ -113,7 +119,6 @@ class MatrixBot(object):
 
         # Logging in is deferred b/c it does I/O
         self._setup_done = False
-        self._client = None
 
         # We have to fetch the aliases for every room to make sure we don't
         # join it twice by accident. However, fetching aliases is costly,
@@ -143,29 +148,12 @@ class MatrixBot(object):
                         self._expression_commands[room_id] = []
                     self._expression_commands[room_id].append(command)
 
-        hass.add_job(self._setup)
-
-    def _setup(self):
-        """Log in, join rooms etc."""
-        from matrix_client.client import MatrixRequestError
+        # Log in. This raises a MatrixRequestError if login is unsuccessful
+        self._client = self._login()
 
         def handle_matrix_exception(exception):
             """Handle exceptions raised inside the Matrix SDK."""
             _LOGGER.error("Matrix exception:\n %s", str(exception))
-
-        # Login, this will raise a MatrixRequestError if login is unsuccessful
-        try:
-            self._client = self._login()
-        except MatrixRequestError as exception:
-            _LOGGER.error("Matrix login failed: %s", str(exception))
-
-            del self.hass.data[DOMAIN]
-            self.hass.services.remove(DOMAIN, SERVICE_SEND_MESSAGE)
-
-            return
-
-        # Join rooms in which we listen for commands and start listening
-        self._join_rooms()
 
         self._client.start_listener_thread(
             exception_handler=handle_matrix_exception)
@@ -176,7 +164,8 @@ class MatrixBot(object):
 
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_client)
 
-        self._setup_done = True
+        # This potentially does a lot of I/O, so we defer it
+        hass.add_job(self._join_rooms)
 
     def _handle_room_message(self, room_id, room, event):
         """Handle a message sent to a room."""
