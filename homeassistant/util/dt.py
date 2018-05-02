@@ -175,7 +175,6 @@ def get_age(date: dt.datetime) -> str:
     The age can be in second, minute, hour, day, month or year. Only the
     biggest unit is considered, e.g. if it's 2 days and 3 hours, "2 days" will
     be returned.
-    Make sure date is not in the future, or else it won't work.
     """
     def formatn(number: int, unit: str) -> str:
         """Add "unit" if it's plural."""
@@ -189,7 +188,11 @@ def get_age(date: dt.datetime) -> str:
         """Return quotient and remaining."""
         return first // second, first % second
 
-    delta = now() - date
+    if date > now():
+        delta = date + timedelta(seconds=0.9) - now()
+    else:
+        delta = now() - date
+
     day = delta.days
     second = delta.seconds
 

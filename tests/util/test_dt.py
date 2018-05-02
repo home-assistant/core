@@ -1,6 +1,7 @@
 """Test Home Assistant date util methods."""
 import unittest
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
 import homeassistant.util.dt as dt_util
 
@@ -135,32 +136,45 @@ class TestDateUtil(unittest.TestCase):
 
     def test_get_age(self):
         """Test get_age."""
-        diff = dt_util.now() - timedelta(seconds=0)
-        self.assertEqual(dt_util.get_age(diff), "0 seconds")
+        with patch('homeassistant.util.utcnow', return_value=dt_util.now()):
+            diff = dt_util.now() - timedelta(seconds=0)
+            self.assertEqual(dt_util.get_age(diff), "0 seconds")
 
-        diff = dt_util.now() - timedelta(seconds=1)
-        self.assertEqual(dt_util.get_age(diff), "1 second")
+            diff = dt_util.now() - timedelta(seconds=1)
+            self.assertEqual(dt_util.get_age(diff), "1 second")
 
-        diff = dt_util.now() - timedelta(seconds=30)
-        self.assertEqual(dt_util.get_age(diff), "30 seconds")
+            diff = dt_util.now() - timedelta(seconds=30)
+            self.assertEqual(dt_util.get_age(diff), "30 seconds")
 
-        diff = dt_util.now() - timedelta(minutes=5)
-        self.assertEqual(dt_util.get_age(diff), "5 minutes")
+            diff = dt_util.now() - timedelta(minutes=5)
+            self.assertEqual(dt_util.get_age(diff), "5 minutes")
 
-        diff = dt_util.now() - timedelta(minutes=1)
-        self.assertEqual(dt_util.get_age(diff), "1 minute")
+            diff = dt_util.now() - timedelta(minutes=1)
+            self.assertEqual(dt_util.get_age(diff), "1 minute")
 
-        diff = dt_util.now() - timedelta(minutes=300)
-        self.assertEqual(dt_util.get_age(diff), "5 hours")
+            diff = dt_util.now() - timedelta(minutes=300)
+            self.assertEqual(dt_util.get_age(diff), "5 hours")
 
-        diff = dt_util.now() - timedelta(minutes=320)
-        self.assertEqual(dt_util.get_age(diff), "5 hours")
+            diff = dt_util.now() - timedelta(minutes=320)
+            self.assertEqual(dt_util.get_age(diff), "5 hours")
 
-        diff = dt_util.now() - timedelta(minutes=2*60*24)
-        self.assertEqual(dt_util.get_age(diff), "2 days")
+            diff = dt_util.now() - timedelta(minutes=2*60*24)
+            self.assertEqual(dt_util.get_age(diff), "2 days")
 
-        diff = dt_util.now() - timedelta(minutes=32*60*24)
-        self.assertEqual(dt_util.get_age(diff), "1 month")
+            diff = dt_util.now() - timedelta(minutes=32*60*24)
+            self.assertEqual(dt_util.get_age(diff), "1 month")
 
-        diff = dt_util.now() - timedelta(minutes=365*60*24)
-        self.assertEqual(dt_util.get_age(diff), "1 year")
+            diff = dt_util.now() - timedelta(minutes=365*60*24)
+            self.assertEqual(dt_util.get_age(diff), "1 year")
+
+            diff = dt_util.now() + timedelta(seconds=1)
+            self.assertEqual(dt_util.get_age(diff), "1 second")
+
+            diff = dt_util.now() + timedelta(seconds=30)
+            self.assertEqual(dt_util.get_age(diff), "30 seconds")
+
+            diff = dt_util.now() + timedelta(minutes=5)
+            self.assertEqual(dt_util.get_age(diff), "5 minutes")
+
+            diff = dt_util.now() + timedelta(minutes=1)
+            self.assertEqual(dt_util.get_age(diff), "1 minute")
