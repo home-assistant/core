@@ -590,6 +590,9 @@ pmsensor==0.4
 # homeassistant.components.sensor.pocketcasts
 pocketcasts==0.1
 
+# homeassistant.components.sensor.postnl
+postnl_api==1.0.1
+
 # homeassistant.components.climate.proliphix
 proliphix==0.4.1
 
@@ -1038,9 +1041,6 @@ regenmaschine==0.4.1
 
 # homeassistant.components.python_script
 restrictedpython==4.0b2
-
-# homeassistant.components.sensor.postnl
-postnl_api==1.0.1
 
 # homeassistant.components.rflink
 rflink==0.0.34
