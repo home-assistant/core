@@ -89,7 +89,7 @@ class Entity(object):
 
         False if entity pushes its state to HA.
         """
-        return True
+        return not self.assumed_state
 
     @property
     def unique_id(self) -> str:
