@@ -24,6 +24,14 @@ REQUIREMENTS = ['yeelight==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+LEGACY_DEVICE_TYPE_MAP = {
+    'color1': 'rgb',
+    'mono1': 'white',
+    'strip1': 'strip',
+    'bslamp1': 'bedside',
+    'ceiling1': 'ceiling',
+}
+
 CONF_TRANSITION = 'transition'
 DEFAULT_TRANSITION = 350
 
@@ -122,8 +130,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is not None:
         _LOGGER.debug("Adding autodetected %s", discovery_info['hostname'])
 
+        device_type = discovery_info['device_type']
+        device_type = LEGACY_DEVICE_TYPE_MAP.get(device_type, device_type)
+
         # Not using hostname, as it seems to vary.
-        name = "yeelight_%s_%s" % (discovery_info['device_type'],
+        name = "yeelight_%s_%s" % (device_type,
                                    discovery_info['properties']['mac'])
         device = {'name': name, 'ipaddr': discovery_info['host']}
 

@@ -19,7 +19,7 @@ requests_mock==1.4
 
 
 # homeassistant.components.homekit
-HAP-python==1.1.8
+HAP-python==1.1.9
 
 # homeassistant.components.notify.html5
 PyJWT==1.6.0
@@ -63,7 +63,7 @@ evohomeclient==0.2.5
 feedparser==5.2.1
 
 # homeassistant.components.sensor.foobot
-foobot_async==0.3.0
+foobot_async==0.3.1
 
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
@@ -81,7 +81,7 @@ hbmqtt==0.9.1
 holidays==0.9.4
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180404.0
+home-assistant-frontend==20180426.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -129,8 +129,11 @@ pushbullet.py==0.11.0
 # homeassistant.components.canary
 py-canary==0.5.0
 
+# homeassistant.components.media_player.blackbird
+pyblackbird==0.5
+
 # homeassistant.components.deconz
-pydeconz==35
+pydeconz==36
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -145,6 +148,9 @@ pymonoprice==0.3
 # homeassistant.components.binary_sensor.nx584
 pynx584==0.4
 
+# homeassistant.components.qwikswitch
+pyqwikswitch==0.8
+
 # homeassistant.components.sensor.darksky
 # homeassistant.components.weather.darksky
 python-forecastio==1.4.0
@@ -154,6 +160,9 @@ pythonwhois==2.4.3
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
+
+# homeassistant.components.upnp
+pyupnp-async==0.1.0.1
 
 # homeassistant.components.notify.html5
 pywebpush==1.6.0
@@ -179,7 +188,7 @@ somecomfort==0.5.2
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.5
+sqlalchemy==1.2.6
 
 # homeassistant.components.statsd
 statsd==3.2.1
