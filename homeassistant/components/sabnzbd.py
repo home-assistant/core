@@ -14,6 +14,7 @@ from homeassistant.components.discovery import SERVICE_SABNZBD
 from homeassistant.const import (
     CONF_HOST, CONF_API_KEY, CONF_NAME, CONF_PORT, CONF_SENSORS,
     CONF_SSL, CONF_SCAN_INTERVAL)
+from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -98,7 +99,9 @@ async def async_configure_sabnzbd(hass, config, use_ssl, name=DEFAULT_NAME,
     uri_scheme = 'https' if use_ssl else 'http'
     base_url = BASE_URL_FORMAT.format(uri_scheme, host, port)
     if api_key is None:
-        conf = load_json(hass.config.path(CONFIG_FILE))
+        conf = await hass.async_add_job(
+            load_json(hass.config.path(CONFIG_FILE)))
+
         if conf.get(base_url, {}).get(CONF_API_KEY):
             api_key = conf[base_url][CONF_API_KEY]
 
@@ -106,7 +109,7 @@ async def async_configure_sabnzbd(hass, config, use_ssl, name=DEFAULT_NAME,
     if await async_check_sabnzbd(sab_api):
         await async_setup_sabnzbd(hass, sab_api, config, name)
     else:
-        request_configuration(hass, config, base_url)
+        async_request_configuration(hass, config, base_url)
 
 
 async def async_setup(hass, config):
@@ -150,22 +153,30 @@ async def async_setup_sabnzbd(hass, sab_api, config, name):
             else:
                 await sab_api_data.async_set_queue_speed()
 
-    hass.services.async_register(DOMAIN, SERVICE_PAUSE, async_service_handler)
-    hass.services.async_register(DOMAIN, SERVICE_RESUME, async_service_handler)
+    hass.services.async_register(DOMAIN, SERVICE_PAUSE,
+                                 async_service_handler,
+                                 schema=vol.Schema({}))
+
+    hass.services.async_register(DOMAIN, SERVICE_RESUME,
+                                 async_service_handler,
+                                 schema=vol.Schema({}))
+
     hass.services.async_register(DOMAIN, SERVICE_SET_SPEED,
                                  async_service_handler,
                                  schema=SPEED_LIMIT_SCHEMA)
 
 
-def request_configuration(hass, config, host):
+@callback
+def async_request_configuration(hass, config, host):
     """Request configuration steps from the user."""
     from pysabnzbd import SabnzbdApi
 
     configurator = hass.components.configurator
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
-        configurator.notify_errors(_CONFIGURING[host],
-                                   'Failed to register, please try again.')
+        configurator.async_notify_errors(
+            _CONFIGURING[host],
+            'Failed to register, please try again.')
 
         return
 
@@ -183,7 +194,7 @@ def request_configuration(hass, config, host):
                 req_config = _CONFIGURING.pop(host)
                 configurator.async_request_done(req_config)
 
-            success()
+            hass.async_add_job(success)
             await async_setup_sabnzbd(hass, sab_api, config,
                                       config.get(CONF_NAME, DEFAULT_NAME))
 
