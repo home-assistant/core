@@ -1,5 +1,5 @@
 """
-Support for manual details.
+Support for manual alarms.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.manual/
