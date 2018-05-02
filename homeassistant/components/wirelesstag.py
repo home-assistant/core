@@ -268,7 +268,7 @@ class WirelessTagBaseSensor(Entity):
         pass
 
     def on_binary_event(self, event):
-        """Update sensor data on binary event.
+        """Update sensor data on push notification binary event.
 
         Applicable for binary sensors only.
         Subclasses must ovverride - handler of push notification.
@@ -281,10 +281,8 @@ class WirelessTagBaseSensor(Entity):
         return {
             ATTR_BATTERY_LEVEL: self._tag.battery_remaining,
             ATTR_VOLTAGE: '{:.2f}V'.format(self._tag.battery_volts),
-            ATTR_TAG_COMMENT: self._tag.comment,
             ATTR_TAG_SIGNAL_STRAIGHT: '{}dBm'.format(
                 self._tag.signal_straight),
-            ATTR_TAG_BEEP_DURATION: self._tag.beep_option,
             ATTR_TAG_OUT_OF_RANGE: not self._tag.is_in_range,
             ATTR_TAG_POWER_CONSUMPTION: '{:.2f}%'.format(
                 self._tag.power_consumption)
