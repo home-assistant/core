@@ -245,7 +245,7 @@ class HueLight(Light):
         mode = self._color_mode
         source = self.light.action if self.is_group else self.light.state
 
-        if mode in ('xy', 'hs'):
+        if mode in ('xy', 'hs') and 'xy' in source:
             return color.color_xy_to_hs(*source['xy'])
 
         return None
