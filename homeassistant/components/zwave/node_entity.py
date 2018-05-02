@@ -75,6 +75,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         super().__init__()
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
+        self.component = None
         self._network = network
         self.node = node
         self.node_id = self.node.node_id
@@ -151,6 +152,15 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
         if not self._unique_id:
             self._unique_id = self._compute_unique_id()
+            if self._unique_id and self.component and self.hass:
+                # Node info parsed. Remove and re-add
+                async def remove_and_add():
+                    """Remove this entity and add it back."""
+                    await self.async_remove()
+                    self.entity_id = None
+                    await self.component.async_add_entities([self])
+                    self.component = None
+                self.hass.add_job(remove_and_add)
 
         self.maybe_schedule_update()
 

@@ -307,6 +307,8 @@ def setup(hass, config):
                     "Ignoring node entity %s due to device settings",
                     generated_id)
                 return
+            if not entity.unique_id:
+                entity.component = component
             component.add_entities([entity])
 
         if entity.unique_id:
