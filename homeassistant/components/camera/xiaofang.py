@@ -1,8 +1,8 @@
 """
-This component provides support for Xiaomi Cameras (HiSilicon Hi3518e V200).
+This component provides support for Xiaofang Cameras
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.yi/
+https://home-assistant.io/components/camera.xiaofang/
 """
 import asyncio
 import logging
@@ -19,9 +19,9 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 DEPENDENCIES = ['ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_BRAND = 'YI Home Camera'
+DEFAULT_BRAND = 'Xiaofang Home Camera'
 DEFAULT_PASSWORD = ''
-DEFAULT_PATH = '/tmp/sd/record'
+DEFAULT_PATH = '/media/mmcblk0p1/record'
 DEFAULT_PORT = 21
 DEFAULT_USERNAME = 'root'
 
@@ -42,13 +42,13 @@ async def async_setup_platform(hass,
                                config,
                                async_add_devices,
                                discovery_info=None):
-    """Set up a Yi Camera."""
+    """Set up a Xiaofang Camera."""
     _LOGGER.debug('Received configuration: %s', config)
-    async_add_devices([YiCamera(hass, config)], True)
+    async_add_devices([XiaofangCamera(hass, config)], True)
 
 
-class YiCamera(Camera):
-    """Define an implementation of a Yi Camera."""
+class XiaofangCamera(Camera):
+    """Define an implementation of a Xiaofang Camera."""
 
     def __init__(self, hass, config):
         """Initialize."""
@@ -75,7 +75,7 @@ class YiCamera(Camera):
         return DEFAULT_BRAND
 
     def get_latest_video_url(self):
-        """Retrieve the latest video file from the customized Yi FTP server."""
+        """Retrieve the latest video file from the Xiaofang FTP server."""
         from ftplib import FTP, error_perm
 
         ftp = FTP(self.host)
@@ -98,6 +98,19 @@ class YiCamera(Camera):
             _LOGGER.warning("There don't appear to be any uploaded videos")
             return False
 
+        first_dir = dirs[-1]
+        try:
+            ftp.cwd(first_dir)
+        except error_perm as exc:
+            _LOGGER.error('Unable to find path: %s', first_dir)
+            _LOGGER.debug(exc)
+            return False
+
+        dirs = [d for d in ftp.nlst() if '.' not in d]
+        if not dirs:
+            _LOGGER.warning("There don't appear to be any uploaded videos")
+            return False
+
         latest_dir = dirs[-1]
         ftp.cwd(latest_dir)
         videos = ftp.nlst()
@@ -105,9 +118,9 @@ class YiCamera(Camera):
             _LOGGER.info('Video folder "%s" is empty; delaying', latest_dir)
             return False
 
-        return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}'.format(
+        return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}/{7}'.format(
             self.user, self.passwd, self.host, self.port, self.path,
-            latest_dir, videos[-1])
+            first_dir, latest_dir, videos[-2])
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
