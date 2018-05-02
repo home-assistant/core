@@ -75,7 +75,7 @@ class XiaofangCamera(Camera):
         return DEFAULT_BRAND
 
     def get_latest_video_url(self):
-        """Retrieve the latest video file from the customized Xiaofang FTP server."""
+        """Retrieve the latest video file from Xiaofang FTP server."""
         from ftplib import FTP, error_perm
 
         ftp = FTP(self.host)
@@ -120,7 +120,7 @@ class XiaofangCamera(Camera):
 
         return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}/{7}'.format(
             self.user, self.passwd, self.host, self.port, self.path,
-            first_dir,latest_dir, videos[-2])
+            first_dir, latest_dir, videos[-2])
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
