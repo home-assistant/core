@@ -98,8 +98,7 @@ def isdevice(value):
 
 def matches_regex(regex):
     """Validate that the value is a string that matches a regex."""
-    if isinstance(regex, str):
-        regex = re.compile(regex)
+    regex = re.compile(regex)
 
     def validator(value: Any) -> str:
         """Validate that value matches the given regex."""
@@ -119,7 +118,10 @@ def is_regex(value):
     try:
         r = re.compile(value)
         return r
-    except Exception:
+    except TypeError:
+        raise vol.Invalid("value {} is of the wrong type for a regular "
+                          "expression".format(value))
+    except re.error:
         raise vol.Invalid("value {} is not a valid regular expression".format(
             value))
 

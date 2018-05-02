@@ -13,14 +13,15 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (ATTR_TARGET, ATTR_MESSAGE)
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_VERIFY_SSL, CONF_NAME)
+                                 CONF_VERIFY_SSL, CONF_NAME,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['matrix-client==0.1.0']
+REQUIREMENTS = ['matrix-client==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-SESSION_FILE = 'matrix.conf'
+SESSION_FILE = '.matrix.conf'
 
 CONF_HOMESERVER = 'homeserver'
 CONF_ROOMS = 'rooms'
@@ -146,18 +147,34 @@ class MatrixBot(object):
 
     def _setup(self):
         """Log in, join rooms etc."""
+        from matrix_client.client import MatrixRequestError
+
         def handle_matrix_exception(exception):
             """Handle exceptions raised inside the Matrix SDK."""
             _LOGGER.error("Matrix exception:\n %s", str(exception))
 
         # Login, this will raise a MatrixRequestError if login is unsuccessful
-        self._client = self._login()
+        try:
+            self._client = self._login()
+        except MatrixRequestError as exception:
+            _LOGGER.error("Matrix login failed: %s", str(exception))
+
+            del self.hass.data[DOMAIN]
+            self.hass.services.remove(DOMAIN, SERVICE_SEND_MESSAGE)
+
+            return
 
         # Join rooms in which we listen for commands and start listening
         self._join_rooms()
 
         self._client.start_listener_thread(
             exception_handler=handle_matrix_exception)
+
+        def stop_client(_):
+            """Run once when Home Assistant stops."""
+            self._client.stop_listener_thread()
+
+        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_client)
 
         self._setup_done = True
 
@@ -300,7 +317,7 @@ class MatrixBot(object):
                     "login_by_password raised: (%d) %s",
                     ex.code, ex.content)
 
-                # re-raise the error so the constructor can catch it.
+                # re-raise the error so _setup can catch it.
                 raise
 
         return client
