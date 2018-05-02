@@ -11,6 +11,8 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['upnp']
+
 BYTES_RECEIVED = 1
 BYTES_SENT = 2
 PACKETS_RECEIVED = 3
@@ -25,12 +27,16 @@ SENSOR_TYPES = {
 }
 
 
-async def async_setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the IGD sensors."""
+    if discovery_info is None:
+        return
+
     device = hass.data[DATA_UPNP]
     service = device.find_first_service(CIC_SERVICE)
     unit = discovery_info['unit']
-    add_devices([
+    async_add_devices([
         IGDSensor(service, t, unit if SENSOR_TYPES[t][1] else '#')
         for t in SENSOR_TYPES], True)
 
