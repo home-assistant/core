@@ -203,7 +203,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
     def code_format(self):
         """ Return one or more digits/characters."""
         if self._code.isdigit():
-            return '^\\\d+$'
+            return '^\d+$'
         return None if self._code is None else '.+'
 
     def alarm_disarm(self, code=None):
