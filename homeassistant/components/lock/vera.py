@@ -19,17 +19,18 @@ DEPENDENCIES = ['vera']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Vera locks."""
     add_devices(
-        VeraLock(device, hass.data[VERA_CONTROLLER]) for
+        VeraLock(device, hass.data[VERA_CONTROLLER],
+                 discovery_info['unique_entities']) for
         device in hass.data[VERA_DEVICES]['lock'])
 
 
 class VeraLock(VeraDevice, LockDevice):
     """Representation of a Vera lock."""
 
-    def __init__(self, vera_device, controller):
+    def __init__(self, vera_device, controller, unique_entities):
         """Initialize the Vera device."""
         self._state = None
-        VeraDevice.__init__(self, vera_device, controller)
+        VeraDevice.__init__(self, vera_device, controller, unique_entities)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     def lock(self, **kwargs):

@@ -19,22 +19,26 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera scenes."""
     add_devices(
-        [VeraScene(scene, hass.data[VERA_CONTROLLER])
+        [VeraScene(scene, hass.data[VERA_CONTROLLER],
+                   discovery_info['unique_entities'])
          for scene in hass.data[VERA_SCENES]], True)
 
 
 class VeraScene(Scene):
     """Representation of a Vera scene entity."""
 
-    def __init__(self, vera_scene, controller):
+    def __init__(self, vera_scene, controller, unique_entities):
         """Initialize the scene."""
         self.vera_scene = vera_scene
         self.controller = controller
 
         self._name = self.vera_scene.name
         # Append device id to prevent name clashes in HA.
-        self.vera_id = VERA_ID_FORMAT.format(
-            slugify(vera_scene.name), vera_scene.scene_id)
+        if unique_entities:
+            self.vera_id = VERA_ID_FORMAT.format(
+                slugify(vera_scene.name), vera_scene.scene_id)
+        else:
+            self.vera_id = slugify(vera_scene.name)
 
     def update(self):
         """Update the scene status."""
