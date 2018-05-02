@@ -16,9 +16,10 @@ from homeassistant.components.mqtt import (
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
-    CONF_PAYLOAD_ON, CONF_ICON)
+    CONF_PAYLOAD_ON, CONF_ICON, STATE_ON)
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,6 +112,12 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
             await mqtt.async_subscribe(
                 self.hass, self._state_topic, state_message_received,
                 self._qos)
+
+        if self._optimistic:
+            last_state = await async_get_last_state(self.hass,
+                                                    self.entity_id)
+            if last_state:
+                self._state = last_state.state == STATE_ON
 
     @property
     def should_poll(self):
