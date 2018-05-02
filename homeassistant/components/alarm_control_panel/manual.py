@@ -1,5 +1,5 @@
 """
-Support for manual alarms.
+Support for manual details.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.manual/
@@ -201,11 +201,9 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """ Distinguish between a numeric code and a string"""
+        """ Return one or more digits/characters."""
         if self._code.isdigit():
-            digits = str(len(str(self._code)))
-            return '[0-9]{' + digits + '}'
-        """Return one or more characters."""
+            return '^\\\d+$'
         return None if self._code is None else '.+'
 
     def alarm_disarm(self, code=None):
