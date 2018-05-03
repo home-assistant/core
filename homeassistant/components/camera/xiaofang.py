@@ -1,5 +1,5 @@
 """
-This component provides support for Xiaofang Cameras
+This component provides support for Xiaomi Xiaofang 1080p Cameras.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.xiaofang/
