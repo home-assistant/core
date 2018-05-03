@@ -21,7 +21,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DemoSensor(Entity):
     """Representation of a Demo sensor."""
 
-    def __init__(self, name, state, device_class, unit_of_measurement, battery):
+    def __init__(self, name, state, device_class,
+                 unit_of_measurement, battery):
         """Initialize the sensor."""
         self._name = name
         self._state = state
