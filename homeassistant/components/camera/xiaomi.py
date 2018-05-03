@@ -1,5 +1,5 @@
 """
-This component provides support for Xiaomi Cameras
+This component provides support for Xiaomi Cameras.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.xiaomi/
@@ -27,6 +27,9 @@ DEFAULT_USERNAME = 'root'
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 CONF_MODEL = 'model'
+
+MODEL_YI = 'yi'
+MODEL_XIAOFANG = 'xiaofang'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
@@ -96,12 +99,18 @@ class XiaomiCamera(Camera):
             _LOGGER.debug(exc)
             return False
 
-        dirs = [d for d in ftp.nlst() if '.' not in d]
-        if not dirs:
-            _LOGGER.warning("There don't appear to be any uploaded videos")
-            return False
+        if self._model == MODEL_YI:
+            dirs = [d for d in ftp.nlst() if '.' not in d]
+            if not dirs:
+                _LOGGER.warning("There don't appear to be any uploaded videos")
+                return False
 
-        if self._model == 'xiaofang':
+        if self._model == MODEL_XIAOFANG:
+            dirs = [d for d in ftp.nlst() if '.' not in d]
+            if not dirs:
+                _LOGGER.warning("There don't appear to be any folders")
+                return False
+
             first_dir = dirs[-1]
             try:
                 ftp.cwd(first_dir)
