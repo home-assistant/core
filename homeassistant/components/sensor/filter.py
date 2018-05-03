@@ -85,8 +85,6 @@ FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
 
 FILTER_RANGE_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_RANGE,
-    vol.Optional(CONF_FILTER_WINDOW_SIZE,
-                 default=DEFAULT_WINDOW_SIZE): vol.Coerce(int),
     vol.Optional(CONF_FILTER_LOWER_BOUND,
                  default=DEFAULT_LOWER_BOUND): vol.Coerce(float),
     vol.Optional(CONF_FILTER_UPPER_BOUND,
@@ -354,10 +352,10 @@ class RangeFilter(Filter):
         lower_bound (float): band lower bound
     """
 
-    def __init__(self, window_size, precision, entity,
+    def __init__(self, entity,
                  lower_bound, upper_bound):
         """Initialize Filter."""
-        super().__init__(FILTER_NAME_RANGE, window_size, precision, entity)
+        super().__init__(FILTER_NAME_RANGE, entity=entity)
         self._lower_bound = lower_bound
         self._upper_bound = upper_bound
         self._stats_internal = Counter()
