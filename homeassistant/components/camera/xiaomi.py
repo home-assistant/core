@@ -1,8 +1,8 @@
 """
-This component provides support for Xiaomi Xiaofang 1080p Cameras.
+This component provides support for Xiaomi Cameras
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.xiaofang/
+https://home-assistant.io/components/camera.xiaomi/
 """
 import asyncio
 import logging
@@ -19,17 +19,19 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 DEPENDENCIES = ['ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_BRAND = 'Xiaofang Home Camera'
+DEFAULT_BRAND = 'Xiaomi Home Camera'
 DEFAULT_PASSWORD = ''
 DEFAULT_PATH = '/media/mmcblk0p1/record'
 DEFAULT_PORT = 21
 DEFAULT_USERNAME = 'root'
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
+CONF_MODEL = 'model'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_MODEL): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
     vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
@@ -42,13 +44,13 @@ async def async_setup_platform(hass,
                                config,
                                async_add_devices,
                                discovery_info=None):
-    """Set up a Xiaofang Camera."""
+    """Set up a Xiaomi Camera."""
     _LOGGER.debug('Received configuration: %s', config)
-    async_add_devices([XiaofangCamera(hass, config)], True)
+    async_add_devices([XiaomiCamera(hass, config)], True)
 
 
-class XiaofangCamera(Camera):
-    """Define an implementation of a Xiaofang Camera."""
+class XiaomiCamera(Camera):
+    """Define an implementation of a Xiaomi Camera."""
 
     def __init__(self, hass, config):
         """Initialize."""
@@ -59,6 +61,7 @@ class XiaofangCamera(Camera):
         self._manager = hass.data[DATA_FFMPEG]
         self._name = config.get(CONF_NAME)
         self.host = config.get(CONF_HOST)
+        self._model = config.get(CONF_MODEL)
         self.port = config.get(CONF_PORT)
         self.path = config.get(CONF_PATH)
         self.user = config.get(CONF_USERNAME)
@@ -75,7 +78,7 @@ class XiaofangCamera(Camera):
         return DEFAULT_BRAND
 
     def get_latest_video_url(self):
-        """Retrieve the latest video file from Xiaofang FTP server."""
+        """Retrieve the latest video file from the Xiaomi Camera FTP server."""
         from ftplib import FTP, error_perm
 
         ftp = FTP(self.host)
@@ -98,29 +101,34 @@ class XiaofangCamera(Camera):
             _LOGGER.warning("There don't appear to be any uploaded videos")
             return False
 
-        first_dir = dirs[-1]
-        try:
-            ftp.cwd(first_dir)
-        except error_perm as exc:
-            _LOGGER.error('Unable to find path: %s', first_dir)
-            _LOGGER.debug(exc)
-            return False
+        if self._model == 'xiaofang':
+            first_dir = dirs[-1]
+            try:
+                ftp.cwd(first_dir)
+            except error_perm as exc:
+                _LOGGER.error('Unable to find path: %s', first_dir)
+                _LOGGER.debug(exc)
+                return False
 
-        dirs = [d for d in ftp.nlst() if '.' not in d]
-        if not dirs:
-            _LOGGER.warning("There don't appear to be any uploaded videos")
-            return False
+            dirs = [d for d in ftp.nlst() if '.' not in d]
+            if not dirs:
+                _LOGGER.warning("There don't appear to be any uploaded videos")
+                return False
 
         latest_dir = dirs[-1]
         ftp.cwd(latest_dir)
-        videos = ftp.nlst()
+        videos = [v for v in ftp.nlst() if '.tmp' not in v]
         if not videos:
             _LOGGER.info('Video folder "%s" is empty; delaying', latest_dir)
             return False
 
-        return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}/{7}'.format(
-            self.user, self.passwd, self.host, self.port, self.path,
-            first_dir, latest_dir, videos[-2])
+        if self._model == 'xiaofang':
+            video = videos[-2]
+        else:
+            video = videos[-1]
+
+        return 'ftp://{0}:{1}@{2}:{3}{4}/{5}'.format(
+            self.user, self.passwd, self.host, self.port, ftp.pwd(), video)
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
