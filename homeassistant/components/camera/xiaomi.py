@@ -81,6 +81,11 @@ class XiaomiCamera(Camera):
         """Camera brand."""
         return DEFAULT_BRAND
 
+    @property
+    def model(self):
+        """Return the camera model."""
+        return self._model
+
     def get_latest_video_url(self):
         """Retrieve the latest video file from the Xiaomi Camera FTP server."""
         from ftplib import FTP, error_perm
