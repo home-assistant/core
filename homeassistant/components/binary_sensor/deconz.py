@@ -6,7 +6,7 @@ https://home-assistant.io/components/binary_sensor.deconz/
 """
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.deconz import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
+    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -31,7 +31,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             if sensor.type in DECONZ_BINARY_SENSOR:
                 entities.append(DeconzBinarySensor(sensor))
         async_add_devices(entities, True)
-    async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor)
+    hass.data[DATA_DECONZ_UNSUB].append(
+        async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
 
     async_add_sensor(hass.data[DATA_DECONZ].sensors.values())
 

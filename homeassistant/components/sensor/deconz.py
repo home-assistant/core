@@ -5,8 +5,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.deconz/
 """
 from homeassistant.components.deconz import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_VOLTAGE
+    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, ATTR_VOLTAGE)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -41,7 +42,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
                 else:
                     entities.append(DeconzSensor(sensor))
         async_add_devices(entities, True)
-    async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor)
+    hass.data[DATA_DECONZ_UNSUB].append(
+        async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
 
     async_add_sensor(hass.data[DATA_DECONZ].sensors.values())
 

@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.deconz/
 """
 from homeassistant.components.deconz import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
+    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -45,8 +45,10 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         async_add_devices(entities, True)
     async_dispatcher_connect(hass, 'deconz_new_group', async_add_group)
 
-    async_add_light(hass.data[DATA_DECONZ].lights.values())
-    async_add_group(hass.data[DATA_DECONZ].groups.values())
+    hass.data[DATA_DECONZ_UNSUB].append(
+        async_add_light(hass.data[DATA_DECONZ].lights.values()))
+    hass.data[DATA_DECONZ_UNSUB].append(
+        async_add_group(hass.data[DATA_DECONZ].groups.values()))
 
 
 class DeconzLight(Light):

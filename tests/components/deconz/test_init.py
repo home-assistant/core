@@ -98,6 +98,7 @@ async def test_setup_entry_successful(hass):
         assert await deconz.async_setup_entry(hass, entry) is True
     assert hass.data[deconz.DOMAIN]
     assert hass.data[deconz.DATA_DECONZ_ID] == {}
+    assert len(hass.data[deconz.DATA_DECONZ_UNSUB]) == 1
     assert len(mock_add_job.mock_calls) == 4
     assert len(mock_config_entries.async_forward_entry_setup.mock_calls) == 4
     assert mock_config_entries.async_forward_entry_setup.mock_calls[0][1] == \
@@ -122,6 +123,7 @@ async def test_unload_entry(hass):
     hass.data[deconz.DATA_DECONZ_ID] = {'id': 'deconzid'}
     assert await deconz.async_unload_entry(hass, entry)
     assert deconz.DOMAIN not in hass.data
+    assert len(hass.data[deconz.DATA_DECONZ_UNSUB]) == 0
     assert len(hass.data[deconz.DATA_DECONZ_EVENT]) == 0
     assert len(hass.data[deconz.DATA_DECONZ_ID]) == 0
 

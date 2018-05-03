@@ -19,7 +19,8 @@ from homeassistant.util.json import load_json
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
 from .const import (
-    CONFIG_FILE, DATA_DECONZ_EVENT, DATA_DECONZ_ID, DOMAIN, _LOGGER)
+    CONFIG_FILE, DATA_DECONZ_EVENT, DATA_DECONZ_ID,
+    DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
 
 REQUIREMENTS = ['pydeconz==37']
 
@@ -93,6 +94,8 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN] = deconz
     hass.data[DATA_DECONZ_ID] = {}
     hass.data[DATA_DECONZ_EVENT] = []
+    hass.data[DATA_DECONZ_UNSUB] = []
+
 
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
         hass.async_add_job(hass.config_entries.async_forward_entry_setup(
@@ -105,7 +108,8 @@ async def async_setup_entry(hass, config_entry):
         for sensor in sensors:
             if sensor.type in DECONZ_REMOTE:
                 hass.data[DATA_DECONZ_EVENT].append(DeconzEvent(hass, sensor))
-    async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_remote)
+    hass.data[DATA_DECONZ_UNSUB].append(
+        async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_remote))
 
     async_add_remote(deconz.sensors.values())
 
@@ -164,6 +168,10 @@ async def async_unload_entry(hass, config_entry):
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
         await hass.config_entries.async_forward_entry_unload(
             config_entry, component)
+    dispatchers = hass.data[DATA_DECONZ_UNSUB]
+    for unsub_dispatcher in dispatchers:
+        unsub_dispatcher()
+    hass.data[DATA_DECONZ_UNSUB] = []
     hass.data[DATA_DECONZ_EVENT] = []
     hass.data[DATA_DECONZ_ID] = []
     return True
