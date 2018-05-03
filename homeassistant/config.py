@@ -687,7 +687,7 @@ async def async_check_ha_config_file(hass):
     from homeassistant.scripts.check_config import check_ha_config_file
 
     res = await hass.async_add_job(
-        check_ha_config_file, hass.config.config_dir)
+        check_ha_config_file, hass)
 
     if not res.errors:
         return None
