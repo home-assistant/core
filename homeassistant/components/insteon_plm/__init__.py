@@ -38,6 +38,8 @@ SRV_PRINT_IM_ALDB = 'print_im_all_link_database'
 SRV_ALL_LINK_GROUP = 'group'
 SRV_ALL_LINK_MODE = 'mode'
 SRV_LOAD_DB_RELOAD = 'reload'
+SRV_CONTROLLER = 'controller'
+SRV_RESPONDER = 'responder'
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
@@ -59,8 +61,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 ADD_ALL_LINK_SCHEMA = vol.Schema({
     vol.Required(SRV_ALL_LINK_GROUP): vol.Range(min=0, max=255),
-    vol.Required(SRV_ALL_LINK_MODE): vol.In(['C', 'R',
-                                             'c', 'r']),
+    vol.Required(SRV_ALL_LINK_MODE): vol.In([SRV_CONTROLLER, SRV_RESPONDER]),
     })
 
 DEL_ALL_LINK_SCHEMA = vol.Schema({
@@ -69,8 +70,7 @@ DEL_ALL_LINK_SCHEMA = vol.Schema({
 
 LOAD_ALDB_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Optional(SRV_LOAD_DB_RELOAD, default='n'): vol.In(['Y', 'N',
-                                                           'y', 'n']),
+    vol.Optional(SRV_LOAD_DB_RELOAD, default='false'): vol.boolean),
     })
 
 PRINT_ALDB_SCHEMA = vol.Schema({
@@ -114,7 +114,7 @@ def async_setup(hass, config):
         """Add an INSTEON All-Link between two devices."""
         group = service.data.get(SRV_ALL_LINK_GROUP)
         mode = service.data.get(SRV_ALL_LINK_MODE)
-        link_mode = 1 if mode.lower() == 'c' else 0
+        link_mode = 1 if mode.lower() == SRV_CONTROLLER else 0
         plm.start_all_linking(link_mode, group)
 
     def del_all_link(service):
@@ -256,9 +256,8 @@ class IPDB(object):
 class InsteonPLMEntity(Entity):
     """INSTEON abstract base entity."""
 
-    def __init__(self, hass, device, state_key):
+    def __init__(self, device, state_key):
         """Initialize the INSTEON PLM binary sensor."""
-        self._hass = hass
         self._insteon_device_state = device.states[state_key]
         self._insteon_device = device
         self._insteon_device.aldb.add_loaded_callback(self._aldb_loaded)
@@ -308,7 +307,7 @@ class InsteonPLMEntity(Entity):
         """Register INSTEON update events."""
         self._insteon_device_state.register_updates(
             self.async_entity_update)
-        self._hass.data[DOMAIN]['entities'][self.entity_id] = self
+        self.hass.data[DOMAIN]['entities'][self.entity_id] = self
 
     def load_aldb(self, reload=False):
         """Load the device All-Link Database."""
@@ -330,22 +329,24 @@ def print_aldb_to_log(aldb):
     """Print the All-Link Database to the log file."""
     from insteonplm.devices import ALDBStatus
     _LOGGER.info('ALDB load status is %s', aldb.status.name)
-    _LOGGER.info('RecID In Use Mode HWM Group Address  Data 1 Data 2 Data 3')
-    _LOGGER.info('----- ------ ---- --- ----- -------- ------ ------ ------')
-    if aldb.status in [ALDBStatus.LOADED, ALDBStatus.PARTIAL]:
-        for mem_addr in aldb:
-            rec = aldb[mem_addr]
-            # For now we write this to the log
-            # Roadmap is to create a configuration panel
-            in_use = 'Y' if rec.control_flags.is_in_use else 'N'
-            mode = 'C' if rec.control_flags.is_controller else 'R'
-            hwm = 'Y' if rec.control_flags.is_high_water_mark else 'N'
-            _LOGGER.info(' {:04x}    {:s}     {:s}   {:s}    {:3d} {:s}'
-                         '   {:3d}   {:3d}   {:3d}'.format(
-                             rec.mem_addr, in_use, mode, hwm,
-                             rec.group, rec.address.human,
-                             rec.data1, rec.data2, rec.data3))
-
-    else:
+    if aldb.status not in [ALDBStatus.LOADED, ALDBStatus.PARTIAL]:
         _LOGGER.warning('Device All-Link database not loaded')
         _LOGGER.warning('Use service insteon_plm.load_aldb first')
+        return
+
+    _LOGGER.info('RecID In Use Mode HWM Group Address  Data 1 Data 2 Data 3')
+    _LOGGER.info('----- ------ ---- --- ----- -------- ------ ------ ------')
+    for mem_addr in aldb:
+        rec = aldb[mem_addr]
+        # For now we write this to the log
+        # Roadmap is to create a configuration panel
+        in_use = 'Y' if rec.control_flags.is_in_use else 'N'
+        mode = 'C' if rec.control_flags.is_controller else 'R'
+        hwm = 'Y' if rec.control_flags.is_high_water_mark else 'N'
+        _LOGGER.info(' {:04x}    {:s}     {:s}   {:s}    {:3d} {:s}'
+                     '   {:3d}   {:3d}   {:3d}'.format(
+                     rec.mem_addr, in_use, mode, hwm,
+                     rec.group, rec.address.human,
+                     rec.data1, rec.data2, rec.data3))
+
+  

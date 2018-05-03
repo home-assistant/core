@@ -30,7 +30,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.debug('Adding device %s entity %s to Light platform',
                   device.address.hex, device.states[state_key].name)
 
-    new_entity = InsteonPLMDimmerDevice(hass, device, state_key)
+    new_entity = InsteonPLMDimmerDevice(device, state_key)
 
     async_add_devices([new_entity])
 
