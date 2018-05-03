@@ -1,153 +1,80 @@
 """Implements a RainMachine sprinkler controller for Home Assistant."""
 
-from datetime import timedelta
 from logging import getLogger
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.rainmachine import (
+    CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DEFAULT_ATTRIBUTION, MIN_SCAN_TIME,
+    MIN_SCAN_TIME_FORCED)
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS, CONF_EMAIL, CONF_IP_ADDRESS,
-    CONF_PASSWORD, CONF_PLATFORM, CONF_PORT, CONF_SCAN_INTERVAL, CONF_SSL)
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.util import Throttle
 
+DEPENDENCIES = ['rainmachine']
+
 _LOGGER = getLogger(__name__)
-REQUIREMENTS = ['regenmaschine==0.4.1']
 
 ATTR_CYCLES = 'cycles'
 ATTR_TOTAL_DURATION = 'total_duration'
 
-CONF_ZONE_RUN_TIME = 'zone_run_time'
-
-DEFAULT_PORT = 8080
-DEFAULT_SSL = True
-DEFAULT_ZONE_RUN_SECONDS = 60 * 10
-
-MIN_SCAN_TIME_LOCAL = timedelta(seconds=1)
-MIN_SCAN_TIME_REMOTE = timedelta(seconds=5)
-MIN_SCAN_TIME_FORCED = timedelta(milliseconds=100)
-
-PLATFORM_SCHEMA = vol.Schema(
-    vol.All(
-        cv.has_at_least_one_key(CONF_IP_ADDRESS, CONF_EMAIL),
-        {
-            vol.Required(CONF_PLATFORM): cv.string,
-            vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
-            vol.Exclusive(CONF_IP_ADDRESS, 'auth'): cv.string,
-            vol.Exclusive(CONF_EMAIL, 'auth'):
-                vol.Email(),  # pylint: disable=no-value-for-parameter
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN_SECONDS):
-                cv.positive_int
-        }),
-    extra=vol.ALLOW_EXTRA)
+DEFAULT_ZONE_RUN = 60 * 10
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set this component up under its platform."""
-    import regenmaschine as rm
+    if discovery_info is None:
+        return
 
-    _LOGGER.debug('Config data: %s', config)
+    _LOGGER.debug('Config received: %s', discovery_info)
 
-    ip_address = config.get(CONF_IP_ADDRESS, None)
-    email_address = config.get(CONF_EMAIL, None)
-    password = config[CONF_PASSWORD]
-    zone_run_time = config[CONF_ZONE_RUN_TIME]
+    zone_run_time = discovery_info.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN)
 
-    try:
-        if ip_address:
-            _LOGGER.debug('Configuring local API')
+    client, device_mac = hass.data.get(DATA_RAINMACHINE)
 
-            port = config[CONF_PORT]
-            ssl = config[CONF_SSL]
-            auth = rm.Authenticator.create_local(
-                ip_address, password, port=port, https=ssl)
-        elif email_address:
-            _LOGGER.debug('Configuring remote API')
-            auth = rm.Authenticator.create_remote(email_address, password)
+    entities = []
+    for program in client.programs.all().get('programs', {}):
+        if not program.get('active'):
+            continue
 
-        _LOGGER.debug('Querying against: %s', auth.url)
+        _LOGGER.debug('Adding program: %s', program)
+        entities.append(
+            RainMachineProgram(client, device_mac, program))
 
-        client = rm.Client(auth)
-        device_name = client.provision.device_name()['name']
-        device_mac = client.provision.wifi()['macAddress']
+    for zone in client.zones.all().get('zones', {}):
+        if not zone.get('active'):
+            continue
 
-        entities = []
-        for program in client.programs.all().get('programs', {}):
-            if not program.get('active'):
-                continue
+        _LOGGER.debug('Adding zone: %s', zone)
+        entities.append(
+            RainMachineZone(client, device_mac, zone,
+                            zone_run_time))
 
-            _LOGGER.debug('Adding program: %s', program)
-            entities.append(
-                RainMachineProgram(client, device_name, device_mac, program))
-
-        for zone in client.zones.all().get('zones', {}):
-            if not zone.get('active'):
-                continue
-
-            _LOGGER.debug('Adding zone: %s', zone)
-            entities.append(
-                RainMachineZone(client, device_name, device_mac, zone,
-                                zone_run_time))
-
-        add_devices(entities)
-    except rm.exceptions.HTTPError as exc_info:
-        _LOGGER.error('An HTTP error occurred while talking with RainMachine')
-        _LOGGER.debug(exc_info)
-        return False
-    except UnboundLocalError as exc_info:
-        _LOGGER.error('Could not authenticate against RainMachine')
-        _LOGGER.debug(exc_info)
-        return False
-
-
-def aware_throttle(api_type):
-    """Create an API type-aware throttler."""
-    _decorator = None
-    if api_type == 'local':
-
-        @Throttle(MIN_SCAN_TIME_LOCAL, MIN_SCAN_TIME_FORCED)
-        def decorator(function):
-            """Create a local API throttler."""
-            return function
-
-        _decorator = decorator
-    else:
-
-        @Throttle(MIN_SCAN_TIME_REMOTE, MIN_SCAN_TIME_FORCED)
-        def decorator(function):
-            """Create a remote API throttler."""
-            return function
-
-        _decorator = decorator
-
-    return _decorator
+    add_devices(entities, True)
 
 
 class RainMachineEntity(SwitchDevice):
     """A class to represent a generic RainMachine entity."""
 
-    def __init__(self, client, device_name, device_mac, entity_json):
+    def __init__(self, client, device_mac, entity_json):
         """Initialize a generic RainMachine entity."""
         self._api_type = 'remote' if client.auth.using_remote_api else 'local'
         self._client = client
         self._entity_json = entity_json
+
         self.device_mac = device_mac
-        self.device_name = device_name
 
         self._attrs = {
-            ATTR_ATTRIBUTION: '© RainMachine',
-            ATTR_DEVICE_CLASS: self.device_name
+            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
         }
 
     @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
-        if self._client:
-            return self._attrs
+        return self._attrs
+
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return 'mdi:water'
 
     @property
     def is_enabled(self) -> bool:
@@ -158,27 +85,6 @@ class RainMachineEntity(SwitchDevice):
     def rainmachine_entity_id(self) -> int:
         """Return the RainMachine ID for this entity."""
         return self._entity_json.get('uid')
-
-    @aware_throttle('local')
-    def _local_update(self) -> None:
-        """Call an update with scan times appropriate for the local API."""
-        self._update()
-
-    @aware_throttle('remote')
-    def _remote_update(self) -> None:
-        """Call an update with scan times appropriate for the remote API."""
-        self._update()
-
-    def _update(self) -> None:  # pylint: disable=no-self-use
-        """Logic for update method, regardless of API type."""
-        raise NotImplementedError()
-
-    def update(self) -> None:
-        """Determine how the entity updates itself."""
-        if self._api_type == 'remote':
-            self._remote_update()
-        else:
-            self._local_update()
 
 
 class RainMachineProgram(RainMachineEntity):
@@ -192,7 +98,7 @@ class RainMachineProgram(RainMachineEntity):
     @property
     def name(self) -> str:
         """Return the name of the program."""
-        return 'Program: {}'.format(self._entity_json.get('name'))
+        return 'Program: {0}'.format(self._entity_json.get('name'))
 
     @property
     def unique_id(self) -> str:
@@ -224,7 +130,8 @@ class RainMachineProgram(RainMachineEntity):
             _LOGGER.error('Unable to turn on program "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
-    def _update(self) -> None:
+    @Throttle(MIN_SCAN_TIME, MIN_SCAN_TIME_FORCED)
+    def update(self) -> None:
         """Update info for the program."""
         import regenmaschine.exceptions as exceptions
 
@@ -240,10 +147,10 @@ class RainMachineProgram(RainMachineEntity):
 class RainMachineZone(RainMachineEntity):
     """A RainMachine zone."""
 
-    def __init__(self, client, device_name, device_mac, zone_json,
+    def __init__(self, client, device_mac, zone_json,
                  zone_run_time):
         """Initialize a RainMachine zone."""
-        super().__init__(client, device_name, device_mac, zone_json)
+        super().__init__(client, device_mac, zone_json)
         self._run_time = zone_run_time
         self._attrs.update({
             ATTR_CYCLES: self._entity_json.get('noOfCycles'),
@@ -258,7 +165,7 @@ class RainMachineZone(RainMachineEntity):
     @property
     def name(self) -> str:
         """Return the name of the zone."""
-        return 'Zone: {}'.format(self._entity_json.get('name'))
+        return 'Zone: {0}'.format(self._entity_json.get('name'))
 
     @property
     def unique_id(self) -> str:
@@ -287,7 +194,8 @@ class RainMachineZone(RainMachineEntity):
             _LOGGER.error('Unable to turn on zone "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
-    def _update(self) -> None:
+    @Throttle(MIN_SCAN_TIME, MIN_SCAN_TIME_FORCED)
+    def update(self) -> None:
         """Update info for the zone."""
         import regenmaschine.exceptions as exceptions
 

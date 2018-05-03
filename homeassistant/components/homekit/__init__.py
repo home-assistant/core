@@ -3,6 +3,7 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/homekit/
 """
+import ipaddress
 import logging
 from zlib import adler32
 
@@ -12,8 +13,8 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION)
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_DEVICE_CLASS, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    ATTR_DEVICE_CLASS, CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS,
+    TEMP_FAHRENHEIT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
@@ -35,6 +36,8 @@ REQUIREMENTS = ['HAP-python==1.1.9']
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_IP_ADDRESS):
+            vol.All(ipaddress.ip_address, cv.string),
         vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
         vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
         vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
@@ -48,11 +51,12 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
     port = conf[CONF_PORT]
+    ip_address = conf.get(CONF_IP_ADDRESS)
     auto_start = conf[CONF_AUTO_START]
     entity_filter = conf[CONF_FILTER]
     entity_config = conf[CONF_ENTITY_CONFIG]
 
-    homekit = HomeKit(hass, port, entity_filter, entity_config)
+    homekit = HomeKit(hass, port, ip_address, entity_filter, entity_config)
     homekit.setup()
 
     if auto_start:
@@ -126,7 +130,7 @@ def get_accessory(hass, state, aid, config):
                 or DEVICE_CLASS_CO2 in state.entity_id:
             a_type = 'CarbonDioxideSensor'
         elif device_class == DEVICE_CLASS_LIGHT or unit == 'lm' or \
-                unit == 'lux':
+                unit == 'lux' or unit == 'lx':
             a_type = 'LightSensor'
 
     elif state.domain == 'switch' or state.domain == 'remote' \
@@ -151,10 +155,11 @@ def generate_aid(entity_id):
 class HomeKit():
     """Class to handle all actions between HomeKit and Home Assistant."""
 
-    def __init__(self, hass, port, entity_filter, entity_config):
+    def __init__(self, hass, port, ip_address, entity_filter, entity_config):
         """Initialize a HomeKit object."""
         self.hass = hass
         self._port = port
+        self._ip_address = ip_address
         self._filter = entity_filter
         self._config = entity_config
         self.started = False
@@ -169,9 +174,10 @@ class HomeKit():
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, self.stop)
 
+        ip_addr = self._ip_address or get_local_ip()
         path = self.hass.config.path(HOMEKIT_FILE)
         self.bridge = HomeBridge(self.hass)
-        self.driver = HomeDriver(self.bridge, self._port, get_local_ip(), path)
+        self.driver = HomeDriver(self.bridge, self._port, ip_addr, path)
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""

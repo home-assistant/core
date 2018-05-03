@@ -81,6 +81,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self._name = node_name(self.node)
         self._product_name = node.product_name
         self._manufacturer_name = node.manufacturer_name
+        self._unique_id = self._compute_unique_id()
         self._attributes = {}
         self.wakeup_interval = None
         self.location = None
@@ -94,6 +95,11 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             self.network_node_event, ZWaveNetwork.SIGNAL_NODE_EVENT)
         dispatcher.connect(
             self.network_scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT)
+
+    @property
+    def unique_id(self):
+        """Unique ID of Z-wave node."""
+        return self._unique_id
 
     def network_node_changed(self, node=None, value=None, args=None):
         """Handle a changed node on the network."""
@@ -138,7 +144,13 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             self.wakeup_interval = None
 
         self.battery_level = self.node.get_battery_level()
+        self._product_name = self.node.product_name
+        self._manufacturer_name = self.node.manufacturer_name
+        self._name = node_name(self.node)
         self._attributes = attributes
+
+        if not self._unique_id:
+            self._unique_id = self._compute_unique_id()
 
         self.maybe_schedule_update()
 
@@ -229,3 +241,8 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             attrs[ATTR_WAKEUP] = self.wakeup_interval
 
         return attrs
+
+    def _compute_unique_id(self):
+        if self._manufacturer_name and self._product_name:
+            return 'node-{}'.format(self.node_id)
+        return None

@@ -189,7 +189,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     def test_update_stale(self):
         """Test stalled update."""
-        scanner = get_component('device_tracker.test').SCANNER
+        scanner = get_component(self.hass, 'device_tracker.test').SCANNER
         scanner.reset()
         scanner.come_home('DEV1')
 
@@ -251,7 +251,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             hide_if_away=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
-        scanner = get_component('device_tracker.test').SCANNER
+        scanner = get_component(self.hass, 'device_tracker.test').SCANNER
         scanner.reset()
 
         with assert_setup_component(1, device_tracker.DOMAIN):
@@ -270,7 +270,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             hide_if_away=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
-        scanner = get_component('device_tracker.test').SCANNER
+        scanner = get_component(self.hass, 'device_tracker.test').SCANNER
         scanner.reset()
 
         with assert_setup_component(1, device_tracker.DOMAIN):
@@ -431,7 +431,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                 'zone': zone_info
             })
 
-        scanner = get_component('device_tracker.test').SCANNER
+        scanner = get_component(self.hass, 'device_tracker.test').SCANNER
         scanner.reset()
         scanner.come_home('dev1')
 
@@ -547,7 +547,7 @@ def test_bad_platform(hass):
 
 async def test_adding_unknown_device_to_config(mock_device_tracker_conf, hass):
     """Test the adding of unknown devices to configuration file."""
-    scanner = get_component('device_tracker.test').SCANNER
+    scanner = get_component(hass, 'device_tracker.test').SCANNER
     scanner.reset()
     scanner.come_home('DEV1')
 

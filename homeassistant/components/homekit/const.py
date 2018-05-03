@@ -18,9 +18,10 @@ DEFAULT_PORT = 51827
 SERVICE_HOMEKIT_START = 'start'
 
 # #### STRING CONSTANTS ####
-BRIDGE_MODEL = 'homekit.bridge'
-BRIDGE_NAME = 'Home Assistant'
-MANUFACTURER = 'HomeAssistant'
+BRIDGE_MODEL = 'Bridge'
+BRIDGE_NAME = 'Home Assistant Bridge'
+BRIDGE_SERIAL_NUMBER = 'homekit.bridge'
+MANUFACTURER = 'Home Assistant'
 
 # #### Categories ####
 CATEGORY_ALARM_SYSTEM = 'ALARM_SYSTEM'
@@ -74,6 +75,7 @@ CHAR_CURRENT_POSITION = 'CurrentPosition'  # Int | [0, 100]
 CHAR_CURRENT_HUMIDITY = 'CurrentRelativeHumidity'  # percent
 CHAR_CURRENT_SECURITY_STATE = 'SecuritySystemCurrentState'
 CHAR_CURRENT_TEMPERATURE = 'CurrentTemperature'
+CHAR_FIRMWARE_REVISION = 'FirmwareRevision'
 CHAR_HEATING_THRESHOLD_TEMPERATURE = 'HeatingThresholdTemperature'
 CHAR_HUE = 'Hue'  # arcdegress | [0, 360]
 CHAR_LEAK_DETECTED = 'LeakDetected'

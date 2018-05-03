@@ -253,6 +253,8 @@ class TradfriLight(Light):
             params[ATTR_BRIGHTNESS] = brightness
             hue = int(kwargs[ATTR_HS_COLOR][0] * (65535 / 360))
             sat = int(kwargs[ATTR_HS_COLOR][1] * (65279 / 100))
+            if brightness is None:
+                params[ATTR_TRANSITION_TIME] = transition_time
             await self._api(
                 self._light_control.set_hsb(hue, sat, **params))
             return

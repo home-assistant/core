@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util import get_local_ip
 
-REQUIREMENTS = ['pyupnp-async==0.1.0.1']
+REQUIREMENTS = ['pyupnp-async==0.1.0.2']
 DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_ENABLE_PORT_MAPPING, default=True): cv.boolean,
         vol.Optional(CONF_UNITS, default="MBytes"): vol.In(UNITS),
-        vol.Optional(CONF_LOCAL_IP): ip_address,
+        vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
         vol.Optional(CONF_PORTS):
             vol.Schema({vol.Any(CONF_HASS, cv.positive_int): cv.positive_int})
     }),
@@ -62,9 +62,7 @@ async def async_setup(hass, config):
     config = config[DOMAIN]
     host = config.get(CONF_LOCAL_IP)
 
-    if host is not None:
-        host = str(host)
-    else:
+    if host is None:
         host = get_local_ip()
 
     if host == '127.0.0.1':
@@ -90,10 +88,8 @@ async def async_setup(hass, config):
                 service = device.find_first_service(IP_SERVICE)
             if _service['serviceType'] == CIC_SERVICE:
                 unit = config.get(CONF_UNITS)
-                discovery.load_platform(hass, 'sensor',
-                                        DOMAIN,
-                                        {'unit': unit},
-                                        config)
+                hass.async_add_job(discovery.async_load_platform(
+                    hass, 'sensor', DOMAIN, {'unit': unit}, config))
     except UpnpSoapError as error:
         _LOGGER.error(error)
         return False

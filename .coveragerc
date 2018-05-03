@@ -29,7 +29,7 @@ omit =
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
-    homeassistant/components/bmw_connected_drive.py
+    homeassistant/components/bmw_connected_drive/*.py
     homeassistant/components/*/bmw_connected_drive.py
 
     homeassistant/components/android_ip_webcam.py
@@ -207,6 +207,9 @@ omit =
 
     homeassistant/components/raincloud.py
     homeassistant/components/*/raincloud.py
+
+    homeassistant/components/rainmachine.py
+    homeassistant/components/*/rainmachine.py
 
     homeassistant/components/raspihats.py
     homeassistant/components/*/raspihats.py
@@ -574,6 +577,7 @@ omit =
     homeassistant/components/sensor/discogs.py
     homeassistant/components/sensor/dnsip.py
     homeassistant/components/sensor/dovado.py
+    homeassistant/components/sensor/domain_expiry.py
     homeassistant/components/sensor/dte_energy_bridge.py
     homeassistant/components/sensor/dublin_bus_transport.py
     homeassistant/components/sensor/dwd_weather_warnings.py
@@ -615,6 +619,7 @@ omit =
     homeassistant/components/sensor/lyft.py
     homeassistant/components/sensor/metoffice.py
     homeassistant/components/sensor/miflora.py
+    homeassistant/components/sensor/mitemp_bt.py
     homeassistant/components/sensor/modem_callerid.py
     homeassistant/components/sensor/mopar.py
     homeassistant/components/sensor/mqtt_room.py
@@ -635,6 +640,7 @@ omit =
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/pocketcasts.py
     homeassistant/components/sensor/pollen.py
+    homeassistant/components/sensor/postnl.py
     homeassistant/components/sensor/pushbullet.py
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/pyload.py
@@ -656,6 +662,7 @@ omit =
     homeassistant/components/sensor/sma.py
     homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/sochain.py
+    homeassistant/components/sensor/socialblade.py
     homeassistant/components/sensor/sonarr.py
     homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/spotcrime.py
@@ -710,7 +717,6 @@ omit =
     homeassistant/components/switch/orvibo.py
     homeassistant/components/switch/pulseaudio_loopback.py
     homeassistant/components/switch/rainbird.py
-    homeassistant/components/switch/rainmachine.py
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
     homeassistant/components/switch/snmp.py

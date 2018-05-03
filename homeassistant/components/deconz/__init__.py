@@ -7,14 +7,17 @@ https://home-assistant.io/components/deconz/
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_API_KEY, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import callback
+    CONF_API_KEY, CONF_EVENT, CONF_HOST,
+    CONF_ID, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.util import slugify
 from homeassistant.util.json import load_json
 
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
-from .const import CONFIG_FILE, DATA_DECONZ_ID, DOMAIN, _LOGGER
+from .const import (
+    CONFIG_FILE, DATA_DECONZ_EVENT, DATA_DECONZ_ID, DOMAIN, _LOGGER)
 
 REQUIREMENTS = ['pydeconz==36']
 
@@ -25,6 +28,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT, default=80): cv.port,
     })
 }, extra=vol.ALLOW_EXTRA)
+
+SERVICE_DECONZ = 'configure'
 
 SERVICE_FIELD = 'field'
 SERVICE_ENTITY = 'entity'
@@ -64,6 +69,7 @@ async def async_setup_entry(hass, config_entry):
     Start websocket for push notification of state changes from deCONZ.
     """
     from pydeconz import DeconzSession
+    from pydeconz.sensor import SWITCH as DECONZ_REMOTE
     if DOMAIN in hass.data:
         _LOGGER.error(
             "Config entry failed since one deCONZ instance already exists")
@@ -82,6 +88,11 @@ async def async_setup_entry(hass, config_entry):
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
         hass.async_add_job(hass.config_entries.async_forward_entry_setup(
             config_entry, component))
+
+    hass.data[DATA_DECONZ_EVENT] = [DeconzEvent(
+        hass, sensor) for sensor in deconz.sensors.values()
+                                    if sensor.type in DECONZ_REMOTE]
+
     deconz.start()
 
     async def async_configure(call):
@@ -112,7 +123,7 @@ async def async_setup_entry(hass, config_entry):
                 return
         await deconz.async_put_state(field, data)
     hass.services.async_register(
-        DOMAIN, 'configure', async_configure, schema=SERVICE_SCHEMA)
+        DOMAIN, SERVICE_DECONZ, async_configure, schema=SERVICE_SCHEMA)
 
     @callback
     def deconz_shutdown(event):
@@ -127,3 +138,39 @@ async def async_setup_entry(hass, config_entry):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deconz_shutdown)
     return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload deCONZ config entry."""
+    deconz = hass.data.pop(DOMAIN)
+    hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
+    deconz.close()
+    for component in ['binary_sensor', 'light', 'scene', 'sensor']:
+        await hass.config_entries.async_forward_entry_unload(
+            config_entry, component)
+    hass.data[DATA_DECONZ_EVENT] = []
+    hass.data[DATA_DECONZ_ID] = []
+    return True
+
+
+class DeconzEvent(object):
+    """When you want signals instead of entities.
+
+    Stateless sensors such as remotes are expected to generate an event
+    instead of a sensor entity in hass.
+    """
+
+    def __init__(self, hass, device):
+        """Register callback that will be used for signals."""
+        self._hass = hass
+        self._device = device
+        self._device.register_async_callback(self.async_update_callback)
+        self._event = 'deconz_{}'.format(CONF_EVENT)
+        self._id = slugify(self._device.name)
+
+    @callback
+    def async_update_callback(self, reason):
+        """Fire the event if reason is that state is updated."""
+        if reason['state']:
+            data = {CONF_ID: self._id, CONF_EVENT: self._device.state}
+            self._hass.bus.async_fire(self._event, data, EventOrigin.remote)
