@@ -8,7 +8,7 @@ from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_AUTO, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import TYPES
@@ -41,7 +41,7 @@ class Thermostat(HomeAccessory):
         """Initialize a Thermostat accessory object."""
         super().__init__(*args, category=CATEGORY_THERMOSTAT)
         self._unit = TEMP_CELSIUS
-        self.power_state = False
+        self.support_power_state = False
         self.heat_cool_flag_target_state = False
         self.temperature_flag_target_state = False
         self.coolingthresh_flag_target_state = False
@@ -51,12 +51,11 @@ class Thermostat(HomeAccessory):
         self.chars = []
         features = self.hass.states.get(self.entity_id) \
             .attributes.get(ATTR_SUPPORTED_FEATURES)
+        if features & SUPPORT_ON_OFF:
+            self.support_power_state = True
         if features & SUPPORT_TEMP_RANGE:
             self.chars.extend((CHAR_COOLING_THRESHOLD_TEMPERATURE,
                                CHAR_HEATING_THRESHOLD_TEMPERATURE))
-
-        if features & SUPPORT_ON_OFF:
-            self.power_state = True
 
         serv_thermostat = add_preload_service(
             self, SERV_THERMOSTAT, self.chars)
@@ -97,6 +96,13 @@ class Thermostat(HomeAccessory):
             _LOGGER.debug('%s: Set heat-cool to %d', self.entity_id, value)
             self.heat_cool_flag_target_state = True
             hass_value = HC_HOMEKIT_TO_HASS[value]
+            if self.support_power_state is True:
+                params = {ATTR_ENTITY_ID: self.entity_id}
+                if hass_value == STATE_OFF:
+                    self.hass.services.call('climate', 'turn_off', params)
+                    return
+                else:
+                    self.hass.services.call('climate', 'turn_on', params)
             self.hass.components.climate.set_operation_mode(
                 operation_mode=hass_value, entity_id=self.entity_id)
 
@@ -182,7 +188,7 @@ class Thermostat(HomeAccessory):
 
         # Update target operation mode
         operation_mode = new_state.attributes.get(ATTR_OPERATION_MODE)
-        if self.power_state and new_state.state == STATE_OFF:
+        if self.support_power_state is True and new_state.state == STATE_OFF:
             self.char_target_heat_cool.set_value(
                 HC_HASS_TO_HOMEKIT[STATE_OFF])
         elif operation_mode and operation_mode in HC_HASS_TO_HOMEKIT:
@@ -192,7 +198,9 @@ class Thermostat(HomeAccessory):
         self.heat_cool_flag_target_state = False
 
         # Set current operation mode based on temperatures and target mode
-        if operation_mode == STATE_HEAT:
+        if self.support_power_state is True and new_state.state == STATE_OFF:
+            current_operation_mode = STATE_OFF
+        elif operation_mode == STATE_HEAT:
             if isinstance(target_temp, float) and current_temp < target_temp:
                 current_operation_mode = STATE_HEAT
             else:
