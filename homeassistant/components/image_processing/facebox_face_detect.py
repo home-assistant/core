@@ -34,10 +34,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     entities = []
     for camera in config[CONF_SOURCE]:
         entities.append(FaceboxFaceDetectEntity(
-            camera.get(CONF_NAME),
             config[CONF_IP_ADDRESS],
             config[CONF_PORT],
-            camera[CONF_ENTITY_ID]
+            camera[CONF_ENTITY_ID],
+            camera.get(CONF_NAME)
         ))
     add_devices(entities)
 
@@ -45,16 +45,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FaceboxFaceDetectEntity(ImageProcessingFaceEntity):
     """Perform a classification via a Facebox."""
 
-    def __init__(self, name, ip, port, camera_entity):
+    def __init__(self, ip, port, camera_entity, name=None):
         """Init with the API key and model id"""
         super().__init__()
-        if name:  # Since name is optional.
+        self._url = "http://{}:{}/facebox/check".format(ip, port)
+        self._camera = camera_entity
+        if name:
             self._name = name
         else:
             self._name = "Facebox {0}".format(
                 split_entity_id(camera_entity)[1])
-        self._url = "http://{}:{}/facebox/check".format(ip, port)
-        self._camera = camera_entity
         self._response_time = None
         self.total_faces = 0
         self.faces = []
@@ -77,7 +77,7 @@ class FaceboxFaceDetectEntity(ImageProcessingFaceEntity):
             elapsed_time = time.perf_counter() - timer_start
             self._response_time = "{} seconds".format(
                     str(round(elapsed_time, 1)))
-            self.total_faces = response['facesCount']  # An int.
+            self.total_faces = response['facesCount']
             self.faces = response['faces']
 
         else:
