@@ -29,6 +29,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_FAN_STATE = 'fan_state'
 ATTR_HVAC_STATE = 'hvac_state'
 
+CONF_HUMIDIFIER = 'humidifier'
+
 DEFAULT_SSL = False
 
 VALID_FAN_STATES = [STATE_ON, STATE_AUTO]
@@ -40,6 +42,7 @@ HOLD_MODE_TEMPERATURE = 'temperature'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_HUMIDIFIER, default=True): cv.boolean,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=5):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -55,6 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     host = config.get(CONF_HOST)
     timeout = config.get(CONF_TIMEOUT)
+    humidifier = config.get(CONF_HUMIDIFIER)
 
     if config.get(CONF_SSL):
         proto = 'https'
@@ -65,15 +69,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         addr=host, timeout=timeout, user=username, password=password,
         proto=proto)
 
-    add_devices([VenstarThermostat(client)], True)
+    add_devices([VenstarThermostat(client, humidifier)], True)
 
 
 class VenstarThermostat(ClimateDevice):
     """Representation of a Venstar thermostat."""
 
-    def __init__(self, client):
+    def __init__(self, client, humidifier):
         """Initialize the thermostat."""
         self._client = client
+        self._humidifier = humidifier
 
     def update(self):
         """Update the data from the thermostat."""
@@ -93,7 +98,8 @@ class VenstarThermostat(ClimateDevice):
             features |= (SUPPORT_TARGET_TEMPERATURE_HIGH |
                          SUPPORT_TARGET_TEMPERATURE_LOW)
 
-        if hasattr(self._client,'hum_active'):
+        if (self._humidifier and
+                hasattr(self._client,'hum_active')):
             features |= (SUPPORT_TARGET_HUMIDITY |
                          SUPPORT_TARGET_HUMIDITY_HIGH |
                          SUPPORT_TARGET_HUMIDITY_LOW)
