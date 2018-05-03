@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.ifttt/
 """
 import logging
+import re
 
 import voluptuous as vol
 
