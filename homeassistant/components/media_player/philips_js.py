@@ -20,16 +20,15 @@ from homeassistant.const import (
 from homeassistant.helpers.script import Script
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['ha-philipsjs==0.0.3']
+REQUIREMENTS = ['ha-philipsjs==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 SUPPORT_PHILIPS_JS = SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
-                     SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE
-
-SUPPORT_PHILIPS_JS_V5 = SUPPORT_PHILIPS_JS | SUPPORT_VOLUME_SET
+                     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+                     SUPPORT_SELECT_SOURCE
 
 SUPPORT_PHILIPS_JS_TV = SUPPORT_PHILIPS_JS | SUPPORT_NEXT_TRACK | \
                         SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
@@ -101,8 +100,6 @@ class PhilipsTV(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         is_supporting_turn_on = SUPPORT_TURN_ON if self._on_script else 0
-        if self._tv._api_version == '5':
-            return SUPPORT_PHILIPS_JS_V5 | is_supporting_turn_on
         if self._watching_tv:
             return SUPPORT_PHILIPS_JS_TV | is_supporting_turn_on
         return SUPPORT_PHILIPS_JS | is_supporting_turn_on
@@ -122,22 +119,14 @@ class PhilipsTV(MediaPlayerDevice):
         """List of available input sources."""
         return self._source_list
 
-    def _select_body(self, ccid):
-        return {"channelList": {"id": "alltv"}, "channel": {"ccid": ccid}}
-
     def select_source(self, source):
         """Set the input source."""
         if source in self._source_mapping:
-            id = self._source_mapping.get(source)
-            if self._tv._api_version == '5':
-                self._tv._postReq('activities/tv', self._select_body(id))
-            else:
-                self._tv.setSource(id)
+            self._tv.setSource(self._source_mapping.get(source))
             self._source = source
             if not self._tv.on:
                 self._state = STATE_OFF
-            if self._tv._api_version != '5':
-                self._watching_tv = bool(self._tv.source_id == 'tv')
+            self._watching_tv = bool(self._tv.source_id == 'tv')
 
     @property
     def volume_level(self):
@@ -148,26 +137,6 @@ class PhilipsTV(MediaPlayerDevice):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
-
-    def set_volume_level(self, volume):
-        """Set volume level, range 0..1."""
-        if self._volume != volume:
-            self._setVolume(volume)
-            self._volume = volume
-            if not self._tv.on:
-                self._state = STATE_OFF
-
-    def _setVolume(self, level):
-        if level:
-            if self._min_volume != 0 or not self._max_volume:
-                self.getAudiodata()
-            try:
-                targetlevel = int(level * self._max_volume)
-            except ValueError:
-                _LOGGER.warning("Invalid audio level %s" % str(level))
-                return
-            body = {'current': targetlevel, 'muted': False}
-            self._tv._postReq('audio/volume', body)
 
     def turn_on(self):
         """Turn on the device."""
@@ -198,6 +167,13 @@ class PhilipsTV(MediaPlayerDevice):
         if not self._tv.on:
             self._state = STATE_OFF
 
+    def set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        if self._volume != volume:
+            self._tv.setVolume(volume)
+            if not self._tv.on:
+                self._state = STATE_OFF
+
     def media_previous_track(self):
         """Send rewind command."""
         self._tv.sendKey('Previous')
@@ -209,61 +185,35 @@ class PhilipsTV(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self._tv._api_version == '5':
-            return self._source
         if self._watching_tv and self._channel_name:
             return '{} - {}'.format(self._source, self._channel_name)
         return self._source
 
-    def _update_sources_v1(self):
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Get the latest data and update device state."""
+        self._tv.update()
+        self._min_volume = self._tv.min_volume
+        self._max_volume = self._tv.max_volume
+        self._volume = self._tv.volume
+        self._muted = self._tv.muted
         if self._tv.source_id:
-            src = self._tv.sources.get(self._tv.source_id, None)
-            if src:
-                self._source = src.get('name', None)
+            self._source = self._tv.getSourceName(self._tv.source_id)
         if self._tv.sources and not self._source_list:
-            for srcid in sorted(self._tv.sources):
-                srcname = self._tv.sources.get(srcid, dict()).get('name', None)
+            for srcid in self._tv.sources:
+                srcname = self._tv.getSourceName(srcid)
                 self._source_list.append(srcname)
                 self._source_mapping[srcname] = srcid
+        if self._tv.on:
+            self._state = STATE_ON
+        else:
+            self._state = STATE_OFF
+
         self._watching_tv = bool(self._tv.source_id == 'tv')
+
         self._tv.getChannelId()
         self._tv.getChannels()
         if self._tv.channels and self._tv.channel_id in self._tv.channels:
             self._channel_name = self._tv.channels[self._tv.channel_id]['name']
         else:
             self._channel_name = None
-
-    def _update_sources_v5(self):
-        r = self._tv._getReq('channeldb/tv/channelLists/alltv')
-        if r:
-            self._channels = r['Channel']
-        r = self._tv._getReq('activities/tv')
-        if r:
-            self._channel_name = r['channel']['name']
-            self._source = r['channel']['name']
-
-        if self._channels and not self._source_list:
-            for channel in self._channels:
-                srcname = channel['name']
-                self._source_list.append(srcname)
-                self._source_mapping[srcname] = channel['ccid']
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data and update device state."""
-        if self._tv._api_version == '5':
-            self._tv.getName()
-            self._tv.getAudiodata()
-            self._volume = self._tv.volume / self._tv.max_volume
-            self._update_sources_v5()
-        else:
-            self._tv.update()
-            self._volume = self._tv.volume
-            self._update_sources_v1()
-        self._min_volume = self._tv.min_volume
-        self._max_volume = self._tv.max_volume
-        self._muted = self._tv.muted
-        if self._tv.on:
-            self._state = STATE_ON
-        else:
-            self._state = STATE_OFF
