@@ -34,7 +34,8 @@ MODEL_XIAOFANG = 'xiaofang'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_MODEL): cv.string,
+    vol.Required(CONF_MODEL): vol.Any(MODEL_YI,
+                                      MODEL_XIAOFANG),
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
     vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
@@ -62,13 +63,13 @@ class XiaomiCamera(Camera):
         self._last_image = None
         self._last_url = None
         self._manager = hass.data[DATA_FFMPEG]
-        self._name = config.get(CONF_NAME)
-        self.host = config.get(CONF_HOST)
-        self._model = config.get(CONF_MODEL)
-        self.port = config.get(CONF_PORT)
-        self.path = config.get(CONF_PATH)
-        self.user = config.get(CONF_USERNAME)
-        self.passwd = config.get(CONF_PASSWORD)
+        self._name = config[CONF_NAME]
+        self.host = config[CONF_HOST]
+        self._model = config[CONF_MODEL]
+        self.port = config[CONF_PORT]
+        self.path = config[CONF_PATH]
+        self.user = config[CONF_USERNAME]
+        self.passwd = config[CONF_PASSWORD]
 
     @property
     def name(self):
