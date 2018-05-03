@@ -606,6 +606,7 @@ def _is_latest(js_option, request):
     return useragent and hass_frontend.version(useragent)
 
 
+@callback
 def websocket_handle_get_panels(hass, connection, msg):
     """Handle get panels command.
 
