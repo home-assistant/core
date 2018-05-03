@@ -239,7 +239,7 @@ def async_setup(hass, config):
                 'post',
                 "persongroups/{0}/persons/{1}/persistedFaces".format(
                     g_id, p_id),
-                image,
+                image.content,
                 binary=True
             )
         except HomeAssistantError as err:
