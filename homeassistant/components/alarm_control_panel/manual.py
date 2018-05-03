@@ -201,7 +201,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """ Return one or more digits/characters."""
+        """Return one or more digits/characters."""
         if self._code.isdigit():
             return '^\d+$'
         return None if self._code is None else '.+'

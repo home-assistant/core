@@ -60,7 +60,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """ Return one or more digits/characters."""
+        """Return one or more digits/characters."""
         return '^\d+$'
 
     @property

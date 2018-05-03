@@ -69,7 +69,7 @@ class NX584Alarm(alarm.AlarmControlPanel):
 
     @property
     def that(self):
-        """ Return one or more digits/characters."""
+        """Return one or more digits/characters."""
         return '^\d+$'
 
     @property
