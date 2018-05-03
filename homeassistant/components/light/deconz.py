@@ -33,7 +33,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         for light in lights:
             entities.append(DeconzLight(light))
         async_add_devices(entities, True)
-    async_dispatcher_connect(hass, 'deconz_new_light', async_add_light)
+    hass.data[DATA_DECONZ_UNSUB].append(
+        async_dispatcher_connect(hass, 'deconz_new_light', async_add_light))
 
     @callback
     def async_add_group(groups):
@@ -43,12 +44,11 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             if group.lights:
                 entities.append(DeconzLight(group))
         async_add_devices(entities, True)
-    async_dispatcher_connect(hass, 'deconz_new_group', async_add_group)
+    hass.data[DATA_DECONZ_UNSUB].append(
+        async_dispatcher_connect(hass, 'deconz_new_group', async_add_group))
 
-    hass.data[DATA_DECONZ_UNSUB].append(
-        async_add_light(hass.data[DATA_DECONZ].lights.values()))
-    hass.data[DATA_DECONZ_UNSUB].append(
-        async_add_group(hass.data[DATA_DECONZ].groups.values()))
+    async_add_light(hass.data[DATA_DECONZ].lights.values())
+    async_add_group(hass.data[DATA_DECONZ].groups.values())
 
 
 class DeconzLight(Light):
