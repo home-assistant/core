@@ -99,7 +99,7 @@ class VenstarThermostat(ClimateDevice):
                          SUPPORT_TARGET_TEMPERATURE_LOW)
 
         if (self._humidifier and
-                hasattr(self._client,'hum_active')):
+                hasattr(self._client, 'hum_active')):
             features |= (SUPPORT_TARGET_HUMIDITY |
                          SUPPORT_TARGET_HUMIDITY_HIGH |
                          SUPPORT_TARGET_HUMIDITY_LOW)
@@ -221,8 +221,7 @@ class VenstarThermostat(ClimateDevice):
         """Return the status of hold mode."""
         if self._client.schedule == 0:
             return HOLD_MODE_TEMPERATURE
-        else:
-            return HOLD_MODE_OFF
+        return HOLD_MODE_OFF
 
     def _set_operation_mode(self, operation_mode):
         """Change the operation mode (internal)."""
@@ -287,14 +286,14 @@ class VenstarThermostat(ClimateDevice):
         if not success:
             _LOGGER.error("Failed to change the target humidity level")
 
-    def set_hold_mode(self, hold):
+    def set_hold_mode(self, hold_mode):
         """Set the hold mode."""
-        if hold == HOLD_MODE_TEMPERATURE:
+        if hold_mode == HOLD_MODE_TEMPERATURE:
             success = self._client.set_schedule(0)
-        elif hold == HOLD_MODE_OFF:
+        elif hold_mode == HOLD_MODE_OFF:
             success = self._client.set_schedule(1)
         else:
-            _LOGGER.error("Unknown hold mode \"%s\"" % hold)
+            _LOGGER.error("Unknown hold mode \"%s\"", hold_mode)
             success = False
 
         if not success:
