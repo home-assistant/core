@@ -1,8 +1,8 @@
 """
-Component that will perform facial detection via a local machinebox instance.
+Component that will perform facial detection via a local facebox instance.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.facebox
+https://home-assistant.io/components/image_processing.facebox_face_detect
 """
 import base64
 import requests
@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the classifier."""
     entities = []
     for camera in config[CONF_SOURCE]:
-        entities.append(Facebox(
+        entities.append(FaceboxFaceDetectEntity(
             camera.get(CONF_NAME),
             config[CONF_IP_ADDRESS],
             config[CONF_PORT],
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(entities)
 
 
-class Facebox(ImageProcessingFaceEntity):
+class FaceboxFaceDetectEntity(ImageProcessingFaceEntity):
     """Perform a classification via a Facebox."""
 
     def __init__(self, name, ip, port, camera_entity):

@@ -20,7 +20,7 @@ MOCK_RESPONSE = """
 VALID_ENTITY_ID = 'image_processing.facebox_demo_camera'
 VALID_CONFIG = {
     ip.DOMAIN: {
-        'platform': 'facebox',
+        'platform': 'facebox_face_detect',
         CONF_IP_ADDRESS: MOCK_IP,
         CONF_PORT: MOCK_PORT,
         ip.CONF_SOURCE: {
