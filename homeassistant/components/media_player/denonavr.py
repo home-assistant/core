@@ -36,6 +36,8 @@ CONF_VALID_ZONES = ['Zone2', 'Zone3']
 CONF_INVALID_ZONES_ERR = 'Invalid Zone (expected Zone2 or Zone3)'
 KEY_DENON_CACHE = 'denonavr_hosts'
 
+ATTR_SOUND_MODE_RAW = 'sound_mode_raw'
+
 SUPPORT_DENON = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_SELECT_SOURCE | SUPPORT_VOLUME_SET
@@ -322,6 +324,14 @@ class DenonDevice(MediaPlayerDevice):
     def media_episode(self):
         """Episode of current playing media, TV show only."""
         return None
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        attributes = {}
+        if self._sound_mode_raw is not None and self._sound_mode_support:
+            attributes[ATTR_SOUND_MODE_RAW] = self._sound_mode_raw
+        return attributes
 
     def media_play_pause(self):
         """Simulate play pause media player."""
