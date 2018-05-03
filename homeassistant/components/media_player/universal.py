@@ -47,7 +47,6 @@ CONF_SERVICE_DATA = 'service_data'
 ATTR_DATA = 'data'
 CONF_STATE = 'state'
 
-OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_UNAVAILABLE]
 REQUIREMENTS = []
 _LOGGER = logging.getLogger(__name__)
 
@@ -513,19 +512,19 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         # Search for child in 'playing' state first
         for child_name in self._children:
             child_state = self.hass.states.get(child_name)
-            if child_state and child_state.state is STATE_PLAYING:
+            if child_state and child_state.state == STATE_PLAYING:
                 self._child_state = child_state
                 return
         # Search for child in 'paused' state if no playing one found
         for child_name in self._children:
             child_state = self.hass.states.get(child_name)
-            if child_state and child_state.state is STATE_PAUSED:
+            if child_state and child_state.state == STATE_PAUSED:
                 self._child_state = child_state
                 return
         # Search for child in 'on' state if no playing or paused found
         for child_name in self._children:
             child_state = self.hass.states.get(child_name)
-            if child_state and child_state.state is STATE_ON:
+            if child_state and child_state.state == STATE_ON:
                 self._child_state = child_state
                 return
         # None playing, paused or on found
