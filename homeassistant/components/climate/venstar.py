@@ -12,6 +12,7 @@ from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
     PLATFORM_SCHEMA, STATE_AUTO, STATE_COOL, STATE_HEAT, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_HUMIDITY, SUPPORT_AWAY_MODE,
+    SUPPORT_TARGET_HUMIDITY_HIGH, SUPPORT_TARGET_HUMIDITY_LOW,
     SUPPORT_HOLD_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
     ClimateDevice)
@@ -92,8 +93,10 @@ class VenstarThermostat(ClimateDevice):
             features |= (SUPPORT_TARGET_TEMPERATURE_HIGH |
                          SUPPORT_TARGET_TEMPERATURE_LOW)
 
-        if self._client.hum_active == 1:
-            features |= SUPPORT_TARGET_HUMIDITY
+        if hasattr(self._client,'hum_active'):
+            features |= (SUPPORT_TARGET_HUMIDITY |
+                         SUPPORT_TARGET_HUMIDITY_HIGH |
+                         SUPPORT_TARGET_HUMIDITY_LOW)
 
         return features
 
