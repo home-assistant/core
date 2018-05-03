@@ -22,22 +22,18 @@ async def async_setup_platform(hass, config, async_add_devices,
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the deCONZ binary sensor."""
-    from pydeconz.sensor import DECONZ_BINARY_SENSOR
-    sensors = hass.data[DATA_DECONZ].sensors
-    entities = []
-
-    for sensor in sensors.values():
-        if sensor.type in DECONZ_BINARY_SENSOR:
-            entities.append(DeconzBinarySensor(sensor))
-    async_add_devices(entities, True)
-
     @callback
-    def async_new_sensor(sensor):
-        """Called when a new sensor device has been added to deCONZ."""
-        if sensor.type in DECONZ_BINARY_SENSOR:
-            async_add_devices(DeconzBinarySensor(sensor), True)
-    async_dispatcher_connect(
-        hass, 'deconz_new_sensor', async_new_sensor)
+    def async_add_sensor(sensors):
+        """Add binary sensor from deCONZ."""
+        from pydeconz.sensor import DECONZ_BINARY_SENSOR
+        entities = []
+        for sensor in sensors:
+            if sensor.type in DECONZ_BINARY_SENSOR:
+                entities.append(DeconzBinarySensor(sensor))
+        async_add_devices(entities, True)
+    async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor)
+
+    async_add_sensor(hass.data[DATA_DECONZ].sensors.values())
 
 
 class DeconzBinarySensor(BinarySensorDevice):

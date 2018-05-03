@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 
 from homeassistant import config_entries
 from homeassistant.components import deconz
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import mock_coro
 
@@ -72,3 +73,27 @@ async def test_lights_and_groups(hass):
     assert "light.group_1_name" in hass.data[deconz.DATA_DECONZ_ID]
     assert "light.group_2_name" not in hass.data[deconz.DATA_DECONZ_ID]
     assert len(hass.states.async_all()) == 3
+
+
+async def test_add_new_light(hass):
+    """Test successful creation of light entities."""
+    data = {}
+    await setup_bridge(hass, data)
+    light = Mock()
+    light.name = 'name'
+    light.register_async_callback = Mock()
+    async_dispatcher_send(hass, 'deconz_new_light', [light])
+    await hass.async_block_till_done()
+    assert "light.name" in hass.data[deconz.DATA_DECONZ_ID]
+
+
+async def test_add_new_group(hass):
+    """Test successful creation of group entities."""
+    data = {}
+    await setup_bridge(hass, data)
+    group = Mock()
+    group.name = 'name'
+    group.register_async_callback = Mock()
+    async_dispatcher_send(hass, 'deconz_new_group', [group])
+    await hass.async_block_till_done()
+    assert "light.name" in hass.data[deconz.DATA_DECONZ_ID]

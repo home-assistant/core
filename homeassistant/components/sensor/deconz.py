@@ -28,29 +28,22 @@ async def async_setup_platform(hass, config, async_add_devices,
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the deCONZ sensors."""
-    from pydeconz.sensor import DECONZ_SENSOR, SWITCH as DECONZ_REMOTE
-    sensors = hass.data[DATA_DECONZ].sensors
-    entities = []
-
-    for sensor in sensors.values():
-        if sensor.type in DECONZ_SENSOR:
-            if sensor.type in DECONZ_REMOTE:
-                if sensor.battery:
-                    entities.append(DeconzBattery(sensor))
-            else:
-                entities.append(DeconzSensor(sensor))
-    async_add_devices(entities, True)
-
     @callback
-    def async_new_sensor(sensor):
-        """Called when a new sensor device has been added to deCONZ."""
-        if sensor.type in DECONZ_SENSOR:
-            if sensor.type in DECONZ_REMOTE:
-                if sensor.battery:
-                    async_add_devices(DeconzBattery(sensor), True)
-            else:
-                async_add_devices(DeconzSensor(sensor), True)
-    async_dispatcher_connect(hass, 'deconz_new_sensor', async_new_sensor)
+    def async_add_sensor(sensors):
+        """Add sensors from deCONZ."""
+        from pydeconz.sensor import DECONZ_SENSOR, SWITCH as DECONZ_REMOTE
+        entities = []
+        for sensor in sensors:
+            if sensor.type in DECONZ_SENSOR:
+                if sensor.type in DECONZ_REMOTE:
+                    if sensor.battery:
+                        entities.append(DeconzBattery(sensor))
+                else:
+                    entities.append(DeconzSensor(sensor))
+        async_add_devices(entities, True)
+    async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor)
+
+    async_add_sensor(hass.data[DATA_DECONZ].sensors.values())
 
 
 class DeconzSensor(Entity):

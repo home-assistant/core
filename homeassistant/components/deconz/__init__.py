@@ -71,7 +71,6 @@ async def async_setup_entry(hass, config_entry):
     Start websocket for push notification of state changes from deCONZ.
     """
     from pydeconz import DeconzSession
-    from pydeconz.sensor import SWITCH as DECONZ_REMOTE
     if DOMAIN in hass.data:
         _LOGGER.error(
             "Config entry failed since one deCONZ instance already exists")
@@ -81,7 +80,7 @@ async def async_setup_entry(hass, config_entry):
     def async_add_device_callback(device_type, device):
         """Called when a new device has been created in deCONZ."""
         async_dispatcher_send(
-            hass, 'deconz_new_{}'.format(device_type), device)
+            hass, 'deconz_new_{}'.format(device_type), [device])
 
     session = aiohttp_client.async_get_clientsession(hass)
     deconz = DeconzSession(hass.loop, session, **config_entry.data,
@@ -93,20 +92,22 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN] = deconz
     hass.data[DATA_DECONZ_ID] = {}
+    hass.data[DATA_DECONZ_EVENT] = []
 
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
         hass.async_add_job(hass.config_entries.async_forward_entry_setup(
             config_entry, component))
 
-    hass.data[DATA_DECONZ_EVENT] = [DeconzEvent(
-        hass, sensor) for sensor in deconz.sensors.values()
-                                    if sensor.type in DECONZ_REMOTE]
+    @callback
+    def async_add_remote(sensors):
+        """Setup remote from deCONZ."""
+        from pydeconz.sensor import SWITCH as DECONZ_REMOTE
+        for sensor in sensors:
+            if sensor.type in DECONZ_REMOTE:
+                hass.data[DATA_DECONZ_EVENT].append(DeconzEvent(hass, sensor))
+    async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_remote)
 
-    async def async_new_remote(remote):
-        """Create deCONZ event if new sensor is a remote."""
-        if remote.type in DECONZ_REMOTE:
-            hass.data[DATA_DECONZ_EVENT].append(DeconzEvent(hass, remote))
-    async_dispatcher_connect(hass, 'deconz_new_sensor', async_new_remote)
+    async_add_remote(deconz.sensors.values())
 
     deconz.start()
 

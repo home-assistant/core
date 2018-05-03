@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 
 from homeassistant import config_entries
 from homeassistant.components import deconz
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import mock_coro
 
@@ -13,6 +14,13 @@ SENSOR = {
         "name": "Sensor 1 name",
         "type": "ZHAPresence",
         "state": {"presence": False},
+        "config": {}
+    },
+    "2": {
+        "id": "Sensor 2 id",
+        "name": "Sensor 2 name",
+        "type": "ZHATemperature",
+        "state": {"temperature": False},
         "config": {}
     }
 }
@@ -52,4 +60,19 @@ async def test_binary_sensors(hass):
     data = {"sensors": SENSOR}
     await setup_bridge(hass, data)
     assert "binary_sensor.sensor_1_name" in hass.data[deconz.DATA_DECONZ_ID]
+    assert "binary_sensor.sensor_2_name" not in \
+        hass.data[deconz.DATA_DECONZ_ID]
     assert len(hass.states.async_all()) == 1
+
+
+async def test_add_new_sensor(hass):
+    """Test successful creation of sensor entities."""
+    data = {}
+    await setup_bridge(hass, data)
+    sensor = Mock()
+    sensor.name = 'name'
+    sensor.type = 'ZHAPresence'
+    sensor.register_async_callback = Mock()
+    async_dispatcher_send(hass, 'deconz_new_sensor', [sensor])
+    await hass.async_block_till_done()
+    assert "binary_sensor.name" in hass.data[deconz.DATA_DECONZ_ID]

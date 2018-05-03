@@ -167,6 +167,6 @@ async def test_add_new_remote(hass):
                return_value=mock_coro(True)):
         assert await deconz.async_setup_entry(hass, entry) is True
 
-    async_dispatcher_send(hass, 'deconz_new_sensor', remote)
+    async_dispatcher_send(hass, 'deconz_new_sensor', [remote])
     await hass.async_block_till_done()
     assert len(hass.data[deconz.DATA_DECONZ_EVENT]) == 1

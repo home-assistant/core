@@ -1,9 +1,10 @@
 """deCONZ sensor platform tests."""
 from unittest.mock import Mock, patch
 
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+
 from homeassistant import config_entries
 from homeassistant.components import deconz
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import mock_coro
 
@@ -89,10 +90,9 @@ async def test_add_new_sensor(hass):
     data = {}
     await setup_bridge(hass, data)
     sensor = Mock()
-    sensor.deconzid = 'deconzid'
     sensor.name = 'name'
     sensor.type = 'ZHATemperature'
     sensor.register_async_callback = Mock()
-    async_dispatcher_send(hass, 'deconz_new_sensor', sensor)
+    async_dispatcher_send(hass, 'deconz_new_sensor', [sensor])
     await hass.async_block_till_done()
     assert "sensor.name" in hass.data[deconz.DATA_DECONZ_ID]

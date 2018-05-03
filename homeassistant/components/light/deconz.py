@@ -20,29 +20,33 @@ DEPENDENCIES = ['deconz']
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Old way of setting up deCONZ lights."""
+    """Old way of setting up deCONZ lights and group."""
     pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
-    """Set up the deCONZ lights from a config entry."""
-    lights = hass.data[DATA_DECONZ].lights
-    groups = hass.data[DATA_DECONZ].groups
-    entities = []
-
-    for light in lights.values():
-        entities.append(DeconzLight(light))
-
-    for group in groups.values():
-        if group.lights:  # Don't create entity for group not containing light
-            entities.append(DeconzLight(group))
-    async_add_devices(entities, True)
+    """Set up the deCONZ lights and groups from a config entry."""
+    @callback
+    def async_add_light(lights):
+        """Add light from deCONZ."""
+        entities = []
+        for light in lights:
+            entities.append(DeconzLight(light))
+        async_add_devices(entities, True)
+    async_dispatcher_connect(hass, 'deconz_new_light', async_add_light)
 
     @callback
-    def async_new_light(light):
-        """Called when a new light has been added to deCONZ."""
-        async_add_devices(DeconzLight(light), True)
-    async_dispatcher_connect(hass, 'deconz_new_light', async_new_light)
+    def async_add_group(groups):
+        """Add group from deCONZ."""
+        entities = []
+        for group in groups:
+            if group.lights:
+                entities.append(DeconzLight(group))
+        async_add_devices(entities, True)
+    async_dispatcher_connect(hass, 'deconz_new_group', async_add_group)
+
+    async_add_light(hass.data[DATA_DECONZ].lights.values())
+    async_add_group(hass.data[DATA_DECONZ].groups.values())
 
 
 class DeconzLight(Light):
