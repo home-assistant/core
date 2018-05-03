@@ -118,10 +118,10 @@ def get_accessory(hass, state, aid, config):
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
-        if device_class == DEVICE_CLASS_TEMPERATURE or unit == TEMP_CELSIUS \
-                or unit == TEMP_FAHRENHEIT:
+        if device_class == DEVICE_CLASS_TEMPERATURE and (
+                unit == TEMP_CELSIUS or unit == TEMP_FAHRENHEIT):
             a_type = 'TemperatureSensor'
-        elif device_class == DEVICE_CLASS_HUMIDITY or unit == '%':
+        elif device_class == DEVICE_CLASS_HUMIDITY and unit == '%':
             a_type = 'HumiditySensor'
         elif device_class == DEVICE_CLASS_PM25 \
                 or DEVICE_CLASS_PM25 in state.entity_id:
@@ -129,8 +129,8 @@ def get_accessory(hass, state, aid, config):
         elif device_class == DEVICE_CLASS_CO2 \
                 or DEVICE_CLASS_CO2 in state.entity_id:
             a_type = 'CarbonDioxideSensor'
-        elif device_class == DEVICE_CLASS_LIGHT or unit == 'lm' or \
-                unit == 'lux' or unit == 'lx':
+        elif device_class == DEVICE_CLASS_LIGHT and (
+                unit == 'lm' or unit == 'lux' or unit == 'lx'):
             a_type = 'LightSensor'
 
     elif state.domain == 'switch' or state.domain == 'remote' \

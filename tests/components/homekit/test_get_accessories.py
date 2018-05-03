@@ -43,39 +43,28 @@ class TestGetAccessories(unittest.TestCase):
         """Test if mock type was called."""
         self.assertTrue(self.mock_type.called)
 
-    def test_sensor_temperature(self):
-        """Test temperature sensor with device class temperature."""
-        with patch.dict(TYPES, {'TemperatureSensor': self.mock_type}):
-            state = State('sensor.temperature', '23',
-                          {ATTR_DEVICE_CLASS: 'temperature'})
-            get_accessory(None, state, 2, {})
-
     def test_sensor_temperature_celsius(self):
         """Test temperature sensor with Celsius as unit."""
         with patch.dict(TYPES, {'TemperatureSensor': self.mock_type}):
             state = State('sensor.temperature', '23',
-                          {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+                          {ATTR_DEVICE_CLASS: 'temperature',
+                           ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
             get_accessory(None, state, 2, {})
 
     def test_sensor_temperature_fahrenheit(self):
         """Test temperature sensor with Fahrenheit as unit."""
         with patch.dict(TYPES, {'TemperatureSensor': self.mock_type}):
             state = State('sensor.temperature', '74',
-                          {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT})
+                          {ATTR_DEVICE_CLASS: 'temperature',
+                           ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT})
             get_accessory(None, state, 2, {})
 
     def test_sensor_humidity(self):
         """Test humidity sensor with device class humidity."""
         with patch.dict(TYPES, {'HumiditySensor': self.mock_type}):
             state = State('sensor.humidity', '20',
-                          {ATTR_DEVICE_CLASS: 'humidity'})
-            get_accessory(None, state, 2, {})
-
-    def test_sensor_humidity_unit(self):
-        """Test humidity sensor with % as unit."""
-        with patch.dict(TYPES, {'HumiditySensor': self.mock_type}):
-            state = State('sensor.humidity', '20',
-                          {ATTR_UNIT_OF_MEASUREMENT: '%'})
+                          {ATTR_DEVICE_CLASS: 'humidity',
+                           ATTR_UNIT_OF_MEASUREMENT: '%'})
             get_accessory(None, state, 2, {})
 
     def test_air_quality_sensor(self):
@@ -104,32 +93,28 @@ class TestGetAccessories(unittest.TestCase):
             state = State('sensor.airmeter_co2', '500', {})
             get_accessory(None, state, 2, {})
 
-    def test_light_sensor(self):
-        """Test light sensor with device class lux."""
-        with patch.dict(TYPES, {'LightSensor': self.mock_type}):
-            state = State('sensor.light', '900',
-                          {ATTR_DEVICE_CLASS: 'light'})
-            get_accessory(None, state, 2, {})
-
     def test_light_sensor_unit_lm(self):
         """Test light sensor with lm as unit."""
         with patch.dict(TYPES, {'LightSensor': self.mock_type}):
             state = State('sensor.light', '900',
-                          {ATTR_UNIT_OF_MEASUREMENT: 'lm'})
+                          {ATTR_DEVICE_CLASS: 'light',
+                           ATTR_UNIT_OF_MEASUREMENT: 'lm'})
             get_accessory(None, state, 2, {})
 
     def test_light_sensor_unit_lux(self):
         """Test light sensor with lux as unit."""
         with patch.dict(TYPES, {'LightSensor': self.mock_type}):
             state = State('sensor.light', '900',
-                          {ATTR_UNIT_OF_MEASUREMENT: 'lux'})
+                          {ATTR_DEVICE_CLASS: 'light',
+                           ATTR_UNIT_OF_MEASUREMENT: 'lux'})
             get_accessory(None, state, 2, {})
 
     def test_light_sensor_unit_lx(self):
         """Test light sensor with lx as unit."""
         with patch.dict(TYPES, {'LightSensor': self.mock_type}):
             state = State('sensor.light', '900',
-                          {ATTR_UNIT_OF_MEASUREMENT: 'lx'})
+                          {ATTR_DEVICE_CLASS: 'light',
+                           ATTR_UNIT_OF_MEASUREMENT: 'lx'})
             get_accessory(None, state, 2, {})
 
     def test_binary_sensor(self):
