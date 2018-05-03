@@ -14,8 +14,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (ATTR_TARGET, ATTR_MESSAGE)
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  CONF_VERIFY_SSL, CONF_NAME,
-                                 EVENT_HOMEASSISTANT_STOP)
+                                 EVENT_HOMEASSISTANT_STOP,
+                                 EVENT_HOMEASSISTANT_START)
 from homeassistant.util.json import load_json, save_json
+from homeassistant.exceptions import HomeAssistantError
 
 REQUIREMENTS = ['matrix-client==0.2.0']
 
@@ -46,15 +48,17 @@ COMMAND_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION)
 )
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOMESERVER): cv.url,
-    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
-    vol.Required(CONF_USERNAME): cv.matches_regex("@[^:]*:.*"),
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list,
-                                                  [cv.string]),
-    vol.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA]
-})
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_HOMESERVER): cv.url,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
+        vol.Required(CONF_USERNAME): cv.matches_regex("@[^:]*:.*"),
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_ROOMS, default=[]): vol.All(cv.ensure_list,
+                                                      [cv.string]),
+        vol.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA]
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SEND_MESSAGE = 'send_message'
 
@@ -68,32 +72,25 @@ def setup(hass, config):
     """Set up the Matrix bot component."""
     from matrix_client.client import MatrixRequestError
 
-    if not config[DOMAIN]:
-        return False
-
-    config = config[DOMAIN][0]
+    config = config[DOMAIN]
 
     try:
         bot = MatrixBot(
             hass,
             os.path.join(hass.config.path(), SESSION_FILE),
-            config.get(CONF_HOMESERVER),
-            config.get(CONF_VERIFY_SSL),
-            config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD),
-            config.get(CONF_ROOMS, []),
-            config.get(CONF_COMMANDS, []))
+            config[CONF_HOMESERVER],
+            config[CONF_VERIFY_SSL],
+            config[CONF_USERNAME],
+            config[CONF_PASSWORD],
+            config[CONF_ROOMS],
+            config[CONF_COMMANDS])
         hass.data[DOMAIN] = bot
     except MatrixRequestError as exception:
         _LOGGER.error("Matrix failed to log in: %s", str(exception))
         return False
 
-    def send_message_handler(service):
-        """Handle the send_message service."""
-        bot.handle_send_message(service)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SEND_MESSAGE, send_message_handler,
+    hass.services.register(
+        DOMAIN, SERVICE_SEND_MESSAGE, bot.handle_send_message,
         schema=SERVICE_SCHEMA_SEND_MESSAGE)
 
     return True
@@ -164,8 +161,12 @@ class MatrixBot(object):
 
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_client)
 
-        # This potentially does a lot of I/O, so we defer it
-        hass.add_job(self._join_rooms)
+        # Joining rooms potentially does a lot of I/O, so we defer it
+        def handle_startup(_):
+            """Run once when Home Assistant finished startup."""
+            self._join_rooms()
+
+        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START, handle_startup)
 
     def _handle_room_message(self, room_id, room, event):
         """Handle a message sent to a room."""
@@ -250,19 +251,11 @@ class MatrixBot(object):
 
         Returns the auth_tokens dictionary.
         """
-        if not os.path.exists(self._session_filepath):
-            return {}
-
         try:
-            data = load_json(self._session_filepath)
-
-            auth_tokens = {}
-            for mx_id, token in data.items():
-                auth_tokens[mx_id] = token
+            auth_tokens = load_json(self._session_filepath)
 
             return auth_tokens
-
-        except (OSError, IOError, PermissionError) as ex:
+        except HomeAssistantError as ex:
             _LOGGER.warning(
                 "Loading authentication tokens from file '%s' failed: %s",
                 self._session_filepath, str(ex))
