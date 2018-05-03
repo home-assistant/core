@@ -20,8 +20,8 @@ load_all_link_database:
       description: Name of the device to print
       example: 'light.1a2b3c'
     reload:
-      description: Reload all records. If Y the current records are cleared from memory (does not effect the device) and the records are reloaded. If N the existing records are left in place and only missing records are added. Default is N.
-      example: N
+      description: Reload all records. If true the current records are cleared from memory (does not effect the device) and the records are reloaded. If false the existing records are left in place and only missing records are added. Default is false.
+      example: 'true'
 print_all_link_database:
   description: Print the All-Link Database for a device. Requires that the All-Link Database is loaded into memory.
   fields:
