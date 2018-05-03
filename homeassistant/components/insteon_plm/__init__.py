@@ -345,8 +345,6 @@ def print_aldb_to_log(aldb):
         hwm = 'Y' if rec.control_flags.is_high_water_mark else 'N'
         _LOGGER.info(' {:04x}    {:s}     {:s}   {:s}    {:3d} {:s}'
                      '   {:3d}   {:3d}   {:3d}'.format(
-                     rec.mem_addr, in_use, mode, hwm,
-                     rec.group, rec.address.human,
-                     rec.data1, rec.data2, rec.data3))
-
-  
+                         rec.mem_addr, in_use, mode, hwm,
+                         rec.group, rec.address.human,
+                         rec.data1, rec.data2, rec.data3))
