@@ -15,7 +15,7 @@ import voluptuous as vol
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.notify import (
     ATTR_DATA, ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import (CONTENT_TYPE_JSON,  HTTP_BAD_REQUEST)
+from homeassistant.const import (CONTENT_TYPE_JSON, HTTP_BAD_REQUEST)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -182,13 +182,19 @@ class FacebookReceiver(HomeAssistantView):
                             }
 
                             if "quick_reply" in messaging_event["message"]:
-                                event_data['payload'] = messaging_event["message"]["quick_reply"]["payload"]
+                                event_data['payload'] = \
+                                    messaging_event["message"]["quick_reply"][
+                                        "payload"]
 
-                            self.hass.bus.async_fire(EVENT_FACEBOOK_MESSAGE, event_data)
+                            self.hass.bus.async_fire(EVENT_FACEBOOK_MESSAGE,
+                                                     event_data)
                         else:
-                            _LOGGER.warn("Received message on facebook webhook from sender not in allowed chat ids.")
+                            _LOGGER.warn(
+                                ("Received message on facebook webhook from "
+                                 "sender not in allowed chat ids."))
                     else:
-                        _LOGGER.warn("Recieved message but no allowed senders defined")
+                        _LOGGER.warn(
+                            "Recieved message but no allowed senders defined")
 
         return "ok", 200
 
@@ -211,6 +217,7 @@ class FacebookReceiver(HomeAssistantView):
             }
         })
 
-        resp = requests.post(BASE_URL, params=params, headers=headers, data=data)
+        resp = requests.post(BASE_URL, params=params, headers=headers,
+                             data=data)
         if resp.status_code != 200:
             log_error(resp)
