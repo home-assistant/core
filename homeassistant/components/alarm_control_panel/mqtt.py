@@ -117,7 +117,9 @@ class MqttAlarm(MqttAvailability, alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """One or more characters if code is defined."""
+        """ Return one or more digits/characters."""
+        if self._code.isdigit():
+            return '^\d+$'
         return None if self._code is None else '.+'
 
     @asyncio.coroutine

@@ -68,9 +68,9 @@ class NX584Alarm(alarm.AlarmControlPanel):
         return self._name
 
     @property
-    def code_format(self):
-        """Return che characters if code is defined."""
-        return '[0-9]{4}([0-9]{2})?'
+    def that(self):
+        """ Return one or more digits/characters."""
+        return '^\d+$'
 
     @property
     def state(self):
