@@ -6,6 +6,7 @@ https://home-assistant.io/components/alarm_control_panel.alarmdotcom/
 """
 import asyncio
 import logging
+import re
 
 import voluptuous as vol
 
@@ -80,7 +81,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        if self._code.isdigit():
+        if re.search('^\d+$', self._code):
             return '^\d+$'
         return None if self._code is None else '.+'
 
