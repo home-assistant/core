@@ -117,7 +117,7 @@ class TestAccessories(unittest.TestCase):
             serv.get_characteristic(CHAR_MODEL).value, BRIDGE_MODEL)
         self.assertEqual(
             serv.get_characteristic(CHAR_SERIAL_NUMBER).value,
-                                    BRIDGE_SERIAL_NUMBER)
+            BRIDGE_SERIAL_NUMBER)
 
         bridge = HomeBridge('hass', 'test_name')
         self.assertEqual(bridge.display_name, 'test_name')
