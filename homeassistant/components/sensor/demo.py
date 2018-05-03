@@ -12,18 +12,21 @@ from homeassistant.helpers.entity import Entity
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo sensors."""
     add_devices([
-        DemoSensor('Outside Temperature', 15.6, TEMP_CELSIUS, 12),
-        DemoSensor('Outside Humidity', 54, '%', None),
+        DemoSensor('Outside Temperature', 15.6, 'temperature',
+                   TEMP_CELSIUS, 12),
+        DemoSensor('Outside Humidity', 54, 'humidity', '%', None),
     ])
 
 
 class DemoSensor(Entity):
     """Representation of a Demo sensor."""
 
-    def __init__(self, name, state, unit_of_measurement, battery):
+    def __init__(self, name, state, device_class,
+                 unit_of_measurement, battery):
         """Initialize the sensor."""
         self._name = name
         self._state = state
+        self._device_class = device_class
         self._unit_of_measurement = unit_of_measurement
         self._battery = battery
 
@@ -31,6 +34,11 @@ class DemoSensor(Entity):
     def should_poll(self):
         """No polling needed for a demo sensor."""
         return False
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return self._device_class
 
     @property
     def name(self):
