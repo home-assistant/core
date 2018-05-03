@@ -126,13 +126,10 @@ def async_setup(hass, config):
         """Load the device All-Link database."""
         entity_id = service.data.get(CONF_ENTITY_ID)
         reload = service.data.get(SRV_LOAD_DB_RELOAD)
-        db_reload = False
-        if reload:
-            db_reload = True if reload.lower() == 'y' else False
         entities = hass.data[DOMAIN].get('entities')
         entity = entities.get(entity_id)
         if entity:
-            entity.load_aldb(db_reload)
+            entity.load_aldb(reload)
         else:
             _LOGGER.error('Entity %s is not an INSTEON device', entity_id)
 
