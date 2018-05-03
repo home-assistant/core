@@ -6,9 +6,9 @@ https://home-assistant.io/components/notify.facebook/
 """
 import json
 import logging
-
-from aiohttp.hdrs import CONTENT_TYPE
 import asyncio
+from aiohttp.hdrs import CONTENT_TYPE
+
 import requests
 import voluptuous as vol
 
@@ -141,7 +141,6 @@ class FacebookReceiver(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):
         """Accept the GET verification from facebook."""
-
         data = request.query
 
         if data.get("hub.mode") == "subscribe" and data.get("hub.challenge"):
@@ -153,7 +152,6 @@ class FacebookReceiver(HomeAssistantView):
     @asyncio.coroutine
     def post(self, request):
         """Accept the POST from facebook."""
-
         try:
             data = yield from request.json()
         except ValueError:
@@ -174,33 +172,36 @@ class FacebookReceiver(HomeAssistantView):
 
                     if self.allowed_chat_ids is not None:
                         if int(sender_id) in self.allowed_chat_ids:
-                            _LOGGER.debug("Received facebook message.")
-                            event_data = {
-                                'sender_id': sender_id,
-                                'message': message_text,
-                                'payload': None
-                            }
-
-                            if "quick_reply" in messaging_event["message"]:
-                                event_data['payload'] = \
-                                    messaging_event["message"]["quick_reply"][
-                                        "payload"]
-
-                            self.hass.bus.async_fire(EVENT_FACEBOOK_MESSAGE,
-                                                     event_data)
+                            self.process_message_event(sender_id,
+                                                       message_text,
+                                                       messaging_event)
                         else:
-                            _LOGGER.warn(
+                            _LOGGER.warning(
                                 ("Received message on facebook webhook from "
                                  "sender not in allowed chat ids."))
                     else:
-                        _LOGGER.warn(
+                        _LOGGER.warning(
                             "Recieved message but no allowed senders defined")
 
         return "ok", 200
 
+    def process_message_event(self, sender_id, message_text, messaging_event):
+        """Process the incoming message event."""
+        _LOGGER.debug("Received facebook message.")
+        event_data = {
+            'sender_id': sender_id,
+            'message': message_text,
+            'payload': None
+        }
+
+        if "quick_reply" in messaging_event["message"]:
+            event_data['payload'] = \
+                messaging_event["message"]["quick_reply"]["payload"]
+
+        self.hass.bus.async_fire(EVENT_FACEBOOK_MESSAGE, event_data)
+
     def reply_with_id(self, sender_id):
         """Reply with the id of the sender to make configuration easier."""
-
         message_text = "Your id is {}".format(sender_id)
         params = {
             "access_token": self.token
