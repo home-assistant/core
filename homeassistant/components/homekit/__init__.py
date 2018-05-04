@@ -30,7 +30,7 @@ from .util import (
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==1.1.9']
+REQUIREMENTS = ['HAP-python==2.0.0']
 
 # #### Driver Status ####
 STATUS_READY = 0
