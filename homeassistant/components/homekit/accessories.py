@@ -4,8 +4,9 @@ from functools import wraps
 from inspect import getmodule
 import logging
 
-from pyhap.accessory import Accessory, Bridge, Category
+from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
+from pyhap.const import CATEGORY_OTHER
 
 from homeassistant.const import __version__
 from homeassistant.core import callback as ha_callback
@@ -15,9 +16,8 @@ from homeassistant.helpers.event import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DEBOUNCE_TIMEOUT, BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER,
-    MANUFACTURER, SERV_ACCESSORY_INFO, CHAR_FIRMWARE_REVISION,
-    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER)
+    DEBOUNCE_TIMEOUT, BRIDGE_MODEL, BRIDGE_NAME,
+    BRIDGE_SERIAL_NUMBER, MANUFACTURER)
 from .util import (
     show_setup_message, dismiss_setup_message)
 
@@ -61,58 +61,19 @@ def debounce(func):
     return wrapper
 
 
-def add_preload_service(acc, service, chars=None):
-    """Define and return a service to be available for the accessory."""
-    from pyhap.loader import get_serv_loader, get_char_loader
-    service = get_serv_loader().get(service)
-    if chars:
-        chars = chars if isinstance(chars, list) else [chars]
-        for char_name in chars:
-            char = get_char_loader().get(char_name)
-            service.add_characteristic(char)
-    acc.add_service(service)
-    return service
-
-
-def setup_char(char_name, service, value=None, properties=None, callback=None):
-    """Helper function to return fully configured characteristic."""
-    char = service.get_characteristic(char_name)
-    if value:
-        char.value = value
-    if properties:
-        char.override_properties(properties)
-    if callback:
-        char.setter_callback = callback
-    return char
-
-
-def set_accessory_info(acc, name, model, serial_number,
-                       manufacturer=MANUFACTURER,
-                       firmware_revision=__version__):
-    """Set the default accessory information."""
-    service = acc.get_service(SERV_ACCESSORY_INFO)
-    service.get_characteristic(CHAR_NAME).set_value(name)
-    service.get_characteristic(CHAR_MODEL).set_value(model)
-    service.get_characteristic(CHAR_MANUFACTURER).set_value(manufacturer)
-    service.get_characteristic(CHAR_SERIAL_NUMBER).set_value(serial_number)
-    service.get_characteristic(CHAR_FIRMWARE_REVISION) \
-        .set_value(firmware_revision)
-
-
 class HomeAccessory(Accessory):
     """Adapter class for Accessory."""
 
-    def __init__(self, hass, name, entity_id, aid, category):
+    def __init__(self, hass, name, entity_id, aid, category=CATEGORY_OTHER):
         """Initialize a Accessory object."""
         super().__init__(name, aid=aid)
         domain = split_entity_id(entity_id)[0].replace("_", " ").title()
-        set_accessory_info(self, name, model=domain, serial_number=entity_id)
-        self.category = getattr(Category, category, Category.OTHER)
+        self.set_info_service(
+            firmware_revision=__version__, manufacturer=MANUFACTURER,
+            model=domain, serial_number=entity_id)
+        self.category = category
         self.entity_id = entity_id
         self.hass = hass
-
-    def _set_services(self):
-        add_preload_service(self, SERV_ACCESSORY_INFO)
 
     def run(self):
         """Method called by accessory after driver is started."""
@@ -143,12 +104,10 @@ class HomeBridge(Bridge):
     def __init__(self, hass, name=BRIDGE_NAME):
         """Initialize a Bridge object."""
         super().__init__(name)
-        set_accessory_info(self, name, model=BRIDGE_MODEL,
-                           serial_number=BRIDGE_SERIAL_NUMBER)
+        self.set_info_service(
+            firmware_revision=__version__, manufacturer=MANUFACTURER,
+            model=BRIDGE_MODEL, serial_number=BRIDGE_SERIAL_NUMBER)
         self.hass = hass
-
-    def _set_services(self):
-        add_preload_service(self, SERV_ACCESSORY_INFO)
 
     def setup_message(self):
         """Prevent print of pyhap setup message to terminal."""

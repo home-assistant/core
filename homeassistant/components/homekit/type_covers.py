@@ -1,6 +1,8 @@
 """Class to hold all cover accessories."""
 import logging
 
+from pyhap.const import CATEGORY_WINDOW_COVERING, CATEGORY_GARAGE_DOOR_OPENER
+
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN, SUPPORT_STOP)
 from homeassistant.const import (
@@ -9,12 +11,11 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES)
 
 from . import TYPES
-from .accessories import HomeAccessory, add_preload_service, setup_char
+from .accessories import HomeAccessory
 from .const import (
-    CATEGORY_WINDOW_COVERING, SERV_WINDOW_COVERING,
-    CHAR_CURRENT_POSITION, CHAR_TARGET_POSITION, CHAR_POSITION_STATE,
-    CATEGORY_GARAGE_DOOR_OPENER, SERV_GARAGE_DOOR_OPENER,
-    CHAR_CURRENT_DOOR_STATE, CHAR_TARGET_DOOR_STATE)
+    SERV_WINDOW_COVERING, CHAR_CURRENT_POSITION,
+    CHAR_TARGET_POSITION, CHAR_POSITION_STATE,
+    SERV_GARAGE_DOOR_OPENER, CHAR_CURRENT_DOOR_STATE, CHAR_TARGET_DOOR_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,12 +33,11 @@ class GarageDoorOpener(HomeAccessory):
         super().__init__(*args, category=CATEGORY_GARAGE_DOOR_OPENER)
         self.flag_target_state = False
 
-        serv_garage_door = add_preload_service(self, SERV_GARAGE_DOOR_OPENER)
-        self.char_current_state = setup_char(
-            CHAR_CURRENT_DOOR_STATE, serv_garage_door, value=0)
-        self.char_target_state = setup_char(
-            CHAR_TARGET_DOOR_STATE, serv_garage_door, value=0,
-            callback=self.set_state)
+        serv_garage_door = self.add_preload_service(SERV_GARAGE_DOOR_OPENER)
+        self.char_current_state = serv_garage_door.configure_char(
+            CHAR_CURRENT_DOOR_STATE, value=0)
+        self.char_target_state = serv_garage_door.configure_char(
+            CHAR_TARGET_DOOR_STATE, value=0, setter_callback=self.set_state)
 
     def set_state(self, value):
         """Change garage state if call came from HomeKit."""
@@ -74,12 +74,11 @@ class WindowCovering(HomeAccessory):
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
         self.homekit_target = None
 
-        serv_cover = add_preload_service(self, SERV_WINDOW_COVERING)
-        self.char_current_position = setup_char(
-            CHAR_CURRENT_POSITION, serv_cover, value=0)
-        self.char_target_position = setup_char(
-            CHAR_TARGET_POSITION, serv_cover, value=0,
-            callback=self.move_cover)
+        serv_cover = self.add_preload_service(SERV_WINDOW_COVERING)
+        self.char_current_position = serv_cover.configure_char(
+            CHAR_CURRENT_POSITION, value=0)
+        self.char_target_position = serv_cover.configure_char(
+            CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover)
 
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
@@ -115,14 +114,13 @@ class WindowCoveringBasic(HomeAccessory):
             .attributes.get(ATTR_SUPPORTED_FEATURES)
         self.supports_stop = features & SUPPORT_STOP
 
-        serv_cover = add_preload_service(self, SERV_WINDOW_COVERING)
-        self.char_current_position = setup_char(
-            CHAR_CURRENT_POSITION, serv_cover, value=0)
-        self.char_target_position = setup_char(
-            CHAR_TARGET_POSITION, serv_cover, value=0,
-            callback=self.move_cover)
-        self.char_position_state = setup_char(
-            CHAR_POSITION_STATE, serv_cover, value=2)
+        serv_cover = self.add_preload_service(SERV_WINDOW_COVERING)
+        self.char_current_position = serv_cover.configure_char(
+            CHAR_CURRENT_POSITION, value=0)
+        self.char_target_position = serv_cover.configure_char(
+            CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover)
+        self.char_position_state = serv_cover.configure_char(
+            CHAR_POSITION_STATE, value=2)
 
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
