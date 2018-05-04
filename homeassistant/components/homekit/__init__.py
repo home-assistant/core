@@ -129,8 +129,8 @@ def get_accessory(hass, state, aid, config):
         elif device_class == DEVICE_CLASS_CO2 \
                 or DEVICE_CLASS_CO2 in state.entity_id:
             a_type = 'CarbonDioxideSensor'
-        elif device_class == DEVICE_CLASS_LIGHT or \
-                unit in ('lm', 'lux', 'lx'):
+        elif device_class == DEVICE_CLASS_LIGHT or unit == 'lm' or \
+                unit == 'lux' or unit == 'lx':
             a_type = 'LightSensor'
 
     elif state.domain in ('switch', 'remote', 'input_boolean', 'script'):
