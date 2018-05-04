@@ -126,10 +126,10 @@ def get_accessory(hass, state, aid, config):
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
-        if device_class == DEVICE_CLASS_TEMPERATURE or unit == TEMP_CELSIUS \
-                or unit == TEMP_FAHRENHEIT:
+        if device_class == DEVICE_CLASS_TEMPERATURE or \
+                unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
             a_type = 'TemperatureSensor'
-        elif device_class == DEVICE_CLASS_HUMIDITY or unit == '%':
+        elif device_class == DEVICE_CLASS_HUMIDITY and unit == '%':
             a_type = 'HumiditySensor'
         elif device_class == DEVICE_CLASS_PM25 \
                 or DEVICE_CLASS_PM25 in state.entity_id:
@@ -141,8 +141,7 @@ def get_accessory(hass, state, aid, config):
                 unit == 'lux' or unit == 'lx':
             a_type = 'LightSensor'
 
-    elif state.domain == 'switch' or state.domain == 'remote' \
-            or state.domain == 'input_boolean' or state.domain == 'script':
+    elif state.domain in ('switch', 'remote', 'input_boolean', 'script'):
         a_type = 'Switch'
 
     if a_type is None:
