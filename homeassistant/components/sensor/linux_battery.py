@@ -97,7 +97,7 @@ class LinuxBatterySensor(Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return 'battery'
+        return 'battery_level'
 
     @property
     def state(self):

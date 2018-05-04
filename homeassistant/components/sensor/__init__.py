@@ -21,8 +21,8 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SCAN_INTERVAL = timedelta(seconds=30)
 DEVICE_CLASSES = [
-    'battery',  # % of battery that is left
-    'humidity',  # % of humidity in the air
+    'battery_level',  # % of battery that is left
+    'relative_humidity',  # % of humidity in the air
     'temperature',  # temperature (C/F)
 ]
 
