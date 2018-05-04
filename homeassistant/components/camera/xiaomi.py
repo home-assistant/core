@@ -94,13 +94,13 @@ class XiaomiCamera(Camera):
         try:
             ftp.login(self.user, self.passwd)
         except error_perm as exc:
-            _LOGGER.error('There was an error while logging into the camera')
+            _LOGGER.error('There was an error while logging into the camera: %s', exc)
             return False
 
         try:
             ftp.cwd(self.path)
         except error_perm as exc:
-            _LOGGER.error('Unable to find path: %s', self.path)
+            _LOGGER.error('Unable to find path: %s - %s', self.path, exc)
             return False
 
         if self._model == MODEL_YI:
@@ -119,7 +119,7 @@ class XiaomiCamera(Camera):
             try:
                 ftp.cwd(first_dir)
             except error_perm as exc:
-                _LOGGER.error('Unable to find path: %s', first_dir)
+                _LOGGER.error('Unable to find path: %s - %s', first_dir, exc)
                 return False
 
             dirs = [d for d in ftp.nlst() if '.' not in d]
