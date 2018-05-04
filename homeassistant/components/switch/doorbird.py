@@ -1,13 +1,12 @@
 """Support for powering relays in a DoorBird video doorbell."""
 import datetime
 import logging
-
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.doorbird import DOMAIN as DOORBIRD_DOMAIN
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_SWITCHES
-import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['doorbird']
 
