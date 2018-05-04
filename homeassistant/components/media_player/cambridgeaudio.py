@@ -141,7 +141,6 @@ class CADevice(MediaPlayerDevice):
         """Return the name of the media_player"""
         return self._name
 
-    # TODO: move this to update() and only return _state
     @property
     def state(self):
         """ Return the state of the media_player. """
@@ -278,11 +277,12 @@ class CADevice(MediaPlayerDevice):
             self._pwstate = STATE_OFF
             return
         self._pwstate = STATE_ON
-        self._state = {'PLAYING': STATE_PLAYING,
-                       'PAUSED_PLAYBACK': STATE_PAUSED,
-                       'STOPPED': STATE_IDLE,
-                       'TRANSITIONING': STATE_PLAYING
-                       }.get(dev.get_transport_state())
+        self._state = {
+                        'PLAYING': STATE_PLAYING,
+                        'PAUSED_PLAYBACK': STATE_PAUSED,
+                        'STOPPED': STATE_IDLE,
+                        'TRANSITIONING': STATE_PLAYING
+                      }.get(dev.get_transport_state())
         self._audio_source = dev.get_audio_source()
         self._source = dev.get_current_preset()['name']
         self._muted = dev.get_mute_state()
@@ -297,6 +297,6 @@ class CADevice(MediaPlayerDevice):
             elif self._audio_source == "internet radio":
                 self._artist = dev.get_playback_details()['artist']
                 self._album = dev.get_playback_details()['stream']
-                self._albumArtURI = None
+                self._album_art = None
                 self._trackno = None
                 self._title = None
