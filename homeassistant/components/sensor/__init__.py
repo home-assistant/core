@@ -26,7 +26,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 DEVICE_CLASSES = [
     DEVICE_CLASS_BATTERY,  # % of battery that is left
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
-    DEVICE_CLASS_LIGHT,  # current light level (lx/lux/lm)
+    DEVICE_CLASS_LIGHT,  # current light level (lx/lm)
     DEVICE_CLASS_TEMPERATURE,  # temperature (C/F)
 ]
 
