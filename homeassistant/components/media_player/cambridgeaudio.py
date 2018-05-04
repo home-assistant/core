@@ -24,24 +24,19 @@ from homeassistant.const import (STATE_ON, STATE_OFF, STATE_UNKNOWN,
                                  CONF_HOST, CONF_NAME, CONF_COMMAND_OFF)
 
 import homeassistant.helpers.config_validation as cv
-from stream_magic import device as cadevice
-from stream_magic import discovery as ca
 
-REQUIREMENTS = ['stream_magic==0.12']
+REQUIREMENTS = ['stream_magic==0.13']
 DOMAIN = 'cambridgeaudio'
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SOURCES = 'sources'
 DEFAULT_NAME = 'Cambridge Audio Streamer'
-DEFAULT_SOURCES = {'current': 'Current'}
 DEFAULT_PWROFF_CMD = 'OFF'
 KNOWN_HOSTS = []
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SOURCES,
-                 default=DEFAULT_SOURCES): {cv.string: cv.string},
     vol.Optional(CONF_COMMAND_OFF, default=DEFAULT_PWROFF_CMD): cv.string
 })
 
@@ -55,9 +50,17 @@ SUPPORT_CAMBRIDGE = SUPPORT_VOLUME_MUTE | SUPPORT_TURN_OFF | SUPPORT_TURN_ON |\
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Cambridge Audio platform"""
+    from stream_magic import device as cadevice
+    from stream_magic import discovery as ca
 
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
+
+    if CONF_COMMAND_OFF in config:
+        poweroff_command = config.get(CONF_COMMAND_OFF)
+    else:
+        poweroff_command = DEFAULT_PWROFF_CMD
+
     hosts = []
     sm = ca.StreamMagic()   # pylint: disable=C0103
 
@@ -78,7 +81,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                       desc, scpd_url)
                 hosts.append(CADevice(smdevice,
                                       config.get(CONF_SOURCES),
-                                      config.get(CONF_COMMAND_OFF),
+                                      poweroff_command,
                                       name=name))
                 KNOWN_HOSTS.append(host)
                 _LOGGER.debug("Added StreamMagic device with ip %s (%s)",
@@ -93,12 +96,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             name = discovery_info.get('name')
             scpd_url = discovery_info.get('ssdp_description')
             if addr not in KNOWN_HOSTS:
-                print("HOST: ", host)
                 smdevice = cadevice.StreamMagicDevice(addr, port,
                                                       name, scpd_url)
                 hosts.append(CADevice(smdevice,
                                       config.get(CONF_SOURCES),
-                                      config.get(CONF_COMMAND_OFF),
+                                      poweroff_command,
                                       name=name))
                 KNOWN_HOSTS.append(host)
                 _LOGGER.debug("Added StreamMagic device with ip %s (%s)",
@@ -127,27 +129,23 @@ class CADevice(MediaPlayerDevice):
         self._source_list = list(self._sources_map.values())
         self._audio_source = None
         self._power_off_cmd = poweroff_command.upper()  # IDLE or OFF
+        self._artist = None
+        self._album_art = None
+        self._album = None
+        self._trackno = None
+        self._title = None
+        self._position = None
 
     @property
     def name(self):
         """Return the name of the media_player"""
         return self._name
 
+    # TODO: move this to update() and only return _state
     @property
     def state(self):
         """ Return the state of the media_player. """
-        transport_state = self._smdevice.get_transport_state()
-        if self._pwstate == STATE_ON:
-            if transport_state in ['PLAYING', 'TRANSITIONING']:
-                return STATE_PLAYING
-            elif transport_state == 'PAUSED_PLAYBACK':
-                return STATE_PAUSED
-            elif transport_state == 'STOPPED':
-                return STATE_IDLE
-        elif self._pwstate == STATE_IDLE:
-            return STATE_OFF
-        else:
-            return STATE_OFF
+        return self._state
 
     @property
     def is_volume_muted(self):
@@ -177,44 +175,27 @@ class CADevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if self._audio_source == "media player":
-            return self._smdevice.get_current_track_info()['albumArtURI']
-        return None
+        return self._album_art
 
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        if self._state is STATE_PLAYING:
-            if self._audio_source == "media player":
-                return self._smdevice.get_current_track_info()['artist']
-            elif self._audio_source == "internet radio":
-                return self._smdevice.get_playback_details()['artist']
-            else:
-                return None
-        return None
+        return self._artist
 
     @property
     def media_album(self):
         """Artist of current playing media, music track only."""
-        if self._audio_source == "media player":
-            return self._smdevice.get_current_track_info()['album']
-        elif self._audio_source == "internet radio":
-            return self._smdevice.get_playback_details()['stream']
-        return None
+        return self._album
 
     @property
     def media_track(self):
         """Track number of current playing media, music track only."""
-        if self._audio_source == "media player":
-            return self._smdevice.get_current_track_info()['origTrackNo']
-        return None
+        return self._trackno
 
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self._audio_source == "media player":
-            return self._smdevice.get_current_track_info()['trackTitle']
-        return None
+        return self._title
 
     @property
     def media_position(self):
@@ -290,17 +271,32 @@ class CADevice(MediaPlayerDevice):
 
     def update(self):
         """Fetch new state data from the media_player"""
-        smdevice = self._smdevice
+        dev = self._smdevice
 
-        pwstate = smdevice.get_power_state()
-        if not pwstate or pwstate == 'idle':
+        pwstate = dev.get_power_state()
+        if not pwstate or pwstate in ['idle', 'off']:
             self._pwstate = STATE_OFF
             return
         self._pwstate = STATE_ON
-
         self._state = {'PLAYING': STATE_PLAYING,
                        'PAUSED_PLAYBACK': STATE_PAUSED,
                        'STOPPED': STATE_IDLE,
                        'TRANSITIONING': STATE_PLAYING
-                       }.get(smdevice.get_transport_state())
-        self._audio_source = smdevice.get_audio_source()
+                       }.get(dev.get_transport_state())
+        self._audio_source = dev.get_audio_source()
+        self._source = dev.get_current_preset()['name']
+        self._muted = dev.get_mute_state()
+
+        if self._state == STATE_PLAYING:
+            if self._audio_source == "media player":
+                self._album_art = dev.get_current_track_info()['albumArtURI']
+                self._artist = dev.get_current_track_info()['artist']
+                self._album = dev.get_current_track_info()['album']
+                self._trackno = dev.get_current_track_info()['origTrackNo']
+                self._title = dev.get_current_track_info()['trackTitle']
+            elif self._audio_source == "internet radio":
+                self._artist = dev.get_playback_details()['artist']
+                self._album = dev.get_playback_details()['stream']
+                self._albumArtURI = None
+                self._trackno = None
+                self._title = None
