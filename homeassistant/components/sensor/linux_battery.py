@@ -10,7 +10,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_BATTERY
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -97,7 +97,7 @@ class LinuxBatterySensor(Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return 'battery'
+        return DEVICE_CLASS_BATTERY
 
     @property
     def state(self):

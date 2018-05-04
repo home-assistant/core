@@ -6,7 +6,8 @@ https://home-assistant.io/components/sensor.deconz/
 """
 from homeassistant.components.deconz import (
     DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_VOLTAGE
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -126,7 +127,6 @@ class DeconzBattery(Entity):
         """Register dispatcher callback for update of battery state."""
         self._device = device
         self._name = '{} {}'.format(self._device.name, 'Battery Level')
-        self._device_class = 'battery'
         self._unit_of_measurement = "%"
 
     async def async_added_to_hass(self):
@@ -158,7 +158,7 @@ class DeconzBattery(Entity):
     @property
     def device_class(self):
         """Return the class of the sensor."""
-        return self._device_class
+        return DEVICE_CLASS_BATTERY
 
     @property
     def icon(self):
