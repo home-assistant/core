@@ -66,8 +66,7 @@ class SecuritySystem(HomeAccessory):
                           self.entity_id, hass_state, current_security_state)
 
             # SecuritySystemTargetSTate does not support triggered
-            if hass_state in (STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
-                              STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED):
-                if not self.flag_target_state:
-                    self.char_target_state.set_value(current_security_state)
-                self.flag_target_state = False
+            if not self.flag_target_state and \
+                    hass_state != STATE_ALARM_TRIGGERED:
+                self.char_target_state.set_value(current_security_state)
+            self.flag_target_state = False
