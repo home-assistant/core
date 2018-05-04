@@ -30,10 +30,9 @@ DEFAULT_PORT = 5900
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-SUPPORT_UPC_HORIZON = SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PLAY | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_SELECT_SOURCE | SUPPORT_TURN_ON | \
-    SUPPORT_TURN_OFF
+SUPPORT_UM_HORIZON = SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PLAY | \
+    SUPPORT_PLAY_MEDIA | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE | \
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -52,26 +51,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     port = config.get(CONF_PORT)
 
-    _LOGGER.info("Connecting to Horizon at %s", host)
-
     try:
         client = Client(host, port=port)
-    except AuthenticationError:
-        _LOGGER.error("Authenticating to Horizon at %s failed!", host)
+    except (AuthenticationError, OSError) as msg:
+        _LOGGER.error("Connection to %s at %s failed: %s", name, host, msg)
         return False
 
-    _LOGGER.info("Connection to Horizon at %s established", host)
+    _LOGGER.info("Connection to %s at %s established", name, host)
 
-    add_devices([HorizonDevice(client, name, keys)], True)
+    add_devices([HorizonDevice(client, host, port, name, keys)], True)
 
 
 class HorizonDevice(MediaPlayerDevice):
     """Representation of a Horizon HD Recorder."""
 
-    def __init__(self, client, name, keys):
+    def __init__(self, client, host, port, name, keys):
         """Initialize the remote."""
-        self._name = name
         self._client = client
+        self._host = host
+        self._port = port
+        self._name = name
         self._state = False
         self._keys = keys
         self._source_list = {1: 'Das Erste HD', 2: 'ZDF HD', 3: 'RTL HD',
@@ -191,6 +190,11 @@ class HorizonDevice(MediaPlayerDevice):
         return self._name
 
     @property
+    def client(self):
+        """Return the name of the remote."""
+        return self._client
+
+    @property
     def state(self):
         """Return the state of the device."""
         return self._state
@@ -208,21 +212,11 @@ class HorizonDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_UPC_HORIZON
+        return SUPPORT_UM_HORIZON
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Update State using the media server running on the Horizon."""
-        from einder.exceptions import AuthenticationError
-
-        if self._client.con is None:
-            try:
-                self._client.connect()
-                self._client.authorize()
-            except AuthenticationError:
-                _LOGGER.error("Re-authenticating to Horizon failed!")
-                return False
-
         if self._client.is_powered_on():
             self._state = STATE_PLAYING
         else:
@@ -230,49 +224,50 @@ class HorizonDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn the device on."""
-        self._client.power_on()
+        if self._state is STATE_OFF:
+            self._send_key(self._keys.POWER)
 
     def turn_off(self):
         """Turn the device off."""
-        self._client.power_off()
+        if self._state is not STATE_OFF:
+            self._send_key(self._keys.POWER)
 
     def media_previous_track(self):
         """Channel down."""
-        self._client.send_key(self._keys.CHAN_DOWN)
+        self._send_key(self._keys.CHAN_DOWN)
         self._state = STATE_PLAYING
 
     def media_next_track(self):
         """Channel up."""
-        self._client.send_key(self._keys.CHAN_UP)
+        self._send_key(self._keys.CHAN_UP)
         self._state = STATE_PLAYING
-
-    def play_media(self, media_type, media_id, **kwargs):
-        """Play media / switch to channel."""
-        if MEDIA_TYPE_CHANNEL == media_type and isinstance(int(media_id), int):
-            self._client.select_channel(media_id)
-            self._state = STATE_PLAYING
-        else:
-            _LOGGER.error("Invalid type %s or channel %d",
-                          media_type, media_id)
-            _LOGGER.error("Only %s is supported", MEDIA_TYPE_CHANNEL)
 
     def media_play(self):
         """Send play command."""
-        self._client.send_key(self._keys.PAUSE)
+        self._send_key(self._keys.PAUSE)
         self._state = STATE_PLAYING
 
     def media_pause(self):
         """Send pause command."""
-        self._client.send_key(self._keys.PAUSE)
+        self._send_key(self._keys.PAUSE)
         self._state = STATE_PAUSED
 
     def media_play_pause(self):
         """Send play/pause command."""
-        self._client.send_key(self._keys.PAUSE)
+        self._send_key(self._keys.PAUSE)
         if self._state == STATE_PAUSED:
             self._state = STATE_PLAYING
         else:
             self._state = STATE_PAUSED
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Play media / switch to channel."""
+        if MEDIA_TYPE_CHANNEL == media_type and isinstance(int(media_id), int):
+            self._select_channel(media_id)
+            self._state = STATE_PLAYING
+        else:
+            _LOGGER.error("Invalid type %s or channel %d. Supported type: %s",
+                          media_type, media_id, MEDIA_TYPE_CHANNEL)
 
     def select_source(self, source):
         """Select a channel."""
@@ -284,5 +279,35 @@ class HorizonDevice(MediaPlayerDevice):
                       if v == source]
 
         if digits is not None:
-            self._client.select_channel("".join(digits))
+            self._select_channel("".join(digits))
             self._state = STATE_PLAYING
+
+    def _select_channel(self, channel):
+        """Select a channel (taken from einder library, thx)."""
+        for i in str(channel):
+            key = int(i) + 0xe300
+            self._send_key(key)
+
+    def _send_key(self, key):
+        """Send a key to the Horizon device."""
+        try:
+            self._client.send_key(key)
+        except OSError as msg:
+            _LOGGER.error("%s disconnected: %s", self._name, msg)
+            self._reconnect()
+            self._client.send_key(key)
+
+    def _reconnect(self):
+        """Reconnecting to the Horizon after a disconnect."""
+        from einder.exceptions import AuthenticationError
+
+        # graceful disconnect
+        self._client.disconnect()
+
+        try:
+            self._client.connect()
+            self._client.authorize()
+        except (AuthenticationError, OSError) as msg:
+            _LOGGER.error("Connection to %s at %s failed: %s",
+                          self._name, self._host, msg)
+            return False
