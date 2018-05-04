@@ -40,7 +40,7 @@ class Thermostat(HomeAccessory):
 
     def __init__(self, *args, config):
         """Initialize a Thermostat accessory object."""
-        super().__init__(*args, category=CATEGORY_THERMOSTAT)
+        super().__init__(*args, config, category=CATEGORY_THERMOSTAT)
         self._unit = TEMP_CELSIUS
         self.support_power_state = False
         self.heat_cool_flag_target_state = False

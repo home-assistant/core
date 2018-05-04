@@ -28,7 +28,7 @@ class Light(HomeAccessory):
 
     def __init__(self, *args, config):
         """Initialize a new Light accessory object."""
-        super().__init__(*args, category=CATEGORY_LIGHTBULB)
+        super().__init__(*args, config, category=CATEGORY_LIGHTBULB)
         self._flag = {CHAR_ON: False, CHAR_BRIGHTNESS: False,
                       CHAR_HUE: False, CHAR_SATURATION: False,
                       CHAR_COLOR_TEMPERATURE: False, RGB_COLOR: False}

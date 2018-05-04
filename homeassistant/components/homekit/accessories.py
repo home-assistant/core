@@ -8,7 +8,7 @@ from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
 
-from homeassistant.const import __version__
+from homeassistant.const import __version__, CONF_NAME
 from homeassistant.core import callback as ha_callback
 from homeassistant.core import split_entity_id
 from homeassistant.helpers.event import (
@@ -17,7 +17,8 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     DEBOUNCE_TIMEOUT, BRIDGE_MODEL, BRIDGE_NAME,
-    BRIDGE_SERIAL_NUMBER, MANUFACTURER)
+    BRIDGE_SERIAL_NUMBER, CONF_MANUFACTURER, CONF_MODEL,
+    CONF_SERIAL_NUMBER, MANUFACTURER)
 from .util import (
     show_setup_message, dismiss_setup_message)
 
@@ -64,13 +65,18 @@ def debounce(func):
 class HomeAccessory(Accessory):
     """Adapter class for Accessory."""
 
-    def __init__(self, hass, name, entity_id, aid, category=CATEGORY_OTHER):
+    def __init__(self, hass, name, entity_id, aid, config,
+                 category=CATEGORY_OTHER):
         """Initialize a Accessory object."""
-        super().__init__(name, aid=aid)
-        domain = split_entity_id(entity_id)[0].replace("_", " ").title()
+        display_name = config.get(CONF_NAME, name)
+        super().__init__(display_name, aid=aid)
+        manufacturer = config.get(CONF_MANUFACTURER, MANUFACTURER)
+        model = config.get(CONF_MODEL, split_entity_id(entity_id)[0]
+                           .replace("_", " ").title())
+        serial_number = config.get(CONF_SERIAL_NUMBER, entity_id)
         self.set_info_service(
-            firmware_revision=__version__, manufacturer=MANUFACTURER,
-            model=domain, serial_number=entity_id)
+            firmware_revision=__version__, manufacturer=manufacturer,
+            model=model, serial_number=serial_number)
         self.category = category
         self.entity_id = entity_id
         self.hass = hass

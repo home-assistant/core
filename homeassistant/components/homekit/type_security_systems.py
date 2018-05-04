@@ -34,7 +34,7 @@ class SecuritySystem(HomeAccessory):
 
     def __init__(self, *args, config):
         """Initialize a SecuritySystem accessory object."""
-        super().__init__(*args, category=CATEGORY_ALARM_SYSTEM)
+        super().__init__(*args, config, category=CATEGORY_ALARM_SYSTEM)
         self._alarm_code = config.get(ATTR_CODE)
         self.flag_target_state = False
 

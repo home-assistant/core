@@ -31,7 +31,7 @@ class Lock(HomeAccessory):
 
     def __init__(self, *args, config):
         """Initialize a Lock accessory object."""
-        super().__init__(*args, category=CATEGORY_DOOR_LOCK)
+        super().__init__(*args, config, category=CATEGORY_DOOR_LOCK)
         self.flag_target_state = False
 
         serv_lock_mechanism = self.add_preload_service(SERV_LOCK)

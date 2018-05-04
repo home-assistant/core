@@ -53,7 +53,7 @@ class TemperatureSensor(HomeAccessory):
 
     def __init__(self, *args, config):
         """Initialize a TemperatureSensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args, config, category=CATEGORY_SENSOR)
         serv_temp = self.add_preload_service(SERV_TEMPERATURE_SENSOR)
         self.char_temp = serv_temp.configure_char(
             CHAR_CURRENT_TEMPERATURE, value=0, properties=PROP_CELSIUS)
@@ -76,7 +76,7 @@ class HumiditySensor(HomeAccessory):
 
     def __init__(self, *args, config):
         """Initialize a HumiditySensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args, config, category=CATEGORY_SENSOR)
         serv_humidity = self.add_preload_service(SERV_HUMIDITY_SENSOR)
         self.char_humidity = serv_humidity.configure_char(
             CHAR_CURRENT_HUMIDITY, value=0)
@@ -96,7 +96,7 @@ class AirQualitySensor(HomeAccessory):
 
     def __init__(self, *args, config):
         """Initialize a AirQualitySensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args, config, category=CATEGORY_SENSOR)
 
         serv_air_quality = self.add_preload_service(
             SERV_AIR_QUALITY_SENSOR, [CHAR_AIR_PARTICULATE_DENSITY])
@@ -120,7 +120,7 @@ class CarbonDioxideSensor(HomeAccessory):
 
     def __init__(self, *args, config):
         """Initialize a CarbonDioxideSensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args, config, category=CATEGORY_SENSOR)
 
         serv_co2 = self.add_preload_service(SERV_CARBON_DIOXIDE_SENSOR, [
             CHAR_CARBON_DIOXIDE_LEVEL, CHAR_CARBON_DIOXIDE_PEAK_LEVEL])
@@ -148,7 +148,7 @@ class LightSensor(HomeAccessory):
 
     def __init__(self, *args, config):
         """Initialize a LightSensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args, config, category=CATEGORY_SENSOR)
 
         serv_light = self.add_preload_service(SERV_LIGHT_SENSOR)
         self.char_light = serv_light.configure_char(
@@ -168,7 +168,7 @@ class BinarySensor(HomeAccessory):
 
     def __init__(self, *args, config):
         """Initialize a BinarySensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
+        super().__init__(*args, config, category=CATEGORY_SENSOR)
         device_class = self.hass.states.get(self.entity_id).attributes \
             .get(ATTR_DEVICE_CLASS)
         service_char = BINARY_SENSOR_SERVICE_MAP[device_class] \

@@ -5,10 +5,11 @@ import voluptuous as vol
 
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
-    ATTR_CODE, TEMP_CELSIUS)
+    ATTR_CODE, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
-from .const import HOMEKIT_NOTIFY_ID
+from .const import (
+    CONF_MANUFACTURER, CONF_MODEL, CONF_SERIAL_NUMBER, HOMEKIT_NOTIFY_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +23,21 @@ def validate_entity_config(values):
         if not isinstance(config, dict):
             raise vol.Invalid('The configuration for "{}" must be '
                               ' an dictionary.'.format(entity))
+
+        name = config.get(CONF_NAME)
+        params[CONF_NAME] = \
+            cv.string(name) if name else None
+
+        manufacturer = config.get(CONF_MANUFACTURER)
+        params[CONF_MANUFACTURER] = \
+            cv.string(manufacturer) if manufacturer else None
+
+        model = config.get(CONF_MODEL)
+        params[CONF_MODEL] = cv.string(model) if model else None
+
+        serial_number = config.get(CONF_SERIAL_NUMBER)
+        params[CONF_SERIAL_NUMBER] = \
+            cv.string(serial_number) if serial_number else None
 
         domain, _ = split_entity_id(entity)
 
