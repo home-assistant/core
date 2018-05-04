@@ -21,8 +21,6 @@ from homeassistant.components.image_processing.microsoft_face_identify import (
 
 _LOGGER = logging.getLogger(__name__)
 
-ROUNDING_DECIMALS = 2
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP_ADDRESS): cv.string,
     vol.Required(CONF_PORT): cv.string,
