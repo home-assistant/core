@@ -18,8 +18,10 @@ from homeassistant.const import (
     CONF_NAME, CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['pyebox==1.1.3']
+
+REQUIREMENTS = ['pyebox==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +33,7 @@ PERCENT = '%'  # type: str
 DEFAULT_NAME = 'EBox'
 
 REQUESTS_TIMEOUT = 15
+SCAN_INTERVAL = timedelta(minutes=15)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SENSOR_TYPES = {
@@ -70,11 +73,14 @@ async def async_setup_platform(hass, config, async_add_devices,
     httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
     ebox_data = EBoxData(username, password, httpsession)
 
-    if not await ebox_data.async_update():
-        _LOGGER.error("Failed to fetch data")
-        return
-
     name = config.get(CONF_NAME)
+
+    from pyebox.client import PyEboxError
+    try:
+        await ebox_data.async_update()
+    except PyEboxError as exp:
+        _LOGGER.error("Failed login: %s", exp)
+        raise PlatformNotReady
 
     sensors = []
     for variable in config[CONF_MONITORED_VARIABLES]:
@@ -141,7 +147,6 @@ class EBoxData(object):
             await self.client.fetch_data()
         except PyEboxError as exp:
             _LOGGER.error("Error on receive last EBox data: %s", exp)
-            return False
+            return
         # Update data
         self.data = self.client.get_data()
-        return True
