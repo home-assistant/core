@@ -80,6 +80,7 @@ SERVICE_HANDLERS = {
     'songpal': ('media_player', 'songpal'),
     'kodi': ('media_player', 'kodi'),
     'volumio': ('media_player', 'volumio'),
+    'cambridgeaudio': ('media_player', 'cambridgeaudio'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
