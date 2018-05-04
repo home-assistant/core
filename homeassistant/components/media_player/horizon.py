@@ -59,17 +59,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     _LOGGER.info("Connection to %s at %s established", name, host)
 
-    add_devices([HorizonDevice(client, host, port, name, keys)], True)
+    add_devices([HorizonDevice(client, name, keys)], True)
 
 
 class HorizonDevice(MediaPlayerDevice):
     """Representation of a Horizon HD Recorder."""
 
-    def __init__(self, client, host, port, name, keys):
+    def __init__(self, client, name, keys):
         """Initialize the remote."""
         self._client = client
-        self._host = host
-        self._port = port
         self._name = name
         self._state = False
         self._keys = keys
@@ -191,7 +189,7 @@ class HorizonDevice(MediaPlayerDevice):
 
     @property
     def client(self):
-        """Return the name of the remote."""
+        """Return the Horizon client object."""
         return self._client
 
     @property
@@ -308,6 +306,5 @@ class HorizonDevice(MediaPlayerDevice):
             self._client.connect()
             self._client.authorize()
         except (AuthenticationError, OSError) as msg:
-            _LOGGER.error("Connection to %s at %s failed: %s",
-                          self._name, self._host, msg)
+            _LOGGER.error("Connection to %s failed: %s", self._name, msg)
             return False
