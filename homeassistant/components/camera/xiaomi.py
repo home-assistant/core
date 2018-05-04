@@ -134,7 +134,7 @@ class XiaomiCamera(Camera):
             _LOGGER.info('Video folder "%s" is empty; delaying', latest_dir)
             return False
 
-        if self._model == 'xiaofang':
+        if self._model == MODEL_XIAOFANG:
             video = videos[-2]
         else:
             video = videos[-1]
