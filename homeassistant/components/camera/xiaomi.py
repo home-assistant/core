@@ -78,7 +78,7 @@ class XiaomiCamera(Camera):
 
     @property
     def brand(self):
-        """Camera brand."""
+        """Return the camera brand."""
         return DEFAULT_BRAND
 
     @property
