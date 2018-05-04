@@ -11,11 +11,12 @@ import aiohttp
 from aiohttp import hdrs
 import async_timeout
 import voluptuous as vol
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 
 from homeassistant.const import (
     CONF_TIMEOUT, CONF_USERNAME, CONF_PASSWORD, CONF_URL, CONF_PAYLOAD,
     CONF_METHOD, CONF_HEADERS, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,)
+    HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
