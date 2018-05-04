@@ -144,4 +144,4 @@ class EBoxData(object):
             return False
         # Update data
         self.data = self.client.get_data()
-        Return True
+        return True
