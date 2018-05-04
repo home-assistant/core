@@ -21,6 +21,11 @@ from homeassistant.components.image_processing.microsoft_face_identify import (
 
 _LOGGER = logging.getLogger(__name__)
 
+<<<<<<< HEAD
+=======
+ROUNDING_DECIMALS = 2
+
+>>>>>>> Adds facebox face detect
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP_ADDRESS): cv.string,
     vol.Required(CONF_PORT): cv.string,
