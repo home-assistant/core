@@ -136,8 +136,7 @@ class TestFilterSensor(unittest.TestCase):
         """Test if range filter works."""
         lower = 10
         upper = 20
-        filt = RangeFilter(1, None,
-                           entity=None,
+        filt = RangeFilter(entity=None,
                            lower_bound=lower,
                            upper_bound=upper)
         for unf_state in self.values:
