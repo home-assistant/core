@@ -78,7 +78,7 @@ haversine==0.4.5
 hbmqtt==0.9.1
 
 # homeassistant.components.binary_sensor.workday
-holidays==0.9.4
+holidays==0.9.5
 
 # homeassistant.components.frontend
 home-assistant-frontend==20180426.0
