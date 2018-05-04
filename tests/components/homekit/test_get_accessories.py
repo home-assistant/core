@@ -68,14 +68,8 @@ class TestGetAccessories(unittest.TestCase):
         """Test humidity sensor with device class humidity."""
         with patch.dict(TYPES, {'HumiditySensor': self.mock_type}):
             state = State('sensor.humidity', '20',
-                          {ATTR_DEVICE_CLASS: 'humidity'})
-            get_accessory(None, state, 2, {})
-
-    def test_sensor_humidity_unit(self):
-        """Test humidity sensor with % as unit."""
-        with patch.dict(TYPES, {'HumiditySensor': self.mock_type}):
-            state = State('sensor.humidity', '20',
-                          {ATTR_UNIT_OF_MEASUREMENT: '%'})
+                          {ATTR_DEVICE_CLASS: 'humidity',
+                           ATTR_UNIT_OF_MEASUREMENT: '%'})
             get_accessory(None, state, 2, {})
 
     def test_air_quality_sensor(self):
