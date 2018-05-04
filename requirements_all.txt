@@ -10,7 +10,7 @@ aiohttp==3.1.3
 async_timeout==2.0.1
 astral==1.6
 certifi>=2017.4.17
-attrs==17.4.0
+attrs==18.1.0
 
 # homeassistant.components.nuimo_controller
 --only-binary=all https://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
