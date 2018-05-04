@@ -70,6 +70,10 @@ async def async_setup_platform(hass, config, async_add_devices,
     httpsession = hass.helpers.aiohttp_client.async_get_clientsession()
     ebox_data = EBoxData(username, password, httpsession)
 
+    if not await ebox_data.async_update():
+        _LOGGER.error("Failed to fetch data")
+        return
+
     name = config.get(CONF_NAME)
 
     sensors = []
@@ -137,7 +141,7 @@ class EBoxData(object):
             await self.client.fetch_data()
         except PyEboxError as exp:
             _LOGGER.error("Error on receive last EBox data: %s", exp)
-            return
+            return False
         # Update data
         self.data = self.client.get_data()
-        return
+        Return True
