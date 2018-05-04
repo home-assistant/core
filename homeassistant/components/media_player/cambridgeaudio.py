@@ -11,23 +11,21 @@ media_player:
 import logging
 # pylint: disable=unused-import
 import voluptuous as vol
-from homeassistant.helpers.entity import Entity
+
 from homeassistant.components.media_player import (
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, \
-    SUPPORT_VOLUME_MUTE, \
-    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, \
-    SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK, SUPPORT_STOP, \
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE,
+    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK, SUPPORT_STOP,
     MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC)
 
 from homeassistant.const import (STATE_ON, STATE_OFF, STATE_UNKNOWN,
                                  STATE_PLAYING, STATE_PAUSED, STATE_IDLE,
                                  CONF_HOST, CONF_NAME, CONF_COMMAND_OFF)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.discovery import SERVICE_SAMSUNG_PRINTER
-from homeassistant.helpers import discovery
 
-from stream_magic import discovery as ca
+import homeassistant.helpers.config_validation as cv
 from stream_magic import device as cadevice
+from stream_magic import discovery as ca
 
 REQUIREMENTS = ['stream_magic==0.12']
 DOMAIN = 'cambridgeaudio'
@@ -42,7 +40,8 @@ KNOWN_HOSTS = []
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
+    vol.Optional(CONF_SOURCES,
+                 default=DEFAULT_SOURCES): {cv.string: cv.string},
     vol.Optional(CONF_COMMAND_OFF, default=DEFAULT_PWROFF_CMD): cv.string
 })
 
@@ -52,6 +51,7 @@ SUPPORT_CAMBRIDGE = SUPPORT_VOLUME_MUTE | SUPPORT_TURN_OFF | SUPPORT_TURN_ON |\
                     SUPPORT_PLAY | SUPPORT_SELECT_SOURCE |\
                     SUPPORT_CLEAR_PLAYLIST | SUPPORT_NEXT_TRACK |\
                     SUPPORT_PREVIOUS_TRACK | SUPPORT_STOP
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Cambridge Audio platform"""
@@ -68,13 +68,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             devices = sm.discover(host=host)
             if devices:
                 dev = devices[0]
-                addr,port = dev[0][0:2]
+                addr, port = dev[0][0:2]
                 desc = dev[1]['server']
                 scpd_url = dev[1]['location']
                 if not name:
                     name = desc
 
-                smdevice = cadevice.StreamMagicDevice(addr, port,\
+                smdevice = cadevice.StreamMagicDevice(addr, port,
                                                       desc, scpd_url)
                 hosts.append(CADevice(smdevice,
                                       config.get(CONF_SOURCES),
@@ -94,7 +94,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             scpd_url = discovery_info.get('ssdp_description')
             if addr not in KNOWN_HOSTS:
                 print("HOST: ", host)
-                smdevice = cadevice.StreamMagicDevice(addr, port,\
+                smdevice = cadevice.StreamMagicDevice(addr, port,
                                                       name, scpd_url)
                 hosts.append(CADevice(smdevice,
                                       config.get(CONF_SOURCES),
@@ -103,8 +103,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 KNOWN_HOSTS.append(host)
                 _LOGGER.debug("Added StreamMagic device with ip %s (%s)",
                               addr, name)
-
     add_devices(hosts, True)
+
 
 class CADevice(MediaPlayerDevice):
     """Representation of a Cambridge Audio Network Audio Player device"""
@@ -120,14 +120,13 @@ class CADevice(MediaPlayerDevice):
         self._volume = 0
         self._source = None
         self._sources_map = dict((pr_num, pr_name)
-                                  for pr_num, pr_name, pr_state
-                                  in self._smdevice.get_preset_list())
-        self._sources_reverse = {name:id for id, name
-                                         in self._sources_map.items()}
+                                 for pr_num, pr_name, pr_state
+                                 in self._smdevice.get_preset_list())
+        self._sources_reverse = {name: id for id, name
+                                 in self._sources_map.items()}
         self._source_list = list(self._sources_map.values())
         self._audio_source = None
-        self._power_off_cmd = poweroff_command.upper() # IDLE or OFF
-        #self._reverse_mapping = {value: key for key, value in sources.items()}
+        self._power_off_cmd = poweroff_command.upper()  # IDLE or OFF
 
     @property
     def name(self):
@@ -149,7 +148,6 @@ class CADevice(MediaPlayerDevice):
             return STATE_OFF
         else:
             return STATE_OFF
-
 
     @property
     def is_volume_muted(self):
@@ -188,7 +186,7 @@ class CADevice(MediaPlayerDevice):
         """Artist of current playing media, music track only."""
         if self._state is STATE_PLAYING:
             if self._audio_source == "media player":
-               return self._smdevice.get_current_track_info()['artist']
+                return self._smdevice.get_current_track_info()['artist']
             elif self._audio_source == "internet radio":
                 return self._smdevice.get_playback_details()['artist']
             else:
@@ -222,9 +220,6 @@ class CADevice(MediaPlayerDevice):
     def media_position(self):
         """Position of current playing media in seconds."""
         pass
-        #if self.media_status and self.state in \
-        #        [STATE_PLAYING, STATE_PAUSED, STATE_IDLE]:
-        #    return self.media_status.media_position
 
     def clear_playlist(self):
         pass
@@ -238,7 +233,6 @@ class CADevice(MediaPlayerDevice):
         """ Skip to the previous track, when in media player mode. """
         if self._audio_source == "media player":
             self._smdevice.trnsprt_prev()
-
 
     def media_pause(self):
         """ Pause playing the current media """
