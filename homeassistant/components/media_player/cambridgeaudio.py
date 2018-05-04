@@ -237,9 +237,7 @@ class CADevice(MediaPlayerDevice):
         self._state = STATE_PLAYING
 
     def mute_volume(self, mute):
-        """Mute the volume.
-            This will only work if the device is set up as Pre-Amp.
-        """
+        """Mute the volume. This only works in pre-amp mode."""
         self._smdevice.volume_mute(mute)
 
     def play_media(self, media_type, media_id, **kwargs):
@@ -255,9 +253,7 @@ class CADevice(MediaPlayerDevice):
         pass
 
     def set_volume_level(self, volume):
-        """Set the current volume level.
-            This will only work if the device is set up as Pre-Amp.
-        """
+        """Set the current volume level. This only works in pre-amp mode."""
         pass
 
     def turn_off(self):
