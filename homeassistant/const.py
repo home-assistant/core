@@ -169,7 +169,7 @@ EVENT_THEMES_UPDATED = 'themes_updated'
 # #### DEVICE CLASSES ####
 DEVICE_CLASS_BATTERY = 'battery'
 DEVICE_CLASS_HUMIDITY = 'humidity'
-DEVICE_CLASS_LIGHT = 'light'
+DEVICE_CLASS_ILLUMINANCE = 'illuminance'
 DEVICE_CLASS_TEMPERATURE = 'temperature'
 
 # #### STATES ####

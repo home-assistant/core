@@ -15,7 +15,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     ATTR_DEVICE_CLASS, CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS,
     TEMP_FAHRENHEIT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_LIGHT, DEVICE_CLASS_TEMPERATURE)
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
@@ -137,8 +137,7 @@ def get_accessory(hass, state, aid, config):
         elif device_class == DEVICE_CLASS_CO2 \
                 or DEVICE_CLASS_CO2 in state.entity_id:
             a_type = 'CarbonDioxideSensor'
-        elif device_class == DEVICE_CLASS_LIGHT or \
-                unit in ('lm', 'lx'):
+        elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ('lm', 'lx'):
             a_type = 'LightSensor'
 
     elif state.domain == 'switch' or state.domain == 'remote' \

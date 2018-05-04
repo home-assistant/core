@@ -105,10 +105,10 @@ class TestGetAccessories(unittest.TestCase):
             get_accessory(None, state, 2, {})
 
     def test_light_sensor(self):
-        """Test light sensor with device class lux."""
+        """Test light sensor with device class illuminance."""
         with patch.dict(TYPES, {'LightSensor': self.mock_type}):
             state = State('sensor.light', '900',
-                          {ATTR_DEVICE_CLASS: 'light'})
+                          {ATTR_DEVICE_CLASS: 'illuminance'})
             get_accessory(None, state, 2, {})
 
     def test_light_sensor_unit_lm(self):

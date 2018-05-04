@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
 from homeassistant.const import (
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_LIGHT, DEVICE_CLASS_TEMPERATURE)
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ DEPENDENCIES = ['abode']
 SENSOR_TYPES = {
     'temp': ['Temperature', DEVICE_CLASS_TEMPERATURE],
     'humidity': ['Humidity', DEVICE_CLASS_HUMIDITY],
-    'lux': ['Lux', DEVICE_CLASS_LIGHT],
+    'lux': ['Lux', DEVICE_CLASS_ILLUMINANCE],
 }
 
 
