@@ -14,7 +14,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_TIMEOUT, CONF_USERNAME, CONF_PASSWORD, CONF_URL, CONF_PAYLOAD,
-    CONF_METHOD, CONF_HEADERS)
+    CONF_METHOD, CONF_HEADERS, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -38,6 +39,8 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Required(CONF_URL): cv.template,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
         vol.All(vol.Lower, vol.In(SUPPORT_REST_METHODS)),
+    vol.Optional(CONF_AUTHENTICATION):
+        vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
     vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
@@ -51,8 +54,7 @@ CONFIG_SCHEMA = vol.Schema({
         cv.slug: COMMAND_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
-
-
+ 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the REST command component."""
@@ -65,12 +67,14 @@ def async_setup(hass, config):
 
         template_url = command_config[CONF_URL]
         template_url.hass = hass
-
-        auth = None
+    
         if CONF_USERNAME in command_config:
             username = command_config[CONF_USERNAME]
             password = command_config.get(CONF_PASSWORD, '')
-            auth = aiohttp.BasicAuth(username, password=password)
+            if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
+                auth = HTTPDigestAuth(username, password)
+            else:
+                auth = HTTPBasicAuth(username, password)
 
         template_payload = None
         if CONF_PAYLOAD in command_config:
