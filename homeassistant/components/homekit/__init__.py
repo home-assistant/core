@@ -30,7 +30,13 @@ from .util import (
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==1.1.9']
+REQUIREMENTS = ['HAP-python==2.0.0']
+
+# #### Driver Status ####
+STATUS_READY = 0
+STATUS_RUNNING = 1
+STATUS_STOPPED = 2
+STATUS_WAIT = 3
 
 
 CONFIG_SCHEMA = vol.Schema({
@@ -57,7 +63,7 @@ async def async_setup(hass, config):
     entity_config = conf[CONF_ENTITY_CONFIG]
 
     homekit = HomeKit(hass, port, ip_address, entity_filter, entity_config)
-    homekit.setup()
+    await hass.async_add_job(homekit.setup)
 
     if auto_start:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, homekit.start)
@@ -65,8 +71,10 @@ async def async_setup(hass, config):
 
     def handle_homekit_service_start(service):
         """Handle start HomeKit service call."""
-        if homekit.started:
-            _LOGGER.warning('HomeKit is already running')
+        if homekit.status != STATUS_READY:
+            _LOGGER.warning(
+                'HomeKit is not ready. Either it is already running or has '
+                'been stopped.')
             return
         homekit.start()
 
@@ -162,7 +170,7 @@ class HomeKit():
         self._ip_address = ip_address
         self._filter = entity_filter
         self._config = entity_config
-        self.started = False
+        self.status = STATUS_READY
 
         self.bridge = None
         self.driver = None
@@ -191,9 +199,9 @@ class HomeKit():
 
     def start(self, *args):
         """Start the accessory driver."""
-        if self.started:
+        if self.status != STATUS_READY:
             return
-        self.started = True
+        self.status = STATUS_WAIT
 
         # pylint: disable=unused-variable
         from . import (  # noqa F401
@@ -202,19 +210,20 @@ class HomeKit():
 
         for state in self.hass.states.all():
             self.add_bridge_accessory(state)
-        self.bridge.set_broker(self.driver)
+        self.bridge.set_driver(self.driver)
 
         if not self.bridge.paired:
             show_setup_message(self.hass, self.bridge)
 
         _LOGGER.debug('Driver start')
-        self.driver.start()
+        self.hass.add_job(self.driver.start)
+        self.status = STATUS_RUNNING
 
     def stop(self, *args):
         """Stop the accessory driver."""
-        if not self.started:
+        if self.status != STATUS_RUNNING:
             return
+        self.status = STATUS_STOPPED
 
         _LOGGER.debug('Driver stop')
-        if self.driver and self.driver.run_sentinel:
-            self.driver.stop()
+        self.hass.add_job(self.driver.stop)
