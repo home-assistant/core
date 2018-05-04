@@ -48,8 +48,6 @@ DEFAULT_SYSTEM = 'linux'
 
 SYSTEMS = ['android', 'linux']
 
-ICON = 'mdi:battery'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -108,11 +106,6 @@ class LinuxBatterySensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
 
     @property
     def device_state_attributes(self):

@@ -10,10 +10,10 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'temperature': [TEMP_CELSIUS, 'mdi:thermometer', DEVICE_CLASS_TEMPERATURE],
-    'humidity': ['%', 'mdi:water-percent', DEVICE_CLASS_HUMIDITY],
-    'illumination': ['lm', 'mdi:weather-sunset', DEVICE_CLASS_LIGHT],
-    'lux': ['lx', 'mdi:weather-sunset', DEVICE_CLASS_LIGHT],
+    'temperature': [TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    'humidity': ['%', None, DEVICE_CLASS_HUMIDITY],
+    'illumination': ['lm', None, DEVICE_CLASS_LIGHT],
+    'lux': ['lx', None, DEVICE_CLASS_LIGHT],
     'pressure': ['hPa', 'mdi:gauge', None]
 }
 

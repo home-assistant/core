@@ -27,10 +27,9 @@ SENSOR_TYPE_DEW_POINT = 'dewp'
 SENSOR_TYPE_BAROMETRIC_PRESSURE = 'barpress'
 
 SENSOR_TYPES = {
-    SENSOR_TYPE_TEMPERATURE: ['Temperature', TEMP_CELSIUS, 'mdi:thermometer',
+    SENSOR_TYPE_TEMPERATURE: ['Temperature', TEMP_CELSIUS, None,
                               DEVICE_CLASS_TEMPERATURE],
-    SENSOR_TYPE_HUMIDITY: ['Humidity', '%', 'mdi:water',
-                           DEVICE_CLASS_HUMIDITY],
+    SENSOR_TYPE_HUMIDITY: ['Humidity', '%', None, DEVICE_CLASS_HUMIDITY],
     SENSOR_TYPE_RAINRATE: ['Rain rate', 'mm/h', 'mdi:water', None],
     SENSOR_TYPE_RAINTOTAL: ['Rain total', 'mm', 'mdi:water', None],
     SENSOR_TYPE_WINDDIRECTION: ['Wind direction', '', '', None],
@@ -38,9 +37,9 @@ SENSOR_TYPES = {
     SENSOR_TYPE_WINDGUST: ['Wind gust', 'm/s', '', None],
     SENSOR_TYPE_UV: ['UV', 'UV', '', None],
     SENSOR_TYPE_WATT: ['Power', 'W', '', None],
-    SENSOR_TYPE_LUMINANCE: ['Luminance', 'lx', '', DEVICE_CLASS_LIGHT],
+    SENSOR_TYPE_LUMINANCE: ['Luminance', 'lx', None, DEVICE_CLASS_LIGHT],
     SENSOR_TYPE_DEW_POINT:
-        ['Dew Point', TEMP_CELSIUS, 'mdi:thermometer', None],
+        ['Dew Point', TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
     SENSOR_TYPE_BAROMETRIC_PRESSURE: ['Barometric Pressure', 'kPa', '', None],
 }
 

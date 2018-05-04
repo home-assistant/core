@@ -10,7 +10,6 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
 DEPENDENCIES = ['deconz']
@@ -159,11 +158,6 @@ class DeconzBattery(Entity):
     def device_class(self):
         """Return the class of the sensor."""
         return DEVICE_CLASS_BATTERY
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return icon_for_battery_level(int(self.state))
 
     @property
     def unit_of_measurement(self):

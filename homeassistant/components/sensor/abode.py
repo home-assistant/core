@@ -16,9 +16,9 @@ DEPENDENCIES = ['abode']
 
 # Sensor types: Name, icon
 SENSOR_TYPES = {
-    'temp': ['Temperature', 'thermometer', DEVICE_CLASS_TEMPERATURE],
-    'humidity': ['Humidity', 'water-percent', DEVICE_CLASS_HUMIDITY],
-    'lux': ['Lux', 'lightbulb', DEVICE_CLASS_LIGHT],
+    'temp': ['Temperature', DEVICE_CLASS_TEMPERATURE],
+    'humidity': ['Humidity', DEVICE_CLASS_HUMIDITY],
+    'lux': ['Lux', DEVICE_CLASS_LIGHT],
 }
 
 
@@ -48,15 +48,9 @@ class AbodeSensor(AbodeDevice):
         """Initialize a sensor for an Abode device."""
         super().__init__(data, device)
         self._sensor_type = sensor_type
-        self._icon = 'mdi:{}'.format(SENSOR_TYPES[self._sensor_type][1])
         self._name = '{0} {1}'.format(
             self._device.name, SENSOR_TYPES[self._sensor_type][0])
-        self._device_class = SENSOR_TYPES[self._sensor_type][2]
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
+        self._device_class = SENSOR_TYPES[self._sensor_type][1]
 
     @property
     def name(self):
