@@ -94,7 +94,7 @@ class XiaomiCamera(Camera):
         try:
             ftp.login(self.user, self.passwd)
         except error_perm as exc:
-            _LOGGER.error('There was an error while logging into the camera: %s', exc)
+            _LOGGER.error('There was an error while logging: %s', exc)
             return False
 
         try:
