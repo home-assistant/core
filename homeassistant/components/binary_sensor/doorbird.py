@@ -33,6 +33,8 @@ SENSOR_TYPES = {
     'motion': ['Motion', 'motion', MOTION_EVENT],
 }
 
+SENSOR_TIMEOUT = datetime.timedelta(seconds=5)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
@@ -67,7 +69,7 @@ class DoorbirdBinarySensor(BinarySensorDevice):
         self._device_class = SENSOR_TYPES[sensor_type][1]
         self._event_type = SENSOR_TYPES[sensor_type][2]
         self._device = doorstation
-        self._timeout = datetime.timedelta(seconds=5)
+        self._timeout = SENSOR_TIMEOUT
         self._offtime = datetime.datetime.min
 
         # Provide an endpoint for the doorstation to call to trigger events
@@ -115,8 +117,7 @@ class DoorbirdBinarySensor(BinarySensorDevice):
 
     def update(self):
         """Wait for the correct amount of assumed time to pass."""
-        if self._event_type is DOORBELL_EVENT \
-                and self._offtime <= datetime.datetime.now():
+        if self._offtime <= datetime.datetime.now():
             self._state = STATE_OFF
             self._offtime = datetime.datetime.min
 
