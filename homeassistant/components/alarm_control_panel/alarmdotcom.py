@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyalarmdotcom==0.3.1']
+REQUIREMENTS = ['pyalarmdotcom==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +92,13 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         elif self._alarm.state.lower() == 'armed away':
             return STATE_ALARM_ARMED_AWAY
         return STATE_UNKNOWN
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'sensor_status': self._alarm.sensor_status
+        }
 
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):
