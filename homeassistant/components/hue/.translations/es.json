@@ -1,0 +1,11 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Se produjo un error desconocido"
+        },
+        "error": {
+            "linking": "Se produjo un error de enlace desconocido.",
+            "register_failed": "No se pudo registrar, intente de nuevo"
+        }
+    }
+}
