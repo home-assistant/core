@@ -166,6 +166,9 @@ omit =
     homeassistant/components/mailgun.py
     homeassistant/components/*/mailgun.py
 
+    homeassistant/components/matrix.py
+    homeassistant/components/*/matrix.py
+
     homeassistant/components/maxcube.py
     homeassistant/components/*/maxcube.py
 
@@ -519,7 +522,6 @@ omit =
     homeassistant/components/notify/lannouncer.py
     homeassistant/components/notify/llamalab_automate.py
     homeassistant/components/notify/mastodon.py
-    homeassistant/components/notify/matrix.py
     homeassistant/components/notify/message_bird.py
     homeassistant/components/notify/mycroft.py
     homeassistant/components/notify/nfandroidtv.py

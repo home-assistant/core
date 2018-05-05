@@ -565,3 +565,31 @@ def test_socket_timeout():  # pylint: disable=invalid-name
     assert _GLOBAL_DEFAULT_TIMEOUT == schema(None)
 
     assert schema(1) == 1.0
+
+
+def test_matches_regex():
+    """Test matches_regex validator."""
+    schema = vol.Schema(cv.matches_regex('.*uiae.*'))
+
+    with pytest.raises(vol.Invalid):
+        schema(1.0)
+
+    with pytest.raises(vol.Invalid):
+        schema("  nrtd   ")
+
+    test_str = "This is a test including uiae."
+    assert(schema(test_str) == test_str)
+
+
+def test_is_regex():
+    """Test the is_regex validator."""
+    schema = vol.Schema(cv.is_regex)
+
+    with pytest.raises(vol.Invalid):
+        schema("(")
+
+    with pytest.raises(vol.Invalid):
+        schema({"a dict": "is not a regex"})
+
+    valid_re = ".*"
+    schema(valid_re)

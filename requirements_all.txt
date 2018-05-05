@@ -511,8 +511,8 @@ luftdaten==0.1.3
 # homeassistant.components.sensor.lyft
 lyft_rides==0.2
 
-# homeassistant.components.notify.matrix
-matrix-client==0.0.6
+# homeassistant.components.matrix
+matrix-client==0.2.0
 
 # homeassistant.components.maxcube
 maxcube-api==0.1.0
