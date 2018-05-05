@@ -13,7 +13,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
+    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_PLAY,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
@@ -29,7 +30,8 @@ DEFAULT_NAME = 'Onkyo Receiver'
 SUPPORTED_MAX_VOLUME = 80
 
 SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+    SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 KNOWN_HOSTS = []  # type: List[str]
 DEFAULT_SOURCES = {'tv': 'TV', 'bd': 'Bluray', 'game': 'Game', 'aux1': 'Aux1',
@@ -199,6 +201,14 @@ class OnkyoDevice(MediaPlayerDevice):
         """
         self.command('volume {}'.format(int(volume * self._max_volume)))
 
+    def volume_up(self):
+        """Increase volume by 1 step."""
+        self.command('volume level-up')
+
+    def volume_down(self):
+        """Decrease volume by 1 step."""
+        self.command('volume level-down')
+
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         if mute:
@@ -263,6 +273,14 @@ class OnkyoDeviceZone2(OnkyoDevice):
     def set_volume_level(self, volume):
         """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
         self.command('zone2.volume={}'.format(int(volume*80)))
+
+    def volume_up(self):
+        """Increase volume by 1 step."""
+        self.command('zone2.volume=level-up')
+
+    def volume_down(self):
+        """Decrease volume by 1 step."""
+        self.command('zone2.volume=level-down')
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
