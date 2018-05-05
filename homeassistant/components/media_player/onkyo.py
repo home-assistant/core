@@ -59,7 +59,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         try:
             hosts.append(OnkyoDevice(
                 eiscp.eISCP(host), config.get(CONF_SOURCES),
-                name=config.get(CONF_NAME), max_volume=config.get(CONF_MAX_VOLUME)))
+                name=config.get(CONF_NAME),
+                max_volume=config.get(CONF_MAX_VOLUME),
+            ))
             KNOWN_HOSTS.append(host)
         except OSError:
             _LOGGER.error("Unable to connect to receiver at %s", host)
