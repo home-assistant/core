@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED,
-    CONF_IP_ADDRESS, CONF_NAME)
+    CONF_IP_ADDRESS, CONF_NAME, ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pygogogate2==0.1.1']
@@ -91,7 +91,7 @@ class MyGogogate2Device(CoverDevice):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
-    
+
     @property
     def state_attributes(self):
         """Return the state attributes."""
