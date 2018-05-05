@@ -256,11 +256,16 @@ class ApplicationListener:
         """Try to set up an entity from a "bare" cluster."""
         if cluster.cluster_id in profile_clusters:
             return
-        # pylint: disable=unidiomatic-typecheck
-        if type(cluster) not in device_classes:
+
+        component = None
+        for cluster_type, candidate_component in device_classes.items():
+            if isinstance(cluster, cluster_type):
+                component = candidate_component
+                break
+
+        if component is None:
             return
 
-        component = device_classes[type(cluster)]
         cluster_key = "{}-{}".format(device_key, cluster.cluster_id)
         discovery_info = {
             'application_listener': self,
