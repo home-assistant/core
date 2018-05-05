@@ -25,7 +25,7 @@ from homeassistant.const import (STATE_ON, STATE_OFF, STATE_UNKNOWN,
 
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['stream_magic==0.13']
+REQUIREMENTS = ['stream_magic==0.14']
 DOMAIN = 'cambridgeaudio'
 _LOGGER = logging.getLogger(__name__)
 
@@ -273,8 +273,9 @@ class CADevice(MediaPlayerDevice):
         dev = self._smdevice
 
         pwstate = dev.get_power_state()
-        if not pwstate or pwstate in ['idle', 'off']:
+        if pwstate is None or pwstate in ['idle', 'off']:
             self._pwstate = STATE_OFF
+            self._state = STATE_OFF
             return
         self._pwstate = STATE_ON
         self._state = {
