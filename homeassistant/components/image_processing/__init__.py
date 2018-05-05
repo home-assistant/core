@@ -11,7 +11,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import STATE_UNKNOWN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, CONF_ENTITY_ID)
@@ -159,7 +158,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
     def state(self):
         """Return the state of the entity."""
         confidence = 0
-        state = STATE_UNKNOWN
+        state = None
 
         # No confidence support
         if not self.confidence:
