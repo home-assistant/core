@@ -70,6 +70,7 @@ class MyGogogate2Device(CoverDevice):
         self.device_id = device['door']
         self._name = name or device['name']
         self._status = device['status']
+        self._temperature = device['temperature']
         self._available = None
 
     @property
