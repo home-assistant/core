@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for doorstation in hass.data.get(DOORBIRD_DOMAIN):
 
-        """This will make HA the only service that gets doorbell events"""
+        # This will make HA the only service that gets doorbell events.
         doorstation.device.reset_notifications()
 
         for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
