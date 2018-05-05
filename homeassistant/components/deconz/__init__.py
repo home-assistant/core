@@ -11,15 +11,18 @@ from homeassistant.const import (
     CONF_ID, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.util import slugify
 from homeassistant.util.json import load_json
 
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
 from .const import (
-    CONFIG_FILE, DATA_DECONZ_EVENT, DATA_DECONZ_ID, DOMAIN, _LOGGER)
+    CONFIG_FILE, DATA_DECONZ_EVENT, DATA_DECONZ_ID,
+    DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
 
-REQUIREMENTS = ['pydeconz==36']
+REQUIREMENTS = ['pydeconz==37']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -69,14 +72,20 @@ async def async_setup_entry(hass, config_entry):
     Start websocket for push notification of state changes from deCONZ.
     """
     from pydeconz import DeconzSession
-    from pydeconz.sensor import SWITCH as DECONZ_REMOTE
     if DOMAIN in hass.data:
         _LOGGER.error(
             "Config entry failed since one deCONZ instance already exists")
         return False
 
+    @callback
+    def async_add_device_callback(device_type, device):
+        """Called when a new device has been created in deCONZ."""
+        async_dispatcher_send(
+            hass, 'deconz_new_{}'.format(device_type), [device])
+
     session = aiohttp_client.async_get_clientsession(hass)
-    deconz = DeconzSession(hass.loop, session, **config_entry.data)
+    deconz = DeconzSession(hass.loop, session, **config_entry.data,
+                           async_add_device=async_add_device_callback)
     result = await deconz.async_load_parameters()
     if result is False:
         _LOGGER.error("Failed to communicate with deCONZ")
@@ -84,14 +93,24 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN] = deconz
     hass.data[DATA_DECONZ_ID] = {}
+    hass.data[DATA_DECONZ_EVENT] = []
+    hass.data[DATA_DECONZ_UNSUB] = []
 
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
         hass.async_add_job(hass.config_entries.async_forward_entry_setup(
             config_entry, component))
 
-    hass.data[DATA_DECONZ_EVENT] = [DeconzEvent(
-        hass, sensor) for sensor in deconz.sensors.values()
-                                    if sensor.type in DECONZ_REMOTE]
+    @callback
+    def async_add_remote(sensors):
+        """Setup remote from deCONZ."""
+        from pydeconz.sensor import SWITCH as DECONZ_REMOTE
+        for sensor in sensors:
+            if sensor.type in DECONZ_REMOTE:
+                hass.data[DATA_DECONZ_EVENT].append(DeconzEvent(hass, sensor))
+    hass.data[DATA_DECONZ_UNSUB].append(
+        async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_remote))
+
+    async_add_remote(deconz.sensors.values())
 
     deconz.start()
 
@@ -148,6 +167,10 @@ async def async_unload_entry(hass, config_entry):
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
         await hass.config_entries.async_forward_entry_unload(
             config_entry, component)
+    dispatchers = hass.data[DATA_DECONZ_UNSUB]
+    for unsub_dispatcher in dispatchers:
+        unsub_dispatcher()
+    hass.data[DATA_DECONZ_UNSUB] = []
     hass.data[DATA_DECONZ_EVENT] = []
     hass.data[DATA_DECONZ_ID] = []
     return True
