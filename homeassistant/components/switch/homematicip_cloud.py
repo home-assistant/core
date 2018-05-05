@@ -34,9 +34,10 @@ async def async_setup_platform(hass, config, async_add_devices,
     devices = []
     for device in home.devices:
         if isinstance(device, BrandSwitchMeasuring):
+            # BrandSwitch is implemented in the light platform
             pass
         elif isinstance(device, PlugableSwitchMeasuring):
-            devices.append(HomematicipMeasuringSwitch(home, device))
+            devices.append(HomematicipSwitchMeasuring(home, device))
         elif isinstance(device, PlugableSwitch):
             devices.append(HomematicipSwitch(home, device))
 
@@ -65,7 +66,7 @@ class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):
         await self._device.turn_off()
 
 
-class HomematicipMeasuringSwitch(HomematicipSwitch):
+class HomematicipSwitchMeasuring(HomematicipSwitch):
     """MomematicIP measuring switch device."""
 
     @property

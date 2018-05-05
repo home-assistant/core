@@ -23,8 +23,6 @@ ATTR_ILLUMINATION = 'illumination'
 
 HMIP_OPEN = 'open'
 
-STATE_SABOTAGE = 'sabotage'
-
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
@@ -53,23 +51,18 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
         super().__init__(home, device)
 
     @property
-    def icon(self):
-        """Return the icon."""
-        if self._device.sabotage:
-            return 'mdi:alert'
-        if self._device.windowState is None:
-            return
-        if self._device.windowState.lower() == HMIP_OPEN:
-            return 'mdi:checkbox-marked-circle-outline'
+    def device_class(self):
+        """Return the class of this sensor."""
+        return 'door'
 
     @property
-    def state(self):
-        """Return the state."""
+    def is_on(self):
+        """Return true if the shutter contact is on/open."""
         if self._device.sabotage:
-            return STATE_SABOTAGE
+            return True
         if self._device.windowState is None:
-            return
-        return self._device.windowState.lower()
+            return None
+        return self._device.windowState.lower() == HMIP_OPEN
 
 
 class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
@@ -80,16 +73,13 @@ class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
         super().__init__(home, device)
 
     @property
-    def icon(self):
-        """Return the icon."""
-        if self._device.sabotage:
-            return 'mdi:alert'
-        if self._device.motionDetected:
-            return 'mdi:run-fast'
+    def device_class(self):
+        """Return the class of this sensor."""
+        return 'motion'
 
     @property
-    def state(self):
-        """Return the state."""
+    def is_on(self):
+        """Return true if motion is detected."""
         if self._device.sabotage:
-            return STATE_SABOTAGE
+            return True
         return self._device.motionDetected

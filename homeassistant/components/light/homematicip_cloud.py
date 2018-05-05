@@ -33,7 +33,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     devices = []
     for device in home.devices:
         if isinstance(device, BrandSwitchMeasuring):
-            devices.append(HomematicipMeasuringLight(home, device))
+            devices.append(HomematicipLightMeasuring(home, device))
 
     if devices:
         async_add_devices(devices)
@@ -60,7 +60,7 @@ class HomematicipLight(HomematicipGenericDevice, Light):
         await self._device.turn_off()
 
 
-class HomematicipMeasuringLight(HomematicipLight):
+class HomematicipLightMeasuring(HomematicipLight):
     """MomematicIP measuring light device."""
 
     @property
