@@ -17,7 +17,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,16 +120,16 @@ class ImageProcessingEntity(Entity):
 
         This method is a coroutine.
         """
-        camera = get_component('camera')
+        camera = self.hass.components.camera
         image = None
 
         try:
             image = yield from camera.async_get_image(
-                self.hass, self.camera_entity, timeout=self.timeout)
+                self.camera_entity, timeout=self.timeout)
 
         except HomeAssistantError as err:
             _LOGGER.error("Error on receive image from entity: %s", err)
             return
 
         # process image data
-        yield from self.async_process_image(image)
+        yield from self.async_process_image(image.content)

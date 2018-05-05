@@ -147,7 +147,7 @@ class TestHelpersEntityPlatform(unittest.TestCase):
         platform = MockPlatform(platform_setup)
         platform.SCAN_INTERVAL = timedelta(seconds=30)
 
-        loader.set_component('test_domain.platform', platform)
+        loader.set_component(self.hass, 'test_domain.platform', platform)
 
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
@@ -184,7 +184,7 @@ def test_platform_warn_slow_setup(hass):
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
 
-    loader.set_component('test_domain.platform', platform)
+    loader.set_component(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -218,7 +218,7 @@ def test_platform_error_slow_setup(hass, caplog):
 
         platform = MockPlatform(async_setup_platform=setup_platform)
         component = EntityComponent(_LOGGER, DOMAIN, hass)
-        loader.set_component('test_domain.test_platform', platform)
+        loader.set_component(hass, 'test_domain.test_platform', platform)
         yield from component.async_setup({
             DOMAIN: {
                 'platform': 'test_platform',
@@ -260,7 +260,7 @@ def test_parallel_updates_async_platform(hass):
 
     platform.async_setup_platform = mock_update
 
-    loader.set_component('test_domain.platform', platform)
+    loader.set_component(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -288,7 +288,7 @@ def test_parallel_updates_async_platform_with_constant(hass):
     platform.async_setup_platform = mock_update
     platform.PARALLEL_UPDATES = 1
 
-    loader.set_component('test_domain.platform', platform)
+    loader.set_component(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -309,7 +309,7 @@ def test_parallel_updates_sync_platform(hass):
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform(setup_platform=lambda *args: None)
 
-    loader.set_component('test_domain.platform', platform)
+    loader.set_component(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}

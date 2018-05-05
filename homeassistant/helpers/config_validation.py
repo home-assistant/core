@@ -12,7 +12,6 @@ from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
 import voluptuous as vol
 
-from homeassistant.loader import get_platform
 from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
@@ -281,19 +280,6 @@ time_period = vol.Any(time_period_str, time_period_seconds, timedelta,
 def match_all(value):
     """Validate that matches all values."""
     return value
-
-
-def platform_validator(domain):
-    """Validate if platform exists for given domain."""
-    def validator(value):
-        """Test if platform exists."""
-        if value is None:
-            raise vol.Invalid('platform cannot be None')
-        if get_platform(domain, str(value)):
-            return value
-        raise vol.Invalid(
-            'platform {} does not exist for {}'.format(value, domain))
-    return validator
 
 
 def positive_timedelta(value: timedelta) -> timedelta:

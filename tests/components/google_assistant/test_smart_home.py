@@ -286,3 +286,29 @@ async def test_unavailable_state_doesnt_sync(hass):
             'devices': []
         }
     }
+
+
+async def test_empty_name_doesnt_sync(hass):
+    """Test that an entity with empty name does not sync over."""
+    light = DemoLight(
+        None, ' ',
+        state=False,
+    )
+    light.hass = hass
+    light.entity_id = 'light.demo_light'
+    await light.async_update_ha_state()
+
+    result = await sh.async_handle_message(hass, BASIC_CONFIG, {
+        "requestId": REQ_ID,
+        "inputs": [{
+            "intent": "action.devices.SYNC"
+        }]
+    })
+
+    assert result == {
+        'requestId': REQ_ID,
+        'payload': {
+            'agentUserId': 'test-agent',
+            'devices': []
+        }
+    }

@@ -661,7 +661,7 @@ def test_hs_color():
         is_group=False,
     )
 
-    assert light.hs_color == (1234 / 65535 * 360, 123 / 255 * 100)
+    assert light.hs_color is None
 
     light = hue_light.HueLight(
         light=Mock(state={

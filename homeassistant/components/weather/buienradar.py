@@ -10,7 +10,8 @@ import asyncio
 import voluptuous as vol
 
 from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
+    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME)
 from homeassistant.const import \
     CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
@@ -27,9 +28,6 @@ DATA_CONDITION = 'buienradar_condition'
 DEFAULT_TIMEFRAME = 60
 
 CONF_FORECAST = 'forecast'
-
-ATTR_FORECAST_CONDITION = 'condition'
-ATTR_FORECAST_TEMP_LOW = 'templow'
 
 
 CONDITION_CLASSES = {

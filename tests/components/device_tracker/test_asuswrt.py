@@ -3,9 +3,9 @@ import os
 from datetime import timedelta
 import unittest
 from unittest import mock
+import socket
 
 import voluptuous as vol
-from future.backports import socket
 
 from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker

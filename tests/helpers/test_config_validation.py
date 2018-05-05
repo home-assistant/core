@@ -10,8 +10,6 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 
-from tests.common import get_test_home_assistant
-
 
 def test_boolean():
     """Test boolean validation."""
@@ -254,24 +252,6 @@ def test_event_schema():
     )
     for value in options:
         cv.EVENT_SCHEMA(value)
-
-
-def test_platform_validator():
-    """Test platform validation."""
-    hass = None
-
-    try:
-        hass = get_test_home_assistant()
-
-        schema = vol.Schema(cv.platform_validator('light'))
-
-        with pytest.raises(vol.MultipleInvalid):
-            schema('platform_that_does_not_exist')
-
-        schema('hue')
-    finally:
-        if hass is not None:
-            hass.stop()
 
 
 def test_icon():

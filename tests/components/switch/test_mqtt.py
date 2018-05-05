@@ -1,12 +1,14 @@
 """The tests for the MQTT switch platform."""
 import unittest
+from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE,\
     ATTR_ASSUMED_STATE
+import homeassistant.core as ha
 import homeassistant.components.switch as switch
 from tests.common import (
-    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant)
+    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant, mock_coro)
 
 
 class TestSwitchMQTT(unittest.TestCase):
@@ -52,19 +54,23 @@ class TestSwitchMQTT(unittest.TestCase):
 
     def test_sending_mqtt_commands_and_optimistic(self):
         """Test the sending MQTT commands in optimistic mode."""
-        assert setup_component(self.hass, switch.DOMAIN, {
-            switch.DOMAIN: {
-                'platform': 'mqtt',
-                'name': 'test',
-                'command_topic': 'command-topic',
-                'payload_on': 'beer on',
-                'payload_off': 'beer off',
-                'qos': '2'
-            }
-        })
+        fake_state = ha.State('switch.test', 'on')
+
+        with patch('homeassistant.components.switch.mqtt.async_get_last_state',
+                   return_value=mock_coro(fake_state)):
+            assert setup_component(self.hass, switch.DOMAIN, {
+                switch.DOMAIN: {
+                    'platform': 'mqtt',
+                    'name': 'test',
+                    'command_topic': 'command-topic',
+                    'payload_on': 'beer on',
+                    'payload_off': 'beer off',
+                    'qos': '2'
+                }
+            })
 
         state = self.hass.states.get('switch.test')
-        self.assertEqual(STATE_OFF, state.state)
+        self.assertEqual(STATE_ON, state.state)
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         switch.turn_on(self.hass, 'switch.test')

@@ -2,40 +2,33 @@
 
 from logging import getLogger
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.rainmachine import (
-    DATA_RAINMACHINE, DEFAULT_ATTRIBUTION, MIN_SCAN_TIME, MIN_SCAN_TIME_FORCED)
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_DEVICE_CLASS
+    CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DEFAULT_ATTRIBUTION, MIN_SCAN_TIME,
+    MIN_SCAN_TIME_FORCED)
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.util import Throttle
 
-_LOGGER = getLogger(__name__)
 DEPENDENCIES = ['rainmachine']
+
+_LOGGER = getLogger(__name__)
 
 ATTR_CYCLES = 'cycles'
 ATTR_TOTAL_DURATION = 'total_duration'
 
-CONF_ZONE_RUN_TIME = 'zone_run_time'
-
-DEFAULT_ZONE_RUN_SECONDS = 60 * 10
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN_SECONDS):
-        cv.positive_int
-})
+DEFAULT_ZONE_RUN = 60 * 10
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set this component up under its platform."""
-    client = hass.data.get(DATA_RAINMACHINE)
-    device_name = client.provision.device_name()['name']
-    device_mac = client.provision.wifi()['macAddress']
+    if discovery_info is None:
+        return
 
-    _LOGGER.debug('Config received: %s', config)
+    _LOGGER.debug('Config received: %s', discovery_info)
 
-    zone_run_time = config[CONF_ZONE_RUN_TIME]
+    zone_run_time = discovery_info.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN)
+
+    client, device_mac = hass.data.get(DATA_RAINMACHINE)
 
     entities = []
     for program in client.programs.all().get('programs', {}):
@@ -44,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         _LOGGER.debug('Adding program: %s', program)
         entities.append(
-            RainMachineProgram(client, device_name, device_mac, program))
+            RainMachineProgram(client, device_mac, program))
 
     for zone in client.zones.all().get('zones', {}):
         if not zone.get('active'):
@@ -52,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         _LOGGER.debug('Adding zone: %s', zone)
         entities.append(
-            RainMachineZone(client, device_name, device_mac, zone,
+            RainMachineZone(client, device_mac, zone,
                             zone_run_time))
 
     add_devices(entities, True)
@@ -61,18 +54,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RainMachineEntity(SwitchDevice):
     """A class to represent a generic RainMachine entity."""
 
-    def __init__(self, client, device_name, device_mac, entity_json):
+    def __init__(self, client, device_mac, entity_json):
         """Initialize a generic RainMachine entity."""
         self._api_type = 'remote' if client.auth.using_remote_api else 'local'
         self._client = client
         self._entity_json = entity_json
 
         self.device_mac = device_mac
-        self.device_name = device_name
 
         self._attrs = {
-            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-            ATTR_DEVICE_CLASS: self.device_name
+            ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION
         }
 
     @property
@@ -156,10 +147,10 @@ class RainMachineProgram(RainMachineEntity):
 class RainMachineZone(RainMachineEntity):
     """A RainMachine zone."""
 
-    def __init__(self, client, device_name, device_mac, zone_json,
+    def __init__(self, client, device_mac, zone_json,
                  zone_run_time):
         """Initialize a RainMachine zone."""
-        super().__init__(client, device_name, device_mac, zone_json)
+        super().__init__(client, device_mac, zone_json)
         self._run_time = zone_run_time
         self._attrs.update({
             ATTR_CYCLES: self._entity_json.get('noOfCycles'),

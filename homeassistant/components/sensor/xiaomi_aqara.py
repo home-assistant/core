@@ -3,16 +3,18 @@ import logging
 
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS)
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'temperature': [TEMP_CELSIUS, 'mdi:thermometer'],
-    'humidity': ['%', 'mdi:water-percent'],
-    'illumination': ['lm', 'mdi:weather-sunset'],
-    'lux': ['lx', 'mdi:weather-sunset'],
-    'pressure': ['hPa', 'mdi:gauge']
+    'temperature': [TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    'humidity': ['%', None, DEVICE_CLASS_HUMIDITY],
+    'illumination': ['lm', None, DEVICE_CLASS_ILLUMINANCE],
+    'lux': ['lx', None, DEVICE_CLASS_ILLUMINANCE],
+    'pressure': ['hPa', 'mdi:gauge', None]
 }
 
 
@@ -65,6 +67,12 @@ class XiaomiSensor(XiaomiDevice):
             return SENSOR_TYPES.get(self._data_key)[0]
         except TypeError:
             return None
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity."""
+        return SENSOR_TYPES.get(self._data_key)[2] \
+            if self._data_key in SENSOR_TYPES else None
 
     @property
     def state(self):
