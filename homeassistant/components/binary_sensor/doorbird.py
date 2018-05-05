@@ -6,11 +6,9 @@ https://home-assistant.io/components/doorbird/
 """
 
 import asyncio
-import logging
 import datetime
+import logging
 import voluptuous as vol
-from homeassistant.core import callback
-from homeassistant.util import slugify
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
@@ -20,6 +18,7 @@ from homeassistant.components.doorbird import (DOMAIN as DOORBIRD_DOMAIN,
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON)
+from homeassistant.util import slugify
 
 DEPENDENCIES = ['doorbird']
 
@@ -43,7 +42,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Doorbird doorbell sensor platform."""
 
-    doorbird = hass.data.get(DOORBIRD_DOMAIN)
     sensors = []
     for doorstation in hass.data.get(DOORBIRD_DOMAIN):
 
@@ -88,7 +86,6 @@ class DoorbirdBinarySensor(BinarySensorDevice):
                      url)
 
         doorstation.device.subscribe_notification(self._event_type, url)
-
 
     @asyncio.coroutine
     def async_added_to_hass(self):

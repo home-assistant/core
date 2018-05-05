@@ -77,7 +77,7 @@ def setup(hass, config):
 class ConfiguredDoorbird():
     """Attach additional information to pass along with configured device."""
 
-    def __init__(self, device, name, custom_url = None):
+    def __init__(self, device, name, custom_url=None):
         """Initialize configured device."""
         self._name = name
         self._device = device
