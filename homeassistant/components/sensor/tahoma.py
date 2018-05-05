@@ -49,7 +49,7 @@ class TahomaSensor(TahomaDevice, Entity):
         elif self.tahoma_device.type == 'io:SomfyContactIOSystemSensor':
             return None
         elif self.tahoma_device.type == 'io:LightIOSystemSensor':
-            return 'lux'
+            return 'lx'
         elif self.tahoma_device.type == 'Humidity Sensor':
             return '%'
 
