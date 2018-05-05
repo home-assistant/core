@@ -131,3 +131,9 @@ async def async_setup_entry(hass, entry):
     bridge = HueBridge(hass, entry, allow_unreachable, allow_groups)
     hass.data[DOMAIN][host] = bridge
     return await bridge.async_setup()
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    bridge = hass.data[DOMAIN].pop(entry.data['host'])
+    return await bridge.async_reset()

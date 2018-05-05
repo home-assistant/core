@@ -52,7 +52,7 @@ class VeraSensor(VeraDevice, Entity):
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             return self._temperature_units
         elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
-            return 'lux'
+            return 'lx'
         elif self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
             return 'level'
         elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:

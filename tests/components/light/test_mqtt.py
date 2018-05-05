@@ -255,7 +255,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(150, state.attributes.get('color_temp'))
         self.assertEqual('none', state.attributes.get('effect'))
         self.assertEqual(255, state.attributes.get('white_value'))
-        self.assertEqual((0.32, 0.336), state.attributes.get('xy_color'))
+        self.assertEqual((0.323, 0.329), state.attributes.get('xy_color'))
 
         fire_mqtt_message(self.hass, 'test_light_rgb/status', '0')
         self.hass.block_till_done()
@@ -311,7 +311,7 @@ class TestLightMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         light_state = self.hass.states.get('light.test')
-        self.assertEqual((0.652, 0.343),
+        self.assertEqual((0.672, 0.324),
                          light_state.attributes.get('xy_color'))
 
     def test_brightness_controlling_scale(self):
@@ -519,7 +519,7 @@ class TestLightMQTT(unittest.TestCase):
             mock.call('test_light_rgb/rgb/set', '50,50,50', 2, False),
             mock.call('test_light_rgb/brightness/set', 50, 2, False),
             mock.call('test_light_rgb/white_value/set', 80, 2, False),
-            mock.call('test_light_rgb/xy/set', '0.32,0.336', 2, False),
+            mock.call('test_light_rgb/xy/set', '0.323,0.329', 2, False),
         ], any_order=True)
 
         state = self.hass.states.get('light.test')
@@ -527,7 +527,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual((255, 255, 255), state.attributes['rgb_color'])
         self.assertEqual(50, state.attributes['brightness'])
         self.assertEqual(80, state.attributes['white_value'])
-        self.assertEqual((0.32, 0.336), state.attributes['xy_color'])
+        self.assertEqual((0.323, 0.329), state.attributes['xy_color'])
 
     def test_sending_mqtt_rgb_command_with_template(self):
         """Test the sending of RGB command with template."""
@@ -679,7 +679,7 @@ class TestLightMQTT(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
-        self.assertEqual((0.32, 0.336), state.attributes.get('xy_color'))
+        self.assertEqual((0.323, 0.329), state.attributes.get('xy_color'))
 
     def test_on_command_first(self):
         """Test on command being sent before brightness."""

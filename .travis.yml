@@ -31,7 +31,7 @@ script: travis_wait 30 tox --develop
 services:
   - docker
 before_deploy:
-  - docker pull lokalise/lokalise-cli@sha256:79b3108211ed1fcc9f7b09a011bfc53c240fc2f3b7fa7f0c8390f593271b4cd7
+  - docker pull lokalise/lokalise-cli@sha256:2198814ebddfda56ee041a4b427521757dd57f75415ea9693696a64c550cef21
 deploy:
   skip_cleanup: true
   provider: script

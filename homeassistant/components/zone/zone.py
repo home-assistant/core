@@ -1,53 +1,17 @@
-"""
-Support for the definition of zones.
+"""Component entity and functionality."""
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/zone/
-"""
-import asyncio
-import logging
-
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_LATITUDE,
-    CONF_LONGITUDE, CONF_ICON, CONF_RADIUS)
+from homeassistant.const import ATTR_HIDDEN, ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.helpers.entity import Entity
 from homeassistant.loader import bind_hass
-from homeassistant.helpers import config_per_platform
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.location import distance
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN
 
 ATTR_PASSIVE = 'passive'
 ATTR_RADIUS = 'radius'
 
-CONF_PASSIVE = 'passive'
-
-DEFAULT_NAME = 'Unnamed zone'
-DEFAULT_PASSIVE = False
-DEFAULT_RADIUS = 100
-DOMAIN = 'zone'
-
-ENTITY_ID_FORMAT = 'zone.{}'
-ENTITY_ID_HOME = ENTITY_ID_FORMAT.format('home')
-
-ICON_HOME = 'mdi:home'
-ICON_IMPORT = 'mdi:import'
-
 STATE = 'zoning'
-
-# The config that zone accepts is the same as if it has platforms.
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_LATITUDE): cv.latitude,
-    vol.Required(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
-    vol.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
-    vol.Optional(CONF_ICON): cv.icon,
-}, extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
@@ -102,32 +66,6 @@ def in_zone(zone, latitude, longitude, radius=0):
         zone.attributes[ATTR_LATITUDE], zone.attributes[ATTR_LONGITUDE])
 
     return zone_dist - radius < zone.attributes[ATTR_RADIUS]
-
-
-@asyncio.coroutine
-def async_setup(hass, config):
-    """Set up the zone."""
-    entities = set()
-    tasks = []
-    for _, entry in config_per_platform(config, DOMAIN):
-        name = entry.get(CONF_NAME)
-        zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
-                    entry.get(CONF_RADIUS), entry.get(CONF_ICON),
-                    entry.get(CONF_PASSIVE))
-        zone.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, name, entities)
-        tasks.append(zone.async_update_ha_state())
-        entities.add(zone.entity_id)
-
-    if ENTITY_ID_HOME not in entities:
-        zone = Zone(hass, hass.config.location_name,
-                    hass.config.latitude, hass.config.longitude,
-                    DEFAULT_RADIUS, ICON_HOME, False)
-        zone.entity_id = ENTITY_ID_HOME
-        tasks.append(zone.async_update_ha_state())
-
-    yield from asyncio.wait(tasks, loop=hass.loop)
-    return True
 
 
 class Zone(Entity):

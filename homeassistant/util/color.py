@@ -203,7 +203,7 @@ def color_RGB_to_xy_brightness(
 
     # Wide RGB D65 conversion formula
     X = R * 0.664511 + G * 0.154324 + B * 0.162028
-    Y = R * 0.313881 + G * 0.668433 + B * 0.047685
+    Y = R * 0.283881 + G * 0.668433 + B * 0.047685
     Z = R * 0.000088 + G * 0.072310 + B * 0.986039
 
     # Convert XYZ to xy

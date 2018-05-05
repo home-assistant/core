@@ -167,3 +167,22 @@ async def test_config_passed_to_config_entry(hass):
     assert p_entry is entry
     assert p_allow_unreachable is True
     assert p_allow_groups is False
+
+
+async def test_unload_entry(hass):
+    """Test being able to unload an entry."""
+    entry = MockConfigEntry(domain=hue.DOMAIN, data={
+        'host': '0.0.0.0',
+    })
+    entry.add_to_hass(hass)
+
+    with patch.object(hue, 'HueBridge') as mock_bridge:
+        mock_bridge.return_value.async_setup.return_value = mock_coro(True)
+        assert await async_setup_component(hass, hue.DOMAIN, {}) is True
+
+    assert len(mock_bridge.return_value.mock_calls) == 1
+
+    mock_bridge.return_value.async_reset.return_value = mock_coro(True)
+    assert await hue.async_unload_entry(hass, entry)
+    assert len(mock_bridge.return_value.async_reset.mock_calls) == 1
+    assert hass.data[hue.DOMAIN] == {}

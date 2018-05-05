@@ -89,6 +89,8 @@ FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend({
 
 FILTER_THROTTLE_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_THROTTLE,
+    vol.Optional(CONF_FILTER_WINDOW_SIZE,
+                 default=DEFAULT_WINDOW_SIZE): vol.Coerce(int),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -341,7 +343,7 @@ class OutlierFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the outlier filter."""
-        if (self.states and
+        if (len(self.states) == self.states.maxlen and
                 abs(new_state.state -
                     statistics.median([s.state for s in self.states])) >
                 self._radius):

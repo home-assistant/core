@@ -102,18 +102,23 @@ class _GoogleEntity:
         if state.state == STATE_UNAVAILABLE:
             return None
 
+        entity_config = self.config.entity_config.get(state.entity_id, {})
+        name = (entity_config.get(CONF_NAME) or state.name).strip()
+
+        # If an empty string
+        if not name:
+            return None
+
         traits = self.traits()
 
         # Found no supported traits for this entity
         if not traits:
             return None
 
-        entity_config = self.config.entity_config.get(state.entity_id, {})
-
         device = {
             'id': state.entity_id,
             'name': {
-                'name': entity_config.get(CONF_NAME) or state.name
+                'name': name
             },
             'attributes': {},
             'traits': [trait.name for trait in traits],
