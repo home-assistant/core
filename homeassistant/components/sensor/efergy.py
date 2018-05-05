@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                          + app_token
             response = get(url_string, timeout=10)
             for sensor in response.json():
-                sid = sensor['sid']+'_'+sensor['cid']
+                sid = "%s_%s" % (sensor['sid'], sensor['cid'])
                 dev.append(EfergySensor(variable[CONF_SENSOR_TYPE], app_token,
                                         utc_offset, variable[CONF_PERIOD],
                                         variable[CONF_CURRENCY], sid))
@@ -86,7 +86,7 @@ class EfergySensor(Entity):
         """Initialize the sensor."""
         self.sid = sid
         if sid:
-            self._name = 'efergy_' + sid
+            self._name = 'efergy_%s' % (sid)
         else:
             self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
@@ -143,7 +143,7 @@ class EfergySensor(Entity):
                     + self.app_token
                 response = get(url_string, timeout=10)
                 for sensor in response.json():
-                    if self.sid == sensor['sid']+'_'+sensor['cid']:
+                    if self.sid == "%s_%s" % (sensor['sid'], sensor['cid']):
                         measurement = next(iter(sensor['data'][0].values()))
                         self._state = measurement
             else:
