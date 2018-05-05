@@ -13,19 +13,12 @@ import voluptuous as vol
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA, CONF_SOURCE, CONF_ENTITY_ID,
+    PLATFORM_SCHEMA, ImageProcessingFaceEntity, CONF_SOURCE, CONF_ENTITY_ID,
     CONF_NAME)
 from homeassistant.const import (CONF_IP_ADDRESS, CONF_PORT)
-from homeassistant.components.image_processing.microsoft_face_identify import (
-    ImageProcessingFaceEntity)
 
 _LOGGER = logging.getLogger(__name__)
 
-<<<<<<< HEAD
-=======
-ROUNDING_DECIMALS = 2
-
->>>>>>> Adds facebox face detect
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP_ADDRESS): cv.string,
     vol.Required(CONF_PORT): cv.string,
