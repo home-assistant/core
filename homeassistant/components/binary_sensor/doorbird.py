@@ -25,7 +25,7 @@ DEPENDENCIES = ['doorbird']
 _LOGGER = logging.getLogger(__name__)
 
 DOORBELL_EVENT = 'doorbell'
-MOTION_EVENT = 'motion'
+MOTION_EVENT = 'motionsensor'
 
 # Sensor types: Name, device_class, event
 SENSOR_TYPES = {
