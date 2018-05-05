@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "no_bridges": "Ingen Philips Hue bridge fundet"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "V\u00e6rt"
+                },
+                "title": "V\u00e6lg Hue bridge"
+            },
+            "link": {
+                "title": "Link Hub"
+            }
+        },
+        "title": "Philips Hue Bridge"
+    }
+}
