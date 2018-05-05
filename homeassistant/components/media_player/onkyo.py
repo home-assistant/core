@@ -40,7 +40,8 @@ DEFAULT_SOURCES = {'tv': 'TV', 'bd': 'Bluray', 'game': 'Game', 'aux1': 'Aux1',
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME): int,
+    vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME):
+        vol.All(vol.Coerce(int), vol.Range(min=1, max=SUPPORTED_MAX_VOLUME)),
     vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES):
         {cv.string: cv.string},
 })
@@ -54,15 +55,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     hosts = []
 
-    max_volume = config.get(CONF_MAX_VOLUME)
-    if max_volume > SUPPORTED_MAX_VOLUME:
-        max_volume = SUPPORTED_MAX_VOLUME
-
     if CONF_HOST in config and host not in KNOWN_HOSTS:
         try:
             hosts.append(OnkyoDevice(
                 eiscp.eISCP(host), config.get(CONF_SOURCES),
-                name=config.get(CONF_NAME), max_volume=max_volume))
+                name=config.get(CONF_NAME), max_volume=config.get(CONF_MAX_VOLUME)))
             KNOWN_HOSTS.append(host)
         except OSError:
             _LOGGER.error("Unable to connect to receiver at %s", host)
@@ -185,7 +182,7 @@ class OnkyoDevice(MediaPlayerDevice):
         Onkyo ranges from 1-80 however 80 is usually far too loud
         so allow the user to specify the upper range with CONF_MAX_VOLUME
         """
-        self.command('volume {}'.format(int(volume*self._max_volume)))
+        self.command('volume {}'.format(int(volume * self._max_volume)))
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
