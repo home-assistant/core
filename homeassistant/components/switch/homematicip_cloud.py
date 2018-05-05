@@ -34,7 +34,9 @@ async def async_setup_platform(hass, config, async_add_devices,
     devices = []
     for device in home.devices:
         if isinstance(device, BrandSwitchMeasuring):
-            # BrandSwitch is implemented in the light platform
+            # BrandSwitchMeasuring inherits PlugableSwitchMeasuring
+            # This device is implemented in the light platform and will
+            # not be added in the switch platform
             pass
         elif isinstance(device, PlugableSwitchMeasuring):
             devices.append(HomematicipSwitchMeasuring(home, device))
