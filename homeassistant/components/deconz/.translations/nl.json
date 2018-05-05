@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge is al geconfigureerd",
+            "no_bridges": "Geen deCONZ bruggen ontdekt",
+            "one_instance_only": "Component ondersteunt slechts \u00e9\u00e9n deCONZ instance"
+        },
+        "error": {
+            "no_key": "Kon geen API-sleutel ophalen"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host",
+                    "port": "Poort (standaard: '80')"
+                },
+                "title": "Definieer deCONZ gateway"
+            },
+            "link": {
+                "description": "Ontgrendel je deCONZ gateway om te registreren met Home Assistant.\n\n1. Ga naar deCONZ systeeminstellingen\n2. Druk op de knop \"Gateway ontgrendelen\"",
+                "title": "Koppel met deCONZ"
+            }
+        },
+        "title": "deCONZ"
+    }
+}

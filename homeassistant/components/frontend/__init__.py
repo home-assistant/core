@@ -25,7 +25,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180426.0']
+REQUIREMENTS = ['home-assistant-frontend==20180505.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -606,6 +606,7 @@ def _is_latest(js_option, request):
     return useragent and hass_frontend.version(useragent)
 
 
+@callback
 def websocket_handle_get_panels(hass, connection, msg):
     """Handle get panels command.
 

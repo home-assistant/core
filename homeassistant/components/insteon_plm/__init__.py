@@ -11,12 +11,13 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import (CONF_PORT, EVENT_HOMEASSISTANT_STOP,
-                                 CONF_PLATFORM)
+                                 CONF_PLATFORM,
+                                 CONF_ENTITY_ID)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.8.6']
+REQUIREMENTS = ['insteonplm==0.9.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +29,17 @@ CONF_CAT = 'cat'
 CONF_SUBCAT = 'subcat'
 CONF_FIRMWARE = 'firmware'
 CONF_PRODUCT_KEY = 'product_key'
+
+SRV_ADD_ALL_LINK = 'add_all_link'
+SRV_DEL_ALL_LINK = 'delete_all_link'
+SRV_LOAD_ALDB = 'load_all_link_database'
+SRV_PRINT_ALDB = 'print_all_link_database'
+SRV_PRINT_IM_ALDB = 'print_im_all_link_database'
+SRV_ALL_LINK_GROUP = 'group'
+SRV_ALL_LINK_MODE = 'mode'
+SRV_LOAD_DB_RELOAD = 'reload'
+SRV_CONTROLLER = 'controller'
+SRV_RESPONDER = 'responder'
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
@@ -47,6 +59,24 @@ CONFIG_SCHEMA = vol.Schema({
         })
 }, extra=vol.ALLOW_EXTRA)
 
+ADD_ALL_LINK_SCHEMA = vol.Schema({
+    vol.Required(SRV_ALL_LINK_GROUP): vol.Range(min=0, max=255),
+    vol.Required(SRV_ALL_LINK_MODE): vol.In([SRV_CONTROLLER, SRV_RESPONDER]),
+    })
+
+DEL_ALL_LINK_SCHEMA = vol.Schema({
+    vol.Required(SRV_ALL_LINK_GROUP): vol.Range(min=0, max=255),
+    })
+
+LOAD_ALDB_SCHEMA = vol.Schema({
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Optional(SRV_LOAD_DB_RELOAD, default='false'): cv.boolean,
+    })
+
+PRINT_ALDB_SCHEMA = vol.Schema({
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    })
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -54,6 +84,7 @@ def async_setup(hass, config):
     import insteonplm
 
     ipdb = IPDB()
+    plm = None
 
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
@@ -79,6 +110,60 @@ def async_setup(hass, config):
                                         'state_key': state_key},
                             hass_config=config))
 
+    def add_all_link(service):
+        """Add an INSTEON All-Link between two devices."""
+        group = service.data.get(SRV_ALL_LINK_GROUP)
+        mode = service.data.get(SRV_ALL_LINK_MODE)
+        link_mode = 1 if mode.lower() == SRV_CONTROLLER else 0
+        plm.start_all_linking(link_mode, group)
+
+    def del_all_link(service):
+        """Delete an INSTEON All-Link between two devices."""
+        group = service.data.get(SRV_ALL_LINK_GROUP)
+        plm.start_all_linking(255, group)
+
+    def load_aldb(service):
+        """Load the device All-Link database."""
+        entity_id = service.data.get(CONF_ENTITY_ID)
+        reload = service.data.get(SRV_LOAD_DB_RELOAD)
+        entities = hass.data[DOMAIN].get('entities')
+        entity = entities.get(entity_id)
+        if entity:
+            entity.load_aldb(reload)
+        else:
+            _LOGGER.error('Entity %s is not an INSTEON device', entity_id)
+
+    def print_aldb(service):
+        """Print the All-Link Database for a device."""
+        # For now this sends logs to the log file.
+        # Furture direction is to create an INSTEON control panel.
+        entity_id = service.data.get(CONF_ENTITY_ID)
+        entities = hass.data[DOMAIN].get('entities')
+        entity = entities.get(entity_id)
+        if entity:
+            entity.print_aldb()
+        else:
+            _LOGGER.error('Entity %s is not an INSTEON device', entity_id)
+
+    def print_im_aldb(service):
+        """Print the All-Link Database for a device."""
+        # For now this sends logs to the log file.
+        # Furture direction is to create an INSTEON control panel.
+        print_aldb_to_log(plm.aldb)
+
+    def _register_services():
+        hass.services.register(DOMAIN, SRV_ADD_ALL_LINK, add_all_link,
+                               schema=ADD_ALL_LINK_SCHEMA)
+        hass.services.register(DOMAIN, SRV_DEL_ALL_LINK, del_all_link,
+                               schema=DEL_ALL_LINK_SCHEMA)
+        hass.services.register(DOMAIN, SRV_LOAD_ALDB, load_aldb,
+                               schema=LOAD_ALDB_SCHEMA)
+        hass.services.register(DOMAIN, SRV_PRINT_ALDB, print_aldb,
+                               schema=PRINT_ALDB_SCHEMA)
+        hass.services.register(DOMAIN, SRV_PRINT_IM_ALDB, print_im_aldb,
+                               schema=None)
+        _LOGGER.debug("Insteon_plm Services registered")
+
     _LOGGER.info("Looking for PLM on %s", port)
     conn = yield from insteonplm.Connection.create(
         device=port,
@@ -100,11 +185,14 @@ def async_setup(hass, config):
                 plm.devices.add_override(address, CONF_PRODUCT_KEY,
                                          device_override[prop])
 
-    hass.data['insteon_plm'] = plm
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN]['plm'] = plm
+    hass.data[DOMAIN]['entities'] = {}
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, conn.close)
 
     plm.devices.add_device_callback(async_plm_new_device)
+    hass.async_add_job(_register_services)
 
     return True
 
@@ -169,6 +257,7 @@ class InsteonPLMEntity(Entity):
         """Initialize the INSTEON PLM binary sensor."""
         self._insteon_device_state = device.states[state_key]
         self._insteon_device = device
+        self._insteon_device.aldb.add_loaded_callback(self._aldb_loaded)
 
     @property
     def should_poll(self):
@@ -215,3 +304,44 @@ class InsteonPLMEntity(Entity):
         """Register INSTEON update events."""
         self._insteon_device_state.register_updates(
             self.async_entity_update)
+        self.hass.data[DOMAIN]['entities'][self.entity_id] = self
+
+    def load_aldb(self, reload=False):
+        """Load the device All-Link Database."""
+        if reload:
+            self._insteon_device.aldb.clear()
+        self._insteon_device.read_aldb()
+
+    def print_aldb(self):
+        """Print the device ALDB to the log file."""
+        print_aldb_to_log(self._insteon_device.aldb)
+
+    @callback
+    def _aldb_loaded(self):
+        """All-Link Database loaded for the device."""
+        self.print_aldb()
+
+
+def print_aldb_to_log(aldb):
+    """Print the All-Link Database to the log file."""
+    from insteonplm.devices import ALDBStatus
+    _LOGGER.info('ALDB load status is %s', aldb.status.name)
+    if aldb.status not in [ALDBStatus.LOADED, ALDBStatus.PARTIAL]:
+        _LOGGER.warning('Device All-Link database not loaded')
+        _LOGGER.warning('Use service insteon_plm.load_aldb first')
+        return
+
+    _LOGGER.info('RecID In Use Mode HWM Group Address  Data 1 Data 2 Data 3')
+    _LOGGER.info('----- ------ ---- --- ----- -------- ------ ------ ------')
+    for mem_addr in aldb:
+        rec = aldb[mem_addr]
+        # For now we write this to the log
+        # Roadmap is to create a configuration panel
+        in_use = 'Y' if rec.control_flags.is_in_use else 'N'
+        mode = 'C' if rec.control_flags.is_controller else 'R'
+        hwm = 'Y' if rec.control_flags.is_high_water_mark else 'N'
+        _LOGGER.info(' {:04x}    {:s}     {:s}   {:s}    {:3d} {:s}'
+                     '   {:3d}   {:3d}   {:3d}'.format(
+                         rec.mem_addr, in_use, mode, hwm,
+                         rec.group, rec.address.human,
+                         rec.data1, rec.data2, rec.data3))

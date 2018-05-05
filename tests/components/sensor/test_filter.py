@@ -67,6 +67,9 @@ class TestFilterSensor(unittest.TestCase):
                         'filter': 'lowpass',
                         'time_constant': 10,
                         'precision': 2
+                    }, {
+                        'filter': 'throttle',
+                        'window_size': 1
                     }]
             }
         }
