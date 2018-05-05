@@ -1,5 +1,5 @@
 """
-Doorbird Doorbell Binary Sensor
+Doorbird Doorbell Binary Sensor.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/doorbird/
@@ -43,7 +43,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Doorbird doorbell sensor platform."""
-
     sensors = []
     for doorstation in hass.data.get(DOORBIRD_DOMAIN):
 
@@ -112,7 +111,7 @@ class DoorbirdBinarySensor(BinarySensorDevice):
 
     @property
     def state(self):
-        """Current state of entity"""
+        """Current state of entity."""
         return self._state
 
     def update(self):
@@ -133,6 +132,7 @@ class DoorbirdBinarySensor(BinarySensorDevice):
 
 class DoorbirdRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
+
     requires_auth = False
     url = API_URL
     name = API_URL[1:].replace('/', ':')
