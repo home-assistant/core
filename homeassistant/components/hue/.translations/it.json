@@ -1,0 +1,10 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Tutti i bridge Philips Hue sono gi\u00e0 configurati",
+            "discover_timeout": "Impossibile trovare i bridge Hue",
+            "no_bridges": "Nessun bridge Hue di Philips trovato"
+        },
+        "title": "Philips Hue Bridge"
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "no_bridges": "\u672a\u641c\u5c0b\u5230 deCONZ Bridfe",
+            "one_instance_only": "\u7d44\u4ef6\u50c5\u652f\u63f4\u4e00\u7d44 deCONZ \u5be6\u4f8b"
+        },
+        "error": {
+            "no_key": "\u7121\u6cd5\u53d6\u5f97 API key"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0\uff08\u9810\u8a2d\u503c\uff1a'80'\uff09"
+                },
+                "title": "\u5b9a\u7fa9 deCONZ \u7db2\u95dc"
+            },
+            "link": {
+                "description": "\u89e3\u9664 deCONZ \u7db2\u95dc\u9396\u5b9a\uff0c\u4ee5\u65bc Home Assistant \u9032\u884c\u8a3b\u518a\u3002\n\n1. \u9032\u5165 deCONZ \u7cfb\u7d71\u8a2d\u5b9a\n2. \u6309\u4e0b\u300c\u89e3\u9664\u7db2\u95dc\u9396\u5b9a\uff08Unlock Gateway\uff09\u300d\u6309\u9215",
+                "title": "\u9023\u7d50\u81f3 deCONZ"
+            }
+        },
+        "title": "deCONZ"
+    }
+}
