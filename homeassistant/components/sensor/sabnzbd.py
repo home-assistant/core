@@ -22,17 +22,15 @@ async def async_setup_platform(hass, config, async_add_devices,
     sab_api_data = hass.data[DATA_SABNZBD]
     sensors = sab_api_data.sensors
     client_name = sab_api_data.name
-    async_add_devices([SabnzbdSensor(hass, sensor, sab_api_data, client_name)
+    async_add_devices([SabnzbdSensor(sensor, sab_api_data, client_name)
                        for sensor in sensors])
 
 
 class SabnzbdSensor(Entity):
     """Representation of an SABnzbd sensor."""
 
-    def __init__(self, hass, sensor_type, sabnzbd_api_data, client_name):
+    def __init__(self, sensor_type, sabnzbd_api_data, client_name):
         """Initialize the sensor."""
-        self.hass = hass
-
         self._client_name = client_name
         self._field_name = SENSOR_TYPES[sensor_type][2]
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -41,7 +39,9 @@ class SabnzbdSensor(Entity):
         self._type = sensor_type
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
-        async_dispatcher_connect(hass, SIGNAL_SABNZBD_UPDATED,
+    async def async_added_to_hass(self):
+        """Call when entity about to be added to hass."""
+        async_dispatcher_connect(self.hass, SIGNAL_SABNZBD_UPDATED,
                                  self.update_state)
 
     @property

@@ -12,8 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.discovery import SERVICE_SABNZBD
 from homeassistant.const import (
-    CONF_HOST, CONF_API_KEY, CONF_NAME, CONF_PORT, CONF_SENSORS,
-    CONF_SSL, CONF_SCAN_INTERVAL)
+    CONF_HOST, CONF_API_KEY, CONF_NAME, CONF_PORT, CONF_SENSORS, CONF_SSL)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -35,8 +34,9 @@ CONFIG_FILE = 'sabnzbd.conf'
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'SABnzbd'
 DEFAULT_PORT = 8080
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SSL = False
+
+UPDATE_INTERVAL = timedelta(seconds=30)
 
 SERVICE_PAUSE = 'pause'
 SERVICE_RESUME = 'resume'
@@ -68,8 +68,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-            cv.time_period_seconds,
         vol.Optional(CONF_SENSORS):
             vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
@@ -99,15 +97,17 @@ async def async_configure_sabnzbd(hass, config, use_ssl, name=DEFAULT_NAME,
     uri_scheme = 'https' if use_ssl else 'http'
     base_url = BASE_URL_FORMAT.format(uri_scheme, host, port)
     if api_key is None:
-        conf = await hass.async_add_job(
-            load_json(hass.config.path(CONFIG_FILE)))
+        conf = await hass.async_add_job(load_json,
+                                        hass.config.path(CONFIG_FILE))
 
         if conf.get(base_url, {}).get(CONF_API_KEY):
             api_key = conf[base_url][CONF_API_KEY]
+        else:
+            api_key = ''
 
     sab_api = SabnzbdApi(base_url, api_key)
     if await async_check_sabnzbd(sab_api):
-        await async_setup_sabnzbd(hass, sab_api, config, name)
+        async_setup_sabnzbd(hass, sab_api, config, name)
     else:
         async_request_configuration(hass, config, base_url)
 
@@ -117,7 +117,7 @@ async def async_setup(hass, config):
     async def sabnzbd_discovered(service, info):
         """Handle service discovery."""
         ssl = info.get('properties', {}).get('https', '0') == '1'
-        async_configure_sabnzbd(hass, info, ssl)
+        await async_configure_sabnzbd(hass, info, ssl)
 
     discovery.async_listen(hass, SERVICE_SABNZBD, sabnzbd_discovered)
 
@@ -130,28 +130,27 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_sabnzbd(hass, sab_api, config, name):
+@callback
+def async_setup_sabnzbd(hass, sab_api, config, name):
     """Setup SABnzbd sensors and services."""
-    hass.data[DATA_SABNZBD] = SabnzbdApiData(hass, sab_api, name,
-                                             config.get(CONF_SENSORS, {}),
-                                             config.get(CONF_SCAN_INTERVAL))
+    sab_api_data = SabnzbdApiData(sab_api, name, config.get(CONF_SENSORS, {}))
+
     if config.get(CONF_SENSORS):
+        hass.data[DATA_SABNZBD] = sab_api_data
         hass.async_add_job(
             discovery.async_load_platform(hass, 'sensor', DOMAIN, {}, config))
 
     async def async_service_handler(service):
         """Handle service calls."""
-        sab_api_data = hass.data[DATA_SABNZBD]
         if service.service == SERVICE_PAUSE:
             await sab_api_data.async_pause_queue()
         elif service.service == SERVICE_RESUME:
             await sab_api_data.async_resume_queue()
         elif service.service == SERVICE_SET_SPEED:
             speed = service.data.get(ATTR_SPEED, None)
-            if speed is not None:
-                await sab_api_data.async_set_queue_speed(speed)
-            else:
-                await sab_api_data.async_set_queue_speed()
+            if speed is None:
+                speed = '100'
+            await sab_api_data.async_set_queue_speed(speed)
 
     hass.services.async_register(DOMAIN, SERVICE_PAUSE,
                                  async_service_handler,
@@ -164,6 +163,17 @@ async def async_setup_sabnzbd(hass, sab_api, config, name):
     hass.services.async_register(DOMAIN, SERVICE_SET_SPEED,
                                  async_service_handler,
                                  schema=SPEED_LIMIT_SCHEMA)
+
+    async def async_update_sabnzbd(now):
+        """Refresh SABnzbd queue data."""
+        from pysabnzbd import SabnzbdApiException
+        try:
+            await sab_api.refresh_data()
+            async_dispatcher_send(hass, SIGNAL_SABNZBD_UPDATED, None)
+        except SabnzbdApiException as err:
+            _LOGGER.error(err)
+
+    async_track_time_interval(hass, async_update_sabnzbd, UPDATE_INTERVAL)
 
 
 @callback
@@ -192,11 +202,11 @@ def async_request_configuration(hass, config, host):
                 conf[host] = {CONF_API_KEY: api_key}
                 save_json(hass.config.path(CONFIG_FILE), conf)
                 req_config = _CONFIGURING.pop(host)
-                configurator.async_request_done(req_config)
+                configurator.request_done(req_config)
 
             hass.async_add_job(success)
-            await async_setup_sabnzbd(hass, sab_api, config,
-                                      config.get(CONF_NAME, DEFAULT_NAME))
+            async_setup_sabnzbd(hass, sab_api, config,
+                                config.get(CONF_NAME, DEFAULT_NAME))
 
     _CONFIGURING[host] = configurator.async_request_config(
         DEFAULT_NAME,
@@ -210,24 +220,11 @@ def async_request_configuration(hass, config, host):
 class SabnzbdApiData:
     """Class for storing/refreshing sabnzbd api queue data."""
 
-    def __init__(self, hass, sab_api, name, sensors, scan_interval):
+    def __init__(self, sab_api, name, sensors):
         """Initialize component."""
-        self.hass = hass
         self.sab_api = sab_api
         self.name = name
         self.sensors = sensors
-
-        async_track_time_interval(self.hass, self.async_refresh_data,
-                                  scan_interval)
-
-    async def async_refresh_data(self, args):
-        """Refresh Sabnzbd queue data."""
-        from pysabnzbd import SabnzbdApiException
-        try:
-            await self.sab_api.refresh_data()
-            async_dispatcher_send(self.hass, SIGNAL_SABNZBD_UPDATED, None)
-        except SabnzbdApiException as err:
-            _LOGGER.error(err)
 
     async def async_pause_queue(self):
         """Pause Sabnzbd queue."""
