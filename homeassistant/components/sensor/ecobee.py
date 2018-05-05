@@ -55,8 +55,10 @@ class EcobeeSensor(Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        if self.type in ('temperature', 'humidity'):
-            return self.type
+        if self.type == 'temperature':
+            return 'temperature'
+        if self.type == 'humidity':
+            return 'relative_humidity'
         return None
 
     @property

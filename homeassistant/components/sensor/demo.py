@@ -14,7 +14,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([
         DemoSensor('Outside Temperature', 15.6, 'temperature',
                    TEMP_CELSIUS, 12),
-        DemoSensor('Outside Humidity', 54, 'humidity', '%', None),
+        DemoSensor('Outside Humidity', 54, 'relative_humidity', '%', None),
     ])
 
 
