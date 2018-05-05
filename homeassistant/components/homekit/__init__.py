@@ -15,7 +15,8 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     ATTR_DEVICE_CLASS, CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS,
     TEMP_FAHRENHEIT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE)
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
+    CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
@@ -94,6 +95,7 @@ def get_accessory(hass, state, aid, config):
 
     a_type = None
     config = config or {}
+    name = config.get(CONF_NAME, state.name)
 
     if state.domain == 'alarm_control_panel':
         a_type = 'SecuritySystem'
@@ -147,7 +149,7 @@ def get_accessory(hass, state, aid, config):
         return None
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
-    return TYPES[a_type](hass, state.name, state.entity_id, aid, config=config)
+    return TYPES[a_type](hass, name, state.entity_id, aid, config)
 
 
 def generate_aid(entity_id):

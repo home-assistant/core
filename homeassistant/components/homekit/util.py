@@ -27,14 +27,11 @@ def validate_entity_config(values):
         name = config.get(CONF_NAME)
         params[CONF_NAME] = \
             cv.string(name) if name else None
-
         manufacturer = config.get(CONF_MANUFACTURER)
         params[CONF_MANUFACTURER] = \
             cv.string(manufacturer) if manufacturer else None
-
         model = config.get(CONF_MODEL)
         params[CONF_MODEL] = cv.string(model) if model else None
-
         serial_number = config.get(CONF_SERIAL_NUMBER)
         params[CONF_SERIAL_NUMBER] = \
             cv.string(serial_number) if serial_number else None

@@ -29,9 +29,9 @@ class Lock(HomeAccessory):
     The lock entity must support: unlock and lock.
     """
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a Lock accessory object."""
-        super().__init__(*args, config, category=CATEGORY_DOOR_LOCK)
+        super().__init__(*args, category=CATEGORY_DOOR_LOCK)
         self.flag_target_state = False
 
         serv_lock_mechanism = self.add_preload_service(SERV_LOCK)

@@ -8,7 +8,7 @@ from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
 
-from homeassistant.const import __version__, CONF_NAME
+from homeassistant.const import __version__
 from homeassistant.core import callback as ha_callback
 from homeassistant.core import split_entity_id
 from homeassistant.helpers.event import (
@@ -68,8 +68,7 @@ class HomeAccessory(Accessory):
     def __init__(self, hass, name, entity_id, aid, config,
                  category=CATEGORY_OTHER):
         """Initialize a Accessory object."""
-        display_name = config.get(CONF_NAME, name)
-        super().__init__(display_name, aid=aid)
+        super().__init__(name, aid=aid)
         manufacturer = config.get(CONF_MANUFACTURER, MANUFACTURER)
         model = config.get(CONF_MODEL, split_entity_id(entity_id)[0]
                            .replace("_", " ").title())
@@ -78,6 +77,7 @@ class HomeAccessory(Accessory):
             firmware_revision=__version__, manufacturer=manufacturer,
             model=model, serial_number=serial_number)
         self.category = category
+        self.config = config
         self.entity_id = entity_id
         self.hass = hass
 
