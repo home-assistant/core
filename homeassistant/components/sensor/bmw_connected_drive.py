@@ -107,8 +107,7 @@ class BMWConnectedDriveSensor(Entity):
             return 'h'
         elif self._attribute == 'charging_level_hv':
             return '%'
-        else:
-            return None
+        return None
 
     @property
     def device_state_attributes(self):
