@@ -42,7 +42,6 @@ class BMWConnectedDriveSensor(Entity):
         self._account = account
         self._attribute = attribute
         self._state = None
-        self._unit_of_measurement = None
         self._name = '{} {}'.format(self._vehicle.name, self._attribute)
         self._unique_id = '{}-{}'.format(self._vehicle.vin, self._attribute)
 
@@ -109,7 +108,7 @@ class BMWConnectedDriveSensor(Entity):
         elif self._attribute == 'charging_level_hv':
             return '%'
         else:
-            self._unit_of_measurement = None
+            return None
 
     @property
     def device_state_attributes(self):

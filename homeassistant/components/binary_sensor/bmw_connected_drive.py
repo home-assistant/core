@@ -171,8 +171,8 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         # device class plug: On means device is plugged in,
         #                    Off means device is unplugged
         if self._attribute == 'connection_status':
-            self._state = bool(vehicle_state._attributes['connectionStatus'] ==
-                               'CONNECTED')
+            self._state = (vehicle_state._attributes['connectionStatus'] ==
+                           'CONNECTED')
 
     def update_callback(self):
         """Schedule a state update."""
