@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,15 +19,22 @@ _LOGGER = logging.getLogger(__name__)
 def test_get_accessory_invalid_aid(caplog):
     """Test with unsupported component."""
     assert get_accessory(None, State('light.demo', 'on'),
-                         None, config=None) is None
+                         None, None) is None
     assert caplog.records[0].levelname == 'WARNING'
     assert 'invalid aid' in caplog.records[0].msg
 
 
 def test_not_supported():
     """Test if none is returned if entity isn't supported."""
-    assert get_accessory(None, State('demo.demo', 'on'), 2, config=None) \
+    assert get_accessory(None, State('demo.demo', 'on'), 2, {}) \
         is None
+
+
+def test_get_accessory_customize_name():
+    """Test with customized name."""
+    config = {CONF_NAME: 'Customize Name'}
+    acc = get_accessory(None, State('light.demo', 'on'), 2, config)
+    assert acc.display_name == 'Customize Name'
 
 
 @pytest.mark.parametrize('type_name, entity_id, state, attrs, config', [
