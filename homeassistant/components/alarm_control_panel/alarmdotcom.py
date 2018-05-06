@@ -81,9 +81,12 @@ class AlarmDotCom(alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        if re.search('^\\d+$', self._code):
+        if self._code is None:
+            return None
+        elif re.search('^\\d+$', self._code):
             return '^\\d+$'
-        return None if self._code is None else '.+'
+        else:
+            return '.+'
 
     @property
     def state(self):
