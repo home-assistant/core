@@ -18,7 +18,6 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR, HTTP_UNAUTHORIZED,
     CONF_DEVICES, CONF_BINARY_SENSORS, CONF_SWITCHES, CONF_HOST, CONF_PORT,
     CONF_ID, CONF_NAME, CONF_TYPE, CONF_PIN, CONF_ZONE, ATTR_STATE)
-from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 
@@ -89,7 +88,7 @@ async def async_setup(hass, config):
         port = info.get(CONF_PORT)
 
         device = KonnectedDevice(hass, host, port, cfg)
-        hass.async_add_job(device.async_setup)
+        await device.async_setup()
 
     discovery.async_listen(
         hass,
@@ -116,22 +115,19 @@ class KonnectedDevice(object):
         self.status = self.client.get_status()
         _LOGGER.info('Initialized Konnected device %s', self.device_id)
 
-    @callback
-    def async_setup(self):
+    async def async_setup(self):
         """Set up a newly discovered Konnected device."""
         user_config = self.config()
         if user_config:
             _LOGGER.debug('Configuring Konnected device %s', self.device_id)
             self.save_data()
-            self.hass.async_add_job(self.async_sync_device_config)
-            self.hass.async_add_job(
-                discovery.async_load_platform(
-                    self.hass, 'binary_sensor',
-                    DOMAIN, {'device_id': self.device_id}))
-            self.hass.async_add_job(
-                discovery.async_load_platform(
-                    self.hass, 'switch', DOMAIN,
-                    {'device_id': self.device_id}))
+            await self.async_sync_device_config()
+            await discovery.async_load_platform(
+                self.hass, 'binary_sensor',
+                DOMAIN, {'device_id': self.device_id})
+            await discovery.async_load_platform(
+                self.hass, 'switch', DOMAIN,
+                {'device_id': self.device_id})
 
     @property
     def device_id(self):
@@ -235,8 +231,7 @@ class KonnectedDevice(object):
                 for p, data in
                 self.stored_configuration[CONF_SWITCHES].items()]
 
-    @callback
-    def async_sync_device_config(self):
+    async def async_sync_device_config(self):
         """Sync the new pin configuration to the Konnected device."""
         desired_sensor_configuration = self.sensor_configuration()
         current_sensor_configuration = [
