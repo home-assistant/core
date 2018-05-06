@@ -146,7 +146,7 @@ batinfo==0.4.2
 beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
-bellows==0.5.2
+bellows==0.6.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.5.0
@@ -1382,7 +1382,7 @@ zeroconf==0.20.0
 ziggo-mediabox-xl==1.0.0
 
 # homeassistant.components.zha
-zigpy-xbee==0.0.2
+zigpy-xbee==0.1.0
 
 # homeassistant.components.zha
-zigpy==0.0.3
+zigpy==0.1.0
