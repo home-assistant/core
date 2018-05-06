@@ -83,7 +83,7 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         return 'Alarm {}'.format(self.simplisafe.location_id())
 
     @property
-    def format(self):
+    def code_format(self):
         """Return one or more digits/characters."""
         if re.search('^\d+$', self._code):
             return '^\d+$'
