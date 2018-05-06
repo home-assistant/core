@@ -130,3 +130,4 @@ class RainMachineEntity(Entity):
             self.rainmachine.device_mac.replace(
                 ':', ''), self._rainmachine_type,
             self._rainmachine_entity_id)
+
