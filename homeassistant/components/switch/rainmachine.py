@@ -143,12 +143,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RainMachineSwitch(RainMachineEntity, SwitchDevice):
     """A class to represent a generic RainMachine entity."""
 
-    def __init__(self, rainmachine, rainmachine_type, obj):
+    def __init__(self, rainmachine, rainmachine_type, obj, name):
         """Initialize a generic RainMachine entity."""
         self._obj = obj
         self._type = rainmachine_type
 
-        super().__init__(rainmachine, rainmachine_type, obj.get('uid'))
+        super().__init__(rainmachine, rainmachine_type, obj.get('uid'), name)
 
     @property
     def is_enabled(self) -> bool:
@@ -161,17 +161,13 @@ class RainMachineProgram(RainMachineSwitch):
 
     def __init__(self, rainmachine, obj):
         """Initialize."""
-        super().__init__(rainmachine, 'program', obj)
+        super().__init__(rainmachine, 'program', obj, 'Program: {0}'.format(
+            obj.get('name')))
 
     @property
     def is_on(self) -> bool:
         """Return whether the program is running."""
         return bool(self._obj.get('status'))
-
-    @property
-    def name(self) -> str:
-        """Return the name of the program."""
-        return 'Program: {0}'.format(self._obj.get('name'))
 
     @property
     def zones(self) -> list:
@@ -226,7 +222,8 @@ class RainMachineZone(RainMachineSwitch):
 
     def __init__(self, rainmachine, obj, zone_run_time):
         """Initialize a RainMachine zone."""
-        super().__init__(rainmachine, 'zone', obj)
+        super().__init__(rainmachine, 'zone', obj, 'Zone: {0}'.format(
+            obj.get('name')))
 
         self._properties_json = {}
         self._run_time = zone_run_time
@@ -235,11 +232,6 @@ class RainMachineZone(RainMachineSwitch):
     def is_on(self) -> bool:
         """Return whether the zone is running."""
         return bool(self._obj.get('state'))
-
-    @property
-    def name(self) -> str:
-        """Return the name of the zone."""
-        return 'Zone: {0}'.format(self._obj.get('name'))
 
     @callback
     def _program_updated(self):
