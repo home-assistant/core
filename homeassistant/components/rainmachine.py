@@ -5,14 +5,18 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rainmachine/
 """
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, CONF_SSL,
+    ATTR_ATTRIBUTION, CONF_IP_ADDRESS,
+    CONF_PASSWORD, CONF_PORT, CONF_SSL,
     CONF_SWITCHES)
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import track_time_interval
 
 REQUIREMENTS = ['regenmaschine==0.4.1']
 
@@ -29,18 +33,18 @@ CONF_ZONE_RUN_TIME = 'zone_run_time'
 DEFAULT_ATTRIBUTION = 'Data provided by Green Electronics LLC'
 DEFAULT_ICON = 'mdi:water'
 DEFAULT_PORT = 8080
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_SSL = True
 
+DATA_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
 PROGRAM_UPDATE_TOPIC = '{0}_program_update'.format(DOMAIN)
 
-SWITCH_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ZONE_RUN_TIME):
-        cv.positive_int
-})
+SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int})
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema({
+        DOMAIN:
+        vol.Schema({
             vol.Required(CONF_IP_ADDRESS): cv.string,
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -68,8 +72,7 @@ def setup(hass, config):
     try:
         auth = Authenticator.create_local(
             ip_address, password, port=port, https=ssl)
-        client = Client(auth)
-        hass.data[DATA_RAINMACHINE] = RainMachine(client)
+        hass.data[DATA_RAINMACHINE] = RainMachine(Client(auth))
     except (HTTPError, ConnectTimeout, UnboundLocalError) as exc_info:
         _LOGGER.error('An error occurred: %s', str(exc_info))
         hass.components.persistent_notification.create(
@@ -84,6 +87,14 @@ def setup(hass, config):
     switch_config = conf.get(CONF_SWITCHES, {})
     discovery.load_platform(hass, 'switch', DOMAIN, switch_config, config)
 
+    def refresh(event_time):
+        """Call Raincloud hub to refresh information."""
+        _LOGGER.debug("Updating RainMachine data")
+        hass.data[DATA_RAINMACHINE].update()
+        dispatcher_send(hass, DATA_UPDATE_TOPIC)
+
+    track_time_interval(hass, refresh, DEFAULT_SCAN_INTERVAL)
+
     _LOGGER.debug('Setup complete')
 
     return True
@@ -96,6 +107,15 @@ class RainMachine(object):
         """Initialize."""
         self.client = client
         self.device_mac = self.client.provision.wifi()['macAddress']
+        self.restrictions = {}
+
+        self.update()
+
+    def update(self):
+        """Update sensor/binary sensor data."""
+        self.restrictions.update({
+            'current': self.client.restrictions.current()
+        })
 
 
 class RainMachineEntity(Entity):
@@ -127,6 +147,5 @@ class RainMachineEntity(Entity):
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
         return '{0}_{1}_{2}'.format(
-            self.rainmachine.device_mac.replace(
-                ':', ''), self._rainmachine_type,
-            self._rainmachine_entity_id)
+            self.rainmachine.device_mac.replace(':', ''),
+            self._rainmachine_type, self._rainmachine_entity_id)
