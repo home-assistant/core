@@ -11,7 +11,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES)
 
 from . import TYPES
-from .accessories import HomeAccessory
+from .accessories import HomeAccessory, debounce
 from .const import (
     SERV_WINDOW_COVERING, CHAR_CURRENT_POSITION,
     CHAR_TARGET_POSITION, CHAR_POSITION_STATE,
@@ -80,6 +80,7 @@ class WindowCovering(HomeAccessory):
         self.char_target_position = serv_cover.configure_char(
             CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover)
 
+    @debounce
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set position to %d', self.entity_id, value)
@@ -122,6 +123,7 @@ class WindowCoveringBasic(HomeAccessory):
         self.char_position_state = serv_cover.configure_char(
             CHAR_POSITION_STATE, value=2)
 
+    @debounce
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set position to %d', self.entity_id, value)
