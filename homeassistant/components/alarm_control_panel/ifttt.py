@@ -126,8 +126,8 @@ class IFTTTAlarmPanel(alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        if re.search('^\d+$', self._code):
-            return '^\d+$'
+        if re.search('^\\d+$', self._code):
+            return '^\\d+$'
         return None if self._code is None else '.+'
 
     def alarm_disarm(self, code=None):
