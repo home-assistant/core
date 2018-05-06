@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED,
-    CONF_IP_ADDRESS, CONF_NAME, ATTR_TEMPERATURE)
+    CONF_IP_ADDRESS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pygogogate2==0.1.1']
@@ -70,7 +70,6 @@ class MyGogogate2Device(CoverDevice):
         self.device_id = device['door']
         self._name = name or device['name']
         self._status = device['status']
-        self._temperature = device['temperature']
         self._available = None
 
     @property
@@ -92,13 +91,6 @@ class MyGogogate2Device(CoverDevice):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes."""
-        data = super().state_attributes
-        data[ATTR_TEMPERATURE] = self._temperature
-        return data
 
     @property
     def available(self):
