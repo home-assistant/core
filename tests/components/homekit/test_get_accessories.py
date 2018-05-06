@@ -16,7 +16,7 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def test_get_accessory_invalid_aid(caplog):
+def test_invalid_aid(caplog):
     """Test with unsupported component."""
     assert get_accessory(None, State('light.demo', 'on'),
                          None, None) is None
@@ -30,11 +30,14 @@ def test_not_supported():
         is None
 
 
-def test_get_accessory_customize_name():
+def test_customize_name():
     """Test with customized name."""
-    config = {CONF_NAME: 'Customize Name'}
-    acc = get_accessory(None, State('light.demo', 'on'), 2, config)
-    assert acc.display_name == 'Customize Name'
+    mock_type = Mock()
+    with patch.dict(TYPES, {'Light': mock_type}):
+        config = {CONF_NAME: 'Customize Name'}
+        get_accessory(None, State('light.demo', 'on'), 2, config)
+        mock_type.assert_called_with(
+            None, 'Customize Name', 'light.demo', 2, config)
 
 
 @pytest.mark.parametrize('type_name, entity_id, state, attrs, config', [
