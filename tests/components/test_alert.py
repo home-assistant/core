@@ -146,6 +146,31 @@ class TestAlert(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(events))
 
+    def test_notification_name(self):
+        """Test notifications."""
+        events = []
+        config = deepcopy(TEST_CONFIG)
+        del(config[alert.DOMAIN][NAME][alert.CONF_NAME])
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.services.register(
+            notify.DOMAIN, NOTIFIER, record_event)
+
+        assert setup_component(self.hass, alert.DOMAIN, config)
+        self.assertEqual(0, len(events))
+
+        self.hass.states.set("sensor.test", STATE_ON)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(events))
+
+        self.hass.states.set("sensor.test", STATE_OFF)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(events))
+
     def test_notification(self):
         """Test notifications."""
         events = []
