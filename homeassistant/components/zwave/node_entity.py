@@ -152,15 +152,9 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
         if not self._unique_id:
             self._unique_id = self._compute_unique_id()
-            if self._unique_id and self.component and self.hass:
+            if self._unique_id:
                 # Node info parsed. Remove and re-add
-                async def remove_and_add():
-                    """Remove this entity and add it back."""
-                    await self.async_remove()
-                    self.entity_id = None
-                    await self.component.async_add_entities([self])
-                    self.component = None
-                self.hass.add_job(remove_and_add)
+                self.try_remove_and_add()
 
         self.maybe_schedule_update()
 
@@ -251,6 +245,15 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             attrs[ATTR_WAKEUP] = self.wakeup_interval
 
         return attrs
+
+    def try_remove_and_add(self):
+        """Remove this entity and add it back."""
+        async def _async_remove_and_add():
+            await self.async_remove()
+            self.entity_id = None
+            await self.platform.async_add_entities([self])
+        if self.hass and self.platform:
+            self.hass.add_job(_async_remove_and_add)
 
     def _compute_unique_id(self):
         if self._manufacturer_name and self._product_name:
