@@ -19,6 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the SABnzbd sensors."""
+    if discovery_info is None:
+        return
+
     sab_api_data = hass.data[DATA_SABNZBD]
     sensors = sab_api_data.sensors
     client_name = sab_api_data.name
