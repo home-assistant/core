@@ -171,11 +171,6 @@ class RainMachineEntity(Entity):
         return self._name
 
     @property
-    def state(self) -> str:
-        """Return the name of the entity."""
-        return self._state
-
-    @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
         return '{0}_{1}_{2}'.format(

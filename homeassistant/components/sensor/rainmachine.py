@@ -61,6 +61,11 @@ class RainMachineSensor(RainMachineEntity):
         """Disable polling."""
         return False
 
+    @property
+    def state(self) -> str:
+        """Return the name of the entity."""
+        return self._state
+
     async def async_added_to_hass(self):
         """Register callbacks."""
         def update_data():

@@ -71,6 +71,11 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
         self._sensor_type = sensor_type
 
     @property
+    def is_on(self):
+        """Return the status of the sensor."""
+        return self._state
+
+    @property
     def should_poll(self):
         """Disable polling."""
         return False
