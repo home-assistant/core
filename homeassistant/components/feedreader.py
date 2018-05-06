@@ -89,8 +89,12 @@ class FeedManager(object):
             _LOGGER.error("Error fetching feed data from %s", self._url)
             self._last_update_successful = False
         else:
-            # If an error is detected, output message but continue processing
-            # the feed entries.
+            # The 'bozo' flag really only indicates that there was an issue
+            # during the initial parsing of the XML, but it doesn't indicate
+            # whether this is an unrecoverable error. In this case the
+            # feedparser lib is trying a less strict parsing approach.
+            # If an error is detected here, log error message but continue
+            # processing the feed entries if present.
             if self._feed.bozo != 0:
                 _LOGGER.error("Error parsing feed %s: %s", self._url,
                               self._feed.bozo_exception)
