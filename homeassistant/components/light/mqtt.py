@@ -37,6 +37,8 @@ CONF_BRIGHTNESS_VALUE_TEMPLATE = 'brightness_value_template'
 CONF_COLOR_TEMP_COMMAND_TOPIC = 'color_temp_command_topic'
 CONF_COLOR_TEMP_STATE_TOPIC = 'color_temp_state_topic'
 CONF_COLOR_TEMP_VALUE_TEMPLATE = 'color_temp_value_template'
+CONF_COLOR_TEMP_MIREDS_MIN = 'color_temp_mireds_min'
+CONF_COLOR_TEMP_MIREDS_MAX = 'color_temp_mireds_max'
 CONF_EFFECT_COMMAND_TOPIC = 'effect_command_topic'
 CONF_EFFECT_LIST = 'effect_list'
 CONF_EFFECT_STATE_TOPIC = 'effect_state_topic'
@@ -46,6 +48,15 @@ CONF_RGB_COMMAND_TOPIC = 'rgb_command_topic'
 CONF_RGB_STATE_TOPIC = 'rgb_state_topic'
 CONF_RGB_VALUE_TEMPLATE = 'rgb_value_template'
 CONF_STATE_VALUE_TEMPLATE = 'state_value_template'
+CONF_HUE = "hue"
+CONF_HUE_COMMAND_TOPIC = 'hue_command_topic'
+CONF_HUE_STATE_TOPIC = 'hue_state_topic'
+CONF_HUE_VALUE_TEMPLATE = 'hue_value_template'
+CONF_HUE_SCALE = 'hue_scale'
+CONF_SATURATION = "saturation"
+CONF_SATURATION_COMMAND_TOPIC = 'saturation_command_topic'
+CONF_SATURATION_STATE_TOPIC = 'saturation_state_topic'
+CONF_SATURATION_VALUE_TEMPLATE = 'saturation_value_template'
 CONF_XY_COMMAND_TOPIC = 'xy_command_topic'
 CONF_XY_STATE_TOPIC = 'xy_state_topic'
 CONF_XY_VALUE_TEMPLATE = 'xy_value_template'
@@ -56,6 +67,9 @@ CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
 CONF_ON_COMMAND_TYPE = 'on_command_type'
 
 DEFAULT_BRIGHTNESS_SCALE = 255
+DEFAULT_COLOR_TEMP_MIREDS_MIN = 153
+DEFAULT_COLOR_TEMP_MIREDS_MAX = 500
+DEFAULT_HUE_SCALE = 360
 DEFAULT_NAME = 'MQTT Light'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_OFF = 'OFF'
@@ -74,6 +88,10 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_COLOR_TEMP_MIREDS_MIN, default=DEFAULT_COLOR_TEMP_MIREDS_MIN):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_COLOR_TEMP_MIREDS_MAX, default=DEFAULT_COLOR_TEMP_MIREDS_MAX):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Optional(CONF_EFFECT_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_EFFECT_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -87,6 +105,14 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_RGB_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_RGB_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_HUE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_HUE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_HUE_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_HUE_SCALE, default=DEFAULT_HUE_SCALE):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_SATURATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_SATURATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_SATURATION_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_WHITE_VALUE_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_WHITE_VALUE_SCALE, default=DEFAULT_WHITE_VALUE_SCALE):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
@@ -123,6 +149,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 CONF_EFFECT_STATE_TOPIC,
                 CONF_RGB_COMMAND_TOPIC,
                 CONF_RGB_STATE_TOPIC,
+                CONF_HUE_COMMAND_TOPIC,
+                CONF_HUE_STATE_TOPIC,
+                CONF_SATURATION_COMMAND_TOPIC,
+                CONF_SATURATION_STATE_TOPIC,
                 CONF_STATE_TOPIC,
                 CONF_WHITE_VALUE_COMMAND_TOPIC,
                 CONF_WHITE_VALUE_STATE_TOPIC,
@@ -136,6 +166,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             CONF_EFFECT: config.get(CONF_EFFECT_VALUE_TEMPLATE),
             CONF_RGB: config.get(CONF_RGB_VALUE_TEMPLATE),
             CONF_RGB_COMMAND_TEMPLATE: config.get(CONF_RGB_COMMAND_TEMPLATE),
+            CONF_HUE: config.get(CONF_HUE_VALUE_TEMPLATE),
+            CONF_SATURATION: config.get(CONF_SATURATION_VALUE_TEMPLATE),
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
             CONF_WHITE_VALUE: config.get(CONF_WHITE_VALUE_TEMPLATE),
             CONF_XY: config.get(CONF_XY_VALUE_TEMPLATE),
@@ -148,6 +180,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         },
         config.get(CONF_OPTIMISTIC),
         config.get(CONF_BRIGHTNESS_SCALE),
+        config.get(CONF_COLOR_TEMP_MIREDS_MIN),
+        config.get(CONF_COLOR_TEMP_MIREDS_MAX),
+        config.get(CONF_HUE_SCALE),
         config.get(CONF_WHITE_VALUE_SCALE),
         config.get(CONF_ON_COMMAND_TYPE),
         config.get(CONF_AVAILABILITY_TOPIC),
@@ -161,6 +196,7 @@ class MqttLight(MqttAvailability, Light):
 
     def __init__(self, name, effect_list, topic, templates, qos,
                  retain, payload, optimistic, brightness_scale,
+                 color_temp_mireds_min, color_temp_mireds_max, hue_scale,
                  white_value_scale, on_command_type, availability_topic,
                  payload_available, payload_not_available):
         """Initialize MQTT light."""
@@ -176,6 +212,9 @@ class MqttLight(MqttAvailability, Light):
         self._optimistic = optimistic or topic[CONF_STATE_TOPIC] is None
         self._optimistic_rgb = \
             optimistic or topic[CONF_RGB_STATE_TOPIC] is None
+        self._optimistic_hs_color = \
+            optimistic or (topic[CONF_HUE_STATE_TOPIC] is None and \
+            topic[CONF_SATURATION_STATE_TOPIC])
         self._optimistic_brightness = (
             optimistic or topic[CONF_BRIGHTNESS_STATE_TOPIC] is None)
         self._optimistic_color_temp = (
@@ -187,6 +226,9 @@ class MqttLight(MqttAvailability, Light):
         self._optimistic_xy = \
             optimistic or topic[CONF_XY_STATE_TOPIC] is None
         self._brightness_scale = brightness_scale
+        self._color_temp_mireds_min = color_temp_mireds_min
+        self._color_temp_mireds_max = color_temp_mireds_max
+        self._hue_scale = hue_scale
         self._white_value_scale = white_value_scale
         self._on_command_type = on_command_type
         self._state = False
@@ -212,6 +254,9 @@ class MqttLight(MqttAvailability, Light):
             SUPPORT_WHITE_VALUE)
         self._supported_features |= (
             topic[CONF_XY_COMMAND_TOPIC] is not None and SUPPORT_COLOR)
+        self._supported_features |= (
+            topic[CONF_HUE_COMMAND_TOPIC] is not None and \
+            topic[CONF_SATURATION_COMMAND_TOPIC] is not None and SUPPORT_COLOR)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -276,9 +321,40 @@ class MqttLight(MqttAvailability, Light):
             self._hs = (0, 0)
 
         @callback
+        def hue_received(topic, payload, qos):
+            """Handle new MQTT messages for hue."""
+            hue_value = float(templates[CONF_HUE](payload))
+            percent_hue = hue_value / self._hue_scale
+            self._hs = (int(percent_hue * 360), self._hs[1])
+            self.async_schedule_update_ha_state()
+
+        if self._topic[CONF_HUE_STATE_TOPIC] is not None:
+            yield from mqtt.async_subscribe(
+                self.hass, self._topic[CONF_HUE_STATE_TOPIC],
+                hue_received, self._qos)
+            self._hs = (0, 0)
+        if self._topic[CONF_HUE_COMMAND_TOPIC] is not None:
+            self._hs = (0, 0)
+
+        @callback
+        def saturation_received(topic, payload, qos):
+            """Handle new MQTT messages for saturation."""
+            saturation_value = float(templates[CONF_SATURATION](payload))
+            self._hs = (self._hs[0], int(saturation_value))
+            self.async_schedule_update_ha_state()
+
+        if self._topic[CONF_SATURATION_STATE_TOPIC] is not None:
+            yield from mqtt.async_subscribe(
+                self.hass, self._topic[CONF_SATURATION_STATE_TOPIC],
+                saturation_received, self._qos)
+            self._hs = (0, 0)
+        if self._topic[CONF_SATURATION_COMMAND_TOPIC] is not None:
+            self._hs = (0, 0)
+
+        @callback
         def color_temp_received(topic, payload, qos):
             """Handle new MQTT messages for color temperature."""
-            self._color_temp = int(templates[CONF_COLOR_TEMP](payload))
+            self._color_temp = int(float(templates[CONF_COLOR_TEMP](payload)))
             self.async_schedule_update_ha_state()
 
         if self._topic[CONF_COLOR_TEMP_STATE_TOPIC] is not None:
@@ -345,6 +421,14 @@ class MqttLight(MqttAvailability, Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
+
+    @property
+    def min_mireds(self):
+        return self._color_temp_mireds_min
+
+    @property
+    def max_mireds(self):
+        return self._color_temp_mireds_max
 
     @property
     def hs_color(self):
@@ -454,6 +538,25 @@ class MqttLight(MqttAvailability, Light):
                 self._retain)
 
             if self._optimistic_xy:
+                self._hs = kwargs[ATTR_HS_COLOR]
+                should_update = True
+
+        if ATTR_HS_COLOR in kwargs and \
+           self._topic[CONF_HUE_COMMAND_TOPIC] is not None and \
+           self._topic[CONF_SATURATION_COMMAND_TOPIC] is not None:
+
+            hs_color = kwargs[ATTR_HS_COLOR]
+            percent_hue = float(hs_color[0]) / 360
+            hue_value = int(percent_hue * self._hue_scale)
+            saturation_value = int(hs_color[1])
+            mqtt.async_publish(
+                self.hass, self._topic[CONF_HUE_COMMAND_TOPIC],
+                hue_value, self._qos, self._retain)
+            mqtt.async_publish(
+                self.hass, self._topic[CONF_SATURATION_COMMAND_TOPIC],
+                saturation_value, self._qos, self._retain)
+
+            if self._optimistic_hs_color:
                 self._hs = kwargs[ATTR_HS_COLOR]
                 should_update = True
 
