@@ -34,6 +34,7 @@ CONFIG_FILE = 'sabnzbd.conf'
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'SABnzbd'
 DEFAULT_PORT = 8080
+DEFAULT_SPEED_LIMIT = '100'
 DEFAULT_SSL = False
 
 UPDATE_INTERVAL = timedelta(seconds=30)
@@ -59,7 +60,7 @@ SENSOR_TYPES = {
 }
 
 SPEED_LIMIT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_SPEED): cv.string,
+    vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -99,11 +100,7 @@ async def async_configure_sabnzbd(hass, config, use_ssl, name=DEFAULT_NAME,
     if api_key is None:
         conf = await hass.async_add_job(load_json,
                                         hass.config.path(CONFIG_FILE))
-
-        if conf.get(base_url, {}).get(CONF_API_KEY):
-            api_key = conf[base_url][CONF_API_KEY]
-        else:
-            api_key = ''
+        api_key = conf.get(base_url, {}).get(CONF_API_KEY, '')
 
     sab_api = SabnzbdApi(base_url, api_key)
     if await async_check_sabnzbd(sab_api):
@@ -147,9 +144,7 @@ def async_setup_sabnzbd(hass, sab_api, config, name):
         elif service.service == SERVICE_RESUME:
             await sab_api_data.async_resume_queue()
         elif service.service == SERVICE_SET_SPEED:
-            speed = service.data.get(ATTR_SPEED, None)
-            if speed is None:
-                speed = '100'
+            speed = service.data.get(ATTR_SPEED)
             await sab_api_data.async_set_queue_speed(speed)
 
     hass.services.async_register(DOMAIN, SERVICE_PAUSE,
@@ -194,19 +189,20 @@ def async_request_configuration(hass, config, host):
         """Handle configuration changes."""
         api_key = data.get(CONF_API_KEY)
         sab_api = SabnzbdApi(host, api_key)
-        if await async_check_sabnzbd(sab_api):
+        if not await async_check_sabnzbd(sab_api):
+            return
 
-            def success():
-                """Setup was successful."""
-                conf = load_json(hass.config.path(CONFIG_FILE))
-                conf[host] = {CONF_API_KEY: api_key}
-                save_json(hass.config.path(CONFIG_FILE), conf)
-                req_config = _CONFIGURING.pop(host)
-                configurator.request_done(req_config)
+        def success():
+            """Setup was successful."""
+            conf = load_json(hass.config.path(CONFIG_FILE))
+            conf[host] = {CONF_API_KEY: api_key}
+            save_json(hass.config.path(CONFIG_FILE), conf)
+            req_config = _CONFIGURING.pop(host)
+            configurator.request_done(req_config)
 
-            hass.async_add_job(success)
-            async_setup_sabnzbd(hass, sab_api, config,
-                                config.get(CONF_NAME, DEFAULT_NAME))
+        hass.async_add_job(success)
+        async_setup_sabnzbd(hass, sab_api, config,
+                            config.get(CONF_NAME, DEFAULT_NAME))
 
     _CONFIGURING[host] = configurator.async_request_config(
         DEFAULT_NAME,
@@ -244,7 +240,7 @@ class SabnzbdApiData:
             _LOGGER.error(err)
             return False
 
-    async def async_set_queue_speed(self, limit='100'):
+    async def async_set_queue_speed(self, limit):
         """Set speed limit for the Sabnzbd queue."""
         from pysabnzbd import SabnzbdApiException
         try:
@@ -253,6 +249,6 @@ class SabnzbdApiData:
             _LOGGER.error(err)
             return False
 
-    def get_queue_field(self, field, default='Unknown'):
+    def get_queue_field(self, field):
         """Return the value for the given field from the Sabnzbd queue."""
-        return self.sab_api.queue.get(field, default)
+        return self.sab_api.queue.get(field)
