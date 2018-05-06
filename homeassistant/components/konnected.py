@@ -4,7 +4,6 @@ Support for Konnected devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/konnected/
 """
-import asyncio
 import logging
 import hmac
 import voluptuous as vol
@@ -70,9 +69,7 @@ CONFIG_SCHEMA = vol.Schema(
 DEPENDENCIES = ['http', 'discovery']
 
 ENDPOINT_ROOT = '/api/konnected'
-UPDATE_ENDPOINT = (
-    ENDPOINT_ROOT +
-    r'/device/{device_id:[a-zA-Z0-9]+}/{pin_num:[0-9]}/{state:[01]}')
+UPDATE_ENDPOINT = (ENDPOINT_ROOT + r'/device/{device_id:[a-zA-Z0-9]+}')
 
 
 async def async_setup(hass, config):
@@ -271,6 +268,7 @@ class KonnectedView(HomeAssistantView):
     """View creates an endpoint to receive push updates from the device."""
 
     url = UPDATE_ENDPOINT
+    extra_urls = [UPDATE_ENDPOINT + '/{pin_num}/{state}']
     name = 'api:konnected'
     requires_auth = False  # Uses access token from configuration
 
@@ -278,11 +276,14 @@ class KonnectedView(HomeAssistantView):
         """Initialize the view."""
         self.auth_token = auth_token
 
-    @asyncio.coroutine
-    def put(self, request: Request, device_id, pin_num, state) -> Response:
+    async def put(self, request: Request, device_id,
+                  pin_num=None, state=None) -> Response:
         """Receive a sensor update via PUT request and async set state."""
         hass = request.app['hass']
         data = hass.data[DOMAIN]
+        payload = await request.json()
+        pin_num = pin_num or payload['pin']
+        state = state or payload['state']
 
         auth = request.headers.get(AUTHORIZATION, None)
         if not hmac.compare_digest('Bearer {}'.format(self.auth_token), auth):
@@ -305,5 +306,5 @@ class KonnectedView(HomeAssistantView):
             return self.json_message('uninitialized sensor/actuator',
                                      status_code=HTTP_INTERNAL_SERVER_ERROR)
 
-        yield from entity.async_set_state(state)
+        await entity.async_set_state(state)
         return self.json_message('ok')
