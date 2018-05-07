@@ -105,7 +105,16 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
         except ImportError as err:
             # This error happens if for example custom_components/switch
             # exists and we try to load switch.demo.
-            if str(err) != "No module named '{}'".format(path):
+            # Ignore errors for custom_components, custom_components.switch
+            # and custom_components.switch.demo.
+            white_listed_errors = []
+            parts = []
+            for part in path.split('.'):
+                parts.append(part)
+                white_listed_errors.append(
+                    "No module named '{}'".format('.'.join(parts)))
+
+            if str(err) not in white_listed_errors:
                 _LOGGER.exception(
                     ("Error loading %s. Make sure all "
                      "dependencies are installed"), path)
