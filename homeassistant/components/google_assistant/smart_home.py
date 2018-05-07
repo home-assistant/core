@@ -15,7 +15,7 @@ from homeassistant.util.decorator import Registry
 
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES)
+    CONF_NAME, CONF_TYPE, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES)
 from homeassistant.components import (
     climate,
     cover,
@@ -82,7 +82,12 @@ class _GoogleEntity:
     def traits(self):
         """Return traits for entity."""
         state = self.state
-        domain = state.domain
+
+        entity_config = self.config.entity_config.get(state.entity_id, {})
+        type = entity_config.get(CONF_TYPE)
+
+        # Use the overridden type if available
+        domain = type or state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         return [Trait(state) for Trait in trait.TRAITS
@@ -123,7 +128,8 @@ class _GoogleEntity:
             'attributes': {},
             'traits': [trait.name for trait in traits],
             'willReportState': False,
-            'type': DOMAIN_TO_GOOGLE_TYPES[state.domain],
+            # Use the overridden type if available, to allow things like `remote` to work
+            'type': DOMAIN_TO_GOOGLE_TYPES[entity_config.get(CONF_TYPE) or state.domain],
         }
 
         # use aliases
