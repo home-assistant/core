@@ -120,3 +120,7 @@ async def test_custom_component_name(hass):
     comp = loader.get_component(hass, 'light.test')
     assert comp.__name__ == 'custom_components.light.test'
     assert comp.__package__ == 'custom_components.light'
+
+    # Test custom components is mounted
+    from custom_components.test_package import TEST
+    assert TEST == 5

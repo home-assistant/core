@@ -31,12 +31,6 @@ PREPARED = False
 
 DEPENDENCY_BLACKLIST = set(('config',))
 
-# List of available components
-AVAILABLE_COMPONENTS = []  # type: List[str]
-
-# Dict of loaded components mapped name => module
-_COMPONENT_CACHE = {}  # type: Dict[str, ModuleType]
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -64,83 +58,61 @@ def get_platform(hass, domain: str, platform: str) -> Optional[ModuleType]:
     return get_component(hass, PLATFORM_FORMAT.format(domain, platform))
 
 
-def get_component(hass, comp_or_platform):
-    """Load a module from either custom component or built-in."""
+def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
+    """Try to load specified component.
+
+    Looks in config dir first, then built-in components.
+    Only returns it if also found to be valid.
+    Async friendly.
+    """
     try:
         return hass.data[DATA_KEY][comp_or_platform]
     except KeyError:
         pass
 
-    # Try custom component
-    module = _load_module(hass.config.path(PATH_CUSTOM_COMPONENTS),
-                          PATH_CUSTOM_COMPONENTS, comp_or_platform)
-
-    if module is None:
-        try:
-            module = importlib.import_module(
-                '{}.{}'.format(PACKAGE_COMPONENTS, comp_or_platform))
-            _LOGGER.debug('Loaded %s (built-in)', comp_or_platform)
-        except ImportError:
-            _LOGGER.warning('Unable to find %s', comp_or_platform)
-            module = None
-
     cache = hass.data.get(DATA_KEY)
     if cache is None:
+        # Only insert if it's not there (happens during tests)
+        if sys.path[0] != hass.config.config_dir:
+            sys.path.insert(0, hass.config.config_dir)
         cache = hass.data[DATA_KEY] = {}
-    cache[comp_or_platform] = module
 
-    return module
+    # First check custom, then built-in
+    potential_paths = ['custom_components.{}'.format(comp_or_platform),
+                       'homeassistant.components.{}'.format(comp_or_platform)]
 
-
-def _find_spec(path, name):
-    for finder in sys.meta_path:
+    for path in potential_paths:
         try:
-            spec = finder.find_spec(name, path=path)
-            if spec is not None:
-                return spec
-        except AttributeError:
-            # Not all finders have the find_spec method
-            pass
+            module = importlib.import_module(path)
+
+            # In Python 3 you can import files from directories that do not
+            # contain the file __init__.py. A directory is a valid module if
+            # it contains a file with the .py extension. In this case Python
+            # will succeed in importing the directory as a module and call it
+            # a namespace. We do not care about namespaces.
+            # This prevents that when only
+            # custom_components/switch/some_platform.py exists,
+            # the import custom_components.switch would succeed.
+            if module.__spec__.origin == 'namespace':
+                continue
+
+            _LOGGER.info("Loaded %s from %s", comp_or_platform, path)
+
+            cache[comp_or_platform] = module
+
+            return module
+
+        except ImportError as err:
+            # This error happens if for example custom_components/switch
+            # exists and we try to load switch.demo.
+            if str(err) != "No module named '{}'".format(path):
+                _LOGGER.exception(
+                    ("Error loading %s. Make sure all "
+                     "dependencies are installed"), path)
+
+    _LOGGER.error("Unable to find component %s", comp_or_platform)
+
     return None
-
-
-def _load_module(path, base_module, name):
-    """Load a module based on a folder and a name."""
-    mod_name = "{}.{}".format(base_module, name)
-    spec = _find_spec([path], name)
-
-    # Special handling if loading platforms and the folder is a namespace
-    # (namespace is a folder without __init__.py)
-    if spec is None and '.' in name:
-        mod_parent_name = name.split('.')[0]
-        parent_spec = _find_spec([path], mod_parent_name)
-        if (parent_spec is None or
-                parent_spec.submodule_search_locations is None):
-            return None
-        spec = _find_spec(parent_spec.submodule_search_locations, mod_name)
-
-    # Not found
-    if spec is None:
-        return None
-
-    # This is a namespace
-    if spec.loader is None:
-        return None
-
-    _LOGGER.debug('Loaded %s (%s)', name, base_module)
-
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    # A hack, I know. Don't currently know how to work around it.
-    if not module.__name__.startswith(base_module):
-        module.__name__ = "{}.{}".format(base_module, name)
-
-    if not module.__package__:
-        module.__package__ = base_module
-    elif not module.__package__.startswith(base_module):
-        module.__package__ = "{}.{}".format(base_module, name)
-
-    return module
 
 
 class Components:
