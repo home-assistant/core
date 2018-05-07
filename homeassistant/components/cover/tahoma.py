@@ -1,6 +1,5 @@
 """
 Support for Tahoma cover - shutters etc.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.tahoma/
 """
@@ -35,7 +34,6 @@ class TahomaCover(TahomaDevice, CoverDevice):
     def current_cover_position(self):
         """
         Return current position of cover.
-
         0 is closed, 100 is fully open.
         """
         try:
@@ -79,11 +77,8 @@ class TahomaCover(TahomaDevice, CoverDevice):
         if self.tahoma_device.type == \
            'io:RollerShutterWithLowSpeedManagementIOComponent':
             self.apply_action('setPosition', 'secured')
-        elif self.tahoma_device.type == 'rts:BlindRTSComponent':
-            self.apply_action('my')
-        elif self.tahoma_device.type == 'io:RollerShutterUnoIOComponent':
-            self.apply_action('my')
-        elif self.tahoma_device.type == 'io:ExteriorVenetianBlindIOComponent':
+        elif self.tahoma_device.type == 'rts:BlindRTSComponent' or \
+             self.tahoma_device.type == 'io:ExteriorVenetianBlindIOComponent':
             self.apply_action('my')
         else:
             self.apply_action('stopIdentify')
