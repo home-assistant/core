@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Most je \u017ee nastavljen",
+            "no_bridges": "Ni odkritih mostov deCONZ",
+            "one_instance_only": "Komponenta podpira le en primerek deCONZ"
+        },
+        "error": {
+            "no_key": "Klju\u010da API ni mogo\u010de dobiti"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Gostitelj",
+                    "port": "Vrata (privzeta vrednost: '80')"
+                },
+                "title": "Dolo\u010dite deCONZ prehod"
+            },
+            "link": {
+                "description": "Odklenite va\u0161 deCONZ gateway za registracijo z Home Assistant-om. \n1. Pojdite v deCONT sistemske nastavitve\n2. Pritisnite tipko \"odkleni prehod\"",
+                "title": "Povezava z deCONZ"
+            }
+        },
+        "title": "deCONZ"
+    }
+}

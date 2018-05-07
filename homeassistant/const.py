@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 68
+MINOR_VERSION = 70
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -165,6 +165,12 @@ EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 EVENT_THEMES_UPDATED = 'themes_updated'
+
+# #### DEVICE CLASSES ####
+DEVICE_CLASS_BATTERY = 'battery'
+DEVICE_CLASS_HUMIDITY = 'humidity'
+DEVICE_CLASS_ILLUMINANCE = 'illuminance'
+DEVICE_CLASS_TEMPERATURE = 'temperature'
 
 # #### STATES ####
 STATE_ON = 'on'

@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.mqtt/
 """
 import logging
+from typing import Optional
 
 import voluptuous as vol
 
@@ -16,9 +17,10 @@ from homeassistant.components.mqtt import (
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
-    CONF_PAYLOAD_ON, CONF_ICON)
+    CONF_PAYLOAD_ON, CONF_ICON, STATE_ON)
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,12 +30,14 @@ DEFAULT_NAME = 'MQTT Switch'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_OPTIMISTIC = False
+CONF_UNIQUE_ID = 'unique_id'
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
@@ -61,6 +65,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         config.get(CONF_OPTIMISTIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+        config.get(CONF_UNIQUE_ID),
         value_template,
     )])
 
@@ -71,7 +76,8 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
     def __init__(self, name, icon,
                  state_topic, command_topic, availability_topic,
                  qos, retain, payload_on, payload_off, optimistic,
-                 payload_available, payload_not_available, value_template):
+                 payload_available, payload_not_available,
+                 unique_id: Optional[str], value_template):
         """Initialize the MQTT switch."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
@@ -86,6 +92,7 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
         self._payload_off = payload_off
         self._optimistic = optimistic
         self._template = value_template
+        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -112,6 +119,12 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
                 self.hass, self._state_topic, state_message_received,
                 self._qos)
 
+        if self._optimistic:
+            last_state = await async_get_last_state(self.hass,
+                                                    self.entity_id)
+            if last_state:
+                self._state = last_state.state == STATE_ON
+
     @property
     def should_poll(self):
         """Return the polling state."""
@@ -131,6 +144,11 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
     def assumed_state(self):
         """Return true if we do optimistic updates."""
         return self._optimistic
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def icon(self):

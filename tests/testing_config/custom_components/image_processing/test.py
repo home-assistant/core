@@ -3,9 +3,11 @@
 from homeassistant.components.image_processing import ImageProcessingEntity
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices_callback,
+                               discovery_info=None):
     """Set up the test image_processing platform."""
-    add_devices([TestImageProcessing('camera.demo_camera', "Test")])
+    async_add_devices_callback([
+        TestImageProcessing('camera.demo_camera', "Test")])
 
 
 class TestImageProcessing(ImageProcessingEntity):

@@ -4,7 +4,9 @@ from unittest.mock import call, patch, ANY, Mock
 
 from homeassistant import setup
 from homeassistant.core import State
-from homeassistant.components.homekit import HomeKit, generate_aid
+from homeassistant.components.homekit import (
+    HomeKit, generate_aid,
+    STATUS_READY, STATUS_RUNNING, STATUS_STOPPED, STATUS_WAIT)
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     DOMAIN, HOMEKIT_FILE, CONF_AUTO_START,
@@ -79,24 +81,28 @@ class TestHomeKit(unittest.TestCase):
                            CONF_IP_ADDRESS: '172.0.0.0'}}
         self.assertTrue(setup.setup_component(
             self.hass, DOMAIN, config))
-
-        self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
 
         self.assertEqual(mock_homekit.mock_calls, [
             call(self.hass, 11111, '172.0.0.0', ANY, {}),
             call().setup()])
 
-        # Test start call with driver stopped.
+        # Test auto_start disabled
         homekit.reset_mock()
-        homekit.configure_mock(**{'started': False})
+        self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
+        self.hass.block_till_done()
+        self.assertEqual(homekit.mock_calls, [])
+
+        # Test start call with driver is ready
+        homekit.reset_mock()
+        homekit.status = STATUS_READY
 
         self.hass.services.call('homekit', 'start')
         self.assertEqual(homekit.mock_calls, [call.start()])
 
-        # Test start call with driver started.
+        # Test start call with driver started
         homekit.reset_mock()
-        homekit.configure_mock(**{'started': True})
+        homekit.status = STATUS_STOPPED
 
         self.hass.services.call(DOMAIN, SERVICE_HOMEKIT_START)
         self.assertEqual(homekit.mock_calls, [])
@@ -180,34 +186,38 @@ class TestHomeKit(unittest.TestCase):
         state = self.hass.states.all()[0]
 
         homekit.start()
+        self.hass.block_till_done()
 
         self.assertEqual(mock_add_bridge_acc.mock_calls, [call(state)])
         self.assertEqual(mock_show_setup_msg.mock_calls, [
             call(self.hass, homekit.bridge)])
         self.assertEqual(homekit.driver.mock_calls, [call.start()])
-        self.assertTrue(homekit.started)
+        self.assertEqual(homekit.status, STATUS_RUNNING)
 
         # Test start() if already started
         homekit.driver.reset_mock()
         homekit.start()
+        self.hass.block_till_done()
         self.assertEqual(homekit.driver.mock_calls, [])
 
     def test_homekit_stop(self):
         """Test HomeKit stop method."""
-        homekit = HomeKit(None, None, None, None, None)
+        homekit = HomeKit(self.hass, None, None, None, None)
         homekit.driver = Mock()
 
-        # Test if started = False
+        self.assertEqual(homekit.status, STATUS_READY)
         homekit.stop()
-        self.assertFalse(homekit.driver.stop.called)
-
-        # Test if driver not started
-        homekit.started = True
-        homekit.driver.configure_mock(**{'run_sentinel': None})
+        self.hass.block_till_done()
+        homekit.status = STATUS_WAIT
         homekit.stop()
+        self.hass.block_till_done()
+        homekit.status = STATUS_STOPPED
+        homekit.stop()
+        self.hass.block_till_done()
         self.assertFalse(homekit.driver.stop.called)
 
         # Test if driver is started
-        homekit.driver.configure_mock(**{'run_sentinel': 'sentinel'})
+        homekit.status = STATUS_RUNNING
         homekit.stop()
+        self.hass.block_till_done()
         self.assertTrue(homekit.driver.stop.called)

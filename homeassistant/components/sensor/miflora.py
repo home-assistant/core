@@ -38,7 +38,7 @@ DEFAULT_TIMEOUT = 10
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
     'temperature': ['Temperature', '°C'],
-    'light': ['Light intensity', 'lux'],
+    'light': ['Light intensity', 'lx'],
     'moisture': ['Moisture', '%'],
     'conductivity': ['Conductivity', 'µS/cm'],
     'battery': ['Battery', '%'],
