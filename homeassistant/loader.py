@@ -72,7 +72,9 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
 
     cache = hass.data.get(DATA_KEY)
     if cache is None:
-        sys.path.insert(0, hass.config.config_dir)
+        # Only insert if it's not there (happens during tests)
+        if sys.path[0] != hass.config.config_dir:
+            sys.path.insert(0, hass.config.config_dir)
         cache = hass.data[DATA_KEY] = {}
 
     # First check custom, then built-in
