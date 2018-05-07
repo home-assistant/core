@@ -144,7 +144,7 @@ class AuthProvidersView(HomeAssistantView):
     requires_auth = False
 
     @verify_client
-    async def get(self, request, client_id):
+    async def get(self, request, client):
         """Get available auth providers."""
         return self.json([{
             'name': provider.name,
@@ -166,8 +166,12 @@ class LoginFlowIndexView(FlowManagerIndexView):
 
     # pylint: disable=arguments-differ
     @verify_client
-    async def post(self, request, client_id):
+    async def post(self, request, client):
         """Create a new login flow."""
+        redirect_uri = request.query.get('redirect_uri')
+
+        # TODO verify redirect_uri !
+
         # pylint: disable=no-value-for-parameter
         return await super().post(request)
 
@@ -192,7 +196,7 @@ class LoginFlowResourceView(FlowManagerResourceView):
     # pylint: disable=arguments-differ
     @verify_client
     @RequestDataValidator(vol.Schema(dict), allow_empty=True)
-    async def post(self, request, client_id, flow_id, data):
+    async def post(self, request, client, flow_id, data):
         """Handle progressing a login flow request."""
         try:
             result = await self._flow_mgr.async_configure(flow_id, data)
@@ -205,7 +209,7 @@ class LoginFlowResourceView(FlowManagerResourceView):
             return self.json(self._prepare_result_json(result))
 
         result.pop('data')
-        result['result'] = self._store_credentials(client_id, result['result'])
+        result['result'] = self._store_credentials(client.id, result['result'])
 
         return self.json(result)
 
@@ -222,7 +226,7 @@ class GrantTokenView(HomeAssistantView):
         self._retrieve_credentials = retrieve_credentials
 
     @verify_client
-    async def post(self, request, client_id):
+    async def post(self, request, client):
         """Grant a token."""
         hass = request.app['hass']
         data = await request.post()
@@ -230,11 +234,11 @@ class GrantTokenView(HomeAssistantView):
 
         if grant_type == 'authorization_code':
             return await self._async_handle_auth_code(
-                hass, client_id, data)
+                hass, client.id, data)
 
         elif grant_type == 'refresh_token':
             return await self._async_handle_refresh_token(
-                hass, client_id, data)
+                hass, client.id, data)
 
         return self.json({
             'error': 'unsupported_grant_type',
