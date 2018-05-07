@@ -5,8 +5,6 @@ from homeassistant.const import (CONF_IP_ADDRESS, CONF_PORT)
 from homeassistant.setup import async_setup_component
 import homeassistant.components.image_processing as ip
 
-from tests.common import assert_setup_component
-
 MOCK_IP = '192.168.0.1'
 MOCK_PORT = '8080'
 
