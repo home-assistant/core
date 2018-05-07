@@ -13,7 +13,12 @@ MOCK_PORT = '8080'
 MOCK_RESPONSE = """
 {"facesCount": 1,
 "success": True,
-"faces":['face_data']}
+"faces":[{'confidence': 0.5812028911604818,
+            'id': 'john.jpg',
+            'matched': True,
+            'name': 'John Lennon',
+            'rect': {'height': 75, 'left': 63, 'top': 262, 'width': 74}
+            }]
 """
 
 VALID_ENTITY_ID = 'image_processing.facebox_demo_camera'
