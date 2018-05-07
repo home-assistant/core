@@ -67,7 +67,7 @@ class SecuritySystem(HomeAccessory):
             _LOGGER.debug('%s: Updated current state to %s (%d)',
                           self.entity_id, hass_state, current_security_state)
 
-            # SecuritySystemTargetSTate does not support triggered
+            # SecuritySystemTargetState does not support triggered
             if not self.flag_target_state and \
                     hass_state != STATE_ALARM_TRIGGERED:
                 self.char_target_state.set_value(current_security_state)
