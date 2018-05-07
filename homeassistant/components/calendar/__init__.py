@@ -8,6 +8,7 @@ import asyncio
 import logging
 from datetime import timedelta
 import re
+import uuid
 
 import voluptuous as vol
 
@@ -34,6 +35,8 @@ DOMAIN = 'calendar'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SCAN_INTERVAL = timedelta(seconds=60)
+
+EVENT = 'calendar_updated'
 
 EVENT_SCHEMA = vol.Schema({
     vol.Required('title'): cv.string,
@@ -68,10 +71,12 @@ def async_setup(hass, config):
         all_day = call.data.get("all_day", False)
         description = call.data.get("description")
 
-        hass.data[DOMAIN].async_add(title, start, end, url, color, all_day, description)
+        hass.data[DOMAIN].async_add(title, start, end, url,
+                                    color, all_day, description)
         hass.bus.async_fire(EVENT)
 
-    hass.services.async_register(DOMAIN, 'create_event', create_event, schema=EVENT_SCHEMA)
+    hass.services.async_register(DOMAIN, 'create_event', create_event,
+                                 schema=EVENT_SCHEMA)
 
     async def delete_event(call):
         title = call.data.get("title")
@@ -80,7 +85,8 @@ def async_setup(hass, config):
         hass.data[DOMAIN].async_delete(title, start)
         hass.bus.async_fire(EVENT)
 
-    hass.services.async_register(DOMAIN, 'delete_event', delete_event, schema=EVENT_SCHEMA)
+    hass.services.async_register(DOMAIN, 'delete_event', delete_event,
+                                 schema=EVENT_SCHEMA)
 
     yield from hass.components.frontend.async_register_built_in_panel(
         'calendar', 'Calendar', 'mdi:calendar')
@@ -254,7 +260,9 @@ class CalendarData:
         return None
 
     @callback
-    def async_add(self, title, start, end=None, url=None, color=None, all_day=False, description=None):
+    def async_add(self, title, start,
+                  end=None, url=None, color=None,
+                  all_day=False, description=None):
         """Add a scheduler item."""
         # Check if the object exists
         if self._get_item(title, start) is not None:
@@ -277,16 +285,7 @@ class CalendarData:
     @callback
     def async_update(self, item_id, info):
         """Update a scheduler item."""
-        # Check if the object exists
-        item = next((itm for itm in self.items if itm['id'] == item_id), None)
-
-        if item is None:
-            raise KeyError
-
-        info = ITEM_UPDATE_SCHEMA(info)
-        item.update(info)
-        self.hass.async_add_job(self.save)
-        return item
+        raise NotImplementedError
 
     @callback
     def async_delete(self, title, date):
