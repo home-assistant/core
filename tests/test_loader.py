@@ -30,8 +30,7 @@ class TestLoader(unittest.TestCase):
         comp = object()
         loader.set_component(self.hass, 'switch.test_set', comp)
 
-        self.assertEqual(comp,
-                         loader.get_component(self.hass, 'switch.test_set'))
+        assert loader.get_component(self.hass, 'switch.test_set') is comp
 
     def test_get_component(self):
         """Test if get_component works."""
@@ -106,3 +105,18 @@ def test_helpers_wrapper(hass):
     yield from hass.async_block_till_done()
 
     assert result == ['hello']
+
+
+async def test_custom_component_name(hass):
+    """Test the name attribte of custom components."""
+    comp = loader.get_component(hass, 'test_standalone')
+    assert comp.__name__ == 'custom_components.test_standalone'
+    assert comp.__package__ == 'custom_components'
+
+    comp = loader.get_component(hass, 'test_package')
+    assert comp.__name__ == 'custom_components.test_package'
+    assert comp.__package__ == 'custom_components.test_package'
+
+    comp = loader.get_component(hass, 'light.test')
+    assert comp.__name__ == 'custom_components.light.test'
+    assert comp.__package__ == 'custom_components.light'
