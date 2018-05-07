@@ -4,18 +4,34 @@ import unittest
 from homeassistant.core import callback
 from homeassistant.components.cover import (
     ATTR_POSITION, ATTR_CURRENT_POSITION, SUPPORT_STOP)
-from homeassistant.components.homekit.type_covers import (
-    GarageDoorOpener, WindowCovering, WindowCoveringBasic)
 from homeassistant.const import (
     STATE_CLOSED, STATE_UNAVAILABLE, STATE_UNKNOWN, STATE_OPEN,
     ATTR_SERVICE, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     ATTR_SUPPORTED_FEATURES)
 
 from tests.common import get_test_home_assistant
+from tests.components.homekit.test_accessories import patch_debounce
 
 
-class TestHomekitSensors(unittest.TestCase):
+class TestHomekitCovers(unittest.TestCase):
     """Test class for all accessory types regarding covers."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Setup Light class import and debounce patcher."""
+        cls.patcher = patch_debounce()
+        cls.patcher.start()
+        _import = __import__('homeassistant.components.homekit.type_covers',
+                             fromlist=['GarageDoorOpener', 'WindowCovering,',
+                                       'WindowCoveringBasic'])
+        cls.garage_cls = _import.GarageDoorOpener
+        cls.window_cls = _import.WindowCovering
+        cls.window_basic_cls = _import.WindowCoveringBasic
+
+    @classmethod
+    def tearDownClass(cls):
+        """Stop debounce patcher."""
+        cls.patcher.stop()
 
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -37,7 +53,7 @@ class TestHomekitSensors(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         garage_door = 'cover.garage_door'
 
-        acc = GarageDoorOpener(self.hass, 'Cover', garage_door, 2, config=None)
+        acc = self.garage_cls(self.hass, 'Cover', garage_door, 2, config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -95,7 +111,7 @@ class TestHomekitSensors(unittest.TestCase):
         """Test if accessory and HA are updated accordingly."""
         window_cover = 'cover.window'
 
-        acc = WindowCovering(self.hass, 'Cover', window_cover, 2, config=None)
+        acc = self.window_cls(self.hass, 'Cover', window_cover, 2, config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -146,8 +162,8 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.hass.states.set(window_cover, STATE_UNKNOWN,
                              {ATTR_SUPPORTED_FEATURES: 0})
-        acc = WindowCoveringBasic(self.hass, 'Cover', window_cover, 2,
-                                  config=None)
+        acc = self.window_basic_cls(self.hass, 'Cover', window_cover, 2,
+                                    config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -214,8 +230,8 @@ class TestHomekitSensors(unittest.TestCase):
 
         self.hass.states.set(window_cover, STATE_UNKNOWN,
                              {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP})
-        acc = WindowCoveringBasic(self.hass, 'Cover', window_cover, 2,
-                                  config=None)
+        acc = self.window_basic_cls(self.hass, 'Cover', window_cover, 2,
+                                    config=None)
         acc.run()
 
         # Set from HomeKit
