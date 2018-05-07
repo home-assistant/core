@@ -2,7 +2,7 @@
 import requests_mock
 
 from homeassistant.const import (CONF_IP_ADDRESS, CONF_PORT)
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 import homeassistant.components.image_processing as ip
 
 from tests.common import assert_setup_component
@@ -36,20 +36,20 @@ VALID_CONFIG = {
     }
 
 
-def test_setup_platform(hass):
+async def test_setup_platform(hass):
     """Setup platform with one entity."""
 
     with assert_setup_component(1, ip.DOMAIN):
-        setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+        async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
 
     assert hass.states.get(VALID_ENTITY_ID)
 
 
-def test_process_image(hass):
+async def test_process_image(hass):
     """Test processing of an image."""
 
     with assert_setup_component(1, ip.DOMAIN):
-        setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+        async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
 
     with requests_mock.Mocker() as mock_req:
