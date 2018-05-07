@@ -10,6 +10,7 @@ from logging import getLogger
 from homeassistant.components.rainmachine import (
     CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, PROGRAM_UPDATE_TOPIC,
     RainMachineEntity)
+from homeassistant.const import ATTR_ID
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
@@ -208,6 +209,7 @@ class RainMachineProgram(RainMachineSwitch):
                 self._rainmachine_entity_id)
 
             self._attrs.update({
+                ATTR_ID: self._obj['uid'],
                 ATTR_CS_ON: self._obj.get('cs_on'),
                 ATTR_CYCLES: self._obj.get('cycles'),
                 ATTR_DELAY: self._obj.get('delay'),
@@ -286,6 +288,7 @@ class RainMachineZone(RainMachineSwitch):
                 self._rainmachine_entity_id, properties=True)
 
             self._attrs.update({
+                ATTR_ID: self._obj['uid'],
                 ATTR_AREA: self._properties_json.get('waterSense').get('area'),
                 ATTR_CURRENT_CYCLE: self._obj.get('cycle'),
                 ATTR_FIELD_CAPACITY:
