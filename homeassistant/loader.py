@@ -133,6 +133,11 @@ def _load_module(path, base_module, name):
     spec.loader.exec_module(module)
     # A hack, I know. Don't currently know how to work around it.
     module.__name__ = "{}.{}".format(base_module, name)
+    if module.__package__:
+        module.__package__ = "{}.{}".format(base_module, module.__package__)
+    else:
+        module.__package__ = base_module
+
     return module
 
 

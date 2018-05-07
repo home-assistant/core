@@ -111,3 +111,12 @@ async def test_custom_component_name(hass):
     """Test the name attribte of custom components."""
     comp = loader.get_component(hass, 'test_standalone')
     assert comp.__name__ == 'custom_components.test_standalone'
+    assert comp.__package__ == 'custom_components'
+
+    comp = loader.get_component(hass, 'test_package')
+    assert comp.__name__ == 'custom_components.test_package'
+    assert comp.__package__ == 'custom_components.test_package'
+
+    comp = loader.get_component(hass, 'light.test')
+    assert comp.__name__ == 'custom_components.light.test'
+    assert comp.__package__ == 'custom_components.light'
