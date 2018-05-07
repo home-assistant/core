@@ -131,9 +131,11 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
                 result['check_control_messages'] = check_control_messages
         elif self._attribute == 'charging_status':
             result['charging_status'] = vehicle_state.charging_status.value
+            # pylint: disable=W0212
             result['last_charging_end_result'] = \
                 vehicle_state._attributes['lastChargingEndResult']
         if self._attribute == 'connection_status':
+            # pylint: disable=W0212
             result['connection_status'] = \
                 vehicle_state._attributes['connectionStatus']
 
@@ -171,6 +173,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         # device class plug: On means device is plugged in,
         #                    Off means device is unplugged
         if self._attribute == 'connection_status':
+            # pylint: disable=W0212
             self._state = (vehicle_state._attributes['connectionStatus'] ==
                            'CONNECTED')
 
