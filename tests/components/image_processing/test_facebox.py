@@ -38,7 +38,6 @@ async def test_setup_platform(hass):
     """Setup platform with one entity."""
 
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
-
     assert hass.states.get(VALID_ENTITY_ID)
 
 
@@ -50,7 +49,7 @@ async def test_process_image(hass):
 
     with requests_mock.Mocker() as mock_req:
         url = "http://{}:{}/facebox/check".format(MOCK_IP, MOCK_PORT)
-        mock_req.get(url, text=MOCK_RESPONSE)
+        mock_req.post(url, text=MOCK_RESPONSE)
         ip.scan(hass, entity_id=VALID_ENTITY_ID)
         hass.block_till_done()
 
