@@ -13,6 +13,7 @@ from homeassistant.components.wirelesstag import (
     DOMAIN as WIRELESSTAG_DOMAIN,
     WIRELESSTAG_TYPE_13BIT, WIRELESSTAG_TYPE_WATER,
     WIRELESSTAG_TYPE_ALSPRO,
+    WIRELESSTAG_TYPE_WEMO_DEVICE,
     WirelessTagBaseSensor)
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
@@ -71,7 +72,8 @@ class WirelessTagSwitch(WirelessTagBaseSensor, SwitchDevice):
             WIRELESSTAG_TYPE_WATER: [
                 ARM_TEMPERATURE, ARM_MOISTURE],
             WIRELESSTAG_TYPE_ALSPRO: [
-                ARM_TEMPERATURE, ARM_HUMIDITY, ARM_MOTION, ARM_LIGHT]
+                ARM_TEMPERATURE, ARM_HUMIDITY, ARM_MOTION, ARM_LIGHT],
+            WIRELESSTAG_TYPE_WEMO_DEVICE: []
         }
 
         tag_type = tag.tag_type

@@ -14,6 +14,7 @@ from homeassistant.components.wirelesstag import (
     DOMAIN as WIRELESSTAG_DOMAIN,
     WIRELESSTAG_TYPE_13BIT, WIRELESSTAG_TYPE_WATER,
     WIRELESSTAG_TYPE_ALSPRO,
+    WIRELESSTAG_TYPE_WEMO_DEVICE,
     WirelessTagBaseSensor)
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, STATE_ON, STATE_OFF)
@@ -146,7 +147,10 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
                 SENSOR_MOTION, SENSOR_DOOR,
                 SENSOR_COLD, SENSOR_HEAT,
                 SENSOR_DRY, SENSOR_WET,
-                SENSOR_LIGHT]
+                SENSOR_LIGHT],
+
+            # Wemo are power switches.
+            WIRELESSTAG_TYPE_WEMO_DEVICE: [SENSOR_PRESENCE]
         }
 
         # allow everything if tag type is unknown

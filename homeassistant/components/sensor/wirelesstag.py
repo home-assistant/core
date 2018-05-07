@@ -15,6 +15,7 @@ from homeassistant.components.wirelesstag import (
     DOMAIN as WIRELESSTAG_DOMAIN,
     WIRELESSTAG_TYPE_13BIT, WIRELESSTAG_TYPE_WATER,
     WIRELESSTAG_TYPE_ALSPRO,
+    WIRELESSTAG_TYPE_WEMO_DEVICE,
     WirelessTagBaseSensor)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import TEMP_CELSIUS
@@ -84,7 +85,8 @@ class WirelessTagSensor(WirelessTagBaseSensor):
             WIRELESSTAG_TYPE_ALSPRO: [
                 SENSOR_TEMPERATURE,
                 SENSOR_HUMIDITY,
-                SENSOR_LIGHT]
+                SENSOR_LIGHT],
+            WIRELESSTAG_TYPE_WEMO_DEVICE: []
         }
 
         tag_type = tag.tag_type
