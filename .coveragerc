@@ -226,6 +226,9 @@ omit =
     homeassistant/components/rpi_pfio.py
     homeassistant/components/*/rpi_pfio.py
 
+    homeassistant/components/sabnzbd.py
+    homeassistant/components/*/sabnzbd.py
+
     homeassistant/components/satel_integra.py
     homeassistant/components/*/satel_integra.py
 
@@ -650,7 +653,6 @@ omit =
     homeassistant/components/sensor/radarr.py
     homeassistant/components/sensor/rainbird.py
     homeassistant/components/sensor/ripple.py
-    homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sense.py
     homeassistant/components/sensor/sensehat.py
