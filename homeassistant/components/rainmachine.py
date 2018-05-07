@@ -43,6 +43,10 @@ BINARY_SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_MONITORED_CONDITIONS): cv.ensure_list
 })
 
+SERVICE_RUN_ZONE_SCHEMA = vol.Schema({
+
+})
+
 SWITCH_SCHEMA = vol.Schema({
     vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int
 })
