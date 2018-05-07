@@ -17,7 +17,7 @@ start_zone:
       description: The number of seconds to run the zone.
       example: 120
 stop_all:
-  description: Stop all watering.
+  description: Stop all watering activities.
 stop_program:
   description: Stop a program.
   fields:
