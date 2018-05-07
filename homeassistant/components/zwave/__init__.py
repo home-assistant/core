@@ -32,7 +32,7 @@ from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import (check_node_schema, check_value_schema, node_name,
-                   check_has_unique_id)
+                   check_has_unique_id, is_node_parsed)
 
 REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.3']
 
@@ -907,6 +907,8 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self._name = _value_name(self.values.primary)
         if not self._unique_id:
             self._unique_id = self._compute_unique_id()
+            if self._unique_id:
+                self.try_remove_and_add()
 
         if self.values.power:
             self.power_consumption = round(
@@ -955,6 +957,9 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
                 self.node.refresh_value(value.value_id)
 
     def _compute_unique_id(self):
-        if not self.node.manufacturer_name or not self.node.product_name:
-            return None
-        return "{}-{}".format(self.node.node_id, self.values.primary.object_id)
+        if (is_node_parsed(self.node) and
+                self.values.primary.label != "Unknown") or \
+                self.node.is_ready:
+            return "{}-{}".format(self.node.node_id,
+                                  self.values.primary.object_id)
+        return None
