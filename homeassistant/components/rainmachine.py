@@ -28,6 +28,7 @@ DOMAIN = 'rainmachine'
 NOTIFICATION_ID = 'rainmachine_notification'
 NOTIFICATION_TITLE = 'RainMachine Component Setup'
 
+CONF_PROGRAM_ID = 'program_id'
 CONF_ZONE_ID = 'zone_id'
 CONF_ZONE_RUN_TIME = 'zone_run_time'
 
@@ -49,10 +50,22 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list, cv.string)
 })
 
-SERVICE_RUN_ZONE_SCHEMA = vol.Schema({
+SERVICE_START_PROGRAM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PROGRAM_ID): cv.positive_int,
+})
+
+SERVICE_START_ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONE_ID): cv.positive_int,
     vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN):
         cv.positive_int,
+})
+
+SERVICE_STOP_PROGRAM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PROGRAM_ID): cv.positive_int,
+})
+
+SERVICE_STOP_ZONE_SCHEMA = vol.Schema({
+    vol.Required(CONF_ZONE_ID): cv.positive_int,
 })
 
 SWITCH_SCHEMA = vol.Schema({
@@ -128,13 +141,45 @@ def setup(hass, config):
 
     _LOGGER.debug('Setting up services')
 
-    def run_zone(service):
-        """Run a particular zone for a certain amount of time"""
+    def start_program(service):
+        """Start a particular program."""
+        rainmachine.client.programs.start(service.data[CONF_PROGRAM_ID])
+
+    def start_zone(service):
+        """Start a particular zone for a certain amount of time."""
         rainmachine.client.zones.start(
             service.data[CONF_ZONE_ID], service.data[CONF_ZONE_RUN_TIME])
 
+    def stop_all(service):
+        """Stop all watering."""
+        rainmachine.client.watering.stop_all()
+
+    def stop_program(service):
+        """Stop a program"""
+        rainmachine.client.programs.stop(service.data[CONF_PROGRAM_ID])
+
+    def stop_zone(service):
+        """Stop a zone."""
+        rainmachine.client.zones.stop(service.data[CONF_ZONE_ID])
+
     hass.services.register(
-        DOMAIN, 'run_zone', run_zone, schema=SERVICE_RUN_ZONE_SCHEMA)
+        DOMAIN, 'start_program',
+        start_program,
+        schema=SERVICE_START_PROGRAM_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, 'start_zone', start_zone, schema=SERVICE_START_ZONE_SCHEMA)
+
+    hass.services.register(DOMAIN, 'stop_all', stop_all)
+
+    hass.services.register(
+        DOMAIN,
+        'stop_program',
+        stop_program,
+        schema=SERVICE_STOP_PROGRAM_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, 'stop_zone', stop_zone, schema=SERVICE_STOP_ZONE_SCHEMA)
 
     _LOGGER.debug('Setup complete')
 
