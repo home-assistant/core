@@ -149,7 +149,7 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return "roku_{}".format(self.device_info.sernum)
+        return self.device_info.sernum
 
     @property
     def media_content_type(self):
