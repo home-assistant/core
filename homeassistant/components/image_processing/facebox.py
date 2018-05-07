@@ -55,6 +55,7 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
             camera_name = split_entity_id(camera_entity)[1]
             self._name = "{} {}".format(
                 CLASSIFIER, camera_name)
+        self._matched = {}
 
     def process_image(self, image):
         """Process an image."""
@@ -70,17 +71,25 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
             response['success'] = False
 
         if response['success']:
-            self.total_faces = response['facesCount']
-            self.faces = response['faces']
+            faces = response['faces']
+            total = response['facesCount']
+            self.process_faces(faces, total)
+            self._matched = self.get_matched_faces(response)
 
         else:
             self.total_faces = None
             self.faces = []
+            self._matched = {}
 
     def encode_image(self, image):
         """base64 encode an image stream."""
         base64_img = base64.b64encode(image).decode('ascii')
         return {"base64": base64_img}
+
+    def get_matched_faces(self, response):
+        """Return the name and rounded confidence of matched faces."""
+        return {face['name']: round(face['confidence'], 2)
+                for face in response['faces'] if face['matched']}
 
     @property
     def camera_entity(self):
@@ -91,3 +100,10 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the classifier attributes."""
+        return {
+            'matched_faces': self._matched,
+            }
