@@ -74,7 +74,7 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
             faces = response['faces']
             total = response['facesCount']
             self.process_faces(faces, total)
-            self._matched = self.get_matched_faces(response)
+            self._matched = self.get_matched_faces(faces)
 
         else:
             self.total_faces = None
@@ -86,10 +86,10 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
         base64_img = base64.b64encode(image).decode('ascii')
         return {"base64": base64_img}
 
-    def get_matched_faces(self, response):
+    def get_matched_faces(self, faces):
         """Return the name and rounded confidence of matched faces."""
         return {face['name']: round(face['confidence'], 2)
-                for face in response['faces'] if face['matched']}
+                for face in faces if face['matched']}
 
     @property
     def camera_entity(self):
