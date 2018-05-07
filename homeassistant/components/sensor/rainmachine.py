@@ -12,7 +12,6 @@ from homeassistant.components.rainmachine import (
     DATA_UPDATE_TOPIC,
     RainMachineEntity)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['rainmachine']
@@ -36,11 +35,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rainmachine = hass.data[DATA_RAINMACHINE]
 
     sensors = []
-    for sensor_type, attrs in discovery_info.get(
-            CONF_MONITORED_CONDITIONS, SENSORS).items():
-        name, icon, unit = attrs
-        sensors.append(
-            RainMachineSensor(rainmachine, sensor_type, name, icon, unit))
+    for sensor_type in discovery_info.get(
+            CONF_MONITORED_CONDITIONS, SENSORS.keys()):
+        try:
+            name, icon, unit = SENSORS[sensor_type]
+            sensors.append(
+                RainMachineSensor(rainmachine, sensor_type, name, icon, unit))
+        except KeyError:
+            continue
 
     add_devices(sensors, True)
 

@@ -8,8 +8,8 @@ https://home-assistant.io/components/switch.rainmachine/
 from logging import getLogger
 
 from homeassistant.components.rainmachine import (
-    CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, PROGRAM_UPDATE_TOPIC,
-    RainMachineEntity)
+    CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DEFAULT_ZONE_RUN,
+    PROGRAM_UPDATE_TOPIC, RainMachineEntity)
 from homeassistant.const import ATTR_ID
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
@@ -38,8 +38,6 @@ ATTR_STATUS = 'status'
 ATTR_SUN_EXPOSURE = 'sun_exposure'
 ATTR_VEGETATION_TYPE = 'vegetation_type'
 ATTR_ZONES = 'zones'
-
-DEFAULT_ZONE_RUN = 60 * 10
 
 DAYS = [
     'Monday',

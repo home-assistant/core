@@ -28,6 +28,7 @@ DOMAIN = 'rainmachine'
 NOTIFICATION_ID = 'rainmachine_notification'
 NOTIFICATION_TITLE = 'RainMachine Component Setup'
 
+CONF_ZONE_ID = 'zone_id'
 CONF_ZONE_RUN_TIME = 'zone_run_time'
 
 DEFAULT_ATTRIBUTION = 'Data provided by Green Electronics LLC'
@@ -35,16 +36,23 @@ DEFAULT_ICON = 'mdi:water'
 DEFAULT_PORT = 8080
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_SSL = True
+DEFAULT_ZONE_RUN = 60 * 10
 
 DATA_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
 PROGRAM_UPDATE_TOPIC = '{0}_program_update'.format(DOMAIN)
 
 BINARY_SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MONITORED_CONDITIONS): cv.ensure_list
+    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list, cv.string)
+})
+
+SENSOR_SCHEMA = vol.Schema({
+    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list, cv.string)
 })
 
 SERVICE_RUN_ZONE_SCHEMA = vol.Schema({
-
+    vol.Required(CONF_ZONE_ID): cv.positive_int,
+    vol.Optional(CONF_ZONE_RUN_TIME, default=DEFAULT_ZONE_RUN):
+        cv.positive_int,
 })
 
 SWITCH_SCHEMA = vol.Schema({
@@ -59,6 +67,7 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
             vol.Optional(CONF_BINARY_SENSORS): BINARY_SENSOR_SCHEMA,
+            vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
             vol.Optional(CONF_SWITCHES): SWITCH_SCHEMA,
         })
     },
@@ -116,6 +125,16 @@ def setup(hass, config):
         dispatcher_send(hass, DATA_UPDATE_TOPIC)
 
     track_time_interval(hass, refresh, DEFAULT_SCAN_INTERVAL)
+
+    _LOGGER.debug('Setting up services')
+
+    def run_zone(service):
+        """Run a particular zone for a certain amount of time"""
+        rainmachine.client.zones.start(
+            service.data[CONF_ZONE_ID], service.data[CONF_ZONE_RUN_TIME])
+
+    hass.services.register(
+        DOMAIN, 'run_zone', run_zone, schema=SERVICE_RUN_ZONE_SCHEMA)
 
     _LOGGER.debug('Setup complete')
 
