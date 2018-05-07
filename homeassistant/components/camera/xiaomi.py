@@ -19,7 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 DEPENDENCIES = ['ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_BRAND = 'Xiaomi Home Cameras'
+DEFAULT_BRAND = 'Xiaomi Home Camera'
 DEFAULT_PASSWORD = ''
 DEFAULT_PATH = '/media/mmcblk0p1/record'
 DEFAULT_PORT = 21
