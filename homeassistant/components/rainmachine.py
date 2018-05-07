@@ -1,5 +1,5 @@
 """
-This component provides support for RainMachine sprinkler controllers.
+Support for RainMachine devices.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rainmachine/
