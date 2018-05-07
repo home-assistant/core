@@ -44,10 +44,10 @@ class Fan(HomeAccessory):
         if CHAR_ROTATION_SPEED in self.chars:
             speed_list = self.hass.states.get(self.entity_id) \
                 .attributes.get(ATTR_SPEED_LIST)
-            max_speed = len(speed_list) if speed_list else 100
+            self.min_step = 100 / len(speed_list) if speed_list else 1
             self.char_speed = serv_fan.configure_char(
                 CHAR_ROTATION_SPEED, value=0,
-                properties={'maxValue': max_speed},
+                properties={'minStep': self.min_step},
                 setter_callback=self.set_speed)
 
     def set_state(self, value):
@@ -71,8 +71,9 @@ class Fan(HomeAccessory):
         if value != 0:
             speed_list = self.hass.states.get(self.entity_id) \
                 .attributes.get(ATTR_SPEED_LIST)
+            speed = speed_list[int(round(value / self.min_step)) - 1]
             self.hass.components.fan.turn_on(
-                self.entity_id, speed=speed_list[value - 1])
+                self.entity_id, speed=speed)
         else:
             self.hass.components.fan.turn_off(self.entity_id)
 
@@ -91,9 +92,9 @@ class Fan(HomeAccessory):
         if CHAR_ROTATION_SPEED in self.chars:
             speed_list = new_state.attributes.get(ATTR_SPEED_LIST)
             speed = new_state.attributes.get(ATTR_SPEED)
-            if not self._flag[CHAR_ROTATION_SPEED] and isinstance(speed, str):
-                index = speed_list.index(speed)
-                homekit_speed = index + 1
-                if self.char_speed.value != homekit_speed:
-                    self.char_speed.set_value(homekit_speed)
+            if not self._flag[CHAR_ROTATION_SPEED] and \
+                    len(speed_list) > 1 and isinstance(speed, str):
+                value = (speed_list.index(speed) + 1) * self.min_step
+                if self.char_speed.value != value:
+                    self.char_speed.set_value(value)
             self._flag[CHAR_ROTATION_SPEED] = False
