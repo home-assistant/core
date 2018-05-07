@@ -1,12 +1,14 @@
 """
-Component that will perform facial detection via a local facebox instance.
+Component that will perform facial detection and identification via a local
+facebox classifier.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing.facebox_face_detect
+https://home-assistant.io/components/image_processing.facebox
 """
 import base64
-import requests
 import logging
+
+import requests
 import voluptuous as vol
 
 from homeassistant.core import split_entity_id
@@ -18,9 +20,11 @@ from homeassistant.const import (CONF_IP_ADDRESS, CONF_PORT)
 
 _LOGGER = logging.getLogger(__name__)
 
+CLASSIFIER = 'facebox'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP_ADDRESS): cv.string,
-    vol.Required(CONF_PORT): cv.string,
+    vol.Required(CONF_PORT): cv.port,
 })
 
 
@@ -28,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the classifier."""
     entities = []
     for camera in config[CONF_SOURCE]:
-        entities.append(FaceboxFaceDetectEntity(
+        entities.append(FaceClassifyEntity(
             config[CONF_IP_ADDRESS],
             config[CONF_PORT],
             camera[CONF_ENTITY_ID],
@@ -37,21 +41,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(entities)
 
 
-class FaceboxFaceDetectEntity(ImageProcessingFaceEntity):
-    """Perform a classification via a Facebox."""
+class FaceClassifyEntity(ImageProcessingFaceEntity):
+    """Perform a face classification."""
 
     def __init__(self, ip, port, camera_entity, name=None):
         """Init with the API key and model id"""
         super().__init__()
-        self._url = "http://{}:{}/facebox/check".format(ip, port)
+        self._url = "http://{}:{}/{}/check".format(ip, port, CLASSIFIER)
         self._camera = camera_entity
         if name:
             self._name = name
         else:
-            self._name = "Facebox {0}".format(
-                split_entity_id(camera_entity)[1])
-        self.total_faces = 0
-        self.faces = []
+            camera_name = split_entity_id(camera_entity)[1]
+            self._name = "{} {}".format(
+                CLASSIFIER, camera_name)
 
     def process_image(self, image):
         """Process an image."""
@@ -60,10 +63,10 @@ class FaceboxFaceDetectEntity(ImageProcessingFaceEntity):
             response = requests.post(
                 self._url,
                 json=self.encode_image(image),
-                timeout=30
+                timeout=9
                 ).json()
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("ConnectionError: Is Facebox running?")
+            _LOGGER.error("ConnectionError: Is {} running?".format(CLASSIFIER))
             response['success'] = False
 
         if response['success']:
@@ -71,7 +74,7 @@ class FaceboxFaceDetectEntity(ImageProcessingFaceEntity):
             self.faces = response['faces']
 
         else:
-            self.total_faces = "Request_failed"
+            self.total_faces = None
             self.faces = []
 
     def encode_image(self, image):
