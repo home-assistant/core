@@ -73,13 +73,15 @@ def get_component(hass, comp_or_platform):
 
     # Try custom component
     module = _load_module(hass.config.path(PATH_CUSTOM_COMPONENTS),
-                          comp_or_platform)
+                          PATH_CUSTOM_COMPONENTS, comp_or_platform)
 
     if module is None:
         try:
             module = importlib.import_module(
                 '{}.{}'.format(PACKAGE_COMPONENTS, comp_or_platform))
+            _LOGGER.debug('Loaded %s (built-in)', comp_or_platform)
         except ImportError:
+            _LOGGER.warning('Unable to find %s', comp_or_platform)
             module = None
 
     cache = hass.data.get(DATA_KEY)
@@ -102,18 +104,20 @@ def _find_spec(path, name):
     return None
 
 
-def _load_module(path, name):
+def _load_module(path, base_module, name):
     """Load a module based on a folder and a name."""
+    mod_name = "{}.{}".format(base_module, name)
     spec = _find_spec([path], name)
 
     # Special handling if loading platforms and the folder is a namespace
     # (namespace is a folder without __init__.py)
     if spec is None and '.' in name:
-        parent_spec = _find_spec([path], name.split('.')[0])
+        mod_parent_name = name.split('.')[0]
+        parent_spec = _find_spec([path], mod_parent_name)
         if (parent_spec is None or
                 parent_spec.submodule_search_locations is None):
             return None
-        spec = _find_spec(parent_spec.submodule_search_locations, name)
+        spec = _find_spec(parent_spec.submodule_search_locations, mod_name)
 
     # Not found
     if spec is None:
@@ -123,8 +127,19 @@ def _load_module(path, name):
     if spec.loader is None:
         return None
 
+    _LOGGER.debug('Loaded %s (%s)', name, base_module)
+
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    # A hack, I know. Don't currently know how to work around it.
+    if not module.__name__.startswith(base_module):
+        module.__name__ = "{}.{}".format(base_module, name)
+
+    if not module.__package__:
+        module.__package__ = base_module
+    elif not module.__package__.startswith(base_module):
+        module.__package__ = "{}.{}".format(base_module, name)
+
     return module
 
 
