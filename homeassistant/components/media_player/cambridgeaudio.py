@@ -284,7 +284,13 @@ class CADevice(MediaPlayerDevice):
             'STOPPED': STATE_IDLE,
             'TRANSITIONING': STATE_PLAYING}.get(dev.get_transport_state())
         self._audio_source = dev.get_audio_source()
-        self._source = dev.get_current_preset()['name']
+
+        current_preset = dev.get_current_preset()
+        if current_preset:
+            self._source = dev.get_current_preset()['name']
+        else:
+            self._source = None
+
         self._muted = dev.get_mute_state()
 
         if self._state == STATE_PLAYING:
