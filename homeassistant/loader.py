@@ -132,7 +132,6 @@ def _load_module(path, base_module, name):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     # A hack, I know. Don't currently know how to work around it.
-    print(name, module.__name__, module.__package__)
     if not module.__name__.startswith(base_module):
         module.__name__ = "{}.{}".format(base_module, name)
 
