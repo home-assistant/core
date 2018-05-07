@@ -40,7 +40,9 @@ DEFAULT_AGENT_USER_ID = 'home-assistant'
 
 ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_TYPE): cv.string, # allows you to override the domain it uses so you can get things like `remote` to work with GA
+    # allows you to override the domain it uses so
+    # you can get things like `remote` to work with GA
+    vol.Optional(CONF_TYPE): cv.string,
     vol.Optional(CONF_EXPOSE): cv.boolean,
     vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_ROOM_HINT): cv.string

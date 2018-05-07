@@ -128,8 +128,11 @@ class _GoogleEntity:
             'attributes': {},
             'traits': [trait.name for trait in traits],
             'willReportState': False,
-            # Use the overridden type if available, to allow things like `remote` to work
-            'type': DOMAIN_TO_GOOGLE_TYPES[entity_config.get(CONF_TYPE) or state.domain],
+            # Use the overridden type if available,
+            # to allow things like `remote` to work
+            'type': DOMAIN_TO_GOOGLE_TYPES[
+                entity_config.get(CONF_TYPE) or state.domain
+            ],
         }
 
         # use aliases
