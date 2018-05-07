@@ -39,8 +39,7 @@ VALID_CONFIG = {
 async def test_setup_platform(hass):
     """Setup platform with one entity."""
 
-    with assert_setup_component(1, ip.DOMAIN):
-        async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
 
     assert hass.states.get(VALID_ENTITY_ID)
 
@@ -48,8 +47,7 @@ async def test_setup_platform(hass):
 async def test_process_image(hass):
     """Test processing of an image."""
 
-    with assert_setup_component(1, ip.DOMAIN):
-        async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
 
     with requests_mock.Mocker() as mock_req:
