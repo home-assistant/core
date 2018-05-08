@@ -80,7 +80,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
            'io:RollerShutterWithLowSpeedManagementIOComponent':
             self.apply_action('setPosition', 'secured')
         elif self.tahoma_device.type == 'rts:BlindRTSComponent' \
-           or 'io:ExteriorVenetianBlindIOComponent':
+                or 'io:ExteriorVenetianBlindIOComponent':
             self.apply_action('my')
         else:
             self.apply_action('stopIdentify')
