@@ -166,11 +166,14 @@ class LoginFlowIndexView(FlowManagerIndexView):
 
     # pylint: disable=arguments-differ
     @verify_client
-    async def post(self, request, client):
+    @RequestDataValidator(vol.Schema({
+        vol.Required('handler'): vol.Any(str, list),
+        vol.Required('redirect_uri'): str,
+    }))
+    async def post(self, request, client, data):
         """Create a new login flow."""
-        redirect_uri = request.query.get('redirect_uri')
-
-        # TODO verify redirect_uri !
+        if data['redirect_uri'] not in client.redirect_uris:
+            return self.json_message('invalid redirect uri', )
 
         # pylint: disable=no-value-for-parameter
         return await super().post(request)

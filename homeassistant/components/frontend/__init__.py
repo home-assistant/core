@@ -299,7 +299,7 @@ def async_setup(hass, config):
     if list(hass.auth.async_auth_providers):
         client = yield from hass.auth.async_create_client(
             'Home Assistant Frontend',
-            redirect_uri=['/'],
+            redirect_uris=['/'],
             no_secret=True,
         )
     else:
