@@ -19,8 +19,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, STATE_UNKNOWN, CONF_NAME,
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, CONF_NAME, ATTR_ATTRIBUTION,
+    CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -33,8 +33,7 @@ CONF_STATION = 'station'
 CONF_ZONE_ID = 'zone_id'
 CONF_WMO_ID = 'wmo_id'
 
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=60)
-LAST_UPDATE = 0
+MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=35)
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
@@ -114,13 +113,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error("Could not get BOM weather station from lat/lon")
             return False
 
-    rest = BOMCurrentData(hass, station)
+    bom_data = BOMCurrentData(hass, station)
     try:
-        rest.update()
+        bom_data.update()
     except ValueError as err:
         _LOGGER.error("Received error from BOM_Current: %s", err)
         return False
-    add_devices([BOMCurrentSensor(rest, variable, config.get(CONF_NAME))
+    add_devices([BOMCurrentSensor(bom_data, variable, config.get(CONF_NAME))
                  for variable in config[CONF_MONITORED_CONDITIONS]])
     return True
 
@@ -128,9 +127,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class BOMCurrentSensor(Entity):
     """Implementation of a BOM current sensor."""
 
-    def __init__(self, rest, condition, stationname):
+    def __init__(self, bom_data, condition, stationname):
         """Initialize the sensor."""
-        self.rest = rest
+        self.bom_data = bom_data
         self._condition = condition
         self.stationname = stationname
 
@@ -146,21 +145,18 @@ class BOMCurrentSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.rest.data and self._condition in self.rest.data:
-            return self.rest.data[self._condition]
-
-        return STATE_UNKNOWN
+        return self.bom_data.get_reading(self._condition)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
         attr['Sensor Id'] = self._condition
-        attr['Zone Id'] = self.rest.data['history_product']
-        attr['Station Id'] = self.rest.data['wmo']
-        attr['Station Name'] = self.rest.data['name']
+        attr['Zone Id'] = self.bom_data.latest_data['history_product']
+        attr['Station Id'] = self.bom_data.latest_data['wmo']
+        attr['Station Name'] = self.bom_data.latest_data['name']
         attr['Last Update'] = datetime.datetime.strptime(str(
-            self.rest.data['local_date_time_full']), '%Y%m%d%H%M%S')
+            self.bom_data.latest_data['local_date_time_full']), '%Y%m%d%H%M%S')
         attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         return attr
 
@@ -171,7 +167,7 @@ class BOMCurrentSensor(Entity):
 
     def update(self):
         """Update current conditions."""
-        self.rest.update()
+        self.bom_data.update()
 
 
 class BOMCurrentData(object):
@@ -181,34 +177,43 @@ class BOMCurrentData(object):
         """Initialize the data object."""
         self._hass = hass
         self._zone_id, self._wmo_id = station_id.split('.')
-        self.data = None
-        self._lastupdate = LAST_UPDATE
+        self._data = None
 
     def _build_url(self):
         url = _RESOURCE.format(self._zone_id, self._zone_id, self._wmo_id)
         _LOGGER.info("BOM URL %s", url)
         return url
 
+    @property
+    def latest_data(self):
+        """Return the latest data object."""
+        if self._data:
+            return self._data[0]
+        return None
+
+    def get_reading(self, condition):
+        """Return the value for the given condition.
+
+        BOM weather publishes condition readings for weather (and a few other
+        conditions) at intervals throughout the day. To avoid a `-` value in
+        the frontend for these conditions, we traverse the historical data
+        for the latest value that is not `-`.
+
+        Iterators are used in this method to avoid iterating needlessly
+        iterating through the entire BOM provided dataset
+        """
+        condition_readings = (entry[condition] for entry in self._data)
+        return next((x for x in condition_readings if x != '-'), None)
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from BOM."""
-        if self._lastupdate != 0 and \
-            ((datetime.datetime.now() - self._lastupdate) <
-             datetime.timedelta(minutes=35)):
-            _LOGGER.info(
-                "BOM was updated %s minutes ago, skipping update as"
-                " < 35 minutes", (datetime.datetime.now() - self._lastupdate))
-            return self._lastupdate
-
         try:
             result = requests.get(self._build_url(), timeout=10).json()
-            self.data = result['observations']['data'][0]
-            self._lastupdate = datetime.datetime.strptime(
-                str(self.data['local_date_time_full']), '%Y%m%d%H%M%S')
-            return self._lastupdate
+            self._data = result['observations']['data']
         except ValueError as err:
             _LOGGER.error("Check BOM %s", err.args)
-            self.data = None
+            self._data = None
             raise
 
 

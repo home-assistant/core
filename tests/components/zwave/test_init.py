@@ -237,7 +237,7 @@ async def test_unparsed_node_discovery(hass, mock_openzwave):
 
     assert len(mock_receivers) == 1
 
-    node = MockNode(node_id=14, manufacturer_name=None)
+    node = MockNode(node_id=14, manufacturer_name=None, is_ready=False)
 
     sleeps = []
 

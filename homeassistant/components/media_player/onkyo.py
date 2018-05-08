@@ -13,7 +13,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
+    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_PLAY,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
@@ -22,11 +23,14 @@ REQUIREMENTS = ['onkyo-eiscp==1.2.4']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SOURCES = 'sources'
+CONF_MAX_VOLUME = 'max_volume'
 
 DEFAULT_NAME = 'Onkyo Receiver'
+SUPPORTED_MAX_VOLUME = 80
 
 SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+    SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 KNOWN_HOSTS = []  # type: List[str]
 DEFAULT_SOURCES = {'tv': 'TV', 'bd': 'Bluray', 'game': 'Game', 'aux1': 'Aux1',
@@ -38,6 +42,8 @@ DEFAULT_SOURCES = {'tv': 'TV', 'bd': 'Bluray', 'game': 'Game', 'aux1': 'Aux1',
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_MAX_VOLUME, default=SUPPORTED_MAX_VOLUME):
+        vol.All(vol.Coerce(int), vol.Range(min=1, max=SUPPORTED_MAX_VOLUME)),
     vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES):
         {cv.string: cv.string},
 })
@@ -87,7 +93,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hosts.append(OnkyoDevice(
                 receiver,
                 config.get(CONF_SOURCES),
-                name=config.get(CONF_NAME)))
+                name=config.get(CONF_NAME),
+                max_volume=config.get(CONF_MAX_VOLUME),
+            ))
             KNOWN_HOSTS.append(host)
 
             zones = determine_zones(receiver)
@@ -121,7 +129,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class OnkyoDevice(MediaPlayerDevice):
     """Representation of an Onkyo device."""
 
-    def __init__(self, receiver, sources, name=None):
+    def __init__(self, receiver, sources, name=None,
+                 max_volume=SUPPORTED_MAX_VOLUME):
         """Initialize the Onkyo Receiver."""
         self._receiver = receiver
         self._muted = False
@@ -129,6 +138,7 @@ class OnkyoDevice(MediaPlayerDevice):
         self._pwstate = STATE_OFF
         self._name = name or '{}_{}'.format(
             receiver.info['model_name'], receiver.info['identifier'])
+        self._max_volume = max_volume
         self._current_source = None
         self._source_list = list(sources.values())
         self._source_mapping = sources
@@ -182,7 +192,7 @@ class OnkyoDevice(MediaPlayerDevice):
                 self._current_source = '_'.join(
                     [i for i in current_source_tuples[1]])
         self._muted = bool(mute_raw[1] == 'on')
-        self._volume = volume_raw[1] / 80.0
+        self._volume = volume_raw[1] / self._max_volume
 
     @property
     def name(self):
@@ -224,8 +234,21 @@ class OnkyoDevice(MediaPlayerDevice):
         self.command('system-power standby')
 
     def set_volume_level(self, volume):
-        """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
-        self.command('volume {}'.format(int(volume*80)))
+        """
+        Set volume level, input is range 0..1.
+
+        Onkyo ranges from 1-80 however 80 is usually far too loud
+        so allow the user to specify the upper range with CONF_MAX_VOLUME
+        """
+        self.command('volume {}'.format(int(volume * self._max_volume)))
+
+    def volume_up(self):
+        """Increase volume by 1 step."""
+        self.command('volume level-up')
+
+    def volume_down(self):
+        """Decrease volume by 1 step."""
+        self.command('volume level-down')
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
@@ -296,6 +319,14 @@ class OnkyoDeviceZone(OnkyoDevice):
     def set_volume_level(self, volume):
         """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
         self.command('zone{}.volume={}'.format(self._zone, int(volume*80)))
+
+    def volume_up(self):
+        """Increase volume by 1 step."""
+        self.command('zone{}.volume=level-up'.format(self._zone))
+
+    def volume_down(self):
+        """Decrease volume by 1 step."""
+        self.command('zone{}.volume=level-down'.format(self._zone))
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""

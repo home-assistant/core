@@ -8,7 +8,7 @@ voluptuous==0.11.1
 typing>=3,<4
 aiohttp==3.1.3
 async_timeout==2.0.1
-astral==1.6
+astral==1.6.1
 certifi>=2017.4.17
 attrs==18.1.0
 
@@ -146,10 +146,10 @@ batinfo==0.4.2
 beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
-bellows==0.5.2
+bellows==0.6.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.5.0
+bimmer_connected==0.5.1
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -371,7 +371,7 @@ ha-philipsjs==0.0.3
 haversine==0.4.5
 
 # homeassistant.components.mqtt.server
-hbmqtt==0.9.1
+hbmqtt==0.9.2
 
 # homeassistant.components.climate.heatmiser
 heatmiserV3==0.9.1
@@ -386,7 +386,7 @@ hipnotify==1.0.8
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180426.0
+home-assistant-frontend==20180505.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.6
@@ -446,7 +446,7 @@ influxdb==5.0.0
 insteonlocal==0.53
 
 # homeassistant.components.insteon_plm
-insteonplm==0.8.6
+insteonplm==0.9.1
 
 # homeassistant.components.verisure
 jsonpath==0.75
@@ -511,8 +511,8 @@ luftdaten==0.1.3
 # homeassistant.components.sensor.lyft
 lyft_rides==0.2
 
-# homeassistant.components.notify.matrix
-matrix-client==0.0.6
+# homeassistant.components.matrix
+matrix-client==0.2.0
 
 # homeassistant.components.maxcube
 maxcube-api==0.1.0
@@ -553,7 +553,7 @@ nad_receiver==0.0.9
 nanoleaf==0.4.1
 
 # homeassistant.components.discovery
-netdisco==1.4.0
+netdisco==1.4.1
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -698,7 +698,7 @@ pyads==2.2.6
 pyairvisual==1.0.0
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
-pyalarmdotcom==0.3.1
+pyalarmdotcom==0.3.2
 
 # homeassistant.components.arlo
 pyarlo==0.1.2
@@ -745,7 +745,7 @@ pycsspeechtts==1.0.2
 pydaikin==0.4
 
 # homeassistant.components.deconz
-pydeconz==36
+pydeconz==37
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -784,7 +784,7 @@ pyfritzhome==0.3.7
 pyfttt==0.3
 
 # homeassistant.components.cover.gogogate2
-pygogogate2==0.0.7
+pygogogate2==0.1.1
 
 # homeassistant.components.remote.harmony
 pyharmony==1.0.20
@@ -909,7 +909,7 @@ pyqwikswitch==0.8
 # homeassistant.components.rainbird
 pyrainbird==0.1.3
 
-# homeassistant.components.sensor.sabnzbd
+# homeassistant.components.sabnzbd
 pysabnzbd==1.0.1
 
 # homeassistant.components.climate.sensibo
@@ -1382,7 +1382,7 @@ zeroconf==0.20.0
 ziggo-mediabox-xl==1.0.0
 
 # homeassistant.components.zha
-zigpy-xbee==0.0.2
+zigpy-xbee==0.1.0
 
 # homeassistant.components.zha
-zigpy==0.0.3
+zigpy==0.1.0
