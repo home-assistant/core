@@ -30,7 +30,7 @@ def hass_access_token(hass):
     user = MockUser().add_to_hass(hass)
     client = hass.loop.run_until_complete(hass.auth.async_create_client(
         'Access Token Fixture',
-        redirect_uri=['/'],
+        redirect_uris=['/'],
         no_secret=True,
     ))
     refresh_token = hass.loop.run_until_complete(
