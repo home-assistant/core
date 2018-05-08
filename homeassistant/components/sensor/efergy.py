@@ -52,7 +52,7 @@ SENSORS_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_APPTOKEN): cv.string,
     vol.Optional(CONF_UTC_OFFSET, default=DEFAULT_UTC_OFFSET): cv.string,
-    vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA]
+    vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA],
 })
 
 
@@ -63,14 +63,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
     for variable in config[CONF_MONITORED_VARIABLES]:
         if variable[CONF_SENSOR_TYPE] == CONF_CURRENT_VALUES:
-            url_string = _RESOURCE + 'getCurrentValuesSummary?token=' \
-                         + app_token
+            url_string = '{}{}{}'.format(
+                _RESOURCE, 'getCurrentValuesSummary?token=', app_token)
             response = get(url_string, timeout=10)
             for sensor in response.json():
-                sid = "%s_%s" % (sensor['sid'], sensor['cid'])
-                dev.append(EfergySensor(variable[CONF_SENSOR_TYPE], app_token,
-                                        utc_offset, variable[CONF_PERIOD],
-                                        variable[CONF_CURRENCY], sid))
+                sid = '{}_{}'.format(sensor['sid'], sensor['cid'])
+                dev.append(EfergySensor(
+                    variable[CONF_SENSOR_TYPE], app_token, utc_offset,
+                    variable[CONF_PERIOD], variable[CONF_CURRENCY], sid))
         dev.append(EfergySensor(
             variable[CONF_SENSOR_TYPE], app_token, utc_offset,
             variable[CONF_PERIOD], variable[CONF_CURRENCY]))
@@ -86,7 +86,7 @@ class EfergySensor(Entity):
         """Initialize the sensor."""
         self.sid = sid
         if sid:
-            self._name = 'efergy_%s' % (sid)
+            self._name = 'efergy_{}'.format(sid)
         else:
             self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
@@ -96,7 +96,8 @@ class EfergySensor(Entity):
         self.period = period
         self.currency = currency
         if self.type == 'cost':
-            self._unit_of_measurement = self.currency + '/' + self.period
+            self._unit_of_measurement = '{}/{}'.format(
+                self.currency, self.period)
         else:
             self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
@@ -119,34 +120,38 @@ class EfergySensor(Entity):
         """Get the Efergy monitor data from the web service."""
         try:
             if self.type == 'instant_readings':
-                url_string = _RESOURCE + 'getInstant?token=' + self.app_token
+                url_string = '{}{}{}'.format(
+                    _RESOURCE, 'getInstant?token=', self.app_token)
                 response = get(url_string, timeout=10)
                 self._state = response.json()['reading']
             elif self.type == 'amount':
-                url_string = _RESOURCE + 'getEnergy?token=' + self.app_token \
-                    + '&offset=' + self.utc_offset + '&period=' \
-                    + self.period
+                url_string = '{}{}{}{}{}{}{}'.format(
+                    _RESOURCE, 'getEnergy?token=', self.app_token, '&offset=',
+                    self.utc_offset, '&period=', self.period)
                 response = get(url_string, timeout=10)
                 self._state = response.json()['sum']
             elif self.type == 'budget':
-                url_string = _RESOURCE + 'getBudget?token=' + self.app_token
+                url_string = '{}{}{}'.format(
+                    _RESOURCE, 'getBudget?token=', self.app_token)
                 response = get(url_string, timeout=10)
                 self._state = response.json()['status']
             elif self.type == 'cost':
-                url_string = _RESOURCE + 'getCost?token=' + self.app_token \
-                    + '&offset=' + self.utc_offset + '&period=' \
-                    + self.period
+                url_string = '{}{}{}{}{}{}{}'.format(
+                    _RESOURCE, 'getCost?token=', self.app_token, '&offset=',
+                    self.utc_offset, '&period=', self.period)
                 response = get(url_string, timeout=10)
                 self._state = response.json()['sum']
             elif self.type == 'current_values':
-                url_string = _RESOURCE + 'getCurrentValuesSummary?token=' \
-                    + self.app_token
+                url_string = '{}{}{}'.format(
+                    _RESOURCE, 'getCurrentValuesSummary?token=',
+                    self.app_token)
                 response = get(url_string, timeout=10)
                 for sensor in response.json():
-                    if self.sid == "%s_%s" % (sensor['sid'], sensor['cid']):
+                    if self.sid == '{}_{}'.format(
+                            sensor['sid'], sensor['cid']):
                         measurement = next(iter(sensor['data'][0].values()))
                         self._state = measurement
             else:
-                self._state = 'Unknown'
+                self._state = None
         except (RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)
