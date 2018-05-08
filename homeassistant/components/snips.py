@@ -131,7 +131,7 @@ async def async_setup(hass, config):
         slots = {}
         for slot in request.get('slots', []):
             slots[slot['slotName']] = {'value': resolve_slot_values(slot)}
-        slots['siteId'] = {'value': request.get('siteId')}
+        slots['site_id'] = {'value': request.get('siteId')}
         slots['probability'] = {'value': request['intent']['probability']}
 
         try:
