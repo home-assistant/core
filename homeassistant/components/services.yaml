@@ -556,29 +556,3 @@ xiaomi_aqara:
       device_id:
         description: Hardware address of the device to remove.
         example: 158d0000000000
-
-scheduler:
-  create_event:
-    description: Create new event
-    fields:
-      title:
-        description: Event title
-        example: My event
-      start:
-        description: Event start date or datetime (ISO8601 format. See https://en.wikipedia.org/wiki/ISO_8601)
-        example: 2018-08-17T10:30:00
-      end:
-        description: Event start date or datetime (ISO8601 format. See https://en.wikipedia.org/wiki/ISO_8601). Default None
-        example: "2018-08-17"
-      url:
-        description: Event url. Default None
-        example: https://www.home-assistant.io
-      color:
-        description: Event background HTML color in calendar view
-        example: aabbcc
-      all_day:
-        description: Define as an all day event. Default false
-        example: true
-      description:
-        description: Detailed description
-        example: This is the description of my event
