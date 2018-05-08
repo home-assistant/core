@@ -17,7 +17,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant  # NOQA
 from typing import Dict, Any  # NOQA
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import (CONF_NAME, CONF_TYPE)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import bind_hass
@@ -40,6 +40,9 @@ DEFAULT_AGENT_USER_ID = 'home-assistant'
 
 ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
+    # allows you to override the domain it uses so
+    # you can get things like `remote` to work with GA
+    vol.Optional(CONF_TYPE): cv.string,
     vol.Optional(CONF_EXPOSE): cv.boolean,
     vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_ROOM_HINT): cv.string
