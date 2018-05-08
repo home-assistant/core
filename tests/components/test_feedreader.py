@@ -69,7 +69,10 @@ class TestFeedreaderComponent(unittest.TestCase):
         with patch("homeassistant.components.feedreader."
                    "track_utc_time_change") as track_method:
             manager = FeedManager(feed_data, self.hass, storage)
-            track_method.assert_called_once()
+            # Can't use 'assert_called_once' here because it's not available
+            # in Python 3.5 yet.
+            track_method.assert_called_once_with(self.hass, mock.ANY, minute=0,
+                                                 second=0)
         # Artificially trigger update.
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         # Collect events.
