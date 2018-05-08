@@ -26,7 +26,7 @@ ATTR_ROUTE = 'route'
 CONF_ATTRIBUTION = "Data provided by the Waze.com"
 CONF_DESTINATION = 'destination'
 CONF_ORIGIN = 'origin'
-CONF_INCL_FILTER = 'incL_filter'
+CONF_INCL_FILTER = 'incl_filter'
 CONF_EXCL_FILTER = 'excl_filter'
 
 DEFAULT_NAME = 'Waze Travel Time'
