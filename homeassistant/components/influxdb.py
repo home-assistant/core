@@ -9,6 +9,7 @@ import re
 import queue
 import threading
 import time
+import math
 
 import requests.exceptions
 import voluptuous as vol
@@ -220,9 +221,11 @@ def setup(hass, config):
                         json['fields'][key] = float(
                             RE_DECIMAL.sub('', new_value))
 
-                # Infinity is not a valid float in InfluxDB
-                if (key, float("inf")) in json['fields'].items():
-                    del json['fields'][key]
+                # Infinity and NaN are not valid floats in InfluxDB
+                if key in json['fields']:
+                    converted = json['fields'][key]
+                    if math.isinf(converted) or math.isnan(converted):
+                        del json['fields'][key]
 
         json['tags'].update(tags)
 
