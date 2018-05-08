@@ -136,7 +136,7 @@ class WazeRouteData(object):
             results = params.calc_all_routes_info()
             if self._incl_filter is not None:
                 results = {k: v for k, v in results.items() if
-                           self._inc_filter.lower() in k.lower()}
+                           self._incl_filter.lower() in k.lower()}
             if self._excl_filter is not None:
                 results = {k: v for k, v in results.items() if
                            self._excl_filter.lower() not in k.lower()}
