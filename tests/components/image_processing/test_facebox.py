@@ -1,4 +1,6 @@
 """The tests for the facebox component."""
+from unittest.mock import patch
+
 import requests_mock
 
 from homeassistant.const import (
@@ -42,6 +44,8 @@ async def test_setup_platform(hass):
     assert hass.states.get(VALID_ENTITY_ID)
 
 
+@patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
+       autospec=True, return_value=b'Test')
 async def test_process_image(hass):
     """Test processing of an image."""
 
@@ -51,9 +55,10 @@ async def test_process_image(hass):
     with requests_mock.Mocker() as mock_req:
         url = "http://{}:{}/facebox/check".format(MOCK_IP, MOCK_PORT)
         mock_req.post(url, text=MOCK_RESPONSE)
+        data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
         await hass.services.async_call(ip.DOMAIN,
                                        ip.SERVICE_SCAN,
-                                       {ATTR_ENTITY_ID: VALID_ENTITY_ID})
+                                       service_data=data)
         await hass.async_block_till_done()
 
     state = hass.states.get(VALID_ENTITY_ID)
