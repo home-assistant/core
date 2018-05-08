@@ -206,7 +206,7 @@ class XiaomiUnlockSensor(XiaomiBinarySensor):
     """Representation of a XiaomiUnlockSensor."""
 
     def __init__(self, config, devices, device, hass, xiaomi_hub):
-        """Initialize the XiaomiMotionSensor."""
+        """Initialize the XiaomiUnlockSensor."""
         self._hass = hass
         self._no_motion_since = 0
         self.sub_devices = {}
@@ -245,11 +245,6 @@ class XiaomiUnlockSensor(XiaomiBinarySensor):
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if raw_data['cmd'] in ['heartbeat', 'read_ack', 'read_rsp']:
-            _LOGGER.debug(
-                'Skipping heartbeat of the motion sensor. '
-                'It can introduce an incorrect state because of a firmware '
-                'bug (https://github.com/home-assistant/home-assistant/pull/'
-                '11631#issuecomment-357507744).')
             return
 
         self._should_poll = False
@@ -280,27 +275,22 @@ class XiaomiUnlockSensor(XiaomiBinarySensor):
 
 
 class XiaomiUnlockSubSensor(XiaomiBinarySensor):
-    """Representation of a XiaomiMotionSensor."""
+    """Representation of a XiaomiUnlockSubSensor."""
 
     def __init__(self, device, hass, xiaomi_hub):
-        """Initialize the XiaomiMotionSensor."""
+        """Initialize the XiaomiUnlockSubSensor."""
         self._hass = hass
         self._no_motion_since = 0
         if 'proto' not in device or int(device['proto'][0:1]) == 1:
             data_key = 'status'
         else:
             data_key = 'motion_status'
-        XiaomiBinarySensor.__init__(self, device, 'Motion Sensor', xiaomi_hub,
-                                    data_key, 'motion')
+        XiaomiBinarySensor.__init__(self, device, 'UnlockSub Sensor',
+                                    xiaomi_hub, data_key, 'motion')
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if raw_data['cmd'] == 'heartbeat':
-            _LOGGER.debug(
-                'Skipping heartbeat of the motion sensor. '
-                'It can introduce an incorrect state because of a firmware '
-                'bug (https://github.com/home-assistant/home-assistant/pull/'
-                '11631#issuecomment-357507744).')
             return
 
         value = data.get(self._data_key)
