@@ -72,7 +72,7 @@ class RainMachineSensor(RainMachineEntity):
         """Register callbacks."""
         def update_data():
             """Update the state."""
-            self.schedule_update_ha_state(True)
+            self.async_schedule_update_ha_state(True)
 
         async_dispatcher_connect(self.hass, DATA_UPDATE_TOPIC, update_data)
 
