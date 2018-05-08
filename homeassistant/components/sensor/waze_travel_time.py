@@ -26,7 +26,7 @@ ATTR_ROUTE = 'route'
 CONF_ATTRIBUTION = "Data provided by the Waze.com"
 CONF_DESTINATION = 'destination'
 CONF_ORIGIN = 'origin'
-CONF_INC_FILTER = 'inc_filter'
+CONF_INCL_FILTER = 'incL_filter'
 CONF_EXCL_FILTER = 'excl_filter'
 
 DEFAULT_NAME = 'Waze Travel Time'
@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DESTINATION): cv.string,
     vol.Required(CONF_REGION): vol.In(REGIONS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_INC_FILTER): cv.string,
+    vol.Optional(CONF_INCL_FILTER): cv.string,
     vol.Optional(CONF_EXCL_FILTER): cv.string,
 })
 
@@ -53,12 +53,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     origin = config.get(CONF_ORIGIN)
     region = config.get(CONF_REGION)
-    inc_filter = config.get(CONF_INC_FILTER)
+    incl_filter = config.get(CONF_INCL_FILTER)
     excl_filter = config.get(CONF_EXCL_FILTER)
 
     try:
-        waze_data = WazeRouteData(origin, destination, region,
-                                  inc_filter, excl_filter)
+        waze_data = WazeRouteData(
+            origin, destination, region, incl_filter, excl_filter)
     except requests.exceptions.HTTPError as error:
         _LOGGER.error("%s", error)
         return
@@ -116,12 +116,12 @@ class WazeTravelTime(Entity):
 class WazeRouteData(object):
     """Get data from Waze."""
 
-    def __init__(self, origin, destination, region, inc_filter, excl_filter):
+    def __init__(self, origin, destination, region, incl_filter, excl_filter):
         """Initialize the data object."""
         self._destination = destination
         self._origin = origin
         self._region = region
-        self._inc_filter = inc_filter
+        self._incl_filter = incl_filter
         self._excl_filter = excl_filter
         self.data = {}
 
@@ -134,7 +134,7 @@ class WazeRouteData(object):
             params = WazeRouteCalculator.WazeRouteCalculator(
                 self._origin, self._destination, self._region, None)
             results = params.calc_all_routes_info()
-            if self._inc_filter is not None:
+            if self._incl_filter is not None:
                 results = {k: v for k, v in results.items() if
                            self._inc_filter.lower() in k.lower()}
             if self._excl_filter is not None:
