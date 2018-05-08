@@ -248,7 +248,7 @@ class RainMachineZone(RainMachineSwitch):
     @callback
     def _program_updated(self):
         """Update state, trigger updates."""
-        self.schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
