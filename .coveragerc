@@ -127,7 +127,7 @@ omit =
     homeassistant/components/insteon_local.py
     homeassistant/components/*/insteon_local.py
 
-    homeassistant/components/insteon_plm.py
+    homeassistant/components/insteon_plm/*
     homeassistant/components/*/insteon_plm.py
 
     homeassistant/components/ios.py
