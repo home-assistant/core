@@ -74,6 +74,7 @@ class FeedManager(object):
 
     @property
     def last_update_successful(self):
+        """Returns True if the last feed update was successful."""
         return self._last_update_successful
 
     def _update(self):

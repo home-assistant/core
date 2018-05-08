@@ -50,6 +50,7 @@ class TestFeedreaderComponent(unittest.TestCase):
                                             VALID_CONFIG_1))
 
     def setup_manager(self, feed_data):
+        """Generic test setup method."""
         events = []
 
         @callback
@@ -87,7 +88,7 @@ class TestFeedreaderComponent(unittest.TestCase):
         assert datetime.fromtimestamp(
             time.mktime(events[0].data.published_parsed)) == \
             datetime(2018, 4, 30, 5, 10, 0)
-        assert manager.last_update_successful == True
+        assert manager.last_update_successful is True
 
     def test_feed_updates(self):
         """Test feed updates."""
@@ -101,14 +102,14 @@ class TestFeedreaderComponent(unittest.TestCase):
         # with the URL which in these tests is the raw XML data.
         with patch("homeassistant.components.feedreader.StoredData."
                    "get_timestamp", return_value=time.struct_time(
-                (2018, 4, 30, 5, 10, 0, 0, 120, 0))) as mock_get_timestamp:
+                (2018, 4, 30, 5, 10, 0, 0, 120, 0))):
             manager2, events2 = self.setup_manager(feed_data2)
             assert len(events2) == 1
         # 3. Run
         feed_data3 = load_fixture('feedreader1.xml')
         with patch("homeassistant.components.feedreader.StoredData."
                    "get_timestamp", return_value=time.struct_time(
-                (2018, 4, 30, 5, 11, 0, 0, 120, 0))) as mock_get_timestamp:
+                (2018, 4, 30, 5, 11, 0, 0, 120, 0))):
             manager3, events3 = self.setup_manager(feed_data3)
             assert len(events3) == 0
 
@@ -129,7 +130,7 @@ class TestFeedreaderComponent(unittest.TestCase):
         feed_data = "INVALID DATA"
         manager, events = self.setup_manager(feed_data)
         assert len(events) == 0
-        assert manager.last_update_successful == True
+        assert manager.last_update_successful is True
 
     @mock.patch('feedparser.parse', return_value=None)
     def test_feed_parsing_failed(self, mock_parse):
@@ -142,4 +143,4 @@ class TestFeedreaderComponent(unittest.TestCase):
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         # Collect events.
         self.hass.block_till_done()
-        assert manager.last_update_successful == False
+        assert manager.last_update_successful is False
