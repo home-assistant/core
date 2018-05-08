@@ -222,10 +222,11 @@ def setup(hass, config):
                             RE_DECIMAL.sub('', new_value))
 
                 # Infinity and NaN are not valid floats in InfluxDB
-                if key in json['fields']:
-                    converted = json['fields'][key]
-                    if math.isinf(converted) or math.isnan(converted):
+                try:
+                    if not math.isfinite(json['fields'][key]):
                         del json['fields'][key]
+                except (KeyError, TypeError):
+                    pass
 
         json['tags'].update(tags)
 
