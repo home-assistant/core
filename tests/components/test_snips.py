@@ -120,7 +120,7 @@ async def test_snips_intent(hass, mqtt_mock):
     assert intent.intent_type == 'Lights'
     assert intent.slots == {'light_color': {'value': 'green'},
                             'probability': {'value': 1},
-                            'siteId': {'value': None}}
+                            'site_id': {'value': None}}
     assert intent.text_input == 'turn the lights green'
 
 
@@ -172,7 +172,7 @@ async def test_snips_intent_with_duration(hass, mqtt_mock):
     assert intent.platform == 'snips'
     assert intent.intent_type == 'SetTimer'
     assert intent.slots == {'probability': {'value': 1},
-                            'siteId': {'value': None},
+                            'site_id': {'value': None},
                             'timer_duration': {'value': 300}}
 
 
@@ -336,7 +336,7 @@ async def test_intent_special_slots(hass, mqtt_mock):
                     "service": "light.turn_on",
                     "data_template": {
                         "probability": "{{ probability }}",
-                        "siteId": "{{ siteId }}"
+                        "site_id": "{{ site_id }}"
                     }
                 }
             }
@@ -361,7 +361,7 @@ async def test_intent_special_slots(hass, mqtt_mock):
     assert calls[0].domain == 'light'
     assert calls[0].service == 'turn_on'
     assert calls[0].data['probability'] == '0.85'
-    assert calls[0].data['siteId'] == 'default'
+    assert calls[0].data['site_id'] == 'default'
 
 
 async def test_snips_say(hass, caplog):
