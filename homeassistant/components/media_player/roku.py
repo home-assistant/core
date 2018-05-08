@@ -147,6 +147,11 @@ class RokuDevice(MediaPlayerDevice):
         return SUPPORT_ROKU
 
     @property
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return self.device_info.sernum
+
+    @property
     def media_content_type(self):
         """Content type of current playing media."""
         if self.current_app is None:
