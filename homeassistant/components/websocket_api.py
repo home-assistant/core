@@ -8,7 +8,6 @@ import asyncio
 from concurrent import futures
 from contextlib import suppress
 from functools import partial
-import hmac
 import json
 import logging
 
