@@ -84,7 +84,6 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         super().__init__()
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
-        self.component = None
         self._network = network
         self.node = node
         self.node_id = self.node.node_id

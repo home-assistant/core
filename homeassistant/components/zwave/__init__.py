@@ -11,7 +11,7 @@ from pprint import pprint
 
 import voluptuous as vol
 
-from homeassistant.core import CoreState
+from homeassistant.core import callback, CoreState
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
@@ -314,11 +314,13 @@ def setup(hass, config):
             _add_node_to_component()
             return
 
+        @callback
         def _on_ready(sec):
             _LOGGER.info("Z-Wave node %d ready after %d seconds",
                          entity.node_id, sec)
             hass.async_add_job(_add_node_to_component)
 
+        @callback
         def _on_timeout(sec):
             _LOGGER.warning(
                 "Z-Wave node %d not ready after %d seconds, "
@@ -830,6 +832,7 @@ class ZWaveDeviceEntityValues():
 
         dict_id = id(self)
 
+        @callback
         def _on_ready(sec):
             _LOGGER.info(
                 "Z-Wave entity %s (node_id: %d) ready after %d seconds",
@@ -837,6 +840,7 @@ class ZWaveDeviceEntityValues():
             self._hass.async_add_job(discover_device, component, device,
                                      dict_id)
 
+        @callback
         def _on_timeout(sec):
             _LOGGER.warning(
                 "Z-Wave entity %s (node_id: %d) not ready after %d seconds, "
