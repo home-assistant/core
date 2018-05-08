@@ -192,7 +192,6 @@ class RainMachine(object):
         """Initialize."""
         self.client = client
         self.device_mac = self.client.provision.wifi()['macAddress']
-        self.hass = hass
         self.restrictions = {}
 
     def update(self):
