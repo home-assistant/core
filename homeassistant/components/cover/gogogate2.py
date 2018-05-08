@@ -30,8 +30,6 @@ COVER_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
