@@ -62,4 +62,6 @@ async def test_process_image(hass):
         await hass.async_block_till_done()
 
     state = hass.states.get(VALID_ENTITY_ID)
+    assert False
     assert state.state == '1'
+    assert state.attributes.get('matched_faces') == {'John Lennon': 0.58}
