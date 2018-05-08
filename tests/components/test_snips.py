@@ -118,7 +118,9 @@ async def test_snips_intent(hass, mqtt_mock):
     intent = intents[0]
     assert intent.platform == 'snips'
     assert intent.intent_type == 'Lights'
-    assert intent.slots == {'light_color': {'value': 'green'}}
+    assert intent.slots == {'light_color': {'value': 'green'},
+                            'probability': {'value': 1},
+                            'site_id': {'value': None}}
     assert intent.text_input == 'turn the lights green'
 
 
@@ -169,7 +171,9 @@ async def test_snips_intent_with_duration(hass, mqtt_mock):
     intent = intents[0]
     assert intent.platform == 'snips'
     assert intent.intent_type == 'SetTimer'
-    assert intent.slots == {'timer_duration': {'value': 300}}
+    assert intent.slots == {'probability': {'value': 1},
+                            'site_id': {'value': None},
+                            'timer_duration': {'value': 300}}
 
 
 async def test_intent_speech_response(hass, mqtt_mock):
@@ -318,11 +322,51 @@ async def test_snips_low_probability(hass, mqtt_mock, caplog):
     assert 'Intent below probaility threshold 0.49 < 0.5' in caplog.text
 
 
+async def test_intent_special_slots(hass, mqtt_mock):
+    """Test intent special slot values via Snips."""
+    calls = async_mock_service(hass, 'light', 'turn_on')
+    result = await async_setup_component(hass, "snips", {
+        "snips": {},
+    })
+    assert result
+    result = await async_setup_component(hass, "intent_script", {
+        "intent_script": {
+            "Lights": {
+                "action": {
+                    "service": "light.turn_on",
+                    "data_template": {
+                        "probability": "{{ probability }}",
+                        "site_id": "{{ site_id }}"
+                    }
+                }
+            }
+        }
+    })
+    assert result
+    payload = """
+    {
+        "input": "turn the light on",
+        "intent": {
+            "intentName": "Lights",
+            "probability": 0.85
+        },
+        "siteId": "default",
+        "slots": []
+    }
+    """
+    async_fire_mqtt_message(hass, 'hermes/intent/Lights', payload)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].domain == 'light'
+    assert calls[0].service == 'turn_on'
+    assert calls[0].data['probability'] == '0.85'
+    assert calls[0].data['site_id'] == 'default'
+
+
 async def test_snips_say(hass, caplog):
     """Test snips say with invalid config."""
-    calls = async_mock_service(hass, 'snips', 'say',
-                               snips.SERVICE_SCHEMA_SAY)
-
+    calls = async_mock_service(hass, 'snips', 'say', snips.SERVICE_SCHEMA_SAY)
     data = {'text': 'Hello'}
     await hass.services.async_call('snips', 'say', data)
     await hass.async_block_till_done()
