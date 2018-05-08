@@ -155,7 +155,7 @@ class APISpaceApiView(HomeAssistantView):
 
         if is_sensors is not None:
             sensors = {}
-            for sensor_type in is_sensors.keys():
+            for sensor_type in is_sensors:
                 sensors[sensor_type] = []
                 for sensor in spaceapi['sensors'][sensor_type]:
                     sensor_state = request.app['hass'].states.get(sensor)
