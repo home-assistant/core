@@ -26,7 +26,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 import homeassistant.util as util
 
-REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2']
+REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2', 'jellyfish==0.6.1']
 
 _CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
@@ -351,30 +351,30 @@ class LgWebOSDevice(MediaPlayerDevice):
 
         if media_type == MEDIA_TYPE_CHANNEL:
             _LOGGER.debug("Searching channel...")
-            partial_match_channel_id = None
-            perfect_match_channel_id = None
+            max_score = -1
+            best_id = None
+            best_name = None
+
+            import jellyfish
 
             for channel in self._client.get_channels():
+                name = channel['channelName']
                 if media_id == channel['channelNumber']:
-                    perfect_match_channel_id = channel['channelId']
+                    max_score = 1
+                    best_id = channel['channelId']
                     continue
-                elif media_id.lower() == channel['channelName'].lower():
-                    perfect_match_channel_id = channel['channelId']
-                    continue
-                elif media_id.lower() in channel['channelName'].lower():
-                    partial_match_channel_id = channel['channelId']
+                else:
+                    ratio = 1/(
+                        1+jellyfish.levenshtein_distance(
+                            media_id.lower(), name.lower()))
+                    if ratio > max_score:
+                        max_score = ratio
+                        best_id = channel['channelId']
+                        best_name = name
 
-            if perfect_match_channel_id is not None:
-                _LOGGER.info(
-                    "Switching to channel <%s> with perfect match",
-                    perfect_match_channel_id)
-                self._client.set_channel(perfect_match_channel_id)
-            elif partial_match_channel_id is not None:
-                _LOGGER.info(
-                    "Switching to channel <%s> with partial match",
-                    partial_match_channel_id)
-                self._client.set_channel(partial_match_channel_id)
-
+            _LOGGER.info(
+                "Switching to channel <%s> with best match", best_name)
+            self._client.set_channel(best_id)
             return
 
     def media_play(self):

@@ -448,6 +448,9 @@ insteonlocal==0.53
 # homeassistant.components.insteon_plm
 insteonplm==0.9.1
 
+# homeassistant.components.media_player.webostv
+jellyfish==0.6.1
+
 # homeassistant.components.verisure
 jsonpath==0.75
 
