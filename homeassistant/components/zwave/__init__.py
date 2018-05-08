@@ -11,7 +11,7 @@ from pprint import pprint
 
 import voluptuous as vol
 
-from homeassistant.core import CoreState
+from homeassistant.core import callback, CoreState
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
@@ -31,7 +31,8 @@ from .const import DOMAIN, DATA_DEVICES, DATA_NETWORK, DATA_ENTITY_VALUES
 from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
-from .util import check_node_schema, check_value_schema, node_name
+from .util import (check_node_schema, check_value_schema, node_name,
+                   check_has_unique_id, is_node_parsed)
 
 REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.3']
 
@@ -313,30 +314,22 @@ def setup(hass, config):
             _add_node_to_component()
             return
 
-        async def _check_node_ready():
-            """Wait for node to be parsed."""
-            start_time = dt_util.utcnow()
-            while True:
-                waited = int((dt_util.utcnow()-start_time).total_seconds())
-
-                if entity.unique_id:
-                    _LOGGER.info("Z-Wave node %d ready after %d seconds",
-                                 entity.node_id, waited)
-                    break
-                elif waited >= const.NODE_READY_WAIT_SECS:
-                    # Wait up to NODE_READY_WAIT_SECS seconds for the Z-Wave
-                    # node to be ready.
-                    _LOGGER.warning(
-                        "Z-Wave node %d not ready after %d seconds, "
-                        "continuing anyway",
-                        entity.node_id, waited)
-                    break
-                else:
-                    await asyncio.sleep(1, loop=hass.loop)
-
+        @callback
+        def _on_ready(sec):
+            _LOGGER.info("Z-Wave node %d ready after %d seconds",
+                         entity.node_id, sec)
             hass.async_add_job(_add_node_to_component)
 
-        hass.add_job(_check_node_ready)
+        @callback
+        def _on_timeout(sec):
+            _LOGGER.warning(
+                "Z-Wave node %d not ready after %d seconds, "
+                "continuing anyway",
+                entity.node_id, sec)
+            hass.async_add_job(_add_node_to_component)
+
+        hass.add_job(check_has_unique_id, entity, _on_ready, _on_timeout,
+                     hass.loop)
 
     def network_ready():
         """Handle the query of all awake nodes."""
@@ -839,13 +832,35 @@ class ZWaveDeviceEntityValues():
 
         dict_id = id(self)
 
+        @callback
+        def _on_ready(sec):
+            _LOGGER.info(
+                "Z-Wave entity %s (node_id: %d) ready after %d seconds",
+                device.name, self._node.node_id, sec)
+            self._hass.async_add_job(discover_device, component, device,
+                                     dict_id)
+
+        @callback
+        def _on_timeout(sec):
+            _LOGGER.warning(
+                "Z-Wave entity %s (node_id: %d) not ready after %d seconds, "
+                "continuing anyway",
+                device.name, self._node.node_id, sec)
+            self._hass.async_add_job(discover_device, component, device,
+                                     dict_id)
+
         async def discover_device(component, device, dict_id):
             """Put device in a dictionary and call discovery on it."""
             self._hass.data[DATA_DEVICES][dict_id] = device
             await discovery.async_load_platform(
                 self._hass, component, DOMAIN,
                 {const.DISCOVERY_DEVICE: dict_id}, self._zwave_config)
-        self._hass.add_job(discover_device, component, device, dict_id)
+
+        if device.unique_id:
+            self._hass.add_job(discover_device, component, device, dict_id)
+        else:
+            self._hass.add_job(check_has_unique_id, device, _on_ready,
+                               _on_timeout, self._hass.loop)
 
 
 class ZWaveDeviceEntity(ZWaveBaseEntity):
@@ -862,8 +877,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self.values.primary.set_change_verified(False)
 
         self._name = _value_name(self.values.primary)
-        self._unique_id = "{}-{}".format(self.node.node_id,
-                                         self.values.primary.object_id)
+        self._unique_id = self._compute_unique_id()
         self._update_attributes()
 
         dispatcher.connect(
@@ -894,6 +908,11 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
     def _update_attributes(self):
         """Update the node attributes. May only be used inside callback."""
         self.node_id = self.node.node_id
+        self._name = _value_name(self.values.primary)
+        if not self._unique_id:
+            self._unique_id = self._compute_unique_id()
+            if self._unique_id:
+                self.try_remove_and_add()
 
         if self.values.power:
             self.power_consumption = round(
@@ -940,3 +959,11 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         for value in self.values:
             if value is not None:
                 self.node.refresh_value(value.value_id)
+
+    def _compute_unique_id(self):
+        if (is_node_parsed(self.node) and
+                self.values.primary.label != "Unknown") or \
+                self.node.is_ready:
+            return "{}-{}".format(self.node.node_id,
+                                  self.values.primary.object_id)
+        return None
