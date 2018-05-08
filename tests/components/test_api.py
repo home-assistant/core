@@ -12,8 +12,6 @@ from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
-
 
 @pytest.fixture
 def mock_api_client(hass, aiohttp_client):
