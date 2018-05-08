@@ -313,3 +313,49 @@ def test_unknown_command(websocket_client):
 
     msg = yield from websocket_client.receive()
     assert msg.type == WSMsgType.close
+
+
+async def test_auth_with_token(hass, aiohttp_client, hass_access_token):
+    """Test authenticating with a token."""
+    assert await async_setup_component(hass, 'websocket_api', {
+            'http': {
+                'api_password': API_PASSWORD
+            }
+        })
+
+    client = await aiohttp_client(hass.http.app)
+
+    async with client.ws_connect(wapi.URL) as ws:
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
+
+        await ws.send_json({
+            'type': wapi.TYPE_AUTH,
+            'access_token': hass_access_token.token
+        })
+
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == wapi.TYPE_AUTH_OK
+
+
+async def test_auth_with_invalid_token(hass, aiohttp_client):
+    """Test authenticating with a token."""
+    assert await async_setup_component(hass, 'websocket_api', {
+            'http': {
+                'api_password': API_PASSWORD
+            }
+        })
+
+    client = await aiohttp_client(hass.http.app)
+
+    async with client.ws_connect(wapi.URL) as ws:
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
+
+        await ws.send_json({
+            'type': wapi.TYPE_AUTH,
+            'access_token': 'incorrect'
+        })
+
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == wapi.TYPE_AUTH_INVALID
