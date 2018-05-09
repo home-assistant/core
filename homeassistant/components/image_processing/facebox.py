@@ -1,6 +1,5 @@
 """
-Component that will perform facial detection and identification via a local
-facebox classifier.
+Component that will perform facial detection and identification via facebox.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.facebox
@@ -57,7 +56,7 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
     """Perform a face classification."""
 
     def __init__(self, ip, port, camera_entity, name=None):
-        """Init with the API key and model id"""
+        """Init with the API key and model id."""
         super().__init__()
         self._url = "http://{}:{}/{}/check".format(ip, port, CLASSIFIER)
         self._camera = camera_entity
