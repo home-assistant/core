@@ -293,7 +293,7 @@ class VenstarThermostat(ClimateDevice):
         elif hold_mode == HOLD_MODE_OFF:
             success = self._client.set_schedule(1)
         else:
-            _LOGGER.error("Unknown hold mode \"%s\"", hold_mode)
+            _LOGGER.error("Unknown hold mode: %s", hold_mode)
             success = False
 
         if not success:
