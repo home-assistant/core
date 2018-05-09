@@ -89,8 +89,7 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
             return None
         elif re.search('^\\d+$', self._code):
             return '^\\d+$'
-        else:
-            return '.+'
+        return '.+'
 
     @property
     def state(self):

@@ -243,8 +243,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
             return None
         elif re.search('^\\d+$', self._code):
             return '^\\d+$'
-        else:
-            return '.+'
+        return '.+'
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

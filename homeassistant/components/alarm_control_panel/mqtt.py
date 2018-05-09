@@ -123,8 +123,7 @@ class MqttAlarm(MqttAvailability, alarm.AlarmControlPanel):
             return None
         elif re.search('^\\d+$', self._code):
             return '^\\d+$'
-        else:
-            return '.+'
+        return '.+'
 
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):
