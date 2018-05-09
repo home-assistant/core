@@ -15,7 +15,6 @@ from voluptuous.humanize import humanize_error
 from homeassistant import data_entry_flow, requirements
 from homeassistant.core import callback
 from homeassistant.const import CONF_TYPE, CONF_NAME, CONF_ID
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.decorator import Registry
 from homeassistant.util import dt as dt_util
 
