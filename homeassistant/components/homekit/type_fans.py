@@ -4,28 +4,24 @@ import logging
 from pyhap.const import CATEGORY_FAN
 
 from homeassistant.components.fan import (
-    ATTR_SPEED, ATTR_SPEED_LIST, SUPPORT_SET_SPEED, SUPPORT_OSCILLATE,
-    SUPPORT_DIRECTION, ATTR_OSCILLATING, ATTR_DIRECTION)
+    ATTR_DIRECTION, ATTR_OSCILLATING, ATTR_SPEED, ATTR_SPEED_LIST,
+    DIRECTION_FORWARD, DIRECTION_REVERSE, SUPPORT_DIRECTION,
+    SUPPORT_OSCILLATE, SUPPORT_SET_SPEED)
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF, ATTR_ENTITY_ID,
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON,
     SERVICE_TURN_OFF, SERVICE_TURN_ON)
 from homeassistant.core import split_entity_id
 
 from . import TYPES
 from .accessories import HomeAccessory, debounce
 from .const import (
-    SERV_FANV2, CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_ROTATION_SPEED,
-    CHAR_SWING_MODE)
+    CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_ROTATION_SPEED,
+    CHAR_SWING_MODE, SERV_FANV2)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DIRECTION_LEFT = 'left'
-ATTR_DIRECTION_RIGHT = 'right'
-ATTR_DIRECTION_CLOCKWISE = 'clockwise'
-ATTR_DIRECTION_COUNTER_CLOCKWISE = 'counter_clockwise'
-
-HASS_TO_HOMEKIT = {ATTR_DIRECTION_LEFT: 1,
-                   ATTR_DIRECTION_RIGHT: 0}
+HASS_TO_HOMEKIT = {DIRECTION_FORWARD: 0,
+                   DIRECTION_REVERSE: 1}
 HOMEKIT_TO_HASS = {c: s for s, c in HASS_TO_HOMEKIT.items()}
 
 
@@ -108,7 +104,7 @@ class Fan(HomeAccessory):
         """Set state if call came from HomeKit."""
         _LOGGER.debug('%s: Set direction to %d', self.entity_id, value)
         self._flag[CHAR_ROTATION_DIRECTION] = True
-        direction = 'left' if value == 1 else 'right'
+        direction = HOMEKIT_TO_HASS[value]
         self.hass.components.fan.set_direction(self.entity_id,
                                                direction=direction)
 
