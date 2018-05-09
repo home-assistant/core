@@ -52,7 +52,7 @@ TIMEOUT_MESSAGE = 'Timeout waiting for response.'
 
 
 def determine_zones(receiver):
-    """Determine what zones are available for the receiver"""
+    """Determine what zones are available for the receiver."""
     out = {
         "zone2": False,
         "zone3": False,
@@ -61,17 +61,17 @@ def determine_zones(receiver):
         _LOGGER.debug("Checking for zone 2 capability")
         receiver.raw("ZPW")
         out["zone2"] = True
-    except ValueError as e:
-        if str(e) != TIMEOUT_MESSAGE:
-            raise e
+    except ValueError as error:
+        if str(error) != TIMEOUT_MESSAGE:
+            raise error
         _LOGGER.debug("Zone 2 timed out, assuming no functionality")
     try:
         _LOGGER.debug("Checking for zone 3 capability")
         receiver.raw("PW3")
         out["zone3"] = True
-    except ValueError as e:
-        if str(e) != TIMEOUT_MESSAGE:
-            raise e
+    except ValueError as error:
+        if str(error) != TIMEOUT_MESSAGE:
+            raise error
         _LOGGER.debug("Zone 3 timed out, assuming no functionality")
 
     return out
@@ -268,6 +268,7 @@ class OnkyoDeviceZone(OnkyoDevice):
     """Representation of an Onkyo device's extra zone."""
 
     def __init__(self, zone, receiver, sources, name=None):
+        """Initialize the Zone with the zone identifier."""
         self._zone = zone
         super().__init__(receiver, sources, name)
 
