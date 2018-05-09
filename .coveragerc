@@ -422,7 +422,6 @@ omit =
     homeassistant/components/ifttt.py
     homeassistant/components/image_processing/dlib_face_detect.py
     homeassistant/components/image_processing/dlib_face_identify.py
-    homeassistant/components/image_processing/facebox.py
     homeassistant/components/image_processing/seven_segments.py
     homeassistant/components/keyboard_remote.py
     homeassistant/components/keyboard.py
