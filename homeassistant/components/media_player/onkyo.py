@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_SOURCES = 'sources'
 CONF_MAX_VOLUME = 'max_volume'
-CONF_ZONE2 = 'zone2'
 
 DEFAULT_NAME = 'Onkyo Receiver'
 SUPPORTED_MAX_VOLUME = 80
@@ -47,8 +46,35 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=1, max=SUPPORTED_MAX_VOLUME)),
     vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES):
         {cv.string: cv.string},
-    vol.Optional(CONF_ZONE2, default=False): cv.boolean,
 })
+
+TIMEOUT_MESSAGE = 'Timeout waiting for response.'
+
+
+def determine_zones(receiver):
+    """Determine what zones are available for the receiver."""
+    out = {
+        "zone2": False,
+        "zone3": False,
+    }
+    try:
+        _LOGGER.debug("Checking for zone 2 capability")
+        receiver.raw("ZPW")
+        out["zone2"] = True
+    except ValueError as error:
+        if str(error) != TIMEOUT_MESSAGE:
+            raise error
+        _LOGGER.debug("Zone 2 timed out, assuming no functionality")
+    try:
+        _LOGGER.debug("Checking for zone 3 capability")
+        receiver.raw("PW3")
+        out["zone3"] = True
+    except ValueError as error:
+        if str(error) != TIMEOUT_MESSAGE:
+            raise error
+        _LOGGER.debug("Zone 3 timed out, assuming no functionality")
+
+    return out
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -61,20 +87,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if CONF_HOST in config and host not in KNOWN_HOSTS:
         try:
+            receiver = eiscp.eISCP(host)
             hosts.append(OnkyoDevice(
-                eiscp.eISCP(host), config.get(CONF_SOURCES),
+                receiver,
+                config.get(CONF_SOURCES),
                 name=config.get(CONF_NAME),
                 max_volume=config.get(CONF_MAX_VOLUME),
             ))
             KNOWN_HOSTS.append(host)
 
-            # Add Zone2 if configured
-            if config.get(CONF_ZONE2):
+            zones = determine_zones(receiver)
+
+            # Add Zone2 if available
+            if zones["zone2"]:
                 _LOGGER.debug("Setting up zone 2")
-                hosts.append(OnkyoDeviceZone2(eiscp.eISCP(host),
-                                              config.get(CONF_SOURCES),
-                                              name=config.get(CONF_NAME) +
-                                              " Zone 2"))
+                hosts.append(OnkyoDeviceZone(
+                    "2", receiver,
+                    config.get(CONF_SOURCES),
+                    name="{} Zone 2".format(config[CONF_NAME])))
+            # Add Zone3 if available
+            if zones["zone3"]:
+                _LOGGER.debug("Setting up zone 3")
+                hosts.append(OnkyoDeviceZone(
+                    "3", receiver,
+                    config.get(CONF_SOURCES),
+                    name="{} Zone 3".format(config[CONF_NAME])))
         except OSError:
             _LOGGER.error("Unable to connect to receiver at %s", host)
     else:
@@ -227,12 +264,17 @@ class OnkyoDevice(MediaPlayerDevice):
         self.command('input-selector {}'.format(source))
 
 
-class OnkyoDeviceZone2(OnkyoDevice):
-    """Representation of an Onkyo device's zone 2."""
+class OnkyoDeviceZone(OnkyoDevice):
+    """Representation of an Onkyo device's extra zone."""
+
+    def __init__(self, zone, receiver, sources, name=None):
+        """Initialize the Zone with the zone identifier."""
+        self._zone = zone
+        super().__init__(receiver, sources, name)
 
     def update(self):
         """Get the latest state from the device."""
-        status = self.command('zone2.power=query')
+        status = self.command('zone{}.power=query'.format(self._zone))
 
         if not status:
             return
@@ -242,9 +284,10 @@ class OnkyoDeviceZone2(OnkyoDevice):
             self._pwstate = STATE_OFF
             return
 
-        volume_raw = self.command('zone2.volume=query')
-        mute_raw = self.command('zone2.muting=query')
-        current_source_raw = self.command('zone2.selector=query')
+        volume_raw = self.command('zone{}.volume=query'.format(self._zone))
+        mute_raw = self.command('zone{}.muting=query'.format(self._zone))
+        current_source_raw = self.command(
+            'zone{}.selector=query'.format(self._zone))
 
         if not (volume_raw and mute_raw and current_source_raw):
             return
@@ -268,33 +311,33 @@ class OnkyoDeviceZone2(OnkyoDevice):
 
     def turn_off(self):
         """Turn the media player off."""
-        self.command('zone2.power=standby')
+        self.command('zone{}.power=standby'.format(self._zone))
 
     def set_volume_level(self, volume):
         """Set volume level, input is range 0..1. Onkyo ranges from 1-80."""
-        self.command('zone2.volume={}'.format(int(volume*80)))
+        self.command('zone{}.volume={}'.format(self._zone, int(volume*80)))
 
     def volume_up(self):
         """Increase volume by 1 step."""
-        self.command('zone2.volume=level-up')
+        self.command('zone{}.volume=level-up'.format(self._zone))
 
     def volume_down(self):
         """Decrease volume by 1 step."""
-        self.command('zone2.volume=level-down')
+        self.command('zone{}.volume=level-down'.format(self._zone))
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         if mute:
-            self.command('zone2.muting=on')
+            self.command('zone{}.muting=on'.format(self._zone))
         else:
-            self.command('zone2.muting=off')
+            self.command('zone{}.muting=off'.format(self._zone))
 
     def turn_on(self):
         """Turn the media player on."""
-        self.command('zone2.power=on')
+        self.command('zone{}.power=on'.format(self._zone))
 
     def select_source(self, source):
         """Set the input source."""
         if source in self._source_list:
             source = self._reverse_mapping[source]
-        self.command('zone2.selector={}'.format(source))
+        self.command('zone{}.selector={}'.format(self._zone, source))
