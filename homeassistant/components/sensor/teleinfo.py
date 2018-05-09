@@ -111,8 +111,8 @@ class TeleinfoSensor(Entity):
                     self._attributes[info['name']] = info['value']
                 if 'ADCO' == info['name']:
                     self._state = self._attributes['ADCO']
-            _LOGGER.debug(
-                "Sensor: state=%s attributes=%s", self._state, self._attributes)
+            _LOGGER.debug("Sensor: state=%s attributes=%s",
+                self._state, self._attributes)
 
 
 class TeleinfoData(object):
