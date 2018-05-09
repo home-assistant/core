@@ -459,10 +459,10 @@ jsonrpc-async==0.6
 jsonrpc-websocket==0.6
 
 # homeassistant.scripts.keyring
-keyring==12.0.0
+keyring==12.2.0
 
 # homeassistant.scripts.keyring
-keyrings.alt==3.0
+keyrings.alt==3.1
 
 # homeassistant.components.eufy
 lakeside==0.5
