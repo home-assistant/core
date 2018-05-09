@@ -94,6 +94,8 @@ homeassistant/components/*/hive.py @Rendili @KJonline
 homeassistant/components/homekit/* @cdce8p
 homeassistant/components/knx.py @Julius2342
 homeassistant/components/*/knx.py @Julius2342
+homeassistant/components/matrix.py @tinloaf
+homeassistant/components/*/matrix.py @tinloaf
 homeassistant/components/qwikswitch.py @kellerza
 homeassistant/components/*/qwikswitch.py @kellerza
 homeassistant/components/*/rfxtrx.py @danielhiversen

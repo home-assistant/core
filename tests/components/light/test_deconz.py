@@ -3,6 +3,7 @@ from unittest.mock import Mock, patch
 
 from homeassistant import config_entries
 from homeassistant.components import deconz
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import mock_coro
 
@@ -49,6 +50,7 @@ async def setup_bridge(hass, data):
                return_value=mock_coro(data)):
         await bridge.async_load_parameters()
     hass.data[deconz.DOMAIN] = bridge
+    hass.data[deconz.DATA_DECONZ_UNSUB] = []
     hass.data[deconz.DATA_DECONZ_ID] = {}
     config_entry = config_entries.ConfigEntry(
         1, deconz.DOMAIN, 'Mock Title', {'host': 'mock-host'}, 'test')
@@ -58,7 +60,7 @@ async def setup_bridge(hass, data):
 
 
 async def test_no_lights_or_groups(hass):
-    """Test the update_lights function with some lights."""
+    """Test that no lights or groups entities are created."""
     data = {}
     await setup_bridge(hass, data)
     assert len(hass.data[deconz.DATA_DECONZ_ID]) == 0
@@ -66,9 +68,33 @@ async def test_no_lights_or_groups(hass):
 
 
 async def test_lights_and_groups(hass):
-    """Test the update_lights function with some lights."""
+    """Test that lights or groups entities are created."""
     await setup_bridge(hass, {"lights": LIGHT, "groups": GROUP})
     assert "light.light_1_name" in hass.data[deconz.DATA_DECONZ_ID]
     assert "light.group_1_name" in hass.data[deconz.DATA_DECONZ_ID]
     assert "light.group_2_name" not in hass.data[deconz.DATA_DECONZ_ID]
     assert len(hass.states.async_all()) == 3
+
+
+async def test_add_new_light(hass):
+    """Test successful creation of light entities."""
+    data = {}
+    await setup_bridge(hass, data)
+    light = Mock()
+    light.name = 'name'
+    light.register_async_callback = Mock()
+    async_dispatcher_send(hass, 'deconz_new_light', [light])
+    await hass.async_block_till_done()
+    assert "light.name" in hass.data[deconz.DATA_DECONZ_ID]
+
+
+async def test_add_new_group(hass):
+    """Test successful creation of group entities."""
+    data = {}
+    await setup_bridge(hass, data)
+    group = Mock()
+    group.name = 'name'
+    group.register_async_callback = Mock()
+    async_dispatcher_send(hass, 'deconz_new_group', [group])
+    await hass.async_block_till_done()
+    assert "light.name" in hass.data[deconz.DATA_DECONZ_ID]

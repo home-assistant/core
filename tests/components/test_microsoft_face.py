@@ -2,7 +2,7 @@
 import asyncio
 from unittest.mock import patch
 
-import homeassistant.components.microsoft_face as mf
+from homeassistant.components import camera, microsoft_face as mf
 from homeassistant.setup import setup_component
 
 from tests.common import (
@@ -190,7 +190,7 @@ class TestMicrosoftFaceSetup(object):
         assert len(aioclient_mock.mock_calls) == 1
 
     @patch('homeassistant.components.camera.async_get_image',
-           return_value=mock_coro(b'Test'))
+           return_value=mock_coro(camera.Image('image/jpeg', b'Test')))
     def test_service_face(self, camera_mock, aioclient_mock):
         """Setup component, test person face services."""
         aioclient_mock.get(

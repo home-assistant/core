@@ -5,7 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ecobee/
 """
 from homeassistant.components import ecobee
-from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ecobee']
@@ -55,7 +56,7 @@ class EcobeeSensor(Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        if self.type in ('temperature', 'humidity'):
+        if self.type in (DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE):
             return self.type
         return None
 

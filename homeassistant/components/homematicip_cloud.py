@@ -24,7 +24,10 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'homematicip_cloud'
 
 COMPONENTS = [
-    'sensor'
+    'sensor',
+    'binary_sensor',
+    'switch',
+    'light'
 ]
 
 CONF_NAME = 'name'

@@ -1,16 +1,17 @@
 """Class to hold all light accessories."""
 import logging
 
+from pyhap.const import CATEGORY_LIGHTBULB
+
 from homeassistant.components.light import (
     ATTR_HS_COLOR, ATTR_COLOR_TEMP, ATTR_BRIGHTNESS, ATTR_MIN_MIREDS,
     ATTR_MAX_MIREDS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_BRIGHTNESS)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF
 
 from . import TYPES
-from .accessories import (
-    HomeAccessory, add_preload_service, debounce, setup_char)
+from .accessories import HomeAccessory, debounce
 from .const import (
-    CATEGORY_LIGHT, SERV_LIGHTBULB, CHAR_COLOR_TEMPERATURE,
+    SERV_LIGHTBULB, CHAR_COLOR_TEMPERATURE,
     CHAR_BRIGHTNESS, CHAR_HUE, CHAR_ON, CHAR_SATURATION)
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ class Light(HomeAccessory):
 
     def __init__(self, *args, config):
         """Initialize a new Light accessory object."""
-        super().__init__(*args, category=CATEGORY_LIGHT)
+        super().__init__(*args, category=CATEGORY_LIGHTBULB)
         self._flag = {CHAR_ON: False, CHAR_BRIGHTNESS: False,
                       CHAR_HUE: False, CHAR_SATURATION: False,
                       CHAR_COLOR_TEMPERATURE: False, RGB_COLOR: False}
@@ -46,30 +47,28 @@ class Light(HomeAccessory):
             self._hue = None
             self._saturation = None
 
-        serv_light = add_preload_service(self, SERV_LIGHTBULB, self.chars)
-        self.char_on = setup_char(
-            CHAR_ON, serv_light, value=self._state, callback=self.set_state)
+        serv_light = self.add_preload_service(SERV_LIGHTBULB, self.chars)
+        self.char_on = serv_light.configure_char(
+            CHAR_ON, value=self._state, setter_callback=self.set_state)
 
         if CHAR_BRIGHTNESS in self.chars:
-            self.char_brightness = setup_char(
-                CHAR_BRIGHTNESS, serv_light, value=0,
-                callback=self.set_brightness)
+            self.char_brightness = serv_light.configure_char(
+                CHAR_BRIGHTNESS, value=0, setter_callback=self.set_brightness)
         if CHAR_COLOR_TEMPERATURE in self.chars:
             min_mireds = self.hass.states.get(self.entity_id) \
                 .attributes.get(ATTR_MIN_MIREDS, 153)
             max_mireds = self.hass.states.get(self.entity_id) \
                 .attributes.get(ATTR_MAX_MIREDS, 500)
-            self.char_color_temperature = setup_char(
-                CHAR_COLOR_TEMPERATURE, serv_light, value=min_mireds,
+            self.char_color_temperature = serv_light.configure_char(
+                CHAR_COLOR_TEMPERATURE, value=min_mireds,
                 properties={'minValue': min_mireds, 'maxValue': max_mireds},
-                callback=self.set_color_temperature)
+                setter_callback=self.set_color_temperature)
         if CHAR_HUE in self.chars:
-            self.char_hue = setup_char(
-                CHAR_HUE, serv_light, value=0, callback=self.set_hue)
+            self.char_hue = serv_light.configure_char(
+                CHAR_HUE, value=0, setter_callback=self.set_hue)
         if CHAR_SATURATION in self.chars:
-            self.char_saturation = setup_char(
-                CHAR_SATURATION, serv_light, value=75,
-                callback=self.set_saturation)
+            self.char_saturation = serv_light.configure_char(
+                CHAR_SATURATION, value=75, setter_callback=self.set_saturation)
 
     def set_state(self, value):
         """Set state if call came from HomeKit."""

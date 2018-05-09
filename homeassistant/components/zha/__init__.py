@@ -16,9 +16,9 @@ from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
 
 REQUIREMENTS = [
-    'bellows==0.5.2',
-    'zigpy==0.0.3',
-    'zigpy-xbee==0.0.2',
+    'bellows==0.6.0',
+    'zigpy==0.1.0',
+    'zigpy-xbee==0.1.0',
 ]
 
 DOMAIN = 'zha'

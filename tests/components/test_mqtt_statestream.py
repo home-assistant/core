@@ -134,7 +134,7 @@ class TestMqttStateStream(object):
         test_attributes = {
             "testing": "YES",
             "list": ["a", "b", "c"],
-            "bool": True
+            "bool": False
         }
 
         # Set a state of an entity
@@ -150,7 +150,7 @@ class TestMqttStateStream(object):
                                1, True),
             call.async_publish(self.hass, 'pub/fake/entity/list',
                                '["a", "b", "c"]', 1, True),
-            call.async_publish(self.hass, 'pub/fake/entity/bool', "true",
+            call.async_publish(self.hass, 'pub/fake/entity/bool', "false",
                                1, True)
         ]
 

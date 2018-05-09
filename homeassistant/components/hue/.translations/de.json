@@ -2,8 +2,11 @@
     "config": {
         "abort": {
             "all_configured": "Alle Philips Hue Bridges sind bereits konfiguriert",
+            "already_configured": "Bridge ist bereits konfiguriert",
+            "cannot_connect": "Verbindung zur Bridge nicht m\u00f6glich",
             "discover_timeout": "Nicht in der Lage Hue Bridges zu entdecken",
-            "no_bridges": "Philips Hue Bridges entdeckt"
+            "no_bridges": "Keine Philips Hue Bridges entdeckt",
+            "unknown": "Unbekannter Fehler ist aufgetreten"
         },
         "error": {
             "linking": "Unbekannter Link-Fehler aufgetreten.",
