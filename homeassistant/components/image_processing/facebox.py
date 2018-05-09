@@ -28,6 +28,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+def encode_image(image):
+    """base64 encode an image stream."""
+    base64_img = base64.b64encode(image).decode('ascii')
+    return {"base64": base64_img}
+
+
+def get_matched_faces(faces):
+    """Return the name and rounded confidence of matched faces."""
+    return {face['name']: round(face['confidence'], 2)
+            for face in faces if face['matched']}
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the classifier."""
     entities = []
@@ -63,33 +75,23 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
         try:
             response = requests.post(
                 self._url,
-                json=self.encode_image(image),
+                json=encode_image(image),
                 timeout=9
                 ).json()
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("ConnectionError: Is {} running?".format(CLASSIFIER))
+            _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
             response['success'] = False
 
         if response['success']:
             faces = response['faces']
             total = response['facesCount']
             self.process_faces(faces, total)
-            self._matched = self.get_matched_faces(faces)
+            self._matched = get_matched_faces(faces)
 
         else:
             self.total_faces = None
             self.faces = []
             self._matched = {}
-
-    def encode_image(self, image):
-        """base64 encode an image stream."""
-        base64_img = base64.b64encode(image).decode('ascii')
-        return {"base64": base64_img}
-
-    def get_matched_faces(self, faces):
-        """Return the name and rounded confidence of matched faces."""
-        return {face['name']: round(face['confidence'], 2)
-                for face in faces if face['matched']}
 
     @property
     def camera_entity(self):
