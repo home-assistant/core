@@ -74,8 +74,6 @@ def determine_zones(receiver):
             raise e
         _LOGGER.debug("Zone 3 timed out, assuming no functionality")
 
-    receiver.disconnect()
-
     return out
 
 
@@ -103,19 +101,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             # Add Zone2 if available
             if zones["zone2"]:
                 _LOGGER.debug("Setting up zone 2")
-                hosts.append(OnkyoDeviceZone("2",
-                                             receiver,
-                                             config.get(CONF_SOURCES),
-                                             name=config.get(CONF_NAME) +
-                                             " Zone 2"))
+                hosts.append(OnkyoDeviceZone(
+                    "2", receiver,
+                    config.get(CONF_SOURCES),
+                    name="{} Zone 2".format(config[CONF_NAME])))
             # Add Zone3 if available
             if zones["zone3"]:
                 _LOGGER.debug("Setting up zone 3")
-                hosts.append(OnkyoDeviceZone("3",
-                                             receiver,
-                                             config.get(CONF_SOURCES),
-                                             name=config.get(CONF_NAME) +
-                                             " Zone 3"))
+                hosts.append(OnkyoDeviceZone(
+                    "3", receiver,
+                    config.get(CONF_SOURCES),
+                    name="{} Zone 3".format(config[CONF_NAME])))
         except OSError:
             _LOGGER.error("Unable to connect to receiver at %s", host)
     else:
