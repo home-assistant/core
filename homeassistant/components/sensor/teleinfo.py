@@ -111,8 +111,7 @@ class TeleinfoSensor(Entity):
                     self._attributes[info['name']] = info['value']
                 if 'ADCO' == info['name']:
                     self._state = self._attributes['ADCO']
-            _LOGGER.debug("Sensor: state=%s attributes=%s",
-                self._state, self._attributes)
+            _LOGGER.debug("Sensor: %s %s", self._state, self._attributes)
 
 
 class TeleinfoData(object):
@@ -136,7 +135,6 @@ class TeleinfoData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Teleinfo device."""
-
         self._teleinfo.open()
         self._frame = self._teleinfo.readframe()
         self._teleinfo.close()
