@@ -5,6 +5,7 @@ import sys
 import unittest
 from unittest import mock
 
+from homeassistant.components.sensor import teleinfo
 from homeassistant.setup import setup_component
 
 from tests.common import (get_test_home_assistant, load_fixture)
@@ -110,7 +111,7 @@ class TestTeleinfoSensor(unittest.TestCase):
         mock_imports()
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
         state = self.hass.states.get('sensor.teleinfo')
-        self.assertEqual("Teleinfo", state.name)
+        self.assertEqual(teleinfo.DEFAULT_NAME, state.name)
         self._check_teleinfo_values(state)
 
     def test_teleinfo_one_device(self):

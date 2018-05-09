@@ -17,7 +17,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, STATE_UNKNOWN)
+    CONF_NAME, CONF_DEVICE, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -26,22 +26,17 @@ REQUIREMENTS = ["kylin==0.4.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'teleinfo'
-
-CONF_DEVICE = 'device'
 ATTRIBUTION = "Provided by EDF Teleinfo."
 
 DEFAULT_DEVICE = '/dev/ttyUSB0'
 DEFAULT_NAME = 'teleinfo'
-
-DEFAULT_NAME = 'Teleinfo'
 
 DATA_TELEINFO = "data_teleinfo"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -54,10 +49,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     teleinfo_data = None
     try:
-        teleinfo_data = TeleinfoData(hass, config)
+        import kylin
+        teleinfo = kylin.Kylin(port=config.get(CONF_DEVICE), timeout=2)
+        teleinfo_data = TeleinfoData(hass, teleinfo)
 
     except exceptions.KylinSerialError as err:
-        _LOGGER.error("Can't connect to teleinfo device: %s", str(err))
         return False
 
     if not teleinfo_data.update():
@@ -106,29 +102,26 @@ class TeleinfoSensor(Entity):
     def update(self):
         """Get the latest data from Teleinfo device and updates the state."""
         self._data.update()
-        if not self._data.frame:
-            _LOGGER.warning("Don't receive energy data from Teleinfo!")
-            return
-        _LOGGER.info("Frame read: %s", self._data.frame)
-        for info in self._data.frame:
-            if info['name'] in TELEINFO_AVAILABLE_VALUES:
-                self._attributes[info['name']] = int(info['value'])
-            else:
-                self._attributes[info['name']] = info['value']
-            if 'ADCO' == info['name']:
-                self._state = self._attributes['ADCO']
-        _LOGGER.debug(
-            "Sensor: state=%s attributes=%s", self._state, self._attributes)
+        if self._data.frame:
+            _LOGGER.debug("Frame read: %s", self._data.frame)
+            for info in self._data.frame:
+                if info['name'] in TELEINFO_AVAILABLE_VALUES:
+                    self._attributes[info['name']] = int(info['value'])
+                else:
+                    self._attributes[info['name']] = info['value']
+                if 'ADCO' == info['name']:
+                    self._state = self._attributes['ADCO']
+            _LOGGER.debug(
+                "Sensor: state=%s attributes=%s", self._state, self._attributes)
 
 
 class TeleinfoData(object):
     """Get the latest data from Teleinfo."""
 
-    def __init__(self, hass, config):
+    def __init__(self, hass, teleinfo):
         """Initialize the data object."""
-        self._device = config.get(CONF_DEVICE)
         self._frame = None
-        self._teleinfo = None
+        self._teleinfo = teleinfo
 
     @property
     def teleinfo(self):
@@ -143,12 +136,13 @@ class TeleinfoData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Teleinfo device."""
-        _LOGGER.info("Read teleinfo informations")
-        import kylin
-        self._teleinfo = kylin.Kylin(port=self._device, timeout=2)
+
         self._teleinfo.open()
         self._frame = self._teleinfo.readframe()
         self._teleinfo.close()
+        if not self._frame:
+            _LOGGER.warning("Don't receive energy data from Teleinfo!")
+            return None
         return self._frame
 
     def _stop(self, event):
