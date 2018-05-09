@@ -1,4 +1,5 @@
-"""Support for RainMachine devices.
+"""
+Support for RainMachine devices.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rainmachine/
@@ -154,7 +155,7 @@ def setup(hass, config):
         rainmachine.client.watering.stop_all()
 
     def stop_program(service):
-        """Stop a program"""
+        """Stop a program."""
         rainmachine.client.programs.stop(service.data[CONF_PROGRAM_ID])
 
     def stop_zone(service):
