@@ -151,8 +151,8 @@ class SongpalDevice(MediaPlayerDevice):
                 return
 
             if len(volumes) > 1:
-                _LOGGER.warning("Got %s volume controls, using the first one",
-                                volumes)
+                _LOGGER.debug("Got %s volume controls, using the first one",
+                              volumes)
 
             volume = volumes[0]
             _LOGGER.debug("Current volume: %s", volume)
