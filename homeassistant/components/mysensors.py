@@ -24,7 +24,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
 from homeassistant.helpers.entity import Entity
-from homeassistant.loader import get_component
 from homeassistant.setup import setup_component
 
 REQUIREMENTS = ['pymysensors==0.11.1']
@@ -294,16 +293,16 @@ def setup(hass, config):
         if device == MQTT_COMPONENT:
             if not setup_component(hass, MQTT_COMPONENT, config):
                 return
-            mqtt = get_component(MQTT_COMPONENT)
+            mqtt = hass.components.mqtt
             retain = config[DOMAIN].get(CONF_RETAIN)
 
             def pub_callback(topic, payload, qos, retain):
                 """Call MQTT publish function."""
-                mqtt.publish(hass, topic, payload, qos, retain)
+                mqtt.publish(topic, payload, qos, retain)
 
             def sub_callback(topic, sub_cb, qos):
                 """Call MQTT subscribe function."""
-                mqtt.subscribe(hass, topic, sub_cb, qos)
+                mqtt.subscribe(topic, sub_cb, qos)
             gateway = mysensors.MQTTGateway(
                 pub_callback, sub_callback,
                 event_callback=None, persistence=persistence,

@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene/
 """
 import asyncio
+import importlib
 import logging
 
 import voluptuous as vol
@@ -16,7 +17,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.state import HASS_DOMAIN
-from homeassistant.loader import get_platform
 
 DOMAIN = 'scene'
 STATE = 'scening'
@@ -34,20 +34,24 @@ def _hass_domain_validator(config):
 
 def _platform_validator(config):
     """Validate it is a valid  platform."""
-    p_name = config[CONF_PLATFORM]
-    platform = get_platform(DOMAIN, p_name)
+    try:
+        platform = importlib.import_module(
+            'homeassistant.components.scene.{}'.format(
+                config[CONF_PLATFORM]))
+    except ImportError:
+        raise vol.Invalid('Invalid platform specified') from None
 
     if not hasattr(platform, 'PLATFORM_SCHEMA'):
         return config
 
-    return getattr(platform, 'PLATFORM_SCHEMA')(config)
+    return platform.PLATFORM_SCHEMA(config)
 
 
 PLATFORM_SCHEMA = vol.Schema(
     vol.All(
         _hass_domain_validator,
         vol.Schema({
-            vol.Required(CONF_PLATFORM): cv.platform_validator(DOMAIN)
+            vol.Required(CONF_PLATFORM): str
         }, extra=vol.ALLOW_EXTRA),
         _platform_validator
     ), extra=vol.ALLOW_EXTRA)

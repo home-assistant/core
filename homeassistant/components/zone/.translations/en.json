@@ -1,21 +1,21 @@
 {
     "config": {
-        "title": "Zone",
-        "step": {
-            "init": {
-                "title": "Define zone parameters",
-                "data": {
-                    "name": "Name",
-                    "latitude": "Latitude",
-                    "longitude": "Longitude",
-                    "radius": "Radius",
-                    "passive": "Passive",
-                    "icon": "Icon"
-                }
-            }
-        },
         "error": {
             "name_exists": "Name already exists"
-        }
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "icon": "Icon",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Name",
+                    "passive": "Passive",
+                    "radius": "Radius"
+                },
+                "title": "Define zone parameters"
+            }
+        },
+        "title": "Zone"
     }
 }

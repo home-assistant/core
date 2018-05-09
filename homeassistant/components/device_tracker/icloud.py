@@ -24,8 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pyicloud==0.9.1']
 
-CONF_IGNORED_DEVICES = 'ignored_devices'
 CONF_ACCOUNTNAME = 'account_name'
+CONF_MAX_INTERVAL = 'max_interval'
+CONF_GPS_ACCURACY_THRESHOLD = 'gps_accuracy_threshold'
 
 # entity attributes
 ATTR_ACCOUNTNAME = 'account_name'
@@ -64,13 +65,15 @@ DEVICESTATUSCODES = {
 SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ACCOUNTNAME): vol.All(cv.ensure_list, [cv.slugify]),
     vol.Optional(ATTR_DEVICENAME): cv.slugify,
-    vol.Optional(ATTR_INTERVAL): cv.positive_int,
+    vol.Optional(ATTR_INTERVAL): cv.positive_int
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(ATTR_ACCOUNTNAME): cv.slugify,
+    vol.Optional(CONF_MAX_INTERVAL, default=30): cv.positive_int,
+    vol.Optional(CONF_GPS_ACCURACY_THRESHOLD, default=1000): cv.positive_int
 })
 
 
@@ -79,8 +82,11 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     account = config.get(CONF_ACCOUNTNAME, slugify(username.partition('@')[0]))
+    max_interval = config.get(CONF_MAX_INTERVAL)
+    gps_accuracy_threshold = config.get(CONF_GPS_ACCURACY_THRESHOLD)
 
-    icloudaccount = Icloud(hass, username, password, account, see)
+    icloudaccount = Icloud(hass, username, password, account, max_interval,
+                           gps_accuracy_threshold, see)
 
     if icloudaccount.api is not None:
         ICLOUDTRACKERS[account] = icloudaccount
@@ -96,6 +102,7 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
         for account in accounts:
             if account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].lost_iphone(devicename)
+
     hass.services.register(DOMAIN, 'icloud_lost_iphone', lost_iphone,
                            schema=SERVICE_SCHEMA)
 
@@ -106,6 +113,7 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
         for account in accounts:
             if account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].update_icloud(devicename)
+
     hass.services.register(DOMAIN, 'icloud_update', update_icloud,
                            schema=SERVICE_SCHEMA)
 
@@ -115,6 +123,7 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
         for account in accounts:
             if account in ICLOUDTRACKERS:
                 ICLOUDTRACKERS[account].reset_account_icloud()
+
     hass.services.register(DOMAIN, 'icloud_reset_account',
                            reset_account_icloud, schema=SERVICE_SCHEMA)
 
@@ -137,7 +146,8 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
 class Icloud(DeviceScanner):
     """Representation of an iCloud account."""
 
-    def __init__(self, hass, username, password, name, see):
+    def __init__(self, hass, username, password, name, max_interval,
+                 gps_accuracy_threshold, see):
         """Initialize an iCloud account."""
         self.hass = hass
         self.username = username
@@ -148,6 +158,8 @@ class Icloud(DeviceScanner):
         self.seen_devices = {}
         self._overridestates = {}
         self._intervals = {}
+        self._max_interval = max_interval
+        self._gps_accuracy_threshold = gps_accuracy_threshold
         self.see = see
 
         self._trusted_device = None
@@ -348,7 +360,7 @@ class Icloud(DeviceScanner):
         self._overridestates[devicename] = None
 
         if currentzone is not None:
-            self._intervals[devicename] = 30
+            self._intervals[devicename] = self._max_interval
             return
 
         if mindistance is None:
@@ -363,7 +375,6 @@ class Icloud(DeviceScanner):
 
         if interval > 180:
             # Three hour drive?  This is far enough that they might be flying
-            # home - check every half hour
             interval = 30
 
         if battery is not None and battery <= 33 and mindistance > 3:
@@ -403,22 +414,24 @@ class Icloud(DeviceScanner):
                 status = device.status(DEVICESTATUSSET)
                 battery = status.get('batteryLevel', 0) * 100
                 location = status['location']
-                if location:
-                    self.determine_interval(
-                        devicename, location['latitude'],
-                        location['longitude'], battery)
-                    interval = self._intervals.get(devicename, 1)
-                    attrs[ATTR_INTERVAL] = interval
-                    accuracy = location['horizontalAccuracy']
-                    kwargs['dev_id'] = dev_id
-                    kwargs['host_name'] = status['name']
-                    kwargs['gps'] = (location['latitude'],
-                                     location['longitude'])
-                    kwargs['battery'] = battery
-                    kwargs['gps_accuracy'] = accuracy
-                    kwargs[ATTR_ATTRIBUTES] = attrs
-                    self.see(**kwargs)
-                    self.seen_devices[devicename] = True
+                if location and location['horizontalAccuracy']:
+                    horizontal_accuracy = int(location['horizontalAccuracy'])
+                    if horizontal_accuracy < self._gps_accuracy_threshold:
+                        self.determine_interval(
+                            devicename, location['latitude'],
+                            location['longitude'], battery)
+                        interval = self._intervals.get(devicename, 1)
+                        attrs[ATTR_INTERVAL] = interval
+                        accuracy = location['horizontalAccuracy']
+                        kwargs['dev_id'] = dev_id
+                        kwargs['host_name'] = status['name']
+                        kwargs['gps'] = (location['latitude'],
+                                         location['longitude'])
+                        kwargs['battery'] = battery
+                        kwargs['gps_accuracy'] = accuracy
+                        kwargs[ATTR_ATTRIBUTES] = attrs
+                        self.see(**kwargs)
+                        self.seen_devices[devicename] = True
         except PyiCloudNoDevicesException:
             _LOGGER.error("No iCloud Devices found")
 
@@ -434,7 +447,7 @@ class Icloud(DeviceScanner):
                 device.play_sound()
 
     def update_icloud(self, devicename=None):
-        """Authenticate against iCloud and scan for devices."""
+        """Request device information from iCloud and update device_tracker."""
         from pyicloud.exceptions import PyiCloudNoDevicesException
 
         if self.api is None:
@@ -443,13 +456,13 @@ class Icloud(DeviceScanner):
         try:
             if devicename is not None:
                 if devicename in self.devices:
-                    self.devices[devicename].location()
+                    self.update_device(devicename)
                 else:
                     _LOGGER.error("devicename %s unknown for account %s",
                                   devicename, self._attrs[ATTR_ACCOUNTNAME])
             else:
                 for device in self.devices:
-                    self.devices[device].location()
+                    self.update_device(device)
         except PyiCloudNoDevicesException:
             _LOGGER.error("No iCloud Devices found")
 

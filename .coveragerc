@@ -29,7 +29,7 @@ omit =
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
-    homeassistant/components/bmw_connected_drive.py
+    homeassistant/components/bmw_connected_drive/*.py
     homeassistant/components/*/bmw_connected_drive.py
 
     homeassistant/components/android_ip_webcam.py
@@ -127,7 +127,7 @@ omit =
     homeassistant/components/insteon_local.py
     homeassistant/components/*/insteon_local.py
 
-    homeassistant/components/insteon_plm.py
+    homeassistant/components/insteon_plm/*
     homeassistant/components/*/insteon_plm.py
 
     homeassistant/components/ios.py
@@ -165,6 +165,9 @@ omit =
 
     homeassistant/components/mailgun.py
     homeassistant/components/*/mailgun.py
+
+    homeassistant/components/matrix.py
+    homeassistant/components/*/matrix.py
 
     homeassistant/components/maxcube.py
     homeassistant/components/*/maxcube.py
@@ -222,6 +225,9 @@ omit =
 
     homeassistant/components/rpi_pfio.py
     homeassistant/components/*/rpi_pfio.py
+
+    homeassistant/components/sabnzbd.py
+    homeassistant/components/*/sabnzbd.py
 
     homeassistant/components/satel_integra.py
     homeassistant/components/*/satel_integra.py
@@ -519,7 +525,6 @@ omit =
     homeassistant/components/notify/lannouncer.py
     homeassistant/components/notify/llamalab_automate.py
     homeassistant/components/notify/mastodon.py
-    homeassistant/components/notify/matrix.py
     homeassistant/components/notify/message_bird.py
     homeassistant/components/notify/mycroft.py
     homeassistant/components/notify/nfandroidtv.py
@@ -619,6 +624,7 @@ omit =
     homeassistant/components/sensor/lyft.py
     homeassistant/components/sensor/metoffice.py
     homeassistant/components/sensor/miflora.py
+    homeassistant/components/sensor/mitemp_bt.py
     homeassistant/components/sensor/modem_callerid.py
     homeassistant/components/sensor/mopar.py
     homeassistant/components/sensor/mqtt_room.py
@@ -639,6 +645,7 @@ omit =
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/pocketcasts.py
     homeassistant/components/sensor/pollen.py
+    homeassistant/components/sensor/postnl.py
     homeassistant/components/sensor/pushbullet.py
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/pyload.py
@@ -646,7 +653,6 @@ omit =
     homeassistant/components/sensor/radarr.py
     homeassistant/components/sensor/rainbird.py
     homeassistant/components/sensor/ripple.py
-    homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sense.py
     homeassistant/components/sensor/sensehat.py
@@ -660,6 +666,7 @@ omit =
     homeassistant/components/sensor/sma.py
     homeassistant/components/sensor/snmp.py
     homeassistant/components/sensor/sochain.py
+    homeassistant/components/sensor/socialblade.py
     homeassistant/components/sensor/sonarr.py
     homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/spotcrime.py

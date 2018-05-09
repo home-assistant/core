@@ -16,7 +16,7 @@ from homeassistant.components.image_processing import (
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['numpy==1.14.2']
+REQUIREMENTS = ['numpy==1.14.3']
 
 _LOGGER = logging.getLogger(__name__)
 

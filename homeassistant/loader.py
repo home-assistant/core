@@ -6,15 +6,13 @@ documentation as possible to keep it understandable.
 
 Components can be accessed via hass.components.switch from your code.
 If you want to retrieve a platform that is part of a component, you should
-call get_component('switch.your_platform'). In both cases the config directory
-is checked to see if it contains a user provided version. If not available it
-will check the built-in components and platforms.
+call get_component(hass, 'switch.your_platform'). In both cases the config
+directory is checked to see if it contains a user provided version. If not
+available it will check the built-in components and platforms.
 """
 import functools as ft
 import importlib
 import logging
-import os
-import pkgutil
 import sys
 from types import ModuleType
 
@@ -33,111 +31,57 @@ PREPARED = False
 
 DEPENDENCY_BLACKLIST = set(('config',))
 
-# List of available components
-AVAILABLE_COMPONENTS = []  # type: List[str]
-
-# Dict of loaded components mapped name => module
-_COMPONENT_CACHE = {}  # type: Dict[str, ModuleType]
-
 _LOGGER = logging.getLogger(__name__)
 
 
-def prepare(hass: 'HomeAssistant'):
-    """Prepare the loading of components.
-
-    This method needs to run in an executor.
-    """
-    global PREPARED  # pylint: disable=global-statement
-
-    # Load the built-in components
-    import homeassistant.components as components
-
-    AVAILABLE_COMPONENTS.clear()
-
-    AVAILABLE_COMPONENTS.extend(
-        item[1] for item in
-        pkgutil.iter_modules(components.__path__, 'homeassistant.components.'))
-
-    # Look for available custom components
-    custom_path = hass.config.path("custom_components")
-
-    if os.path.isdir(custom_path):
-        # Ensure we can load custom components using Pythons import
-        sys.path.insert(0, hass.config.config_dir)
-
-        # We cannot use the same approach as for built-in components because
-        # custom components might only contain a platform for a component.
-        # ie custom_components/switch/some_platform.py. Using pkgutil would
-        # not give us the switch component (and neither should it).
-
-        # Assumption: the custom_components dir only contains directories or
-        # python components. If this assumption is not true, HA won't break,
-        # just might output more errors.
-        for fil in os.listdir(custom_path):
-            if fil == '__pycache__':
-                continue
-            elif os.path.isdir(os.path.join(custom_path, fil)):
-                AVAILABLE_COMPONENTS.append('custom_components.{}'.format(fil))
-            else:
-                # For files we will strip out .py extension
-                AVAILABLE_COMPONENTS.append(
-                    'custom_components.{}'.format(fil[0:-3]))
-
-    PREPARED = True
+DATA_KEY = 'components'
+PATH_CUSTOM_COMPONENTS = 'custom_components'
+PACKAGE_COMPONENTS = 'homeassistant.components'
 
 
-def set_component(comp_name: str, component: ModuleType) -> None:
+def set_component(hass, comp_name: str, component: ModuleType) -> None:
     """Set a component in the cache.
 
     Async friendly.
     """
-    _check_prepared()
+    cache = hass.data.get(DATA_KEY)
+    if cache is None:
+        cache = hass.data[DATA_KEY] = {}
+    cache[comp_name] = component
 
-    _COMPONENT_CACHE[comp_name] = component
 
-
-def get_platform(domain: str, platform: str) -> Optional[ModuleType]:
+def get_platform(hass, domain: str, platform: str) -> Optional[ModuleType]:
     """Try to load specified platform.
 
     Async friendly.
     """
-    return get_component(PLATFORM_FORMAT.format(domain, platform))
+    return get_component(hass, PLATFORM_FORMAT.format(domain, platform))
 
 
-def get_component(comp_name) -> Optional[ModuleType]:
+def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
     """Try to load specified component.
 
     Looks in config dir first, then built-in components.
     Only returns it if also found to be valid.
-
     Async friendly.
     """
-    if comp_name in _COMPONENT_CACHE:
-        return _COMPONENT_CACHE[comp_name]
+    try:
+        return hass.data[DATA_KEY][comp_or_platform]
+    except KeyError:
+        pass
 
-    _check_prepared()
-
-    # If we ie. try to load custom_components.switch.wemo but the parent
-    # custom_components.switch does not exist, importing it will trigger
-    # an exception because it will try to import the parent.
-    # Because of this behavior, we will approach loading sub components
-    # with caution: only load it if we can verify that the parent exists.
-    # We do not want to silent the ImportErrors as they provide valuable
-    # information to track down when debugging Home Assistant.
+    cache = hass.data.get(DATA_KEY)
+    if cache is None:
+        # Only insert if it's not there (happens during tests)
+        if sys.path[0] != hass.config.config_dir:
+            sys.path.insert(0, hass.config.config_dir)
+        cache = hass.data[DATA_KEY] = {}
 
     # First check custom, then built-in
-    potential_paths = ['custom_components.{}'.format(comp_name),
-                       'homeassistant.components.{}'.format(comp_name)]
+    potential_paths = ['custom_components.{}'.format(comp_or_platform),
+                       'homeassistant.components.{}'.format(comp_or_platform)]
 
     for path in potential_paths:
-        # Validate here that root component exists
-        # If path contains a '.' we are specifying a sub-component
-        # Using rsplit we get the parent component from sub-component
-        root_comp = path.rsplit(".", 1)[0] if '.' in comp_name else path
-
-        if root_comp not in AVAILABLE_COMPONENTS:
-            continue
-
         try:
             module = importlib.import_module(path)
 
@@ -152,21 +96,30 @@ def get_component(comp_name) -> Optional[ModuleType]:
             if module.__spec__.origin == 'namespace':
                 continue
 
-            _LOGGER.info("Loaded %s from %s", comp_name, path)
+            _LOGGER.info("Loaded %s from %s", comp_or_platform, path)
 
-            _COMPONENT_CACHE[comp_name] = module
+            cache[comp_or_platform] = module
 
             return module
 
         except ImportError as err:
             # This error happens if for example custom_components/switch
             # exists and we try to load switch.demo.
-            if str(err) != "No module named '{}'".format(path):
+            # Ignore errors for custom_components, custom_components.switch
+            # and custom_components.switch.demo.
+            white_listed_errors = []
+            parts = []
+            for part in path.split('.'):
+                parts.append(part)
+                white_listed_errors.append(
+                    "No module named '{}'".format('.'.join(parts)))
+
+            if str(err) not in white_listed_errors:
                 _LOGGER.exception(
                     ("Error loading %s. Make sure all "
                      "dependencies are installed"), path)
 
-    _LOGGER.error("Unable to find component %s", comp_name)
+    _LOGGER.error("Unable to find component %s", comp_or_platform)
 
     return None
 
@@ -180,7 +133,7 @@ class Components:
 
     def __getattr__(self, comp_name):
         """Fetch a component."""
-        component = get_component(comp_name)
+        component = get_component(self._hass, comp_name)
         if component is None:
             raise ImportError('Unable to load {}'.format(comp_name))
         wrapped = ModuleWrapper(self._hass, component)
@@ -230,7 +183,7 @@ def bind_hass(func):
     return func
 
 
-def load_order_component(comp_name: str) -> OrderedSet:
+def load_order_component(hass, comp_name: str) -> OrderedSet:
     """Return an OrderedSet of components in the correct order of loading.
 
     Raises HomeAssistantError if a circular dependency is detected.
@@ -238,16 +191,16 @@ def load_order_component(comp_name: str) -> OrderedSet:
 
     Async friendly.
     """
-    return _load_order_component(comp_name, OrderedSet(), set())
+    return _load_order_component(hass, comp_name, OrderedSet(), set())
 
 
-def _load_order_component(comp_name: str, load_order: OrderedSet,
+def _load_order_component(hass, comp_name: str, load_order: OrderedSet,
                           loading: Set) -> OrderedSet:
     """Recursive function to get load order of components.
 
     Async friendly.
     """
-    component = get_component(comp_name)
+    component = get_component(hass, comp_name)
 
     # If None it does not exist, error already thrown by get_component.
     if component is None:
@@ -266,7 +219,8 @@ def _load_order_component(comp_name: str, load_order: OrderedSet,
                           comp_name, dependency)
             return OrderedSet()
 
-        dep_load_order = _load_order_component(dependency, load_order, loading)
+        dep_load_order = _load_order_component(
+            hass, dependency, load_order, loading)
 
         # length == 0 means error loading dependency or children
         if not dep_load_order:
@@ -280,14 +234,3 @@ def _load_order_component(comp_name: str, load_order: OrderedSet,
     loading.remove(comp_name)
 
     return load_order
-
-
-def _check_prepared() -> None:
-    """Issue a warning if loader.prepare() has never been called.
-
-    Async friendly.
-    """
-    if not PREPARED:
-        _LOGGER.warning((
-            "You did not call loader.prepare() yet. "
-            "Certain functionality might not be working"))
