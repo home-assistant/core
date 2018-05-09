@@ -80,7 +80,6 @@ async def test_spaceapi_get(hass, mock_client):
 
     data = await resp.json()
 
-    print(data)
     assert data['api'] == SPACEAPI_VERSION
     assert data['space'] == 'Home'
     assert data['contact']['email'] == 'hello@home-assistant.io'
@@ -111,5 +110,4 @@ async def test_spaceapi_sensors_get(hass, mock_client):
     assert resp.status == 200
 
     data = await resp.json()
-    print(data)
     assert data['sensors'] == SENSOR_OUTPUT
