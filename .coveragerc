@@ -4,6 +4,8 @@ source = homeassistant
 omit =
     homeassistant/__main__.py
     homeassistant/scripts/*.py
+    homeassistant/util/async.py
+    homeassistant/monkey_patch.py
     homeassistant/helpers/typing.py
     homeassistant/helpers/signal.py
 
