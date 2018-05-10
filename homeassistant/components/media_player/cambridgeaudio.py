@@ -29,7 +29,7 @@ from homeassistant.const import (STATE_ON, STATE_OFF, STATE_UNKNOWN,
 
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['stream_magic==0.14']
+REQUIREMENTS = ['stream_magic==0.15']
 DOMAIN = 'cambridgeaudio'
 _LOGGER = logging.getLogger(__name__)
 
