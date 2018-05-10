@@ -76,6 +76,9 @@ class LW12WiFi(Light):
         self._light = lw12_light
         self._name = name
         self._state = None
+        self._effect = None
+        self._rgb_color = [255, 255, 255]
+        self._brightness = 255
         # Setup feature list
         self._supported_features = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT \
             | SUPPORT_COLOR | SUPPORT_TRANSITION
@@ -150,15 +153,10 @@ class LW12WiFi(Light):
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs.get(ATTR_EFFECT).replace(' ', '_').upper()
             self._light.set_effect(lw12.LW12_EFFECT[self._effect])
-            # Sending UDP messages too quickly after the previous message
-            # the new command is ignored. Adding a short wait time.
-            time.sleep(.25)
-            self._light.set_light_option(lw12.LW12_LIGHT.FLASH,
-                                         self._transition_speed)
         if ATTR_TRANSITION in kwargs:
-            self._transition_speed = int(kwargs[ATTR_TRANSITION])
+            transition_speed = int(kwargs[ATTR_TRANSITION])
             self._light.set_light_option(lw12.LW12_LIGHT.FLASH,
-                                         self._transition_speed)
+                                         transition_speed)
         self._state = True
 
     def turn_off(self, **kwargs):
