@@ -133,7 +133,8 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
         from bellows.types.basic import uint16_t
 
         result = await zha.safe_read(self._endpoint.ias_zone,
-                                     ['zone_status'])
+                                     ['zone_status'],
+                                     allow_cache=False)
         state = result.get('zone_status', self._state)
         if isinstance(state, (int, uint16_t)):
             self._state = result.get('zone_status', self._state) & 3
