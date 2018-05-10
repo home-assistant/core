@@ -24,5 +24,5 @@ if [ -z "$pylint_files" ] ; then
   echo "Only test files changed. Skipping\n"
   exit
 fi
-pylint $(echo "$files" | grep -v '^tests.*')
+pylint $pylint_files
 echo
