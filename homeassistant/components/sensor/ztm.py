@@ -170,7 +170,7 @@ class ZTMSensor(Entity):
 def parse_raw_timetable(raw_result):
     """Change {'key': 'name','value': 'val'} into {'name': 'val'}."""
     result = {}
-    for val in raw_result.get('values'):
+    for val in raw_result['values']:
         result[val['key']] = val['value']
     return result
 
