@@ -12,17 +12,16 @@ import homeassistant.components.image_processing as ip
 MOCK_IP = '192.168.0.1'
 MOCK_PORT = '8080'
 
+MOCK_FACES = {'confidence': 0.5812028911604818,
+              'id': 'john.jpg',
+              'matched': True,
+              'name': 'John Lennon',
+              'rect': {'height': 75, 'left': 63, 'top': 262, 'width': 74}
+              }
+
 MOCK_JSON = {"facesCount": 1,
              "success": True,
-             "faces": [{'confidence': 0.5812028911604818,
-                        'id': 'john.jpg',
-                        'matched': True,
-                        'name': 'John Lennon',
-                        'rect': {'height': 75,
-                                 'left': 63,
-                                 'top': 262,
-                                 'width': 74}
-                        }]
+             "faces": [MOCK_FACES]
              }
 
 VALID_ENTITY_ID = 'image_processing.facebox_demo_camera'
@@ -71,3 +70,6 @@ async def test_process_image(hass, mock_image):
     state = hass.states.get(VALID_ENTITY_ID)
     assert state.state == '1'
     assert state.attributes.get('matched_faces') == {'John Lennon': 0.58}
+
+    MOCK_FACES[ATTR_ENTITY_ID] = VALID_ENTITY_ID  # Update.
+    assert state.attributes.get('faces') == [MOCK_FACES]
