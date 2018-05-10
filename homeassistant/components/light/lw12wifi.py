@@ -183,7 +183,7 @@ class LW12WiFi(Light):
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs.get(ATTR_EFFECT).replace(' ', '_').upper()
             self._light.set_effect(lw12.LW12_EFFECT[self._effect])
-            # Sending UDP messages to quickly after the previous message
+            # Sending UDP messages too quickly after the previous message
             # the new command is ignored. Adding a short wait time.
             time.sleep(.25)
             self._light.set_light_option(lw12.LW12_LIGHT.FLASH,
