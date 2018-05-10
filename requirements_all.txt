@@ -1041,9 +1041,6 @@ python-velbus==2.0.11
 # homeassistant.components.media_player.vlc
 python-vlc==1.1.2
 
-# homeassistant.components.sensor.domain_expiry
-python-whois==0.6.9
-
 # homeassistant.components.wink
 python-wink==1.7.3
 
