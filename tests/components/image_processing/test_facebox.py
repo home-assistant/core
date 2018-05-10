@@ -6,9 +6,10 @@ import requests_mock
 
 from homeassistant.core import callback
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_IP_ADDRESS, CONF_PORT)
+    ATTR_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_IP_ADDRESS, CONF_PORT)
 from homeassistant.setup import async_setup_component
 import homeassistant.components.image_processing as ip
+import homeassistant.components.image_processing.facebox as fb
 
 MOCK_IP = '192.168.0.1'
 MOCK_PORT = '8080'
@@ -38,6 +39,16 @@ VALID_CONFIG = {
         'platform': 'demo'
         }
     }
+
+
+def test_encode_image():
+    """Test that binary data is encoded correctly."""
+    assert fb.encode_image(b'test')["base64"] == 'dGVzdA=='
+
+
+def test_get_matched_faces():
+    """Test that matched faces are parsed correctly."""
+    assert fb.get_matched_faces([MOCK_FACES]) == {MOCK_FACES['name']: 0.58}
 
 
 @pytest.fixture
@@ -83,6 +94,7 @@ async def test_process_image(hass, mock_image):
 
     MOCK_FACES[ATTR_ENTITY_ID] = VALID_ENTITY_ID  # Update.
     assert state.attributes.get('faces') == [MOCK_FACES]
+    assert state.attributes.get(CONF_FRIENDLY_NAME) == 'facebox demo_camera'
 
     assert len(face_events) == 1
     assert face_events[0].data['name'] == MOCK_FACES['name']
