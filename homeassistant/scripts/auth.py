@@ -1,4 +1,4 @@
-"""Script to get, put and delete secrets stored in credstash."""
+"""Script to manage users for the Home Assistant auth provider."""
 import argparse
 import os
 
