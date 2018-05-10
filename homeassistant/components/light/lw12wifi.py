@@ -59,8 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_RGB, default=DEFAULT_RGB):
-        vol.All(list, vol.Length(min=3, max=3),
-                [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))]),
+        vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte))),
     vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
