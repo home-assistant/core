@@ -27,7 +27,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.setup import async_setup_component
 
-REQUIREMENTS = ['pymysensors==0.13.0']
+REQUIREMENTS = ['pymysensors==0.14.0']
 
 _LOGGER = logging.getLogger(__name__)
 
