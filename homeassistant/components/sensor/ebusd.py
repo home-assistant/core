@@ -63,31 +63,35 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_VARIABLES, default=[]): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     name = config.get(CONF_NAME)
     circuit = config.get(CONF_CIRCUIT)
     time = config.get(CONF_TIME)
     data = EbusdData(circuit,time)
-    
+
     dev = []
     for variable in config[CONF_MONITORED_VARIABLES]:
         dev.append(Ebusd(data, variable, name))
 
     add_devices(dev)
 
+
 def timer_format(string):
     r = []
     s = string.split(';')
-    for i in range(0,len(s) // 2):
+    for i in range(0, len(s) // 2):
         if(s[i * 2] != '-:-' and s[i * 2] != s[(i * 2) + 1]):
             r.append(s[i * 2] + '/' + s[(i * 2) + 1])
     return ' - '.join(r)
+
 
 def switch_format(value):
     if value == 1:
         return STATE_ON
     return STATE_OFF
+
 
 class EbusdData(object):
     """Get the latest data from Ebusd."""
@@ -99,9 +103,9 @@ class EbusdData(object):
         self.value = None
     
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self,name):
+    def update(self, name):
         """Call the Ebusd API to update the data."""
-        command = BASE_URL.format(self._circuit,name,self._time)
+        command = BASE_URL.format(self._circuit, name, self._time)
         try:
             _LOGGER.info("Receiving data from ebusdctl for %s: %s", name, command)
             r = subprocess.check_output(command,shell=True, timeout=15)
@@ -119,6 +123,7 @@ class EbusdData(object):
         except subprocess.TimeoutExpired:
             _LOGGER.error("Timeout for command: %s", command)
             return False
+
 
 class Ebusd(Entity):
     """Representation of a Sensor."""
@@ -170,11 +175,11 @@ class Ebusd(Entity):
         if self._last_updated is None or (datetime.now() - self._last_updated) > timedelta(minutes=15):
             update_result = self.data.update(self._name)
 
-        if update_result == True:
+        if update_result is True:
             if self._type == 'switch':
                 self._state = switch_format(self.data.value)
             elif self._type == 'time-schedule':
                 self._state = timer_format(self.data.value)
             elif self._type == 'decimal':
-                self._state = format(float(self.data.value),'.1f')
+                self._state = format(float(self.data.value), '.1f')
             self._last_updated = datetime.now()
