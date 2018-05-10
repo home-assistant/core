@@ -3,8 +3,7 @@
 This includes tests for all mock object types.
 """
 from datetime import datetime, timedelta
-import unittest
-from unittest.mock import call, patch, Mock
+from unittest.mock import patch, Mock
 
 from homeassistant.components.homekit.accessories import (
     debounce, HomeAccessory, HomeBridge, HomeDriver)
@@ -15,8 +14,6 @@ from homeassistant.components.homekit.const import (
 from homeassistant.const import __version__, ATTR_NOW, EVENT_TIME_CHANGED
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant
-
 
 def patch_debounce():
     """Return patch for debounce method."""
@@ -24,141 +21,122 @@ def patch_debounce():
                  lambda f: lambda *args, **kwargs: f(*args, **kwargs))
 
 
-class TestAccessories(unittest.TestCase):
-    """Test pyhap adapter methods."""
+async def test_debounce(hass):
+    """Test add_timeout decorator function."""
+    def demo_func(*args):
+        nonlocal arguments, counter
+        counter += 1
+        arguments = args
 
-    def test_debounce(self):
-        """Test add_timeout decorator function."""
-        def demo_func(*args):
-            nonlocal arguments, counter
-            counter += 1
-            arguments = args
+    arguments = None
+    counter = 0
+    mock = Mock(hass=hass)
 
-        arguments = None
-        counter = 0
-        hass = get_test_home_assistant()
-        mock = Mock(hass=hass)
+    debounce_demo = debounce(demo_func)
+    assert debounce_demo.__name__ == 'demo_func'
+    now = datetime(2018, 1, 1, 20, 0, 0, tzinfo=dt_util.UTC)
 
-        debounce_demo = debounce(demo_func)
-        self.assertEqual(debounce_demo.__name__, 'demo_func')
-        now = datetime(2018, 1, 1, 20, 0, 0, tzinfo=dt_util.UTC)
+    with patch('homeassistant.util.dt.utcnow', return_value=now):
+        await hass.async_add_job(debounce_demo, mock, 'value')
+    hass.bus.async_fire(
+        EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
+    await hass.async_block_till_done()
+    assert counter == 1
+    assert len(arguments) == 2
 
-        with patch('homeassistant.util.dt.utcnow', return_value=now):
-            debounce_demo(mock, 'value')
-        hass.bus.fire(
-            EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
-        hass.block_till_done()
-        assert counter == 1
-        assert len(arguments) == 2
+    with patch('homeassistant.util.dt.utcnow', return_value=now):
+        await hass.async_add_job(debounce_demo, mock, 'value')
+        await hass.async_add_job(debounce_demo, mock, 'value')
 
-        with patch('homeassistant.util.dt.utcnow', return_value=now):
-            debounce_demo(mock, 'value')
-            debounce_demo(mock, 'value')
+    hass.bus.async_fire(
+        EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
+    await hass.async_block_till_done()
+    assert counter == 2
 
-        hass.bus.fire(
-            EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
-        hass.block_till_done()
-        assert counter == 2
 
-        hass.stop()
+async def test_home_accessory(hass):
+    """Test HomeAccessory class."""
+    acc = HomeAccessory(hass, 'Home Accessory', 'homekit.accessory', 2)
+    assert acc.hass == hass
+    assert acc.display_name == 'Home Accessory'
+    assert acc.category == 1  # Category.OTHER
+    assert len(acc.services) == 1
+    serv = acc.services[0]  # SERV_ACCESSORY_INFO
+    assert serv.display_name == SERV_ACCESSORY_INFO
+    assert serv.get_characteristic(CHAR_NAME).value == 'Home Accessory'
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == MANUFACTURER
+    assert serv.get_characteristic(CHAR_MODEL).value == 'Homekit'
+    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == \
+        'homekit.accessory'
 
-    def test_home_accessory(self):
-        """Test HomeAccessory class."""
-        hass = get_test_home_assistant()
+    hass.states.async_set('homekit.accessory', 'on')
+    await hass.async_block_till_done()
+    await hass.async_add_job(acc.run)
+    hass.states.async_set('homekit.accessory', 'off')
+    await hass.async_block_till_done()
 
-        acc = HomeAccessory(hass, 'Home Accessory', 'homekit.accessory', 2)
-        self.assertEqual(acc.hass, hass)
-        self.assertEqual(acc.display_name, 'Home Accessory')
-        self.assertEqual(acc.category, 1)  # Category.OTHER
-        self.assertEqual(len(acc.services), 1)
-        serv = acc.services[0]  # SERV_ACCESSORY_INFO
-        self.assertEqual(serv.display_name, SERV_ACCESSORY_INFO)
-        self.assertEqual(
-            serv.get_characteristic(CHAR_NAME).value, 'Home Accessory')
-        self.assertEqual(
-            serv.get_characteristic(CHAR_MANUFACTURER).value, MANUFACTURER)
-        self.assertEqual(
-            serv.get_characteristic(CHAR_MODEL).value, 'Homekit')
-        self.assertEqual(serv.get_characteristic(CHAR_SERIAL_NUMBER).value,
-                         'homekit.accessory')
+    acc = HomeAccessory('hass', 'test_name', 'test_model.demo', 2)
+    assert acc.display_name == 'test_name'
+    assert acc.aid == 2
+    assert len(acc.services) == 1
+    serv = acc.services[0]  # SERV_ACCESSORY_INFO
+    assert serv.get_characteristic(CHAR_MODEL).value == 'Test Model'
 
-        hass.states.set('homekit.accessory', 'on')
-        hass.block_till_done()
-        acc.run()
-        hass.states.set('homekit.accessory', 'off')
-        hass.block_till_done()
 
-        acc = HomeAccessory('hass', 'test_name', 'test_model.demo', 2)
-        self.assertEqual(acc.display_name, 'test_name')
-        self.assertEqual(acc.aid, 2)
-        self.assertEqual(len(acc.services), 1)
-        serv = acc.services[0]  # SERV_ACCESSORY_INFO
-        self.assertEqual(
-            serv.get_characteristic(CHAR_MODEL).value, 'Test Model')
+def test_home_bridge():
+    """Test HomeBridge class."""
+    bridge = HomeBridge('hass')
+    assert bridge.hass == 'hass'
+    assert bridge.display_name == BRIDGE_NAME
+    assert bridge.category == 2  # Category.BRIDGE
+    assert len(bridge.services) == 1
+    serv = bridge.services[0]  # SERV_ACCESSORY_INFO
+    assert serv.display_name == SERV_ACCESSORY_INFO
+    assert serv.get_characteristic(CHAR_NAME).value == BRIDGE_NAME
+    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == __version__
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == MANUFACTURER
+    assert serv.get_characteristic(CHAR_MODEL).value == BRIDGE_MODEL
+    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == \
+        BRIDGE_SERIAL_NUMBER
 
-        hass.stop()
+    bridge = HomeBridge('hass', 'test_name')
+    assert bridge.display_name == 'test_name'
+    assert len(bridge.services) == 1
+    serv = bridge.services[0]  # SERV_ACCESSORY_INFO
 
-    def test_home_bridge(self):
-        """Test HomeBridge class."""
-        bridge = HomeBridge('hass')
-        self.assertEqual(bridge.hass, 'hass')
-        self.assertEqual(bridge.display_name, BRIDGE_NAME)
-        self.assertEqual(bridge.category, 2)  # Category.BRIDGE
-        self.assertEqual(len(bridge.services), 1)
-        serv = bridge.services[0]  # SERV_ACCESSORY_INFO
-        self.assertEqual(serv.display_name, SERV_ACCESSORY_INFO)
-        self.assertEqual(
-            serv.get_characteristic(CHAR_NAME).value, BRIDGE_NAME)
-        self.assertEqual(
-            serv.get_characteristic(CHAR_FIRMWARE_REVISION).value, __version__)
-        self.assertEqual(
-            serv.get_characteristic(CHAR_MANUFACTURER).value, MANUFACTURER)
-        self.assertEqual(
-            serv.get_characteristic(CHAR_MODEL).value, BRIDGE_MODEL)
-        self.assertEqual(
-            serv.get_characteristic(CHAR_SERIAL_NUMBER).value,
-            BRIDGE_SERIAL_NUMBER)
+    # setup_message
+    bridge.setup_message()
 
-        bridge = HomeBridge('hass', 'test_name')
-        self.assertEqual(bridge.display_name, 'test_name')
-        self.assertEqual(len(bridge.services), 1)
-        serv = bridge.services[0]  # SERV_ACCESSORY_INFO
+    # add_paired_client
+    with patch('pyhap.accessory.Accessory.add_paired_client') \
+        as mock_add_paired_client, \
+        patch('homeassistant.components.homekit.accessories.'
+              'dismiss_setup_message') as mock_dissmiss_msg:
+        bridge.add_paired_client('client_uuid', 'client_public')
 
-        # setup_message
-        bridge.setup_message()
+    mock_add_paired_client.assert_called_with('client_uuid', 'client_public')
+    mock_dissmiss_msg.assert_called_with('hass')
 
-        # add_paired_client
-        with patch('pyhap.accessory.Accessory.add_paired_client') \
-            as mock_add_paired_client, \
-            patch('homeassistant.components.homekit.accessories.'
-                  'dismiss_setup_message') as mock_dissmiss_msg:
-            bridge.add_paired_client('client_uuid', 'client_public')
+    # remove_paired_client
+    with patch('pyhap.accessory.Accessory.remove_paired_client') \
+        as mock_remove_paired_client, \
+        patch('homeassistant.components.homekit.accessories.'
+              'show_setup_message') as mock_show_msg:
+        bridge.remove_paired_client('client_uuid')
 
-        self.assertEqual(mock_add_paired_client.call_args,
-                         call('client_uuid', 'client_public'))
-        self.assertEqual(mock_dissmiss_msg.call_args, call('hass'))
+    mock_remove_paired_client.assert_called_with('client_uuid')
+    mock_show_msg.assert_called_with('hass', bridge)
 
-        # remove_paired_client
-        with patch('pyhap.accessory.Accessory.remove_paired_client') \
-            as mock_remove_paired_client, \
-            patch('homeassistant.components.homekit.accessories.'
-                  'show_setup_message') as mock_show_msg:
-            bridge.remove_paired_client('client_uuid')
 
-        self.assertEqual(
-            mock_remove_paired_client.call_args, call('client_uuid'))
-        self.assertEqual(mock_show_msg.call_args, call('hass', bridge))
+def test_home_driver():
+    """Test HomeDriver class."""
+    bridge = HomeBridge('hass')
+    ip_address = '127.0.0.1'
+    port = 51826
+    path = '.homekit.state'
 
-    def test_home_driver(self):
-        """Test HomeDriver class."""
-        bridge = HomeBridge('hass')
-        ip_address = '127.0.0.1'
-        port = 51826
-        path = '.homekit.state'
+    with patch('pyhap.accessory_driver.AccessoryDriver.__init__') \
+            as mock_driver:
+        HomeDriver(bridge, ip_address, port, path)
 
-        with patch('pyhap.accessory_driver.AccessoryDriver.__init__') \
-                as mock_driver:
-            HomeDriver(bridge, ip_address, port, path)
-
-        self.assertEqual(
-            mock_driver.call_args, call(bridge, ip_address, port, path))
+    mock_driver.assert_called_with(bridge, ip_address, port, path)
