@@ -15,7 +15,6 @@ from voluptuous.humanize import humanize_error
 from homeassistant import data_entry_flow, requirements
 from homeassistant.core import callback
 from homeassistant.const import CONF_TYPE, CONF_NAME, CONF_ID
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.decorator import Registry
 from homeassistant.util import dt as dt_util
 
@@ -36,22 +35,6 @@ ACCESS_TOKEN_EXPIRATION = timedelta(minutes=30)
 DATA_REQS = 'auth_reqs_processed'
 
 
-class AuthError(HomeAssistantError):
-    """Generic authentication error."""
-
-
-class InvalidUser(AuthError):
-    """Raised when an invalid user has been specified."""
-
-
-class InvalidPassword(AuthError):
-    """Raised when an invalid password has been supplied."""
-
-
-class UnknownError(AuthError):
-    """When an unknown error occurs."""
-
-
 def generate_secret(entropy=32):
     """Generate a secret.
 
@@ -69,8 +52,9 @@ class AuthProvider:
 
     initialized = False
 
-    def __init__(self, store, config):
+    def __init__(self, hass, store, config):
         """Initialize an auth provider."""
+        self.hass = hass
         self.store = store
         self.config = config
 
@@ -284,7 +268,7 @@ async def _auth_provider_from_config(hass, store, config):
                       provider_name, humanize_error(config, err))
         return None
 
-    return AUTH_PROVIDERS[provider_name](store, config)
+    return AUTH_PROVIDERS[provider_name](hass, store, config)
 
 
 class AuthManager:
