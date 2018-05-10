@@ -52,7 +52,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     })
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the ZTM platform."""
     websession = async_get_clientsession(hass)
     api_key = config[CONF_API_KEY]
@@ -127,7 +128,8 @@ class ZTMSensor(Entity):
     async def async_update(self):
         """Update state."""
         if self.data_is_outdated():
-            res = await async_http_request(self._loop, self._websession, ZTM_ENDPOINT, self._params)
+            res = await async_http_request(self._loop, self._websession,
+                                           ZTM_ENDPOINT, self._params)
             if res.get('error', ''):
                 _LOGGER.error("Error: %s", res['error'])
             else:
@@ -171,6 +173,7 @@ def parse_raw_timetable(raw_result):
     for val in raw_result.get('values'):
         result[val['key']] = val['value']
     return result
+
 
 async def async_http_request(loop, websession, uri, params):
     """Perform actual request."""
