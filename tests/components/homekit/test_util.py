@@ -3,8 +3,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.homekit.accessories import HomeBridge
-from homeassistant.components.homekit.const import (
-    CONF_MANUFACTURER, CONF_MODEL, CONF_SERIAL_NUMBER, HOMEKIT_NOTIFY_ID)
+from homeassistant.components.homekit.const import HOMEKIT_NOTIFY_ID
 from homeassistant.components.homekit.util import (
     show_setup_message, dismiss_setup_message, convert_to_float,
     temperature_to_homekit, temperature_to_states, density_to_air_quality)
@@ -31,12 +30,6 @@ def test_validate_entity_config():
     assert vec({}) == {}
     assert vec({'demo.test': {CONF_NAME: 'Name'}}) == \
         {'demo.test': {CONF_NAME: 'Name'}}
-    assert vec({'demo.test': {CONF_MANUFACTURER: 'Manufacturer'}}) == \
-        {'demo.test': {CONF_MANUFACTURER: 'Manufacturer'}}
-    assert vec({'demo.test': {CONF_MODEL: 'Model'}}) == \
-        {'demo.test': {CONF_MODEL: 'Model'}}
-    assert vec({'demo.test': {CONF_SERIAL_NUMBER: 'Serial Number'}}) == \
-        {'demo.test': {CONF_SERIAL_NUMBER: 'Serial Number'}}
     assert vec({'alarm_control_panel.demo': {ATTR_CODE: '1234'}}) == \
         {'alarm_control_panel.demo': {ATTR_CODE: '1234'}}
 

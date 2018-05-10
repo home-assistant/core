@@ -8,8 +8,7 @@ from homeassistant.const import (
     ATTR_CODE, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
-from .const import (
-    CONF_MANUFACTURER, CONF_MODEL, CONF_SERIAL_NUMBER, HOMEKIT_NOTIFY_ID)
+from .const import HOMEKIT_NOTIFY_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,11 +23,9 @@ def validate_entity_config(values):
             raise vol.Invalid('The configuration for "{}" must be '
                               ' an dictionary.'.format(entity))
 
-        for char in (CONF_NAME, CONF_MANUFACTURER,
-                     CONF_MODEL, CONF_SERIAL_NUMBER):
-            value = config.get(char)
-            if value:
-                params[char] = value
+        name = config.get(CONF_NAME)
+        if name:
+            params[CONF_NAME] = name
 
         domain, _ = split_entity_id(entity)
 

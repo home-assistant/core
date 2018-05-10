@@ -16,9 +16,8 @@ from homeassistant.helpers.event import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DEBOUNCE_TIMEOUT, BRIDGE_MODEL, BRIDGE_NAME,
-    BRIDGE_SERIAL_NUMBER, CONF_MANUFACTURER, CONF_MODEL,
-    CONF_SERIAL_NUMBER, MANUFACTURER)
+    BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER,
+    DEBOUNCE_TIMEOUT, MANUFACTURER)
 from .util import (
     show_setup_message, dismiss_setup_message)
 
@@ -69,13 +68,10 @@ class HomeAccessory(Accessory):
                  category=CATEGORY_OTHER):
         """Initialize a Accessory object."""
         super().__init__(name, aid=aid)
-        manufacturer = config.get(CONF_MANUFACTURER, MANUFACTURER)
-        model = config.get(CONF_MODEL, split_entity_id(entity_id)[0]
-                           .replace("_", " ").title())
-        serial_number = config.get(CONF_SERIAL_NUMBER, entity_id)
+        model = split_entity_id(entity_id)[0].replace("_", " ").title()
         self.set_info_service(
-            firmware_revision=__version__, manufacturer=manufacturer,
-            model=model, serial_number=serial_number)
+            firmware_revision=__version__, manufacturer=MANUFACTURER,
+            model=model, serial_number=entity_id)
         self.category = category
         self.config = config
         self.entity_id = entity_id

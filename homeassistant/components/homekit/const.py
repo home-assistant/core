@@ -9,9 +9,6 @@ HOMEKIT_NOTIFY_ID = 4663548
 CONF_AUTO_START = 'auto_start'
 CONF_ENTITY_CONFIG = 'entity_config'
 CONF_FILTER = 'filter'
-CONF_MANUFACTURER = 'manufacturer'
-CONF_MODEL = 'model'
-CONF_SERIAL_NUMBER = 'serial_number'
 
 # #### CONFIG DEFAULTS ####
 DEFAULT_AUTO_START = True
