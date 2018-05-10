@@ -16,13 +16,6 @@ light:
     # For a full list of supported effects see:
     # https://github.com/jaypikay/python-lw12/blob/v0.9.2/lw12.py#L54
     effect: "Gradient Cyan"
-    # (Optional) Transition speed for effects (Value: 0-255)
-    transition: 10
-    # (Optional) LED Brightness (Value: 0-255)
-    brightness: 10
-    # (Optional) RGB value array as standard color to set.
-    # This option is is ignored when effect is set.
-    rgb: [255, 255, 255]
 """
 
 import logging
@@ -36,7 +29,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR, SUPPORT_TRANSITION
 )
 from homeassistant.const import (
-    CONF_BRIGHTNESS, CONF_EFFECT, CONF_HOST, CONF_NAME, CONF_PORT, CONF_RGB
+    CONF_HOST, CONF_NAME, CONF_PORT
 )
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
@@ -46,25 +39,14 @@ REQUIREMENTS = ['lw12==0.9.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TRANSITION = 'transition'
 
 DEFAULT_NAME = 'LW-12 FC'
 DEFAULT_PORT = 5000
-DEFAULT_RGB = [255, 255, 255]
-DEFAULT_BRIGHTNESS = 255
-DEFAULT_EFFECT = None
-DEFAULT_TRANSITION = 128
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_RGB, default=DEFAULT_RGB):
-        vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte))),
-    vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION):
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
 })
 
 
@@ -76,38 +58,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    rgb = config.get(CONF_RGB)
-    brightness = config.get(CONF_BRIGHTNESS)
-    effect = config.get(CONF_EFFECT)
-    transition = config.get(CONF_TRANSITION)
     # Add devices
     lw12_light = lw12.LW12Controller(host, port)
-    add_devices([LW12WiFi(name, lw12_light, rgb, brightness, effect,
-                          transition)])
+    add_devices([LW12WiFi(name, lw12_light)])
 
 
 class LW12WiFi(Light):
     """LW-12 WiFi LED Controller."""
 
-    def __init__(self, name, lw12_light, rgb_color, brightness, effect,
-                 transition):
+    def __init__(self, name, lw12_light):
         """Initialisation of LW-12 WiFi LED Controller.
 
         Args:
             name: Friendly name for this platform to use.
             lw12_light: Instance of the LW12 controller.
-            rgb_color: Initial color to set after the light turned on.
-            brightness: Brightness of the LEDs to set.
-            effect: If not None, turn on the lights with the selected effect.
-            transition: Speed of the effects.
         """
         self._light = lw12_light
         self._name = name
-        self._rgb_color = rgb_color
-        self._brightness = brightness
         self._state = None
-        self._effect = effect
-        self._transition_speed = transition
         # Setup feature list
         self._supported_features = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT \
             | SUPPORT_COLOR | SUPPORT_TRANSITION
