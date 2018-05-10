@@ -60,7 +60,8 @@ JSON_DUMP = partial(json.dumps, cls=JSONEncoder)
 
 AUTH_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('type'): TYPE_AUTH,
-    vol.Required('api_password'): str,
+    vol.Exclusive('api_password', 'auth'): str,
+    vol.Exclusive('access_token', 'auth'): str,
 })
 
 # Minimal requirements of a message
@@ -318,15 +319,18 @@ class ActiveConnection:
                 msg = await wsock.receive_json()
                 msg = AUTH_MESSAGE_SCHEMA(msg)
 
-                if validate_password(request, msg['api_password']):
-                    authenticated = True
+                if 'api_password' in msg:
+                    authenticated = validate_password(
+                        request, msg['api_password'])
 
-                else:
-                    self.debug("Invalid password")
-                    await self.wsock.send_json(
-                        auth_invalid_message('Invalid password'))
+                elif 'access_token' in msg:
+                    authenticated = \
+                        msg['access_token'] in self.hass.auth.access_tokens
 
             if not authenticated:
+                self.debug("Invalid password")
+                await self.wsock.send_json(
+                    auth_invalid_message('Invalid password'))
                 await process_wrong_login(request)
                 return wsock
 
