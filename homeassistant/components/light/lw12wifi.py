@@ -124,14 +124,6 @@ class LW12WiFi(Light):
         return self._brightness
 
     @property
-    def rgb_color(self):
-        """Read back the color of the light.
-
-        Returns [r, g, b] list with values in range of 0-255.
-        """
-        return self._rgb_color
-
-    @property
     def hs_color(self):
         """Read back the hue-saturation of the light."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
