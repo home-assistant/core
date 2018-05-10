@@ -32,13 +32,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 def make_sensor(discovery_info):
     """Create ZHA sensors factory."""
     from zigpy.zcl.clusters.measurement import (
-        RelativeHumidity, TemperatureMeasurement
+        RelativeHumidity, TemperatureMeasurement, PressureMeasurement
     )
     in_clusters = discovery_info['in_clusters']
     if RelativeHumidity.cluster_id in in_clusters:
         sensor = RelativeHumiditySensor(**discovery_info)
     elif TemperatureMeasurement.cluster_id in in_clusters:
         sensor = TemperatureSensor(**discovery_info)
+    elif PressureMeasurement.cluster_id in in_clusters:
+        sensor = PressureSensor(**discovery_info)
     else:
         sensor = Sensor(**discovery_info)
 
@@ -111,3 +113,20 @@ class RelativeHumiditySensor(Sensor):
             return 'unknown'
 
         return round(float(self._state) / 100, 1)
+
+
+class PressureSensor(Sensor):
+    """ZHA pressure sensor."""
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return 'hPa'
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        if self._state == 'unknown':
+            return 'unknown'
+
+        return round(float(self._state))
