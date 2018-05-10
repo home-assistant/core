@@ -91,4 +91,4 @@ async def check_has_unique_id(entity, ready_callback, timeout_callback, loop):
 
 def is_node_parsed(node):
     """Check whether the node has been parsed or still waiting to be parsed."""
-    return (node.manufacturer_name and node.product_name) or node.name
+    return bool((node.manufacturer_name and node.product_name) or node.name)
