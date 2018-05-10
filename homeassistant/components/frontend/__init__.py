@@ -296,6 +296,15 @@ def add_manifest_json_key(key, val):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the serving of the frontend."""
+    if list(hass.auth.async_auth_providers):
+        client = yield from hass.auth.async_create_client(
+            'Home Assistant Frontend',
+            redirect_uris=['/'],
+            no_secret=True,
+        )
+    else:
+        client = None
+
     hass.components.websocket_api.async_register_command(
         WS_TYPE_GET_PANELS, websocket_handle_get_panels, SCHEMA_GET_PANELS)
     hass.http.register_view(ManifestJSONView)
@@ -353,7 +362,7 @@ def async_setup(hass, config):
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    index_view = IndexView(repo_path, js_version)
+    index_view = IndexView(repo_path, js_version, client)
     hass.http.register_view(index_view)
 
     @asyncio.coroutine
@@ -451,10 +460,11 @@ class IndexView(HomeAssistantView):
     requires_auth = False
     extra_urls = ['/states', '/states/{extra}']
 
-    def __init__(self, repo_path, js_option):
+    def __init__(self, repo_path, js_option, client):
         """Initialize the frontend view."""
         self.repo_path = repo_path
         self.js_option = js_option
+        self.client = client
         self._template_cache = {}
 
     def get_template(self, latest):
@@ -508,7 +518,7 @@ class IndexView(HomeAssistantView):
 
         extra_key = DATA_EXTRA_HTML_URL if latest else DATA_EXTRA_HTML_URL_ES5
 
-        resp = template.render(
+        template_params = dict(
             no_auth=no_auth,
             panel_url=panel_url,
             panels=hass.data[DATA_PANELS],
@@ -516,7 +526,11 @@ class IndexView(HomeAssistantView):
             extra_urls=hass.data[extra_key],
         )
 
-        return web.Response(text=resp, content_type='text/html')
+        if self.client is not None:
+            template_params['client_id'] = self.client.id
+
+        return web.Response(text=template.render(**template_params),
+                            content_type='text/html')
 
 
 class ManifestJSONView(HomeAssistantView):

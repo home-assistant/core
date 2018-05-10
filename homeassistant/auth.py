@@ -210,6 +210,7 @@ class Client:
     name = attr.ib(type=str)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
     secret = attr.ib(type=str, default=attr.Factory(generate_secret))
+    redirect_uris = attr.ib(type=list, default=attr.Factory(list))
 
 
 async def load_auth_provider_module(hass, provider):
@@ -340,9 +341,11 @@ class AuthManager:
         """Get an access token."""
         return self.access_tokens.get(token)
 
-    async def async_create_client(self, name):
+    async def async_create_client(self, name, *, redirect_uris=None,
+                                  no_secret=False):
         """Create a new client."""
-        return await self._store.async_create_client(name)
+        return await self._store.async_create_client(
+            name, redirect_uris, no_secret)
 
     async def async_get_client(self, client_id):
         """Get a client."""
@@ -477,12 +480,20 @@ class AuthStore:
 
         return None
 
-    async def async_create_client(self, name):
+    async def async_create_client(self, name, redirect_uris, no_secret):
         """Create a new client."""
         if self.clients is None:
             await self.async_load()
 
-        client = Client(name)
+        kwargs = {
+            'name': name,
+            'redirect_uris': redirect_uris
+        }
+
+        if no_secret:
+            kwargs['secret'] = None
+
+        client = Client(**kwargs)
         self.clients[client.id] = client
         await self.async_save()
         return client

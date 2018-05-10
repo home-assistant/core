@@ -81,7 +81,12 @@ async def async_validate_auth_header(api_password, request):
     if hdrs.AUTHORIZATION not in request.headers:
         return False
 
-    auth_type, auth_val = request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
+    try:
+        auth_type, auth_val = \
+            request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
+    except ValueError:
+        # If no space in authorization header
+        return False
 
     if auth_type == 'Basic':
         decoded = base64.b64decode(auth_val).decode('utf-8')
