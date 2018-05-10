@@ -219,7 +219,10 @@ class Switch(zha.Entity, BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {'level': self._state and self._level or 0}
+        self._device_state_attributes.update({
+            'level': self._state and self._level or 0
+        })
+        return self._device_state_attributes
 
     def move_level(self, change):
         """Increment the level, setting state if appropriate."""
