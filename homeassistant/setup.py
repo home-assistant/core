@@ -98,14 +98,14 @@ async def _async_setup_component(hass: core.HomeAssistant,
         _LOGGER.error("Setup failed for %s: %s", domain, msg)
         async_notify_setup_error(hass, domain, link)
 
-    component = loader.get_component(domain)
+    component = loader.get_component(hass, domain)
 
     if not component:
         log_error("Component not found.", False)
         return False
 
     # Validate no circular dependencies
-    components = loader.load_order_component(domain)
+    components = loader.load_order_component(hass, domain)
 
     # OrderedSet is empty if component or dependencies could not be resolved
     if not components:
@@ -159,7 +159,7 @@ async def _async_setup_component(hass: core.HomeAssistant,
     elif result is not True:
         log_error("Component did not return boolean if setup was successful. "
                   "Disabling component.")
-        loader.set_component(domain, None)
+        loader.set_component(hass, domain, None)
         return False
 
     for entry in hass.config_entries.async_entries(domain):
@@ -193,7 +193,7 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config,
                       platform_path, msg)
         async_notify_setup_error(hass, platform_path)
 
-    platform = loader.get_platform(domain, platform_name)
+    platform = loader.get_platform(hass, domain, platform_name)
 
     # Not found
     if platform is None:

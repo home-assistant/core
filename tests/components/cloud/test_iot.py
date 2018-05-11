@@ -318,7 +318,8 @@ def test_handler_google_actions(hass):
                     'entity_config': {
                         'switch.test': {
                             'name': 'Config name',
-                            'aliases': 'Config alias'
+                            'aliases': 'Config alias',
+                            'room': 'living room'
                         }
                     }
                 }
@@ -347,6 +348,7 @@ def test_handler_google_actions(hass):
     assert device['name']['name'] == 'Config name'
     assert device['name']['nicknames'] == ['Config alias']
     assert device['type'] == 'action.devices.types.SWITCH'
+    assert device['roomHint'] == 'living room'
 
 
 async def test_refresh_token_expired(hass):

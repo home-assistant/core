@@ -10,6 +10,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_NAME, CONF_ENTITY_ID)
@@ -17,7 +18,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.loader import get_component
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +35,16 @@ DEVICE_CLASSES = [
 
 SERVICE_SCAN = 'scan'
 
+EVENT_DETECT_FACE = 'image_processing.detect_face'
+
+ATTR_AGE = 'age'
 ATTR_CONFIDENCE = 'confidence'
+ATTR_FACES = 'faces'
+ATTR_GENDER = 'gender'
+ATTR_GLASSES = 'glasses'
+ATTR_NAME = 'name'
+ATTR_MOTION = 'motion'
+ATTR_TOTAL_FACES = 'total_faces'
 
 CONF_SOURCE = 'source'
 CONF_CONFIDENCE = 'confidence'
@@ -121,16 +131,103 @@ class ImageProcessingEntity(Entity):
 
         This method is a coroutine.
         """
-        camera = get_component('camera')
+        camera = self.hass.components.camera
         image = None
 
         try:
             image = yield from camera.async_get_image(
-                self.hass, self.camera_entity, timeout=self.timeout)
+                self.camera_entity, timeout=self.timeout)
 
         except HomeAssistantError as err:
             _LOGGER.error("Error on receive image from entity: %s", err)
             return
 
         # process image data
-        yield from self.async_process_image(image)
+        yield from self.async_process_image(image.content)
+
+
+class ImageProcessingFaceEntity(ImageProcessingEntity):
+    """Base entity class for face image processing."""
+
+    def __init__(self):
+        """Initialize base face identify/verify entity."""
+        self.faces = []
+        self.total_faces = 0
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        confidence = 0
+        state = None
+
+        # No confidence support
+        if not self.confidence:
+            return self.total_faces
+
+        # Search high confidence
+        for face in self.faces:
+            if ATTR_CONFIDENCE not in face:
+                continue
+
+            f_co = face[ATTR_CONFIDENCE]
+            if f_co > confidence:
+                confidence = f_co
+                for attr in [ATTR_NAME, ATTR_MOTION]:
+                    if attr in face:
+                        state = face[attr]
+                        break
+
+        return state
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'face'
+
+    @property
+    def state_attributes(self):
+        """Return device specific state attributes."""
+        attr = {
+            ATTR_FACES: self.faces,
+            ATTR_TOTAL_FACES: self.total_faces,
+        }
+
+        return attr
+
+    def process_faces(self, faces, total):
+        """Send event with detected faces and store data."""
+        run_callback_threadsafe(
+            self.hass.loop, self.async_process_faces, faces, total).result()
+
+    @callback
+    def async_process_faces(self, faces, total):
+        """Send event with detected faces and store data.
+
+        known are a dict in follow format:
+         [
+           {
+              ATTR_CONFIDENCE: 80,
+              ATTR_NAME: 'Name',
+              ATTR_AGE: 12.0,
+              ATTR_GENDER: 'man',
+              ATTR_MOTION: 'smile',
+              ATTR_GLASSES: 'sunglasses'
+           },
+         ]
+
+        This method must be run in the event loop.
+        """
+        # Send events
+        for face in faces:
+            if ATTR_CONFIDENCE in face and self.confidence:
+                if face[ATTR_CONFIDENCE] < self.confidence:
+                    continue
+
+            face.update({ATTR_ENTITY_ID: self.entity_id})
+            self.hass.async_add_job(
+                self.hass.bus.async_fire, EVENT_DETECT_FACE, face
+            )
+
+        # Update entity store
+        self.faces = faces
+        self.total_faces = total

@@ -35,7 +35,7 @@ from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.6']
+REQUIREMENTS = ['sqlalchemy==1.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,8 +111,7 @@ def run_information(hass, point_in_time: Optional[datetime] = None):
         return res
 
 
-@asyncio.coroutine
-def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the recorder."""
     conf = config.get(DOMAIN, {})
     keep_days = conf.get(CONF_PURGE_KEEP_DAYS)
@@ -131,8 +130,7 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.async_initialize()
     instance.start()
 
-    @asyncio.coroutine
-    def async_handle_purge_service(service):
+    async def async_handle_purge_service(service):
         """Handle calls to the purge service."""
         instance.do_adhoc_purge(**service.data)
 
@@ -140,7 +138,7 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN, SERVICE_PURGE, async_handle_purge_service,
         schema=SERVICE_PURGE_SCHEMA)
 
-    return (yield from instance.async_db_ready)
+    return await instance.async_db_ready
 
 
 PurgeTask = namedtuple('PurgeTask', ['keep_days', 'repack'])

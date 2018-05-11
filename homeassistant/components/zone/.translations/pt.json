@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Nome j\u00e1 existente"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "icon": "\u00cdcone",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "name": "Nome",
+                    "passive": "Passivo",
+                    "radius": "Raio"
+                }
+            }
+        },
+        "title": "Zona"
+    }
+}
