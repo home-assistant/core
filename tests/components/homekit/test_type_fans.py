@@ -5,8 +5,8 @@ from homeassistant.core import callback
 from homeassistant.components.fan import (
     ATTR_DIRECTION, ATTR_OSCILLATING, ATTR_SPEED, ATTR_SPEED_LIST,
     DIRECTION_FORWARD, DIRECTION_REVERSE, DOMAIN, SERVICE_OSCILLATE,
-    SERVICE_SET_DIRECTION, SUPPORT_DIRECTION, SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED)
+    SERVICE_SET_DIRECTION, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM,
+    SUPPORT_DIRECTION, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED)
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_SERVICE, ATTR_SERVICE_DATA,
     ATTR_SUPPORTED_FEATURES, EVENT_CALL_SERVICE, SERVICE_TURN_ON,
@@ -14,6 +14,8 @@ from homeassistant.const import (
 
 from tests.common import get_test_home_assistant
 from tests.components.homekit.test_accessories import patch_debounce
+
+SPEED_MAX = 'max'
 
 
 class TestHomekitFans(unittest.TestCase):
@@ -101,8 +103,8 @@ class TestHomekitFans(unittest.TestCase):
 
         self.hass.states.set(entity_id, STATE_ON, {
             ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED,
-            ATTR_SPEED_LIST: ['low', 'medium', 'high', 'max'],
-            ATTR_SPEED: 'low'})
+            ATTR_SPEED_LIST: [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SPEED_MAX],
+            ATTR_SPEED: SPEED_LOW})
         self.hass.block_till_done()
         acc = self.fan_cls(self.hass, 'Fan', entity_id, 2, config=None)
         self.assertEqual(acc.char_speed.value, 0)
@@ -111,38 +113,63 @@ class TestHomekitFans(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(acc.char_speed.value, 25)
 
-        self.hass.states.set(entity_id, STATE_ON, {ATTR_SPEED: 'medium'})
+        self.hass.states.set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_MEDIUM})
         self.hass.block_till_done()
         self.assertEqual(acc.char_speed.value, 50)
 
+        self.hass.states.set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_HIGH})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_speed.value, 75)
+
+        self.hass.states.set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_MAX})
+        self.hass.block_till_done()
+        self.assertEqual(acc.char_speed.value, 100)
+
         # Set from HomeKit
-        acc.char_speed.client_update_value(75)
+        acc.char_speed.client_update_value(25)
         self.hass.block_till_done()
         self.assertEqual(self.events[0].data[ATTR_DOMAIN], DOMAIN)
         self.assertEqual(self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE_DATA], {
-                ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 'high'})
+                ATTR_ENTITY_ID: entity_id, ATTR_SPEED: SPEED_LOW})
 
-        acc.char_speed.client_update_value(100)
+        acc.char_speed.client_update_value(50)
         self.hass.block_till_done()
         self.assertEqual(self.events[1].data[ATTR_DOMAIN], DOMAIN)
         self.assertEqual(self.events[1].data[ATTR_SERVICE], SERVICE_TURN_ON)
         self.assertEqual(
             self.events[1].data[ATTR_SERVICE_DATA], {
-                ATTR_ENTITY_ID: entity_id, ATTR_SPEED: 'max'})
+                ATTR_ENTITY_ID: entity_id, ATTR_SPEED: SPEED_MEDIUM})
+
+        acc.char_speed.client_update_value(75)
+        self.hass.block_till_done()
+        self.assertEqual(self.events[2].data[ATTR_DOMAIN], DOMAIN)
+        self.assertEqual(self.events[2].data[ATTR_SERVICE], SERVICE_TURN_ON)
+        self.assertEqual(
+            self.events[2].data[ATTR_SERVICE_DATA], {
+                ATTR_ENTITY_ID: entity_id, ATTR_SPEED: SPEED_HIGH})
+
+        acc.char_speed.client_update_value(100)
+        self.hass.block_till_done()
+        self.assertEqual(self.events[3].data[ATTR_DOMAIN], DOMAIN)
+        self.assertEqual(self.events[3].data[ATTR_SERVICE], SERVICE_TURN_ON)
+        self.assertEqual(
+            self.events[3].data[ATTR_SERVICE_DATA], {
+                ATTR_ENTITY_ID: entity_id, ATTR_SPEED: SPEED_MAX})
 
         acc.char_speed.client_update_value(0)
         self.hass.block_till_done()
-        self.assertEqual(self.events[2].data[ATTR_DOMAIN], DOMAIN)
-        self.assertEqual(self.events[2].data[ATTR_SERVICE], SERVICE_TURN_OFF)
+        self.assertEqual(self.events[4].data[ATTR_DOMAIN], DOMAIN)
+        self.assertEqual(self.events[4].data[ATTR_SERVICE], SERVICE_TURN_OFF)
 
     def test_fan_direction(self):
         """Test fan with direction."""
         entity_id = 'fan.demo'
 
         self.hass.states.set(entity_id, STATE_ON, {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_DIRECTION})
+            ATTR_SUPPORTED_FEATURES: SUPPORT_DIRECTION,
+            ATTR_DIRECTION: DIRECTION_FORWARD})
         self.hass.block_till_done()
         acc = self.fan_cls(self.hass, 'Fan', entity_id, 2, config=None)
         self.assertEqual(acc.char_direction.value, 0)
@@ -151,7 +178,8 @@ class TestHomekitFans(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(acc.char_direction.value, 0)
 
-        self.hass.states.set(entity_id, STATE_ON, {ATTR_DIRECTION: 'reverse'})
+        self.hass.states.set(entity_id, STATE_ON,
+                             {ATTR_DIRECTION: DIRECTION_REVERSE})
         self.hass.block_till_done()
         self.assertEqual(acc.char_direction.value, 1)
 
@@ -159,25 +187,28 @@ class TestHomekitFans(unittest.TestCase):
         acc.char_direction.client_update_value(0)
         self.hass.block_till_done()
         self.assertEqual(self.events[0].data[ATTR_DOMAIN], DOMAIN)
-        self.assertEqual(self.events[0].data[ATTR_SERVICE], SERVICE_SET_DIRECTION)
+        self.assertEqual(self.events[0].data[ATTR_SERVICE],
+                         SERVICE_SET_DIRECTION)
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE_DATA], {
-                ATTR_ENTITY_ID: entity_id, ATTR_DIRECTION: 'forward'})
+                ATTR_ENTITY_ID: entity_id, ATTR_DIRECTION: DIRECTION_FORWARD})
 
         acc.char_direction.client_update_value(1)
         self.hass.block_till_done()
         self.assertEqual(self.events[1].data[ATTR_DOMAIN], DOMAIN)
-        self.assertEqual(self.events[1].data[ATTR_SERVICE], SERVICE_SET_DIRECTION)
+        self.assertEqual(self.events[1].data[ATTR_SERVICE],
+                         SERVICE_SET_DIRECTION)
         self.assertEqual(
             self.events[1].data[ATTR_SERVICE_DATA], {
-                ATTR_ENTITY_ID: entity_id, ATTR_DIRECTION: 'reverse'})
+                ATTR_ENTITY_ID: entity_id, ATTR_DIRECTION: DIRECTION_REVERSE})
 
     def test_fan_oscillate(self):
         """Test fan with oscillate."""
         entity_id = 'fan.demo'
 
         self.hass.states.set(entity_id, STATE_ON, {
-            ATTR_SUPPORTED_FEATURES: SUPPORT_OSCILLATE})
+            ATTR_SUPPORTED_FEATURES: SUPPORT_OSCILLATE,
+            ATTR_OSCILLATING: False})
         self.hass.block_till_done()
         acc = self.fan_cls(self.hass, 'Fan', entity_id, 2, config=None)
         self.assertEqual(acc.char_swing.value, 0)
