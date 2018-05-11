@@ -135,12 +135,6 @@ class LW12WiFi(Light):
         """Instruct the light to turn on."""
         import lw12
         self._light.light_on()
-        if self._effect is not None:
-            if self._effect.replace(' ', '_').upper() in lw12.LW12_EFFECT:
-                kwargs['effect'] = self._effect
-            else:
-                self._effect = None
-                raise HomeAssistantError("Unknown effect selected.")
         if ATTR_HS_COLOR in kwargs:
             self._rgb_color = color_util.color_hs_to_RGB(
                 *kwargs.get(ATTR_HS_COLOR))
@@ -153,6 +147,12 @@ class LW12WiFi(Light):
                                          brightness)
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs.get(ATTR_EFFECT).replace(' ', '_').upper()
+            # Check if a known and supported effect was selected.
+            if self._effect not in [eff.name for eff in lw12.LW12_EFFECT]:
+                # Unknown effect was set, recover by disabling the effect
+                # mode and raise an error.
+                self._effect = None
+                raise HomeAssistantError("Unknown effect selected.")
             self._light.set_effect(lw12.LW12_EFFECT[self._effect])
         if ATTR_TRANSITION in kwargs:
             transition_speed = int(kwargs[ATTR_TRANSITION])
