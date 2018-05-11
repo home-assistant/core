@@ -7,7 +7,8 @@ import requests_mock
 
 from homeassistant.core import callback
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_IP_ADDRESS, CONF_PORT)
+    ATTR_ENTITY_ID, CONF_FRIENDLY_NAME,
+    CONF_IP_ADDRESS, CONF_PORT, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
 import homeassistant.components.image_processing as ip
 import homeassistant.components.image_processing.facebox as fb
@@ -104,7 +105,7 @@ async def test_process_image(hass, mock_image):
 
 
 async def test_connection_error(hass, mock_image):
-    """Test processing of an image."""
+    """Test connection error."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
 
@@ -119,7 +120,7 @@ async def test_connection_error(hass, mock_image):
         await hass.async_block_till_done()
 
     state = hass.states.get(VALID_ENTITY_ID)
-    assert state.state == 'unknown'
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get('faces') == []
     assert state.attributes.get('matched_faces') == {}
 
