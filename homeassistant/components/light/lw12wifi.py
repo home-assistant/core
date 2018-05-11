@@ -15,7 +15,6 @@ light:
 """
 
 import logging
-import time
 
 import voluptuous as vol
 
