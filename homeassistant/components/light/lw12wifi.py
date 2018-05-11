@@ -125,6 +125,11 @@ class LW12WiFi(Light):
         """Return True if unable to access real state of the entity."""
         return True
 
+    @property
+    def shoud_poll(self) -> bool:
+        """Return False to not poll the state of this entity."""
+        return False
+
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         import lw12
