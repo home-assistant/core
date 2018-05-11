@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Broen er allerede konfigurert",
+            "no_bridges": "Ingen deCONZ broer oppdaget",
+            "one_instance_only": "Komponenten st\u00f8tter bare \u00e9n deCONZ forekomst"
+        },
+        "error": {
+            "no_key": "Kunne ikke f\u00e5 en API-n\u00f8kkel"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Vert",
+                    "port": "Port (standardverdi: '80')"
+                },
+                "title": "Definer deCONZ-gatewayen"
+            },
+            "link": {
+                "description": "L\u00e5s opp deCONZ-gatewayen din for \u00e5 registrere deg med Home Assistant. \n\n 1. G\u00e5 til deCONZ-systeminnstillinger \n 2. Trykk p\u00e5 \"L\u00e5s opp gateway\" knappen",
+                "title": "Koble til deCONZ"
+            }
+        },
+        "title": "deCONZ"
+    }
+}

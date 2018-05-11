@@ -12,13 +12,14 @@ from typing import Any, List, Tuple  # NOQA
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
+from homeassistant import auth
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
     __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB,
-    CONF_WHITELIST_EXTERNAL_DIRS)
+    CONF_WHITELIST_EXTERNAL_DIRS, CONF_AUTH_PROVIDERS)
 from homeassistant.core import callback, DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component, get_platform
@@ -157,6 +158,8 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
         # pylint: disable=no-value-for-parameter
         vol.All(cv.ensure_list, [vol.IsDir()]),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
+    vol.Optional(CONF_AUTH_PROVIDERS):
+        vol.All(cv.ensure_list, [auth.AUTH_PROVIDER_SCHEMA])
 })
 
 
@@ -394,6 +397,12 @@ async def async_process_ha_core_config(hass, config):
     This method is a coroutine.
     """
     config = CORE_CONFIG_SCHEMA(config)
+
+    # Only load auth during startup.
+    if not hasattr(hass, 'auth'):
+        hass.auth = await auth.auth_manager_from_config(
+            hass, config.get(CONF_AUTH_PROVIDERS, []))
+
     hac = hass.config
 
     def set_time_zone(time_zone_str):
@@ -539,7 +548,8 @@ def _identify_config_schema(module):
     return '', schema
 
 
-def merge_packages_config(config, packages, _log_pkg_error=_log_pkg_error):
+def merge_packages_config(hass, config, packages,
+                          _log_pkg_error=_log_pkg_error):
     """Merge packages into the top-level configuration. Mutate config."""
     # pylint: disable=too-many-nested-blocks
     PACKAGES_CONFIG_SCHEMA(packages)
@@ -547,7 +557,7 @@ def merge_packages_config(config, packages, _log_pkg_error=_log_pkg_error):
         for comp_name, comp_conf in pack_conf.items():
             if comp_name == CONF_CORE:
                 continue
-            component = get_component(comp_name)
+            component = get_component(hass, comp_name)
 
             if component is None:
                 _log_pkg_error(pack_name, comp_name, config, "does not exist")
@@ -616,7 +626,7 @@ def async_process_component_config(hass, config, domain):
 
     This method must be run in the event loop.
     """
-    component = get_component(domain)
+    component = get_component(hass, domain)
 
     if hasattr(component, 'CONFIG_SCHEMA'):
         try:
@@ -642,7 +652,7 @@ def async_process_component_config(hass, config, domain):
                 platforms.append(p_validated)
                 continue
 
-            platform = get_platform(domain, p_name)
+            platform = get_platform(hass, domain, p_name)
 
             if platform is None:
                 continue
@@ -677,7 +687,7 @@ async def async_check_ha_config_file(hass):
     from homeassistant.scripts.check_config import check_ha_config_file
 
     res = await hass.async_add_job(
-        check_ha_config_file, hass.config.config_dir)
+        check_ha_config_file, hass)
 
     if not res.errors:
         return None

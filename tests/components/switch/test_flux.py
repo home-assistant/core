@@ -71,7 +71,7 @@ class TestSwitchFlux(unittest.TestCase):
 
     def test_flux_when_switch_is_off(self):
         """Test the flux switch when it is off."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -113,7 +113,7 @@ class TestSwitchFlux(unittest.TestCase):
 
     def test_flux_before_sunrise(self):
         """Test the flux switch before sunrise."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -160,7 +160,7 @@ class TestSwitchFlux(unittest.TestCase):
     # pylint: disable=invalid-name
     def test_flux_after_sunrise_before_sunset(self):
         """Test the flux switch after sunrise and before sunset."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -207,7 +207,7 @@ class TestSwitchFlux(unittest.TestCase):
     # pylint: disable=invalid-name
     def test_flux_after_sunset_before_stop(self):
         """Test the flux switch after sunset and before stop."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -255,7 +255,7 @@ class TestSwitchFlux(unittest.TestCase):
     # pylint: disable=invalid-name
     def test_flux_after_stop_before_sunrise(self):
         """Test the flux switch after stop and before sunrise."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -302,7 +302,7 @@ class TestSwitchFlux(unittest.TestCase):
     # pylint: disable=invalid-name
     def test_flux_with_custom_start_stop_times(self):
         """Test the flux with custom start and stop times."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -353,7 +353,7 @@ class TestSwitchFlux(unittest.TestCase):
 
         This test has the stop_time on the next day (after midnight).
         """
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -405,7 +405,7 @@ class TestSwitchFlux(unittest.TestCase):
 
         This test has the stop_time on the next day (after midnight).
         """
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -456,7 +456,7 @@ class TestSwitchFlux(unittest.TestCase):
 
         This test has the stop_time on the next day (after midnight).
         """
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -507,7 +507,7 @@ class TestSwitchFlux(unittest.TestCase):
 
         This test has the stop_time on the next day (after midnight).
         """
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -558,7 +558,7 @@ class TestSwitchFlux(unittest.TestCase):
 
         This test has the stop_time on the next day (after midnight).
         """
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -606,7 +606,7 @@ class TestSwitchFlux(unittest.TestCase):
     # pylint: disable=invalid-name
     def test_flux_with_custom_colortemps(self):
         """Test the flux with custom start and stop colortemps."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -656,7 +656,7 @@ class TestSwitchFlux(unittest.TestCase):
     # pylint: disable=invalid-name
     def test_flux_with_custom_brightness(self):
         """Test the flux with custom start and stop colortemps."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -704,7 +704,7 @@ class TestSwitchFlux(unittest.TestCase):
 
     def test_flux_with_multiple_lights(self):
         """Test the flux switch with multiple light entities."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -773,7 +773,7 @@ class TestSwitchFlux(unittest.TestCase):
 
     def test_flux_with_mired(self):
         """Test the flux switch´s mode mired."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
@@ -818,7 +818,7 @@ class TestSwitchFlux(unittest.TestCase):
 
     def test_flux_with_rgb(self):
         """Test the flux switch´s mode rgb."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
         self.assertTrue(
             setup_component(self.hass, light.DOMAIN,
