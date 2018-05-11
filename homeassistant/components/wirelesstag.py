@@ -12,27 +12,18 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import (
+    dispatcher_send)
 
 REQUIREMENTS = ['wirelesstagpy==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-# tag type value is int - I need more info how to interpret it
-ATTR_TAG_TYPE = 'type'
-# comment assigned to tag, value is string
-ATTR_TAG_COMMENT = 'comment'
-# is tag alive
-ATTR_TAG_IS_ALIVE = 'alive'
+
 # straight of signal in dBm
 ATTR_TAG_SIGNAL_STRAIGHT = 'signal_straight'
-# beep options (5 times, 10 times, 15 times etc)
-ATTR_TAG_BEEP_DURATION = 'beep_duration'
-# indicates if tag is out of range or not - valye, Bool
+# indicates if tag is out of range or not
 ATTR_TAG_OUT_OF_RANGE = 'out_of_range'
-# hw revision version
-ATTR_TAG_HW_REVISION = 'revision'
-# tag fw version
-ATTR_TAG_FW_VERSION = 'version'
 # number in percents from max power of tag receiver
 ATTR_TAG_POWER_CONSUMPTION = 'power_consumption'
 
@@ -47,6 +38,9 @@ WIRELESSTAG_TYPE_13BIT = 13
 WIRELESSTAG_TYPE_ALSPRO = 26
 WIRELESSTAG_TYPE_WATER = 32
 WIRELESSTAG_TYPE_WEMO_DEVICE = 82
+
+SIGNAL_TAG_UPDATE = 'wirelesstag.tag_info_updated_{}'
+SIGNAL_BINARY_EVENT_UPDATE = 'wirelesstag.binary_event_updated_{}_{}'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -63,19 +57,12 @@ class WirelessTagPlatform:
         """Designated initializer for wirelesstags platform."""
         self.hass = hass
         self.api = api
-        self.entities = []
-        self.binary_sensors = []  # binary sensors only
         self.tags = {}
 
     def load_tags(self):
         """Load tags from remote server."""
         self.tags = self.api.load_tags()
         return self.tags
-
-    @property
-    def use_celcius(self):
-        """Indicate if unit of measure in celcius."""
-        return self.api.use_celsius
 
     def arm(self, switch):
         """Arm entity sensor monitoring."""
@@ -91,11 +78,6 @@ class WirelessTagPlatform:
         if disarm_func is not None:
             disarm_func(switch.tag_id)
 
-    def register_entity(self, entity):
-        """Resiter new enity for local push notification."""
-        _LOGGER.info("Registered entity for value update: - %s", entity)
-        self.entities.append(entity)
-
     # pylint: disable=no-self-use
     def make_push_notitication(self, name, url, content):
         """Factory for notification config."""
@@ -106,11 +88,11 @@ class WirelessTagPlatform:
 
     def install_push_notifications(self, binary_sensors):
         """Setup local push notification from tag manager."""
-        self.binary_sensors = binary_sensors
+        _LOGGER.info("Registering local push notifications.")
         configs = []
 
         binary_url = self.binary_event_callback_url
-        for event in self.binary_sensors:
+        for event in binary_sensors:
             for state, name in event.binary_spec.items():
                 content = ('{"type": "' + event.device_class +
                            '", "id":{' + str(event.tag_id_index_template) +
@@ -149,11 +131,10 @@ class WirelessTagPlatform:
     def handle_update_tags_event(self, event):
         """Main entry to handle push event from wireless tag manager."""
         _LOGGER.info("push notification for update arrived: %s", event)
-        for entity in self.entities:
-            if event.data.get('id') == entity.tag_id:
-                _LOGGER.info("Entity to update state: %s event data: %s",
-                             entity, event.data)
-                entity.update_tag_info(event)
+        dispatcher_send(
+            self.hass,
+            SIGNAL_TAG_UPDATE.format(event.data.get('id')),
+            event)
 
     def handle_binary_event(self, event):
         """Handle push notifications for binary (on/off) events."""
@@ -161,10 +142,10 @@ class WirelessTagPlatform:
         try:
             tag_id = event.data.get('id')
             event_type = event.data.get('type')
-            for sensor in self.binary_sensors:
-                if (tag_id == sensor.tag_id and
-                        event_type == sensor.device_class):
-                    sensor.on_binary_event(event)
+            dispatcher_send(
+                self.hass,
+                SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type),
+                event)
         except Exception as ex:  # pylint: disable=W0703
             _LOGGER.error("Unable to handle binary event:\
                           %s error: %s", str(event), str(ex))
@@ -194,7 +175,7 @@ def setup(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    # listen to custom event
+    # listen to custom events
     hass.bus.listen('wirelesstag_update_tags',
                     hass.data[DOMAIN].handle_update_tags_event)
     hass.bus.listen('wirelesstag_binary_event',
@@ -260,21 +241,6 @@ class WirelessTagBaseSensor(Entity):
 
         self._tag = updated_tag
         self._state = self.updated_state_value()
-
-    def update_tag_info(self, event):
-        """Update sensor data on push notification event.
-
-        Subclasses must ovverride - handler of push notification.
-        """
-        pass
-
-    def on_binary_event(self, event):
-        """Update sensor data on push notification binary event.
-
-        Applicable for binary sensors only.
-        Subclasses must ovverride - handler of push notification.
-        """
-        pass
 
     @property
     def device_state_attributes(self):

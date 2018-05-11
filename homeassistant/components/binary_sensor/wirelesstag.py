@@ -8,6 +8,8 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.wirelesstag import (
@@ -15,6 +17,7 @@ from homeassistant.components.wirelesstag import (
     WIRELESSTAG_TYPE_13BIT, WIRELESSTAG_TYPE_WATER,
     WIRELESSTAG_TYPE_ALSPRO,
     WIRELESSTAG_TYPE_WEMO_DEVICE,
+    SIGNAL_BINARY_EVENT_UPDATE,
     WirelessTagBaseSensor)
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, STATE_ON, STATE_OFF)
@@ -117,8 +120,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 sensors.append(WirelessTagBinarySensor(platform, tag,
                                                        sensor_type))
 
-    platform.install_push_notifications(sensors)
     add_devices(sensors, True)
+    hass.add_job(platform.install_push_notifications, sensors)
 
 
 class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
@@ -169,7 +172,15 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
         self._tag_attr = SENSOR_TYPES[self._sensor_type][2]
         self.binary_spec = SENSOR_TYPES[self._sensor_type][3]
         self.tag_id_index_template = SENSOR_TYPES[self._sensor_type][4]
-        self._api.register_entity(self)
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        tag_id = self.tag_id
+        event_type = self.device_class
+        async_dispatcher_connect(
+            self.hass,
+            SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type),
+            self._on_binary_event_callback)
 
     @property
     def is_on(self):
@@ -195,15 +206,9 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorDevice):
         """Use raw princial value."""
         return self.principal_value
 
-    def update_tag_info(self, event):
-        """Handle push notification sent by tag manager."""
-        pass
-
-    def on_binary_event(self, event):
+    @callback
+    def _on_binary_event_callback(self, event):
         """Update state from arrive push notification."""
-        # type should be one of decared in SENSOR_TYPES
-        event_type = event.data.get('type')
-        if event_type == self.device_class:
-            # state should be 'on' or 'off'
-            self._state = event.data.get('state')
-            self.async_schedule_update_ha_state()
+        # state should be 'on' or 'off'
+        self._state = event.data.get('state')
+        self.async_schedule_update_ha_state()

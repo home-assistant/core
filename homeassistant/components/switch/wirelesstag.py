@@ -93,7 +93,6 @@ class WirelessTagSwitch(WirelessTagBaseSensor, SwitchDevice):
         self.sensor_type = SWITCH_TYPES[self._switch_type][1]
         self._name = '{} {}'.format(self._tag.name,
                                     SWITCH_TYPES[self._switch_type][0])
-        self._api.register_entity(self)
 
     def turn_on(self, **kwargs):
         """Turn on the switch."""

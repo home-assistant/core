@@ -9,6 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS)
 from homeassistant.components.wirelesstag import (
@@ -16,6 +18,7 @@ from homeassistant.components.wirelesstag import (
     WIRELESSTAG_TYPE_13BIT, WIRELESSTAG_TYPE_WATER,
     WIRELESSTAG_TYPE_ALSPRO,
     WIRELESSTAG_TYPE_WEMO_DEVICE,
+    SIGNAL_TAG_UPDATE,
     WirelessTagBaseSensor)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import TEMP_CELSIUS
@@ -103,11 +106,20 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         self._unit_of_measurement = SENSOR_TYPES[self._sensor_type]['unit']
         self._name = self._tag.name
 
+        # I want to see entity_id as:
         # sensor.wirelesstag_bedroom_temperature
+        # and not as sensor.bedroom for temperature and
+        # sensor.bedroom_2 for humidity
         self._entity_id = '{}.{}_{}_{}'.format('sensor', WIRELESSTAG_DOMAIN,
                                                self.underscored_name,
                                                self._sensor_type)
-        self._api.register_entity(self)
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass,
+            SIGNAL_TAG_UPDATE.format(self.tag_id),
+            self._update_tag_info_callback)
 
     @property
     def entity_id(self):
@@ -139,8 +151,14 @@ class WirelessTagSensor(WirelessTagBaseSensor):
         """Return sensor current value."""
         return getattr(self._tag, self._tag_attr, False)
 
-    def update_tag_info(self, event):
+    @callback
+    def _update_tag_info_callback(self, event):
         """Handle push notification sent by tag manager."""
+        if event.data.get('id') != self.tag_id:
+            return
+
+        _LOGGER.info("Entity to update state: %s event data: %s",
+                     self, event.data)
         new_value = self.principal_value
         try:
             if self._sensor_type == SENSOR_TEMPERATURE:
