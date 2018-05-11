@@ -6,6 +6,9 @@ from unittest import mock
 # https://bugs.python.org/issue23004
 from mock_open import MockOpen
 
+from homeassistant.components.camera import DOMAIN
+from homeassistant.components.camera.local_file import (
+    SERVICE_UPDATE_FILE_PATH)
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_registry
@@ -115,3 +118,37 @@ def test_camera_content_type(hass, aiohttp_client):
     assert resp_4.content_type == 'image/jpeg'
     body = yield from resp_4.text()
     assert body == image
+
+
+async def test_update_file_path(hass):
+    """Test update_file_path service."""
+    # Setup platform
+
+    mock_registry(hass)
+
+    with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
+            mock.patch('os.access', mock.Mock(return_value=True)):
+        await async_setup_component(hass, 'camera', {
+            'camera': {
+                'platform': 'local_file',
+                'file_path': 'mock/path.jpg'
+            }
+        })
+
+        # Fetch state and check motion detection attribute
+        state = hass.states.get('camera.local_file')
+        assert state.attributes.get('friendly_name') == 'Local File'
+        assert state.attributes.get('file_path') == 'mock/path.jpg'
+
+        service_data = {
+            "entity_id": 'camera.local_file',
+            "file_path": 'new/path.jpg'
+        }
+
+        await hass.services.async_call(DOMAIN,
+                                       SERVICE_UPDATE_FILE_PATH,
+                                       service_data)
+        await hass.async_block_till_done()
+
+        state = hass.states.get('camera.local_file')
+        assert state.attributes.get('file_path') == 'new/path.jpg'

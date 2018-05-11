@@ -129,6 +129,7 @@ HANDLERS = Registry()
 FLOWS = [
     'deconz',
     'hue',
+    'zone',
 ]
 
 
@@ -140,6 +141,9 @@ ENTRY_STATE_LOADED = 'loaded'
 ENTRY_STATE_SETUP_ERROR = 'setup_error'
 ENTRY_STATE_NOT_LOADED = 'not_loaded'
 ENTRY_STATE_FAILED_UNLOAD = 'failed_unload'
+
+DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
+DISCOVERY_SOURCES = (data_entry_flow.SOURCE_DISCOVERY,)
 
 
 class ConfigEntry:
@@ -256,7 +260,7 @@ class ConfigEntries:
         """Initialize the entry manager."""
         self.hass = hass
         self.flow = data_entry_flow.FlowManager(
-            hass, self._async_create_flow, self._async_save_entry)
+            hass, self._async_create_flow, self._async_finish_flow)
         self._hass_config = hass_config
         self._entries = None
         self._sched_save = None
@@ -341,8 +345,8 @@ class ConfigEntries:
         return await entry.async_unload(
             self.hass, component=getattr(self.hass.components, component))
 
-    async def _async_save_entry(self, result):
-        """Add an entry."""
+    async def _async_finish_flow(self, result):
+        """Finish a config flow and add an entry."""
         entry = ConfigEntry(
             version=result['version'],
             domain=result['handler'],
@@ -362,9 +366,19 @@ class ConfigEntries:
             await async_setup_component(
                 self.hass, entry.domain, self._hass_config)
 
+        # Return Entry if they not from a discovery request
+        if result['source'] not in DISCOVERY_SOURCES:
+            return entry
+
+        # If no discovery config entries in progress, remove notification.
+        if not any(ent['source'] in DISCOVERY_SOURCES for ent
+                   in self.hass.config_entries.flow.async_progress()):
+            self.hass.components.persistent_notification.async_dismiss(
+                DISCOVERY_NOTIFICATION_ID)
+
         return entry
 
-    async def _async_create_flow(self, handler):
+    async def _async_create_flow(self, handler, *, source, data):
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to setup.
@@ -378,6 +392,15 @@ class ConfigEntries:
         # Make sure requirements and dependencies of component are resolved
         await async_process_deps_reqs(
             self.hass, self._hass_config, handler, component)
+
+        # Create notification.
+        if source in DISCOVERY_SOURCES:
+            self.hass.components.persistent_notification.async_create(
+                title='New devices discovered',
+                message=("We have discovered new devices on your network. "
+                         "[Check it out](/config/integrations)"),
+                notification_id=DISCOVERY_NOTIFICATION_ID
+            )
 
         return handler()
 

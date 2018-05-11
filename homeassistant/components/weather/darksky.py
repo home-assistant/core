@@ -25,9 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Powered by Dark Sky"
 
-ATTR_DAILY_FORECAST_SUMMARY = 'daily_forecast_summary'
-ATTR_HOURLY_FORECAST_SUMMARY = 'hourly_forecast_summary'
-
 CONF_UNITS = 'units'
 
 DEFAULT_NAME = 'Dark Sky'
@@ -121,25 +118,6 @@ class DarkSkyWeather(WeatherEntity):
                 datetime.fromtimestamp(entry.d.get('time')).isoformat(),
             ATTR_FORECAST_TEMP: entry.d.get('temperature')}
                 for entry in self._ds_hourly.data]
-
-    @property
-    def hourly_forecast_summary(self):
-        """Return a summary of the hourly forecast."""
-        return self._ds_hourly.summary
-
-    @property
-    def daily_forecast_summary(self):
-        """Return a summary of the daily forecast."""
-        return self._ds_daily.summary
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attrs = {
-            ATTR_DAILY_FORECAST_SUMMARY: self.daily_forecast_summary,
-            ATTR_HOURLY_FORECAST_SUMMARY: self.hourly_forecast_summary
-        }
-        return attrs
 
     def update(self):
         """Get the latest data from Dark Sky."""

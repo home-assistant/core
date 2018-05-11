@@ -27,7 +27,7 @@ def test_call_setup_entry(hass):
     mock_setup_entry = MagicMock(return_value=mock_coro(True))
 
     loader.set_component(
-        'comp',
+        hass, 'comp',
         MockModule('comp', async_setup_entry=mock_setup_entry))
 
     result = yield from async_setup_component(hass, 'comp', {})
@@ -36,12 +36,12 @@ def test_call_setup_entry(hass):
 
 
 @asyncio.coroutine
-def test_remove_entry(manager):
+def test_remove_entry(hass, manager):
     """Test that we can remove an entry."""
     mock_unload_entry = MagicMock(return_value=mock_coro(True))
 
     loader.set_component(
-        'test',
+        hass, 'test',
         MockModule('comp', async_unload_entry=mock_unload_entry))
 
     MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)
@@ -63,7 +63,7 @@ def test_remove_entry(manager):
 
 
 @asyncio.coroutine
-def test_remove_entry_raises(manager):
+def test_remove_entry_raises(hass, manager):
     """Test if a component raises while removing entry."""
     @asyncio.coroutine
     def mock_unload_entry(hass, entry):
@@ -71,7 +71,7 @@ def test_remove_entry_raises(manager):
         raise Exception("BROKEN")
 
     loader.set_component(
-        'test',
+        hass, 'test',
         MockModule('comp', async_unload_entry=mock_unload_entry))
 
     MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)
@@ -96,7 +96,7 @@ def test_add_entry_calls_setup_entry(hass, manager):
     mock_setup_entry = MagicMock(return_value=mock_coro(True))
 
     loader.set_component(
-        'comp',
+        hass, 'comp',
         MockModule('comp', async_setup_entry=mock_setup_entry))
 
     class TestFlow(data_entry_flow.FlowHandler):
@@ -151,6 +151,8 @@ def test_domains_gets_uniques(manager):
 @asyncio.coroutine
 def test_saving_and_loading(hass):
     """Test that we're saving and loading correctly."""
+    loader.set_component(hass, 'test', MockModule('test'))
+
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 5
 
@@ -217,12 +219,12 @@ async def test_forward_entry_sets_up_component(hass):
 
     mock_original_setup_entry = MagicMock(return_value=mock_coro(True))
     loader.set_component(
-        'original',
+        hass, 'original',
         MockModule('original', async_setup_entry=mock_original_setup_entry))
 
     mock_forwarded_setup_entry = MagicMock(return_value=mock_coro(True))
     loader.set_component(
-        'forwarded',
+        hass, 'forwarded',
         MockModule('forwarded', async_setup_entry=mock_forwarded_setup_entry))
 
     await hass.config_entries.async_forward_entry_setup(entry, 'forwarded')
@@ -236,7 +238,7 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(hass):
 
     mock_setup = MagicMock(return_value=mock_coro(False))
     mock_setup_entry = MagicMock()
-    loader.set_component('forwarded', MockModule(
+    hass, loader.set_component(hass, 'forwarded', MockModule(
         'forwarded',
         async_setup=mock_setup,
         async_setup_entry=mock_setup_entry,
@@ -245,3 +247,40 @@ async def test_forward_entry_does_not_setup_entry_if_setup_fails(hass):
     await hass.config_entries.async_forward_entry_setup(entry, 'forwarded')
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+async def test_discovery_notification(hass):
+    """Test that we create/dismiss a notification when source is discovery."""
+    loader.set_component(hass, 'test', MockModule('test'))
+    await async_setup_component(hass, 'persistent_notification', {})
+
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+
+        async def async_step_discovery(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(
+                    title='Test Title',
+                    data={
+                        'token': 'abcd'
+                    }
+                )
+            return self.async_show_form(
+                step_id='discovery',
+            )
+
+    with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
+        result = await hass.config_entries.flow.async_init(
+            'test', source=data_entry_flow.SOURCE_DISCOVERY)
+
+    await hass.async_block_till_done()
+    state = hass.states.get('persistent_notification.config_entry_discovery')
+    assert state is not None
+
+    result = await hass.config_entries.flow.async_configure(
+        result['flow_id'], {})
+    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    await hass.async_block_till_done()
+    state = hass.states.get('persistent_notification.config_entry_discovery')
+    assert state is None

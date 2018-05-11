@@ -12,7 +12,7 @@ def manager():
     handlers = Registry()
     entries = []
 
-    async def async_create_flow(handler_name):
+    async def async_create_flow(handler_name, *, source, data):
         handler = handlers.get(handler_name)
 
         if handler is None:

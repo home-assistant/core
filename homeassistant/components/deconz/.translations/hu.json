@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "one_instance_only": "Ez a komponens csak egy deCONZ egys\u00e9get t\u00e1mogat"
+        },
+        "error": {
+            "no_key": "API kulcs lek\u00e9r\u00e9se nem siker\u00fclt"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "H\u00e1zigazda (Host)",
+                    "port": "Port (alap\u00e9rtelmezett \u00e9rt\u00e9k: '80')"
+                }
+            },
+            "link": {
+                "title": "Kapcsol\u00f3d\u00e1s a deCONZ-hoz"
+            }
+        },
+        "title": "deCONZ"
+    }
+}

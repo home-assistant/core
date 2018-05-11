@@ -20,7 +20,7 @@ if os.environ.get('UVLOOP') == '1':
     import uvloop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-logging.basicConfig()
+logging.basicConfig(level=logging.INFO)
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "\uc774\ub984\uc774 \uc774\ubbf8 \uc874\uc7ac\ud569\ub2c8\ub2e4"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "icon": "\uc544\uc774\ucf58",
+                    "latitude": "\uc704\ub3c4",
+                    "longitude": "\uacbd\ub3c4",
+                    "name": "\uc774\ub984",
+                    "passive": "\uc790\ub3d9\ud654 \uc804\uc6a9",
+                    "radius": "\ubc18\uacbd"
+                },
+                "title": "\uad6c\uc5ed \ub9e4\uac1c \ubcc0\uc218 \uc815\uc758"
+            }
+        },
+        "title": "\uad6c\uc5ed"
+    }
+}

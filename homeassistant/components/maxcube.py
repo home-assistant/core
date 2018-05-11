@@ -13,7 +13,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 
 REQUIREMENTS = ['maxcube-api==0.1.0']
 
@@ -32,6 +32,7 @@ CONF_GATEWAYS = 'gateways'
 CONFIG_GATEWAY = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SCAN_INTERVAL, default=300): cv.time_period,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -54,10 +55,11 @@ def setup(hass, config):
     for gateway in gateways:
         host = gateway[CONF_HOST]
         port = gateway[CONF_PORT]
+        scan_interval = gateway[CONF_SCAN_INTERVAL].total_seconds()
 
         try:
             cube = MaxCube(MaxCubeConnection(host, port))
-            hass.data[DATA_KEY][host] = MaxCubeHandle(cube)
+            hass.data[DATA_KEY][host] = MaxCubeHandle(cube, scan_interval)
         except timeout as ex:
             _LOGGER.error("Unable to connect to Max!Cube gateway: %s", str(ex))
             hass.components.persistent_notification.create(
@@ -80,9 +82,10 @@ def setup(hass, config):
 class MaxCubeHandle(object):
     """Keep the cube instance in one place and centralize the update."""
 
-    def __init__(self, cube):
+    def __init__(self, cube, scan_interval):
         """Initialize the Cube Handle."""
         self.cube = cube
+        self.scan_interval = scan_interval
         self.mutex = Lock()
         self._updatets = time.time()
 
@@ -90,8 +93,8 @@ class MaxCubeHandle(object):
         """Pull the latest data from the MAX! Cube."""
         # Acquire mutex to prevent simultaneous update from multiple threads
         with self.mutex:
-            # Only update every 60s
-            if (time.time() - self._updatets) >= 60:
+            # Only update every update_interval
+            if (time.time() - self._updatets) >= self.scan_interval:
                 _LOGGER.debug("Updating")
 
                 try:
