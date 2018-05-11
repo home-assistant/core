@@ -140,6 +140,7 @@ light:
 """
 import unittest
 from unittest import mock
+from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 from homeassistant.const import (
@@ -488,8 +489,8 @@ class TestLightMQTT(unittest.TestCase):
                                                    'color_temp': 100,
                                                    'white_value': 50})
         print(fake_state)
-        with mock.patch('homeassistant.components.light.mqtt.async_get_last_state',
-            return_value=mock_coro(fake_state)):
+        with patch('homeassistant.components.light.mqtt.async_get_last_state',
+                return_value=mock_coro(fake_state)):
             with assert_setup_component(1, light.DOMAIN):
                 assert setup_component(self.hass, light.DOMAIN, config)
 
