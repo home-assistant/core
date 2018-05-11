@@ -23,9 +23,10 @@ def validate_entity_config(values):
             raise vol.Invalid('The configuration for "{}" must be '
                               ' an dictionary.'.format(entity))
 
-        name = config.get(CONF_NAME)
-        if name:
-            params[CONF_NAME] = name
+        for key in (CONF_NAME, ):
+            value = config.get(key, -1)
+            if value != -1:
+                params[key] = cv.string(value)
 
         domain, _ = split_entity_id(entity)
 

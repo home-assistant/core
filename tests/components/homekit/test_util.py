@@ -21,7 +21,7 @@ def test_validate_entity_config():
     """Test validate entities."""
     configs = [{'invalid_entity_id': {}}, {'demo.test': 1},
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
-               {'demo.test': None}]
+               {'demo.test': None}, {'demo.test': {CONF_NAME: None}}]
 
     for conf in configs:
         with pytest.raises(vol.Invalid):
