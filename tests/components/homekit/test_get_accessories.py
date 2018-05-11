@@ -11,33 +11,42 @@ from homeassistant.components.climate import (
 from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def test_get_accessory_invalid_aid(caplog):
-    """Test with unsupported component."""
-    assert get_accessory(None, State('light.demo', 'on'),
-                         None, config=None) is None
+def test_not_supported(caplog):
+    """Test if none is returned if entity isn't supported."""
+    # not supported entity
+    assert get_accessory(None, State('demo.demo', 'on'), 2, {}) is None
+
+    # invalid aid
+    assert get_accessory(None, State('light.demo', 'on'), None, None) is None
     assert caplog.records[0].levelname == 'WARNING'
     assert 'invalid aid' in caplog.records[0].msg
 
 
-def test_not_supported():
-    """Test if none is returned if entity isn't supported."""
-    assert get_accessory(None, State('demo.demo', 'on'), 2, config=None) \
-        is None
+@pytest.mark.parametrize('config, name', [
+    ({CONF_NAME: 'Customize Name'}, 'Customize Name'),
+])
+def test_customize_options(config, name):
+    """Test with customized options."""
+    mock_type = Mock()
+    with patch.dict(TYPES, {'Light': mock_type}):
+        entity_state = State('light.demo', 'on')
+        get_accessory(None, entity_state, 2, config)
+    mock_type.assert_called_with(None, name, 'light.demo', 2, config)
 
 
 @pytest.mark.parametrize('type_name, entity_id, state, attrs, config', [
-    ('Light', 'light.test', 'on', {}, None),
-    ('Lock', 'lock.test', 'locked', {}, None),
+    ('Light', 'light.test', 'on', {}, {}),
+    ('Lock', 'lock.test', 'locked', {}, {}),
 
-    ('Thermostat', 'climate.test', 'auto', {}, None),
+    ('Thermostat', 'climate.test', 'auto', {}, {}),
     ('Thermostat', 'climate.test', 'auto',
      {ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_LOW |
-      SUPPORT_TARGET_TEMPERATURE_HIGH}, None),
+      SUPPORT_TARGET_TEMPERATURE_HIGH}, {}),
 
     ('SecuritySystem', 'alarm_control_panel.test', 'armed', {},
      {ATTR_CODE: '1234'}),
@@ -51,7 +60,7 @@ def test_types(type_name, entity_id, state, attrs, config):
     assert mock_type.called
 
     if config:
-        assert mock_type.call_args[1]['config'] == config
+        assert mock_type.call_args[0][-1] == config
 
 
 @pytest.mark.parametrize('type_name, entity_id, state, attrs', [
@@ -68,7 +77,7 @@ def test_type_covers(type_name, entity_id, state, attrs):
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)
-        get_accessory(None, entity_state, 2, None)
+        get_accessory(None, entity_state, 2, {})
     assert mock_type.called
 
 
@@ -104,7 +113,7 @@ def test_type_sensors(type_name, entity_id, state, attrs):
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)
-        get_accessory(None, entity_state, 2, None)
+        get_accessory(None, entity_state, 2, {})
     assert mock_type.called
 
 
@@ -118,5 +127,5 @@ def test_type_switches(type_name, entity_id, state, attrs):
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)
-        get_accessory(None, entity_state, 2, None)
+        get_accessory(None, entity_state, 2, {})
     assert mock_type.called
