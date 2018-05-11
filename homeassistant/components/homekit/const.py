@@ -18,20 +18,10 @@ DEFAULT_PORT = 51827
 SERVICE_HOMEKIT_START = 'start'
 
 # #### STRING CONSTANTS ####
-BRIDGE_MODEL = 'homekit.bridge'
-BRIDGE_NAME = 'Home Assistant'
-MANUFACTURER = 'HomeAssistant'
-
-# #### Categories ####
-CATEGORY_ALARM_SYSTEM = 'ALARM_SYSTEM'
-CATEGORY_GARAGE_DOOR_OPENER = 'GARAGE_DOOR_OPENER'
-CATEGORY_LIGHT = 'LIGHTBULB'
-CATEGORY_LOCK = 'DOOR_LOCK'
-CATEGORY_SENSOR = 'SENSOR'
-CATEGORY_SWITCH = 'SWITCH'
-CATEGORY_THERMOSTAT = 'THERMOSTAT'
-CATEGORY_WINDOW_COVERING = 'WINDOW_COVERING'
-
+BRIDGE_MODEL = 'Bridge'
+BRIDGE_NAME = 'Home Assistant Bridge'
+BRIDGE_SERIAL_NUMBER = 'homekit.bridge'
+MANUFACTURER = 'Home Assistant'
 
 # #### Services ####
 SERV_ACCESSORY_INFO = 'AccessoryInformation'
@@ -55,7 +45,6 @@ SERV_THERMOSTAT = 'Thermostat'
 SERV_WINDOW_COVERING = 'WindowCovering'
 # CurrentPosition, TargetPosition, PositionState
 
-
 # #### Characteristics ####
 CHAR_AIR_PARTICULATE_DENSITY = 'AirParticulateDensity'
 CHAR_AIR_QUALITY = 'AirQuality'
@@ -74,6 +63,7 @@ CHAR_CURRENT_POSITION = 'CurrentPosition'  # Int | [0, 100]
 CHAR_CURRENT_HUMIDITY = 'CurrentRelativeHumidity'  # percent
 CHAR_CURRENT_SECURITY_STATE = 'SecuritySystemCurrentState'
 CHAR_CURRENT_TEMPERATURE = 'CurrentTemperature'
+CHAR_FIRMWARE_REVISION = 'FirmwareRevision'
 CHAR_HEATING_THRESHOLD_TEMPERATURE = 'HeatingThresholdTemperature'
 CHAR_HUE = 'Hue'  # arcdegress | [0, 360]
 CHAR_LEAK_DETECTED = 'LeakDetected'

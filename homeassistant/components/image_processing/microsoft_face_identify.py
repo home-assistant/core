@@ -9,29 +9,17 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import split_entity_id, callback
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA, ImageProcessingEntity, CONF_CONFIDENCE, CONF_SOURCE,
-    CONF_ENTITY_ID, CONF_NAME, ATTR_ENTITY_ID, ATTR_CONFIDENCE)
+    PLATFORM_SCHEMA, ImageProcessingFaceEntity, ATTR_NAME,
+    CONF_CONFIDENCE, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME, ATTR_CONFIDENCE)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async_ import run_callback_threadsafe
 
 DEPENDENCIES = ['microsoft_face']
 
 _LOGGER = logging.getLogger(__name__)
-
-EVENT_DETECT_FACE = 'image_processing.detect_face'
-
-ATTR_NAME = 'name'
-ATTR_TOTAL_FACES = 'total_faces'
-ATTR_AGE = 'age'
-ATTR_GENDER = 'gender'
-ATTR_MOTION = 'motion'
-ATTR_GLASSES = 'glasses'
-ATTR_FACES = 'faces'
 
 CONF_GROUP = 'group'
 
@@ -55,93 +43,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         ))
 
     async_add_devices(entities)
-
-
-class ImageProcessingFaceEntity(ImageProcessingEntity):
-    """Base entity class for face image processing."""
-
-    def __init__(self):
-        """Initialize base face identify/verify entity."""
-        self.faces = []
-        self.total_faces = 0
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        confidence = 0
-        state = STATE_UNKNOWN
-
-        # No confidence support
-        if not self.confidence:
-            return self.total_faces
-
-        # Search high confidence
-        for face in self.faces:
-            if ATTR_CONFIDENCE not in face:
-                continue
-
-            f_co = face[ATTR_CONFIDENCE]
-            if f_co > confidence:
-                confidence = f_co
-                for attr in [ATTR_NAME, ATTR_MOTION]:
-                    if attr in face:
-                        state = face[attr]
-                        break
-
-        return state
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'face'
-
-    @property
-    def state_attributes(self):
-        """Return device specific state attributes."""
-        attr = {
-            ATTR_FACES: self.faces,
-            ATTR_TOTAL_FACES: self.total_faces,
-        }
-
-        return attr
-
-    def process_faces(self, faces, total):
-        """Send event with detected faces and store data."""
-        run_callback_threadsafe(
-            self.hass.loop, self.async_process_faces, faces, total).result()
-
-    @callback
-    def async_process_faces(self, faces, total):
-        """Send event with detected faces and store data.
-
-        known are a dict in follow format:
-         [
-           {
-              ATTR_CONFIDENCE: 80,
-              ATTR_NAME: 'Name',
-              ATTR_AGE: 12.0,
-              ATTR_GENDER: 'man',
-              ATTR_MOTION: 'smile',
-              ATTR_GLASSES: 'sunglasses'
-           },
-         ]
-
-        This method must be run in the event loop.
-        """
-        # Send events
-        for face in faces:
-            if ATTR_CONFIDENCE in face and self.confidence:
-                if face[ATTR_CONFIDENCE] < self.confidence:
-                    continue
-
-            face.update({ATTR_ENTITY_ID: self.entity_id})
-            self.hass.async_add_job(
-                self.hass.bus.async_fire, EVENT_DETECT_FACE, face
-            )
-
-        # Update entity store
-        self.faces = faces
-        self.total_faces = total
 
 
 class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):

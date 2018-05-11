@@ -13,9 +13,8 @@ from homeassistant.core import split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)
-from homeassistant.components.image_processing.microsoft_face_identify import (
-    ImageProcessingFaceEntity, ATTR_GENDER, ATTR_AGE, ATTR_GLASSES)
+    PLATFORM_SCHEMA, ImageProcessingFaceEntity, ATTR_AGE, ATTR_GENDER,
+    ATTR_GLASSES, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['microsoft_face']

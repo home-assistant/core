@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.components.netatmo import CameraData
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
-from homeassistant.loader import get_component
 from homeassistant.helpers import config_validation as cv
 
 DEPENDENCIES = ['netatmo']
@@ -33,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up access to Netatmo cameras."""
-    netatmo = get_component('netatmo')
+    netatmo = hass.components.netatmo
     home = config.get(CONF_HOME)
     verify_ssl = config.get(CONF_VERIFY_SSL, True)
     import lnetatmo

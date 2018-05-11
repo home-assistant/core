@@ -86,9 +86,16 @@ class Metrics(object):
         if hasattr(self, handler):
             getattr(self, handler)(state)
 
+        metric = self._metric(
+            'state_change',
+            self.prometheus_client.Counter,
+            'The number of state changes',
+        )
+        metric.labels(**self._labels(state)).inc()
+
     def _metric(self, metric, factory, documentation, labels=None):
         if labels is None:
-            labels = ['entity', 'friendly_name']
+            labels = ['entity', 'friendly_name', 'domain']
 
         try:
             return self._metrics[metric]
@@ -100,6 +107,7 @@ class Metrics(object):
     def _labels(state):
         return {
             'entity': state.entity_id,
+            'domain': state.domain,
             'friendly_name': state.attributes.get('friendly_name'),
         }
 
