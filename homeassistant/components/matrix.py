@@ -147,6 +147,7 @@ class MatrixBot(object):
 
         # Log in. This raises a MatrixRequestError if login is unsuccessful
         self._client = self._login()
+        self._setup_done = True
 
         def handle_matrix_exception(exception):
             """Handle exceptions raised inside the Matrix SDK."""
