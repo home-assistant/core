@@ -61,7 +61,7 @@ def test_types(type_name, entity_id, state, attrs, config):
     assert mock_type.called
 
     if config:
-        assert mock_type.call_args[1]['config'] == config
+        assert mock_type.call_args[0][-1] == config
 
 
 @pytest.mark.parametrize('type_name, entity_id, state, attrs', [

@@ -16,8 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 def validate_entity_config(values):
     """Validate config entry for CONF_ENTITY."""
     entities = {}
-    for key, config in values.items():
-        entity = cv.entity_id(key)
+    for entity_id, config in values.items():
+        entity = cv.entity_id(entity_id)
         params = {}
         if not isinstance(config, dict):
             raise vol.Invalid('The configuration for "{}" must be '
