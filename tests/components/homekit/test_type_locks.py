@@ -11,7 +11,7 @@ async def test_lock_unlock(hass):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'lock.kitchen_door'
 
-    acc = Lock(hass, 'Lock', entity_id, 2, config=None)
+    acc = Lock(hass, 'Lock', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2

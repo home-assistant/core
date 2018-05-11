@@ -12,7 +12,7 @@ from homeassistant.components.homekit.util import validate_entity_config \
 from homeassistant.components.persistent_notification import (
     DOMAIN, ATTR_NOTIFICATION_ID)
 from homeassistant.const import (
-    ATTR_CODE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_CODE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME)
 
 from tests.common import async_mock_service
 
@@ -21,13 +21,15 @@ def test_validate_entity_config():
     """Test validate entities."""
     configs = [{'invalid_entity_id': {}}, {'demo.test': 1},
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
-               {'demo.test': None}]
+               {'demo.test': None}, {'demo.test': {CONF_NAME: None}}]
 
     for conf in configs:
         with pytest.raises(vol.Invalid):
             vec(conf)
 
     assert vec({}) == {}
+    assert vec({'demo.test': {CONF_NAME: 'Name'}}) == \
+        {'demo.test': {CONF_NAME: 'Name'}}
     assert vec({'alarm_control_panel.demo': {ATTR_CODE: '1234'}}) == \
         {'alarm_control_panel.demo': {ATTR_CODE: '1234'}}
 

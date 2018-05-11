@@ -33,7 +33,7 @@ async def test_light_basic(hass, cls):
     hass.states.async_set(entity_id, STATE_ON,
                           {ATTR_SUPPORTED_FEATURES: 0})
     await hass.async_block_till_done()
-    acc = cls.light(hass, 'Light', entity_id, 2, config=None)
+    acc = cls.light(hass, 'Light', entity_id, 2, None)
 
     assert acc.aid == 2
     assert acc.category == 5  # Lightbulb
@@ -81,7 +81,7 @@ async def test_light_brightness(hass, cls):
     hass.states.async_set(entity_id, STATE_ON, {
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS: 255})
     await hass.async_block_till_done()
-    acc = cls.light(hass, 'Light', entity_id, 2, config=None)
+    acc = cls.light(hass, 'Light', entity_id, 2, None)
 
     assert acc.char_brightness.value == 0
 
@@ -126,7 +126,7 @@ async def test_light_color_temperature(hass, cls):
         ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR_TEMP,
         ATTR_COLOR_TEMP: 190})
     await hass.async_block_till_done()
-    acc = cls.light(hass, 'Light', entity_id, 2, config=None)
+    acc = cls.light(hass, 'Light', entity_id, 2, None)
 
     assert acc.char_color_temperature.value == 153
 
@@ -153,7 +153,7 @@ async def test_light_rgb_color(hass, cls):
         ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR,
         ATTR_HS_COLOR: (260, 90)})
     await hass.async_block_till_done()
-    acc = cls.light(hass, 'Light', entity_id, 2, config=None)
+    acc = cls.light(hass, 'Light', entity_id, 2, None)
 
     assert acc.char_hue.value == 0
     assert acc.char_saturation.value == 75
