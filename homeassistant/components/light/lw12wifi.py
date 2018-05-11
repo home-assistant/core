@@ -12,10 +12,6 @@ light:
     port: 5000
     # (Optional) Friendly name
     name: LW-12 FC
-    # (Optional) Effect to use as default (Default=None).
-    # For a full list of supported effects see:
-    # https://github.com/jaypikay/python-lw12/blob/v0.9.2/lw12.py#L54
-    effect: "Gradient Cyan"
 """
 
 import logging
