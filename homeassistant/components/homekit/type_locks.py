@@ -29,7 +29,7 @@ class Lock(HomeAccessory):
     The lock entity must support: unlock and lock.
     """
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a Lock accessory object."""
         super().__init__(*args, category=CATEGORY_DOOR_LOCK)
         self.flag_target_state = False

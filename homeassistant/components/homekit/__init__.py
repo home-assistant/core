@@ -12,20 +12,19 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION)
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_DEVICE_CLASS, CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
+    CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 from .const import (
-    DOMAIN, HOMEKIT_FILE, CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FILTER,
-    DEFAULT_PORT, DEFAULT_AUTO_START, SERVICE_HOMEKIT_START,
+    CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FILTER, DEFAULT_PORT,
+    DEFAULT_AUTO_START, DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START,
     DEVICE_CLASS_CO2, DEVICE_CLASS_PM25)
-from .util import (
-    validate_entity_config, show_setup_message)
+from .util import show_setup_message, validate_entity_config
 
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
@@ -93,7 +92,7 @@ def get_accessory(hass, state, aid, config):
         return None
 
     a_type = None
-    config = config or {}
+    name = config.get(CONF_NAME, state.name)
 
     if state.domain == 'alarm_control_panel':
         a_type = 'SecuritySystem'
@@ -147,7 +146,7 @@ def get_accessory(hass, state, aid, config):
         return None
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
-    return TYPES[a_type](hass, state.name, state.entity_id, aid, config=config)
+    return TYPES[a_type](hass, name, state.entity_id, aid, config)
 
 
 def generate_aid(entity_id):

@@ -32,7 +32,7 @@ async def test_garage_door_open_close(hass, cls):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.garage_door'
 
-    acc = cls.garage(hass, 'Garage Door', entity_id, 2, config=None)
+    acc = cls.garage(hass, 'Garage Door', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -87,7 +87,7 @@ async def test_window_set_cover_position(hass, cls):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.window'
 
-    acc = cls.window(hass, 'Cover', entity_id, 2, config=None)
+    acc = cls.window(hass, 'Cover', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -135,7 +135,7 @@ async def test_window_open_close(hass, cls):
 
     hass.states.async_set(entity_id, STATE_UNKNOWN,
                           {ATTR_SUPPORTED_FEATURES: 0})
-    acc = cls.window_basic(hass, 'Cover', entity_id, 2, config=None)
+    acc = cls.window_basic(hass, 'Cover', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -198,7 +198,7 @@ async def test_window_open_close_stop(hass, cls):
 
     hass.states.async_set(entity_id, STATE_UNKNOWN,
                           {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP})
-    acc = cls.window_basic(hass, 'Cover', entity_id, 2, config=None)
+    acc = cls.window_basic(hass, 'Cover', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     # Set from HomeKit
