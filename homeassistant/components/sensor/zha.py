@@ -25,7 +25,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return
 
     sensor = yield from make_sensor(discovery_info)
-    async_add_devices([sensor])
+    async_add_devices([sensor], update_before_add=True)
 
 
 @asyncio.coroutine
@@ -62,6 +62,11 @@ class Sensor(zha.Entity):
     min_reportable_change = 1
 
     @property
+    def should_poll(self) -> bool:
+        """State gets pushed from device."""
+        return False
+
+    @property
     def state(self) -> str:
         """Return the state of the entity."""
         if isinstance(self._state, float):
@@ -74,6 +79,14 @@ class Sensor(zha.Entity):
         if attribute == self.value_attribute:
             self._state = value
             self.async_schedule_update_ha_state()
+
+    async def async_update(self):
+        """Retrieve latest state."""
+        result = await zha.safe_read(
+            list(self._in_clusters.values())[0],
+            [self.value_attribute]
+        )
+        self._state = result.get(self.value_attribute, self._state)
 
 
 class TemperatureSensor(Sensor):
