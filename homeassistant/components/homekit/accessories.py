@@ -16,8 +16,8 @@ from homeassistant.helpers.event import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DEBOUNCE_TIMEOUT, BRIDGE_MODEL, BRIDGE_NAME,
-    BRIDGE_SERIAL_NUMBER, MANUFACTURER)
+    BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER,
+    DEBOUNCE_TIMEOUT, MANUFACTURER)
 from .util import (
     show_setup_message, dismiss_setup_message)
 
@@ -64,14 +64,16 @@ def debounce(func):
 class HomeAccessory(Accessory):
     """Adapter class for Accessory."""
 
-    def __init__(self, hass, name, entity_id, aid, category=CATEGORY_OTHER):
+    def __init__(self, hass, name, entity_id, aid, config,
+                 category=CATEGORY_OTHER):
         """Initialize a Accessory object."""
         super().__init__(name, aid=aid)
-        domain = split_entity_id(entity_id)[0].replace("_", " ").title()
+        model = split_entity_id(entity_id)[0].replace("_", " ").title()
         self.set_info_service(
             firmware_revision=__version__, manufacturer=MANUFACTURER,
-            model=domain, serial_number=entity_id)
+            model=model, serial_number=entity_id)
         self.category = category
+        self.config = config
         self.entity_id = entity_id
         self.hass = hass
 

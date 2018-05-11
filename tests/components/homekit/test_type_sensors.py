@@ -12,7 +12,7 @@ async def test_temperature(hass):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.temperature'
 
-    acc = TemperatureSensor(hass, 'Temperature', entity_id, 2, config=None)
+    acc = TemperatureSensor(hass, 'Temperature', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -42,7 +42,7 @@ async def test_humidity(hass):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.humidity'
 
-    acc = HumiditySensor(hass, 'Humidity', entity_id, 2, config=None)
+    acc = HumiditySensor(hass, 'Humidity', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -63,7 +63,7 @@ async def test_air_quality(hass):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.air_quality'
 
-    acc = AirQualitySensor(hass, 'Air Quality', entity_id, 2, config=None)
+    acc = AirQualitySensor(hass, 'Air Quality', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -92,7 +92,7 @@ async def test_co2(hass):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.co2'
 
-    acc = CarbonDioxideSensor(hass, 'CO2', entity_id, 2, config=None)
+    acc = CarbonDioxideSensor(hass, 'CO2', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -125,7 +125,7 @@ async def test_light(hass):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.light'
 
-    acc = LightSensor(hass, 'Light', entity_id, 2, config=None)
+    acc = LightSensor(hass, 'Light', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -150,7 +150,7 @@ async def test_binary(hass):
                           {ATTR_DEVICE_CLASS: 'opening'})
     await hass.async_block_till_done()
 
-    acc = BinarySensor(hass, 'Window Opening', entity_id, 2, config=None)
+    acc = BinarySensor(hass, 'Window Opening', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -192,6 +192,6 @@ async def test_binary_device_classes(hass):
                               {ATTR_DEVICE_CLASS: device_class})
         await hass.async_block_till_done()
 
-        acc = BinarySensor(hass, 'Binary Sensor', entity_id, 2, config=None)
+        acc = BinarySensor(hass, 'Binary Sensor', entity_id, 2, None)
         assert acc.get_service(service).display_name == service
         assert acc.char_detected.display_name == char

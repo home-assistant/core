@@ -14,7 +14,7 @@ async def test_switch_set_state(hass, entity_id):
     """Test if accessory and HA are updated accordingly."""
     domain = split_entity_id(entity_id)[0]
 
-    acc = Switch(hass, 'Switch', entity_id, 2, config=None)
+    acc = Switch(hass, 'Switch', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2

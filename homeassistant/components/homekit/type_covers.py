@@ -28,7 +28,7 @@ class GarageDoorOpener(HomeAccessory):
     and support no more than open, close, and stop.
     """
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a GarageDoorOpener accessory object."""
         super().__init__(*args, category=CATEGORY_GARAGE_DOOR_OPENER)
         self.flag_target_state = False
@@ -69,7 +69,7 @@ class WindowCovering(HomeAccessory):
     The cover entity must support: set_cover_position.
     """
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
         self.homekit_target = None
@@ -108,7 +108,7 @@ class WindowCoveringBasic(HomeAccessory):
     stop_cover (optional).
     """
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a WindowCovering accessory object."""
         super().__init__(*args, category=CATEGORY_WINDOW_COVERING)
         features = self.hass.states.get(self.entity_id) \
