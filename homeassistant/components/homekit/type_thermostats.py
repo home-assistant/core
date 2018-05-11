@@ -6,12 +6,14 @@ from pyhap.const import CATEGORY_THERMOSTAT
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE, ATTR_TEMPERATURE,
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST,
+    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST, DOMAIN,
+    SERVICE_SET_TEMPERATURE, SERVICE_SET_OPERATION_MODE,
     STATE_HEAT, STATE_COOL, STATE_AUTO, SUPPORT_ON_OFF,
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import TYPES
 from .accessories import HomeAccessory, debounce
@@ -92,6 +94,13 @@ class Thermostat(HomeAccessory):
 
     def set_heat_cool(self, value):
         """Move operation mode to value if call came from HomeKit."""
+        self.hass.add_job(self.async_set_heat_cool, value)
+
+    async def async_set_heat_cool(self, value):
+        """Move operation mode to value if call came from HomeKit.
+
+        Coroutine.
+        """
         if value in HC_HOMEKIT_TO_HASS:
             _LOGGER.debug('%s: Set heat-cool to %d', self.entity_id, value)
             self.heat_cool_flag_target_state = True
@@ -99,29 +108,49 @@ class Thermostat(HomeAccessory):
             if self.support_power_state is True:
                 params = {ATTR_ENTITY_ID: self.entity_id}
                 if hass_value == STATE_OFF:
-                    self.hass.services.call('climate', 'turn_off', params)
+                    await self.hass.services.async_call(
+                        DOMAIN, SERVICE_TURN_OFF, params)
                     return
                 else:
-                    self.hass.services.call('climate', 'turn_on', params)
-            self.hass.components.climate.set_operation_mode(
-                operation_mode=hass_value, entity_id=self.entity_id)
+                    await self.hass.services.async_call(
+                        DOMAIN, SERVICE_TURN_ON, params)
+            params = {ATTR_ENTITY_ID: self.entity_id,
+                      ATTR_OPERATION_MODE: hass_value}
+            await self.hass.services.async_call(
+                DOMAIN, SERVICE_SET_OPERATION_MODE, params)
 
     @debounce
     def set_cooling_threshold(self, value):
         """Set cooling threshold temp to value if call came from HomeKit."""
+        self.hass.add_job(self.async_set_cooling_threshold, value)
+
+    async def async_set_cooling_threshold(self, value):
+        """Set cooling threshold temp to value if call came from HomeKit.
+
+        Coroutine.
+        """
         _LOGGER.debug('%s: Set cooling threshold temperature to %.2f°C',
                       self.entity_id, value)
         self.coolingthresh_flag_target_state = True
         low = self.char_heating_thresh_temp.value
         low = temperature_to_states(low, self._unit)
         value = temperature_to_states(value, self._unit)
-        self.hass.components.climate.set_temperature(
-            entity_id=self.entity_id, target_temp_high=value,
-            target_temp_low=low)
+        params = {ATTR_ENTITY_ID: self.entity_id,
+                  ATTR_TARGET_TEMP_HIGH: value,
+                  ATTR_TARGET_TEMP_LOW: low}
+        await self.hass.services.async_call(
+            DOMAIN, SERVICE_SET_TEMPERATURE, params)
 
     @debounce
     def set_heating_threshold(self, value):
         """Set heating threshold temp to value if call came from HomeKit."""
+        self.hass.add_job(self.async_set_heating_threshold, value)
+
+    async def async_set_heating_threshold(self, value):
+        """Set heating threshold temp to value if call came from HomeKit.
+
+        Coroutine.
+        """
         _LOGGER.debug('%s: Set heating threshold temperature to %.2f°C',
                       self.entity_id, value)
         self.heatingthresh_flag_target_state = True
@@ -129,22 +158,33 @@ class Thermostat(HomeAccessory):
         high = self.char_cooling_thresh_temp.value
         high = temperature_to_states(high, self._unit)
         value = temperature_to_states(value, self._unit)
-        self.hass.components.climate.set_temperature(
-            entity_id=self.entity_id, target_temp_high=high,
-            target_temp_low=value)
+        params = {ATTR_ENTITY_ID: self.entity_id,
+                  ATTR_TARGET_TEMP_HIGH: high,
+                  ATTR_TARGET_TEMP_LOW: value}
+        await self.hass.services.async_call(
+            DOMAIN, SERVICE_SET_TEMPERATURE, params)
 
     @debounce
     def set_target_temperature(self, value):
         """Set target temperature to value if call came from HomeKit."""
+        self.hass.add_job(self.async_set_target_temperature, value)
+
+    async def async_set_target_temperature(self, value):
+        """Set target temperature to value if call came from HomeKit.
+
+        Coroutine.
+        """
         _LOGGER.debug('%s: Set target temperature to %.2f°C',
                       self.entity_id, value)
         self.temperature_flag_target_state = True
         value = temperature_to_states(value, self._unit)
-        self.hass.components.climate.set_temperature(
-            temperature=value, entity_id=self.entity_id)
+        params = {ATTR_ENTITY_ID: self.entity_id,
+                  ATTR_TEMPERATURE: value}
+        await self.hass.services.async_call(
+            DOMAIN, SERVICE_SET_TEMPERATURE, params)
 
-    def update_state(self, new_state):
-        """Update security state after state changed."""
+    async def async_update_state(self, new_state):
+        """Update security state after state changed. Coroutine."""
         self._unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT,
                                               TEMP_CELSIUS)
 
@@ -152,14 +192,16 @@ class Thermostat(HomeAccessory):
         current_temp = new_state.attributes.get(ATTR_CURRENT_TEMPERATURE)
         if isinstance(current_temp, (int, float)):
             current_temp = temperature_to_homekit(current_temp, self._unit)
-            self.char_current_temp.set_value(current_temp)
+            self.hass.async_add_job(
+                self.char_current_temp.set_value, current_temp)
 
         # Update target temperature
         target_temp = new_state.attributes.get(ATTR_TEMPERATURE)
         if isinstance(target_temp, (int, float)):
             target_temp = temperature_to_homekit(target_temp, self._unit)
             if not self.temperature_flag_target_state:
-                self.char_target_temp.set_value(target_temp)
+                self.hass.async_add_job(
+                    self.char_target_temp.set_value, target_temp)
         self.temperature_flag_target_state = False
 
         # Update cooling threshold temperature if characteristic exists
@@ -169,7 +211,9 @@ class Thermostat(HomeAccessory):
                 cooling_thresh = temperature_to_homekit(cooling_thresh,
                                                         self._unit)
                 if not self.coolingthresh_flag_target_state:
-                    self.char_cooling_thresh_temp.set_value(cooling_thresh)
+                    self.hass.async_add_job(
+                        self.char_cooling_thresh_temp.set_value,
+                        cooling_thresh)
         self.coolingthresh_flag_target_state = False
 
         # Update heating threshold temperature if characteristic exists
@@ -179,21 +223,27 @@ class Thermostat(HomeAccessory):
                 heating_thresh = temperature_to_homekit(heating_thresh,
                                                         self._unit)
                 if not self.heatingthresh_flag_target_state:
-                    self.char_heating_thresh_temp.set_value(heating_thresh)
+                    self.hass.async_add_job(
+                        self.char_heating_thresh_temp.set_value,
+                        heating_thresh)
         self.heatingthresh_flag_target_state = False
 
         # Update display units
         if self._unit and self._unit in UNIT_HASS_TO_HOMEKIT:
-            self.char_display_units.set_value(UNIT_HASS_TO_HOMEKIT[self._unit])
+            self.hass.async_add_job(
+                self.char_display_units.set_value,
+                UNIT_HASS_TO_HOMEKIT[self._unit])
 
         # Update target operation mode
         operation_mode = new_state.attributes.get(ATTR_OPERATION_MODE)
         if self.support_power_state is True and new_state.state == STATE_OFF:
-            self.char_target_heat_cool.set_value(
+            self.hass.async_add_job(
+                self.char_target_heat_cool.set_value,
                 HC_HASS_TO_HOMEKIT[STATE_OFF])
         elif operation_mode and operation_mode in HC_HASS_TO_HOMEKIT:
             if not self.heat_cool_flag_target_state:
-                self.char_target_heat_cool.set_value(
+                self.hass.async_add_job(
+                    self.char_target_heat_cool.set_value,
                     HC_HASS_TO_HOMEKIT[operation_mode])
         self.heat_cool_flag_target_state = False
 
@@ -236,5 +286,6 @@ class Thermostat(HomeAccessory):
         else:
             current_operation_mode = STATE_OFF
 
-        self.char_current_heat_cool.set_value(
+        self.hass.async_add_job(
+            self.char_current_heat_cool.set_value,
             HC_HASS_TO_HOMEKIT[current_operation_mode])

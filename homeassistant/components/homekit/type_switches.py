@@ -30,18 +30,22 @@ class Switch(HomeAccessory):
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
+        self.hass.add_job(self.async_set_state, value)
+
+    async def async_set_state(self, value):
+        """Move switch state to value if call came from HomeKit. Coroutine."""
         _LOGGER.debug('%s: Set switch state to %s',
                       self.entity_id, value)
         self.flag_target_state = True
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.hass.services.call(self._domain, service,
-                                {ATTR_ENTITY_ID: self.entity_id})
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        await self.hass.services.async_call(self._domain, service, params)
 
-    def update_state(self, new_state):
-        """Update switch state after state changed."""
+    async def async_update_state(self, new_state):
+        """Update switch state after state changed. Coroutine."""
         current_state = (new_state.state == STATE_ON)
         if not self.flag_target_state:
             _LOGGER.debug('%s: Set current state to %s',
                           self.entity_id, current_state)
-            self.char_on.set_value(current_state)
+            self.hass.async_add_job(self.char_on.set_value, current_state)
         self.flag_target_state = False
