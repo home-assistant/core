@@ -180,3 +180,13 @@ test.disabled_hass:
     assert entry_disabled_hass.disabled_by == entity_registry.DISABLED_HASS
     assert entry_disabled_user.disabled
     assert entry_disabled_user.disabled_by == entity_registry.DISABLED_USER
+
+
+@asyncio.coroutine
+def test_async_get_entity_id(registry):
+    """Test that entity_id is returned."""
+    entry = registry.async_get_or_create('light', 'hue', '1234')
+    assert entry.entity_id == 'light.hue_1234'
+    assert registry.async_get_entity_id(
+        'light', 'hue', '1234') == 'light.hue_1234'
+    assert registry.async_get_entity_id('light', 'hue', '123') is None
