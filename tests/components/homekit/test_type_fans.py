@@ -206,10 +206,10 @@ async def test_fan_oscillate(hass, cls):
     await hass.async_block_till_done()
     assert call_oscillate[0]
     assert call_oscillate[0].data[ATTR_ENTITY_ID] == entity_id
-    assert call_oscillate[0].data[ATTR_OSCILLATING] == 'false'
+    assert call_oscillate[0].data[ATTR_OSCILLATING] is False
 
     await hass.async_add_job(acc.char_swing.client_update_value, 1)
     await hass.async_block_till_done()
     assert call_oscillate[1]
     assert call_oscillate[1].data[ATTR_ENTITY_ID] == entity_id
-    assert call_oscillate[1].data[ATTR_OSCILLATING] == 'true'
+    assert call_oscillate[1].data[ATTR_OSCILLATING] is True
