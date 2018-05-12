@@ -264,7 +264,6 @@ class MqttJson(MqttAvailability, Light):
                 self._qos)
 
         if self._optimistic and last_state:
-            print(last_state)
             self._state = last_state.state == STATE_ON
             if last_state.attributes.get('brightness'):
                 self._brightness = last_state.attributes.get('brightness')
