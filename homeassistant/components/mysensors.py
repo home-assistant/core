@@ -402,7 +402,8 @@ async def gw_start(hass, gateway):
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
     gateway_ready = asyncio.Future()
-    hass.data[MYSENSORS_GATEWAY_READY.format(id(gateway))] = gateway_ready
+    gateway_ready_key = MYSENSORS_GATEWAY_READY.format(id(gateway))
+    hass.data[gateway_ready_key] = gateway_ready
 
     try:
         with async_timeout.timeout(GATEWAY_READY_TIMEOUT, loop=hass.loop):
@@ -411,6 +412,8 @@ async def gw_start(hass, gateway):
         _LOGGER.warning(
             "Gateway %s not ready after %s secs so continuing with setup",
             gateway.device, GATEWAY_READY_TIMEOUT)
+    finally:
+        hass.data.pop(gateway_ready_key, None)
 
 
 @callback
@@ -421,9 +424,7 @@ def set_gateway_ready(hass, msg):
         return
     gateway_ready = hass.data.get(MYSENSORS_GATEWAY_READY.format(
         id(msg.gateway)))
-    if gateway_ready is None:
-        return
-    if gateway_ready.cancelled():
+    if gateway_ready is None or gateway_ready.cancelled():
         return
     gateway_ready.set_result(True)
 
