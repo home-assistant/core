@@ -35,7 +35,7 @@ ACCESS_TOKEN_EXPIRATION = timedelta(minutes=30)
 DATA_REQS = 'auth_reqs_processed'
 
 
-def generate_secret(entropy=32):
+def generate_secret(entropy: int = 32) -> str:
     """Generate a secret.
 
     Backport of secrets.token_hex from Python 3.6

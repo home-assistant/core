@@ -10,8 +10,8 @@ matrix:
       env: TOXENV=lint
     - python: "3.5.3"
       env: TOXENV=pylint
-    # - python: "3.5"
-    #   env: TOXENV=typing
+    - python: "3.5.3"
+      env: TOXENV=typing
     - python: "3.5.3"
       env: TOXENV=py35
     - python: "3.6"
