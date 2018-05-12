@@ -11,11 +11,11 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
-from homeassistant.components.light import  PLATFORM_SCHEMA
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
+from homeassistant.components.light import PLATFORM_SCHEMA
 from homeassistant.util import color as color_util
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 #REQUIREMENTS = ['pyelan']
 
@@ -38,21 +38,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     url = discovery_info['url']
 
-    session = aiohttp.ClientSession()
-    resp = yield from session.get(url+'/api/devices', timeout=3)
+    session = async_get_clientsession(hass)
+    resp = yield from session.get(url + '/api/devices', timeout=3)
     device_list = yield from resp.json()
     _LOGGER.info("elan devices")
     _LOGGER.info(device_list)
 
     for device in device_list:
-        resp =  yield from session.get(device_list[device]['url'], timeout=3)
-        info =  yield from resp.json()
+        resp = yield from session.get(device_list[device]['url'], timeout=3)
+        info = yield from resp.json()
         _LOGGER.info("elan device")
         _LOGGER.info(device)
         if info['device info']['type'] == 'light':
             _LOGGER.info("elan Light to add")
             _LOGGER.info(device)
             async_add_devices([elanLight(device_list[device]['url'], info)])
+
 
 class elanLight(Light):
     """The platform class required by Home Assistant."""
@@ -125,7 +126,6 @@ class elanLight(Light):
         """RGB color of the light."""
         return self._rgb_color
 
-
     @asyncio.coroutine
     def update(self):
         """Fetch new state data for this light.
@@ -134,7 +134,7 @@ class elanLight(Light):
         """
         _LOGGER.info('elan Light update')
         _LOGGER.info(self._light + '/state')
-        session = aiohttp.ClientSession()
+        session = async_get_clientsession(self.hass)
         resp = yield from session.get(self._light + '/state', timeout=3)
         state = yield from resp.json()
         _LOGGER.info(state)
@@ -152,11 +152,11 @@ class elanLight(Light):
         """Instruct the light to turn off."""
         _LOGGER.info('Turning off elan light')
         _LOGGER.info(self._light)
-        session = aiohttp.ClientSession()
+        session = async_get_clientsession(self.hass)
         if self._dimmer:
-            resp = yield from session.put(self._light, json={'brightness':0})
+            resp = yield from session.put(self._light, json={'brightness': 0})
         else:
-            resp = yield from session.put(self._light, json={'on':False})
+            resp = yield from session.put(self._light, json={'on': False})
         info = yield from resp.text()
         _LOGGER.info(info)
 
@@ -171,13 +171,14 @@ class elanLight(Light):
             if kwargs[ATTR_BRIGHTNESS] > 0:
                 self._last_brightness = kwargs[ATTR_BRIGHTNESS]
 
-        session = aiohttp.ClientSession()
+        session = async_get_clientsession(self.hass)
         if self._dimmer:
             if self._last_brightness is 0:
                 self._last_brightness = 100
-            resp = yield from session.put(self._light, json={'brightness': self._last_brightness})
+            resp = yield from session.put(
+                self._light, json={'brightness': self._last_brightness})
         else:
-            resp =yield from session.put(self._light, json={'on': True})
+            resp = yield from session.put(self._light, json={'on': True})
 
         info = yield from resp.text()
         _LOGGER.info(info)

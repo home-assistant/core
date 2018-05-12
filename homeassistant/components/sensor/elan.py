@@ -11,11 +11,12 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import  PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 DOMAIN = 'elan'
 
@@ -29,7 +30,9 @@ _LOGGER = logging.getLogger(__name__)
 # Validation of the user's configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required('url'): cv.string,
-    vol.Optional('offsets'): {cv.string : vol.Coerce(float)},
+    vol.Optional('offsets'): {
+        cv.string: vol.Coerce(float)
+    },
 })
 
 
@@ -41,8 +44,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     url = discovery_info['url']
 
-    session = aiohttp.ClientSession()
-    resp = yield from session.get(url+'/api/devices', timeout=3)
+    session = async_get_clientsession(hass)
+    resp = yield from session.get(url + '/api/devices', timeout=3)
     device_list = yield from resp.json()
     _LOGGER.info("elan devices")
     _LOGGER.info(device_list)
@@ -61,21 +64,29 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             _LOGGER.info(temperature_offsets)
 
     for device in device_list:
-        resp =  yield from session.get(device_list[device]['url'], timeout=3)
-        info =  yield from resp.json()
+        resp = yield from session.get(device_list[device]['url'], timeout=3)
+        info = yield from resp.json()
         _LOGGER.info("elan device")
         _LOGGER.info(device)
         if info['device info']['type'] == 'heating':
             _LOGGER.info("elan Thermostat to add")
             _LOGGER.info(device)
-            async_add_devices([elanThermostat(device_list[device]['url'], info, 'temperature',temperature_offsets.get(device_list[device]['url'],0))])
-            async_add_devices([elanThermostat(device_list[device]['url'], info, 'on')])
+            async_add_devices([
+                elanThermostat(device_list[device]['url'], info, 'temperature',
+                               temperature_offsets.get(
+                                   device_list[device]['url'], 0))
+            ])
+            async_add_devices(
+                [elanThermostat(device_list[device]['url'], info, 'on')])
+
+
 #    session.close()
+
 
 class elanThermostat(Entity):
     """The platform class required by Home Assistant."""
 
-    def __init__(self, thermostat, info, var, offset = 0):
+    def __init__(self, thermostat, info, var, offset=0):
         """Initialize a thermostat."""
         _LOGGER.info("elan thermostat initialisation")
         _LOGGER.info(info)
@@ -112,7 +123,6 @@ class elanThermostat(Entity):
         self._temperatureOffset = offset
 
         self._available = True
-
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -152,7 +162,7 @@ class elanThermostat(Entity):
         """
         _LOGGER.info('elan thermostat update')
         _LOGGER.info(self._thermostat + '/state')
-        session = aiohttp.ClientSession()
+        session = async_get_clientsession(self.hass)
         resp = yield from session.get(self._thermostat + '/state', timeout=3)
         state = yield from resp.json()
         _LOGGER.info(state)
@@ -168,17 +178,17 @@ class elanThermostat(Entity):
             self._locked = state['locked']
 
         if self._var is 'temperature':
-            if self._temperatureIN and (self._temperatureIN>-99):
+            if self._temperatureIN and (self._temperatureIN > -99):
                 self._state = self._temperatureIN + self._temperatureOffset
-            if self._temperatureOUT and (self._temperatureOUT>-99):
+            if self._temperatureOUT and (self._temperatureOUT > -99):
                 self._state = self._temperatureOUT + self._temperatureOffset
 
         if self._var is 'temperature OUT':
-            if self._temperatureOUT and (self._temperatureOUT>-99):
+            if self._temperatureOUT and (self._temperatureOUT > -99):
                 self._state = self._temperatureOUT + self._temperatureOffset
 
         if self._var is 'temperature IN':
-            if self._temperatureIN and (self._temperatureIN>-99):
+            if self._temperatureIN and (self._temperatureIN > -99):
                 self._state = self._temperatureIN + self._temperatureOffset
 
         if self._var is 'on':

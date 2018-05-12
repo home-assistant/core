@@ -15,6 +15,7 @@ SERVICE_ELAN = 'elan'
 
 from homeassistant.helpers import discovery
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -28,12 +29,17 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_STATIC = 'static'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required('url'): cv.string,
-        vol.Optional('offsets'): {cv.string : vol.Coerce(float)},
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN:
+        vol.Schema({
+            vol.Required('url'): cv.string,
+            vol.Optional('offsets'): {
+                cv.string: vol.Coerce(float)
+            },
+        }),
+    },
+    extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -55,15 +61,20 @@ def async_setup(hass, config):
 
     discovery.async_listen(hass, SERVICE_ELAN, elan_discovered)
 
-    yield from elan_discovered(None,{'url': url, 'offsets':offsets})
+    yield from elan_discovered(None, {'url': url, 'offsets': offsets})
 
     return True
+
 
 @asyncio.coroutine
 def _setup_elan(hass, hass_config, url, offsets):
     """Call platform discovery for devices on particular elan."""
-    hass.async_add_job(discovery.async_load_platform(
-        hass, 'light', DOMAIN, {'url': url}, hass_config))
-    hass.async_add_job(discovery.async_load_platform(
-        hass, 'sensor', DOMAIN, {'url': url, 'offsets':offsets}, hass_config))
+    hass.async_add_job(
+        discovery.async_load_platform(hass, 'light', DOMAIN, {'url': url},
+                                      hass_config))
+    hass.async_add_job(
+        discovery.async_load_platform(hass, 'sensor', DOMAIN, {
+            'url': url,
+            'offsets': offsets
+        }, hass_config))
     return True
