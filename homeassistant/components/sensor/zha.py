@@ -102,8 +102,8 @@ class TemperatureSensor(Sensor):
     @property
     def state(self):
         """Return the state of the entity."""
-        if self._state == 'unknown':
-            return 'unknown'
+        if self._state is None:
+            return None
         celsius = round(float(self._state) / 100, 1)
         return convert_temperature(
             celsius, TEMP_CELSIUS, self.unit_of_measurement)
@@ -122,8 +122,8 @@ class RelativeHumiditySensor(Sensor):
     @property
     def state(self):
         """Return the state of the entity."""
-        if self._state == 'unknown':
-            return 'unknown'
+        if self._state is None:
+            return None
 
         return round(float(self._state) / 100, 1)
 
@@ -139,7 +139,7 @@ class PressureSensor(Sensor):
     @property
     def state(self):
         """Return the state of the entity."""
-        if self._state == 'unknown':
-            return 'unknown'
+        if self._state is None:
+            return None
 
         return round(float(self._state))
