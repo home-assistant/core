@@ -94,13 +94,12 @@ class HomeAccessory(Accessory):
         _LOGGER.debug('New_state: %s', new_state)
         if new_state is None:
             return
-        self.hass.async_add_job(self.async_update_state, new_state)
+        self.async_update_state(new_state)
 
-    @ha_callback
     def async_update_state(self, new_state):
         """Method called on state change to update HomeKit value.
 
-        Must be run from in the event loop.
+        Method is run in the event loop.
         """
         raise NotImplementedError()
 

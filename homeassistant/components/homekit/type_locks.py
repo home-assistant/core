@@ -61,8 +61,11 @@ class Lock(HomeAccessory):
             params[ATTR_CODE] = self._code
         await self.hass.services.async_call(DOMAIN, service, params)
 
-    async def async_update_state(self, new_state):
-        """Update lock after state changed. Coroutine."""
+    def async_update_state(self, new_state):
+        """Update lock after state changed.
+
+        Method is run in the event loop.
+        """
         hass_state = new_state.state
         if hass_state in HASS_TO_HOMEKIT:
             current_lock_state = HASS_TO_HOMEKIT[hass_state]

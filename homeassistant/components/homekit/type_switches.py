@@ -41,8 +41,11 @@ class Switch(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         await self.hass.services.async_call(self._domain, service, params)
 
-    async def async_update_state(self, new_state):
-        """Update switch state after state changed. Coroutine."""
+    def async_update_state(self, new_state):
+        """Update switch state after state changed.
+
+        Method is run in the event loop.
+        """
         current_state = (new_state.state == STATE_ON)
         if not self.flag_target_state:
             _LOGGER.debug('%s: Set current state to %s',

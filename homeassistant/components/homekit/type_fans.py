@@ -97,8 +97,11 @@ class Fan(HomeAccessory):
                   ATTR_OSCILLATING: oscillating}
         await self.hass.services.async_call(DOMAIN, SERVICE_OSCILLATE, params)
 
-    async def async_update_state(self, new_state):
-        """Update fan after state change. Coroutine."""
+    def async_update_state(self, new_state):
+        """Update fan after state change.
+
+        Method is run in the event loop.
+        """
         # Handle State
         state = new_state.state
         if state in (STATE_ON, STATE_OFF):

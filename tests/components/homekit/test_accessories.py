@@ -5,6 +5,8 @@ This includes tests for all mock object types.
 from datetime import datetime, timedelta
 from unittest.mock import patch, Mock
 
+import pytest
+
 from homeassistant.components.homekit.accessories import (
     debounce, HomeAccessory, HomeBridge, HomeDriver)
 from homeassistant.components.homekit.const import (
@@ -76,7 +78,8 @@ async def test_home_accessory(hass):
 
     hass.states.async_set('homekit.accessory', 'on')
     await hass.async_block_till_done()
-    await hass.async_add_job(acc.run)
+    with pytest.raises(NotImplementedError):
+        await hass.async_add_job(acc.run)
     hass.states.async_set('homekit.accessory', 'off')
     await hass.async_block_till_done()
 

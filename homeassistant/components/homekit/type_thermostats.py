@@ -183,8 +183,11 @@ class Thermostat(HomeAccessory):
         await self.hass.services.async_call(
             DOMAIN, SERVICE_SET_TEMPERATURE, params)
 
-    async def async_update_state(self, new_state):
-        """Update security state after state changed. Coroutine."""
+    def async_update_state(self, new_state):
+        """Update security state after state changed.
+
+        Method is run in the event loop.
+        """
         self._unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT,
                                               TEMP_CELSIUS)
 

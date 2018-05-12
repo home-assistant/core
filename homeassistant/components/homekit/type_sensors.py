@@ -59,8 +59,11 @@ class TemperatureSensor(HomeAccessory):
             CHAR_CURRENT_TEMPERATURE, value=0, properties=PROP_CELSIUS)
         self.unit = None
 
-    async def async_update_state(self, new_state):
-        """Update temperature after state changed. Coroutine."""
+    def async_update_state(self, new_state):
+        """Update temperature after state changed.
+
+        Method is run in the event loop.
+        """
         unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
         temperature = convert_to_float(new_state.state)
         if temperature:
@@ -81,8 +84,11 @@ class HumiditySensor(HomeAccessory):
         self.char_humidity = serv_humidity.configure_char(
             CHAR_CURRENT_HUMIDITY, value=0)
 
-    async def async_update_state(self, new_state):
-        """Update accessory after state change. Coroutine."""
+    def async_update_state(self, new_state):
+        """Update accessory after state change.
+
+        Method is run in the event loop.
+        """
         humidity = convert_to_float(new_state.state)
         if humidity:
             self.hass.async_add_job(self.char_humidity.set_value, humidity)
@@ -104,8 +110,11 @@ class AirQualitySensor(HomeAccessory):
         self.char_density = serv_air_quality.configure_char(
             CHAR_AIR_PARTICULATE_DENSITY, value=0)
 
-    async def async_update_state(self, new_state):
-        """Update accessory after state change."""
+    def async_update_state(self, new_state):
+        """Update accessory after state change.
+
+        Method is run in the event loop.
+        """
         density = convert_to_float(new_state.state)
         if density is not None:
             self.hass.async_add_job(self.char_density.set_value, density)
@@ -131,8 +140,11 @@ class CarbonDioxideSensor(HomeAccessory):
         self.char_detected = serv_co2.configure_char(
             CHAR_CARBON_DIOXIDE_DETECTED, value=0)
 
-    async def async_update_state(self, new_state):
-        """Update accessory after state change. Coroutine."""
+    def async_update_state(self, new_state):
+        """Update accessory after state change.
+
+        Method is run in the event loop.
+        """
         co2 = convert_to_float(new_state.state)
         if co2 is not None:
             self.hass.async_add_job(self.char_co2.set_value, co2)
@@ -154,8 +166,11 @@ class LightSensor(HomeAccessory):
         self.char_light = serv_light.configure_char(
             CHAR_CURRENT_AMBIENT_LIGHT_LEVEL, value=0)
 
-    async def async_update_state(self, new_state):
-        """Update accessory after state change. Coroutine."""
+    def async_update_state(self, new_state):
+        """Update accessory after state change.
+
+        Method is run in the event loop.
+        """
         luminance = convert_to_float(new_state.state)
         if luminance is not None:
             self.hass.async_add_job(self.char_light.set_value, luminance)
@@ -178,8 +193,11 @@ class BinarySensor(HomeAccessory):
         service = self.add_preload_service(service_char[0])
         self.char_detected = service.configure_char(service_char[1], value=0)
 
-    async def async_update_state(self, new_state):
-        """Update accessory after state change. Coroutine."""
+    def async_update_state(self, new_state):
+        """Update accessory after state change.
+
+        Method is run in the event loop.
+        """
         state = new_state.state
         detected = (state == STATE_ON) or (state == STATE_HOME)
         self.hass.async_add_job(self.char_detected.set_value, detected)

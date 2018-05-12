@@ -161,8 +161,11 @@ class Light(HomeAccessory):
             await self.hass.services.async_call(
                 DOMAIN, SERVICE_TURN_ON, params)
 
-    async def async_update_state(self, new_state):
-        """Update light after state change. Coroutine."""
+    def async_update_state(self, new_state):
+        """Update light after state change.
+
+        Method is run in the event loop.
+        """
         # Handle State
         state = new_state.state
         if state in (STATE_ON, STATE_OFF):

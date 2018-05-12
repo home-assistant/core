@@ -58,8 +58,11 @@ class GarageDoorOpener(HomeAccessory):
             await self.hass.services.async_call(
                 DOMAIN, SERVICE_CLOSE_COVER, params)
 
-    async def async_update_state(self, new_state):
-        """Update cover state after state changed. Coroutine."""
+    def async_update_state(self, new_state):
+        """Update cover state after state changed.
+
+        Method is run in the event loop.
+        """
         hass_state = new_state.state
         if hass_state in (STATE_OPEN, STATE_CLOSED):
             current_state = 0 if hass_state == STATE_OPEN else 1
@@ -104,8 +107,11 @@ class WindowCovering(HomeAccessory):
         await self.hass.services.async_call(
             DOMAIN, SERVICE_SET_COVER_POSITION, params)
 
-    async def async_update_state(self, new_state):
-        """Update cover position after state changed. Coroutine."""
+    def async_update_state(self, new_state):
+        """Update cover position after state changed.
+
+        Method is run in the event loop.
+        """
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
         if isinstance(current_position, int):
             self.hass.async_add_job(
@@ -170,8 +176,11 @@ class WindowCoveringBasic(HomeAccessory):
         self.hass.async_add_job(self.char_target_position.set_value, position)
         self.hass.async_add_job(self.char_position_state.set_value, 2)
 
-    async def async_update_state(self, new_state):
-        """Update cover position after state changed. Coroutine."""
+    def async_update_state(self, new_state):
+        """Update cover position after state changed.
+
+        Method is run in the event loop.
+        """
         position_mapping = {STATE_OPEN: 100, STATE_CLOSED: 0}
         hk_position = position_mapping.get(new_state.state)
         if hk_position is not None:
