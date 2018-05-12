@@ -43,10 +43,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if info['device info']['type'] == 'light':
             _LOGGER.info("elan Light to add")
             _LOGGER.info(device)
-            async_add_devices([elanLight(device_list[device]['url'], info)])
+            async_add_devices([ElanLight(device_list[device]['url'], info)])
 
 
-class elanLight(Light):
+class ElanLight(Light):
     """The platform class required by Home Assistant."""
 
     def __init__(self, light, info):

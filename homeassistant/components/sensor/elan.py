@@ -1,4 +1,4 @@
-"""
+_temperature_out"""
 Support for the elan.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/xxxx/
@@ -7,7 +7,6 @@ import asyncio
 import logging
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers import config_validation as cv
@@ -63,18 +62,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             _LOGGER.info("elan Thermostat to add")
             _LOGGER.info(device)
             async_add_devices([
-                elanThermostat(device_list[device]['url'], info, 'temperature',
+                ElanThermostat(device_list[device]['url'], info, 'temperature',
                                temperature_offsets.get(
                                    device_list[device]['url'], 0))
             ])
             async_add_devices(
-                [elanThermostat(device_list[device]['url'], info, 'on')])
+                [ElanThermostat(device_list[device]['url'], info, 'on')])
 
 
 #    session.close()
 
 
-class elanThermostat(Entity):
+class ElanThermostat(Entity):
     """The platform class required by Home Assistant."""
 
     def __init__(self, thermostat, info, var, offset=0):
@@ -86,9 +85,9 @@ class elanThermostat(Entity):
         self._info = info
         self._state = None
         self._name = info['device info']['label']
-        self._temperatureIN = None
-        self._temperatureOUT = None
-        self._temperatureOffset = offset
+        self._temperature_in = None
+        self._temperature_out = None
+        self._temperature_offset = offset
         self._on = None
         self._locked = None
         self._units = None
@@ -111,7 +110,7 @@ class elanThermostat(Entity):
             self._name = info['device info']['label'] + '-ON'
             self._var = var
 
-        self._temperatureOffset = offset
+        self._temperature_offset = offset
 
         self._available = True
 
@@ -152,16 +151,17 @@ class elanThermostat(Entity):
         This is the only method that should fetch new data for Home Assistant.
         """
         _LOGGER.info('elan thermostat update')
-        _LOGGER.info(self._thermostat + '/state')
+        stateurl = self._thermostat + '/state'
+        _LOGGER.info(stateurl)
         session = async_get_clientsession(self.hass)
-        resp = yield from session.get(self._thermostat + '/state', timeout=3)
+        resp = yield from session.get(stateurl, timeout=3)
         state = yield from resp.json()
         _LOGGER.info(state)
         if 'temperature IN' in state:
-            self._temperatureIN = state['temperature IN']
+            self._temperature_in = state['temperature IN']
 
         if 'temperature OUT' in state:
-            self._temperatureOUT = state['temperature OUT']
+            self._temperature_out = state['temperature OUT']
 
         if 'on' in state:
             self._on = state['on']
@@ -169,18 +169,18 @@ class elanThermostat(Entity):
             self._locked = state['locked']
 
         if self._var is 'temperature':
-            if self._temperatureIN and (self._temperatureIN > -99):
-                self._state = self._temperatureIN + self._temperatureOffset
-            if self._temperatureOUT and (self._temperatureOUT > -99):
-                self._state = self._temperatureOUT + self._temperatureOffset
+            if self._temperature_in and (self._temperature_in > -99):
+                self._state = self._temperature_in + self._temperature_offset
+            if self._temperature_out and (self._temperature_out > -99):
+                self._state = self._temperature_out + self._temperature_offset
 
         if self._var is 'temperature OUT':
-            if self._temperatureOUT and (self._temperatureOUT > -99):
-                self._state = self._temperatureOUT + self._temperatureOffset
+            if self._temperature_out and (self._temperature_out > -99):
+                self._state = self._temperature_out + self._temperature_offset
 
         if self._var is 'temperature IN':
-            if self._temperatureIN and (self._temperatureIN > -99):
-                self._state = self._temperatureIN + self._temperatureOffset
+            if self._temperature_in and (self._temperature_in > -99):
+                self._state = self._temperature_in + self._temperature_offset
 
         if self._var is 'on':
             self._state = self._on

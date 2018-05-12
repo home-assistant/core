@@ -17,17 +17,12 @@ elan:
 import asyncio
 import logging
 
-import async_timeout
 import voluptuous as vol
 
-SERVICE_ELAN = 'elan'
-
 from homeassistant.helpers import discovery
-from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+SERVICE_ELAN = 'elan'
 
 DOMAIN = 'elan'
 
@@ -55,16 +50,16 @@ def async_setup(hass, config):
     """Setup elan component."""
     conf = config.get(DOMAIN, {})
     url = conf.get('url')
-    _LOGGER.info('elan platform setup ' + url)
+    _LOGGER.info('elan platform setup %s', url)
     offsets = conf.get('offsets')
-    _LOGGER.info('elan platform offsets ' + str(offsets))
+    _LOGGER.info('elan platform offsets %f', offsets)
 
     @asyncio.coroutine
     def elan_discovered(service, info):
         """Run when a gateway is discovered."""
         url = info['url']
         offsets = info['offsets']
-        _LOGGER.info('elan discovered ' + url)
+        _LOGGER.info('elan discovered %s', url)
         yield from _setup_elan(hass, config, url, offsets)
 
     discovery.async_listen(hass, SERVICE_ELAN, elan_discovered)
