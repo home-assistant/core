@@ -36,10 +36,13 @@ PROTECT_VARS_DEPRECATED = ['battery_level']
 
 SENSOR_TEMP_TYPES = ['temperature', 'target']
 
+STRUCTURE_SENSOR_TYPES = ['eta']
+
 _SENSOR_TYPES_DEPRECATED = SENSOR_TYPES_DEPRECATED \
     + list(DEPRECATED_WEATHER_VARS.keys()) + PROTECT_VARS_DEPRECATED
 
-_VALID_SENSOR_TYPES = SENSOR_TYPES + SENSOR_TEMP_TYPES + PROTECT_VARS
+_VALID_SENSOR_TYPES = SENSOR_TYPES + SENSOR_TEMP_TYPES + PROTECT_VARS  \
+    + STRUCTURE_SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +76,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error(wstr)
 
     all_sensors = []
+    for structure in nest.structures():
+        all_sensors += [NestBasicSensor(structure, None, variable)
+                        for variable in conditions
+                        if variable in STRUCTURE_SENSOR_TYPES]
     for structure, device in chain(nest.thermostats(), nest.smoke_co_alarms()):
         sensors = [NestBasicSensor(structure, device, variable)
                    for variable in conditions
@@ -94,13 +101,20 @@ class NestSensor(Entity):
     def __init__(self, structure, device, variable):
         """Initialize the sensor."""
         self.structure = structure
-        self.device = device
         self.variable = variable
 
-        # device specific
-        self._location = self.device.where
-        self._name = "{} {}".format(self.device.name_long,
-                                    self.variable.replace("_", " "))
+        if device is not None:
+            # device specific
+            self.device = device
+            self._location = self.device.where
+            self._name = "{} {}".format(self.device.name_long,
+                                        self.variable.replace("_", " "))
+        else:
+            # structure only
+            self.device = structure
+            self._name = "{} {}".format(self.structure.name,
+                                        self.variable.replace("_", " "))
+
         self._state = None
         self._unit = None
 
@@ -129,6 +143,8 @@ class NestBasicSensor(NestSensor):
 
         if self.variable == 'operation_mode':
             self._state = getattr(self.device, "mode")
+        elif self.variable == 'eta':
+            self._state = getattr(self.device, 'eta_begin')
         else:
             self._state = getattr(self.device, self.variable)
 
