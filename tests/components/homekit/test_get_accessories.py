@@ -1,5 +1,4 @@
 """Package to test the get_accessory method."""
-import logging
 from unittest.mock import patch, Mock
 
 import pytest
@@ -12,8 +11,6 @@ from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def test_not_supported(caplog):

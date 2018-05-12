@@ -12,6 +12,8 @@ async def test_temperature(hass):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.temperature'
 
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
     acc = TemperatureSensor(hass, 'Temperature', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
@@ -42,6 +44,8 @@ async def test_humidity(hass):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.humidity'
 
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
     acc = HumiditySensor(hass, 'Humidity', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
@@ -63,6 +67,8 @@ async def test_air_quality(hass):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.air_quality'
 
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
     acc = AirQualitySensor(hass, 'Air Quality', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
@@ -92,6 +98,8 @@ async def test_co2(hass):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.co2'
 
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
     acc = CarbonDioxideSensor(hass, 'CO2', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
@@ -125,6 +133,8 @@ async def test_light(hass):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.light'
 
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
     acc = LightSensor(hass, 'Light', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
