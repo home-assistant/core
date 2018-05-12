@@ -117,7 +117,8 @@ class NestBinarySensor(NestSensor, BinarySensorDevice):
         """Retrieve latest state."""
         value = getattr(self.device, self.variable)
         if self.variable in STRUCTURE_BINARY_TYPES:
-            self._state = bool(STRUCTURE_BINARY_STATE_MAP[self.variable][value])
+            self._state = bool(STRUCTURE_BINARY_STATE_MAP
+                               [self.variable][value])
         else:
             self._state = bool(value)
 
