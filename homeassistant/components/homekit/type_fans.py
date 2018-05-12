@@ -28,7 +28,7 @@ class Fan(HomeAccessory):
     Currently supports: state, speed, oscillate, direction.
     """
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a new Light accessory object."""
         super().__init__(*args, category=CATEGORY_FAN)
         self._flag = {CHAR_ACTIVE: False,
