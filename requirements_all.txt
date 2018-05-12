@@ -729,7 +729,7 @@ pychannels==1.0.0
 pychromecast==2.1.0
 
 # homeassistant.components.media_player.cmus
-pycmus==0.1.0
+pycmus==0.1.1
 
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.3
