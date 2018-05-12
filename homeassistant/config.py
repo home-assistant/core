@@ -7,7 +7,7 @@ import os
 import re
 import shutil
 # pylint: disable=unused-import
-from typing import Any, List, Tuple  # NOQA
+from typing import Any, List, Tuple, Optional  # NOQA
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -60,7 +60,7 @@ DEFAULT_CORE_CONFIG = (
     (CONF_TIME_ZONE, 'UTC', 'time_zone', 'Pick yours from here: http://en.wiki'
      'pedia.org/wiki/List_of_tz_database_time_zones'),
     (CONF_CUSTOMIZE, '!include customize.yaml', None, 'Customization file'),
-)  # type: Tuple[Tuple[str, Any, Any, str], ...]
+)  # type: Tuple[Tuple[str, Any, Any, Optional[str]], ...]
 DEFAULT_CONFIG = """
 # Show links to resources in log and frontend
 introduction:
@@ -167,7 +167,7 @@ def get_default_config_dir() -> str:
     """Put together the default configuration directory based on the OS."""
     data_dir = os.getenv('APPDATA') if os.name == "nt" \
         else os.path.expanduser('~')
-    return os.path.join(data_dir, CONFIG_DIR_NAME)
+    return os.path.join(data_dir, CONFIG_DIR_NAME)  # type: ignore
 
 
 def ensure_config_exists(config_dir: str, detect_location: bool = True) -> str:
