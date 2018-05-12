@@ -31,7 +31,7 @@ CAMERA_BINARY_TYPES = [
 
 STRUCTURE_BINARY_TYPES = [
     'away',
-    # 'security_state', # wait python-nest update
+    # 'security_state', # wait for pending python-nest update
 ]
 
 STRUCTURE_BINARY_STATE_MAP = {
