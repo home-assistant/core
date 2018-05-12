@@ -278,7 +278,8 @@ def async_enable_logging(hass: core.HomeAssistant,
 
         if log_rotate_days:
             err_handler = logging.handlers.TimedRotatingFileHandler(
-                err_log_path, when='midnight', backupCount=log_rotate_days)
+                err_log_path, when='midnight',
+                backupCount=log_rotate_days)  # type: logging.FileHandler
         else:
             err_handler = logging.FileHandler(
                 err_log_path, mode='w', delay=True)
