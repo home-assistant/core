@@ -230,18 +230,16 @@ class MqttTemplate(MqttAvailability, Light):
 
         if self._optimistic and last_state:
             self._state = last_state.state == STATE_ON
-            if last_state.attributes.get('brightness'):
-                self._brightness = last_state.attributes.get('brightness')
-            if last_state.attributes.get('hs_color'):
-                self._hs = last_state.attributes.get('hs_color')
-            if last_state.attributes.get('color_temp'):
-                self._color_temp = last_state.attributes.get('color_temp')
-            if last_state.attributes.get('effect'):
-                self._effect = last_state.attributes.get('effect')
-            if last_state.attributes.get('white_value'):
-                self._white_value = last_state.attributes.get('white_value')
-            if last_state.attributes.get('hs_color'):
-                self._hs = last_state.attributes.get('hs_color')
+            if last_state.attributes.get(ATTR_BRIGHTNESS):
+                self._brightness = last_state.attributes.get(ATTR_BRIGHTNESS)
+            if last_state.attributes.get(ATTR_HS_COLOR):
+                self._hs = last_state.attributes.get(ATTR_HS_COLOR)
+            if last_state.attributes.get(ATTR_COLOR_TEMP):
+                self._color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
+            if last_state.attributes.get(ATTR_EFFECT):
+                self._effect = last_state.attributes.get(ATTR_EFFECT)
+            if last_state.attributes.get(ATTR_WHITE_VALUE):
+                self._white_value = last_state.attributes.get(ATTR_WHITE_VALUE)
 
     @property
     def brightness(self):

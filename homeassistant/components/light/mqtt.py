@@ -258,8 +258,8 @@ class MqttLight(MqttAvailability, Light):
                 brightness_received, self._qos)
             self._brightness = 255
         elif self._optimistic_brightness and last_state\
-                and last_state.attributes.get('brightness'):
-            self._brightness = last_state.attributes.get('brightness')
+                and last_state.attributes.get(ATTR_BRIGHTNESS):
+            self._brightness = last_state.attributes.get(ATTR_BRIGHTNESS)
         elif self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
             self._brightness = 255
         else:
@@ -279,8 +279,8 @@ class MqttLight(MqttAvailability, Light):
                 self._qos)
             self._hs = (0, 0)
         if self._optimistic_rgb and last_state\
-                and last_state.attributes.get('hs_color'):
-            self._hs = last_state.attributes.get('hs_color')
+                and last_state.attributes.get(ATTR_HS_COLOR):
+            self._hs = last_state.attributes.get(ATTR_HS_COLOR)
         elif self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
             self._hs = (0, 0)
 
@@ -296,8 +296,8 @@ class MqttLight(MqttAvailability, Light):
                 color_temp_received, self._qos)
             self._color_temp = 150
         if self._optimistic_color_temp and last_state\
-                and last_state.attributes.get('color_temp'):
-            self._color_temp = last_state.attributes.get('color_temp')
+                and last_state.attributes.get(ATTR_COLOR_TEMP):
+            self._color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
         elif self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:
             self._color_temp = 150
         else:
@@ -315,8 +315,8 @@ class MqttLight(MqttAvailability, Light):
                 effect_received, self._qos)
             self._effect = 'none'
         if self._optimistic_effect and last_state\
-                and last_state.attributes.get('effect'):
-            self._effect = last_state.attributes.get('effect')
+                and last_state.attributes.get(ATTR_EFFECT):
+            self._effect = last_state.attributes.get(ATTR_EFFECT)
         elif self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None:
             self._effect = 'none'
         else:
@@ -336,8 +336,8 @@ class MqttLight(MqttAvailability, Light):
                 white_value_received, self._qos)
             self._white_value = 255
         elif self._optimistic_white_value and last_state\
-                and last_state.attributes.get('white_value'):
-            self._white_value = last_state.attributes.get('white_value')
+                and last_state.attributes.get(ATTR_WHITE_VALUE):
+            self._white_value = last_state.attributes.get(ATTR_WHITE_VALUE)
         elif self._topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None:
             self._white_value = 255
         else:
@@ -357,8 +357,8 @@ class MqttLight(MqttAvailability, Light):
                 self._qos)
             self._hs = (0, 0)
         if self._optimistic_xy and last_state\
-                and last_state.attributes.get('hs_color'):
-            self._hs = last_state.attributes.get('hs_color')
+                and last_state.attributes.get(ATTR_HS_COLOR):
+            self._hs = last_state.attributes.get(ATTR_HS_COLOR)
         elif self._topic[CONF_XY_COMMAND_TOPIC] is not None:
             self._hs = (0, 0)
 
