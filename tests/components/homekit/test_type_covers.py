@@ -32,6 +32,8 @@ async def test_garage_door_open_close(hass, cls):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.garage_door'
 
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
     acc = cls.garage(hass, 'Garage Door', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
@@ -87,6 +89,8 @@ async def test_window_set_cover_position(hass, cls):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.window'
 
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
     acc = cls.window(hass, 'Cover', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
