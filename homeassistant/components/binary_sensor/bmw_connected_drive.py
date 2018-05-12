@@ -6,6 +6,7 @@ https://home-assistant.io/components/binary_sensor.bmw_connected_drive/
 """
 import asyncio
 import logging
+from collections import OrderedDict
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
@@ -98,9 +99,8 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         vehicle_state = self._vehicle.state
-        result = {
-            'car': self._vehicle.name
-        }
+        result = OrderedDict()
+        result['car'] = self._vehicle.name
 
         if self._attribute == 'lids':
             for lid in vehicle_state.lids:
@@ -115,14 +115,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['lights_parking'] = vehicle_state.parking_lights.value
         elif self._attribute == 'condition_based_services':
             for report in vehicle_state.condition_based_services:
-                service_type = report.service_type.lower().replace('_', ' ')
-                result['{} status'.format(service_type)] = report.state.value
-                if report.due_date is not None:
-                    result['{} date'.format(service_type)] = \
-                        report.due_date.strftime('%Y-%m-%d')
-                if report.due_distance is not None:
-                    result['{} distance'.format(service_type)] = \
-                        '{} km'.format(report.due_distance)
+                result.update(self._format_cbs_report(report))
         elif self._attribute == 'check_control_messages':
             check_control_messages = vehicle_state.check_control_messages
             if not check_control_messages:
@@ -139,7 +132,8 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['connection_status'] = \
                 vehicle_state._attributes['connectionStatus']
 
-        return result
+        # return result
+        return OrderedDict(sorted(result.items(), key=lambda t: t[0]))
 
     def update(self):
         """Read new state data from the library."""
@@ -176,6 +170,18 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             # pylint: disable=W0212
             self._state = (vehicle_state._attributes['connectionStatus'] ==
                            'CONNECTED')
+
+    def _format_cbs_report(self, report):
+        result = dict()
+        service_type = report.service_type.lower().replace('_', ' ')
+        result['{} status'.format(service_type)] = report.state.value
+        if report.due_date is not None:
+            result['{} date'.format(service_type)] = \
+                report.due_date.strftime('%Y-%m-%d')
+        if report.due_distance is not None:
+            result['{} distance'.format(service_type)] = \
+                '{} km'.format(report.due_distance)
+        return result
 
     def update_callback(self):
         """Schedule a state update."""
