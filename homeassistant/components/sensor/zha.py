@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components import zha
-from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.util.temperature import convert as convert_temperature
 
 _LOGGER = logging.getLogger(__name__)
@@ -102,7 +102,7 @@ class TemperatureSensor(Sensor):
     @property
     def state(self):
         """Return the state of the entity."""
-        if self._state == STATE_UNKNOWN:
+        if self._state is None:
             return None
         celsius = round(float(self._state) / 100, 1)
         return convert_temperature(
@@ -122,7 +122,7 @@ class RelativeHumiditySensor(Sensor):
     @property
     def state(self):
         """Return the state of the entity."""
-        if self._state == STATE_UNKNOWN:
+        if self._state is None:
             return None
 
         return round(float(self._state) / 100, 1)
@@ -139,7 +139,7 @@ class PressureSensor(Sensor):
     @property
     def state(self):
         """Return the state of the entity."""
-        if self._state == STATE_UNKNOWN:
+        if self._state is None:
             return None
 
         return round(float(self._state))
