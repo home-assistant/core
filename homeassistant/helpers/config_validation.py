@@ -8,7 +8,7 @@ from socket import _GLOBAL_DEFAULT_TIMEOUT
 import logging
 import inspect
 
-from typing import Any, Union, TypeVar, Callable, Sequence, Dict
+from typing import Any, Union, TypeVar, Callable, Sequence, Dict, List
 
 import voluptuous as vol
 
@@ -502,6 +502,33 @@ def key_dependency(key, dependency):
 
         return value
     return validator
+
+
+def value_is_unique_in_list(*keys: str) -> Callable:
+    """Validate that given keys contain unique values for each item in list."""
+    def validate(objs: List) -> List:
+        """Test given keys are unique in list."""
+        if not isinstance(objs, list):
+            raise vol.Invalid('expected list')
+
+        values = {key: [] for key in keys}
+        for obj in objs:
+            if not isinstance(obj, dict):
+                raise vol.Invalid('expected list of dicts')
+            for key in keys:
+                value = obj.get(key)
+                if isinstance(value, str):
+                    # Uniqueness test should ignore case and extra whitespace
+                    value = " ".join(value.lower().split())
+                values[key].append(value)
+
+        for key, value in values.items():
+            if len(value) != len(set(value)):
+                raise vol.Invalid("Property '{}' is not unique".format(key))
+
+        return objs
+
+    return validate
 
 
 # Schemas

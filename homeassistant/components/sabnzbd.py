@@ -5,18 +5,20 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sabnzbd/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.discovery import SERVICE_SABNZBD
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
-    CONF_HOST, CONF_API_KEY, CONF_NAME, CONF_PORT, CONF_SENSORS, CONF_SSL)
+    CONF_HOST, CONF_API_KEY, CONF_NAME, CONF_PORT, CONF_SENSORS, CONF_SSL,
+    ATTR_ENTITY_ID)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['pysabnzbd==1.0.1']
@@ -24,29 +26,26 @@ REQUIREMENTS = ['pysabnzbd==1.0.1']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'sabnzbd'
-DATA_SABNZBD = 'sabznbd'
 
 _CONFIGURING = {}
 
 ATTR_SPEED = 'speed'
 BASE_URL_FORMAT = '{}://{}:{}/'
 CONFIG_FILE = 'sabnzbd.conf'
+CONF_SAB_API = 'sab_api'
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'SABnzbd'
 DEFAULT_PORT = 8080
 DEFAULT_SPEED_LIMIT = '100'
 DEFAULT_SSL = False
 
-UPDATE_INTERVAL = timedelta(seconds=30)
-
 SERVICE_PAUSE = 'pause'
 SERVICE_RESUME = 'resume'
 SERVICE_SET_SPEED = 'set_speed'
 
-SIGNAL_SABNZBD_UPDATED = 'sabnzbd_updated'
+SIGNAL_SABNZBD_UPDATED_BASE = 'sabnzbd_updated.{}'
 
 SENSOR_TYPES = {
-    'current_status': ['Status', None, 'status'],
     'speed': ['Speed', 'MB/s', 'kbpersec'],
     'queue_size': ['Queue', 'MB', 'mb'],
     'queue_remaining': ['Left', 'MB', 'mbleft'],
@@ -59,12 +58,17 @@ SENSOR_TYPES = {
     'total_size': ['Total', 'GB', 'total_size'],
 }
 
+PAUSE_RESUME_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
+})
+
 SPEED_LIMIT_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_SPEED, default=DEFAULT_SPEED_LIMIT): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -72,7 +76,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SENSORS):
             vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-    }),
+    })], cv.value_is_unique_in_list(CONF_NAME)),
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -83,96 +87,108 @@ async def async_check_sabnzbd(sab_api):
     try:
         await sab_api.check_available()
         return True
-    except SabnzbdApiException:
-        _LOGGER.error("Connection to SABnzbd API failed")
+    except SabnzbdApiException as err:
+        _LOGGER.error(err)
         return False
 
 
-async def async_configure_sabnzbd(hass, config, use_ssl, name=DEFAULT_NAME,
-                                  api_key=None):
-    """Try to configure Sabnzbd and request api key if configuration fails."""
+async def async_configure_discovered(hass, discovery_info, component):
+    """Configure a discovered SABnzbd instance. Request API key if needed."""
+    from pysabnzbd import SabnzbdApi
+
+    host = discovery_info[CONF_HOST]
+    port = discovery_info[CONF_PORT]
+    name = discovery_info.get('hostname', host).strip('.').replace('.', '_')
+    use_ssl = discovery_info.get('properties', {}).get('https', '0') == '1'
+    uri_scheme = 'https' if use_ssl else 'http'
+    base_url = BASE_URL_FORMAT.format(uri_scheme, host, port)
+    conf = await hass.async_add_job(load_json,
+                                    hass.config.path(CONFIG_FILE))
+    api_key = conf.get(base_url, {}).get(CONF_API_KEY, '')
+    sab_api = SabnzbdApi(base_url, api_key)
+    if await async_check_sabnzbd(sab_api):
+        sab_entity = async_setup_sabnzbd(hass, sab_api, {}, name)
+        await component.async_add_entities([sab_entity])
+    else:
+        async_request_configuration(hass, discovery_info, base_url, name,
+                                    component)
+
+
+async def async_configure_sabnzbd(hass, config):
+    """Configure a declared SABnzbd instance."""
     from pysabnzbd import SabnzbdApi
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
+    use_ssl = config.get(CONF_SSL)
+    name = config.get(CONF_NAME)
+    api_key = config.get(CONF_API_KEY)
     uri_scheme = 'https' if use_ssl else 'http'
     base_url = BASE_URL_FORMAT.format(uri_scheme, host, port)
-    if api_key is None:
-        conf = await hass.async_add_job(load_json,
-                                        hass.config.path(CONFIG_FILE))
-        api_key = conf.get(base_url, {}).get(CONF_API_KEY, '')
-
     sab_api = SabnzbdApi(base_url, api_key)
     if await async_check_sabnzbd(sab_api):
-        async_setup_sabnzbd(hass, sab_api, config, name)
-    else:
-        async_request_configuration(hass, config, base_url)
+        return async_setup_sabnzbd(hass, sab_api, config, name)
 
 
 async def async_setup(hass, config):
     """Setup the SABnzbd component."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
     async def sabnzbd_discovered(service, info):
         """Handle service discovery."""
-        ssl = info.get('properties', {}).get('https', '0') == '1'
-        await async_configure_sabnzbd(hass, info, ssl)
+        await async_configure_discovered(hass, info, component)
 
     discovery.async_listen(hass, SERVICE_SABNZBD, sabnzbd_discovered)
 
-    conf = config.get(DOMAIN)
-    if conf is not None:
-        use_ssl = conf.get(CONF_SSL)
-        name = conf.get(CONF_NAME)
-        api_key = conf.get(CONF_API_KEY)
-        await async_configure_sabnzbd(hass, conf, use_ssl, name, api_key)
-    return True
-
-
-@callback
-def async_setup_sabnzbd(hass, sab_api, config, name):
-    """Setup SABnzbd sensors and services."""
-    sab_api_data = SabnzbdApiData(sab_api, name, config.get(CONF_SENSORS, {}))
-
-    if config.get(CONF_SENSORS):
-        hass.data[DATA_SABNZBD] = sab_api_data
-        hass.async_add_job(
-            discovery.async_load_platform(hass, 'sensor', DOMAIN, {}, config))
+    sabnzbd_config = config.get(DOMAIN)
+    entities = []
+    for conf in sabnzbd_config:
+        sab_entity = await async_configure_sabnzbd(hass, conf)
+        if sab_entity:
+            entities.append(sab_entity)
 
     async def async_service_handler(service):
         """Handle service calls."""
-        if service.service == SERVICE_PAUSE:
-            await sab_api_data.async_pause_queue()
-        elif service.service == SERVICE_RESUME:
-            await sab_api_data.async_resume_queue()
-        elif service.service == SERVICE_SET_SPEED:
-            speed = service.data.get(ATTR_SPEED)
-            await sab_api_data.async_set_queue_speed(speed)
+        sab_entities = component.async_extract_from_service(service)
+        for entity in sab_entities:
+            if service.service == SERVICE_PAUSE:
+                await entity.async_pause_queue()
+            elif service.service == SERVICE_RESUME:
+                await entity.async_resume_queue()
+            elif service.service == SERVICE_SET_SPEED:
+                speed = service.data.get(ATTR_SPEED)
+                await entity.async_set_queue_speed(speed)
 
     hass.services.async_register(DOMAIN, SERVICE_PAUSE,
                                  async_service_handler,
-                                 schema=vol.Schema({}))
+                                 schema=PAUSE_RESUME_SCHEMA)
 
     hass.services.async_register(DOMAIN, SERVICE_RESUME,
                                  async_service_handler,
-                                 schema=vol.Schema({}))
+                                 schema=PAUSE_RESUME_SCHEMA)
 
     hass.services.async_register(DOMAIN, SERVICE_SET_SPEED,
                                  async_service_handler,
                                  schema=SPEED_LIMIT_SCHEMA)
 
-    async def async_update_sabnzbd(now):
-        """Refresh SABnzbd queue data."""
-        from pysabnzbd import SabnzbdApiException
-        try:
-            await sab_api.refresh_data()
-            async_dispatcher_send(hass, SIGNAL_SABNZBD_UPDATED, None)
-        except SabnzbdApiException as err:
-            _LOGGER.error(err)
-
-    async_track_time_interval(hass, async_update_sabnzbd, UPDATE_INTERVAL)
+    if entities:
+        await component.async_add_entities(entities)
+    return True
 
 
 @callback
-def async_request_configuration(hass, config, host):
+def async_setup_sabnzbd(hass, sab_api, config, name):
+    """Create SABnzbd entity and associated sensor entities."""
+    sab_entity = SabnzbdEntity(sab_api, name, config.get(CONF_SENSORS, {}))
+    if config.get(CONF_SENSORS):
+        data = {CONF_SAB_API: sab_entity, CONF_SENSORS: config[CONF_SENSORS]}
+        hass.async_add_job(
+            discovery.async_load_platform(hass, SENSOR_DOMAIN, DOMAIN, data))
+    return sab_entity
+
+
+@callback
+def async_request_configuration(hass, config, host, name, component):
     """Request configuration steps from the user."""
     from pysabnzbd import SabnzbdApi
 
@@ -201,8 +217,8 @@ def async_request_configuration(hass, config, host):
             configurator.request_done(req_config)
 
         hass.async_add_job(success)
-        async_setup_sabnzbd(hass, sab_api, config,
-                            config.get(CONF_NAME, DEFAULT_NAME))
+        sab_entity = async_setup_sabnzbd(hass, sab_api, {}, name)
+        await component.async_add_entities([sab_entity])
 
     _CONFIGURING[host] = configurator.async_request_config(
         DEFAULT_NAME,
@@ -213,14 +229,40 @@ def async_request_configuration(hass, config, host):
     )
 
 
-class SabnzbdApiData:
-    """Class for storing/refreshing sabnzbd api queue data."""
+class SabnzbdEntity(Entity):
+    """Representation of a SABnzbd Usenet client instance."""
 
     def __init__(self, sab_api, name, sensors):
-        """Initialize component."""
+        """Initialize entity."""
+        self._name = " ".join(name.split())
+        self._state = None
+
+        self.identifier = self._name.lower().replace(' ', '_')
+        self.entity_id = '{}.{}'.format(DOMAIN, self.identifier)
         self.sab_api = sab_api
-        self.name = name
         self.sensors = sensors
+        self.updated_signal = SIGNAL_SABNZBD_UPDATED_BASE.format(
+            self.identifier)
+
+    @property
+    def name(self):
+        """Return the name of this SABnzbd instance."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of this SABnzbd instance."""
+        return self._state
+
+    async def async_update(self):
+        """Update SABnzbd API data and send signal to update sensors."""
+        from pysabnzbd import SabnzbdApiException
+        try:
+            await self.sab_api.refresh_data()
+            self._state = self.sab_api.queue.get('status')
+            async_dispatcher_send(self.hass, self.updated_signal, None)
+        except SabnzbdApiException as err:
+            _LOGGER.error(err)
 
     async def async_pause_queue(self):
         """Pause Sabnzbd queue."""

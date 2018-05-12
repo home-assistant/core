@@ -570,3 +570,22 @@ shopping_list:
       name:
         description: The name of the item to mark as completed.
         example: Beer
+
+sabnzbd:
+  pause:
+    description: Pause SABnzbd
+    fields:
+      entity_id:
+        description: Entity id of the SABnzbd instance to pause.
+  resume:
+    description: Resume SABnzbd
+    fields:
+      entity_id:
+        description: Entity id of the SABnzbd instance to resume.
+  set_speed:
+    description: Set the download speed limit of SABnzbd
+    fields:
+      entity_id:
+        description: Entity id of the SABnzbd instance to target.
+      speed:
+        description: The target speed limit
