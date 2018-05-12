@@ -56,7 +56,11 @@ async def test_debounce(hass):
 
 async def test_home_accessory(hass):
     """Test HomeAccessory class."""
-    acc = HomeAccessory(hass, 'Home Accessory', 'homekit.accessory', 2, None)
+    entity_id = 'homekit.accessory'
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(hass, 'Home Accessory', entity_id, 2, None)
     assert acc.hass == hass
     assert acc.display_name == 'Home Accessory'
     assert acc.aid == 2
@@ -76,7 +80,11 @@ async def test_home_accessory(hass):
     hass.states.async_set('homekit.accessory', 'off')
     await hass.async_block_till_done()
 
-    acc = HomeAccessory('hass', 'test_name', 'test_model.demo', 2, None)
+    entity_id = 'test_model.demo'
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory('hass', 'test_name', entity_id, 2, None)
     assert acc.display_name == 'test_name'
     assert acc.aid == 2
     assert len(acc.services) == 1
