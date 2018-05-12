@@ -405,15 +405,15 @@ class XiaomiLock(XiaomiBinarySensor):
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
-        for type in ['fing_verified', 'psw_verified', 'card_verified',
-                     'verified_wrong']:
+        for action_type in ['fing_verified', 'psw_verified', 'card_verified',
+                            'verified_wrong']:
             if type in data:
                 self._hass.bus.fire('lock_action', {
                     'entity_id': self.entity_id,
-                    'action_type': type,
-                    'action_value': data[type]
+                    'action_type': action_type,
+                    'action_value': data[action_type]
                 })
-                self._last_action = type
+                self._last_action = action_type
                 break
 
         return True
