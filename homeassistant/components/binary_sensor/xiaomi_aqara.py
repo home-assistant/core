@@ -55,6 +55,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                             'dual_channel', hass, gateway))
             elif model in ['cube', 'sensor_cube', 'sensor_cube.aqgl01']:
                 devices.append(XiaomiCube(device, hass, gateway))
+            elif model == 'lock.aq1':
+                devices.append(XiaomiLock(device, hass, gateway))
     add_devices(devices)
 
 
@@ -379,5 +381,39 @@ class XiaomiCube(XiaomiBinarySensor):
                 'action_value': float(data['rotate'].replace(",", "."))
             })
             self._last_action = 'rotate'
+
+        return True
+
+
+class XiaomiLock(XiaomiBinarySensor):
+    """Representation of a Xiaomi Lock."""
+
+    def __init__(self, device, hass, xiaomi_hub):
+        """Initialize the Xiaomi Lock."""
+        self._hass = hass
+        self._last_action = None
+        self._state = False
+        XiaomiBinarySensor.__init__(self, device, 'Lock', xiaomi_hub,
+                                    None, None)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attrs = {ATTR_LAST_ACTION: self._last_action}
+        attrs.update(super().device_state_attributes)
+        return attrs
+
+    def parse_data(self, data, raw_data):
+        """Parse data sent by gateway."""
+        for action_type in ['fing_verified', 'psw_verified', 'card_verified',
+                            'verified_wrong']:
+            if type in data:
+                self._hass.bus.fire('lock_action', {
+                    'entity_id': self.entity_id,
+                    'action_type': action_type,
+                    'action_value': data[action_type]
+                })
+                self._last_action = action_type
+                break
 
         return True
