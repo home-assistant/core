@@ -87,7 +87,7 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         """Return one or more digits/characters."""
         if self._code is None:
             return None
-        elif re.search('^\\d+$', self._code):
+        elif isinstance(self._code, str) and re.search('^\\d+$', self._code):
             return '^\\d+$'
         return '.+'
 
