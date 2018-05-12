@@ -1,8 +1,10 @@
 """
-Support for the elan.
+Support for the elan Thermostat.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/xxxx/
 """
+
 import asyncio
 import logging
 import voluptuous as vol
@@ -62,21 +64,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             _LOGGER.info("elan Thermostat to add")
             _LOGGER.info(device)
             async_add_devices([
-                ElanThermostat(device_list[device]['url'], info, 'temperature',
-                               temperature_offsets.get(
-                                   device_list[device]['url'], 0))
+                ElanThermostat(
+                    session, device_list[device]['url'], info, 'temperature',
+                    temperature_offsets.get(device_list[device]['url'], 0))
             ])
-            async_add_devices(
-                [ElanThermostat(device_list[device]['url'], info, 'on')])
-
-
-#    session.close()
+            async_add_devices([
+                ElanThermostat(session, device_list[device]['url'], info, 'on')
+            ])
 
 
 class ElanThermostat(Entity):
     """The platform class required by Home Assistant."""
 
-    def __init__(self, thermostat, info, var, offset=0):
+    def __init__(self, session, thermostat, info, var, offset=0):
         """Initialize a thermostat."""
         _LOGGER.info("elan thermostat initialisation")
         _LOGGER.info(info)
@@ -111,6 +111,8 @@ class ElanThermostat(Entity):
             self._var = var
 
         self._temperature_offset = offset
+
+        self._session = session
 
         self._available = True
 
@@ -153,8 +155,7 @@ class ElanThermostat(Entity):
         _LOGGER.info('elan thermostat update')
         stateurl = self._thermostat + '/state'
         _LOGGER.info(stateurl)
-        session = async_get_clientsession(self.hass)
-        resp = yield from session.get(stateurl, timeout=3)
+        resp = yield from self._session.get(stateurl, timeout=3)
         state = yield from resp.json()
         _LOGGER.info(state)
         if 'temperature IN' in state:
