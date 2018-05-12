@@ -16,10 +16,11 @@ from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity_values import EntityValues
-from homeassistant.helpers.event import track_time_change
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.util import convert
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
@@ -218,7 +219,7 @@ async def async_setup_platform(hass, config, async_add_devices,
 
 
 # pylint: disable=R0914
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up Z-Wave.
 
     Will automatically load components to support devices found on the network.
@@ -286,7 +287,7 @@ def setup(hass, config):
                 continue
 
             values = ZWaveDeviceEntityValues(
-                hass, schema, value, config, device_config)
+                hass, schema, value, config, device_config, registry)
 
             # We create a new list and update the reference here so that
             # the list can be safely iterated over in the main thread
@@ -294,6 +295,7 @@ def setup(hass, config):
             hass.data[DATA_ENTITY_VALUES] = new_values
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    registry = await async_get_registry(hass)
 
     def node_added(node):
         """Handle a new node on the network."""
@@ -702,9 +704,9 @@ def setup(hass, config):
     # Setup autoheal
     if autoheal:
         _LOGGER.info("Z-Wave network autoheal is enabled")
-        track_time_change(hass, heal_network, hour=0, minute=0, second=0)
+        async_track_time_change(hass, heal_network, hour=0, minute=0, second=0)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
 
     return True
 
@@ -713,7 +715,7 @@ class ZWaveDeviceEntityValues():
     """Manages entity access to the underlying zwave value objects."""
 
     def __init__(self, hass, schema, primary_value, zwave_config,
-                 device_config):
+                 device_config, registry):
         """Initialize the values object with the passed entity schema."""
         self._hass = hass
         self._zwave_config = zwave_config
@@ -722,6 +724,7 @@ class ZWaveDeviceEntityValues():
         self._values = {}
         self._entity = None
         self._workaround_ignore = False
+        self._registry = registry
 
         for name in self._schema[const.DISC_VALUES].keys():
             self._values[name] = None
@@ -794,9 +797,13 @@ class ZWaveDeviceEntityValues():
                           workaround_component, component)
             component = workaround_component
 
-        value_name = _value_name(self.primary)
-        generated_id = generate_entity_id(component + '.{}', value_name, [])
-        node_config = self._device_config.get(generated_id)
+        entity_id = self._registry.async_get_entity_id(
+            component, DOMAIN,
+            compute_value_unique_id(self._node, self.primary))
+        if entity_id is None:
+            value_name = _value_name(self.primary)
+            entity_id = generate_entity_id(component + '.{}', value_name, [])
+        node_config = self._device_config.get(entity_id)
 
         # Configure node
         _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, "
@@ -809,7 +816,7 @@ class ZWaveDeviceEntityValues():
 
         if node_config.get(CONF_IGNORED):
             _LOGGER.info(
-                "Ignoring entity %s due to device settings", generated_id)
+                "Ignoring entity %s due to device settings", entity_id)
             # No entity will be created for this value
             self._workaround_ignore = True
             return
@@ -964,6 +971,10 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         if (is_node_parsed(self.node) and
                 self.values.primary.label != "Unknown") or \
                 self.node.is_ready:
-            return "{}-{}".format(self.node.node_id,
-                                  self.values.primary.object_id)
+            return compute_value_unique_id(self.node, self.values.primary)
         return None
+
+
+def compute_value_unique_id(node, value):
+    """Compute unique_id a value would get if it were to get one."""
+    return "{}-{}".format(node.node_id, value.object_id)
