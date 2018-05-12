@@ -84,6 +84,15 @@ class EntityRegistry:
         return entity_id in self.entities
 
     @callback
+    def async_get_entity_id(self, domain: str, platform: str, unique_id: str):
+        """Check if an entity_id is currently registered."""
+        for entity in self.entities.values():
+            if entity.domain == domain and entity.platform == platform and \
+               entity.unique_id == unique_id:
+                return entity.entity_id
+        return None
+
+    @callback
     def async_generate_entity_id(self, domain, suggested_object_id):
         """Generate an entity ID that does not conflict.
 
