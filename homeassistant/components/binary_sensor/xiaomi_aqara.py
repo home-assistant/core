@@ -2,8 +2,8 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
-                                                   XiaomiDevice)
+from homeassistant.components.xiaomi_aqara import (
+    PY_XIAOMI_GATEWAY, XiaomiDevice, DOMAIN_CONFIG, CONF_LOCKUIDS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,18 +15,29 @@ NO_MOTION = 'no_motion'
 ATTR_LAST_ACTION = 'last_action'
 ATTR_NO_MOTION_SINCE = 'No motion since'
 
+VERIFIED_WRONG = 'verified_wrong'
+FING_VERIFIED = 'fing_verified'
+CARD_VERIFIED = 'card_verified'
+PSW_VERIFIED = 'psw_verified'
+
 DENSITY = 'density'
 ATTR_DENSITY = 'Density'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
+    if PY_XIAOMI_GATEWAY not in hass.data:
+        return
     devices = []
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
         for device in gateway.devices['binary_sensor']:
             model = device['model']
             if model in ['motion', 'sensor_motion', 'sensor_motion.aq2']:
                 devices.append(XiaomiMotionSensor(device, hass, gateway))
+            elif model in ['lock.aq1']:
+                devices.append(XiaomiUnlockSensor(hass.data[DOMAIN_CONFIG],
+                                                  devices, device,
+                                                  hass, gateway))
             elif model in ['magnet', 'sensor_magnet', 'sensor_magnet.aq2']:
                 devices.append(XiaomiDoorSensor(device, gateway))
             elif model == 'sensor_wleak.aq1':
@@ -64,6 +75,8 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
     def __init__(self, device, name, xiaomi_hub, data_key, device_class):
         """Initialize the XiaomiSmokeSensor."""
         self._data_key = data_key
+        self._real_sid = \
+            None if 'real_sid' not in device else device['real_sid']
         self._device_class = device_class
         self._should_poll = False
         self._density = 0
@@ -86,6 +99,8 @@ class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
 
     def update(self):
         """Update the sensor state."""
+        if self._real_sid is not None:
+            return
         _LOGGER.debug('Updating xiaomi sensor by polling')
         self._get_from_hub(self._sid)
 
@@ -185,6 +200,102 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
                 return False
             self._state = False
             return True
+
+
+class XiaomiUnlockSensor(XiaomiBinarySensor):
+    """Representation of a XiaomiUnlockSensor."""
+
+    def __init__(self, config, devices, device, hass, xiaomi_hub):
+        """Initialize the XiaomiUnlockSensor."""
+        self._hass = hass
+        self._no_motion_since = 0
+        self.sub_devices = {}
+        users = config[CONF_LOCKUIDS] if CONF_LOCKUIDS in config else []
+        users.append({
+            'uid': 'unsecu'
+        })
+        for user in users:
+            self.sub_devices[str(user['uid'])] = XiaomiUnlockSubSensor({
+                'sid': str(user['uid']),
+                'real_sid': device['sid'],
+                'model': 'motion',
+                'data': {
+                },
+                'raw_data': {
+                    'cmd': 'report'
+                }
+            }, hass, xiaomi_hub)
+            devices.append(self.sub_devices[str(user['uid'])])
+        XiaomiBinarySensor.__init__(self, device, 'Unlock Sensor', xiaomi_hub,
+                                    'status', 'motion')
+
+    def push_sub_devices(self, uid=None):
+        """Parse data sent by gateway."""
+        for key in self.sub_devices:
+            self.sub_devices[key].push_data({
+                'status':
+                    MOTION if uid is not None and uid == key else NO_MOTION
+            }, {
+                'sid': key,
+                'cmd': 'report',
+                'status':
+                    MOTION if uid is not None and uid == key else NO_MOTION
+            })
+
+    def parse_data(self, data, raw_data):
+        """Parse data sent by gateway."""
+        if raw_data['cmd'] in ['heartbeat', 'read_ack', 'read_rsp']:
+            return
+
+        self._should_poll = False
+        if VERIFIED_WRONG in data:  # handle push from the hub
+            self.push_sub_devices('unsecu')
+            self._state = False
+            return True
+
+        value = data.get(FING_VERIFIED)
+        if value is None:
+            value = data.get(CARD_VERIFIED)
+        if value is None:
+            value = data.get(PSW_VERIFIED)
+        if value is None:
+            self.push_sub_devices()
+            self._state = False
+            return False
+
+        self.push_sub_devices(str(value))
+
+        self._should_poll = True
+        if self.entity_id is not None:
+            self._hass.bus.fire('motion', {
+                'entity_id': self.entity_id
+            })
+        self._state = True
+        return True
+
+
+class XiaomiUnlockSubSensor(XiaomiBinarySensor):
+    """Representation of a XiaomiUnlockSubSensor."""
+
+    def __init__(self, device, hass, xiaomi_hub):
+        """Initialize the XiaomiUnlockSubSensor."""
+        self._hass = hass
+        self._no_motion_since = 0
+        if 'proto' not in device or int(device['proto'][0:1]) == 1:
+            data_key = 'status'
+        else:
+            data_key = 'motion_status'
+        XiaomiBinarySensor.__init__(self, device, 'UnlockSub Sensor',
+                                    xiaomi_hub, data_key, 'motion')
+
+    def parse_data(self, data, raw_data):
+        """Parse data sent by gateway."""
+        if raw_data['cmd'] == 'heartbeat':
+            return
+
+        value = data.get(self._data_key)
+        self._state = value is not None and value == MOTION
+        return True
 
 
 class XiaomiDoorSensor(XiaomiBinarySensor):

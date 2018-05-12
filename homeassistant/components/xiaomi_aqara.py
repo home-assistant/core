@@ -34,10 +34,12 @@ ATTR_DEVICE_ID = 'device_id'
 
 CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
+CONF_LOCKUIDS = 'lockuids'
 CONF_INTERFACE = 'interface'
 CONF_KEY = 'key'
 
 DOMAIN = 'xiaomi_aqara'
+DOMAIN_CONFIG = 'xiaomi_aqara_config'
 
 PY_XIAOMI_GATEWAY = "xiaomi_gw"
 
@@ -95,6 +97,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_GATEWAYS, default={}):
             vol.All(cv.ensure_list, [GATEWAY_CONFIG], [_fix_conf_defaults]),
+        vol.Optional(CONF_LOCKUIDS, default={}): vol.All(cv.ensure_list),
         vol.Optional(CONF_INTERFACE, default='any'): cv.string,
         vol.Optional(CONF_DISCOVERY_RETRY, default=3): cv.positive_int
     })
@@ -110,6 +113,7 @@ def setup(hass, config):
         gateways = config[DOMAIN][CONF_GATEWAYS]
         interface = config[DOMAIN][CONF_INTERFACE]
         discovery_retry = config[DOMAIN][CONF_DISCOVERY_RETRY]
+        hass.data[DOMAIN_CONFIG] = config[DOMAIN]
 
     @asyncio.coroutine
     def xiaomi_gw_discovered(service, discovery_info):
@@ -209,6 +213,7 @@ class XiaomiDevice(Entity):
         self._state = None
         self._is_available = True
         self._sid = device['sid']
+        self._model = device['model']
         self._name = '{}_{}'.format(device_type, self._sid)
         self._type = device_type
         self._write_to_hub = xiaomi_hub.write_to_hub

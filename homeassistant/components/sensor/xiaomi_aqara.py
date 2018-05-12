@@ -88,7 +88,10 @@ class XiaomiSensor(XiaomiDevice):
         if self._data_key in ['temperature', 'humidity', 'pressure']:
             value /= 100
         elif self._data_key in ['illumination']:
-            value = max(value - 300, 0)
+            if self._model in 'acpartner.v3':
+                value = max(value, 0)
+            else:
+                value = max(value - 300, 0)
         if self._data_key == 'temperature' and (value < -50 or value > 60):
             return False
         elif self._data_key == 'humidity' and (value <= 0 or value > 100):
