@@ -4,28 +4,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/xxxx/
 """
 import asyncio
-import aiohttp
 import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import TEMP_CELSIUS
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change
-from homeassistant.exceptions import TemplateError
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 DOMAIN = 'elan'
 
-#REQUIREMENTS = ['pyelan']
-
 _LOGGER = logging.getLogger(__name__)
-
-#MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-#MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 # Validation of the user's configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

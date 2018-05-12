@@ -4,25 +4,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/xxxx/
 """
 import asyncio
-import aiohttp
 import logging
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.light import PLATFORM_SCHEMA
-from homeassistant.util import color as color_util
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-#REQUIREMENTS = ['pyelan']
-
 _LOGGER = logging.getLogger(__name__)
-
-#MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-#MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 # Validation of the user's configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

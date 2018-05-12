@@ -2,6 +2,16 @@
 Support for elan devices manual discovery.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/elan/
+
+Setup:
+ - Add INELS RF devices in eLAN web interface (follow eLAN manual)
+ - Add platfrom url into Home Assistant configuration
+
+Sample configuration:
+
+elan:
+  url:  "http://192.168.168.123"
+
 """
 
 import asyncio
@@ -10,7 +20,6 @@ import logging
 import async_timeout
 import voluptuous as vol
 
-#from homeassistant.components.discovery import SERVICE_elan
 SERVICE_ELAN = 'elan'
 
 from homeassistant.helpers import discovery
@@ -22,7 +31,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 DOMAIN = 'elan'
 
-#SUBSCRIPTION_REGISTRY = None # do budoucna zde bude ws link k elanu abychom meli upozorneni na zmeny stavu
 KNOWN_DEVICES = []
 
 _LOGGER = logging.getLogger(__name__)
