@@ -18,6 +18,8 @@ async def test_switch_set_state(hass):
     config = {ATTR_CODE: code}
     entity_id = 'alarm_control_panel.test'
 
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
     acc = SecuritySystem(hass, 'SecuritySystem', entity_id, 2, config)
     await hass.async_add_job(acc.run)
 
@@ -97,6 +99,8 @@ async def test_no_alarm_code(hass, config):
     """Test accessory if security_system doesn't require a alarm_code."""
     entity_id = 'alarm_control_panel.test'
 
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
     acc = SecuritySystem(hass, 'SecuritySystem', entity_id, 2, config)
 
     # Set from HomeKit
