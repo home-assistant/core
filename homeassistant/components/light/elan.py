@@ -85,7 +85,6 @@ class ElanLight(Light):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Start thread when added to hass."""
-        #self._async_start_observe()
 
     @property
     def available(self):
@@ -94,7 +93,7 @@ class ElanLight(Light):
 
     @property
     def should_poll(self):
-        """WS notification not implemented yet - polling is needed"""
+        """WS notification not implemented yet - polling is needed."""
         return True
 
     @property
@@ -125,6 +124,7 @@ class ElanLight(Light):
     @asyncio.coroutine
     def update(self):
         """Fetch new state data for this light.
+
         This is the only method that should fetch new data for Home Assistant.
         """
         _LOGGER.info('elan Light update')
@@ -157,9 +157,7 @@ class ElanLight(Light):
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
-        """
-        Instruct the light to turn on.
-        """
+        """Instruct the light to turn on."""
         _LOGGER.info('Turning on elan light')
         _LOGGER.info(self._light)
         if ATTR_BRIGHTNESS in kwargs:

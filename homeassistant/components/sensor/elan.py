@@ -119,7 +119,6 @@ class ElanThermostat(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Start thread when added to hass."""
-        #self._async_start_observe()
 
     @property
     def available(self):
@@ -128,7 +127,7 @@ class ElanThermostat(Entity):
 
     @property
     def should_poll(self):
-        """WS notification not implemented yet - polling is needed"""
+        """WS notification not implemented yet - polling is needed."""
         return True
 
     @property
