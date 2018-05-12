@@ -292,7 +292,8 @@ class TestLightMQTTJSON(unittest.TestCase):
                                                    'color_temp': 100,
                                                    'white_value': 50})
 
-        with patch('homeassistant.components.light.mqtt_json.async_get_last_state',
+        with patch('homeassistant.components.light.mqtt_json'
+                   '.async_get_last_state',
                    return_value=mock_coro(fake_state)):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
