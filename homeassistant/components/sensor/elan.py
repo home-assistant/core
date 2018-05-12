@@ -1,4 +1,4 @@
-_temperature_out"""
+"""
 Support for the elan.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/xxxx/

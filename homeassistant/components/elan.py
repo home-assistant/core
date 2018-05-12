@@ -52,7 +52,7 @@ def async_setup(hass, config):
     url = conf.get('url')
     _LOGGER.info('elan platform setup %s', url)
     offsets = conf.get('offsets')
-    _LOGGER.info('elan platform offsets %f', offsets)
+    _LOGGER.info('elan platform offsets %s', str(offsets))
 
     @asyncio.coroutine
     def elan_discovered(service, info):
