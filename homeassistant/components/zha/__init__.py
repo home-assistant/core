@@ -7,6 +7,7 @@ https://home-assistant.io/components/zha/
 import collections
 import enum
 import logging
+import time
 
 import voluptuous as vol
 
@@ -14,6 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant import const as ha_const
 from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
+from homeassistant.helpers.entity_component import EntityComponent
 
 REQUIREMENTS = [
     'bellows==0.7.0',
@@ -139,6 +141,7 @@ class ApplicationListener:
         """Initialize the listener."""
         self._hass = hass
         self._config = config
+        self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._device_registry = collections.defaultdict(list)
         hass.data[DISCOVERY_KEY] = hass.data.get(DISCOVERY_KEY, {})
 
@@ -246,6 +249,16 @@ class ApplicationListener:
                     'out_clusters',
                     join,
                 )
+
+            endpoint_key = "zha-{}".format(device_key)
+            endpoint_entity = ZhaEndpointEntity(
+                endpoint,
+                discovered_info['manufacturer'],
+                discovered_info['model'],
+                self,
+                endpoint_key,
+            )
+            await self._component.async_add_entities([endpoint_entity])
 
     def register_entity(self, ieee, entity_obj):
         """Record the creation of a hass entity associated with ieee."""
@@ -368,6 +381,123 @@ class Entity(entity.Entity):
     def zdo_command(self, tsn, command_id, args):
         """Handle a ZDO command received on this cluster."""
         pass
+
+
+class ZhaEndpointEntity(entity.Entity):
+    """A base class for ZHA endpoints."""
+
+    _domain = DOMAIN
+
+    def __init__(self, endpoint, manufacturer, model, application_listener,
+                 unique_id, keepalive_interval=7200, **kwargs):
+        """Init ZHA endpoint entity."""
+
+        self._device_state_attributes = {}
+        ieee = endpoint.device.ieee
+        ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
+        if manufacturer and model is not None:
+            self.entity_id = "{}.{}_{}_{}_{}".format(
+                self._domain,
+                slugify(manufacturer),
+                slugify(model),
+                ieeetail,
+                endpoint.endpoint_id,
+            )
+            self._device_state_attributes['friendly_name'] = "{} {}".format(
+                manufacturer,
+                model,
+            )
+        else:
+            self.entity_id = "{}.zha_{}_{}".format(
+                self._domain,
+                ieeetail,
+                endpoint.endpoint_id,
+            )
+
+        self._device_state_attributes['ieee'] = str(endpoint.device.ieee)
+        self._device_state_attributes['last_update'] = None
+        self._device_state_attributes['lqi'] = endpoint.device.lqi
+        self._device_state_attributes['rssi'] = endpoint.device.rssi
+
+        self._endpoint = endpoint
+        self._state = 'offline'
+        self._unique_id = unique_id
+        self._keepalive_interval = keepalive_interval
+
+        application_listener.register_entity(ieee, self)
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def state(self) -> str:
+        """Return the state of the entity."""
+        return self._state
+
+    @property
+    def hidden(self) -> bool:
+        """Hide by default."""
+        return True
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        update_time = None
+        if self._endpoint.device.last_seen is not None:
+            time_struct = time.localtime(self._endpoint.device.last_seen)
+            update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
+        self._device_state_attributes['last_update'] = update_time
+        self._device_state_attributes['lqi'] = self._endpoint.device.lqi
+        self._device_state_attributes['rssi'] = self._endpoint.device.rssi
+        return self._device_state_attributes
+
+    async def async_update(self):
+        """Handle polling."""
+        if self._endpoint.device.last_seen is None:
+            self._state = 'offline'
+        else:
+            difference = time.time() - self._endpoint.device.last_seen
+            if difference > self._keepalive_interval:
+                self._state = 'offline'
+            else:
+                self._state = 'online'
+        self.schedule_update_ha_state()
+
+
+async def _discover_endpoint_info(endpoint):
+    """Find some basic information about an endpoint."""
+    extra_info = {
+        'manufacturer': None,
+        'model': None,
+    }
+    if 0 not in endpoint.in_clusters:
+        return extra_info
+
+    async def read(attributes):
+        """Read attributes and update extra_info convenience function."""
+        result, _ = await endpoint.in_clusters[0].read_attributes(
+            attributes,
+            allow_cache=True,
+        )
+        extra_info.update(result)
+
+    await read(['manufacturer', 'model'])
+    if extra_info['manufacturer'] is None or extra_info['model'] is None:
+        # Some devices fail at returning multiple results. Attempt separately.
+        await read(['manufacturer'])
+        await read(['model'])
+
+    for key, value in extra_info.items():
+        if isinstance(value, bytes):
+            try:
+                extra_info[key] = value.decode('ascii').strip()
+            except UnicodeDecodeError:
+                # Unsure what the best behaviour here is. Unset the key?
+                pass
+
+    return extra_info
 
 
 def get_discovery_info(hass, discovery_info):
