@@ -38,6 +38,7 @@ CONF_CONTACT = 'contact'
 CONF_HUMIDITY = 'humidity'
 CONF_ICON_CLOSED = 'icon_closed'
 CONF_ICON_OPEN = 'icon_open'
+CONF_ICONS = 'icons'
 CONF_IRC = 'irc'
 CONF_ISSUE_REPORT_CHANNELS = 'issue_report_channels'
 CONF_LOCATION = 'location'
@@ -73,8 +74,8 @@ CONTACT_SCHEMA = vol.Schema({
 
 STATE_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Inclusive(CONF_ICON_CLOSED, 'icons'): cv.url,
-    vol.Inclusive(CONF_ICON_OPEN, 'icons'): cv.url,
+    vol.Inclusive(CONF_ICON_CLOSED, CONF_ICONS): cv.url,
+    vol.Inclusive(CONF_ICON_OPEN, CONF_ICONS): cv.url,
 }, required=False)
 
 SENSOR_SCHEMA = vol.Schema(
@@ -113,21 +114,22 @@ class APISpaceApiView(HomeAssistantView):
     @ha.callback
     def get(self, request):
         """Get SpaceAPI data."""
-        spaceapi = dict(request.app['hass'].data[DATA_SPACEAPI])
+        hass = request.app['hass']
+        spaceapi = dict(hass.data[DATA_SPACEAPI])
         is_sensors = spaceapi.get('sensors')
 
         location = {
             ATTR_ADDRESS: spaceapi[ATTR_LOCATION][CONF_ADDRESS],
-            ATTR_LATITUDE: request.app['hass'].config.latitude,
-            ATTR_LONGITUDE: request.app['hass'].config.longitude,
+            ATTR_LATITUDE: hass.config.latitude,
+            ATTR_LONGITUDE: hass.config.longitude,
         }
 
         state_entity = spaceapi['state'][ATTR_ENTITY_ID]
-        space_state = request.app['hass'].states.get(state_entity)
+        space_state = hass.states.get(state_entity)
 
         if space_state is not None:
             state = {
-                ATTR_OPEN: bool(space_state),
+                ATTR_OPEN: False if space_state.state == 'off' else True,
                 ATTR_LASTCHANGE:
                     dt_util.as_timestamp(space_state.last_updated),
             }
@@ -158,7 +160,7 @@ class APISpaceApiView(HomeAssistantView):
             for sensor_type in is_sensors:
                 sensors[sensor_type] = []
                 for sensor in spaceapi['sensors'][sensor_type]:
-                    sensor_state = request.app['hass'].states.get(sensor)
+                    sensor_state = hass.states.get(sensor)
                     unit = sensor_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
                     value = sensor_state.state
                     sensor_data = {
