@@ -319,7 +319,7 @@ class Entity(entity.Entity):
         self._endpoint = endpoint
         self._in_clusters = in_clusters
         self._out_clusters = out_clusters
-        self._state = ha_const.STATE_UNKNOWN
+        self._state = None
         self._unique_id = unique_id
 
         # Normally the entity itself is the listener. Sub-classes may set this
