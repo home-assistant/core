@@ -29,8 +29,9 @@ from homeassistant.const import (
     CONF_STATE_TEMPLATE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_VOLUME_UP,
-    SERVICE_SHUFFLE_SET, STATE_IDLE, STATE_OFF, STATE_ON, SERVICE_MEDIA_STOP)
+    SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_PAUSED,
+    SERVICE_SHUFFLE_SET, STATE_IDLE, STATE_OFF, STATE_ON, SERVICE_MEDIA_STOP,
+    STATE_UNAVAILABLE, STATE_PLAYING)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_call_from_config
 
@@ -45,7 +46,6 @@ CONF_SERVICE_DATA = 'service_data'
 ATTR_DATA = 'data'
 CONF_STATE = 'state'
 
-OFF_STATES = [STATE_IDLE, STATE_OFF]
 REQUIREMENTS = []
 _LOGGER = logging.getLogger(__name__)
 
@@ -505,9 +505,23 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     async def async_update(self):
         """Update state in HA."""
+        # Search for child in 'playing' state first
         for child_name in self._children:
             child_state = self.hass.states.get(child_name)
-            if child_state and child_state.state not in OFF_STATES:
+            if child_state and child_state.state == STATE_PLAYING:
                 self._child_state = child_state
                 return
+        # Search for child in 'paused' state if no playing one found
+        for child_name in self._children:
+            child_state = self.hass.states.get(child_name)
+            if child_state and child_state.state == STATE_PAUSED:
+                self._child_state = child_state
+                return
+        # Search for child in 'on' state if no playing or paused found
+        for child_name in self._children:
+            child_state = self.hass.states.get(child_name)
+            if child_state and child_state.state == STATE_ON:
+                self._child_state = child_state
+                return
+        # None playing, paused or on found
         self._child_state = None
