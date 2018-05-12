@@ -1,4 +1,9 @@
-"""Support for Xiaomi Gateway Lock."""
+"""
+Support for Xiaomi Gateway Lock.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/lock.xiaomi_aqara/
+"""
 import logging
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
@@ -18,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
 
-    for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
+    for gateway in hass.data[PY_XIAOMI_GATEWAY].gateways.values():
         for device in gateway.devices['lock']:
             model = device['model']
             if model == 'lock.aq1':
@@ -34,7 +39,7 @@ class XiaomiGatewayLock(LockDevice, XiaomiDevice):
         self._changed_by = 0
         self._verified_wrong_times = 0
 
-        XiaomiDevice.__init__(self, device, name, xiaomi_hub)
+        super().__init__(device, name, xiaomi_hub)
 
     @property
     def is_locked(self) -> bool:
@@ -49,8 +54,9 @@ class XiaomiGatewayLock(LockDevice, XiaomiDevice):
     @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes."""
-        attributes = {}
-        attributes[ATTR_VERIFIED_WRONG_TIMES] = self._verified_wrong_times
+        attributes = {
+            ATTR_VERIFIED_WRONG_TIMES: self._verified_wrong_times,
+        }
         return attributes
 
     def parse_data(self, data, raw_data):
