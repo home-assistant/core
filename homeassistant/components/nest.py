@@ -168,6 +168,19 @@ class NestDevice(object):
             self.local_structure = conf[CONF_STRUCTURE]
         _LOGGER.debug("Structures to include: %s", self.local_structure)
 
+    def structures(self):
+        """Generate a list of structures."""
+        try:
+            for structure in self.nest.structures:
+                if structure.name in self.local_structure:
+                    yield structure
+                else:
+                    _LOGGER.debug("Ignoring structure %s, not in %s",
+                                  structure.name, self.local_structure)
+        except socket.error:
+            _LOGGER.error(
+                "Connection error logging into the nest web service.")
+
     def thermostats(self):
         """Generate a list of thermostats and their location."""
         try:
@@ -190,8 +203,8 @@ class NestDevice(object):
                     for device in structure.smoke_co_alarms:
                         yield(structure, device)
                 else:
-                    _LOGGER.info("Ignoring structure %s, not in %s",
-                                 structure.name, self.local_structure)
+                    _LOGGER.debug("Ignoring structure %s, not in %s",
+                                  structure.name, self.local_structure)
         except socket.error:
             _LOGGER.error(
                 "Connection error logging into the nest web service.")
@@ -204,8 +217,8 @@ class NestDevice(object):
                     for device in structure.cameras:
                         yield(structure, device)
                 else:
-                    _LOGGER.info("Ignoring structure %s, not in %s",
-                                 structure.name, self.local_structure)
+                    _LOGGER.debug("Ignoring structure %s, not in %s",
+                                  structure.name, self.local_structure)
         except socket.error:
             _LOGGER.error(
                 "Connection error logging into the nest web service.")
