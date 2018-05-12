@@ -6,7 +6,6 @@ https://home-assistant.io/components/binary_sensor.bmw_connected_drive/
 """
 import asyncio
 import logging
-from collections import OrderedDict
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
@@ -99,8 +98,9 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the binary sensor."""
         vehicle_state = self._vehicle.state
-        result = OrderedDict()
-        result['car'] = self._vehicle.name
+        result = {
+            'car': self._vehicle.name
+        }
 
         if self._attribute == 'lids':
             for lid in vehicle_state.lids:
@@ -132,8 +132,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['connection_status'] = \
                 vehicle_state._attributes['connectionStatus']
 
-        # return result
-        return OrderedDict(sorted(result.items(), key=lambda t: t[0]))
+        return sorted(result.items())
 
     def update(self):
         """Read new state data from the library."""
