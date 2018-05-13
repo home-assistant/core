@@ -61,7 +61,7 @@ async def async_setup(hass, config):
 
     if HOME_ZONE not in hass.data[DOMAIN] and HOME_ZONE not in zone_entries:
         name = hass.config.location_name
-        if not name:
+        if name is None:
             name = HOME_ZONE
         zone = Zone(hass, name, hass.config.latitude, hass.config.longitude,
                     DEFAULT_RADIUS, ICON_HOME, False)
