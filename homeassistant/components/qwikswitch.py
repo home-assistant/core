@@ -195,8 +195,6 @@ async def async_setup(hass, config):
                 return
 
             if qspacket[QS_ID] in sensor_ids:
-                # Not a standard device in, component can handle packet
-                # i.e. sensors
                 _LOGGER.debug("Dispatch %s ((%s))", qspacket[QS_ID], qspacket)
                 hass.helpers.dispatcher.async_dispatcher_send(
                     qspacket[QS_ID], qspacket)
