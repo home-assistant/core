@@ -25,11 +25,14 @@ CONF_LIFETIME = "lifetime"
 CONF_CYCLES = "cycles"
 CONF_PRIORITY = "priority"
 
+AVAILABLE_PRIORITIES = ["info", "warning", "critical"]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ICON, default="i555"): cv.string,
     vol.Optional(CONF_LIFETIME, default=10): cv.positive_int,
     vol.Optional(CONF_CYCLES, default=1): cv.positive_int,
-    vol.Optional(CONF_PRIORITY, default="warning"): cv.string,
+    vol.Optional(CONF_PRIORITY, default="warning"):
+        vol.In(AVAILABLE_PRIORITIES)
 })
 
 
@@ -86,11 +89,11 @@ class LaMetricNotificationService(BaseNotificationService):
             if "cycles" in data:
                 cycles = data['cycles']
             if "priority" in data:
-                if data['priority'] in ["info", "warning", "critical"]:
+                if data['priority'] in AVAILABLE_PRIORITIES:
                     priority = data['priority']
                 else:
-                    _LOGGER.warning("Priority '%s' invalid, using default "
-                                    "'%s'" % (data['priority'], priority))
+                    _LOGGER.warning("Priority %s invalid, using default %s" %
+                                    (data['priority'], priority))
 
         text_frame = SimpleFrame(icon, message)
         _LOGGER.debug("Icon/Message/Cycles/Lifetime: %s, %s, %d, %d",
