@@ -4,9 +4,9 @@ from collections import namedtuple
 import pytest
 
 from homeassistant.components.fan import (
-    ATTR_DIRECTION, ATTR_OSCILLATING, ATTR_SPEED, ATTR_SPEED_LIST,
+    ATTR_DIRECTION, ATTR_OSCILLATING, ATTR_SPEED,
     DIRECTION_FORWARD, DIRECTION_REVERSE, DOMAIN, SERVICE_OSCILLATE,
-    SERVICE_SET_DIRECTION, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM,
+    SERVICE_SET_DIRECTION, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF,
     SUPPORT_DIRECTION, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
@@ -14,8 +14,6 @@ from homeassistant.const import (
 
 from tests.common import async_mock_service
 from tests.components.homekit.test_accessories import patch_debounce
-
-SPEED_MAX = 'max'
 
 
 @pytest.fixture(scope='module')
@@ -84,7 +82,6 @@ async def test_fan_speed(hass, cls):
 
     hass.states.async_set(entity_id, STATE_ON, {
         ATTR_SUPPORTED_FEATURES: SUPPORT_SET_SPEED,
-        ATTR_SPEED_LIST: [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SPEED_MAX],
         ATTR_SPEED: SPEED_LOW})
     await hass.async_block_till_done()
     acc = cls.fan(hass, 'Fan', entity_id, 2, None)
@@ -93,17 +90,21 @@ async def test_fan_speed(hass, cls):
 
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
-    assert acc.char_speed.value == 25
+    assert acc.char_speed.value == 33
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_MEDIUM})
     await hass.async_block_till_done()
-    assert acc.char_speed.value == 50
+    assert acc.char_speed.value == 66
+
+    hass.states.async_set(entity_id, STATE_OFF, {ATTR_SPEED: SPEED_OFF})
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 0
+
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_SPEED: 'invalid'})
+    await hass.async_block_till_done()
+    assert acc.char_speed.value == 0
 
     hass.states.async_set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_HIGH})
-    await hass.async_block_till_done()
-    assert acc.char_speed.value == 75
-
-    hass.states.async_set(entity_id, STATE_ON, {ATTR_SPEED: SPEED_MAX})
     await hass.async_block_till_done()
     assert acc.char_speed.value == 100
 
@@ -123,17 +124,15 @@ async def test_fan_speed(hass, cls):
     assert call_turn_on[1].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[1].data[ATTR_SPEED] == SPEED_MEDIUM
 
+    await hass.async_add_job(acc.char_active.client_update_value, 1)
+    await hass.async_block_till_done()
+    assert len(call_turn_on) == 2
+
     await hass.async_add_job(acc.char_speed.client_update_value, 75)
     await hass.async_block_till_done()
     assert call_turn_on[2]
     assert call_turn_on[2].data[ATTR_ENTITY_ID] == entity_id
     assert call_turn_on[2].data[ATTR_SPEED] == SPEED_HIGH
-
-    await hass.async_add_job(acc.char_speed.client_update_value, 100)
-    await hass.async_block_till_done()
-    assert call_turn_on[3]
-    assert call_turn_on[3].data[ATTR_ENTITY_ID] == entity_id
-    assert call_turn_on[3].data[ATTR_SPEED] == SPEED_MAX
 
     await hass.async_add_job(acc.char_speed.client_update_value, 0)
     await hass.async_block_till_done()

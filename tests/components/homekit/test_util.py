@@ -2,11 +2,14 @@
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.fan import (
+    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF)
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import HOMEKIT_NOTIFY_ID
 from homeassistant.components.homekit.util import (
     show_setup_message, dismiss_setup_message, convert_to_float,
-    temperature_to_homekit, temperature_to_states, density_to_air_quality)
+    temperature_to_homekit, temperature_to_states, density_to_air_quality,
+    fan_value_to_speed, fan_speed_to_value)
 from homeassistant.components.homekit.util import validate_entity_config \
     as vec
 from homeassistant.components.persistent_notification import (
@@ -63,6 +66,23 @@ def test_density_to_air_quality():
     assert density_to_air_quality(115) == 3
     assert density_to_air_quality(150) == 4
     assert density_to_air_quality(300) == 5
+
+
+def test_fan_value_to_speed():
+    """Test map fan speed values from HomeKit to Home Assistant."""
+    assert fan_value_to_speed(0) == SPEED_OFF
+    assert fan_value_to_speed(33) == SPEED_LOW
+    assert fan_value_to_speed(34) == SPEED_MEDIUM
+    assert fan_value_to_speed(75) == SPEED_HIGH
+
+
+def test_fan_speed_to_value():
+    """Test map fan speed values from Home Assistant to Home Kit."""
+    assert fan_speed_to_value(SPEED_OFF) == 0
+    assert fan_speed_to_value(SPEED_LOW) == 33
+    assert fan_speed_to_value(SPEED_MEDIUM) == 66
+    assert fan_speed_to_value(SPEED_HIGH) == 100
+    assert fan_speed_to_value('invalid') is None
 
 
 async def test_show_setup_msg(hass):

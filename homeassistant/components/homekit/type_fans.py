@@ -4,7 +4,7 @@ import logging
 from pyhap.const import CATEGORY_FAN
 
 from homeassistant.components.fan import (
-    ATTR_DIRECTION, ATTR_OSCILLATING, ATTR_SPEED, ATTR_SPEED_LIST,
+    ATTR_DIRECTION, ATTR_OSCILLATING, ATTR_SPEED,
     DIRECTION_FORWARD, DIRECTION_REVERSE, DOMAIN, SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION, SUPPORT_DIRECTION, SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED)
@@ -17,6 +17,7 @@ from .accessories import HomeAccessory, debounce
 from .const import (
     CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_ROTATION_SPEED,
     CHAR_SWING_MODE, SERV_FANV2)
+from .util import fan_speed_to_value, fan_value_to_speed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ class Fan(HomeAccessory):
                       CHAR_ROTATION_SPEED: False,
                       CHAR_ROTATION_DIRECTION: False,
                       CHAR_SWING_MODE: False}
+        self._state = 0
 
         self.chars = []
         features = self.hass.states.get(self.entity_id) \
@@ -51,13 +53,8 @@ class Fan(HomeAccessory):
             CHAR_ACTIVE, value=0, setter_callback=self.set_state)
 
         if CHAR_ROTATION_SPEED in self.chars:
-            self.speed_list = self.hass.states.get(self.entity_id) \
-                .attributes.get(ATTR_SPEED_LIST)
-            self.min_step = 100 / len(self.speed_list) if self.speed_list \
-                else 1
             self.char_speed = serv_fan.configure_char(
                 CHAR_ROTATION_SPEED, value=0,
-                properties={'minStep': self.min_step},
                 setter_callback=self.set_speed)
 
         if CHAR_ROTATION_DIRECTION in self.chars:
@@ -71,9 +68,11 @@ class Fan(HomeAccessory):
 
     def set_state(self, value):
         """Set state if call came from HomeKit."""
+        if self._state == value:
+            return
+
         _LOGGER.debug('%s: Set state to %d', self.entity_id, value)
         self._flag[CHAR_ACTIVE] = True
-
         service = SERVICE_TURN_ON if value == 1 else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.hass.services.call(DOMAIN, service, params)
@@ -84,9 +83,8 @@ class Fan(HomeAccessory):
         _LOGGER.debug('%s: Set speed to %d', self.entity_id, value)
         self._flag[CHAR_ROTATION_SPEED] = True
         if value != 0:
-            speed = self.speed_list[int(round(value / self.min_step)) - 1]
             params = {ATTR_ENTITY_ID: self.entity_id,
-                      ATTR_SPEED: speed}
+                      ATTR_SPEED: fan_value_to_speed(value)}
             self.hass.services.call(DOMAIN, SERVICE_TURN_ON, params)
         else:
             params = {ATTR_ENTITY_ID: self.entity_id}
@@ -115,18 +113,18 @@ class Fan(HomeAccessory):
         # Handle State
         state = new_state.state
         if state in (STATE_ON, STATE_OFF):
-            hk_state = 1 if state == STATE_ON else 0
+            self._state = 1 if state == STATE_ON else 0
             if not self._flag[CHAR_ACTIVE] and \
-                    self.char_active.value != hk_state:
-                self.char_active.set_value(hk_state)
+                    self.char_active.value != self._state:
+                self.char_active.set_value(self._state)
             self._flag[CHAR_ACTIVE] = False
 
         # Handle Speed
         if CHAR_ROTATION_SPEED in self.chars:
             speed = new_state.attributes.get(ATTR_SPEED)
+            hk_speed = fan_speed_to_value(speed)
             if not self._flag[CHAR_ROTATION_SPEED] and \
-                    len(self.speed_list) > 1 and isinstance(speed, str):
-                hk_speed = (self.speed_list.index(speed) + 1) * self.min_step
+                    isinstance(hk_speed, int):
                 if self.char_speed.value != hk_speed:
                     self.char_speed.set_value(hk_speed)
             self._flag[CHAR_ROTATION_SPEED] = False
