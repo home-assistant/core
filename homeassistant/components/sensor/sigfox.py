@@ -66,7 +66,7 @@ class SigfoxAPI(object):
             self._devices = self.get_devices(device_types)
 
     def check_credentials(self):
-        """"Check API credentials are valid."""
+        """Check API credentials are valid."""
         url = urljoin(API_URL, 'devicetypes')
         response = requests.get(url, auth=self._auth, timeout=10)
         if response.status_code != 200:
