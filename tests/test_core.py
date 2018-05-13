@@ -375,7 +375,7 @@ class TestEventBus(unittest.TestCase):
         self.assertEqual(1, len(runs))
 
     def test_thread_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test thread event listener."""
         thread_calls = []
 
         def thread_listener(event):
@@ -387,7 +387,7 @@ class TestEventBus(unittest.TestCase):
         assert len(thread_calls) == 1
 
     def test_callback_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test callback event listener."""
         callback_calls = []
 
         @ha.callback
@@ -400,7 +400,7 @@ class TestEventBus(unittest.TestCase):
         assert len(callback_calls) == 1
 
     def test_coroutine_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test coroutine event listener."""
         coroutine_calls = []
 
         @asyncio.coroutine

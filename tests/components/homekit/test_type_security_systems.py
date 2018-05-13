@@ -96,7 +96,7 @@ async def test_switch_set_state(hass):
 
 @pytest.mark.parametrize('config', [{}, {ATTR_CODE: None}])
 async def test_no_alarm_code(hass, config):
-    """Test accessory if security_system doesn't require a alarm_code."""
+    """Test accessory if security_system doesn't require an alarm_code."""
     entity_id = 'alarm_control_panel.test'
 
     hass.states.async_set(entity_id, None)

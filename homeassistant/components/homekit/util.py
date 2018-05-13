@@ -21,7 +21,7 @@ def validate_entity_config(values):
         params = {}
         if not isinstance(config, dict):
             raise vol.Invalid('The configuration for "{}" must be '
-                              ' an dictionary.'.format(entity))
+                              ' a dictionary.'.format(entity))
 
         for key in (CONF_NAME, ):
             value = config.get(key, -1)
