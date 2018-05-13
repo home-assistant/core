@@ -17,15 +17,15 @@ from tests.components.homekit.test_accessories import patch_debounce
 
 
 @pytest.fixture(scope='module')
-def cls(request):
+def cls():
     """Patch debounce decorator during import of type_fans."""
     patcher = patch_debounce()
     patcher.start()
     _import = __import__('homeassistant.components.homekit.type_fans',
                          fromlist=['Fan'])
-    request.addfinalizer(patcher.stop)
     patcher_tuple = namedtuple('Cls', ['fan'])
-    return patcher_tuple(fan=_import.Fan)
+    yield patcher_tuple(fan=_import.Fan)
+    patcher.stop()
 
 
 async def test_fan_basic(hass, cls):
