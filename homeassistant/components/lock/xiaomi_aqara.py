@@ -24,7 +24,8 @@ ATTR_VERIFIED_WRONG_TIMES = 'verified_wrong_times'
 UNLOCK_MAINTAIN_TIME = 5
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
 
@@ -33,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             model = device['model']
             if model == 'lock.aq1':
                 devices.append(XiaomiAqaraLock(device, 'Lock', gateway))
-    add_devices(devices)
+    async_add_devices(devices)
 
 
 class XiaomiAqaraLock(LockDevice, XiaomiDevice):
