@@ -31,7 +31,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
         self.hass.stop()
 
     def test_setup(self):
-        """"Test the setup."""
+        """Test the setup."""
         config = {
             'binary_sensor': {
                 'platform': 'template',
@@ -49,7 +49,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
                 self.hass, 'binary_sensor', config)
 
     def test_setup_no_sensors(self):
-        """"Test setup with no sensors."""
+        """Test setup with no sensors."""
         with assert_setup_component(0):
             assert setup.setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
@@ -58,7 +58,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             })
 
     def test_setup_invalid_device(self):
-        """"Test the setup with invalid devices."""
+        """Test the setup with invalid devices."""
         with assert_setup_component(0):
             assert setup.setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
@@ -70,7 +70,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             })
 
     def test_setup_invalid_device_class(self):
-        """"Test setup with invalid sensor class."""
+        """Test setup with invalid sensor class."""
         with assert_setup_component(0):
             assert setup.setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
@@ -85,7 +85,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             })
 
     def test_setup_invalid_missing_template(self):
-        """"Test setup with invalid and missing template."""
+        """Test setup with invalid and missing template."""
         with assert_setup_component(0):
             assert setup.setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
@@ -161,7 +161,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
         assert state.attributes['entity_picture'] == '/local/sensor.png'
 
     def test_attributes(self):
-        """"Test the attributes."""
+        """Test the attributes."""
         vs = run_callback_threadsafe(
             self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',
@@ -182,7 +182,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
         self.assertTrue(vs.is_on)
 
     def test_event(self):
-        """"Test the event."""
+        """Test the event."""
         config = {
             'binary_sensor': {
                 'platform': 'template',
@@ -214,7 +214,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
 
     @mock.patch('homeassistant.helpers.template.Template.render')
     def test_update_template_error(self, mock_render):
-        """"Test the template update error."""
+        """Test the template update error."""
         vs = run_callback_threadsafe(
             self.hass.loop, template.BinarySensorTemplate,
             self.hass, 'parent', 'Parent', 'motion',

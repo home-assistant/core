@@ -87,7 +87,7 @@ class SimulatedSensor(Entity):
         self._state = None
 
     def time_delta(self):
-        """"Return the time delta."""
+        """Return the time delta."""
         dt0 = self._start_time
         dt1 = dt_util.utcnow()
         return dt1 - dt0
