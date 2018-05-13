@@ -414,10 +414,10 @@ class GenericThermostat(ClimateDevice):
         return {ATTR_ENTITY_ID: self._get_current_entity_id()}
 
     def _get_current_entity_id(self):
-        op = self._current_operation
-        if op == STATE_OFF:
-            op = self._previous_operation
-        return self.ac_entity_id if op == STATE_COOL \
+        operation = self._current_operation
+        if operation == STATE_OFF:
+            operation = self._previous_operation
+        return self.ac_entity_id if operation == STATE_COOL \
             else self.heater_entity_id
 
     @callback

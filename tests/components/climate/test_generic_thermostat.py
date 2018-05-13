@@ -948,8 +948,9 @@ def test_custom_setup_params(hass):
 def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(hass, (
-        State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20",
-                                               climate.ATTR_OPERATION_MODE: "off", ATTR_AWAY_MODE: "on"}),
+        State('climate.test_thermostat', '0',
+              {ATTR_TEMPERATURE: "20",
+               climate.ATTR_OPERATION_MODE: "off", ATTR_AWAY_MODE: "on"}),
     ))
 
     hass.state = CoreState.starting
@@ -975,8 +976,9 @@ def test_no_restore_state(hass):
     Allows for graceful reboot.
     """
     mock_restore_cache(hass, (
-        State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20",
-                                               climate.ATTR_OPERATION_MODE: "off", ATTR_AWAY_MODE: "on"}),
+        State('climate.test_thermostat', '0',
+              {ATTR_TEMPERATURE: "20",
+               climate.ATTR_OPERATION_MODE: "off", ATTR_AWAY_MODE: "on"}),
     ))
 
     hass.state = CoreState.starting
