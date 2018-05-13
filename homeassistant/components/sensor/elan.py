@@ -90,22 +90,22 @@ class ElanThermostat(Entity):
         self._on = None
         self._locked = None
         self._units = None
-        if var is 'temperature':
+        if var == 'temperature':
             self._name = info['device info']['label'] + '-T'
             self._var = var
             self._units = TEMP_CELSIUS
 
-        if var is 'temperature OUT':
+        if var == 'temperature OUT':
             self._name = info['device info']['label'] + '-T OUT'
             self._var = var
             self._units = TEMP_CELSIUS
 
-        if var is 'temperature IN':
+        if var == 'temperature IN':
             self._name = info['device info']['label'] + '-T IN'
             self._var = var
             self._units = TEMP_CELSIUS
 
-        if var is 'on':
+        if var == 'on':
             self._name = info['device info']['label'] + '-ON'
             self._var = var
 
@@ -166,21 +166,21 @@ class ElanThermostat(Entity):
         if 'locked' in state:
             self._locked = state['locked']
 
-        if self._var is 'temperature':
+        if self._var == 'temperature':
             if self._temperature_in and (self._temperature_in > -99):
                 self._state = self._temperature_in + self._temperature_offset
             if self._temperature_out and (self._temperature_out > -99):
                 self._state = self._temperature_out + self._temperature_offset
 
-        if self._var is 'temperature OUT':
+        if self._var == 'temperature OUT':
             if self._temperature_out and (self._temperature_out > -99):
                 self._state = self._temperature_out + self._temperature_offset
 
-        if self._var is 'temperature IN':
+        if self._var == 'temperature IN':
             if self._temperature_in and (self._temperature_in > -99):
                 self._state = self._temperature_in + self._temperature_offset
 
-        if self._var is 'on':
+        if self._var == 'on':
             self._state = self._on
 
         _LOGGER.debug(self._state)
