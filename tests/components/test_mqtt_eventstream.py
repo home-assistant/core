@@ -44,11 +44,11 @@ class TestMqttEventStream(object):
             eventstream.DOMAIN: config})
 
     def test_setup_succeeds(self):
-        """"Test the success of the setup."""
+        """Test the success of the setup."""
         assert self.add_eventstream()
 
     def test_setup_with_pub(self):
-        """"Test the setup with subscription."""
+        """Test the setup with subscription."""
         # Should start off with no listeners for all events
         assert self.hass.bus.listeners.get('*') is None
 
@@ -60,7 +60,7 @@ class TestMqttEventStream(object):
 
     @patch('homeassistant.components.mqtt.async_subscribe')
     def test_subscribe(self, mock_sub):
-        """"Test the subscription."""
+        """Test the subscription."""
         sub_topic = 'foo'
         assert self.add_eventstream(sub_topic=sub_topic)
         self.hass.block_till_done()
@@ -71,7 +71,7 @@ class TestMqttEventStream(object):
     @patch('homeassistant.components.mqtt.async_publish')
     @patch('homeassistant.core.dt_util.utcnow')
     def test_state_changed_event_sends_message(self, mock_utcnow, mock_pub):
-        """"Test the sending of a new message if event changed."""
+        """Test the sending of a new message if event changed."""
         now = dt_util.as_utc(dt_util.now())
         e_id = 'fake.entity'
         pub_topic = 'bar'
@@ -113,7 +113,7 @@ class TestMqttEventStream(object):
 
     @patch('homeassistant.components.mqtt.async_publish')
     def test_time_event_does_not_send_message(self, mock_pub):
-        """"Test the sending of a new message if time event."""
+        """Test the sending of a new message if time event."""
         assert self.add_eventstream(pub_topic='bar')
         self.hass.block_till_done()
 
@@ -125,7 +125,7 @@ class TestMqttEventStream(object):
         assert not mock_pub.called
 
     def test_receiving_remote_event_fires_hass_event(self):
-        """"Test the receiving of the remotely fired event."""
+        """Test the receiving of the remotely fired event."""
         sub_topic = 'foo'
         assert self.add_eventstream(sub_topic=sub_topic)
         self.hass.block_till_done()
@@ -150,7 +150,7 @@ class TestMqttEventStream(object):
 
     @patch('homeassistant.components.mqtt.async_publish')
     def test_ignored_event_doesnt_send_over_stream(self, mock_pub):
-        """"Test the ignoring of sending events if defined."""
+        """Test the ignoring of sending events if defined."""
         assert self.add_eventstream(pub_topic='bar',
                                     ignore_event=['state_changed'])
         self.hass.block_till_done()
@@ -177,7 +177,7 @@ class TestMqttEventStream(object):
 
     @patch('homeassistant.components.mqtt.async_publish')
     def test_wrong_ignored_event_sends_over_stream(self, mock_pub):
-        """"Test the ignoring of sending events if defined."""
+        """Test the ignoring of sending events if defined."""
         assert self.add_eventstream(pub_topic='bar',
                                     ignore_event=['statee_changed'])
         self.hass.block_till_done()

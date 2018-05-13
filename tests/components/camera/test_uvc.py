@@ -26,7 +26,7 @@ class TestUVCSetup(unittest.TestCase):
     @mock.patch('uvcclient.nvr.UVCRemote')
     @mock.patch.object(uvc, 'UnifiVideoCamera')
     def test_setup_full_config(self, mock_uvc, mock_remote):
-        """"Test the setup with full configuration."""
+        """Test the setup with full configuration."""
         config = {
             'platform': 'uvc',
             'nvr': 'foo',
@@ -41,7 +41,7 @@ class TestUVCSetup(unittest.TestCase):
         ]
 
         def fake_get_camera(uuid):
-            """"Create a fake camera."""
+            """Create a fake camera."""
             if uuid == 'id3':
                 return {'model': 'airCam'}
             else:
@@ -65,7 +65,7 @@ class TestUVCSetup(unittest.TestCase):
     @mock.patch('uvcclient.nvr.UVCRemote')
     @mock.patch.object(uvc, 'UnifiVideoCamera')
     def test_setup_partial_config(self, mock_uvc, mock_remote):
-        """"Test the setup with partial configuration."""
+        """Test the setup with partial configuration."""
         config = {
             'platform': 'uvc',
             'nvr': 'foo',
@@ -152,7 +152,7 @@ class TestUVC(unittest.TestCase):
     """Test class for UVC."""
 
     def setup_method(self, method):
-        """"Setup the mock camera."""
+        """Setup the mock camera."""
         self.nvr = mock.MagicMock()
         self.uuid = 'uuid'
         self.name = 'name'
@@ -171,7 +171,7 @@ class TestUVC(unittest.TestCase):
         self.nvr.server_version = (3, 2, 0)
 
     def test_properties(self):
-        """"Test the properties."""
+        """Test the properties."""
         self.assertEqual(self.name, self.uvc.name)
         self.assertTrue(self.uvc.is_recording)
         self.assertEqual('Ubiquiti', self.uvc.brand)
@@ -180,7 +180,7 @@ class TestUVC(unittest.TestCase):
     @mock.patch('uvcclient.store.get_info_store')
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
     def test_login(self, mock_camera, mock_store):
-        """"Test the login."""
+        """Test the login."""
         self.uvc._login()
         self.assertEqual(mock_camera.call_count, 1)
         self.assertEqual(
@@ -205,7 +205,7 @@ class TestUVC(unittest.TestCase):
     @mock.patch('uvcclient.store.get_info_store')
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
     def test_login_tries_both_addrs_and_caches(self, mock_camera, mock_store):
-        """"Test the login tries."""
+        """Test the login tries."""
         responses = [0]
 
         def fake_login(*a):
@@ -234,13 +234,13 @@ class TestUVC(unittest.TestCase):
     @mock.patch('uvcclient.store.get_info_store')
     @mock.patch('uvcclient.camera.UVCCameraClientV320')
     def test_login_fails_both_properly(self, mock_camera, mock_store):
-        """"Test if login fails properly."""
+        """Test if login fails properly."""
         mock_camera.return_value.login.side_effect = socket.error
         self.assertEqual(None, self.uvc._login())
         self.assertEqual(None, self.uvc._connect_addr)
 
     def test_camera_image_tries_login_bails_on_failure(self):
-        """"Test retrieving failure."""
+        """Test retrieving failure."""
         with mock.patch.object(self.uvc, '_login') as mock_login:
             mock_login.return_value = False
             self.assertEqual(None, self.uvc.camera_image())
@@ -248,19 +248,19 @@ class TestUVC(unittest.TestCase):
             self.assertEqual(mock_login.call_args, mock.call())
 
     def test_camera_image_logged_in(self):
-        """"Test the login state."""
+        """Test the login state."""
         self.uvc._camera = mock.MagicMock()
         self.assertEqual(self.uvc._camera.get_snapshot.return_value,
                          self.uvc.camera_image())
 
     def test_camera_image_error(self):
-        """"Test the camera image error."""
+        """Test the camera image error."""
         self.uvc._camera = mock.MagicMock()
         self.uvc._camera.get_snapshot.side_effect = camera.CameraConnectError
         self.assertEqual(None, self.uvc.camera_image())
 
     def test_camera_image_reauths(self):
-        """"Test the re-authentication."""
+        """Test the re-authentication."""
         responses = [0]
 
         def fake_snapshot():
@@ -281,7 +281,7 @@ class TestUVC(unittest.TestCase):
             self.assertEqual([], responses)
 
     def test_camera_image_reauths_only_once(self):
-        """"Test if the re-authentication only happens once."""
+        """Test if the re-authentication only happens once."""
         self.uvc._camera = mock.MagicMock()
         self.uvc._camera.get_snapshot.side_effect = camera.CameraAuthError
         with mock.patch.object(self.uvc, '_login') as mock_login:

@@ -43,7 +43,7 @@ def setup(hass, config):
 
 
 def create_event_handler(patterns, hass):
-    """"Return the Watchdog EventHandler object."""
+    """Return the Watchdog EventHandler object."""
     from watchdog.events import PatternMatchingEventHandler
 
     class EventHandler(PatternMatchingEventHandler):
