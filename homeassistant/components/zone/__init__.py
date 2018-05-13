@@ -57,10 +57,12 @@ async def async_setup(hass, config):
             zone.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, entry[CONF_NAME], None, hass)
             hass.async_add_job(zone.async_update_ha_state())
-            hass.data[DOMAIN][name] = zone
+            hass.data[DOMAIN][slugify(name)] = zone
 
     if HOME_ZONE not in hass.data[DOMAIN] and HOME_ZONE not in zone_entries:
         name = hass.config.location_name
+        if not name:
+            name = HOME_ZONE
         zone = Zone(hass, name, hass.config.latitude, hass.config.longitude,
                     DEFAULT_RADIUS, ICON_HOME, False)
         zone.entity_id = ENTITY_ID_HOME
