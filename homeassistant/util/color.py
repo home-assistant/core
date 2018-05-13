@@ -173,7 +173,7 @@ def color_name_to_rgb(color_name):
     return hex_value
 
 
-# pylint: disable=invalid-name, invalid-sequence-index
+# pylint: disable=invalid-name
 def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float]:
     """Convert from RGB color to XY color."""
     return color_RGB_to_xy_brightness(iR, iG, iB)[:2]
@@ -182,7 +182,7 @@ def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float]:
 # Taken from:
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 # License: Code is given as is. Use at your own risk and discretion.
-# pylint: disable=invalid-name, invalid-sequence-index
+# pylint: disable=invalid-name
 def color_RGB_to_xy_brightness(
         iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
     """Convert from RGB color to XY color."""
@@ -224,7 +224,6 @@ def color_xy_to_RGB(vX: float, vY: float) -> Tuple[int, int, int]:
 
 # Converted to Python from Obj-C, original source from:
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
-# pylint: disable=invalid-sequence-index
 def color_xy_brightness_to_RGB(vX: float, vY: float,
                                ibrightness: int) -> Tuple[int, int, int]:
     """Convert from XYZ to RGB."""
@@ -265,12 +264,11 @@ def color_xy_brightness_to_RGB(vX: float, vY: float,
     return (ir, ig, ib)
 
 
-# pylint: disable=invalid-sequence-index
 def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> Tuple[int, int, int]:
     """Convert a hsb into its rgb representation."""
     if fS == 0:
-        fV = fB * 255
-        return (fV, fV, fV)
+        fV = int(fB * 255)
+        return fV, fV, fV
 
     r = g = b = 0
     h = fH / 60
@@ -307,7 +305,6 @@ def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> Tuple[int, int, int]:
     return (r, g, b)
 
 
-# pylint: disable=invalid-sequence-index
 def color_RGB_to_hsv(iR: int, iG: int, iB: int) -> Tuple[float, float, float]:
     """Convert an rgb color to its hsv representation.
 
@@ -319,13 +316,11 @@ def color_RGB_to_hsv(iR: int, iG: int, iB: int) -> Tuple[float, float, float]:
     return round(fHSV[0]*360, 3), round(fHSV[1]*100, 3), round(fHSV[2]*100, 3)
 
 
-# pylint: disable=invalid-sequence-index
 def color_RGB_to_hs(iR: int, iG: int, iB: int) -> Tuple[float, float]:
     """Convert an rgb color to its hs representation."""
     return color_RGB_to_hsv(iR, iG, iB)[:2]
 
 
-# pylint: disable=invalid-sequence-index
 def color_hsv_to_RGB(iH: float, iS: float, iV: float) -> Tuple[int, int, int]:
     """Convert an hsv color into its rgb representation.
 
@@ -337,26 +332,22 @@ def color_hsv_to_RGB(iH: float, iS: float, iV: float) -> Tuple[int, int, int]:
     return (int(fRGB[0]*255), int(fRGB[1]*255), int(fRGB[2]*255))
 
 
-# pylint: disable=invalid-sequence-index
 def color_hs_to_RGB(iH: float, iS: float) -> Tuple[int, int, int]:
     """Convert an hsv color into its rgb representation."""
     return color_hsv_to_RGB(iH, iS, 100)
 
 
-# pylint: disable=invalid-sequence-index
 def color_xy_to_hs(vX: float, vY: float) -> Tuple[float, float]:
     """Convert an xy color to its hs representation."""
     h, s, _ = color_RGB_to_hsv(*color_xy_to_RGB(vX, vY))
     return (h, s)
 
 
-# pylint: disable=invalid-sequence-index
 def color_hs_to_xy(iH: float, iS: float) -> Tuple[float, float]:
     """Convert an hs color to its xy representation."""
     return color_RGB_to_xy(*color_hs_to_RGB(iH, iS))
 
 
-# pylint: disable=invalid-sequence-index
 def _match_max_scale(input_colors: Tuple[int, ...],
                      output_colors: Tuple[int, ...]) -> Tuple[int, ...]:
     """Match the maximum value of the output to the input."""

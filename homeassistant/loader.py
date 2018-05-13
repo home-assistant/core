@@ -17,14 +17,14 @@ import sys
 from types import ModuleType
 
 # pylint: disable=unused-import
-from typing import Dict, List, Optional, Sequence, Set  # NOQA
+from typing import Dict, List, Optional, Sequence, Set, TYPE_CHECKING  # NOQA
 
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
 
 # Typing imports that create a circular dependency
 # pylint: disable=using-constant-test,unused-import
-if False:
+if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant  # NOQA
 
 PREPARED = False

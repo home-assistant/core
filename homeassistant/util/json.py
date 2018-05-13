@@ -8,10 +8,10 @@ from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 
-_UNDEFINED = object()
+_UNDEFINED = -1
 
 
-def load_json(filename: str, default: Union[List, Dict] = _UNDEFINED) \
+def load_json(filename: str, default: Union[List, Dict, int] = _UNDEFINED) \
         -> Union[List, Dict]:
     """Load JSON data from a file and return as dict or list.
 
@@ -29,7 +29,7 @@ def load_json(filename: str, default: Union[List, Dict] = _UNDEFINED) \
     except OSError as error:
         _LOGGER.exception('JSON file reading failed: %s', filename)
         raise HomeAssistantError(error)
-    return {} if default is _UNDEFINED else default
+    return {} if isinstance(default, int) else default
 
 
 def save_json(filename: str, data: Union[List, Dict]):
@@ -38,9 +38,9 @@ def save_json(filename: str, data: Union[List, Dict]):
     Returns True on success.
     """
     try:
-        data = json.dumps(data, sort_keys=True, indent=4)
+        json_data = json.dumps(data, sort_keys=True, indent=4)
         with open(filename, 'w', encoding='utf-8') as fdesc:
-            fdesc.write(data)
+            fdesc.write(json_data)
             return True
     except TypeError as error:
         _LOGGER.exception('Failed to serialize to JSON: %s',
@@ -50,4 +50,3 @@ def save_json(filename: str, data: Union[List, Dict]):
         _LOGGER.exception('Saving JSON file failed: %s',
                           filename)
         raise HomeAssistantError(error)
-    return False
