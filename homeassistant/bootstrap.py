@@ -163,7 +163,8 @@ def from_config_file(config_path: str,
                      skip_pip: bool = True,
                      log_rotate_days: Any = None,
                      log_file: Any = None,
-                     log_no_color: bool = False):
+                     log_no_color: bool = False)\
+        -> Optional[core.HomeAssistant]:
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter if given,
@@ -188,7 +189,8 @@ async def async_from_config_file(config_path: str,
                                  skip_pip: bool = True,
                                  log_rotate_days: Any = None,
                                  log_file: Any = None,
-                                 log_no_color: bool = False):
+                                 log_no_color: bool = False)\
+        -> Optional[core.HomeAssistant]:
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter.
@@ -211,9 +213,9 @@ async def async_from_config_file(config_path: str,
     finally:
         clear_secret_cache()
 
-    hass = await async_from_config_dict(
+    updated_hass = await async_from_config_dict(
         config_dict, hass, enable_log=False, skip_pip=skip_pip)
-    return hass
+    return updated_hass
 
 
 @core.callback

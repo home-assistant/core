@@ -38,8 +38,8 @@ def test_async_add_job_schedule_callback():
     job = MagicMock()
 
     ha.HomeAssistant.async_add_job(hass, ha.callback(job))
-    assert len(hass.loop.call_soon.mock_calls) == 1
-    assert len(hass.loop.create_task.mock_calls) == 0
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 1
     assert len(hass.add_job.mock_calls) == 0
 
 
@@ -215,6 +215,8 @@ class TestHomeAssistant(unittest.TestCase):
 
         run_coroutine_threadsafe(
             wait_finish_callback(), self.hass.loop).result()
+
+        assert len(self.hass._pending_tasks) == 2
 
         self.hass.block_till_done()
 

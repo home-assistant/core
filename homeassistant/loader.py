@@ -22,7 +22,7 @@ from typing import Dict, List, Optional, Sequence, Set  # NOQA
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
 
-# Typing imports
+# Typing imports that create a circular dependency
 # pylint: disable=using-constant-test,unused-import
 if False:
     from homeassistant.core import HomeAssistant  # NOQA
@@ -39,7 +39,8 @@ PATH_CUSTOM_COMPONENTS = 'custom_components'
 PACKAGE_COMPONENTS = 'homeassistant.components'
 
 
-def set_component(hass, comp_name: str, component: ModuleType) -> None:
+def set_component(hass,  # type: HomeAssistant
+                  comp_name: str, component: Optional[ModuleType]) -> None:
     """Set a component in the cache.
 
     Async friendly.

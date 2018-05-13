@@ -205,7 +205,7 @@ class HomeAssistant(object):
     def async_add_job(
             self,
             target: Callable[..., Any],
-            *args: Any) -> Optional[asyncio.tasks.Task]:
+            *args: Any) -> asyncio.tasks.Task:
         """Add a job from within the eventloop.
 
         This method must be run in the event loop.
@@ -218,7 +218,10 @@ class HomeAssistant(object):
         if asyncio.iscoroutine(target):
             task = self.loop.create_task(target)
         elif is_callback(target):
-            self.loop.call_soon(target, *args)
+            async def wrapper() -> Any:
+                """Wrapper coroutine around a callback."""
+                return target(*args)
+            task = self.loop.create_task(wrapper())
         elif asyncio.iscoroutinefunction(target):
             task = self.loop.create_task(target(*args))
         else:
