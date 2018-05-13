@@ -21,7 +21,7 @@ VERIFIED_WRONG_KEY = 'verified_wrong'
 
 ATTR_VERIFIED_WRONG_TIMES = 'verified_wrong_times'
 
-UNLOCK_MAINTAIN_TIME_S = 5
+UNLOCK_MAINTAIN_TIME = 5
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -84,7 +84,7 @@ class XiaomiAqaraLock(LockDevice, XiaomiDevice):
                 self._changed_by = int(value)
                 self._verified_wrong_times = 0
                 self._state = STATE_UNLOCKED
-                async_call_later(self.hass, UNLOCK_MAINTAIN_TIME_S,
+                async_call_later(self.hass, UNLOCK_MAINTAIN_TIME,
                                  self.clear_unlock_state)
                 return True
 
