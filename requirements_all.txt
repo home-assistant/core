@@ -783,6 +783,9 @@ pyfritzhome==0.3.7
 # homeassistant.components.ifttt
 pyfttt==0.3
 
+# homeassistant.components.sensor.skybeacon
+pygatt==3.2.0
+
 # homeassistant.components.cover.gogogate2
 pygogogate2==0.1.1
 
