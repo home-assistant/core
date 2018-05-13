@@ -4,10 +4,13 @@ Support for Xiaomi Aqara Lock.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.xiaomi_aqara/
 """
+import asyncio
 import logging
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
 from homeassistant.components.lock import LockDevice
+from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
+from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,6 +20,8 @@ CARD_KEY = 'card_verified'
 VERIFIED_WRONG_KEY = 'verified_wrong'
 
 ATTR_VERIFIED_WRONG_TIMES = 'verified_wrong_times'
+
+UNLOCK_MAINTAIN_TIME_S = 5
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -44,7 +49,8 @@ class XiaomiAqaraLock(LockDevice, XiaomiDevice):
     @property
     def is_locked(self) -> bool:
         """Return true if lock is locked."""
-        return True
+        if self._state is not None:
+            return self._state == STATE_LOCKED
 
     @property
     def changed_by(self) -> int:
@@ -59,6 +65,12 @@ class XiaomiAqaraLock(LockDevice, XiaomiDevice):
         }
         return attributes
 
+    @asyncio.coroutine
+    def clear_unlock_state(self, _):
+        """Clear unlock state automatically."""
+        self._state = STATE_LOCKED
+        self.async_schedule_update_ha_state()
+
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         value = data.get(VERIFIED_WRONG_KEY)
@@ -71,6 +83,9 @@ class XiaomiAqaraLock(LockDevice, XiaomiDevice):
             if value is not None:
                 self._changed_by = int(value)
                 self._verified_wrong_times = 0
+                self._state = STATE_UNLOCKED
+                async_call_later(self.hass, UNLOCK_MAINTAIN_TIME_S,
+                                 self.clear_unlock_state)
                 return True
 
         return False
