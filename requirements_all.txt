@@ -258,7 +258,7 @@ discogs_client==2.2.1
 discord.py==0.16.12
 
 # homeassistant.components.updater
-distro==1.2.0
+distro==1.3.0
 
 # homeassistant.components.switch.digitalloggers
 dlipower==0.7.165
