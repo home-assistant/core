@@ -79,14 +79,12 @@ class BMWConnectedDriveSensor(Entity):
         charging_state = vehicle_state.charging_status in \
             [ChargingState.CHARGING]
 
-        for key, value in ATTR_TO_HA.items():
-            if self._attribute == key:
-                return value[0]
         if self._attribute == 'charging_level_hv':
             return icon_for_battery_level(
                 battery_level=vehicle_state.charging_level_hv,
                 charging=charging_state)
-        return None
+        icon, _ = ATTR_TO_HA.get(self._attribute, [None, None])
+        return icon
 
     @property
     def state(self):
@@ -100,10 +98,8 @@ class BMWConnectedDriveSensor(Entity):
     @property
     def unit_of_measurement(self) -> str:
         """Get the unit of measurement."""
-        for key, value in ATTR_TO_HA.items():
-            if self._attribute == key:
-                return value[1]
-        return None
+        _, unit = ATTR_TO_HA.get(self._attribute, [None, None])
+        return unit
 
     @property
     def device_state_attributes(self):

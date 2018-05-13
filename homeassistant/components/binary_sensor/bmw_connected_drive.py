@@ -170,8 +170,9 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             self._state = (vehicle_state._attributes['connectionStatus'] ==
                            'CONNECTED')
 
-    def _format_cbs_report(self, report):
-        result = dict()
+    @staticmethod
+    def _format_cbs_report(report):
+        result = {}
         service_type = report.service_type.lower().replace('_', ' ')
         result['{} status'.format(service_type)] = report.state.value
         if report.due_date is not None:
