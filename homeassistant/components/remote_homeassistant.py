@@ -6,9 +6,9 @@ https://home-assistant.io/components/remote_homeassistant/
 """
 
 import logging
-import json
 import copy
 import asyncio
+import aiohttp
 
 import voluptuous as vol
 
@@ -17,16 +17,14 @@ from homeassistant.core import EventOrigin, split_entity_id
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.const import (CONF_HOST, CONF_PORT, EVENT_CALL_SERVICE,
                                  EVENT_HOMEASSISTANT_STOP,
-                                 EVENT_STATE_CHANGED, EVENT_SERVICE_REGISTERED)
-from homeassistant.remote import JSONEncoder
+                                 EVENT_STATE_CHANGED, EVENT_SERVICE_REGISTERED, CONF_URL)
 from homeassistant.config import DATA_CUSTOMIZE
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['websockets==4.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SLAVES = 'slaves'
+CONF_INSTANCES = 'instances'
 CONF_SECURE = 'secure'
 CONF_API_PASSWORD = 'api_password'
 CONF_SUBSCRIBE_EVENTS = 'subscribe_events'
@@ -38,7 +36,7 @@ DEFAULT_SUBSCRIBED_EVENTS = [EVENT_STATE_CHANGED,
                              EVENT_SERVICE_REGISTERED]
 DEFAULT_ENTITY_PREFIX = ''
 
-SLAVES_SCHEMA = vol.Schema({
+INSTANCES_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=8123): cv.port,
     vol.Optional(CONF_SECURE, default=False): cv.boolean,
@@ -50,7 +48,7 @@ SLAVES_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_SLAVES): [SLAVES_SCHEMA],
+        vol.Required(CONF_INSTANCES): [INSTANCES_SCHEMA],
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -59,8 +57,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the remote_homeassistant component."""
     conf = config.get(DOMAIN)
 
-    for slave in conf.get(CONF_SLAVES):
-        connection = RemoteConnection(hass, slave)
+    for instance in conf.get(CONF_INSTANCES):
+        connection = RemoteConnection(hass, instance)
         asyncio.ensure_future(connection.async_connect())
 
     return True
@@ -74,8 +72,8 @@ class RemoteConnection(object):
         self._hass = hass
         self._host = conf.get(CONF_HOST)
         self._port = conf.get(CONF_PORT)
-        self._password = conf.get(CONF_API_PASSWORD)
         self._secure = conf.get(CONF_SECURE)
+        self._password = conf.get(CONF_API_PASSWORD)
         self._subscribe_events = conf.get(CONF_SUBSCRIBE_EVENTS)
         self._entity_prefix = conf.get(CONF_ENTITY_PREFIX)
 
@@ -87,16 +85,16 @@ class RemoteConnection(object):
 
     async def async_connect(self):
         """Connect to remote home-assistant websocket..."""
-        import websockets
-
         url = '%s://%s:%s/api/websocket' % (
             'wss' if self._secure else 'ws', self._host, self._port)
+
+        session = async_get_clientsession(self._hass)
 
         while True:
             try:
                 _LOGGER.info('Connecting to %s', url)
-                self._connection = await websockets.connect(url)
-            except ConnectionError:
+                self._connection = await session.ws_connect(url)
+            except aiohttp.client_exceptions.ClientError as err:
                 _LOGGER.error(
                     'Could not connect to %s, retry in 10 seconds...', url)
                 await asyncio.sleep(10)
@@ -105,10 +103,10 @@ class RemoteConnection(object):
                     'Connected to home-assistant websocket at %s', url)
                 break
 
-        def stop():
+        async def stop():
             """Close connection."""
-            if self._connection.connected:
-                self._connection.close()
+            if self._connection is not None:
+                await self._connection.close()
 
         self._hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop)
 
@@ -120,17 +118,14 @@ class RemoteConnection(object):
         return _id
 
     async def _call(self, callback, message_type, **extra_args):
-        import websockets
-
         _id = self._next_id()
         self._handlers[_id] = callback
         try:
-            await self._connection.send(json.dumps(
-                {'id': _id, 'type': message_type, **extra_args}))
-        except websockets.exceptions.ConnectionClosed:
-            _LOGGER.error('remote websocket connection closed')
+            await self._connection.send_json(
+                {'id': _id, 'type': message_type, **extra_args})
+        except aiohttp.client_exceptions.ClientError as err:
+            _LOGGER.error('remote websocket connection closed: %s', err)
             await self._disconnected()
-            return
 
     async def _disconnected(self):
         # Remove all published entries
@@ -140,20 +135,18 @@ class RemoteConnection(object):
         asyncio.ensure_future(self.async_connect())
 
     async def _recv(self):
-        import websockets
-
-        while True:
+        while not self._connection.closed:
             try:
-                data = await self._connection.recv()
-            except websockets.exceptions.ConnectionClosed:
-                _LOGGER.error('remote websocket connection closed')
+                data = await self._connection.receive()
+            except aiohttp.client_exceptions.ClientError as err:
+                _LOGGER.error('remote websocket connection closed: %s', err)
                 await self._disconnected()
                 return
 
             if not data:
                 return
 
-            message = json.loads(data)
+            message = data.json()
             _LOGGER.debug('received: %s', message)
 
             if message['type'] == api.TYPE_AUTH_OK:
@@ -164,7 +157,7 @@ class RemoteConnection(object):
                     _LOGGER.error('Password required, but not provided')
                     return
                 data = {'type': api.TYPE_AUTH, 'api_password': self._password}
-                await self._connection.send(json.dumps(data, cls=JSONEncoder))
+                await self._connection.send_json(data)
 
             elif message['type'] == api.TYPE_AUTH_INVALID:
                 _LOGGER.error('Auth invalid, check your API password')
@@ -222,7 +215,7 @@ class RemoteConnection(object):
 
             _LOGGER.debug('forward event: %s', data)
 
-            await self._connection.send(json.dumps(data, cls=JSONEncoder))
+            await self._connection.send_json(data)
 
         def state_changed(entity_id, state, attr):
             """Publish remote state change on local instance."""
@@ -241,20 +234,23 @@ class RemoteConnection(object):
         def fire_event(message):
             """Publish remove event on local instance."""
             if message['type'] == 'result':
-                pass
-            elif message['type'] == 'event':
-                if message['event']['event_type'] == 'state_changed':
-                    entity_id = message['event']['data']['entity_id']
-                    state = message['event']['data']['new_state']['state']
-                    attr = message['event']['data']['new_state']['attributes']
-                    state_changed(entity_id, state, attr)
-                else:
-                    event = message['event']
-                    self._hass.bus.async_fire(
-                        event_type=event['event_type'],
-                        event_data=event['data'],
-                        origin=EventOrigin.remote
-                    )
+                return
+
+            if message['type'] != 'event':
+                return
+
+            if message['event']['event_type'] == 'state_changed':
+                entity_id = message['event']['data']['entity_id']
+                state = message['event']['data']['new_state']['state']
+                attr = message['event']['data']['new_state']['attributes']
+                state_changed(entity_id, state, attr)
+            else:
+                event = message['event']
+                self._hass.bus.async_fire(
+                    event_type=event['event_type'],
+                    event_data=event['data'],
+                    origin=EventOrigin.remote
+                )
 
         def got_states(message):
             """Called when list of remote states is available."""
