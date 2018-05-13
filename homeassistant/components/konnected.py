@@ -6,6 +6,7 @@ https://home-assistant.io/components/konnected/
 """
 import logging
 import hmac
+import json
 import voluptuous as vol
 
 from aiohttp.hdrs import AUTHORIZATION
@@ -276,9 +277,15 @@ class KonnectedView(HomeAssistantView):
         """Receive a sensor update via PUT request and async set state."""
         hass = request.app['hass']
         data = hass.data[DOMAIN]
-        payload = await request.json()
-        pin_num = pin_num or payload['pin']
-        state = state or payload['state']
+
+        try:  # Konnected 2.2.0 and above supports JSON payloads
+            payload = await request.json()
+            pin_num = payload['pin']
+            state = payload['state']
+        except json.decoder.JSONDecodeError:
+            _LOGGER.warning(("Your Konnected device software may be out of "
+                             "date. Visit https://help.konnected.io for "
+                             "updating instructions."))
 
         auth = request.headers.get(AUTHORIZATION, None)
         if not hmac.compare_digest('Bearer {}'.format(self.auth_token), auth):
