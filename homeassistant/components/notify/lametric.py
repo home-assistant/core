@@ -92,8 +92,8 @@ class LaMetricNotificationService(BaseNotificationService):
                 if data['priority'] in AVAILABLE_PRIORITIES:
                     priority = data['priority']
                 else:
-                    _LOGGER.warning("Priority %s invalid, using default %s" %
-                                    (data['priority'], priority))
+                    _LOGGER.warning("Priority %s invalid, using default %s",
+                                    data['priority'], priority)
 
         text_frame = SimpleFrame(icon, message)
         _LOGGER.debug("Icon/Message/Cycles/Lifetime: %s, %s, %d, %d",
