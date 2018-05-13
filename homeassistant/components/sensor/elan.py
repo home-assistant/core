@@ -76,9 +76,8 @@ class ElanThermostat(Entity):
 
     def __init__(self, session, thermostat, info, var, offset=0):
         """Initialize a thermostat."""
-        _LOGGER.info("elan thermostat %s initialisation",
-                     info['device info']['label'])
-        _LOGGER.info(info)
+        _LOGGER.info("elan thermostat %s initialisation (%s, %d)",
+                     info['device info']['label'], var, offset)
         self._thermostat = thermostat
         self._var = 'temperature'
         self._info = info
