@@ -1,5 +1,5 @@
 """
-Support for Xiaomi Gateway Lock.
+Support for Xiaomi Aqara Lock.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.xiaomi_aqara/
@@ -27,15 +27,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for device in gateway.devices['lock']:
             model = device['model']
             if model == 'lock.aq1':
-                devices.append(XiaomiGatewayLock(device, 'Lock', gateway))
+                devices.append(XiaomiAqaraLock(device, 'Lock', gateway))
     add_devices(devices)
 
 
-class XiaomiGatewayLock(LockDevice, XiaomiDevice):
-    """Representation of a XiaomiGatewayLock."""
+class XiaomiAqaraLock(LockDevice, XiaomiDevice):
+    """Representation of a XiaomiAqaraLock."""
 
     def __init__(self, device, name, xiaomi_hub):
-        """Initialize the XiaomiGatewayLock."""
+        """Initialize the XiaomiAqaraLock."""
         self._changed_by = 0
         self._verified_wrong_times = 0
 
