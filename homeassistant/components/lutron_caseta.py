@@ -82,7 +82,6 @@ class LutronCasetaDevice(Entity):
         self._device_type = device["type"]
         self._device_name = device["name"]
         self._device_zone = device["zone"]
-        self._device_model = device["model"]
         self._device_serial = device["serial"]
         self._state = None
         self._smartbridge = bridge
@@ -97,11 +96,6 @@ class LutronCasetaDevice(Entity):
     def name(self):
         """Return the name of the device."""
         return self._device_name
-
-    @property
-    def model(self):
-        """Return the model number of the device."""
-        return self._device_model
 
     @property
     def serial(self):
