@@ -15,7 +15,7 @@ pytest-cov==2.5.1
 pytest-sugar==0.9.1
 pytest-timeout>=1.2.1
 pytest==3.4.2
-requests_mock==1.4
+requests_mock==1.5
 
 
 # homeassistant.components.homekit
