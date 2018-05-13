@@ -26,7 +26,6 @@ import homeassistant.components as comps
 from tests.common import (assert_setup_component, get_test_home_assistant,
                           mock_restore_cache)
 
-
 ENTITY = 'climate.test'
 ENT_SENSOR = 'sensor.test'
 ENT_SWITCH = 'switch.test'
@@ -68,7 +67,7 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
                                 'name': 'test',
                                 'heater': ENT_SWITCH,
                                 'target_sensor': ENT_SENSOR
-                                }})
+                            }})
         )
 
 
@@ -400,7 +399,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
             'cold_tolerance': 2,
             'hot_tolerance': 4,
             'away_temp': 30,
-            'heater': ENT_SWITCH,
+            'ac': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True
         }})
@@ -564,6 +563,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
             'name': 'test',
             'cold_tolerance': 0.3,
             'hot_tolerance': 0.3,
+            'ac': ENT_SWITCH,
             'heater': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True,
@@ -751,7 +751,7 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
             'name': 'test',
             'cold_tolerance': 0.3,
             'hot_tolerance': 0.3,
-            'heater': ENT_SWITCH,
+            'ac': ENT_SWITCH,
             'target_temp': 25,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True,
@@ -949,7 +949,7 @@ def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(hass, (
         State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20",
-              climate.ATTR_OPERATION_MODE: "off", ATTR_AWAY_MODE: "on"}),
+                                               climate.ATTR_OPERATION_MODE: "off", ATTR_AWAY_MODE: "on"}),
     ))
 
     hass.state = CoreState.starting
@@ -963,9 +963,9 @@ def test_restore_state(hass):
         }})
 
     state = hass.states.get('climate.test_thermostat')
-    assert(state.attributes[ATTR_TEMPERATURE] == 20)
-    assert(state.attributes[climate.ATTR_OPERATION_MODE] == "off")
-    assert(state.state == STATE_OFF)
+    assert (state.attributes[ATTR_TEMPERATURE] == 20)
+    assert (state.attributes[climate.ATTR_OPERATION_MODE] == "off")
+    assert (state.state == STATE_OFF)
 
 
 @asyncio.coroutine
@@ -976,7 +976,7 @@ def test_no_restore_state(hass):
     """
     mock_restore_cache(hass, (
         State('climate.test_thermostat', '0', {ATTR_TEMPERATURE: "20",
-              climate.ATTR_OPERATION_MODE: "off", ATTR_AWAY_MODE: "on"}),
+                                               climate.ATTR_OPERATION_MODE: "off", ATTR_AWAY_MODE: "on"}),
     ))
 
     hass.state = CoreState.starting
@@ -991,8 +991,8 @@ def test_no_restore_state(hass):
         }})
 
     state = hass.states.get('climate.test_thermostat')
-    assert(state.attributes[ATTR_TEMPERATURE] == 22)
-    assert(state.state == STATE_OFF)
+    assert (state.attributes[ATTR_TEMPERATURE] == 22)
+    assert (state.state == STATE_OFF)
 
 
 class TestClimateGenericThermostatRestoreState(unittest.TestCase):
@@ -1042,7 +1042,7 @@ class TestClimateGenericThermostatRestoreState(unittest.TestCase):
             'cold_tolerance': 2,
             'hot_tolerance': 4,
             'away_temp': 30,
-            'heater': ENT_SWITCH,
+            'ac': ENT_SWITCH,
             'target_sensor': ENT_SENSOR,
             'ac_mode': True
         }})
