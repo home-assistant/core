@@ -40,11 +40,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for device in device_list:
         resp = yield from session.get(device_list[device]['url'], timeout=3)
         info = yield from resp.json()
-        _LOGGER.info("elan device")
-        _LOGGER.info(device)
         if info['device info']['type'] == 'light':
-            _LOGGER.info("elan Light to add")
-            _LOGGER.info(device)
+            _LOGGER.info("Adding elan Light %s", device_list[device]['url'])
             async_add_devices(
                 [ElanLight(session, device_list[device]['url'], info)])
 
@@ -54,8 +51,8 @@ class ElanLight(Light):
 
     def __init__(self, session, light, info):
         """Initialize a Light."""
-        _LOGGER.info("elan light initialisation")
-        _LOGGER.info(info)
+        _LOGGER.info("elan light %s initialisation",
+                     info['device info']['label'])
         self._light = light
         self._info = info
         self._name = info['device info']['label']
@@ -127,11 +124,11 @@ class ElanLight(Light):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        _LOGGER.info('elan Light update')
-        _LOGGER.info(self._light + '/state')
-        resp = yield from self._session.get(self._light + '/state', timeout=3)
+        stateurl = self._light + '/state'
+        _LOGGER.debug('Getting elan Light %s update', stateurl)
+        resp = yield from self._session.get(stateurl, timeout=3)
         state = yield from resp.json()
-        _LOGGER.info(state)
+        _LOGGER.debug(state)
         tmp = False
         if 'on' in state:
             tmp = state['on']
@@ -144,8 +141,7 @@ class ElanLight(Light):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        _LOGGER.info('Turning off elan light')
-        _LOGGER.info(self._light)
+        _LOGGER.debug('Turning off elan light %s', self._name)
         if self._dimmer:
             resp = yield from self._session.put(
                 self._light, json={'brightness': 0})
@@ -153,13 +149,12 @@ class ElanLight(Light):
             resp = yield from self._session.put(
                 self._light, json={'on': False})
         info = yield from resp.text()
-        _LOGGER.info(info)
+        _LOGGER.debug(info)
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        _LOGGER.info('Turning on elan light')
-        _LOGGER.info(self._light)
+        _LOGGER.debug('Turning on elan light %s', self._name)
         if ATTR_BRIGHTNESS in kwargs:
             if kwargs[ATTR_BRIGHTNESS] > 0:
                 self._last_brightness = kwargs[ATTR_BRIGHTNESS]
@@ -173,4 +168,4 @@ class ElanLight(Light):
             resp = yield from self._session.put(self._light, json={'on': True})
 
         info = yield from resp.text()
-        _LOGGER.info(info)
+        _LOGGER.debug(info)

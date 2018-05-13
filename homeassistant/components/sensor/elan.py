@@ -58,11 +58,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for device in device_list:
         resp = yield from session.get(device_list[device]['url'], timeout=3)
         info = yield from resp.json()
-        _LOGGER.info("elan device")
-        _LOGGER.info(device)
         if info['device info']['type'] == 'heating':
-            _LOGGER.info("elan Thermostat to add")
-            _LOGGER.info(device)
+            _LOGGER.info("Adding elan Thermostat %s",
+                         device_list[device]['url'])
             async_add_devices([
                 ElanThermostat(
                     session, device_list[device]['url'], info, 'temperature',
@@ -78,7 +76,8 @@ class ElanThermostat(Entity):
 
     def __init__(self, session, thermostat, info, var, offset=0):
         """Initialize a thermostat."""
-        _LOGGER.info("elan thermostat initialisation")
+        _LOGGER.info("elan thermostat %s initialisation",
+                     info['device info']['label'])
         _LOGGER.info(info)
         self._thermostat = thermostat
         self._var = 'temperature'
@@ -151,12 +150,11 @@ class ElanThermostat(Entity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        _LOGGER.info('elan thermostat update')
         stateurl = self._thermostat + '/state'
-        _LOGGER.info(stateurl)
+        _LOGGER.debug('Getting elan thermostat %s update', stateurl)
         resp = yield from self._session.get(stateurl, timeout=3)
         state = yield from resp.json()
-        _LOGGER.info(state)
+        _LOGGER.debug(state)
         if 'temperature IN' in state:
             self._temperature_in = state['temperature IN']
 
@@ -185,4 +183,4 @@ class ElanThermostat(Entity):
         if self._var is 'on':
             self._state = self._on
 
-        _LOGGER.info(self._state)
+        _LOGGER.debug(self._state)
