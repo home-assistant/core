@@ -210,6 +210,6 @@ async def test_get_panels(hass, hass_ws_client):
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
     assert msg['result']['map']['component_name'] == 'map'
-    assert msg['result']['map']['url_path'] == 'map'
     assert msg['result']['map']['icon'] == 'mdi:account-location'
     assert msg['result']['map']['title'] == 'Map'
+    assert 'url_path' not in msg['result']['map']
