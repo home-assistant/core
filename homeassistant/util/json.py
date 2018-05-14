@@ -8,10 +8,8 @@ from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 
-_UNDEFINED = -1
 
-
-def load_json(filename: str, default: Union[List, Dict, int] = _UNDEFINED) \
+def load_json(filename: str, default: Union[List, Dict, None] = None) \
         -> Union[List, Dict]:
     """Load JSON data from a file and return as dict or list.
 
@@ -29,7 +27,7 @@ def load_json(filename: str, default: Union[List, Dict, int] = _UNDEFINED) \
     except OSError as error:
         _LOGGER.exception('JSON file reading failed: %s', filename)
         raise HomeAssistantError(error)
-    return {} if isinstance(default, int) else default
+    return {} if default is None else default
 
 
 def save_json(filename: str, data: Union[List, Dict]):
