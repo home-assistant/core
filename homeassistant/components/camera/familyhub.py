@@ -5,13 +5,14 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/camera.familyhub/
 """
 import logging
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_IP_ADDRESS)
 from homeassistant.components.camera import Camera
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,8 +26,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass,
-                               config, async_add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
     """Set up the Family Hub Camera."""
     from pyfamilyhublocal import FamilyHubCam
     address = config.get(CONF_IP_ADDRESS)
