@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.wink import DOMAIN, WinkDevice
-from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_CODE, ATTR_ENTITY_ID, ATTR_NAME, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['wink']
@@ -28,7 +29,6 @@ SERVICE_ADD_KEY = 'wink_add_new_lock_key_code'
 ATTR_ENABLED = 'enabled'
 ATTR_SENSITIVITY = 'sensitivity'
 ATTR_MODE = 'mode'
-ATTR_NAME = 'name'
 
 ALARM_SENSITIVITY_MAP = {
     'low': 0.2,

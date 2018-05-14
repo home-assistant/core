@@ -10,11 +10,11 @@ import voluptuous as vol
 
 import homeassistant.components.rfxtrx as rfxtrx
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
 from homeassistant.components.rfxtrx import (
     CONF_AUTOMATIC_ADD, CONF_FIRE_EVENT, DEFAULT_SIGNAL_REPETITIONS,
     CONF_SIGNAL_REPETITIONS, CONF_DEVICES)
 from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_NAME
 
 DEPENDENCIES = ['rfxtrx']
 
@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): {
         cv.string: vol.Schema({
             vol.Required(CONF_NAME): cv.string,
-            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean
+            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
         })
     },
     vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
