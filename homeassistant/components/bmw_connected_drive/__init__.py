@@ -14,19 +14,22 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.event import track_utc_time_change
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['bimmer_connected==0.5.0']
+# TODO: replace with new release when available
+REQUIREMENTS = ['https://github.com/m1n3rva/bimmer_connected/archive/master.zip#bimmer_connected==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'bmw_connected_drive'
 CONF_REGION = 'region'
 ATTR_VIN = 'vin'
+CONF_SEND_LOCATION = 'send_location'
 
 ACCOUNT_SCHEMA = vol.Schema({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_REGION): vol.Any('north_america', 'china',
                                        'rest_of_world'),
+    vol.Optional(CONF_SEND_LOCATION, default=False): cv.boolean,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -84,6 +87,12 @@ def setup_account(account_config: dict, hass, name: str) \
     region = account_config[CONF_REGION]
     _LOGGER.debug('Adding new account %s', name)
     cd_account = BMWConnectedDriveAccount(username, password, region, name)
+    if account_config[CONF_SEND_LOCATION]:
+        _LOGGER.debug('Account %s is configured to upload the location of your '
+                      'home assistant installation.', name)
+        latitude = hass.config.latitude
+        longitude = hass.config.longitude
+        cd_account.account.set_observer_position(latitude, longitude)
 
     def execute_service(call):
         """Execute a service for a vehicle.
