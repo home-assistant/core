@@ -26,7 +26,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+
+async def async_setup_platform(hass,
+                               config, async_add_devices, discovery_info=None):
     """Set up the Family Hub Camera."""
     from pyfamilyhublocal import FamilyHubCam
     address = config.get(CONF_IP)
@@ -36,7 +38,6 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     family_hub_cam = FamilyHubCam(address, hass.loop, session)
 
     async_add_devices([FamilyHubCamera(name, family_hub_cam)], True)
-
 
 
 class FamilyHubCamera(Camera):
