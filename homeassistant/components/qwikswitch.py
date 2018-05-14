@@ -150,8 +150,10 @@ async def async_setup(hass, config):
     comps = {'switch': [], 'light': [], 'sensor': [], 'binary_sensor': []}
 
     try:
+        sensor_ids = []
         for sens in sensors:
             _, _type = SENSORS[sens['type']]
+            sensor_ids.append(sens['id'])
             if _type is bool:
                 comps['binary_sensor'].append(sens)
                 continue
@@ -192,9 +194,7 @@ async def async_setup(hass, config):
                     'qwikswitch.button.{}'.format(qspacket[QS_ID]), qspacket)
                 return
 
-            if qspacket[QS_ID] not in qsusb.devices:
-                # Not a standard device in, component can handle packet
-                # i.e. sensors
+            if qspacket[QS_ID] in sensor_ids:
                 _LOGGER.debug("Dispatch %s ((%s))", qspacket[QS_ID], qspacket)
                 hass.helpers.dispatcher.async_dispatcher_send(
                     qspacket[QS_ID], qspacket)
