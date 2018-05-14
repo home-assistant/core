@@ -39,8 +39,10 @@ async def async_setup_platform(hass,
 
 
 class FamilyHubCamera(Camera):
+    """The representation of a Family Hub camera."""
 
     def __init__(self, name, family_hub_cam):
+        """Initialize camera component."""
         super().__init__()
         self._name = name
         self.family_hub_cam = family_hub_cam
@@ -51,8 +53,10 @@ class FamilyHubCamera(Camera):
 
     @property
     def name(self):
+        """Return the name of this camera."""
         return self._name
 
     @property
     def should_poll(self):
-        return False
+        """Camera should poll periodically."""
+        return True
