@@ -495,8 +495,9 @@ def gw_callback_factory(hass):
         _LOGGER.debug(
             "Node update: node %s child %s", msg.node_id, msg.child_id)
 
-        child = msg.gateway.sensors[msg.node_id].children.get(msg.child_id)
-        if child is None:
+        try:
+            child = msg.gateway.sensors[msg.node_id].children[msg.child_id]
+        except KeyError:
             _LOGGER.debug("Not a child update for node %s", msg.node_id)
             return
 
