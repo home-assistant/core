@@ -94,7 +94,6 @@ CHAR_TEMP_DISPLAY_UNITS = 'TemperatureDisplayUnits'
 # #### Properties ####
 PROP_MAX_VALUE = 'maxValue'
 PROP_MIN_VALUE = 'minValue'
-PROP_STEP = 'minStep'
 
 PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}
 
