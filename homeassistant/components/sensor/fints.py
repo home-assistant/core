@@ -36,7 +36,7 @@ ATTR_ACCOUNT_TYPE = 'account_type'
 
 SCHEMA_ACCOUNTS = vol.Schema({
     vol.Required(CONF_ACCOUNT): cv.string,
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(CONF_NAME, default=None): vol.Any(None, cv.string),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -59,49 +59,45 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """
     credentials = BankCredentials(config[CONF_BIN], config[CONF_USERNAME],
                                   config[CONF_PIN], config[CONF_URL])
-    fints_name = config[CONF_NAME]
+    fints_name = config.get(CONF_NAME, config[CONF_BIN])
 
-    account_config = dict()
-    for acc in config[CONF_ACCOUNTS]:
-        account_config[acc[CONF_ACCOUNT]] = acc[CONF_NAME]
+    account_config = {acc[CONF_ACCOUNT]: acc[CONF_NAME]
+                      for acc in config[CONF_ACCOUNTS]}
 
-    holdings_config = dict()
-    for acc in config[CONF_HOLDINGS]:
-        holdings_config[acc[CONF_ACCOUNT]] = acc[CONF_NAME]
+    holdings_config = {acc[CONF_ACCOUNT]: acc[CONF_NAME]
+                       for acc in config[CONF_HOLDINGS]}
 
-    client = FinTsClient(credentials, config[CONF_NAME])
+    client = FinTsClient(credentials, fints_name)
     balance_accounts, holdings_accounts = client.detect_accounts()
     accounts = []
 
     for account in balance_accounts:
-        if not config[CONF_ACCOUNTS] \
-                or account.iban in account_config:
-
-            account_name = account_config.get(account.iban)
-            if not account_name:
-                account_name = '{} - {}'.format(fints_name, account.iban)
-            accounts += [FinTsAccount(client, account, account_name)]
-            _LOGGER.debug('Creating account %s for bank %s',
-                          account.iban, fints_name)
-        else:
+        if config[CONF_ACCOUNTS] and account.iban not in account_config:
             _LOGGER.info('skipping account %s for bank %s',
                          account.iban, fints_name)
+            continue
+
+        account_name = account_config.get(account.iban)
+        if not account_name:
+            account_name = '{} - {}'.format(fints_name, account.iban)
+        accounts.append(FinTsAccount(client, account, account_name))
+        _LOGGER.debug('Creating account %s for bank %s',
+                      account.iban, fints_name)
 
     for account in holdings_accounts:
-        # if not config[CONF_ACCOUNTS] or account.iban in account_config:
-        if not config[CONF_HOLDINGS] \
-                or account.accountnumber in holdings_config:
-            account_name = holdings_config.get(account.accountnumber)
-            if not account_name:
-                account_name = '{} - {}'.format(
-                    fints_name, account.accountnumber)
-            accounts += [FinTsHoldingsAccount(
-                client, account, account_name)]
-            _LOGGER.debug('Creating account %s for bank %s',
-                          account.accountnumber, fints_name)
-        else:
+        if config[CONF_HOLDINGS] and \
+                account.accountnumber not in holdings_config:
             _LOGGER.info('skipping account %s for bank %s',
                          account.accountnumber, fints_name)
+            continue
+
+        account_name = holdings_config.get(account.accountnumber)
+        if not account_name:
+            account_name = '{} - {}'.format(
+                fints_name, account.accountnumber)
+        accounts.append(FinTsHoldingsAccount(client, account, account_name))
+        _LOGGER.debug('Creating account %s for bank %s',
+                      account.accountnumber, fints_name)
 
     add_devices(accounts, True)
 
@@ -121,8 +117,9 @@ class FinTsClient(object):
     def client(self):
         """Get the client object.
 
-        Opens a new connection if required. Before using the client
-        acquire the lock!
+        As the fints library is stateless, there is not benefit in caching
+        the client objects. If that ever changes, consider caching the client
+        object and also think about potential concurrency problems.
         """
         from fints.client import FinTS3PinTanClient
         return FinTS3PinTanClient(
@@ -137,7 +134,7 @@ class FinTsClient(object):
         for account in [a for a in self.client.get_sepa_accounts()]:
             try:
                 self.client.get_balance(account)
-                balance_accounts += [account]
+                balance_accounts.append(account)
             except IndexError:
                 # account is not a balance account.
                 pass
@@ -146,7 +143,7 @@ class FinTsClient(object):
                 pass
             try:
                 self.client.get_holdings(account)
-                holdings_accounts += [account]
+                holdings_accounts.append(account)
             except FinTSDialogError:
                 # account is not a holdings account.
                 pass
