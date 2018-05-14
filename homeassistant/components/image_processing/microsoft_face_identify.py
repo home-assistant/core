@@ -9,12 +9,13 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.image_processing import (
+    ATTR_CONFIDENCE, CONF_CONFIDENCE, CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE,
+    PLATFORM_SCHEMA, ImageProcessingFaceEntity)
+from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import split_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE
-from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA, ImageProcessingFaceEntity, ATTR_NAME,
-    CONF_CONFIDENCE, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME, ATTR_CONFIDENCE)
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['microsoft_face']

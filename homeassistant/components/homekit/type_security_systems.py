@@ -32,10 +32,10 @@ STATE_TO_SERVICE = {STATE_ALARM_ARMED_HOME: 'alarm_arm_home',
 class SecuritySystem(HomeAccessory):
     """Generate an SecuritySystem accessory for an alarm control panel."""
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a SecuritySystem accessory object."""
         super().__init__(*args, category=CATEGORY_ALARM_SYSTEM)
-        self._alarm_code = config.get(ATTR_CODE)
+        self._alarm_code = self.config.get(ATTR_CODE)
         self.flag_target_state = False
 
         serv_alarm = self.add_preload_service(SERV_SECURITY_SYSTEM)
@@ -67,7 +67,7 @@ class SecuritySystem(HomeAccessory):
             _LOGGER.debug('%s: Updated current state to %s (%d)',
                           self.entity_id, hass_state, current_security_state)
 
-            # SecuritySystemTargetSTate does not support triggered
+            # SecuritySystemTargetState does not support triggered
             if not self.flag_target_state and \
                     hass_state != STATE_ALARM_TRIGGERED:
                 self.char_target_state.set_value(current_security_state)

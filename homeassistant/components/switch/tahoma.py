@@ -1,7 +1,7 @@
 """
 Support for Tahoma Switch - those are push buttons for garage door etc.
 
-Those buttons are implemented as switchs that are never on. They only
+Those buttons are implemented as switches that are never on. They only
 receive the turn_on action, perform the relay click, and stay in OFF state
 
 For more details about this platform, please refer to the documentation at
@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up Tahoma switchs."""
+    """Set up Tahoma switches."""
     controller = hass.data[TAHOMA_DOMAIN]['controller']
     devices = []
     for switch in hass.data[TAHOMA_DOMAIN]['devices']['switch']:

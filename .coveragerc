@@ -4,6 +4,8 @@ source = homeassistant
 omit =
     homeassistant/__main__.py
     homeassistant/scripts/*.py
+    homeassistant/util/async.py
+    homeassistant/monkey_patch.py
     homeassistant/helpers/typing.py
     homeassistant/helpers/signal.py
 
@@ -127,7 +129,7 @@ omit =
     homeassistant/components/insteon_local.py
     homeassistant/components/*/insteon_local.py
 
-    homeassistant/components/insteon_plm.py
+    homeassistant/components/insteon_plm/*
     homeassistant/components/*/insteon_plm.py
 
     homeassistant/components/ios.py
@@ -225,6 +227,9 @@ omit =
 
     homeassistant/components/rpi_pfio.py
     homeassistant/components/*/rpi_pfio.py
+
+    homeassistant/components/sabnzbd.py
+    homeassistant/components/*/sabnzbd.py
 
     homeassistant/components/satel_integra.py
     homeassistant/components/*/satel_integra.py
@@ -342,6 +347,7 @@ omit =
     homeassistant/components/calendar/todoist.py
     homeassistant/components/camera/bloomsky.py
     homeassistant/components/camera/canary.py
+    homeassistant/components/camera/familyhub.py
     homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
@@ -650,7 +656,6 @@ omit =
     homeassistant/components/sensor/radarr.py
     homeassistant/components/sensor/rainbird.py
     homeassistant/components/sensor/ripple.py
-    homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sense.py
     homeassistant/components/sensor/sensehat.py

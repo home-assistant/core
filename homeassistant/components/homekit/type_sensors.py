@@ -51,7 +51,7 @@ class TemperatureSensor(HomeAccessory):
     Sensor entity must return temperature in °C, °F.
     """
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a TemperatureSensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
         serv_temp = self.add_preload_service(SERV_TEMPERATURE_SENSOR)
@@ -74,7 +74,7 @@ class TemperatureSensor(HomeAccessory):
 class HumiditySensor(HomeAccessory):
     """Generate a HumiditySensor accessory as humidity sensor."""
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a HumiditySensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
         serv_humidity = self.add_preload_service(SERV_HUMIDITY_SENSOR)
@@ -94,7 +94,7 @@ class HumiditySensor(HomeAccessory):
 class AirQualitySensor(HomeAccessory):
     """Generate a AirQualitySensor accessory as air quality sensor."""
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a AirQualitySensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
 
@@ -118,7 +118,7 @@ class AirQualitySensor(HomeAccessory):
 class CarbonDioxideSensor(HomeAccessory):
     """Generate a CarbonDioxideSensor accessory as CO2 sensor."""
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a CarbonDioxideSensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
 
@@ -146,7 +146,7 @@ class CarbonDioxideSensor(HomeAccessory):
 class LightSensor(HomeAccessory):
     """Generate a LightSensor accessory as light sensor."""
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a LightSensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
 
@@ -166,7 +166,7 @@ class LightSensor(HomeAccessory):
 class BinarySensor(HomeAccessory):
     """Generate a BinarySensor accessory as binary sensor."""
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a BinarySensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
         device_class = self.hass.states.get(self.entity_id).attributes \

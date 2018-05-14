@@ -4,21 +4,18 @@ Support for RFXtrx components.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
 """
-
 import asyncio
-import logging
 from collections import OrderedDict
+import logging
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    ATTR_ENTITY_ID, TEMP_CELSIUS,
-    CONF_DEVICES
-)
+    ATTR_ENTITY_ID, ATTR_NAME, ATTR_STATE, CONF_DEVICE, CONF_DEVICES,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 REQUIREMENTS = ['pyRFXtrx==0.22.1']
 
@@ -29,8 +26,6 @@ DEFAULT_SIGNAL_REPETITIONS = 1
 ATTR_AUTOMATIC_ADD = 'automatic_add'
 ATTR_DEVICE = 'device'
 ATTR_DEBUG = 'debug'
-ATTR_STATE = 'state'
-ATTR_NAME = 'name'
 ATTR_FIRE_EVENT = 'fire_event'
 ATTR_DATA_TYPE = 'data_type'
 ATTR_DUMMY = 'dummy'
@@ -40,7 +35,6 @@ CONF_DATA_TYPE = 'data_type'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_FIRE_EVENT = 'fire_event'
 CONF_DUMMY = 'dummy'
-CONF_DEVICE = 'device'
 CONF_DEBUG = 'debug'
 CONF_OFF_DELAY = 'off_delay'
 EVENT_BUTTON_PRESSED = 'button_pressed'

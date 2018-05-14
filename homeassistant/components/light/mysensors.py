@@ -130,7 +130,7 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
             self._white = white
             self._values[self.value_type] = hex_color
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         value_type = self.gateway.const.SetReq.V_LIGHT
         self.gateway.set_child_value(
@@ -139,7 +139,7 @@ class MySensorsLight(mysensors.MySensorsEntity, Light):
             # optimistically assume that light has changed state
             self._state = False
             self._values[value_type] = STATE_OFF
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
     def _async_update_light(self):
         """Update the controller with values from light child."""
@@ -171,12 +171,12 @@ class MySensorsLightDimmer(MySensorsLight):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
         if self.gateway.optimistic:
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
     async def async_update(self):
         """Update the controller with the latest value from a sensor."""
@@ -196,13 +196,13 @@ class MySensorsLightRGB(MySensorsLight):
             return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
         return SUPPORT_COLOR
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
         self._turn_on_rgb_and_w('%02x%02x%02x', **kwargs)
         if self.gateway.optimistic:
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
     async def async_update(self):
         """Update the controller with the latest value from a sensor."""
@@ -225,10 +225,10 @@ class MySensorsLightRGBW(MySensorsLightRGB):
             return SUPPORT_BRIGHTNESS | SUPPORT_MYSENSORS_RGBW
         return SUPPORT_MYSENSORS_RGBW
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on."""
         self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
         self._turn_on_rgb_and_w('%02x%02x%02x%02x', **kwargs)
         if self.gateway.optimistic:
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()

@@ -38,7 +38,7 @@ SUPPORT_TEMP_RANGE = SUPPORT_TARGET_TEMPERATURE_LOW | \
 class Thermostat(HomeAccessory):
     """Generate a Thermostat accessory for a climate."""
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a Thermostat accessory object."""
         super().__init__(*args, category=CATEGORY_THERMOSTAT)
         self._unit = TEMP_CELSIUS

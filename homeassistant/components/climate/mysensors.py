@@ -115,7 +115,7 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
         """List of available fan modes."""
         return ['Auto', 'Min', 'Normal', 'Max']
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
         temp = kwargs.get(ATTR_TEMPERATURE)
@@ -143,9 +143,9 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
             if self.gateway.optimistic:
                 # Optimistically assume that device has changed state
                 self._values[value_type] = value
-                self.schedule_update_ha_state()
+                self.async_schedule_update_ha_state()
 
-    def set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
@@ -153,9 +153,9 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
         if self.gateway.optimistic:
             # Optimistically assume that device has changed state
             self._values[set_req.V_HVAC_SPEED] = fan_mode
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set new target temperature."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type,
@@ -163,7 +163,7 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
         if self.gateway.optimistic:
             # Optimistically assume that device has changed state
             self._values[self.value_type] = operation_mode
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
     async def async_update(self):
         """Update the controller with the latest value from a sensor."""

@@ -126,11 +126,7 @@ class LogErrorHandler(logging.Handler):
         if record.levelno >= logging.WARN:
             stack = []
             if not record.exc_info:
-                try:
-                    stack = [f for f, _, _, _ in traceback.extract_stack()]
-                except ValueError:
-                    # On Python 3.4 under py.test getting the stack might fail.
-                    pass
+                stack = [f for f, _, _, _ in traceback.extract_stack()]
 
             entry = self._create_entry(record, stack)
             self.records.appendleft(entry)
