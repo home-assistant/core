@@ -88,8 +88,8 @@ def setup_account(account_config: dict, hass, name: str) \
     _LOGGER.debug('Adding new account %s', name)
     cd_account = BMWConnectedDriveAccount(username, password, region, name)
     if account_config[CONF_SEND_LOCATION]:
-        _LOGGER.debug('Account %s is configured to upload the location of your '
-                      'home assistant installation.', name)
+        _LOGGER.debug('Account %s is configured to upload the location of '
+                      'your home assistant installation.', name)
         latitude = hass.config.latitude
         longitude = hass.config.longitude
         cd_account.account.set_observer_position(latitude, longitude)
