@@ -15,6 +15,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['pyfamilyhublocal==0.0.2']
+
 CONF_IP = 'address'
 
 DEFAULT_NAME = 'FamilyHub Camera'
@@ -26,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Family Hub Camera."""
-    from .pyfamilyhublocal import FamilyHubCam
+    from pyfamilyhublocal import FamilyHubCam
     address = config.get(CONF_IP)
     name = config.get(CONF_NAME)
 
