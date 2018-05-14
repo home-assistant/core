@@ -475,6 +475,9 @@ libnacl==1.6.1
 libpurecoollink==0.4.2
 
 # homeassistant.components.camera.foscam
+pyfamilyhublocal==0.0.2
+
+# homeassistant.components.camera.foscam
 libpyfoscam==1.0
 
 # homeassistant.components.device_tracker.mikrotik
