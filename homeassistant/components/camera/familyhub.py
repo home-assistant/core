@@ -9,7 +9,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME)
+from homeassistant.const import (CONF_NAME, CONF_IP_ADDRESS)
 from homeassistant.components.camera import Camera
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -17,12 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pyfamilyhublocal==0.0.2']
 
-CONF_IP = 'address'
-
 DEFAULT_NAME = 'FamilyHub Camera'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_IP): cv.string,
+    vol.Required(CONF_IP_ADDRESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -31,7 +29,7 @@ async def async_setup_platform(hass,
                                config, async_add_devices, discovery_info=None):
     """Set up the Family Hub Camera."""
     from pyfamilyhublocal import FamilyHubCam
-    address = config.get(CONF_IP)
+    address = config.get(CONF_IP_ADDRESS)
     name = config.get(CONF_NAME)
 
     session = async_get_clientsession(hass)
