@@ -181,8 +181,8 @@ def get_age(date: dt.datetime) -> str:
     def formatn(number: int, unit: str) -> str:
         """Add "unit" if it's plural."""
         if number == 1:
-            return "1 %s" % unit
-        return "%d %ss" % (number, unit)
+            return '1 {}'.format(unit)
+        return '{:d} {}s'.format(number, unit)
 
     # pylint: disable=invalid-sequence-index
     def q_n_r(first: int, second: int) -> Tuple[int, int]:

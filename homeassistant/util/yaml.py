@@ -233,7 +233,7 @@ def _load_secret_yaml(secret_path: str) -> Dict:
     try:
         secrets = load_yaml(secret_path)
         if not isinstance(secrets, dict):
-            raise HomeAssistantError
+            raise HomeAssistantError('Secrets is not a dictionary')
         if 'logger' in secrets:
             logger = str(secrets['logger']).lower()
             if logger == 'debug':
