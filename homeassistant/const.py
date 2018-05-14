@@ -221,6 +221,9 @@ ATTR_SERVICE_DATA = 'service_data'
 # IDs
 ATTR_ID = 'id'
 
+# Name
+ATTR_NAME = 'name'
+
 # Data for a SERVICE_EXECUTED event
 ATTR_SERVICE_CALL_ID = 'service_call_id'
 
