@@ -475,9 +475,6 @@ libnacl==1.6.1
 libpurecoollink==0.4.2
 
 # homeassistant.components.camera.foscam
-pyfamilyhublocal==0.0.2
-
-# homeassistant.components.camera.foscam
 libpyfoscam==1.0
 
 # homeassistant.components.device_tracker.mikrotik
@@ -968,6 +965,9 @@ python-ecobee-api==0.0.18
 
 # homeassistant.components.sensor.etherscan
 python-etherscan-api==0.0.3
+
+# homeassistant.components.camera.familyhub
+python-family-hub-local==0.0.2
 
 # homeassistant.components.sensor.darksky
 # homeassistant.components.weather.darksky

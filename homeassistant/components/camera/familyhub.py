@@ -15,7 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyfamilyhublocal==0.0.2']
+REQUIREMENTS = ['python-family-hub-local==0.0.2']
 
 DEFAULT_NAME = 'FamilyHub Camera'
 
