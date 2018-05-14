@@ -66,7 +66,7 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
     if dattim.tzinfo == UTC:
         return dattim
     elif dattim.tzinfo is None:
-        dattim = dattim.replace(tzinfo=DEFAULT_TIME_ZONE)
+        dattim = DEFAULT_TIME_ZONE.localize(dattim)  # type: ignore
 
     return dattim.astimezone(UTC)
 
@@ -94,7 +94,7 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
 
 def utc_from_timestamp(timestamp: float) -> dt.datetime:
     """Return a UTC time from a timestamp."""
-    return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=UTC)
+    return UTC.localize(dt.datetime.utcfromtimestamp(timestamp))
 
 
 def start_of_local_day(dt_or_d:
@@ -104,8 +104,8 @@ def start_of_local_day(dt_or_d:
         date = now().date()  # type: dt.date
     elif isinstance(dt_or_d, dt.datetime):
         date = dt_or_d.date()
-    return dt.datetime.combine(
-        date, dt.time()).replace(tzinfo=DEFAULT_TIME_ZONE)
+    return DEFAULT_TIME_ZONE.localize(dt.datetime.combine(  # type: ignore
+        date, dt.time()))
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
