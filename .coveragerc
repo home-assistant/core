@@ -347,6 +347,7 @@ omit =
     homeassistant/components/calendar/todoist.py
     homeassistant/components/camera/bloomsky.py
     homeassistant/components/camera/canary.py
+    homeassistant/components/camera/familyhub.py
     homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
