@@ -4,8 +4,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import split_entity_id
-from homeassistant.components.fan import (
-    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF)
 from homeassistant.const import (
     ATTR_CODE, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
@@ -84,27 +82,3 @@ def density_to_air_quality(density):
     elif density <= 150:
         return 4
     return 5
-
-
-def fan_value_to_speed(value):
-    """Convert HomeKit value to fan speed setting."""
-    if value == 0:
-        return SPEED_OFF
-    elif value <= 33:
-        return SPEED_LOW
-    elif value <= 66:
-        return SPEED_MEDIUM
-    return SPEED_HIGH
-
-
-def fan_speed_to_value(speed):
-    """Convert fan speed setting to HomeKit value."""
-    if speed == SPEED_OFF:
-        return 0
-    elif speed == SPEED_LOW:
-        return 33
-    elif speed == SPEED_MEDIUM:
-        return 66
-    elif speed == SPEED_HIGH:
-        return 100
-    return None

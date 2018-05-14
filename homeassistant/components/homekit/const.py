@@ -80,7 +80,6 @@ CHAR_OCCUPANCY_DETECTED = 'OccupancyDetected'
 CHAR_ON = 'On'  # boolean
 CHAR_POSITION_STATE = 'PositionState'
 CHAR_ROTATION_DIRECTION = 'RotationDirection'
-CHAR_ROTATION_SPEED = 'RotationSpeed'
 CHAR_SATURATION = 'Saturation'  # percent
 CHAR_SERIAL_NUMBER = 'SerialNumber'
 CHAR_SMOKE_DETECTED = 'SmokeDetected'
