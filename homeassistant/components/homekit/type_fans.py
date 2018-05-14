@@ -16,7 +16,7 @@ from . import TYPES
 from .accessories import HomeAccessory, debounce
 from .const import (
     CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_ROTATION_SPEED,
-    CHAR_SWING_MODE, SERV_FANV2)
+    CHAR_SWING_MODE, SERV_FANV2, PROP_STEP)
 from .util import fan_speed_to_value, fan_value_to_speed
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +55,7 @@ class Fan(HomeAccessory):
         if CHAR_ROTATION_SPEED in self.chars:
             self.char_speed = serv_fan.configure_char(
                 CHAR_ROTATION_SPEED, value=0,
+                properties={PROP_STEP: 33.33},
                 setter_callback=self.set_speed)
 
         if CHAR_ROTATION_DIRECTION in self.chars:

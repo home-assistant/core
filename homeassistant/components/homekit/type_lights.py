@@ -12,7 +12,8 @@ from . import TYPES
 from .accessories import HomeAccessory, debounce
 from .const import (
     SERV_LIGHTBULB, CHAR_COLOR_TEMPERATURE,
-    CHAR_BRIGHTNESS, CHAR_HUE, CHAR_ON, CHAR_SATURATION)
+    CHAR_BRIGHTNESS, CHAR_HUE, CHAR_ON, CHAR_SATURATION,
+    PROP_MAX_VALUE, PROP_MIN_VALUE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +62,8 @@ class Light(HomeAccessory):
                 .attributes.get(ATTR_MAX_MIREDS, 500)
             self.char_color_temperature = serv_light.configure_char(
                 CHAR_COLOR_TEMPERATURE, value=min_mireds,
-                properties={'minValue': min_mireds, 'maxValue': max_mireds},
+                properties={PROP_MIN_VALUE: min_mireds,
+                            PROP_MAX_VALUE: max_mireds},
                 setter_callback=self.set_color_temperature)
         if CHAR_HUE in self.chars:
             self.char_hue = serv_light.configure_char(
