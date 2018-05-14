@@ -1,7 +1,14 @@
+"""
+Support for Ebusd daemon for communication with eBUS heating systems.
+For more details about ebusd, please refer to the documentation at
+https://github.com/john30/ebusd
+"""
+
 from datetime import timedelta
 from datetime import datetime
-import subprocess
 import logging
+import subprocess
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -17,7 +24,7 @@ DEFAULT_NAME = 'ebusd'
 CONF_CIRCUIT = 'circuit'
 CONF_TIME = 0
 
-BASE_URL = 'ebusctl read -m {2} -c {0} {1}'
+BASE_COMMAND = 'ebusctl read -m {2} -c {0} {1}'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -57,20 +64,20 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_CIRCUIT): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TIME, default=0): cv.positive_int,
     vol.Optional(CONF_MONITORED_VARIABLES, default=[]): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Set up the Ebusd..."""
     name = config.get(CONF_NAME)
     circuit = config.get(CONF_CIRCUIT)
     time = config.get(CONF_TIME)
     data = EbusdData(circuit,time)
-
+			
     dev = []
     for variable in config[CONF_MONITORED_VARIABLES]:
         dev.append(Ebusd(data, variable, name))
@@ -105,15 +112,14 @@ class EbusdData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, name):
         """Call the Ebusd API to update the data."""
-        command = BASE_URL.format(self._circuit, name, self._time)
+        command = BASE_COMMAND.format(self._circuit, name, self._time)
         try:
-            _LOGGER.info("Receiving data from ebusdctl for %s: %s", name, command)
-            r = subprocess.check_output(command,shell=True, timeout=15)
+            _LOGGER.debug("Receiving data from ebusdctl for %s: %s", name, command)
+            r = subprocess.check_output(command,shell=True, timeout=8)
             command_result = r.strip().decode('utf-8')
-            if command_result == 'ERR: element not found':
-                _LOGGER.warning('ERR: element not found: %s', command)
-                self.value = STATE_UNKNOWN
-                return False
+            if command_result == 'Element not found':
+                _LOGGER.warning('Element not found: %s', name)
+                self.value = None
             else:
                 self.value = command_result
                 return True
@@ -164,14 +170,11 @@ class Ebusd(Entity):
         """Return the state attributes of this device."""
         attr = {}
         if self._last_updated is not None:
-            attr['Last Updated'] = self._last_updated
+            attr['lastUpdated'] = self._last_updated
         return attr
 
     def update(self):
-        """Fetch new state data for the sensor.
-        This is the only method that should fetch new data for Home Assistant.
-        """
-        update_result = False
+        """Fetch new state data for the sensor."""
         if self._last_updated is None or (datetime.now() - self._last_updated) > timedelta(minutes=15):
             update_result = self.data.update(self._name)
 
