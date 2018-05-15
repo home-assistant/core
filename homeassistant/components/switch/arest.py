@@ -24,7 +24,7 @@ DEFAULT_NAME = 'aREST switch'
 
 PIN_FUNCTION_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_INVERT): cv.boolean,
+    vol.Optional(CONF_INVERT, default=False): cv.boolean,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -168,9 +168,9 @@ class ArestSwitchPin(ArestSwitchBase):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        one_or_zero = 0 if self.invert else 1
+        turn_on_payload = int(not self.invert)
         request = requests.get(
-            '{}/digital/{}/{}'.format(self._resource, self._pin, one_or_zero),
+            '{}/digital/{}/{}'.format(self._resource, self._pin, turn_on_payload),
             timeout=10)
         if request.status_code == 200:
             self._state = True
@@ -180,9 +180,9 @@ class ArestSwitchPin(ArestSwitchBase):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        one_or_zero = 1 if self.invert else 0
+        turn_off_payload = int(self.invert)
         request = requests.get(
-            '{}/digital/{}/{}'.format(self._resource, self._pin, one_or_zero),
+            '{}/digital/{}/{}'.format(self._resource, self._pin, turn_off_payload),
             timeout=10)
         if request.status_code == 200:
             self._state = False
@@ -195,8 +195,8 @@ class ArestSwitchPin(ArestSwitchBase):
         try:
             request = requests.get(
                 '{}/digital/{}'.format(self._resource, self._pin), timeout=10)
-            one_or_zero = 1 if self.invert else 0
-            self._state = request.json()['return_value'] != one_or_zero
+            status_value = int(self.invert)
+            self._state = request.json()['return_value'] != status_value
             self._available = True
         except requests.exceptions.ConnectionError:
             _LOGGER.warning("No route to device %s", self._resource)
