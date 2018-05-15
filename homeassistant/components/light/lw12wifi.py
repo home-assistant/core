@@ -26,7 +26,6 @@ from homeassistant.components.light import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT
 )
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -148,12 +147,14 @@ class LW12WiFi(Light):
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs[ATTR_EFFECT].replace(' ', '_').upper()
             # Check if a known and supported effect was selected.
-            if self._effect not in [eff.name for eff in lw12.LW12_EFFECT]:
+            if self._effect in [eff.name for eff in lw12.LW12_EFFECT]:
+                # Selected effect is supported and will be applied.
+                self._light.set_effect(lw12.LW12_EFFECT[self._effect])
+            else:
                 # Unknown effect was set, recover by disabling the effect
-                # mode and raise an error.
+                # mode and log an error.
+                _LOGGER.error("Unknown effect selected: %s", self._effect)
                 self._effect = None
-                raise HomeAssistantError("Unknown effect selected.")
-            self._light.set_effect(lw12.LW12_EFFECT[self._effect])
         if ATTR_TRANSITION in kwargs:
             transition_speed = int(kwargs[ATTR_TRANSITION])
             self._light.set_light_option(lw12.LW12_LIGHT.FLASH,
