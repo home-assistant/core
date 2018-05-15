@@ -280,3 +280,22 @@ class TestUtil(unittest.TestCase):
         mock_random.SystemRandom.return_value = generator
 
         assert util.get_random_string(length=3) == 'ABC'
+
+
+async def test_throttle_async():
+    """Test Throttle decorator with async method."""
+    @util.Throttle(timedelta(seconds=2))
+    async def test_method():
+        """Only first call should return a value."""
+        return True
+
+    assert (await test_method()) is True
+    assert (await test_method()) is None
+
+    @util.Throttle(timedelta(seconds=2), timedelta(seconds=0.1))
+    async def test_method2():
+        """Only first call should return a value."""
+        return True
+
+    assert (await test_method2()) is True
+    assert (await test_method2()) is None

@@ -16,14 +16,16 @@ import voluptuous as vol
 import jinja2
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.auth import is_trusted_ip
+from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.components.http.const import KEY_AUTHENTICATED
+from homeassistant.components import websocket_api
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180130.0', 'user-agents==1.1.0']
+REQUIREMENTS = ['home-assistant-frontend==20180510.1']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -92,6 +94,10 @@ SERVICE_SET_THEME = 'set_theme'
 SERVICE_RELOAD_THEMES = 'reload_themes'
 SERVICE_SET_THEME_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
+})
+WS_TYPE_GET_PANELS = 'get_panels'
+SCHEMA_GET_PANELS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_GET_PANELS,
 })
 
 
@@ -290,6 +296,17 @@ def add_manifest_json_key(key, val):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the serving of the frontend."""
+    if list(hass.auth.async_auth_providers):
+        client = yield from hass.auth.async_create_client(
+            'Home Assistant Frontend',
+            redirect_uris=['/'],
+            no_secret=True,
+        )
+    else:
+        client = None
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_GET_PANELS, websocket_handle_get_panels, SCHEMA_GET_PANELS)
     hass.http.register_view(ManifestJSONView)
 
     conf = config.get(DOMAIN, {})
@@ -345,7 +362,7 @@ def async_setup(hass, config):
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    index_view = IndexView(repo_path, js_version)
+    index_view = IndexView(repo_path, js_version, client)
     hass.http.register_view(index_view)
 
     @asyncio.coroutine
@@ -378,6 +395,8 @@ def async_setup(hass, config):
         add_extra_html_url(hass, url, True)
 
     async_setup_themes(hass, conf.get(CONF_THEMES))
+
+    hass.http.register_view(TranslationsView)
 
     return True
 
@@ -441,10 +460,11 @@ class IndexView(HomeAssistantView):
     requires_auth = False
     extra_urls = ['/states', '/states/{extra}']
 
-    def __init__(self, repo_path, js_option):
+    def __init__(self, repo_path, js_option, client):
         """Initialize the frontend view."""
         self.repo_path = repo_path
         self.js_option = js_option
+        self.client = client
         self._template_cache = {}
 
     def get_template(self, latest):
@@ -490,7 +510,7 @@ class IndexView(HomeAssistantView):
             panel_url = hass.data[DATA_PANELS][panel].webcomponent_url_es5
 
         no_auth = '1'
-        if hass.config.api.api_password and not is_trusted_ip(request):
+        if hass.config.api.api_password and not request[KEY_AUTHENTICATED]:
             # do not try to auto connect on load
             no_auth = '0'
 
@@ -498,7 +518,7 @@ class IndexView(HomeAssistantView):
 
         extra_key = DATA_EXTRA_HTML_URL if latest else DATA_EXTRA_HTML_URL_ES5
 
-        resp = template.render(
+        template_params = dict(
             no_auth=no_auth,
             panel_url=panel_url,
             panels=hass.data[DATA_PANELS],
@@ -506,7 +526,11 @@ class IndexView(HomeAssistantView):
             extra_urls=hass.data[extra_key],
         )
 
-        return web.Response(text=resp, content_type='text/html')
+        if self.client is not None:
+            template_params['client_id'] = self.client.id
+
+        return web.Response(text=template.render(**template_params),
+                            content_type='text/html')
 
 
 class ManifestJSONView(HomeAssistantView):
@@ -541,6 +565,23 @@ class ThemesView(HomeAssistantView):
         })
 
 
+class TranslationsView(HomeAssistantView):
+    """View to return backend defined translations."""
+
+    url = '/api/translations/{language}'
+    name = 'api:translations'
+
+    @asyncio.coroutine
+    def get(self, request, language):
+        """Return translations."""
+        hass = request.app['hass']
+
+        resources = yield from async_get_translations(hass, language)
+        return self.json({
+            'resources': resources,
+        })
+
+
 def _fingerprint(path):
     """Fingerprint a file."""
     with open(path) as fil:
@@ -553,6 +594,8 @@ def _is_latest(js_option, request):
 
     Set according to user's preference and URL override.
     """
+    import hass_frontend
+
     if request is None:
         return js_option == 'latest'
 
@@ -573,25 +616,21 @@ def _is_latest(js_option, request):
         return js_option == 'latest'
 
     useragent = request.headers.get('User-Agent')
-    if not useragent:
-        return False
 
-    from user_agents import parse
-    useragent = parse(useragent)
+    return useragent and hass_frontend.version(useragent)
 
-    # on iOS every browser is a Safari which we support from version 11.
-    if useragent.os.family == 'iOS':
-        # Was >= 10, temp setting it to 12 to work around issue #11387
-        return useragent.os.version[0] >= 12
 
-    family_min_version = {
-        'Chrome': 50,   # Probably can reduce this
-        'Chrome Mobile': 50,
-        'Firefox': 43,  # Array.prototype.includes added in 43
-        'Firefox Mobile': 43,
-        'Opera': 40,    # Probably can reduce this
-        'Edge': 14,     # Array.prototype.includes added in 14
-        'Safari': 10,   # many features not supported by 9
-    }
-    version = family_min_version.get(useragent.browser.family)
-    return version and useragent.browser.version[0] >= version
+@callback
+def websocket_handle_get_panels(hass, connection, msg):
+    """Handle get panels command.
+
+    Async friendly.
+    """
+    panels = {
+        panel:
+        connection.hass.data[DATA_PANELS][panel].to_response(
+            connection.hass, connection.request)
+        for panel in connection.hass.data[DATA_PANELS]}
+
+    connection.to_write.put_nowait(websocket_api.result_message(
+        msg['id'], panels))

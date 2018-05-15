@@ -14,7 +14,7 @@ import pytest
 import homeassistant.core as ha
 from homeassistant.exceptions import (InvalidEntityFormatError,
                                       InvalidStateError)
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
@@ -375,7 +375,7 @@ class TestEventBus(unittest.TestCase):
         self.assertEqual(1, len(runs))
 
     def test_thread_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test thread event listener."""
         thread_calls = []
 
         def thread_listener(event):
@@ -387,7 +387,7 @@ class TestEventBus(unittest.TestCase):
         assert len(thread_calls) == 1
 
     def test_callback_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test callback event listener."""
         callback_calls = []
 
         @ha.callback
@@ -400,7 +400,7 @@ class TestEventBus(unittest.TestCase):
         assert len(callback_calls) == 1
 
     def test_coroutine_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test coroutine event listener."""
         coroutine_calls = []
 
         @asyncio.coroutine
@@ -809,6 +809,8 @@ class TestConfig(unittest.TestCase):
 
             valid = [
                 test_file,
+                tmp_dir,
+                os.path.join(tmp_dir, 'notfound321')
             ]
             for path in valid:
                 assert self.config.is_allowed_path(path)

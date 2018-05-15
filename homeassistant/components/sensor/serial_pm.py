@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
 
     for pmname in coll.supported_values():
-        if config.get(CONF_NAME) is None:
+        if config.get(CONF_NAME) is not None:
             name = '{} PM{}'.format(config.get(CONF_NAME), pmname)
         else:
             name = 'PM{}'.format(pmname)

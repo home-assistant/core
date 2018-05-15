@@ -11,7 +11,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
+    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME, CONF_MODE)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -26,10 +26,14 @@ CONF_INITIAL = 'initial'
 CONF_MIN = 'min'
 CONF_MAX = 'max'
 
+MODE_TEXT = 'text'
+MODE_PASSWORD = 'password'
+
 ATTR_VALUE = 'value'
 ATTR_MIN = 'min'
 ATTR_MAX = 'max'
 ATTR_PATTERN = 'pattern'
+ATTR_MODE = 'mode'
 
 SERVICE_SET_VALUE = 'set_value'
 
@@ -63,6 +67,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(ATTR_PATTERN): cv.string,
+            vol.Optional(CONF_MODE, default=MODE_TEXT):
+                vol.In([MODE_TEXT, MODE_PASSWORD]),
         }, _cv_input_text)
     })
 }, required=True, extra=vol.ALLOW_EXTRA)
@@ -92,10 +98,11 @@ def async_setup(hass, config):
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
         pattern = cfg.get(ATTR_PATTERN)
+        mode = cfg.get(CONF_MODE)
 
         entities.append(InputText(
             object_id, name, initial, minimum, maximum, icon, unit,
-            pattern))
+            pattern, mode))
 
     if not entities:
         return False
@@ -122,7 +129,7 @@ class InputText(Entity):
     """Represent a text box."""
 
     def __init__(self, object_id, name, initial, minimum, maximum, icon,
-                 unit, pattern):
+                 unit, pattern, mode):
         """Initialize a text input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
@@ -132,6 +139,7 @@ class InputText(Entity):
         self._icon = icon
         self._unit = unit
         self._pattern = pattern
+        self._mode = mode
 
     @property
     def should_poll(self):
@@ -165,6 +173,7 @@ class InputText(Entity):
             ATTR_MIN: self._minimum,
             ATTR_MAX: self._maximum,
             ATTR_PATTERN: self._pattern,
+            ATTR_MODE: self._mode,
         }
 
     @asyncio.coroutine

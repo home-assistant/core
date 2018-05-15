@@ -194,7 +194,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             self._title = item.get('name')
             self._artist = ', '.join([artist.get('name')
                                       for artist in item.get('artists')])
-            self._uri = current.get('uri')
+            self._uri = item.get('uri')
             images = item.get('album').get('images')
             self._image_url = images[0].get('url') if images else None
         # Playing state

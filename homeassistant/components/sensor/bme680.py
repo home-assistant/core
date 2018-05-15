@@ -116,7 +116,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     return
 
 
-# pylint: disable=import-error
+# pylint: disable=import-error, no-member
 def _setup_bme680(config):
     """Set up and configure the BME680 sensor."""
     from smbus import SMBus

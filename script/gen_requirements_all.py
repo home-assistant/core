@@ -5,6 +5,7 @@ import os
 import pkgutil
 import re
 import sys
+import fnmatch
 
 COMMENT_REQUIREMENTS = (
     'RPi.GPIO',
@@ -31,13 +32,14 @@ COMMENT_REQUIREMENTS = (
     'envirophat',
     'i2csense',
     'credstash',
-    'pytradfri',
     'bme680',
+    'homekit',
 )
 
 TEST_REQUIREMENTS = (
     'aioautomatic',
     'aiohttp_cors',
+    'aiohue',
     'apns2',
     'caldav',
     'coinmarketcap',
@@ -46,8 +48,9 @@ TEST_REQUIREMENTS = (
     'ephem',
     'evohomeclient',
     'feedparser',
-    'fuzzywuzzy',
+    'foobot_async',
     'gTTS-token',
+    'HAP-python',
     'ha-ffmpeg',
     'haversine',
     'hbmqtt',
@@ -65,13 +68,17 @@ TEST_REQUIREMENTS = (
     'prometheus_client',
     'pushbullet.py',
     'py-canary',
+    'pyblackbird',
+    'pydeconz',
     'pydispatcher',
     'PyJWT',
     'pylitejet',
     'pymonoprice',
     'pynx584',
+    'pyqwikswitch',
     'python-forecastio',
     'pyunifi',
+    'pyupnp-async',
     'pywebpush',
     'restrictedpython',
     'rflink',
@@ -83,6 +90,7 @@ TEST_REQUIREMENTS = (
     'sqlalchemy',
     'statsd',
     'uvcclient',
+    'voluptuous-serialize',
     'warrant',
     'yahoo-finance',
     'pythonwhois',
@@ -92,6 +100,7 @@ TEST_REQUIREMENTS = (
 
 IGNORE_PACKAGES = (
     'homeassistant.components.recorder.models',
+    'homeassistant.components.homekit.*'
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
@@ -107,8 +116,11 @@ URL_PIN = ('https://home-assistant.io/developers/code_review_platform/'
 CONSTRAINT_PATH = os.path.join(os.path.dirname(__file__),
                                '../homeassistant/package_constraints.txt')
 CONSTRAINT_BASE = """
-# Breaks Python 3.6 and is not needed for our supported Pythons
+# Breaks Python 3.6 and is not needed for our supported Python versions
 enum34==1000000000.0.0
+
+# This is a old unmaintained library and is replaced with pycryptodome
+pycrypto==1000000000.0.0
 """
 
 
@@ -154,7 +166,10 @@ def gather_modules():
         try:
             module = importlib.import_module(package)
         except ImportError:
-            if package not in IGNORE_PACKAGES:
+            for pattern in IGNORE_PACKAGES:
+                if fnmatch.fnmatch(package, pattern):
+                    break
+            else:
                 errors.append(package)
             continue
 
@@ -268,23 +283,23 @@ def validate_constraints_file(data):
         return data + CONSTRAINT_BASE == req_file.read()
 
 
-def main():
+def main(validate):
     """Main section of the script."""
     if not os.path.isfile('requirements_all.txt'):
         print('Run this from HA root dir')
-        return
+        return 1
 
     data = gather_modules()
 
     if data is None:
-        sys.exit(1)
+        return 1
 
     constraints = gather_constraints()
 
     reqs_file = requirements_all_output(data)
     reqs_test_file = requirements_test_output(data)
 
-    if sys.argv[-1] == 'validate':
+    if validate:
         errors = []
         if not validate_requirements_file(reqs_file):
             errors.append("requirements_all.txt is not up to date")
@@ -300,14 +315,16 @@ def main():
             print("******* ERROR")
             print('\n'.join(errors))
             print("Please run script/gen_requirements_all.py")
-            sys.exit(1)
+            return 1
 
-        sys.exit(0)
+        return 0
 
     write_requirements_file(reqs_file)
     write_test_requirements_file(reqs_test_file)
     write_constraints_file(constraints)
+    return 0
 
 
 if __name__ == '__main__':
-    main()
+    _VAL = sys.argv[-1] == 'validate'
+    sys.exit(main(_VAL))

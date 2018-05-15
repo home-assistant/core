@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             NSDepartureSensor(
                 nsapi, departure.get(CONF_NAME), departure.get(CONF_FROM),
                 departure.get(CONF_TO), departure.get(CONF_VIA)))
-    if len(sensors):
+    if sensors:
         add_devices(sensors, True)
 
 

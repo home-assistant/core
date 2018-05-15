@@ -17,17 +17,17 @@ import voluptuous as vol
 from homeassistant.components.mqtt import (
     valid_publish_topic, valid_subscribe_topic)
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, CONF_NAME, CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_START,
+    ATTR_BATTERY_LEVEL, CONF_NAME, CONF_OPTIMISTIC,
     EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON)
+from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+    async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
-from homeassistant.loader import get_component
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 
-REQUIREMENTS = ['pymysensors==0.11.1']
+REQUIREMENTS = ['pymysensors==0.14.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -152,10 +152,8 @@ CONFIG_SCHEMA = vol.Schema({
                 vol.Optional(CONF_BAUD_RATE, default=DEFAULT_BAUD_RATE):
                     cv.positive_int,
                 vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
-                vol.Optional(CONF_TOPIC_IN_PREFIX, default=''):
-                    valid_subscribe_topic,
-                vol.Optional(CONF_TOPIC_OUT_PREFIX, default=''):
-                    valid_publish_topic,
+                vol.Optional(CONF_TOPIC_IN_PREFIX): valid_subscribe_topic,
+                vol.Optional(CONF_TOPIC_OUT_PREFIX): valid_publish_topic,
                 vol.Optional(CONF_NODES, default={}): NODE_SCHEMA,
             }]
         ),
@@ -283,67 +281,62 @@ MYSENSORS_CONST_SCHEMA = {
 }
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the MySensors component."""
     import mysensors.mysensors as mysensors
 
     version = config[DOMAIN].get(CONF_VERSION)
     persistence = config[DOMAIN].get(CONF_PERSISTENCE)
 
-    def setup_gateway(device, persistence_file, baud_rate, tcp_port, in_prefix,
-                      out_prefix):
+    async def setup_gateway(
+            device, persistence_file, baud_rate, tcp_port, in_prefix,
+            out_prefix):
         """Return gateway after setup of the gateway."""
         if device == MQTT_COMPONENT:
-            if not setup_component(hass, MQTT_COMPONENT, config):
-                return
-            mqtt = get_component(MQTT_COMPONENT)
+            if not await async_setup_component(hass, MQTT_COMPONENT, config):
+                return None
+            mqtt = hass.components.mqtt
             retain = config[DOMAIN].get(CONF_RETAIN)
 
             def pub_callback(topic, payload, qos, retain):
                 """Call MQTT publish function."""
-                mqtt.publish(hass, topic, payload, qos, retain)
+                mqtt.async_publish(topic, payload, qos, retain)
 
-            def sub_callback(topic, callback, qos):
+            def sub_callback(topic, sub_cb, qos):
                 """Call MQTT subscribe function."""
-                mqtt.subscribe(hass, topic, callback, qos)
-            gateway = mysensors.MQTTGateway(
-                pub_callback, sub_callback,
+                @callback
+                def internal_callback(*args):
+                    """Call callback."""
+                    sub_cb(*args)
+
+                hass.async_add_job(
+                    mqtt.async_subscribe(topic, internal_callback, qos))
+
+            gateway = mysensors.AsyncMQTTGateway(
+                pub_callback, sub_callback, in_prefix=in_prefix,
+                out_prefix=out_prefix, retain=retain, loop=hass.loop,
                 event_callback=None, persistence=persistence,
                 persistence_file=persistence_file,
-                protocol_version=version, in_prefix=in_prefix,
-                out_prefix=out_prefix, retain=retain)
+                protocol_version=version)
         else:
             try:
-                is_serial_port(device)
-                gateway = mysensors.SerialGateway(
-                    device, event_callback=None, persistence=persistence,
+                await hass.async_add_job(is_serial_port, device)
+                gateway = mysensors.AsyncSerialGateway(
+                    device, baud=baud_rate, loop=hass.loop,
+                    event_callback=None, persistence=persistence,
                     persistence_file=persistence_file,
-                    protocol_version=version, baud=baud_rate)
+                    protocol_version=version)
             except vol.Invalid:
-                try:
-                    socket.getaddrinfo(device, None)
-                    # valid ip address
-                    gateway = mysensors.TCPGateway(
-                        device, event_callback=None, persistence=persistence,
-                        persistence_file=persistence_file,
-                        protocol_version=version, port=tcp_port)
-                except OSError:
-                    # invalid ip address
-                    return
+                gateway = mysensors.AsyncTCPGateway(
+                    device, port=tcp_port, loop=hass.loop, event_callback=None,
+                    persistence=persistence, persistence_file=persistence_file,
+                    protocol_version=version)
         gateway.metric = hass.config.units.is_metric
         gateway.optimistic = config[DOMAIN].get(CONF_OPTIMISTIC)
         gateway.device = device
         gateway.event_callback = gw_callback_factory(hass)
-
-        def gw_start(event):
-            """Trigger to start of the gateway and any persistence."""
-            if persistence:
-                discover_persistent_devices(hass, gateway)
-            gateway.start()
-            hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                                 lambda event: gateway.stop())
-
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, gw_start)
+        if persistence:
+            await gateway.start_persistence()
 
         return gateway
 
@@ -358,9 +351,9 @@ def setup(hass, config):
             hass.config.path('mysensors{}.pickle'.format(index + 1)))
         baud_rate = gway.get(CONF_BAUD_RATE)
         tcp_port = gway.get(CONF_TCP_PORT)
-        in_prefix = gway.get(CONF_TOPIC_IN_PREFIX)
-        out_prefix = gway.get(CONF_TOPIC_OUT_PREFIX)
-        ready_gateway = setup_gateway(
+        in_prefix = gway.get(CONF_TOPIC_IN_PREFIX, '')
+        out_prefix = gway.get(CONF_TOPIC_OUT_PREFIX, '')
+        ready_gateway = await setup_gateway(
             device, persistence_file, baud_rate, tcp_port, in_prefix,
             out_prefix)
         if ready_gateway is not None:
@@ -374,7 +367,34 @@ def setup(hass, config):
 
     hass.data[MYSENSORS_GATEWAYS] = gateways
 
+    hass.async_add_job(finish_setup(hass, gateways))
+
     return True
+
+
+async def finish_setup(hass, gateways):
+    """Load any persistent devices and platforms and start gateway."""
+    discover_tasks = []
+    start_tasks = []
+    for gateway in gateways.values():
+        discover_tasks.append(discover_persistent_devices(hass, gateway))
+        start_tasks.append(gw_start(hass, gateway))
+    if discover_tasks:
+        # Make sure all devices and platforms are loaded before gateway start.
+        await asyncio.wait(discover_tasks, loop=hass.loop)
+    if start_tasks:
+        await asyncio.wait(start_tasks, loop=hass.loop)
+
+
+async def gw_start(hass, gateway):
+    """Start the gateway."""
+    @callback
+    def gw_stop(event):
+        """Trigger to stop the gateway."""
+        hass.async_add_job(gateway.stop())
+
+    await gateway.start()
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gw_stop)
 
 
 def validate_child(gateway, node_id, child):
@@ -434,14 +454,18 @@ def validate_child(gateway, node_id, child):
     return validated
 
 
+@callback
 def discover_mysensors_platform(hass, platform, new_devices):
     """Discover a MySensors platform."""
-    discovery.load_platform(
-        hass, platform, DOMAIN, {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN})
+    task = hass.async_add_job(discovery.async_load_platform(
+        hass, platform, DOMAIN,
+        {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN}))
+    return task
 
 
-def discover_persistent_devices(hass, gateway):
+async def discover_persistent_devices(hass, gateway):
     """Discover platforms for devices loaded via persistence file."""
+    tasks = []
     new_devices = defaultdict(list)
     for node_id in gateway.sensors:
         node = gateway.sensors[node_id]
@@ -450,7 +474,9 @@ def discover_persistent_devices(hass, gateway):
             for platform, dev_ids in validated.items():
                 new_devices[platform].extend(dev_ids)
     for platform, dev_ids in new_devices.items():
-        discover_mysensors_platform(hass, platform, dev_ids)
+        tasks.append(discover_mysensors_platform(hass, platform, dev_ids))
+    if tasks:
+        await asyncio.wait(tasks, loop=hass.loop)
 
 
 def get_mysensors_devices(hass, domain):
@@ -462,14 +488,16 @@ def get_mysensors_devices(hass, domain):
 
 def gw_callback_factory(hass):
     """Return a new callback for the gateway."""
+    @callback
     def mysensors_callback(msg):
         """Handle messages from a MySensors gateway."""
         start = timer()
         _LOGGER.debug(
             "Node update: node %s child %s", msg.node_id, msg.child_id)
 
-        child = msg.gateway.sensors[msg.node_id].children.get(msg.child_id)
-        if child is None:
+        try:
+            child = msg.gateway.sensors[msg.node_id].children[msg.child_id]
+        except KeyError:
             _LOGGER.debug("Not a child update for node %s", msg.node_id)
             return
 
@@ -492,7 +520,7 @@ def gw_callback_factory(hass):
             # Only one signal per device is needed.
             # A device can have multiple platforms, ie multiple schemas.
             # FOR LATER: Add timer to not signal if another update comes in.
-            dispatcher_send(hass, signal)
+            async_dispatcher_send(hass, signal)
         end = timer()
         if end - start > 0.1:
             _LOGGER.debug(
@@ -520,11 +548,12 @@ def get_mysensors_gateway(hass, gateway_id):
     return gateways.get(gateway_id)
 
 
+@callback
 def setup_mysensors_platform(
         hass, domain, discovery_info, device_class, device_args=None,
-        add_devices=None):
+        async_add_devices=None):
     """Set up a MySensors platform."""
-    # Only act if called via MySensors by discovery event.
+    # Only act if called via mysensors by discovery event.
     # Otherwise gateway is not setup.
     if not discovery_info:
         return
@@ -547,15 +576,14 @@ def setup_mysensors_platform(
             device_class_copy = device_class[s_type]
         name = get_mysensors_name(gateway, node_id, child_id)
 
-        # python 3.4 cannot unpack inside tuple, but combining tuples works
-        args_copy = device_args + (
-            gateway, node_id, child_id, name, value_type)
+        args_copy = (*device_args, gateway, node_id, child_id, name,
+                     value_type)
         devices[dev_id] = device_class_copy(*args_copy)
         new_devices.append(devices[dev_id])
     if new_devices:
         _LOGGER.info("Adding new devices: %s", new_devices)
-        if add_devices is not None:
-            add_devices(new_devices, True)
+        if async_add_devices is not None:
+            async_add_devices(new_devices, True)
     return new_devices
 
 
@@ -598,7 +626,7 @@ class MySensorsDevice(object):
 
         return attr
 
-    def update(self):
+    async def async_update(self):
         """Update the controller with the latest value from a sensor."""
         node = self.gateway.sensors[self.node_id]
         child = node.children[self.child_id]
@@ -630,14 +658,14 @@ class MySensorsEntity(MySensorsDevice, Entity):
         """Return true if entity is available."""
         return self.value_type in self._values
 
-    def _async_update_callback(self):
+    @callback
+    def async_update_callback(self):
         """Update the entity."""
         self.async_schedule_update_ha_state(True)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register update callback."""
         dev_id = id(self.gateway), self.node_id, self.child_id, self.value_type
         async_dispatcher_connect(
             self.hass, SIGNAL_CALLBACK.format(*dev_id),
-            self._async_update_callback)
+            self.async_update_callback)

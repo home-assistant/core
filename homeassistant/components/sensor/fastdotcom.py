@@ -26,6 +26,8 @@ CONF_HOUR = 'hour'
 CONF_DAY = 'day'
 CONF_MANUAL = 'manual'
 
+ICON = 'mdi:speedometer'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SECOND, default=[0]):
         vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
@@ -93,6 +95,11 @@ class SpeedtestSensor(Entity):
         if not state:
             return
         self._state = state.state
+
+    @property
+    def icon(self):
+        """Return icon."""
+        return ICON
 
 
 class SpeedtestData(object):

@@ -38,7 +38,7 @@ SUPPORT_LGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_ACCESS_TOKEN, default=None):
+    vol.Optional(CONF_ACCESS_TOKEN):
         vol.All(cv.string, vol.Length(max=6)),
 })
 

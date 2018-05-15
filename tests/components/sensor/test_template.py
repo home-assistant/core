@@ -104,6 +104,60 @@ class TestTemplateSensor:
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.attributes['entity_picture'] == '/local/sensor.png'
 
+    def test_friendly_name_template(self):
+        """Test friendly_name template."""
+        with assert_setup_component(1):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template': "State",
+                            'friendly_name_template':
+                                "It {{ states.sensor.test_state.state }}."
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes.get('friendly_name') == 'It .'
+
+        self.hass.states.set('sensor.test_state', 'Works')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes['friendly_name'] == 'It Works.'
+
+    def test_friendly_name_template_with_unknown_state(self):
+        """Test friendly_name template with an unknown value_template."""
+        with assert_setup_component(1):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test_template_sensor': {
+                            'value_template': "{{ states.fourohfour.state }}",
+                            'friendly_name_template':
+                                "It {{ states.sensor.test_state.state }}."
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes['friendly_name'] == 'It .'
+
+        self.hass.states.set('sensor.test_state', 'Works')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test_template_sensor')
+        assert state.attributes['friendly_name'] == 'It Works.'
+
     def test_template_syntax_error(self):
         """Test templating syntax error."""
         with assert_setup_component(0):
@@ -213,3 +267,40 @@ class TestTemplateSensor:
         self.hass.block_till_done()
 
         assert self.hass.states.all() == []
+
+    def test_setup_invalid_device_class(self):
+        """Test setup with invalid device_class."""
+        with assert_setup_component(0):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test': {
+                            'value_template': '{{ foo }}',
+                            'device_class': 'foobarnotreal',
+                        },
+                    },
+                }
+            })
+
+    def test_setup_valid_device_class(self):
+        """Test setup with valid device_class."""
+        with assert_setup_component(1):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'template',
+                    'sensors': {
+                        'test1': {
+                            'value_template': '{{ foo }}',
+                            'device_class': 'temperature',
+                        },
+                        'test2': {'value_template': '{{ foo }}'},
+                    }
+                }
+            })
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test1')
+        assert state.attributes['device_class'] == 'temperature'
+        state = self.hass.states.get('sensor.test2')
+        assert 'device_class' not in state.attributes

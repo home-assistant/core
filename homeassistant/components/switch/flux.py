@@ -21,7 +21,7 @@ from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
 from homeassistant.util.color import (
-    color_temperature_to_rgb, color_RGB_to_xy,
+    color_temperature_to_rgb, color_RGB_to_xy_brightness,
     color_temperature_kelvin_to_mired)
 from homeassistant.util.dt import now as dt_now
 
@@ -234,7 +234,7 @@ class FluxSwitch(SwitchDevice):
             else:
                 temp = self._sunset_colortemp + temp_offset
         rgb = color_temperature_to_rgb(temp)
-        x_val, y_val, b_val = color_RGB_to_xy(*rgb)
+        x_val, y_val, b_val = color_RGB_to_xy_brightness(*rgb)
         brightness = self._brightness if self._brightness else b_val
         if self._disable_brightness_adjust:
             brightness = None

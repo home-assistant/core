@@ -8,12 +8,15 @@ import asyncio
 import logging
 import voluptuous as vol
 
+import async_timeout
+
 from homeassistant.components.vacuum import (
     VacuumDevice, PLATFORM_SCHEMA, SUPPORT_BATTERY, SUPPORT_FAN_SPEED,
     SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS,
     SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 
@@ -40,7 +43,6 @@ DEFAULT_CERT = '/etc/ssl/certs/ca-certificates.crt'
 DEFAULT_CONTINUOUS = True
 DEFAULT_NAME = 'Roomba'
 
-ICON = 'mdi:roomba'
 PLATFORM = 'roomba'
 
 FAN_SPEED_AUTOMATIC = 'Automatic'
@@ -90,7 +92,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     )
     _LOGGER.info("Initializing communication with host %s (username: %s)",
                  host, username)
-    yield from hass.async_add_job(roomba.connect)
+
+    try:
+        with async_timeout.timeout(9):
+            yield from hass.async_add_job(roomba.connect)
+    except asyncio.TimeoutError:
+        raise PlatformNotReady
+
     roomba_vac = RoombaVacuum(name, roomba)
     hass.data[PLATFORM][host] = roomba_vac
 
@@ -155,11 +163,6 @@ class RoombaVacuum(VacuumDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use for device."""
-        return ICON
 
     @property
     def device_state_attributes(self):
@@ -242,7 +245,7 @@ class RoombaVacuum(VacuumDevice):
             self.vacuum.set_preference, 'vacHigh', str(high_perf))
 
     @asyncio.coroutine
-    def async_send_command(self, command, params, **kwargs):
+    def async_send_command(self, command, params=None, **kwargs):
         """Send raw command."""
         _LOGGER.debug("async_send_command %s (%s), %s",
                       command, params, kwargs)

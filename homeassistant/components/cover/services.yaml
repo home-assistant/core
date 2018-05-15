@@ -51,8 +51,8 @@ set_cover_tilt_position:
     entity_id:
       description: Name(s) of cover(s) to set cover tilt position.
       example: 'cover.living_room'
-    position:
-      description: Position of the cover (0 to 100).
+    tilt_position:
+      description: Tilt position of the cover (0 to 100).
       example: 30
 
 stop_cover_tilt:

@@ -24,7 +24,7 @@ def run(args):
         'value', help="The value to save when putting a secret",
         nargs='?', default=None)
 
-    # pylint: disable=import-error
+    # pylint: disable=import-error, no-member
     import credstash
     import botocore
 

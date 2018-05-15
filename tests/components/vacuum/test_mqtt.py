@@ -71,52 +71,56 @@ class TestVacuumMQTT(unittest.TestCase):
 
         vacuum.turn_on(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
-        self.assertEqual(('vacuum/command', 'turn_on', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'vacuum/command', 'turn_on', 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         vacuum.turn_off(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
-        self.assertEqual(('vacuum/command', 'turn_off', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'vacuum/command', 'turn_off', 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         vacuum.stop(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
-        self.assertEqual(('vacuum/command', 'stop', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'vacuum/command', 'stop', 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         vacuum.clean_spot(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
-        self.assertEqual(('vacuum/command', 'clean_spot', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'vacuum/command', 'clean_spot', 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         vacuum.locate(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
-        self.assertEqual(('vacuum/command', 'locate', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'vacuum/command', 'locate', 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         vacuum.start_pause(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
-        self.assertEqual(('vacuum/command', 'start_pause', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'vacuum/command', 'start_pause', 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         vacuum.return_to_base(self.hass, 'vacuum.mqtttest')
         self.hass.block_till_done()
-        self.assertEqual(('vacuum/command', 'return_to_base', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'vacuum/command', 'return_to_base', 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         vacuum.set_fan_speed(self.hass, 'high', 'vacuum.mqtttest')
         self.hass.block_till_done()
-        self.assertEqual(
-            ('vacuum/set_fan_speed', 'high', 0, False),
-            self.mock_publish.mock_calls[-2][1]
-        )
+        self.mock_publish.async_publish.assert_called_once_with(
+            'vacuum/set_fan_speed', 'high', 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         vacuum.send_command(self.hass, '44 FE 93', entity_id='vacuum.mqtttest')
         self.hass.block_till_done()
-        self.assertEqual(
-            ('vacuum/send_command', '44 FE 93', 0, False),
-            self.mock_publish.mock_calls[-2][1]
-        )
+        self.mock_publish.async_publish.assert_called_once_with(
+            'vacuum/send_command', '44 FE 93', 0, False)
 
     def test_status(self):
         """Test status updates from the vacuum."""

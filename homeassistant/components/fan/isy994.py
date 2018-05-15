@@ -48,10 +48,6 @@ def setup_platform(hass, config: ConfigType,
 class ISYFanDevice(ISYDevice, FanEntity):
     """Representation of an ISY994 fan device."""
 
-    def __init__(self, node) -> None:
-        """Initialize the ISY994 fan device."""
-        super().__init__(node)
-
     @property
     def speed(self) -> str:
         """Return the current speed."""
@@ -66,7 +62,7 @@ class ISYFanDevice(ISYDevice, FanEntity):
         """Send the set speed command to the ISY994 fan device."""
         self._node.on(val=STATE_TO_VALUE.get(speed, 255))
 
-    def turn_on(self, speed: str=None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Send the turn on command to the ISY994 fan device."""
         self.set_speed(speed)
 
@@ -99,7 +95,7 @@ class ISYFanProgram(ISYFanDevice):
         if not self._actions.runThen():
             _LOGGER.error("Unable to turn off the fan")
 
-    def turn_on(self, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Send the turn off command to ISY994 fan program."""
         if not self._actions.runElse():
             _LOGGER.error("Unable to turn on the fan")

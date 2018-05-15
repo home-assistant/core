@@ -23,7 +23,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-mpd2==0.5.5']
+REQUIREMENTS = ['python-mpd2==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,8 +182,7 @@ class MpdDevice(MediaPlayerDevice):
         if name is None and title is None:
             if file_name is None:
                 return "None"
-            else:
-                return os.path.basename(file_name)
+            return os.path.basename(file_name)
         elif name is None:
             return title
         elif title is None:

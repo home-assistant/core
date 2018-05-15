@@ -174,7 +174,7 @@ class MoldIndicator(Entity):
             self._dewpoint = \
                 MAGNUS_K3 * (alpha + math.log(self._indoor_hum / 100.0)) / \
                 (beta - math.log(self._indoor_hum / 100.0))
-        _LOGGER.debug("Dewpoint: %f " + TEMP_CELSIUS, self._dewpoint)
+        _LOGGER.debug("Dewpoint: %f %s", self._dewpoint, TEMP_CELSIUS)
 
     def _calc_moldindicator(self):
         """Calculate the humidity at the (cold) calibration point."""
@@ -192,8 +192,8 @@ class MoldIndicator(Entity):
             self._outdoor_temp + (self._indoor_temp - self._outdoor_temp) / \
             self._calib_factor
 
-        _LOGGER.debug("Estimated Critical Temperature: %f " +
-                      TEMP_CELSIUS, self._crit_temp)
+        _LOGGER.debug("Estimated Critical Temperature: %f %s",
+                      self._crit_temp, TEMP_CELSIUS)
 
         # Then calculate the humidity at this point
         alpha = MAGNUS_K2 * self._crit_temp / (MAGNUS_K3 + self._crit_temp)

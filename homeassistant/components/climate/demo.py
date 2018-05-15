@@ -195,9 +195,9 @@ class DemoClimate(ClimateDevice):
         self._current_swing_mode = swing_mode
         self.schedule_update_ha_state()
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set new target temperature."""
-        self._current_fan_mode = fan
+        self._current_fan_mode = fan_mode
         self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
@@ -225,9 +225,9 @@ class DemoClimate(ClimateDevice):
         self._away = False
         self.schedule_update_ha_state()
 
-    def set_hold_mode(self, hold):
-        """Update hold mode on."""
-        self._hold = hold
+    def set_hold_mode(self, hold_mode):
+        """Update hold_mode on."""
+        self._hold = hold_mode
         self.schedule_update_ha_state()
 
     def turn_aux_heat_on(self):

@@ -118,6 +118,17 @@ def async_setup(hass, config):
 
     tasks2 = []
 
+    # Set up history graph
+    tasks2.append(bootstrap.async_setup_component(
+        hass, 'history_graph',
+        {'history_graph': {'switches': {
+            'name': 'Recent Switches',
+            'entities': switches,
+            'hours_to_show': 1,
+            'refresh': 60
+        }}}
+    ))
+
     # Set up scripts
     tasks2.append(bootstrap.async_setup_component(
         hass, 'script',

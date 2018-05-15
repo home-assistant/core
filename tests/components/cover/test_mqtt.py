@@ -116,16 +116,17 @@ class TestCoverMQTT(unittest.TestCase):
         cover.open_cover(self.hass, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('command-topic', 'OPEN', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'command-topic', 'OPEN', 0, False)
+        self.mock_publish.async_publish.reset_mock()
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_OPEN, state.state)
 
         cover.close_cover(self.hass, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('command-topic', 'CLOSE', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'command-topic', 'CLOSE', 0, False)
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_CLOSED, state.state)
 
@@ -147,8 +148,8 @@ class TestCoverMQTT(unittest.TestCase):
         cover.open_cover(self.hass, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('command-topic', 'OPEN', 2, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'command-topic', 'OPEN', 2, False)
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
 
@@ -170,8 +171,8 @@ class TestCoverMQTT(unittest.TestCase):
         cover.close_cover(self.hass, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('command-topic', 'CLOSE', 2, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'command-topic', 'CLOSE', 2, False)
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
 
@@ -193,8 +194,8 @@ class TestCoverMQTT(unittest.TestCase):
         cover.stop_cover(self.hass, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('command-topic', 'STOP', 2, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'command-topic', 'STOP', 2, False)
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
 
@@ -295,8 +296,8 @@ class TestCoverMQTT(unittest.TestCase):
         cover.set_cover_position(self.hass, 100, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('position-topic', '38', 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'position-topic', '38', 0, False)
 
     def test_set_position_untemplated(self):
         """Test setting cover position via template."""
@@ -316,8 +317,8 @@ class TestCoverMQTT(unittest.TestCase):
         cover.set_cover_position(self.hass, 62, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('position-topic', 62, 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'position-topic', 62, 0, False)
 
     def test_no_command_topic(self):
         """Test with no command topic."""
@@ -401,14 +402,15 @@ class TestCoverMQTT(unittest.TestCase):
         cover.open_cover_tilt(self.hass, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('tilt-command-topic', 100, 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 100, 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         cover.close_cover_tilt(self.hass, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('tilt-command-topic', 0, 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 0, 0, False)
 
     def test_tilt_given_value(self):
         """Test tilting to a given value."""
@@ -432,14 +434,15 @@ class TestCoverMQTT(unittest.TestCase):
         cover.open_cover_tilt(self.hass, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('tilt-command-topic', 400, 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 400, 0, False)
+        self.mock_publish.async_publish.reset_mock()
 
         cover.close_cover_tilt(self.hass, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('tilt-command-topic', 125, 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 125, 0, False)
 
     def test_tilt_via_topic(self):
         """Test tilt by updating status via MQTT."""
@@ -538,8 +541,8 @@ class TestCoverMQTT(unittest.TestCase):
         cover.set_cover_tilt_position(self.hass, 50, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('tilt-command-topic', 50, 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 50, 0, False)
 
     def test_tilt_position_altered_range(self):
         """Test tilt via method invocation with altered range."""
@@ -565,8 +568,8 @@ class TestCoverMQTT(unittest.TestCase):
         cover.set_cover_tilt_position(self.hass, 50, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('tilt-command-topic', 25, 0, False),
-                         self.mock_publish.mock_calls[-2][1])
+        self.mock_publish.async_publish.assert_called_once_with(
+            'tilt-command-topic', 25, 0, False)
 
     def test_find_percentage_in_range_defaults(self):
         """Test find percentage in range with default range."""

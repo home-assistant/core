@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyfido==2.1.0']
+REQUIREMENTS = ['pyfido==2.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,13 +157,12 @@ class FidoData(object):
                                  REQUESTS_TIMEOUT, httpsession)
         self.data = {}
 
-    @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from Fido."""
         from pyfido.client import PyFidoError
         try:
-            yield from self.client.fetch_data()
+            await self.client.fetch_data()
         except PyFidoError as exp:
             _LOGGER.error("Error on receive last Fido data: %s", exp)
             return False

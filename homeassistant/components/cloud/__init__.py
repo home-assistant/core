@@ -15,13 +15,13 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE, CONF_NAME, CONF_TYPE)
-from homeassistant.helpers import entityfilter
-from homeassistant.helpers import config_validation as cv
+    EVENT_HOMEASSISTANT_START, CONF_REGION, CONF_MODE, CONF_NAME)
+from homeassistant.helpers import entityfilter, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 from homeassistant.components.alexa import smart_home as alexa_sh
-from homeassistant.components.google_assistant import smart_home as ga_sh
+from homeassistant.components.google_assistant import helpers as ga_h
+from homeassistant.components.google_assistant import const as ga_c
 
 from . import http_api, iot
 from .const import CONFIG_DIR, DOMAIN, SERVERS
@@ -38,6 +38,7 @@ CONF_FILTER = 'filter'
 CONF_GOOGLE_ACTIONS = 'google_actions'
 CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
+CONF_GOOGLE_ACTIONS_SYNC_URL = 'google_actions_sync_url'
 
 DEFAULT_MODE = 'production'
 DEPENDENCIES = ['http']
@@ -52,15 +53,12 @@ ALEXA_ENTITY_SCHEMA = vol.Schema({
 
 GOOGLE_ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_TYPE): vol.In(ga_sh.MAPPING_COMPONENT),
-    vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string])
+    vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ga_c.CONF_ROOM_HINT): cv.string,
 })
 
 ASSISTANT_SCHEMA = vol.Schema({
-    vol.Optional(
-        CONF_FILTER,
-        default=lambda: entityfilter.generate_filter([], [], [], [])
-    ): entityfilter.FILTER_SCHEMA,
+    vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
 })
 
 ALEXA_SCHEMA = ASSISTANT_SCHEMA.extend({
@@ -80,6 +78,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_USER_POOL_ID): str,
         vol.Optional(CONF_REGION): str,
         vol.Optional(CONF_RELAYER): str,
+        vol.Optional(CONF_GOOGLE_ACTIONS_SYNC_URL): str,
         vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
         vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
     }),
@@ -105,12 +104,7 @@ def async_setup(hass, config):
     )
 
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
-
-    success = yield from cloud.initialize()
-
-    if not success:
-        return False
-
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, cloud.async_start)
     yield from http_api.async_setup(hass)
     return True
 
@@ -120,7 +114,7 @@ class Cloud:
 
     def __init__(self, hass, mode, alexa, google_actions,
                  cognito_client_id=None, user_pool_id=None, region=None,
-                 relayer=None):
+                 relayer=None, google_actions_sync_url=None):
         """Create an instance of Cloud."""
         self.hass = hass
         self.mode = mode
@@ -138,6 +132,7 @@ class Cloud:
             self.user_pool_id = user_pool_id
             self.region = region
             self.relayer = relayer
+            self.google_actions_sync_url = google_actions_sync_url
 
         else:
             info = SERVERS[mode]
@@ -146,6 +141,7 @@ class Cloud:
             self.user_pool_id = info['user_pool_id']
             self.region = info['region']
             self.relayer = info['relayer']
+            self.google_actions_sync_url = info['google_actions_sync_url']
 
     @property
     def is_logged_in(self):
@@ -184,26 +180,13 @@ class Cloud:
                 """If an entity should be exposed."""
                 return conf['filter'](entity.entity_id)
 
-            self._gactions_config = ga_sh.Config(
+            self._gactions_config = ga_h.Config(
                 should_expose=should_expose,
                 agent_user_id=self.claims['cognito:username'],
                 entity_config=conf.get(CONF_ENTITY_CONFIG),
             )
 
         return self._gactions_config
-
-    @asyncio.coroutine
-    def initialize(self):
-        """Initialize and load cloud info."""
-        jwt_success = yield from self._fetch_jwt_keyset()
-
-        if not jwt_success:
-            return False
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, self._start_cloud)
-
-        return True
 
     def path(self, *parts):
         """Get config path inside cloud dir.
@@ -234,19 +217,34 @@ class Cloud:
                 'refresh_token': self.refresh_token,
             }, indent=4))
 
-    def _start_cloud(self, event):
+    @asyncio.coroutine
+    def async_start(self, _):
         """Start the cloud component."""
-        # Ensure config dir exists
-        path = self.hass.config.path(CONFIG_DIR)
-        if not os.path.isdir(path):
-            os.mkdir(path)
+        success = yield from self._fetch_jwt_keyset()
 
-        user_info = self.user_info_path
-        if not os.path.isfile(user_info):
+        # Fetching keyset can fail if internet is not up yet.
+        if not success:
+            self.hass.helpers.event.async_call_later(5, self.async_start)
             return
 
-        with open(user_info, 'rt') as file:
-            info = json.loads(file.read())
+        def load_config():
+            """Load config."""
+            # Ensure config dir exists
+            path = self.hass.config.path(CONFIG_DIR)
+            if not os.path.isdir(path):
+                os.mkdir(path)
+
+            user_info = self.user_info_path
+            if not os.path.isfile(user_info):
+                return None
+
+            with open(user_info, 'rt') as file:
+                return json.loads(file.read())
+
+        info = yield from self.hass.async_add_job(load_config)
+
+        if info is None:
+            return
 
         # Validate tokens
         try:

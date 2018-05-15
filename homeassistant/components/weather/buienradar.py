@@ -6,17 +6,20 @@ https://home-assistant.io/components/weather.buienradar/
 """
 import logging
 import asyncio
+
+import voluptuous as vol
+
 from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
+    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME)
 from homeassistant.const import \
     CONF_NAME, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.buienradar import (
     BrData)
-import voluptuous as vol
 
-REQUIREMENTS = ['buienradar==0.9']
+REQUIREMENTS = ['buienradar==0.91']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,9 +28,6 @@ DATA_CONDITION = 'buienradar_condition'
 DEFAULT_TIMEFRAME = 60
 
 CONF_FORECAST = 'forecast'
-
-ATTR_FORECAST_CONDITION = 'condition'
-ATTR_FORECAST_TEMP_LOW = 'templow'
 
 
 CONDITION_CLASSES = {
@@ -118,15 +118,6 @@ class BrWeather(WeatherEntity):
                 conditions = self.hass.data.get(DATA_CONDITION)
                 if conditions:
                     return conditions.get(ccode)
-
-    @property
-    def entity_picture(self):
-        """Return the entity picture to use in the frontend, if any."""
-        from buienradar.buienradar import (IMAGE)
-
-        if self._data and self._data.condition:
-            return self._data.condition.get(IMAGE, None)
-        return None
 
     @property
     def temperature(self):

@@ -5,12 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/ring/
 """
 import logging
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-
 from requests.exceptions import HTTPError, ConnectTimeout
+
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 REQUIREMENTS = ['ring_doorbell==0.1.8']
 
@@ -37,8 +37,8 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the Ring component."""
     conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
+    username = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
 
     try:
         from ring_doorbell import Ring

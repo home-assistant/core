@@ -9,17 +9,18 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import (
     DOMAIN, CONF_JS_VERSION, CONF_THEMES, CONF_EXTRA_HTML_URL,
     CONF_EXTRA_HTML_URL_ES5, DATA_PANELS)
+from homeassistant.components import websocket_api as wapi
 
 
 @pytest.fixture
-def mock_http_client(hass, test_client):
+def mock_http_client(hass, aiohttp_client):
     """Start the Hass HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {}))
-    return hass.loop.run_until_complete(test_client(hass.http.app))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
-def mock_http_client_with_themes(hass, test_client):
+def mock_http_client_with_themes(hass, aiohttp_client):
     """Start the Hass HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {
         DOMAIN: {
@@ -29,11 +30,11 @@ def mock_http_client_with_themes(hass, test_client):
                 }
             }
         }}))
-    return hass.loop.run_until_complete(test_client(hass.http.app))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
-def mock_http_client_with_urls(hass, test_client):
+def mock_http_client_with_urls(hass, aiohttp_client):
     """Start the Hass HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, 'frontend', {
         DOMAIN: {
@@ -42,7 +43,7 @@ def mock_http_client_with_urls(hass, test_client):
             CONF_EXTRA_HTML_URL_ES5:
                 ["https://domain.com/my_extra_url_es5.html"]
         }}))
-    return hass.loop.run_until_complete(test_client(hass.http.app))
+    return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @asyncio.coroutine
@@ -189,3 +190,26 @@ def test_panel_without_path(hass):
         'test_component', 'nonexistant_file')
     yield from async_setup_component(hass, 'frontend', {})
     assert 'test_component' not in hass.data[DATA_PANELS]
+
+
+async def test_get_panels(hass, hass_ws_client):
+    """Test get_panels command."""
+    await async_setup_component(hass, 'frontend')
+    await hass.components.frontend.async_register_built_in_panel(
+        'map', 'Map', 'mdi:account-location')
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'get_panels',
+    })
+
+    msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['success']
+    assert msg['result']['map']['component_name'] == 'map'
+    assert msg['result']['map']['url_path'] == 'map'
+    assert msg['result']['map']['icon'] == 'mdi:account-location'
+    assert msg['result']['map']['title'] == 'Map'

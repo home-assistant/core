@@ -47,8 +47,9 @@ MONITORED_CONDITIONS = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_REGION_NAME): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS,
+                 default=list(MONITORED_CONDITIONS)):
+    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
 })
 
 
@@ -137,11 +138,11 @@ class DwdWeatherWarningsSensor(Entity):
             data['warning_{}_name'.format(i)] = event['event']
             data['warning_{}_level'.format(i)] = event['level']
             data['warning_{}_type'.format(i)] = event['type']
-            if len(event['headline']) > 0:
+            if event['headline']:
                 data['warning_{}_headline'.format(i)] = event['headline']
-            if len(event['description']) > 0:
+            if event['description']:
                 data['warning_{}_description'.format(i)] = event['description']
-            if len(event['instruction']) > 0:
+            if event['instruction']:
                 data['warning_{}_instruction'.format(i)] = event['instruction']
 
             if event['start'] is not None:

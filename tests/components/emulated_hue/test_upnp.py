@@ -9,7 +9,7 @@ from aiohttp.hdrs import CONTENT_TYPE
 from homeassistant import setup, const, core
 import homeassistant.components as core_components
 from homeassistant.components import emulated_hue, http
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import get_test_instance_port, get_test_home_assistant
 

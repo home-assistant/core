@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_STRUCTURE, CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
     CONF_MONITORED_CONDITIONS)
 
-REQUIREMENTS = ['python-nest==3.1.0']
+REQUIREMENTS = ['python-nest==3.7.0']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)

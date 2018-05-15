@@ -59,7 +59,7 @@ class RainCloudSwitch(RainCloudEntity, SwitchDevice):
         """Return true if device is on."""
         return self._state
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         if self._sensor_type == 'manual_watering':
             self.data.watering_time = self._default_watering_timer
@@ -67,7 +67,7 @@ class RainCloudSwitch(RainCloudEntity, SwitchDevice):
             self.data.auto_watering = True
         self._state = True
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         if self._sensor_type == 'manual_watering':
             self.data.watering_time = 'off'

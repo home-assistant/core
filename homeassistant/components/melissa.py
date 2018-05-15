@@ -12,7 +12,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ["py-melissa-climate==1.0.1"]
+REQUIREMENTS = ["py-melissa-climate==1.0.6"]
 
 _LOGGER = logging.getLogger(__name__)
 

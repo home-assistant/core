@@ -10,15 +10,14 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import ATTR_NAME, CONF_NAME, DEVICE_CLASS_BATTERY
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['batinfo==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_NAME = 'name'
 ATTR_PATH = 'path'
 ATTR_ALARM = 'alarm'
 ATTR_CAPACITY = 'capacity'
@@ -47,8 +46,6 @@ DEFAULT_PATH = '/sys/class/power_supply'
 DEFAULT_SYSTEM = 'linux'
 
 SYSTEMS = ['android', 'linux']
-
-ICON = 'mdi:battery'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
@@ -95,6 +92,11 @@ class LinuxBatterySensor(Entity):
         return self._name
 
     @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_BATTERY
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._battery_stat.capacity
@@ -103,11 +105,6 @@ class LinuxBatterySensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
 
     @property
     def device_state_attributes(self):
@@ -119,24 +116,23 @@ class LinuxBatterySensor(Entity):
                 ATTR_HEALTH: self._battery_stat.health,
                 ATTR_STATUS: self._battery_stat.status,
             }
-        else:
-            return {
-                ATTR_NAME: self._battery_stat.name,
-                ATTR_PATH: self._battery_stat.path,
-                ATTR_ALARM: self._battery_stat.alarm,
-                ATTR_CAPACITY_LEVEL: self._battery_stat.capacity_level,
-                ATTR_CYCLE_COUNT: self._battery_stat.cycle_count,
-                ATTR_ENERGY_FULL: self._battery_stat.energy_full,
-                ATTR_ENERGY_FULL_DESIGN: self._battery_stat.energy_full_design,
-                ATTR_ENERGY_NOW: self._battery_stat.energy_now,
-                ATTR_MANUFACTURER: self._battery_stat.manufacturer,
-                ATTR_MODEL_NAME: self._battery_stat.model_name,
-                ATTR_POWER_NOW: self._battery_stat.power_now,
-                ATTR_SERIAL_NUMBER: self._battery_stat.serial_number,
-                ATTR_STATUS: self._battery_stat.status,
-                ATTR_VOLTAGE_MIN_DESIGN: self._battery_stat.voltage_min_design,
-                ATTR_VOLTAGE_NOW: self._battery_stat.voltage_now,
-            }
+        return {
+            ATTR_NAME: self._battery_stat.name,
+            ATTR_PATH: self._battery_stat.path,
+            ATTR_ALARM: self._battery_stat.alarm,
+            ATTR_CAPACITY_LEVEL: self._battery_stat.capacity_level,
+            ATTR_CYCLE_COUNT: self._battery_stat.cycle_count,
+            ATTR_ENERGY_FULL: self._battery_stat.energy_full,
+            ATTR_ENERGY_FULL_DESIGN: self._battery_stat.energy_full_design,
+            ATTR_ENERGY_NOW: self._battery_stat.energy_now,
+            ATTR_MANUFACTURER: self._battery_stat.manufacturer,
+            ATTR_MODEL_NAME: self._battery_stat.model_name,
+            ATTR_POWER_NOW: self._battery_stat.power_now,
+            ATTR_SERIAL_NUMBER: self._battery_stat.serial_number,
+            ATTR_STATUS: self._battery_stat.status,
+            ATTR_VOLTAGE_MIN_DESIGN: self._battery_stat.voltage_min_design,
+            ATTR_VOLTAGE_NOW: self._battery_stat.voltage_now,
+        }
 
     def update(self):
         """Get the latest data and updates the states."""

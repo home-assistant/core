@@ -98,8 +98,7 @@ class EphEmberThermostat(ClimateDevice):
         """Return current operation ie. heat, cool, idle."""
         if self._zone['isCurrentlyActive']:
             return STATE_HEAT
-        else:
-            return STATE_IDLE
+        return STATE_IDLE
 
     @property
     def is_aux_heat_on(self):

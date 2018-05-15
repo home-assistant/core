@@ -42,17 +42,7 @@ class LutronCasetaScene(Scene):
         """Return the name of the scene."""
         return self._scene_name
 
-    @property
-    def should_poll(self):
-        """Return that polling is not necessary."""
-        return False
-
-    @property
-    def is_on(self):
-        """There is no way of detecting if a scene is active (yet)."""
-        return False
-
     @asyncio.coroutine
-    def async_activate(self, **kwargs):
+    def async_activate(self):
         """Activate the scene."""
         self._bridge.activate_scene(self._scene_id)

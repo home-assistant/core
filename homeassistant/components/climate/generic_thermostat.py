@@ -190,11 +190,9 @@ class GenericThermostat(ClimateDevice):
         """Return the current state."""
         if self._is_device_active:
             return self.current_operation
-        else:
-            if self._enabled:
-                return STATE_IDLE
-            else:
-                return STATE_OFF
+        if self._enabled:
+            return STATE_IDLE
+        return STATE_OFF
 
     @property
     def should_poll(self):
@@ -231,7 +229,7 @@ class GenericThermostat(ClimateDevice):
         """List of available operation modes."""
         return self._operation_list
 
-    def set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set operation mode."""
         if operation_mode == STATE_HEAT:
             self._current_operation = STATE_HEAT

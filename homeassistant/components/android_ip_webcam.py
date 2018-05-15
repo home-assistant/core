@@ -140,11 +140,11 @@ CONFIG_SCHEMA = vol.Schema({
             cv.time_period,
         vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
         vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-        vol.Optional(CONF_SWITCHES, default=None):
+        vol.Optional(CONF_SWITCHES):
             vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
-        vol.Optional(CONF_SENSORS, default=None):
+        vol.Optional(CONF_SENSORS):
             vol.All(cv.ensure_list, [vol.In(SENSORS)]),
-        vol.Optional(CONF_MOTION_SENSOR, default=None): cv.boolean,
+        vol.Optional(CONF_MOTION_SENSOR): cv.boolean,
     })])
 }, extra=vol.ALLOW_EXTRA)
 
@@ -165,9 +165,9 @@ def async_setup(hass, config):
         password = cam_config.get(CONF_PASSWORD)
         name = cam_config[CONF_NAME]
         interval = cam_config[CONF_SCAN_INTERVAL]
-        switches = cam_config[CONF_SWITCHES]
-        sensors = cam_config[CONF_SENSORS]
-        motion = cam_config[CONF_MOTION_SENSOR]
+        switches = cam_config.get(CONF_SWITCHES)
+        sensors = cam_config.get(CONF_SENSORS)
+        motion = cam_config.get(CONF_MOTION_SENSOR)
 
         # Init ip webcam
         cam = PyDroidIPCam(

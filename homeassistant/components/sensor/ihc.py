@@ -62,7 +62,7 @@ class IHCSensor(IHCDevice, Entity):
     """Implementation of the IHC sensor."""
 
     def __init__(self, ihc_controller, name, ihc_id: int, info: bool,
-                 unit, product: Element=None) -> None:
+                 unit, product: Element = None) -> None:
         """Initialize the IHC sensor."""
         super().__init__(ihc_controller, name, ihc_id, info, product)
         self._state = None

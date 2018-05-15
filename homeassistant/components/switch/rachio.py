@@ -216,7 +216,7 @@ class RachioZone(SwitchDevice):
 
         _LOGGER.debug("Updated %s", str(self))
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Start the zone."""
         # Stop other zones first
         self.turn_off()
@@ -224,7 +224,7 @@ class RachioZone(SwitchDevice):
         _LOGGER.info("Watering %s for %d s", self.name, self._manual_run_secs)
         self.rachio.zone.start(self.zone_id, self._manual_run_secs)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Stop all zones."""
         _LOGGER.info("Stopping watering of all zones")
         self.rachio.device.stopWater(self._device.device_id)

@@ -36,7 +36,7 @@ DEMO_DEVICES = [{
     'traits': [
         'action.devices.traits.OnOff'
     ],
-    'type': 'action.devices.types.LIGHT',  # This is used for custom type
+    'type': 'action.devices.types.SWITCH',
     'willReportState':
     False
 }, {
@@ -226,22 +226,6 @@ DEMO_DEVICES = [{
     'id': 'climate.ecobee',
     'name': {
         'name': 'Ecobee'
-    },
-    'traits': ['action.devices.traits.TemperatureSetting'],
-    'type': 'action.devices.types.THERMOSTAT',
-    'willReportState': False
-}, {
-    'id': 'sensor.outside_temperature',
-    'name': {
-        'name': 'Outside Temperature'
-    },
-    'traits': ['action.devices.traits.TemperatureSetting'],
-    'type': 'action.devices.types.THERMOSTAT',
-    'willReportState': False
-}, {
-    'id': 'sensor.outside_humidity',
-    'name': {
-        'name': 'Outside Humidity'
     },
     'traits': ['action.devices.traits.TemperatureSetting'],
     'type': 'action.devices.types.THERMOSTAT',

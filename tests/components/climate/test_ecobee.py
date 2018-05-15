@@ -3,6 +3,7 @@ import unittest
 from unittest import mock
 import homeassistant.const as const
 import homeassistant.components.climate.ecobee as ecobee
+from homeassistant.components.climate import STATE_OFF
 
 
 class TestEcobee(unittest.TestCase):
@@ -23,6 +24,7 @@ class TestEcobee(unittest.TestCase):
                             'desiredFanMode': 'on'},
                 'settings': {'hvacMode': 'auto',
                              'fanMinOnTime': 10,
+                             'heatCoolMinDelta': 50,
                              'holdAction': 'nextTransition'},
                 'equipmentStatus': 'fan',
                 'events': [{'name': 'Event1',
@@ -81,17 +83,17 @@ class TestEcobee(unittest.TestCase):
 
     def test_desired_fan_mode(self):
         """Test desired fan mode property."""
-        self.assertEqual('on', self.thermostat.desired_fan_mode)
+        self.assertEqual('on', self.thermostat.current_fan_mode)
         self.ecobee['runtime']['desiredFanMode'] = 'auto'
-        self.assertEqual('auto', self.thermostat.desired_fan_mode)
+        self.assertEqual('auto', self.thermostat.current_fan_mode)
 
     def test_fan(self):
         """Test fan property."""
         self.assertEqual(const.STATE_ON, self.thermostat.fan)
         self.ecobee['equipmentStatus'] = ''
-        self.assertEqual(const.STATE_OFF, self.thermostat.fan)
+        self.assertEqual(STATE_OFF, self.thermostat.fan)
         self.ecobee['equipmentStatus'] = 'heatPump, heatPump2'
-        self.assertEqual(const.STATE_OFF, self.thermostat.fan)
+        self.assertEqual(STATE_OFF, self.thermostat.fan)
 
     def test_current_hold_mode_away_temporary(self):
         """Test current hold mode when away."""
@@ -180,7 +182,7 @@ class TestEcobee(unittest.TestCase):
                           'climate_list': ['Climate1', 'Climate2'],
                           'fan': 'off',
                           'fan_min_on_time': 10,
-                          'mode': 'Climate1',
+                          'climate_mode': 'Climate1',
                           'operation': 'heat'},
                          self.thermostat.device_state_attributes)
 
@@ -189,7 +191,7 @@ class TestEcobee(unittest.TestCase):
                           'climate_list': ['Climate1', 'Climate2'],
                           'fan': 'off',
                           'fan_min_on_time': 10,
-                          'mode': 'Climate1',
+                          'climate_mode': 'Climate1',
                           'operation': 'heat'},
                          self.thermostat.device_state_attributes)
         self.ecobee['equipmentStatus'] = 'compCool1'
@@ -197,7 +199,7 @@ class TestEcobee(unittest.TestCase):
                           'climate_list': ['Climate1', 'Climate2'],
                           'fan': 'off',
                           'fan_min_on_time': 10,
-                          'mode': 'Climate1',
+                          'climate_mode': 'Climate1',
                           'operation': 'cool'},
                          self.thermostat.device_state_attributes)
         self.ecobee['equipmentStatus'] = ''
@@ -205,7 +207,7 @@ class TestEcobee(unittest.TestCase):
                           'climate_list': ['Climate1', 'Climate2'],
                           'fan': 'off',
                           'fan_min_on_time': 10,
-                          'mode': 'Climate1',
+                          'climate_mode': 'Climate1',
                           'operation': 'idle'},
                          self.thermostat.device_state_attributes)
 
@@ -214,7 +216,7 @@ class TestEcobee(unittest.TestCase):
                           'climate_list': ['Climate1', 'Climate2'],
                           'fan': 'off',
                           'fan_min_on_time': 10,
-                          'mode': 'Climate1',
+                          'climate_mode': 'Climate1',
                           'operation': 'Unknown'},
                          self.thermostat.device_state_attributes)
 
@@ -321,7 +323,7 @@ class TestEcobee(unittest.TestCase):
         self.assertFalse(self.data.ecobee.delete_vacation.called)
         self.assertFalse(self.data.ecobee.resume_program.called)
         self.data.ecobee.set_hold_temp.assert_has_calls(
-            [mock.call(1, 40.0, 20.0, 'nextTransition')])
+            [mock.call(1, 35.0, 25.0, 'nextTransition')])
         self.assertFalse(self.data.ecobee.set_climate_hold.called)
 
     def test_set_auto_temp_hold(self):
@@ -337,21 +339,21 @@ class TestEcobee(unittest.TestCase):
         self.data.reset_mock()
         self.thermostat.set_temp_hold(30.0)
         self.data.ecobee.set_hold_temp.assert_has_calls(
-            [mock.call(1, 40.0, 20.0, 'nextTransition')])
+            [mock.call(1, 35.0, 25.0, 'nextTransition')])
 
         # Heat mode
         self.data.reset_mock()
         self.ecobee['settings']['hvacMode'] = 'heat'
         self.thermostat.set_temp_hold(30)
         self.data.ecobee.set_hold_temp.assert_has_calls(
-            [mock.call(1, 50, 30, 'nextTransition')])
+            [mock.call(1, 30, 30, 'nextTransition')])
 
         # Cool mode
         self.data.reset_mock()
         self.ecobee['settings']['hvacMode'] = 'cool'
         self.thermostat.set_temp_hold(30)
         self.data.ecobee.set_hold_temp.assert_has_calls(
-            [mock.call(1, 30, 10, 'nextTransition')])
+            [mock.call(1, 30, 30, 'nextTransition')])
 
     def test_set_temperature(self):
         """Test set temperature."""
@@ -366,21 +368,21 @@ class TestEcobee(unittest.TestCase):
         self.data.reset_mock()
         self.thermostat.set_temperature(temperature=20)
         self.data.ecobee.set_hold_temp.assert_has_calls(
-            [mock.call(1, 30, 10, 'nextTransition')])
+            [mock.call(1, 25, 15, 'nextTransition')])
 
         # Cool -> Hold
         self.data.reset_mock()
         self.ecobee['settings']['hvacMode'] = 'cool'
         self.thermostat.set_temperature(temperature=20.5)
         self.data.ecobee.set_hold_temp.assert_has_calls(
-            [mock.call(1, 20.5, 0.5, 'nextTransition')])
+            [mock.call(1, 20.5, 20.5, 'nextTransition')])
 
         # Heat -> Hold
         self.data.reset_mock()
         self.ecobee['settings']['hvacMode'] = 'heat'
         self.thermostat.set_temperature(temperature=20)
         self.data.ecobee.set_hold_temp.assert_has_calls(
-            [mock.call(1, 40, 20, 'nextTransition')])
+            [mock.call(1, 20, 20, 'nextTransition')])
 
         # Heat -> Auto
         self.data.reset_mock()
@@ -450,3 +452,17 @@ class TestEcobee(unittest.TestCase):
         """Test climate list property."""
         self.assertEqual(['Climate1', 'Climate2'],
                          self.thermostat.climate_list)
+
+    def test_set_fan_mode_on(self):
+        """Test set fan mode to on."""
+        self.data.reset_mock()
+        self.thermostat.set_fan_mode('on')
+        self.data.ecobee.set_fan_mode.assert_has_calls(
+            [mock.call(1, 'on', 20, 40, 'nextTransition')])
+
+    def test_set_fan_mode_auto(self):
+        """Test set fan mode to auto."""
+        self.data.reset_mock()
+        self.thermostat.set_fan_mode('auto')
+        self.data.ecobee.set_fan_mode.assert_has_calls(
+            [mock.call(1, 'auto', 20, 40, 'nextTransition')])

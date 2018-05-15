@@ -86,6 +86,7 @@ class HuaweiDeviceScanner(DeviceScanner):
         active_clients = [client for client in data if client.state]
         self.last_results = active_clients
 
+        # pylint: disable=logging-not-lazy
         _LOGGER.debug("Active clients: " + "\n"
                       .join((client.mac + " " + client.name)
                             for client in active_clients))

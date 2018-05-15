@@ -25,7 +25,7 @@ SWITCH_SCHEMA = vol.Schema({
     vol.Required(CONF_COMMAND_OFF): cv.string,
     vol.Required(CONF_COMMAND_ON): cv.string,
     vol.Required(CONF_RESOURCE): cv.string,
-    vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_COMMAND_STATE): cv.string,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,

@@ -50,7 +50,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
         self._zone_type = zone_type
         self._zone_number = zone_number
 
-        _LOGGER.debug('Setting up zone: ' + zone_name)
+        _LOGGER.debug('Setting up zone: %s', zone_name)
         super().__init__(zone_name, info, controller)
 
     @asyncio.coroutine

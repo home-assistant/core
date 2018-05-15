@@ -11,11 +11,14 @@ from homeassistant.components.cloud import DOMAIN, auth_api, iot
 from tests.common import mock_coro
 
 
+GOOGLE_ACTIONS_SYNC_URL = 'https://api-test.hass.io/google_actions_sync'
+
+
 @pytest.fixture
-def cloud_client(hass, test_client):
+def cloud_client(hass, aiohttp_client):
     """Fixture that can fetch from the cloud client."""
-    with patch('homeassistant.components.cloud.Cloud.initialize',
-               return_value=mock_coro(True)):
+    with patch('homeassistant.components.cloud.Cloud.async_start',
+               return_value=mock_coro()):
         hass.loop.run_until_complete(async_setup_component(hass, 'cloud', {
             'cloud': {
                 'mode': 'development',
@@ -23,12 +26,13 @@ def cloud_client(hass, test_client):
                 'user_pool_id': 'user_pool_id',
                 'region': 'region',
                 'relayer': 'relayer',
+                'google_actions_sync_url': GOOGLE_ACTIONS_SYNC_URL,
             }
         }))
     hass.data['cloud']._decode_claims = \
         lambda token: jwt.get_unverified_claims(token)
     with patch('homeassistant.components.cloud.Cloud.write_user_info'):
-        yield hass.loop.run_until_complete(test_client(hass.http.app))
+        yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
@@ -36,6 +40,21 @@ def mock_cognito():
     """Mock warrant."""
     with patch('homeassistant.components.cloud.auth_api._cognito') as mock_cog:
         yield mock_cog()
+
+
+async def test_google_actions_sync(mock_cognito, cloud_client, aioclient_mock):
+    """Test syncing Google Actions."""
+    aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL)
+    req = await cloud_client.post('/api/cloud/google_actions/sync')
+    assert req.status == 200
+
+
+async def test_google_actions_sync_fails(mock_cognito, cloud_client,
+                                         aioclient_mock):
+    """Test syncing Google Actions gone bad."""
+    aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL, status=403)
+    req = await cloud_client.post('/api/cloud/google_actions/sync')
+    assert req.status == 403
 
 
 @asyncio.coroutine
@@ -232,53 +251,6 @@ def test_register_view_unknown_error(mock_cognito, cloud_client):
 
 
 @asyncio.coroutine
-def test_confirm_register_view(mock_cognito, cloud_client):
-    """Test logging out."""
-    req = yield from cloud_client.post('/api/cloud/confirm_register', json={
-        'email': 'hello@bla.com',
-        'confirmation_code': '123456'
-    })
-    assert req.status == 200
-    assert len(mock_cognito.confirm_sign_up.mock_calls) == 1
-    result_code, result_email = mock_cognito.confirm_sign_up.mock_calls[0][1]
-    assert result_email == 'hello@bla.com'
-    assert result_code == '123456'
-
-
-@asyncio.coroutine
-def test_confirm_register_view_bad_data(mock_cognito, cloud_client):
-    """Test logging out."""
-    req = yield from cloud_client.post('/api/cloud/confirm_register', json={
-        'email': 'hello@bla.com',
-        'not_confirmation_code': '123456'
-    })
-    assert req.status == 400
-    assert len(mock_cognito.confirm_sign_up.mock_calls) == 0
-
-
-@asyncio.coroutine
-def test_confirm_register_view_request_timeout(mock_cognito, cloud_client):
-    """Test timeout while logging out."""
-    mock_cognito.confirm_sign_up.side_effect = asyncio.TimeoutError
-    req = yield from cloud_client.post('/api/cloud/confirm_register', json={
-        'email': 'hello@bla.com',
-        'confirmation_code': '123456'
-    })
-    assert req.status == 502
-
-
-@asyncio.coroutine
-def test_confirm_register_view_unknown_error(mock_cognito, cloud_client):
-    """Test unknown error while logging out."""
-    mock_cognito.confirm_sign_up.side_effect = auth_api.UnknownError
-    req = yield from cloud_client.post('/api/cloud/confirm_register', json={
-        'email': 'hello@bla.com',
-        'confirmation_code': '123456'
-    })
-    assert req.status == 502
-
-
-@asyncio.coroutine
 def test_forgot_password_view(mock_cognito, cloud_client):
     """Test logging out."""
     req = yield from cloud_client.post('/api/cloud/forgot_password', json={
@@ -357,62 +329,4 @@ def test_resend_confirm_view_unknown_error(mock_cognito, cloud_client):
     req = yield from cloud_client.post('/api/cloud/resend_confirm', json={
         'email': 'hello@bla.com',
     })
-    assert req.status == 502
-
-
-@asyncio.coroutine
-def test_confirm_forgot_password_view(mock_cognito, cloud_client):
-    """Test logging out."""
-    req = yield from cloud_client.post(
-        '/api/cloud/confirm_forgot_password', json={
-            'email': 'hello@bla.com',
-            'confirmation_code': '123456',
-            'new_password': 'hello2',
-        })
-    assert req.status == 200
-    assert len(mock_cognito.confirm_forgot_password.mock_calls) == 1
-    result_code, result_new_password = \
-        mock_cognito.confirm_forgot_password.mock_calls[0][1]
-    assert result_code == '123456'
-    assert result_new_password == 'hello2'
-
-
-@asyncio.coroutine
-def test_confirm_forgot_password_view_bad_data(mock_cognito, cloud_client):
-    """Test logging out."""
-    req = yield from cloud_client.post(
-        '/api/cloud/confirm_forgot_password', json={
-            'email': 'hello@bla.com',
-            'not_confirmation_code': '123456',
-            'new_password': 'hello2',
-        })
-    assert req.status == 400
-    assert len(mock_cognito.confirm_forgot_password.mock_calls) == 0
-
-
-@asyncio.coroutine
-def test_confirm_forgot_password_view_request_timeout(mock_cognito,
-                                                      cloud_client):
-    """Test timeout while logging out."""
-    mock_cognito.confirm_forgot_password.side_effect = asyncio.TimeoutError
-    req = yield from cloud_client.post(
-        '/api/cloud/confirm_forgot_password', json={
-            'email': 'hello@bla.com',
-            'confirmation_code': '123456',
-            'new_password': 'hello2',
-        })
-    assert req.status == 502
-
-
-@asyncio.coroutine
-def test_confirm_forgot_password_view_unknown_error(mock_cognito,
-                                                    cloud_client):
-    """Test unknown error while logging out."""
-    mock_cognito.confirm_forgot_password.side_effect = auth_api.UnknownError
-    req = yield from cloud_client.post(
-        '/api/cloud/confirm_forgot_password', json={
-            'email': 'hello@bla.com',
-            'confirmation_code': '123456',
-            'new_password': 'hello2',
-        })
     assert req.status == 502

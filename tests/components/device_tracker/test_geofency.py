@@ -107,7 +107,7 @@ BEACON_EXIT_CAR = {
 
 
 @pytest.fixture
-def geofency_client(loop, hass, test_client):
+def geofency_client(loop, hass, aiohttp_client):
     """Geofency mock client."""
     assert loop.run_until_complete(async_setup_component(
         hass, device_tracker.DOMAIN, {
@@ -117,7 +117,7 @@ def geofency_client(loop, hass, test_client):
             }}))
 
     with patch('homeassistant.components.device_tracker.update_config'):
-        yield loop.run_until_complete(test_client(hass.http.app))
+        yield loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture(autouse=True)

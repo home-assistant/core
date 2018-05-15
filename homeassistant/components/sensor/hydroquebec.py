@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyhydroquebec==2.1.0']
+REQUIREMENTS = ['pyhydroquebec==2.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,13 +182,12 @@ class HydroquebecData(object):
             return self.client.get_contracts()
         return []
 
-    @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _fetch_data(self):
+    async def _fetch_data(self):
         """Fetch latest data from HydroQuebec."""
         from pyhydroquebec.client import PyHydroQuebecError
         try:
-            yield from self.client.fetch_data()
+            await self.client.fetch_data()
         except PyHydroQuebecError as exp:
             _LOGGER.error("Error on receive last Hydroquebec data: %s", exp)
             return False

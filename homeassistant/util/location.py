@@ -10,7 +10,7 @@ from typing import Any, Optional, Tuple, Dict
 import requests
 
 ELEVATION_URL = 'http://maps.googleapis.com/maps/api/elevation/json'
-FREEGEO_API = 'https://freegeoip.io/json/'
+FREEGEO_API = 'https://freegeoip.net/json/'
 IP_API = 'http://ip-api.com/json'
 
 # Constants from https://github.com/maurycyp/vincenty
@@ -84,7 +84,7 @@ def elevation(latitude, longitude):
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE
 # pylint: disable=invalid-name, unused-variable, invalid-sequence-index
 def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
-             miles: bool=False) -> Optional[float]:
+             miles: bool = False) -> Optional[float]:
     """
     Vincenty formula (inverse method) to calculate the distance.
 

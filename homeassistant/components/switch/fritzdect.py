@@ -130,7 +130,7 @@ class FritzDectSwitch(SwitchDevice):
             _LOGGER.error("Fritz!Box query failed, triggering relogin")
             self.data.is_online = False
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         if not self.data.is_online:
             _LOGGER.error("turn_off: Not online skipping request")

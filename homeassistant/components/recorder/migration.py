@@ -143,6 +143,9 @@ def _apply_update(engine, new_version, old_version):
         _drop_index(engine, "states", "ix_states_entity_id_created")
 
         _create_index(engine, "states", "ix_states_entity_id_last_updated")
+    elif new_version == 5:
+        # Create supporting index for States.event_id foreign key
+        _create_index(engine, "states", "ix_states_event_id")
     else:
         raise ValueError("No schema migration defined for version {}"
                          .format(new_version))

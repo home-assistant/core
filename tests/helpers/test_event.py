@@ -7,10 +7,12 @@ from datetime import datetime, timedelta
 from astral import Astral
 import pytest
 
+from homeassistant.core import callback
 from homeassistant.setup import setup_component
 import homeassistant.core as ha
 from homeassistant.const import MATCH_ALL
 from homeassistant.helpers.event import (
+    async_call_later,
     track_point_in_utc_time,
     track_point_in_time,
     track_utc_time_change,
@@ -52,7 +54,7 @@ class TestEventHelpers(unittest.TestCase):
         runs = []
 
         track_point_in_utc_time(
-            self.hass, lambda x: runs.append(1), birthday_paulus)
+            self.hass, callback(lambda x: runs.append(1)), birthday_paulus)
 
         self._send_time_changed(before_birthday)
         self.hass.block_till_done()
@@ -68,14 +70,14 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(1, len(runs))
 
         track_point_in_time(
-            self.hass, lambda x: runs.append(1), birthday_paulus)
+            self.hass, callback(lambda x: runs.append(1)), birthday_paulus)
 
         self._send_time_changed(after_birthday)
         self.hass.block_till_done()
         self.assertEqual(2, len(runs))
 
         unsub = track_point_in_time(
-            self.hass, lambda x: runs.append(1), birthday_paulus)
+            self.hass, callback(lambda x: runs.append(1)), birthday_paulus)
         unsub()
 
         self._send_time_changed(after_birthday)
@@ -642,3 +644,22 @@ class TestEventHelpers(unittest.TestCase):
         self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
         self.hass.block_till_done()
         self.assertEqual(0, len(specific_runs))
+
+
+@asyncio.coroutine
+def test_async_call_later(hass):
+    """Test calling an action later."""
+    def action(): pass
+    now = datetime(2017, 12, 19, 15, 40, 0, tzinfo=dt_util.UTC)
+
+    with patch('homeassistant.helpers.event'
+               '.async_track_point_in_utc_time') as mock, \
+            patch('homeassistant.util.dt.utcnow', return_value=now):
+        remove = async_call_later(hass, 3, action)
+
+    assert len(mock.mock_calls) == 1
+    p_hass, p_action, p_point = mock.mock_calls[0][1]
+    assert hass is hass
+    assert p_action is action
+    assert p_point == now + timedelta(seconds=3)
+    assert remove is mock()

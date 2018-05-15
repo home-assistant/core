@@ -10,10 +10,10 @@ import voluptuous as vol
 
 import homeassistant.components.rfxtrx as rfxtrx
 from homeassistant.components.rfxtrx import (
-    ATTR_DATA_TYPE, ATTR_FIRE_EVENT, ATTR_NAME, CONF_AUTOMATIC_ADD,
-    CONF_DATA_TYPE, CONF_DEVICES, CONF_FIRE_EVENT, DATA_TYPES)
+    ATTR_DATA_TYPE, ATTR_FIRE_EVENT, CONF_AUTOMATIC_ADD, CONF_DATA_TYPE,
+    CONF_DEVICES, CONF_FIRE_EVENT, DATA_TYPES)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -71,14 +71,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         if device_id in rfxtrx.RFX_DEVICES:
             sensors = rfxtrx.RFX_DEVICES[device_id]
-            for key in sensors:
-                sensor = sensors[key]
+            for data_type in sensors:
+                # Some multi-sensor devices send individual messages for each
+                # of their sensors. Update only if event contains the
+                # right data_type for the sensor.
+                if data_type not in event.values:
+                    continue
+                sensor = sensors[data_type]
                 sensor.event = event
                 # Fire event
-                if sensors[key].should_fire_event:
+                if sensor.should_fire_event:
                     sensor.hass.bus.fire(
                         "signal_received", {
-                            ATTR_ENTITY_ID: sensors[key].entity_id,
+                            ATTR_ENTITY_ID: sensor.entity_id,
                         }
                     )
             return

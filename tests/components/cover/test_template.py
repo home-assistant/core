@@ -135,7 +135,7 @@ class TestTemplateCover(unittest.TestCase):
         entity = self.hass.states.get('cover.test')
         attrs = dict()
         attrs['position'] = 42
-        self.hass.states.async_set(
+        self.hass.states.set(
             entity.entity_id, entity.state,
             attributes=attrs)
         self.hass.block_till_done()
@@ -148,7 +148,7 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.block_till_done()
         entity = self.hass.states.get('cover.test')
         attrs['position'] = 0.0
-        self.hass.states.async_set(
+        self.hass.states.set(
             entity.entity_id, entity.state,
             attributes=attrs)
         self.hass.block_till_done()

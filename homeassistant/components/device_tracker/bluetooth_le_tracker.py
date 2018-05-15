@@ -102,7 +102,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         """Lookup Bluetooth LE devices and update status."""
         devs = discover_ble_devices()
         for mac in devs_to_track:
-            _LOGGER.debug("Checking " + mac)
+            _LOGGER.debug("Checking %s", mac)
             result = mac in devs
             if not result:
                 # Could not lookup device name

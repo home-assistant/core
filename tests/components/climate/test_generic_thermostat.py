@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant import loader
 from homeassistant.util.unit_system import METRIC_SYSTEM
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.components import climate, input_boolean, switch
 import homeassistant.components as comps
 from tests.common import (assert_setup_component, get_test_home_assistant,
@@ -116,7 +116,7 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
 
     def test_heater_switch(self):
         """Test heater switching test switch."""
-        platform = loader.get_component('switch.test')
+        platform = loader.get_component(self.hass, 'switch.test')
         platform.init()
         self.switch_1 = platform.DEVICES[1]
         assert setup_component(self.hass, switch.DOMAIN, {'switch': {

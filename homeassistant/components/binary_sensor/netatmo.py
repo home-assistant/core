@@ -13,7 +13,6 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.components.netatmo import CameraData
-from homeassistant.loader import get_component
 from homeassistant.const import CONF_TIMEOUT
 from homeassistant.helpers import config_validation as cv
 
@@ -50,10 +49,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CAMERAS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_HOME): cv.string,
-    vol.Optional(CONF_PRESENCE_SENSORS, default=PRESENCE_SENSOR_TYPES):
+    vol.Optional(CONF_PRESENCE_SENSORS, default=list(PRESENCE_SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(PRESENCE_SENSOR_TYPES)]),
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_WELCOME_SENSORS, default=WELCOME_SENSOR_TYPES):
+    vol.Optional(CONF_WELCOME_SENSORS, default=list(WELCOME_SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(WELCOME_SENSOR_TYPES)]),
 })
 
@@ -61,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the access to Netatmo binary sensor."""
-    netatmo = get_component('netatmo')
+    netatmo = hass.components.netatmo
     home = config.get(CONF_HOME)
     timeout = config.get(CONF_TIMEOUT)
     if timeout is None:
@@ -131,8 +130,6 @@ class NetatmoBinarySensor(BinarySensorDevice):
             self._name += ' / ' + module_name
         self._sensor_name = sensor
         self._name += ' ' + sensor
-        self._unique_id = data.camera_data.cameraByName(
-            camera=camera_name, home=home)['id']
         self._cameratype = camera_type
         self._state = None
 
@@ -140,11 +137,6 @@ class NetatmoBinarySensor(BinarySensorDevice):
     def name(self):
         """Return the name of the Netatmo device and this sensor."""
         return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique ID for this sensor."""
-        return self._unique_id
 
     @property
     def device_class(self):

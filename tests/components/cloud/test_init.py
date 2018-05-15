@@ -29,6 +29,7 @@ def test_constructor_loads_info_from_constant():
             'user_pool_id': 'test-user_pool_id',
             'region': 'test-region',
             'relayer': 'test-relayer',
+            'google_actions_sync_url': 'test-google_actions_sync_url',
         }
     }), patch('homeassistant.components.cloud.Cloud._fetch_jwt_keyset',
               return_value=mock_coro(True)):
@@ -43,6 +44,7 @@ def test_constructor_loads_info_from_constant():
     assert cl.user_pool_id == 'test-user_pool_id'
     assert cl.region == 'test-region'
     assert cl.relayer == 'test-relayer'
+    assert cl.google_actions_sync_url == 'test-google_actions_sync_url'
 
 
 @asyncio.coroutine
@@ -87,7 +89,7 @@ def test_initialize_loads_info(mock_os, hass):
 
     with patch('homeassistant.components.cloud.open', mopen, create=True), \
             patch('homeassistant.components.cloud.Cloud._decode_claims'):
-        cl._start_cloud(None)
+        yield from cl.async_start(None)
 
     assert cl.id_token == 'test-id-token'
     assert cl.access_token == 'test-access-token'

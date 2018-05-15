@@ -17,21 +17,22 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['holidays==0.9.3']
+REQUIREMENTS = ['holidays==0.9.5']
 
 # List of all countries currently supported by holidays
 # There seems to be no way to get the list out at runtime
-ALL_COUNTRIES = ['Australia', 'AU', 'Austria', 'AT', 'Belgium', 'BE', 'Canada',
-                 'CA', 'Colombia', 'CO', 'Czech', 'CZ', 'Denmark', 'DK',
-                 'England', 'EuropeanCentralBank', 'ECB', 'TAR', 'Finland',
-                 'FI', 'France', 'FRA', 'Germany', 'DE', 'Ireland',
-                 'Isle of Man', 'Italy', 'IT', 'Japan', 'JP', 'Mexico', 'MX',
-                 'Netherlands', 'NL', 'NewZealand', 'NZ', 'Northern Ireland',
+ALL_COUNTRIES = ['Argentina', 'AR', 'Australia', 'AU', 'Austria', 'AT',
+                 'Belgium', 'BE', 'Canada', 'CA', 'Colombia', 'CO', 'Czech',
+                 'CZ', 'Denmark', 'DK', 'England', 'EuropeanCentralBank',
+                 'ECB', 'TAR', 'Finland', 'FI', 'France', 'FRA', 'Germany',
+                 'DE', 'Hungary', 'HU', 'Ireland', 'Isle of Man', 'Italy',
+                 'IT', 'Japan', 'JP', 'Mexico', 'MX', 'Netherlands', 'NL',
+                 'NewZealand', 'NZ', 'Northern Ireland',
                  'Norway', 'NO', 'Polish', 'PL', 'Portugal', 'PT',
                  'PortugalExt', 'PTE', 'Scotland', 'Slovenia', 'SI',
                  'Slovakia', 'SK', 'South Africa', 'ZA', 'Spain', 'ES',
-                 'Sweden', 'SE', 'UnitedKingdom', 'UK', 'UnitedStates', 'US',
-                 'Wales']
+                 'Sweden', 'SE', 'Switzerland', 'CH', 'UnitedKingdom', 'UK',
+                 'UnitedStates', 'US', 'Wales']
 CONF_COUNTRY = 'country'
 CONF_PROVINCE = 'province'
 CONF_WORKDAYS = 'workdays'
@@ -47,12 +48,12 @@ DEFAULT_OFFSET = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COUNTRY): vol.In(ALL_COUNTRIES),
-    vol.Optional(CONF_PROVINCE, default=None): cv.string,
+    vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES):
+        vol.All(cv.ensure_list, [vol.In(ALLOWED_DAYS)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
+    vol.Optional(CONF_PROVINCE): cv.string,
     vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS):
-        vol.All(cv.ensure_list, [vol.In(ALLOWED_DAYS)]),
-    vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES):
         vol.All(cv.ensure_list, [vol.In(ALLOWED_DAYS)]),
 })
 
@@ -74,14 +75,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if province:
         # 'state' and 'prov' are not interchangeable, so need to make
         # sure we use the right one
-        if (hasattr(obj_holidays, "PROVINCES") and
+        if (hasattr(obj_holidays, 'PROVINCES') and
                 province in obj_holidays.PROVINCES):
-            obj_holidays = getattr(holidays, country)(prov=province,
-                                                      years=year)
-        elif (hasattr(obj_holidays, "STATES") and
+            obj_holidays = getattr(holidays, country)(
+                prov=province, years=year)
+        elif (hasattr(obj_holidays, 'STATES') and
               province in obj_holidays.STATES):
-            obj_holidays = getattr(holidays, country)(state=province,
-                                                      years=year)
+            obj_holidays = getattr(holidays, country)(
+                state=province, years=year)
         else:
             _LOGGER.error("There is no province/state %s in country %s",
                           province, country)

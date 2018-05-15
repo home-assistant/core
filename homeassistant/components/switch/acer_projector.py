@@ -155,13 +155,13 @@ class AcerSwitch(SwitchDevice):
                 awns = self._write_read_format(msg)
                 self._attributes[key] = awns
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the projector on."""
         msg = CMD_DICT[STATE_ON]
         self._write_read(msg)
         self._state = STATE_ON
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the projector off."""
         msg = CMD_DICT[STATE_OFF]
         self._write_read(msg)

@@ -4,9 +4,10 @@ Support for Volvo On Call.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/volvooncall/
 """
-
 from datetime import timedelta
 import logging
+
+import voluptuous as vol
 
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  CONF_NAME, CONF_RESOURCES)
@@ -16,7 +17,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util.dt import utcnow
-import voluptuous as vol
 
 DOMAIN = 'volvooncall'
 
@@ -143,8 +143,7 @@ class VolvoData:
             return vehicle.registration_number
         elif vehicle.vin:
             return vehicle.vin
-        else:
-            return ''
+        return ''
 
 
 class VolvoEntity(Entity):
