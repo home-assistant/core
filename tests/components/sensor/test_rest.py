@@ -62,59 +62,59 @@ class TestRestSensorSetup(unittest.TestCase):
     def test_setup_minimum(self, mock_req):
         """Test setup with minimum configuration."""
         mock_req.get('http://localhost', status_code=200)
-        self.assertTrue(setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'rest',
-                'resource': 'http://localhost'
-            }
-        }))
+        with assert_setup_component(1, 'sensor'):
+            self.assertTrue(setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'rest',
+                    'resource': 'http://localhost'
+                }
+            }))
         self.assertEqual(2, mock_req.call_count)
-        assert_setup_component(1, 'switch')
 
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
         """Test setup with valid configuration."""
         mock_req.get('http://localhost', status_code=200)
-        self.assertTrue(setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'rest',
-                'resource': 'http://localhost',
-                'method': 'GET',
-                'value_template': '{{ value_json.key }}',
-                'name': 'foo',
-                'unit_of_measurement': 'MB',
-                'verify_ssl': 'true',
-                'authentication': 'basic',
-                'username': 'my username',
-                'password': 'my password',
-                'headers': {'Accept': 'application/json'}
-            }
-        }))
+        with assert_setup_component(1, 'sensor'):
+            self.assertTrue(setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'rest',
+                    'resource': 'http://localhost',
+                    'method': 'GET',
+                    'value_template': '{{ value_json.key }}',
+                    'name': 'foo',
+                    'unit_of_measurement': 'MB',
+                    'verify_ssl': 'true',
+                    'authentication': 'basic',
+                    'username': 'my username',
+                    'password': 'my password',
+                    'headers': {'Accept': 'application/json'}
+                }
+            }))
         self.assertEqual(2, mock_req.call_count)
-        assert_setup_component(1, 'sensor')
 
     @requests_mock.Mocker()
     def test_setup_post(self, mock_req):
         """Test setup with valid configuration."""
         mock_req.post('http://localhost', status_code=200)
-        self.assertTrue(setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'rest',
-                'resource': 'http://localhost',
-                'method': 'POST',
-                'value_template': '{{ value_json.key }}',
-                'payload': '{ "device": "toaster"}',
-                'name': 'foo',
-                'unit_of_measurement': 'MB',
-                'verify_ssl': 'true',
-                'authentication': 'basic',
-                'username': 'my username',
-                'password': 'my password',
-                'headers': {'Accept': 'application/json'}
-            }
-        }))
+        with assert_setup_component(1, 'sensor'):
+            self.assertTrue(setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'rest',
+                    'resource': 'http://localhost',
+                    'method': 'POST',
+                    'value_template': '{{ value_json.key }}',
+                    'payload': '{ "device": "toaster"}',
+                    'name': 'foo',
+                    'unit_of_measurement': 'MB',
+                    'verify_ssl': 'true',
+                    'authentication': 'basic',
+                    'username': 'my username',
+                    'password': 'my password',
+                    'headers': {'Accept': 'application/json'}
+                }
+            }))
         self.assertEqual(2, mock_req.call_count)
-        assert_setup_component(1, 'sensor')
 
 
 class TestRestSensor(unittest.TestCase):
