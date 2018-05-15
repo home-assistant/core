@@ -25,7 +25,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180510.1']
+REQUIREMENTS = ['home-assistant-frontend==20180515.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -147,21 +147,6 @@ class AbstractPanel:
             'get', '/{}/{{extra:.+}}'.format(self.frontend_url_path),
             index_view.get)
 
-    def to_response(self, hass, request):
-        """Panel as dictionary."""
-        result = {
-            'component_name': self.component_name,
-            'icon': self.sidebar_icon,
-            'title': self.sidebar_title,
-            'url_path': self.frontend_url_path,
-            'config': self.config,
-        }
-        if _is_latest(hass.data[DATA_JS_VERSION], request):
-            result['url'] = self.webcomponent_url_latest
-        else:
-            result['url'] = self.webcomponent_url_es5
-        return result
-
 
 class BuiltInPanel(AbstractPanel):
     """Panel that is part of hass_frontend."""
@@ -175,30 +160,15 @@ class BuiltInPanel(AbstractPanel):
         self.frontend_url_path = frontend_url_path or component_name
         self.config = config
 
-    @asyncio.coroutine
-    def async_finalize(self, hass, frontend_repository_path):
-        """Finalize this panel for usage.
-
-        If frontend_repository_path is set, will be prepended to path of
-        built-in components.
-        """
-        if frontend_repository_path is None:
-            import hass_frontend
-            import hass_frontend_es5
-
-            self.webcomponent_url_latest = \
-                '/frontend_latest/panels/ha-panel-{}-{}.html'.format(
-                    self.component_name,
-                    hass_frontend.FINGERPRINTS[self.component_name])
-            self.webcomponent_url_es5 = \
-                '/frontend_es5/panels/ha-panel-{}-{}.html'.format(
-                    self.component_name,
-                    hass_frontend_es5.FINGERPRINTS[self.component_name])
-        else:
-            # Dev mode
-            self.webcomponent_url_es5 = self.webcomponent_url_latest = \
-                '/home-assistant-polymer/panels/{}/ha-panel-{}.html'.format(
-                    self.component_name, self.component_name)
+    def to_response(self, hass, request):
+        """Panel as dictionary."""
+        return {
+            'component_name': self.component_name,
+            'icon': self.sidebar_icon,
+            'title': self.sidebar_title,
+            'config': self.config,
+            'url_path': self.frontend_url_path,
+        }
 
 
 class ExternalPanel(AbstractPanel):
@@ -243,6 +213,21 @@ class ExternalPanel(AbstractPanel):
                 # if path is None, we're in prod mode, so cache static assets
                 frontend_repository_path is None)
             self.REGISTERED_COMPONENTS.add(self.component_name)
+
+    def to_response(self, hass, request):
+        """Panel as dictionary."""
+        result = {
+            'component_name': self.component_name,
+            'icon': self.sidebar_icon,
+            'title': self.sidebar_title,
+            'url_path': self.frontend_url_path,
+            'config': self.config,
+        }
+        if _is_latest(hass.data[DATA_JS_VERSION], request):
+            result['url'] = self.webcomponent_url_latest
+        else:
+            result['url'] = self.webcomponent_url_es5
+        return result
 
 
 @bind_hass
@@ -365,10 +350,10 @@ def async_setup(hass, config):
     index_view = IndexView(repo_path, js_version, client)
     hass.http.register_view(index_view)
 
-    @asyncio.coroutine
-    def finalize_panel(panel):
+    async def finalize_panel(panel):
         """Finalize setup of a panel."""
-        yield from panel.async_finalize(hass, repo_path)
+        if hasattr(panel, 'async_finalize'):
+            await panel.async_finalize(hass, repo_path)
         panel.async_register_index_routes(hass.http.app.router, index_view)
 
     yield from asyncio.wait([
