@@ -18,9 +18,18 @@ from tests.common import get_test_home_assistant, assert_setup_component
 class TestRestBinarySensorSetup(unittest.TestCase):
     """Tests for setting up the REST binary sensor platform."""
 
+    DEVICES = []
+
+    def add_devices(self, devices, update_before_add=False):
+        """Mock add devices."""
+        for device in devices:
+            self.DEVICES.append(device)
+
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        # Reset for this test.
+        self.DEVICES = []
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -48,7 +57,9 @@ class TestRestBinarySensorSetup(unittest.TestCase):
         self.assertFalse(rest.setup_platform(self.hass, {
             'platform': 'rest',
             'resource': 'http://localhost',
-        }, lambda devices, update=True: None))
+        }, self.add_devices, None))
+        self.assertEqual(len(self.DEVICES), 1)
+        self.assertEqual(STATE_OFF, self.DEVICES[0].state)
 
     @patch('requests.Session.send', side_effect=Timeout())
     def test_setup_timeout(self, mock_req):
@@ -56,7 +67,9 @@ class TestRestBinarySensorSetup(unittest.TestCase):
         self.assertFalse(rest.setup_platform(self.hass, {
             'platform': 'rest',
             'resource': 'http://localhost',
-        }, lambda devices, update=True: None))
+        }, self.add_devices, None))
+        self.assertEqual(len(self.DEVICES), 1)
+        self.assertEqual(STATE_OFF, self.DEVICES[0].state)
 
     @requests_mock.Mocker()
     def test_setup_minimum(self, mock_req):

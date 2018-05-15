@@ -67,10 +67,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
 
-    if rest.data is None:
-        _LOGGER.error("Unable to fetch REST data from %s", resource)
-        return False
-
     add_devices([RestBinarySensor(
         hass, rest, name, device_class, value_template)], True)
 
