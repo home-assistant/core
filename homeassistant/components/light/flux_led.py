@@ -223,16 +223,22 @@ class FluxLight(Light):
         white = kwargs.get(ATTR_WHITE_VALUE)
 
         # color change only
-        if rgb is not None:
+        if rgb is not None and brightness is None:
             self._bulb.setRgb(*tuple(rgb), brightness=self.brightness)
 
         # brightness change only
-        elif brightness is not None:
-            (red, green, blue) = self._bulb.getRgb()
+        if brightness is not None:
+
+            # get rgb from bulb if not provided
+            if rgb is None:
+                (red, green, blue) = self._bulb.getRgb()
+            else:
+                (red, green, blue) = rgb
+
             self._bulb.setRgb(red, green, blue, brightness=brightness)
 
         # random color effect
-        elif effect == EFFECT_RANDOM:
+        if effect == EFFECT_RANDOM:
             self._bulb.setRgb(random.randint(0, 255),
                               random.randint(0, 255),
                               random.randint(0, 255))
@@ -242,8 +248,9 @@ class FluxLight(Light):
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
 
         # white change only
-        elif white is not None:
+        if white is not None:
             self._bulb.setWarmWhite255(white)
+
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
