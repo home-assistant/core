@@ -48,7 +48,7 @@ class FamilyHubCamera(Camera):
         self._name = name
         self.family_hub_cam = family_hub_cam
 
-    async def camera_image(self):
+    async def async_camera_image(self):
         """Return a still image response."""
         return await self.family_hub_cam.async_get_cam_image()
 
@@ -56,8 +56,3 @@ class FamilyHubCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Camera should poll periodically."""
-        return True
