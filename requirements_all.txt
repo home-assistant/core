@@ -1180,9 +1180,6 @@ sharp_aquos_rc==0.3.2
 # homeassistant.components.sensor.shodan
 shodan==1.7.7
 
-# homeassistant.components.notify.simplepush
-simplepush==1.1.4
-
 # homeassistant.components.alarm_control_panel.simplisafe
 simplisafe-python==1.0.5
 
