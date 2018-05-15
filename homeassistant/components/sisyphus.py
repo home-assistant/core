@@ -75,8 +75,3 @@ async def async_setup(hass, config):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_tables)
 
     return True
-
-
-
-
-

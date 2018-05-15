@@ -6,7 +6,7 @@ table light brightness.
 import logging
 
 from homeassistant.const import CONF_NAME
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
 from homeassistant.components.sisyphus import DATA_SISYPHUS
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = discovery_info[CONF_NAME]
     add_devices(
         [SisyphusSwitch(name, hass.data[DATA_SISYPHUS][name])],
-        update_before_add = True)
+        update_before_add=True)
 
 
 class SisyphusSwitch(Light):
