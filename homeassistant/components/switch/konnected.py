@@ -8,7 +8,8 @@ https://home-assistant.io/components/switch.konnected/
 import asyncio
 import logging
 
-from homeassistant.components.konnected import (DOMAIN, PIN_TO_ZONE)
+from homeassistant.components.konnected import (
+    DOMAIN, PIN_TO_ZONE, CONF_ACTIVATION, STATE_LOW, STATE_HIGH)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (CONF_DEVICES, CONF_SWITCHES, ATTR_STATE)
 
@@ -41,7 +42,7 @@ class KonnectedSwitch(ToggleEntity):
         self._device_id = device_id
         self._pin_num = pin_num
         self._state = self._data.get(ATTR_STATE)
-        self._activation = self._data.get('activation', 'high')
+        self._activation = self._data.get(CONF_ACTIVATION, STATE_HIGH)
         self._name = self._data.get(
             'name', 'Konnected {} Actuator {}'.format(
                 device_id, PIN_TO_ZONE[pin_num]))
@@ -61,12 +62,14 @@ class KonnectedSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Send a command to turn on the switch."""
-        self._client.put_device(self._pin_num, int(self._activation == 'high'))
+        self._client.put_device(self._pin_num,
+                                int(self._activation == STATE_HIGH))
         self._set_state(True)
 
     def turn_off(self, **kwargs):
         """Send a command to turn off the switch."""
-        self._client.put_device(self._pin_num, int(self._activation == 'low'))
+        self._client.put_device(self._pin_num,
+                                int(self._activation == STATE_LOW))
         self._set_state(False)
 
     def _set_state(self, state):

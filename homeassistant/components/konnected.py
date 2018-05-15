@@ -18,7 +18,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR, HTTP_UNAUTHORIZED,
     CONF_DEVICES, CONF_BINARY_SENSORS, CONF_SWITCHES, CONF_HOST, CONF_PORT,
-    CONF_ID, CONF_NAME, CONF_TYPE, CONF_PIN, CONF_ZONE, ATTR_STATE)
+    CONF_ID, CONF_NAME, CONF_TYPE, CONF_PIN, CONF_ZONE, CONF_ACCESS_TOKEN,
+    ATTR_STATE)
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 
@@ -27,6 +28,10 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['konnected==0.1.2']
 
 DOMAIN = 'konnected'
+
+CONF_ACTIVATION = 'activation'
+STATE_LOW = 'low'
+STATE_HIGH = 'high'
 
 PIN_TO_ZONE = {1: 1, 2: 2, 5: 3, 6: 4, 7: 5, 8: 'out', 9: 6}
 ZONE_TO_PIN = {zone: pin for pin, zone in PIN_TO_ZONE.items()}
@@ -45,15 +50,15 @@ _SWITCH_SCHEMA = vol.All(
         vol.Exclusive(CONF_PIN, 'a_pin'): vol.Any(*PIN_TO_ZONE),
         vol.Exclusive(CONF_ZONE, 'a_pin'): vol.Any(*ZONE_TO_PIN),
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional('activation', default='high'):
-            vol.All(vol.Lower, vol.Any('high', 'low'))
+        vol.Optional(CONF_ACTIVATION, default=STATE_HIGH):
+            vol.All(vol.Lower, vol.Any(STATE_HIGH, STATE_LOW))
     }), cv.has_at_least_one_key(CONF_PIN, CONF_ZONE)
 )
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema({
-            vol.Required('auth_token'): cv.string,
+            vol.Required(CONF_ACCESS_TOKEN): cv.string,
             vol.Required(CONF_DEVICES): [{
                 vol.Required(CONF_ID): cv.string,
                 vol.Optional(CONF_BINARY_SENSORS): vol.All(
@@ -78,9 +83,9 @@ async def async_setup(hass, config):
     if cfg is None:
         cfg = {}
 
-    auth_token = cfg.get('auth_token')
+    access_token = cfg.get(CONF_ACCESS_TOKEN)
     if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {'auth_token': auth_token}
+        hass.data[DOMAIN] = {CONF_ACCESS_TOKEN: access_token}
 
     async def async_device_discovered(service, info):
         """Call when a Konnected device has been discovered."""
@@ -96,7 +101,7 @@ async def async_setup(hass, config):
         SERVICE_KONNECTED,
         async_device_discovered)
 
-    hass.http.register_view(KonnectedView(auth_token))
+    hass.http.register_view(KonnectedView(access_token))
 
     return True
 
@@ -195,7 +200,7 @@ class KonnectedDevice(object):
                     CONF_NAME, 'Konnected {} Actuator {}'.format(
                         self.device_id[6:], PIN_TO_ZONE[pin])),
                 ATTR_STATE: initial_state,
-                'activation': entity['activation'],
+                CONF_ACTIVATION: entity[CONF_ACTIVATION],
             }
             _LOGGER.debug('Set up actuator %s (initial state: %s)',
                           actuators[pin].get(CONF_NAME),
@@ -228,7 +233,8 @@ class KonnectedDevice(object):
     def actuator_configuration(self):
         """Return the configuration map for syncing actuators."""
         return [{'pin': p,
-                 'trigger': (0 if data.get('activation') in [0, 'low'] else 1)}
+                 'trigger': (0 if data.get(CONF_ACTIVATION) in [0, STATE_LOW]
+                             else 1)}
                 for p, data in
                 self.stored_configuration[CONF_SWITCHES].items()]
 
@@ -255,7 +261,7 @@ class KonnectedDevice(object):
             self.client.put_settings(
                 desired_sensor_configuration,
                 desired_actuator_config,
-                self.hass.data[DOMAIN].get('auth_token'),
+                self.hass.data[DOMAIN].get(CONF_ACCESS_TOKEN),
                 self.hass.config.api.base_url + ENDPOINT_ROOT
             )
 
