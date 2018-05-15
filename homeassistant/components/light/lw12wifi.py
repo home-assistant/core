@@ -1,17 +1,8 @@
 """
 Support for Lagute LW-12 WiFi LED Controller.
 
-Configuration example:
-
-light:
-  - platform: lw12wifi
-    # Host name or IP of LW-12 LED stripe to control
-    host: 192.168.0.1
-    # (Optional) Some firmware versions of the LW-12 controller listen
-    # on different ports.
-    port: 5000
-    # (Optional) Friendly name
-    name: LW-12 FC
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.lw12wifi/
 """
 
 import logging
