@@ -69,7 +69,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     'resource': 'http://localhost'
                 }
             }))
-        self.assertEqual(2, mock_req.call_count)
+        self.assertEqual(1, mock_req.call_count)
 
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
@@ -91,7 +91,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     'headers': {'Accept': 'application/json'}
                 }
             }))
-        self.assertEqual(2, mock_req.call_count)
+        self.assertEqual(1, mock_req.call_count)
 
     @requests_mock.Mocker()
     def test_setup_post(self, mock_req):
@@ -114,7 +114,7 @@ class TestRestSensorSetup(unittest.TestCase):
                     'headers': {'Accept': 'application/json'}
                 }
             }))
-        self.assertEqual(2, mock_req.call_count)
+        self.assertEqual(1, mock_req.call_count)
 
 
 class TestRestSensor(unittest.TestCase):

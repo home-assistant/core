@@ -75,7 +75,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         auth = None
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
-    rest.update()
 
     add_devices([RestSensor(
         hass, rest, name, unit, value_template, json_attrs, force_update
@@ -170,6 +169,7 @@ class RestData(object):
 
     def update(self):
         """Get the latest data from REST service with provided method."""
+        _LOGGER.debug("Updating from %s", self._request.url)
         try:
             with requests.Session() as sess:
                 response = sess.send(

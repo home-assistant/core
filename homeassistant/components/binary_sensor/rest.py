@@ -65,7 +65,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         auth = None
 
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
-    rest.update()
 
     add_devices([RestBinarySensor(
         hass, rest, name, device_class, value_template)], True)
