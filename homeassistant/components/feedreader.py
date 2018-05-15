@@ -21,6 +21,7 @@ REQUIREMENTS = ['feedparser==5.2.1']
 _LOGGER = getLogger(__name__)
 
 CONF_URLS = 'urls'
+CONF_INTERVAL = 'interval'
 
 DOMAIN = 'feedreader'
 
@@ -28,9 +29,12 @@ EVENT_FEEDREADER = 'feedreader'
 
 MAX_ENTRIES = 20
 
+DEFAULT_INTERVAL = 300
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {
         vol.Required(CONF_URLS): vol.All(cv.ensure_list, [cv.url]),
+        vol.Optional(CONF_INTERVAL, default=DEFAULT_INTERVAL): cv.positive_int,
     }
 }, extra=vol.ALLOW_EXTRA)
 
@@ -38,16 +42,17 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the Feedreader component."""
     urls = config.get(DOMAIN)[CONF_URLS]
+    interval = config.get(DOMAIN)[CONF_INTERVAL]
     data_file = hass.config.path("{}.pickle".format(DOMAIN))
     storage = StoredData(data_file)
-    feeds = [FeedManager(url, hass, storage) for url in urls]
+    feeds = [FeedManager(url, interval, hass, storage) for url in urls]
     return len(feeds) > 0
 
 
 class FeedManager(object):
     """Abstraction over Feedparser module."""
 
-    def __init__(self, url, hass, storage):
+    def __init__(self, url, interval, hass, storage):
         """Initialize the FeedManager object, poll every hour."""
         self._url = url
         self._feed = None
@@ -58,8 +63,8 @@ class FeedManager(object):
         self._has_published_parsed = False
         hass.bus.listen_once(
             EVENT_HOMEASSISTANT_START, lambda _: self._update())
-        track_utc_time_change(
-            hass, lambda now: self._update(), minute=0, second=0)
+        track_utc_time_change(hass, lambda now: self._update(),
+                              second=range(1, 59, interval))
 
     def _log_no_entries(self):
         """Send no entries log at debug level."""
