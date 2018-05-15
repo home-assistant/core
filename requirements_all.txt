@@ -464,6 +464,9 @@ keyring==12.2.0
 # homeassistant.scripts.keyring
 keyrings.alt==3.1
 
+# homeassistant.components.konnected
+konnected==0.1.2
+
 # homeassistant.components.eufy
 lakeside==0.6
 
