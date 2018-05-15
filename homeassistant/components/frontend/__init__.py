@@ -167,6 +167,7 @@ class BuiltInPanel(AbstractPanel):
             'icon': self.sidebar_icon,
             'title': self.sidebar_title,
             'config': self.config,
+            'url_path': self.frontend_url_path,
         }
 
 
