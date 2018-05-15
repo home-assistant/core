@@ -8,7 +8,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util.json import load_json
 
-from .const import CONFIG_FILE, DOMAIN
+from .const import CONF_CLIP_SENSOR, CONFIG_FILE, DOMAIN
 
 
 @callback
@@ -30,7 +30,12 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
         self.deconz_config = {}
 
     async def async_step_init(self, user_input=None):
-        """Handle a deCONZ config flow start."""
+        """Handle a deCONZ config flow start.
+
+        Only allows one instance to be set up.
+        If only one bridge is found go to link step.
+        If more than one bridge is found let user choose bridge to link.
+        """
         from pydeconz.utils import async_discovery
 
         if configured_hosts(self.hass):
@@ -78,6 +83,7 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
                 if 'bridgeid' not in self.deconz_config:
                     self.deconz_config['bridgeid'] = await async_get_bridgeid(
                         session, **self.deconz_config)
+                return await self.async_step_options()
                 return self.async_create_entry(
                     title='deCONZ-' + self.deconz_config['bridgeid'],
                     data=self.deconz_config
@@ -88,6 +94,27 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
             step_id='link',
             errors=errors,
         )
+
+    async def async_step_options(self, user_input=None):
+        """[summary]
+
+        Keyword Arguments:
+            user_input {[type]} -- [description] (default: {None})
+        """
+        if user_input is not None:
+            self.deconz_config[CONF_CLIP_SENSOR] = user_input[CONF_CLIP_SENSOR]
+            return self.async_create_entry(
+                title='deCONZ-' + self.deconz_config['bridgeid'],
+                data=self.deconz_config
+            )
+
+        return self.async_show_form(
+            step_id='options',
+            data_schema=vol.Schema({
+                vol.Optional(CONF_CLIP_SENSOR): bool,
+            }),
+        )
+
 
     async def async_step_discovery(self, discovery_info):
         """Prepare configuration for a discovered deCONZ bridge.
