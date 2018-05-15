@@ -115,14 +115,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['lights_parking'] = vehicle_state.parking_lights.value
         elif self._attribute == 'condition_based_services':
             for report in vehicle_state.condition_based_services:
-                service_type = report.service_type.lower().replace('_', ' ')
-                result['{} status'.format(service_type)] = report.state.value
-                if report.due_date is not None:
-                    result['{} date'.format(service_type)] = \
-                        report.due_date.strftime('%Y-%m-%d')
-                if report.due_distance is not None:
-                    result['{} distance'.format(service_type)] = \
-                        '{} km'.format(report.due_distance)
+                result.update(self._format_cbs_report(report))
         elif self._attribute == 'check_control_messages':
             check_control_messages = vehicle_state.check_control_messages
             if not check_control_messages:
@@ -139,7 +132,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['connection_status'] = \
                 vehicle_state._attributes['connectionStatus']
 
-        return result
+        return sorted(result.items())
 
     def update(self):
         """Read new state data from the library."""
@@ -176,6 +169,19 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             # pylint: disable=W0212
             self._state = (vehicle_state._attributes['connectionStatus'] ==
                            'CONNECTED')
+
+    @staticmethod
+    def _format_cbs_report(report):
+        result = {}
+        service_type = report.service_type.lower().replace('_', ' ')
+        result['{} status'.format(service_type)] = report.state.value
+        if report.due_date is not None:
+            result['{} date'.format(service_type)] = \
+                report.due_date.strftime('%Y-%m-%d')
+        if report.due_distance is not None:
+            result['{} distance'.format(service_type)] = \
+                '{} km'.format(report.due_distance)
+        return result
 
     def update_callback(self):
         """Schedule a state update."""
