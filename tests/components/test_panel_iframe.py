@@ -1,6 +1,5 @@
 """The tests for the panel_iframe component."""
 import unittest
-from unittest.mock import patch
 
 from homeassistant import setup
 from homeassistant.components import frontend
