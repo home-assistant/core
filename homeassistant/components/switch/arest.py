@@ -170,7 +170,8 @@ class ArestSwitchPin(ArestSwitchBase):
         """Turn the device on."""
         turn_on_payload = int(not self.invert)
         request = requests.get(
-            '{}/digital/{}/{}'.format(self._resource, self._pin, turn_on_payload),
+            '{}/digital/{}/{}'.format(self._resource, self._pin,
+                                      turn_on_payload),
             timeout=10)
         if request.status_code == 200:
             self._state = True
@@ -182,7 +183,8 @@ class ArestSwitchPin(ArestSwitchBase):
         """Turn the device off."""
         turn_off_payload = int(self.invert)
         request = requests.get(
-            '{}/digital/{}/{}'.format(self._resource, self._pin, turn_off_payload),
+            '{}/digital/{}/{}'.format(self._resource, self._pin,
+                                      turn_off_payload),
             timeout=10)
         if request.status_code == 200:
             self._state = False
