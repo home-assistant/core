@@ -151,10 +151,7 @@ class KonnectedDevice(object):
                     None)
 
     def save_data(self):
-        """Save the device configuration to `hass.data`.
-
-        TODO: This can probably be refactored and tidied up.
-        """
+        """Save the device configuration to `hass.data`."""
         sensors = {}
         for entity in self.config().get(CONF_BINARY_SENSORS) or []:
             if CONF_ZONE in entity:
