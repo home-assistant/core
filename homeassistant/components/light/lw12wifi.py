@@ -137,7 +137,7 @@ class LW12WiFi(Light):
         self._light.light_on()
         if ATTR_HS_COLOR in kwargs:
             self._rgb_color = color_util.color_hs_to_RGB(
-                *kwargs.get(ATTR_HS_COLOR))
+                *kwargs[ATTR_HS_COLOR])
             self._light.set_color(*self._rgb_color)
             self._effect = None
         if ATTR_BRIGHTNESS in kwargs:
@@ -146,7 +146,7 @@ class LW12WiFi(Light):
             self._light.set_light_option(lw12.LW12_LIGHT.BRIGHTNESS,
                                          brightness)
         if ATTR_EFFECT in kwargs:
-            self._effect = kwargs.get(ATTR_EFFECT).replace(' ', '_').upper()
+            self._effect = kwargs[ATTR_EFFECT].replace(' ', '_').upper()
             # Check if a known and supported effect was selected.
             if self._effect not in [eff.name for eff in lw12.LW12_EFFECT]:
                 # Unknown effect was set, recover by disabling the effect
