@@ -22,15 +22,19 @@ async def async_setup_platform(hass, config, async_add_devices,
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the deCONZ binary sensor."""
+    allow_clip_sensor = config_entry.data.get('clip_sensor', True)
+
     @callback
     def async_add_sensor(sensors):
         """Add binary sensor from deCONZ."""
         from pydeconz.sensor import DECONZ_BINARY_SENSOR
         entities = []
         for sensor in sensors:
-            if sensor.type in DECONZ_BINARY_SENSOR:
+            if sensor.type in DECONZ_BINARY_SENSOR and \
+               not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
                 entities.append(DeconzBinarySensor(sensor))
         async_add_devices(entities, True)
+
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
 

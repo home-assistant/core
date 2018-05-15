@@ -28,19 +28,23 @@ async def async_setup_platform(hass, config, async_add_devices,
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the deCONZ sensors."""
+    allow_clip_sensor = config_entry.data.get('clip_sensor', True)
+
     @callback
     def async_add_sensor(sensors):
         """Add sensors from deCONZ."""
         from pydeconz.sensor import DECONZ_SENSOR, SWITCH as DECONZ_REMOTE
         entities = []
         for sensor in sensors:
-            if sensor.type in DECONZ_SENSOR:
+            if sensor.type in DECONZ_SENSOR and \
+               not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
                 if sensor.type in DECONZ_REMOTE:
                     if sensor.battery:
                         entities.append(DeconzBattery(sensor))
                 else:
                     entities.append(DeconzSensor(sensor))
         async_add_devices(entities, True)
+
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
 
