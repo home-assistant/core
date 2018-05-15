@@ -55,15 +55,27 @@ class FeedManager(object):
         self._firstrun = True
         self._storage = storage
         self._last_entry_timestamp = None
+        self._last_update_successful = False
         self._has_published_parsed = False
+        self._event_type = EVENT_FEEDREADER
+        self._feed_id = url
         hass.bus.listen_once(
             EVENT_HOMEASSISTANT_START, lambda _: self._update())
-        track_utc_time_change(
-            hass, lambda now: self._update(), minute=0, second=0)
+        self._init_regular_updates(hass)
 
     def _log_no_entries(self):
         """Send no entries log at debug level."""
         _LOGGER.debug("No new entries to be published in feed %s", self._url)
+
+    def _init_regular_updates(self, hass):
+        """Schedule regular updates at the top of the clock."""
+        track_utc_time_change(
+            hass, lambda now: self._update(), minute=0, second=0)
+
+    @property
+    def last_update_successful(self):
+        """Return True if the last feed update was successful."""
+        return self._last_update_successful
 
     def _update(self):
         """Update the feed and publish new entries to the event bus."""
@@ -76,25 +88,38 @@ class FeedManager(object):
                                       else self._feed.get('modified'))
         if not self._feed:
             _LOGGER.error("Error fetching feed data from %s", self._url)
+            self._last_update_successful = False
         else:
+            # The 'bozo' flag really only indicates that there was an issue
+            # during the initial parsing of the XML, but it doesn't indicate
+            # whether this is an unrecoverable error. In this case the
+            # feedparser lib is trying a less strict parsing approach.
+            # If an error is detected here, log error message but continue
+            # processing the feed entries if present.
             if self._feed.bozo != 0:
-                _LOGGER.error("Error parsing feed %s", self._url)
+                _LOGGER.error("Error parsing feed %s: %s", self._url,
+                              self._feed.bozo_exception)
             # Using etag and modified, if there's no new data available,
             # the entries list will be empty
-            elif self._feed.entries:
+            if self._feed.entries:
                 _LOGGER.debug("%s entri(es) available in feed %s",
                               len(self._feed.entries), self._url)
-                if len(self._feed.entries) > MAX_ENTRIES:
-                    _LOGGER.debug("Processing only the first %s entries "
-                                  "in feed %s", MAX_ENTRIES, self._url)
-                    self._feed.entries = self._feed.entries[0:MAX_ENTRIES]
+                self._filter_entries()
                 self._publish_new_entries()
                 if self._has_published_parsed:
                     self._storage.put_timestamp(
-                        self._url, self._last_entry_timestamp)
+                        self._feed_id, self._last_entry_timestamp)
             else:
                 self._log_no_entries()
+            self._last_update_successful = True
         _LOGGER.info("Fetch from feed %s completed", self._url)
+
+    def _filter_entries(self):
+        """Filter the entries provided and return the ones to keep."""
+        if len(self._feed.entries) > MAX_ENTRIES:
+            _LOGGER.debug("Processing only the first %s entries "
+                          "in feed %s", MAX_ENTRIES, self._url)
+            self._feed.entries = self._feed.entries[0:MAX_ENTRIES]
 
     def _update_and_fire_entry(self, entry):
         """Update last_entry_timestamp and fire entry."""
@@ -109,12 +134,12 @@ class FeedManager(object):
             _LOGGER.debug("No published_parsed info available for entry %s",
                           entry.title)
         entry.update({'feed_url': self._url})
-        self._hass.bus.fire(EVENT_FEEDREADER, entry)
+        self._hass.bus.fire(self._event_type, entry)
 
     def _publish_new_entries(self):
         """Publish new entries to the event bus."""
         new_entries = False
-        self._last_entry_timestamp = self._storage.get_timestamp(self._url)
+        self._last_entry_timestamp = self._storage.get_timestamp(self._feed_id)
         if self._last_entry_timestamp:
             self._firstrun = False
         else:
@@ -157,18 +182,18 @@ class StoredData(object):
                 _LOGGER.error("Error loading data from pickled file %s",
                               self._data_file)
 
-    def get_timestamp(self, url):
-        """Return stored timestamp for given url."""
+    def get_timestamp(self, feed_id):
+        """Return stored timestamp for given feed id (usually the url)."""
         self._fetch_data()
-        return self._data.get(url)
+        return self._data.get(feed_id)
 
-    def put_timestamp(self, url, timestamp):
-        """Update timestamp for given URL."""
+    def put_timestamp(self, feed_id, timestamp):
+        """Update timestamp for given feed id (usually the url)."""
         self._fetch_data()
         with self._lock, open(self._data_file, 'wb') as myfile:
-            self._data.update({url: timestamp})
+            self._data.update({feed_id: timestamp})
             _LOGGER.debug("Overwriting feed %s timestamp in storage file %s",
-                          url, self._data_file)
+                          feed_id, self._data_file)
             try:
                 pickle.dump(self._data, myfile)
             except:  # noqa: E722  # pylint: disable=bare-except
