@@ -18,7 +18,7 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
 from homeassistant.components.light.mqtt import CONF_BRIGHTNESS_SCALE
 from homeassistant.const import (
-    CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT,
+    CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT, STATE_ON,
     CONF_NAME, CONF_OPTIMISTIC, CONF_RGB, CONF_WHITE_VALUE, CONF_XY)
 from homeassistant.components.mqtt import (
     CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
@@ -26,6 +26,7 @@ from homeassistant.components.mqtt import (
     MqttAvailability)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.restore_state import async_get_last_state
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -177,6 +178,8 @@ class MqttJson(MqttAvailability, Light):
         """Subscribe to MQTT events."""
         await super().async_added_to_hass()
 
+        last_state = await async_get_last_state(self.hass, self.entity_id)
+
         @callback
         def state_received(topic, payload, qos):
             """Handle new MQTT messages."""
@@ -259,6 +262,19 @@ class MqttJson(MqttAvailability, Light):
             await mqtt.async_subscribe(
                 self.hass, self._topic[CONF_STATE_TOPIC], state_received,
                 self._qos)
+
+        if self._optimistic and last_state:
+            self._state = last_state.state == STATE_ON
+            if last_state.attributes.get(ATTR_BRIGHTNESS):
+                self._brightness = last_state.attributes.get(ATTR_BRIGHTNESS)
+            if last_state.attributes.get(ATTR_HS_COLOR):
+                self._hs = last_state.attributes.get(ATTR_HS_COLOR)
+            if last_state.attributes.get(ATTR_COLOR_TEMP):
+                self._color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
+            if last_state.attributes.get(ATTR_EFFECT):
+                self._effect = last_state.attributes.get(ATTR_EFFECT)
+            if last_state.attributes.get(ATTR_WHITE_VALUE):
+                self._white_value = last_state.attributes.get(ATTR_WHITE_VALUE)
 
     @property
     def brightness(self):
