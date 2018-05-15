@@ -156,9 +156,14 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         # pylint: disable=protected-access
         if not _is_val_unknown(self._negative_node.status._val):
             # If the negative node has a value, it means the negative node is
-            # in use for this device. Therefore, we cannot determine the state
-            # of the sensor until we receive our first ON event.
-            self._computed_state = None
+            # in use for this device. Next we need to check to see if the
+            # negative and positive nodes disagree on the state (both ON or
+            # both OFF).
+            _LOGGER.debug(self._node)
+            if self._negative_node.status._val == self._node.status._val:
+                # The states disagree, therefore we cannot determine the state
+                # of the sensor until we receive our first ON event.
+                self._computed_state = None
 
     def _negative_node_control_handler(self, event: object) -> None:
         """Handle an "On" control event from the "negative" node."""
