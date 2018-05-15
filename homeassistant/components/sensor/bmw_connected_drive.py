@@ -15,6 +15,17 @@ DEPENDENCIES = ['bmw_connected_drive']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_TO_HA = {
+    'mileage': ['mdi:speedometer', 'km'],
+    'remaining_range_total': ['mdi:ruler', 'km'],
+    'remaining_range_electric': ['mdi:ruler', 'km'],
+    'remaining_range_fuel': ['mdi:ruler', 'km'],
+    'max_range_electric': ['mdi:ruler', 'km'],
+    'remaining_fuel': ['mdi:gas-station', 'l'],
+    'charging_time_remaining': ['mdi:update', 'h'],
+    'charging_status': ['mdi:battery-charging', None]
+}
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the BMW sensors."""
@@ -68,22 +79,12 @@ class BMWConnectedDriveSensor(Entity):
         charging_state = vehicle_state.charging_status in \
             [ChargingState.CHARGING]
 
-        if self._attribute == 'mileage':
-            return 'mdi:speedometer'
-        elif self._attribute in (
-                'remaining_range_total', 'remaining_range_electric',
-                'remaining_range_fuel', 'max_range_electric'):
-            return 'mdi:ruler'
-        elif self._attribute == 'remaining_fuel':
-            return 'mdi:gas-station'
-        elif self._attribute == 'charging_time_remaining':
-            return 'mdi:update'
-        elif self._attribute == 'charging_status':
-            return 'mdi:battery-charging'
-        elif self._attribute == 'charging_level_hv':
+        if self._attribute == 'charging_level_hv':
             return icon_for_battery_level(
                 battery_level=vehicle_state.charging_level_hv,
                 charging=charging_state)
+        icon, _ = ATTR_TO_HA.get(self._attribute, [None, None])
+        return icon
 
     @property
     def state(self):
@@ -97,17 +98,8 @@ class BMWConnectedDriveSensor(Entity):
     @property
     def unit_of_measurement(self) -> str:
         """Get the unit of measurement."""
-        if self._attribute in (
-                'mileage', 'remaining_range_total', 'remaining_range_electric',
-                'remaining_range_fuel', 'max_range_electric'):
-            return 'km'
-        elif self._attribute == 'remaining_fuel':
-            return 'l'
-        elif self._attribute == 'charging_time_remaining':
-            return 'h'
-        elif self._attribute == 'charging_level_hv':
-            return '%'
-        return None
+        _, unit = ATTR_TO_HA.get(self._attribute, [None, None])
+        return unit
 
     @property
     def device_state_attributes(self):
