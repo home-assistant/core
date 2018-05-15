@@ -37,6 +37,7 @@ SERVICE_WINK = 'wink'
 SERVICE_XIAOMI_GW = 'xiaomi_gw'
 SERVICE_TELLDUSLIVE = 'tellstick'
 SERVICE_HUE = 'philips_hue'
+SERVICE_KONNECTED = 'konnected'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DAIKIN = 'daikin'
 SERVICE_SABNZBD = 'sabnzbd'
@@ -62,6 +63,7 @@ SERVICE_HANDLERS = {
     SERVICE_DAIKIN: ('daikin', None),
     SERVICE_SABNZBD: ('sabnzbd', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
+    SERVICE_KONNECTED: ('konnected', None),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
@@ -191,6 +193,7 @@ def _discover(netdisco):
         for disc in netdisco.discover():
             for service in netdisco.get_info(disc):
                 results.append((disc, service))
+
     finally:
         netdisco.stop()
 

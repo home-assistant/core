@@ -153,6 +153,9 @@ omit =
     homeassistant/components/knx.py
     homeassistant/components/*/knx.py
 
+    homeassistant/components/konnected.py
+    homeassistant/components/*/konnected.py
+
     homeassistant/components/lametric.py
     homeassistant/components/*/lametric.py
 
