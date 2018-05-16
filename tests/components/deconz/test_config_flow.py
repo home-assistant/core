@@ -21,7 +21,9 @@ async def test_flow_works(hass, aioclient_mock):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
     await flow.async_step_init()
-    result = await flow.async_step_link(user_input={})
+    await flow.async_step_link(user_input={})
+    result = await flow.async_step_options(
+        user_input={'allow_clip_sensor': True})
 
     assert result['type'] == 'create_entry'
     assert result['title'] == 'deCONZ-id'
@@ -29,7 +31,8 @@ async def test_flow_works(hass, aioclient_mock):
         'bridgeid': 'id',
         'host': '1.2.3.4',
         'port': 80,
-        'api_key': '1234567890ABCDEF'
+        'api_key': '1234567890ABCDEF',
+        'allow_clip_sensor': True
     }
 
 
@@ -141,19 +144,21 @@ async def test_bridge_discovery_config_file(hass):
                       return_value={'host': '1.2.3.4',
                                     'port': 8080,
                                     'api_key': '1234567890ABCDEF'}):
-        result = await flow.async_step_discovery({
+        await flow.async_step_discovery({
             'host': '1.2.3.4',
             'port': 80,
             'serial': 'id'
         })
-
+    result = await flow.async_step_options(
+        user_input={'allow_clip_sensor': True})
     assert result['type'] == 'create_entry'
     assert result['title'] == 'deCONZ-id'
     assert result['data'] == {
         'bridgeid': 'id',
         'host': '1.2.3.4',
         'port': 80,
-        'api_key': '1234567890ABCDEF'
+        'api_key': '1234567890ABCDEF',
+        'allow_clip_sensor': True
     }
 
 
@@ -208,18 +213,42 @@ async def test_import_with_api_key(hass):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_import({
+    await flow.async_step_import({
         'bridgeid': 'id',
         'host': '1.2.3.4',
         'port': 80,
         'api_key': '1234567890ABCDEF'
     })
-
+    result = await flow.async_step_options(
+        user_input={'allow_clip_sensor': True})
     assert result['type'] == 'create_entry'
     assert result['title'] == 'deCONZ-id'
     assert result['data'] == {
         'bridgeid': 'id',
         'host': '1.2.3.4',
         'port': 80,
-        'api_key': '1234567890ABCDEF'
+        'api_key': '1234567890ABCDEF',
+        'allow_clip_sensor': True
+    }
+
+
+async def test_options(hass, aioclient_mock):
+    """Test that options work and that bridgeid can be requested."""
+    aioclient_mock.get('http://1.2.3.4:80/api/1234567890ABCDEF/config',
+                       json={"bridgeid": "id"})
+    flow = config_flow.DeconzFlowHandler()
+    flow.hass = hass
+    flow.deconz_config = {'host': '1.2.3.4',
+                          'port': 80,
+                          'api_key': '1234567890ABCDEF'}
+    result = await flow.async_step_options(
+        user_input={'allow_clip_sensor': False})
+    assert result['type'] == 'create_entry'
+    assert result['title'] == 'deCONZ-id'
+    assert result['data'] == {
+        'bridgeid': 'id',
+        'host': '1.2.3.4',
+        'port': 80,
+        'api_key': '1234567890ABCDEF',
+        'allow_clip_sensor': False
     }
