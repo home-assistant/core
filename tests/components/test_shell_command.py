@@ -19,8 +19,7 @@ def mock_process_creator(error: bool = False) -> asyncio.coroutine:
     def communicate() -> Tuple[bytes, bytes]:
         """Mock a coroutine that runs a process when yielded.
 
-        Returns:
-            a tuple of (stdout, stderr).
+        Returns a tuple of (stdout, stderr).
         """
         return b"I am stdout", b"I am stderr"
 
