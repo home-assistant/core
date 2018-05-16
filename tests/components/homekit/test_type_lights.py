@@ -15,15 +15,15 @@ from tests.components.homekit.test_accessories import patch_debounce
 
 
 @pytest.fixture(scope='module')
-def cls(request):
+def cls():
     """Patch debounce decorator during import of type_lights."""
     patcher = patch_debounce()
     patcher.start()
     _import = __import__('homeassistant.components.homekit.type_lights',
                          fromlist=['Light'])
-    request.addfinalizer(patcher.stop)
     patcher_tuple = namedtuple('Cls', ['light'])
-    return patcher_tuple(light=_import.Light)
+    yield patcher_tuple(light=_import.Light)
+    patcher.stop()
 
 
 async def test_light_basic(hass, cls):
