@@ -149,10 +149,10 @@ class Iperf3Sensor(Entity):
             return
 
         if self._sensor_type == 'download':
-            self._state = self.result.received_Mbps
+            self._state = round(self.result.received_Mbps, 2)
 
         elif self._sensor_type == 'upload':
-            self._state = self.result.sent_Mbps
+            self._state = round(self.result.sent_Mbps, 2)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
