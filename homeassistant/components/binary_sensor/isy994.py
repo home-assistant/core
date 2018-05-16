@@ -117,8 +117,10 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         # pylint: disable=protected-access
         if _is_val_unknown(self._node.status._val):
             self._computed_state = None
+            self._status_was_unknown = True
         else:
             self._computed_state = bool(self._node.status._val)
+            self._status_was_unknown = False
 
     @asyncio.coroutine
     def async_added_to_hass(self) -> None:
@@ -196,12 +198,19 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
 
     # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
-        """Ignore primary node status updates.
+        """Primary node status updates.
 
-        We listen directly to the Control events on all nodes for this
-        device.
+        We MOSTLY ignore these updates, as we listen directly to the Control
+        events on all nodes for this device. However, there is one edge case:
+        If a leak sensor is unknown, due to a recent reboot of the ISY, the
+        status will get updated to dry upon the first heartbeat. This status
+        update is the only way that a leak sensor's status changes without
+        an accompanying Control event, so we need to watch for it.
         """
-        pass
+        if self._status_was_unknown and self._computed_state is None:
+            # pylint: disable=protected-access
+            self._computed_state = bool(self._node._val)
+            self._status_was_unknown = False
 
     @property
     def value(self) -> object:
