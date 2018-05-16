@@ -56,10 +56,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
     for sensor in config[CONF_MONITORED_CONDITIONS]:
         dev.append(
-                Iperf3Sensor(config[CONF_HOST],
-                             config[CONF_PORT],
-                             config[CONF_DURATION],
-                             sensor))
+            Iperf3Sensor(config[CONF_HOST],
+                         config[CONF_PORT],
+                         config[CONF_DURATION],
+                         sensor))
     add_devices(dev)
 
     def update(call=None):
