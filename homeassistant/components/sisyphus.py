@@ -1,6 +1,7 @@
 """
-Enables control of Sisyphus Kinetic Art Tables. Each table is exposed as
-a light and a media player.
+Enables control of Sisyphus Kinetic Art Tables.
+
+Each table is exposed as a light and a media player.
 """
 import logging
 import voluptuous as vol
@@ -37,6 +38,7 @@ CONFIG_SCHEMA = vol.Any(AUTODETECT_SCHEMA, TABLES_SCHEMA)
 
 
 async def async_setup(hass, config):
+    """Set up the sisyphus component."""
     import sisyphus.control
     tables = hass.data.setdefault(DATA_SISYPHUS, {})
     table_configs = config.get(DOMAIN)

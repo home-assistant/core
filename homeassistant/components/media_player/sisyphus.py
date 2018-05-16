@@ -1,6 +1,7 @@
 """
-Exposes the Sisyphus Kinetic Art Table as a media player. Media controls
-work as one would expect. Volume controls table speed.
+Exposes the Sisyphus Kinetic Art Table as a media player.
+
+Media controls work as one would expect. Volume controls table speed.
 """
 import logging
 
@@ -35,6 +36,7 @@ ALWAYS_FEATURES = \
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up a media player entity for a Sisyphus table."""
     name = discovery_info[CONF_NAME]
     host = discovery_info[CONF_HOST]
     add_devices(
@@ -43,13 +45,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SisyphusPlayer(MediaPlayerDevice):
+    """Represents a single Sisyphus table as a media player device."""
+
     def __init__(self, name, host, table):
+        """
+        Constructor.
+
+        :param name: name of the table
+        :param host: hostname or ip address
+        :param table: sisyphus-control Table object
+        """
         self._name = name
         self._host = host
         self._table = table
         self._initialized = False
 
     def update(self):
+        """Lazily initializes the table."""
         if not self._initialized:
             # We wait until update before adding the listener because
             # otherwise there's a race condition by which this entity
@@ -61,10 +73,12 @@ class SisyphusPlayer(MediaPlayerDevice):
 
     @property
     def name(self):
+        """Return the name of the table."""
         return self._name
 
     @property
     def state(self):
+        """Return the urrent state of the table; sleeping maps to off."""
         if self._table.state in ["homing", "playing"]:
             return STATE_PLAYING
         elif self._table.state == "paused":
@@ -78,39 +92,51 @@ class SisyphusPlayer(MediaPlayerDevice):
 
     @property
     def volume_level(self):
+        """Return the current playback speed (0..1)."""
         return self._table.speed
 
     @property
     def shuffle(self):
+        """Return True if the current playlist is in shuffle mode."""
         return self._table.is_shuffle
 
     async def async_set_shuffle(self, shuffle):
+        """
+        Change the shuffle mode of the current playlist.
+
+        :param shuffle: True to shuffle, False not to
+        """
         await self._table.set_shuffle(shuffle)
 
     @property
     def media_playlist(self):
+        """Return the name of the current playlist."""
         return self._table.active_playlist.name \
             if self._table.active_playlist \
             else None
 
     @property
     def media_title(self):
+        """Return the title of the current track."""
         return self._table.active_track.name \
             if self._table.active_track \
             else None
 
     @property
     def media_content_type(self):
+        """Return the content type currently playing; i.e. a Sisyphus track."""
         return MEDIA_TYPE_TRACK
 
     @property
     def media_content_id(self):
+        """Return the track ID of the current track."""
         return self._table.active_track.id \
             if self._table.active_track \
             else None
 
     @property
     def supported_features(self):
+        """Return the features supported by this table in its current state."""
         if self.state == STATE_PLAYING:
             features = ALWAYS_FEATURES | SUPPORT_PAUSE
 
@@ -128,6 +154,7 @@ class SisyphusPlayer(MediaPlayerDevice):
 
     @property
     def media_image_url(self):
+        """Return the URL for a thumbnail image of the current track."""
         from sisyphus.control import Track
         if self._table.active_track:
             return self._table.active_track.get_thumbnail_url(
@@ -136,33 +163,42 @@ class SisyphusPlayer(MediaPlayerDevice):
             return super.media_image_url()
 
     async def async_turn_on(self):
+        """Wake up a sleeping table."""
         await self._table.wakeup()
 
     async def async_turn_off(self):
+        """Put the table to sleep."""
         await self._table.sleep()
 
     async def async_volume_down(self):
+        """Slow down playback."""
         await self._table.set_speed(max(0, self._table.speed - 0.1))
 
     async def async_volume_up(self):
+        """Speed up playback."""
         await self._table.set_speed(min(1.0, self._table.speed + 0.1))
 
     async def async_set_volume_level(self, volume):
+        """Set playback speed (0..1)."""
         await self._table.set_speed(volume)
 
     async def async_media_play(self):
+        """Start playing."""
         await self._table.play()
 
     async def async_media_pause(self):
+        """Pause."""
         await self._table.pause()
 
     async def async_media_next_track(self):
+        """Skip to next track."""
         cur_track_index = self._get_current_track_index()
 
         await self._table.active_playlist.play(
             self._table.active_playlist.tracks[cur_track_index + 1])
 
     async def async_media_previous_track(self):
+        """Skip to previous track."""
         cur_track_index = self._get_current_track_index()
 
         await self._table.active_playlist.play(
