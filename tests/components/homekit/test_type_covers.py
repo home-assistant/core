@@ -14,18 +14,18 @@ from tests.components.homekit.test_accessories import patch_debounce
 
 
 @pytest.fixture(scope='module')
-def cls(request):
+def cls():
     """Patch debounce decorator during import of type_covers."""
     patcher = patch_debounce()
     patcher.start()
     _import = __import__('homeassistant.components.homekit.type_covers',
                          fromlist=['GarageDoorOpener', 'WindowCovering,',
                                    'WindowCoveringBasic'])
-    request.addfinalizer(patcher.stop)
     patcher_tuple = namedtuple('Cls', ['window', 'window_basic', 'garage'])
-    return patcher_tuple(window=_import.WindowCovering,
-                         window_basic=_import.WindowCoveringBasic,
-                         garage=_import.GarageDoorOpener)
+    yield patcher_tuple(window=_import.WindowCovering,
+                        window_basic=_import.WindowCoveringBasic,
+                        garage=_import.GarageDoorOpener)
+    patcher.stop()
 
 
 async def test_garage_door_open_close(hass, cls):

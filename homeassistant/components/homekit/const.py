@@ -29,6 +29,7 @@ SERV_AIR_QUALITY_SENSOR = 'AirQualitySensor'
 SERV_CARBON_DIOXIDE_SENSOR = 'CarbonDioxideSensor'
 SERV_CARBON_MONOXIDE_SENSOR = 'CarbonMonoxideSensor'
 SERV_CONTACT_SENSOR = 'ContactSensor'
+SERV_FANV2 = 'Fanv2'
 SERV_GARAGE_DOOR_OPENER = 'GarageDoorOpener'
 SERV_HUMIDITY_SENSOR = 'HumiditySensor'  # CurrentRelativeHumidity
 SERV_LEAK_SENSOR = 'LeakSensor'
@@ -46,6 +47,7 @@ SERV_WINDOW_COVERING = 'WindowCovering'
 # CurrentPosition, TargetPosition, PositionState
 
 # #### Characteristics ####
+CHAR_ACTIVE = 'Active'
 CHAR_AIR_PARTICULATE_DENSITY = 'AirParticulateDensity'
 CHAR_AIR_QUALITY = 'AirQuality'
 CHAR_BRIGHTNESS = 'Brightness'  # Int | [0, 100]
@@ -77,9 +79,11 @@ CHAR_NAME = 'Name'
 CHAR_OCCUPANCY_DETECTED = 'OccupancyDetected'
 CHAR_ON = 'On'  # boolean
 CHAR_POSITION_STATE = 'PositionState'
+CHAR_ROTATION_DIRECTION = 'RotationDirection'
 CHAR_SATURATION = 'Saturation'  # percent
 CHAR_SERIAL_NUMBER = 'SerialNumber'
 CHAR_SMOKE_DETECTED = 'SmokeDetected'
+CHAR_SWING_MODE = 'SwingMode'
 CHAR_TARGET_DOOR_STATE = 'TargetDoorState'
 CHAR_TARGET_HEATING_COOLING = 'TargetHeatingCoolingState'
 CHAR_TARGET_POSITION = 'TargetPosition'  # Int | [0, 100]
@@ -88,6 +92,9 @@ CHAR_TARGET_TEMPERATURE = 'TargetTemperature'
 CHAR_TEMP_DISPLAY_UNITS = 'TemperatureDisplayUnits'
 
 # #### Properties ####
+PROP_MAX_VALUE = 'maxValue'
+PROP_MIN_VALUE = 'minValue'
+
 PROP_CELSIUS = {'minValue': -273, 'maxValue': 999}
 
 # #### Device Class ####
