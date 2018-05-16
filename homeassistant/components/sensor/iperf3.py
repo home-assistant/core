@@ -66,6 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         """Update service for manual updates."""
         for sensor in dev:
             sensor.update()
+            sensor.schedule_update_ha_state()
 
     for sensor in dev:
         hass.services.register(DOMAIN, sensor.service_name, update)
