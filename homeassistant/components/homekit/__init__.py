@@ -115,6 +115,9 @@ def get_accessory(hass, state, aid, config):
         elif features & (SUPPORT_OPEN | SUPPORT_CLOSE):
             a_type = 'WindowCoveringBasic'
 
+    elif state.domain == 'fan':
+        a_type = 'Fan'
+
     elif state.domain == 'light':
         a_type = 'Light'
 
@@ -202,8 +205,9 @@ class HomeKit():
 
         # pylint: disable=unused-variable
         from . import (  # noqa F401
-            type_covers, type_lights, type_locks, type_security_systems,
-            type_sensors, type_switches, type_thermostats)
+            type_covers, type_fans, type_lights, type_locks,
+            type_security_systems, type_sensors, type_switches,
+            type_thermostats)
 
         for state in self.hass.states.all():
             self.add_bridge_accessory(state)

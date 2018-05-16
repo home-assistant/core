@@ -16,15 +16,15 @@ from tests.components.homekit.test_accessories import patch_debounce
 
 
 @pytest.fixture(scope='module')
-def cls(request):
+def cls():
     """Patch debounce decorator during import of type_thermostats."""
     patcher = patch_debounce()
     patcher.start()
     _import = __import__('homeassistant.components.homekit.type_thermostats',
                          fromlist=['Thermostat'])
-    request.addfinalizer(patcher.stop)
     patcher_tuple = namedtuple('Cls', ['thermostat'])
-    return patcher_tuple(thermostat=_import.Thermostat)
+    yield patcher_tuple(thermostat=_import.Thermostat)
+    patcher.stop()
 
 
 async def test_default_thermostat(hass, cls):
