@@ -169,10 +169,7 @@ class PhilipsTV(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        if self._volume != volume:
-            self._tv.setVolume(volume)
-            if not self._tv.on:
-                self._state = STATE_OFF
+        self._tv.setVolume(volume)
 
     def media_previous_track(self):
         """Send rewind command."""
