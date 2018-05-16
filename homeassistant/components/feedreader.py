@@ -4,7 +4,7 @@ Support for RSS/Atom feeds.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/feedreader/
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 from logging import getLogger
 from os.path import exists
 from threading import Lock
@@ -12,8 +12,8 @@ import pickle
 
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
+from homeassistant.helpers.event import track_time_interval
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['feedparser==5.2.1']
@@ -21,6 +21,8 @@ REQUIREMENTS = ['feedparser==5.2.1']
 _LOGGER = getLogger(__name__)
 
 CONF_URLS = 'urls'
+
+DEFAULT_SCAN_INTERVAL = timedelta(hours=1)
 
 DOMAIN = 'feedreader'
 
@@ -31,6 +33,8 @@ MAX_ENTRIES = 20
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {
         vol.Required(CONF_URLS): vol.All(cv.ensure_list, [cv.url]),
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+            cv.time_period,
     }
 }, extra=vol.ALLOW_EXTRA)
 
@@ -38,18 +42,20 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the Feedreader component."""
     urls = config.get(DOMAIN)[CONF_URLS]
+    scan_interval = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
     data_file = hass.config.path("{}.pickle".format(DOMAIN))
     storage = StoredData(data_file)
-    feeds = [FeedManager(url, hass, storage) for url in urls]
+    feeds = [FeedManager(url, scan_interval, hass, storage) for url in urls]
     return len(feeds) > 0
 
 
 class FeedManager(object):
     """Abstraction over Feedparser module."""
 
-    def __init__(self, url, hass, storage):
-        """Initialize the FeedManager object, poll every hour."""
+    def __init__(self, url, scan_interval, hass, storage):
+        """Initialize the FeedManager object, poll as per scan interval."""
         self._url = url
+        self._scan_interval = scan_interval
         self._feed = None
         self._hass = hass
         self._firstrun = True
@@ -69,8 +75,8 @@ class FeedManager(object):
 
     def _init_regular_updates(self, hass):
         """Schedule regular updates at the top of the clock."""
-        track_utc_time_change(
-            hass, lambda now: self._update(), minute=0, second=0)
+        track_time_interval(hass, lambda now: self._update(),
+                            self._scan_interval)
 
     @property
     def last_update_successful(self):

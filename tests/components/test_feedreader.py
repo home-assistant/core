@@ -1,6 +1,6 @@
 """The tests for the feedreader component."""
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import unittest
 from genericpath import exists
@@ -11,8 +11,8 @@ from unittest.mock import patch
 
 from homeassistant.components import feedreader
 from homeassistant.components.feedreader import CONF_URLS, FeedManager, \
-    StoredData, EVENT_FEEDREADER
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+    StoredData, EVENT_FEEDREADER, DEFAULT_SCAN_INTERVAL
+from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant, assert_setup_component, \
@@ -24,6 +24,12 @@ URL = 'http://some.rss.local/rss_feed.xml'
 VALID_CONFIG_1 = {
     feedreader.DOMAIN: {
         CONF_URLS: [URL]
+    }
+}
+VALID_CONFIG_2 = {
+    feedreader.DOMAIN: {
+        CONF_URLS: [URL],
+        CONF_SCAN_INTERVAL: 60
     }
 }
 
@@ -45,9 +51,21 @@ class TestFeedreaderComponent(unittest.TestCase):
 
     def test_setup_one_feed(self):
         """Test the general setup of this component."""
-        with assert_setup_component(1, 'feedreader'):
+        with patch("homeassistant.components.feedreader."
+                   "track_time_interval") as track_method:
             self.assertTrue(setup_component(self.hass, feedreader.DOMAIN,
                                             VALID_CONFIG_1))
+            track_method.assert_called_once_with(self.hass, mock.ANY,
+                                                 DEFAULT_SCAN_INTERVAL)
+
+    def test_setup_scan_interval(self):
+        """Test the general setup of this component."""
+        with patch("homeassistant.components.feedreader."
+                   "track_time_interval") as track_method:
+            self.assertTrue(setup_component(self.hass, feedreader.DOMAIN,
+                                            VALID_CONFIG_2))
+            track_method.assert_called_once_with(self.hass, mock.ANY,
+                                                 timedelta(seconds=60))
 
     def setup_manager(self, feed_data):
         """Generic test setup method."""
@@ -67,12 +85,13 @@ class TestFeedreaderComponent(unittest.TestCase):
             feedreader.DOMAIN))
         storage = StoredData(data_file)
         with patch("homeassistant.components.feedreader."
-                   "track_utc_time_change") as track_method:
-            manager = FeedManager(feed_data, self.hass, storage)
+                   "track_time_interval") as track_method:
+            manager = FeedManager(feed_data, DEFAULT_SCAN_INTERVAL, self.hass,
+                                  storage)
             # Can't use 'assert_called_once' here because it's not available
             # in Python 3.5 yet.
-            track_method.assert_called_once_with(self.hass, mock.ANY, minute=0,
-                                                 second=0)
+            track_method.assert_called_once_with(self.hass, mock.ANY,
+                                                 DEFAULT_SCAN_INTERVAL)
         # Artificially trigger update.
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         # Collect events.
@@ -141,7 +160,8 @@ class TestFeedreaderComponent(unittest.TestCase):
         data_file = self.hass.config.path("{}.pickle".format(
             feedreader.DOMAIN))
         storage = StoredData(data_file)
-        manager = FeedManager("FEED DATA", self.hass, storage)
+        manager = FeedManager("FEED DATA", DEFAULT_SCAN_INTERVAL, self.hass,
+                              storage)
         # Artificially trigger update.
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         # Collect events.
