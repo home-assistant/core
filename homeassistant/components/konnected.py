@@ -225,7 +225,7 @@ class KonnectedDevice(object):
     def sensor_configuration(self):
         """Return the configuration map for syncing sensors."""
         return [{'pin': p} for p in
-                self.stored_configuration[CONF_BINARY_SENSORS].keys()]
+                self.stored_configuration[CONF_BINARY_SENSORS]]
 
     def actuator_configuration(self):
         """Return the configuration map for syncing actuators."""

@@ -9,7 +9,8 @@ import asyncio
 import logging
 
 from homeassistant.components.konnected import (
-    DOMAIN, PIN_TO_ZONE, CONF_ACTIVATION, STATE_LOW, STATE_HIGH)
+    DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, CONF_ACTIVATION,
+    STATE_LOW, STATE_HIGH)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.const import (CONF_DEVICES, CONF_SWITCHES, ATTR_STATE)
 
@@ -24,7 +25,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     if discovery_info is None:
         return
 
-    data = hass.data[DOMAIN]
+    data = hass.data[KONNECTED_DOMAIN]
     device_id = discovery_info['device_id']
     client = data[CONF_DEVICES][device_id]['client']
     switches = [KonnectedSwitch(device_id, pin_num, pin_data, client)
