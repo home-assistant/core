@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                              sensor))
     add_devices(dev)
 
-    def update(hass, call=None):
+    def update(call=None):
         """Update service for manual updates."""
         for sensor in dev:
             sensor.update()
