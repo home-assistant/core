@@ -251,7 +251,6 @@ class FluxLight(Light):
         if white is not None:
             self._bulb.setWarmWhite255(white)
 
-
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
         self._bulb.turnOff()
