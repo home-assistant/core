@@ -87,7 +87,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for account in holdings_accounts:
         if config[CONF_HOLDINGS] and \
                 account.accountnumber not in holdings_config:
-            _LOGGER.info('skipping account %s for bank %s',
+            _LOGGER.info('skipping holdings %s for bank %s',
                          account.accountnumber, fints_name)
             continue
 
@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             account_name = '{} - {}'.format(
                 fints_name, account.accountnumber)
         accounts.append(FinTsHoldingsAccount(client, account, account_name))
-        _LOGGER.debug('Creating account %s for bank %s',
+        _LOGGER.debug('Creating holdings %s for bank %s',
                       account.accountnumber, fints_name)
 
     add_devices(accounts, True)
@@ -131,7 +131,7 @@ class FinTsClient(object):
         from fints.dialog import FinTSDialogError
         balance_accounts = []
         holdings_accounts = []
-        for account in [a for a in self.client.get_sepa_accounts()]:
+        for account in self.client.get_sepa_accounts():
             try:
                 self.client.get_balance(account)
                 balance_accounts.append(account)
@@ -275,7 +275,7 @@ class FinTsHoldingsAccount(Entity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Get the unit of measurement.
 
         Hardcoded to EUR, as the library does not provide the currency for the
