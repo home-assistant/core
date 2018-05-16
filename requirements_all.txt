@@ -470,6 +470,9 @@ konnected==0.1.2
 # homeassistant.components.eufy
 lakeside==0.6
 
+# homeassistant.components.lock.kiwi
+kiwiki-client==0.1
+
 # homeassistant.components.device_tracker.owntracks
 # homeassistant.components.device_tracker.owntracks_http
 libnacl==1.6.1
