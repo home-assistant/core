@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, slugify
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['broadlink==0.9.0']
+REQUIREMENTS = ['https://github.com/mjg59/python-broadlink/archive/master.zip#broadlink']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -294,6 +294,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
 
     def _update(self, retry=2):
         """Update the state of the device."""
+        self._auth()
         try:
             state = self._device.check_power()
         except (socket.timeout, ValueError) as error:
