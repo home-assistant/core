@@ -4,13 +4,13 @@ Support for Xiaomi Aqara Lock.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.xiaomi_aqara/
 """
-import asyncio
 import logging
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
 from homeassistant.helpers.event import async_call_later
+from homeassistant.core import callback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class XiaomiAqaraLock(LockDevice, XiaomiDevice):
         }
         return attributes
 
-    @asyncio.coroutine
+    @callback
     def clear_unlock_state(self, _):
         """Clear unlock state automatically."""
         self._state = STATE_LOCKED
