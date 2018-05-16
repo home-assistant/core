@@ -16,8 +16,7 @@ from homeassistant.components.feedreader import CONF_URLS, FeedManager, \
 from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant, assert_setup_component, \
-    load_fixture
+from tests.common import get_test_home_assistant, load_fixture
 
 _LOGGER = getLogger(__name__)
 
