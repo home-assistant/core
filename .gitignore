@@ -16,9 +16,12 @@ Icon
 # Thumbnails
 ._*
 
+# IntelliJ IDEA
 .idea
+*.iml
 
 # pytest
+.pytest_cache
 .cache
 
 # GITHUB Proposed Python stuff:
@@ -74,6 +77,7 @@ pip-selfcheck.json
 venv
 .venv
 Pipfile*
+share/*
 
 # vimmy stuff
 *.swp
@@ -96,4 +100,10 @@ docs/build
 desktop.ini
 /home-assistant.pyproj
 /home-assistant.sln
-/.vs/home-assistant/v14
+/.vs/*
+
+# mypy
+/.mypy_cache/*
+
+# Secrets
+.lokalise_token

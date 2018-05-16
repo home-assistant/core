@@ -22,6 +22,10 @@ from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_OBSERVATIONS = 'observations'
+ATTR_PROBABILITY = 'probability'
+ATTR_PROBABILITY_THRESHOLD = 'probability_threshold'
+
 CONF_OBSERVATIONS = 'observations'
 CONF_PRIOR = 'prior'
 CONF_PROBABILITY_THRESHOLD = 'probability_threshold'
@@ -29,7 +33,8 @@ CONF_P_GIVEN_F = 'prob_given_false'
 CONF_P_GIVEN_T = 'prob_given_true'
 CONF_TO_STATE = 'to_state'
 
-DEFAULT_NAME = 'BayesianBinary'
+DEFAULT_NAME = "Bayesian Binary Sensor"
+DEFAULT_PROBABILITY_THRESHOLD = 0.5
 
 NUMERIC_STATE_SCHEMA = vol.Schema({
     CONF_PLATFORM: 'numeric_state',
@@ -49,16 +54,14 @@ STATE_SCHEMA = vol.Schema({
 }, required=True)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME):
-        cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): cv.string,
-    vol.Required(CONF_OBSERVATIONS): vol.Schema(
-        vol.All(cv.ensure_list, [vol.Any(NUMERIC_STATE_SCHEMA,
-                                         STATE_SCHEMA)])
-    ),
+    vol.Required(CONF_OBSERVATIONS):
+        vol.Schema(vol.All(cv.ensure_list,
+                           [vol.Any(NUMERIC_STATE_SCHEMA, STATE_SCHEMA)])),
     vol.Required(CONF_PRIOR): vol.Coerce(float),
-    vol.Optional(CONF_PROBABILITY_THRESHOLD):
-        vol.Coerce(float),
+    vol.Optional(CONF_PROBABILITY_THRESHOLD,
+                 default=DEFAULT_PROBABILITY_THRESHOLD): vol.Coerce(float),
 })
 
 
@@ -73,16 +76,16 @@ def update_probability(prior, prob_true, prob_false):
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the Threshold sensor."""
+    """Set up the Bayesian Binary sensor."""
     name = config.get(CONF_NAME)
     observations = config.get(CONF_OBSERVATIONS)
     prior = config.get(CONF_PRIOR)
-    probability_threshold = config.get(CONF_PROBABILITY_THRESHOLD, 0.5)
+    probability_threshold = config.get(CONF_PROBABILITY_THRESHOLD)
     device_class = config.get(CONF_DEVICE_CLASS)
 
     async_add_devices([
-        BayesianBinarySensor(name, prior, observations, probability_threshold,
-                             device_class)
+        BayesianBinarySensor(
+            name, prior, observations, probability_threshold, device_class)
     ], True)
 
 
@@ -102,7 +105,13 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         self.current_obs = OrderedDict({})
 
-        self.entity_obs = {obs['entity_id']: obs for obs in self._observations}
+        to_observe = set(obs['entity_id'] for obs in self._observations)
+
+        self.entity_obs = dict.fromkeys(to_observe, [])
+
+        for ind, obs in enumerate(self._observations):
+            obs['id'] = ind
+            self.entity_obs[obs['entity_id']].append(obs)
 
         self.watchers = {
             'numeric_state': self._process_numeric_state,
@@ -111,7 +120,7 @@ class BayesianBinarySensor(BinarySensorDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Call when entity about to be added to hass."""
+        """Call when entity about to be added."""
         @callback
         # pylint: disable=invalid-name
         def async_threshold_sensor_state_listener(entity, old_state,
@@ -120,17 +129,17 @@ class BayesianBinarySensor(BinarySensorDevice):
             if new_state.state == STATE_UNKNOWN:
                 return
 
-            entity_obs = self.entity_obs[entity]
-            platform = entity_obs['platform']
+            entity_obs_list = self.entity_obs[entity]
 
-            self.watchers[platform](entity_obs)
+            for entity_obs in entity_obs_list:
+                platform = entity_obs['platform']
+
+                self.watchers[platform](entity_obs)
 
             prior = self.prior
-            print(self.current_obs.values())
             for obs in self.current_obs.values():
-                prior = update_probability(prior, obs['prob_true'],
-                                           obs['prob_false'])
-
+                prior = update_probability(
+                    prior, obs['prob_true'], obs['prob_false'])
             self.probability = prior
 
             self.hass.async_add_job(self.async_update_ha_state, True)
@@ -141,20 +150,20 @@ class BayesianBinarySensor(BinarySensorDevice):
 
     def _update_current_obs(self, entity_observation, should_trigger):
         """Update current observation."""
-        entity = entity_observation['entity_id']
+        obs_id = entity_observation['id']
 
         if should_trigger:
             prob_true = entity_observation['prob_given_true']
             prob_false = entity_observation.get(
                 'prob_given_false', 1 - prob_true)
 
-            self.current_obs[entity] = {
+            self.current_obs[obs_id] = {
                 'prob_true': prob_true,
                 'prob_false': prob_false
             }
 
         else:
-            self.current_obs.pop(entity, None)
+            self.current_obs.pop(obs_id, None)
 
     def _process_numeric_state(self, entity_observation):
         """Add entity to current_obs if numeric state conditions are met."""
@@ -200,9 +209,9 @@ class BayesianBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            'observations': [val for val in self.current_obs.values()],
-            'probability': self.probability,
-            'probability_threshold': self._probability_threshold
+            ATTR_OBSERVATIONS: [val for val in self.current_obs.values()],
+            ATTR_PROBABILITY: round(self.probability, 2),
+            ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
         }
 
     @asyncio.coroutine

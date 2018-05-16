@@ -110,7 +110,7 @@ def test_derivative():
     yield from entity.async_update()
 
     assert entity.state == STATE_UNKNOWN, \
-        'state after first update shoudl still be unknown'
+        'state after first update should still be unknown'
 
     entity.telegram = {
         '1.0.0': MBusObject([

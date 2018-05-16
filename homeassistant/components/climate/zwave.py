@@ -7,8 +7,9 @@ https://home-assistant.io/components/climate.zwave/
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 import logging
-from homeassistant.components.climate import DOMAIN
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import (
+    DOMAIN, ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE,
+    SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE)
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.const import (
@@ -69,6 +70,18 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                         "Remotec ZXT-120 Zwave Thermostat workaround")
                     self._zxt_120 = 1
         self.update_properties()
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        support = SUPPORT_TARGET_TEMPERATURE
+        if self.values.fan_mode:
+            support |= SUPPORT_FAN_MODE
+        if self.values.mode:
+            support |= SUPPORT_OPERATION_MODE
+        if self._zxt_120 == 1 and self.values.zxt_120_swing_mode:
+            support |= SUPPORT_SWING_MODE
+        return support
 
     def update_properties(self):
         """Handle the data changes for node values."""
@@ -185,10 +198,10 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
         self.values.primary.data = temperature
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
         if self.values.fan_mode:
-            self.values.fan_mode.data = fan
+            self.values.fan_mode.data = fan_mode
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""

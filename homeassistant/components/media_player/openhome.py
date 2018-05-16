@@ -124,7 +124,7 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._device.Stop()
 
     def media_play(self):
-        """Send play commmand."""
+        """Send play command."""
         self._device.Play()
 
     def media_next_track(self):
@@ -156,7 +156,7 @@ class OpenhomeDevice(MediaPlayerDevice):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._device.Uuid()
 
     @property

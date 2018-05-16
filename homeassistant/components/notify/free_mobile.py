@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['freesms==0.1.1']
+REQUIREMENTS = ['freesms==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 

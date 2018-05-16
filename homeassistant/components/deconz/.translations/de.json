@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge ist bereits konfiguriert",
+            "no_bridges": "Keine deCON-Bridges entdeckt",
+            "one_instance_only": "Komponente unterst\u00fctzt nur eine deCONZ-Instanz"
+        },
+        "error": {
+            "no_key": "Es konnte kein API-Schl\u00fcssel abgerufen werden"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port (Standartwert : '80')"
+                },
+                "title": "Definieren Sie den deCONZ-Gateway"
+            },
+            "link": {
+                "description": "Entsperren Sie Ihr deCONZ-Gateway, um sich bei Home Assistant zu registrieren. \n\n 1. Gehen Sie zu den deCONZ-Systemeinstellungen \n 2. Dr\u00fccken Sie die Taste \"Gateway entsperren\"",
+                "title": "Mit deCONZ verbinden"
+            }
+        },
+        "title": "deCONZ"
+    }
+}

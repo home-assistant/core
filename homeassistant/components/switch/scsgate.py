@@ -23,8 +23,6 @@ CONF_SCENARIO = 'scenario'
 
 CONF_SCS_ID = 'scs_id'
 
-DOMAIN = 'scsgate'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICES): vol.Schema({cv.slug: scsgate.SCSGATE_SCHEMA}),
 })
@@ -157,7 +155,7 @@ class SCSGateSwitch(SwitchDevice):
 class SCSGateScenarioSwitch(object):
     """Provides a SCSGate scenario switch.
 
-    This switch is always in a 'off" state, when toggled it's used to trigger
+    This switch is always in an 'off" state, when toggled it's used to trigger
     events.
     """
 

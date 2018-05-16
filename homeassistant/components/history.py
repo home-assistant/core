@@ -4,7 +4,6 @@ Provide pre-made queries on top of the recorder component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/history/
 """
-import asyncio
 from collections import defaultdict
 from datetime import timedelta
 from itertools import groupby
@@ -17,18 +16,22 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, script
-from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_HIDDEN
 from homeassistant.components.recorder.util import session_scope, execute
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
 
+CONF_ORDER = 'use_include_order'
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: recorder.FILTER_SCHEMA,
+    DOMAIN: recorder.FILTER_SCHEMA.extend({
+        vol.Optional(CONF_ORDER, default=False): cv.boolean,
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 SIGNIFICANT_DOMAINS = ('thermostat', 'climate')
@@ -41,6 +44,7 @@ def last_recorder_run(hass):
 
     with session_scope(hass=hass) as session:
         res = (session.query(RecorderRuns)
+               .filter(RecorderRuns.end.isnot(None))
                .order_by(RecorderRuns.end.desc()).first())
         if res is None:
             return None
@@ -48,8 +52,8 @@ def last_recorder_run(hass):
         return res
 
 
-def get_significant_states(hass, start_time, end_time=None, entity_id=None,
-                           filters=None):
+def get_significant_states(hass, start_time, end_time=None, entity_ids=None,
+                           filters=None, include_start_time_state=True):
     """
     Return states changes during UTC period start_time - end_time.
 
@@ -59,8 +63,6 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
     """
     timer_start = time.perf_counter()
     from homeassistant.components.recorder.models import States
-
-    entity_ids = (entity_id.lower(), ) if entity_id is not None else None
 
     with session_scope(hass=hass) as session:
         query = session.query(States).filter(
@@ -86,7 +88,9 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
         _LOGGER.debug(
             'get_significant_states took %fs', elapsed)
 
-    return states_to_json(hass, states, start_time, entity_id, filters)
+    return states_to_json(
+        hass, states, start_time, entity_ids, filters,
+        include_start_time_state)
 
 
 def state_changes_during_period(hass, start_time, end_time=None,
@@ -105,10 +109,36 @@ def state_changes_during_period(hass, start_time, end_time=None,
         if entity_id is not None:
             query = query.filter_by(entity_id=entity_id.lower())
 
+        entity_ids = [entity_id] if entity_id is not None else None
+
         states = execute(
             query.order_by(States.last_updated))
 
-    return states_to_json(hass, states, start_time, entity_id)
+    return states_to_json(hass, states, start_time, entity_ids)
+
+
+def get_last_state_changes(hass, number_of_states, entity_id):
+    """Return the last number_of_states."""
+    from homeassistant.components.recorder.models import States
+
+    start_time = dt_util.utcnow()
+
+    with session_scope(hass=hass) as session:
+        query = session.query(States).filter(
+            (States.last_changed == States.last_updated))
+
+        if entity_id is not None:
+            query = query.filter_by(entity_id=entity_id.lower())
+
+        entity_ids = [entity_id] if entity_id is not None else None
+
+        states = execute(
+            query.order_by(States.last_updated.desc()).limit(number_of_states))
+
+    return states_to_json(hass, reversed(states),
+                          start_time,
+                          entity_ids,
+                          include_start_time_state=False)
 
 
 def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
@@ -185,7 +215,13 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
                 if not state.attributes.get(ATTR_HIDDEN, False)]
 
 
-def states_to_json(hass, states, start_time, entity_id, filters=None):
+def states_to_json(
+        hass,
+        states,
+        start_time,
+        entity_ids,
+        filters=None,
+        include_start_time_state=True):
     """Convert SQL results into JSON friendly data structure.
 
     This takes our state list and turns it into a JSON friendly data
@@ -197,14 +233,13 @@ def states_to_json(hass, states, start_time, entity_id, filters=None):
     """
     result = defaultdict(list)
 
-    entity_ids = [entity_id] if entity_id is not None else None
-
     # Get the states at the start time
     timer_start = time.perf_counter()
-    for state in get_states(hass, start_time, entity_ids, filters=filters):
-        state.last_changed = start_time
-        state.last_updated = start_time
-        result[state.entity_id].append(state)
+    if include_start_time_state:
+        for state in get_states(hass, start_time, entity_ids, filters=filters):
+            state.last_changed = start_time
+            state.last_updated = start_time
+            result[state.entity_id].append(state)
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
         elapsed = time.perf_counter() - timer_start
@@ -223,21 +258,23 @@ def get_state(hass, utc_point_in_time, entity_id, run=None):
     return states[0] if states else None
 
 
-# pylint: disable=unused-argument
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the history hooks."""
     filters = Filters()
-    exclude = config[DOMAIN].get(CONF_EXCLUDE)
+    conf = config.get(DOMAIN, {})
+    exclude = conf.get(CONF_EXCLUDE)
     if exclude:
-        filters.excluded_entities = exclude[CONF_ENTITIES]
-        filters.excluded_domains = exclude[CONF_DOMAINS]
-    include = config[DOMAIN].get(CONF_INCLUDE)
+        filters.excluded_entities = exclude.get(CONF_ENTITIES, [])
+        filters.excluded_domains = exclude.get(CONF_DOMAINS, [])
+    include = conf.get(CONF_INCLUDE)
     if include:
-        filters.included_entities = include[CONF_ENTITIES]
-        filters.included_domains = include[CONF_DOMAINS]
+        filters.included_entities = include.get(CONF_ENTITIES, [])
+        filters.included_domains = include.get(CONF_DOMAINS, [])
+    use_include_order = conf.get(CONF_ORDER)
 
-    hass.http.register_view(HistoryPeriodView(filters))
-    register_built_in_panel(hass, 'history', 'History', 'mdi:poll-box')
+    hass.http.register_view(HistoryPeriodView(filters, use_include_order))
+    await hass.components.frontend.async_register_built_in_panel(
+        'history', 'history', 'mdi:poll-box')
 
     return True
 
@@ -249,12 +286,12 @@ class HistoryPeriodView(HomeAssistantView):
     name = 'api:history:view-period'
     extra_urls = ['/api/history/period/{datetime}']
 
-    def __init__(self, filters):
-        """Initilalize the history period view."""
+    def __init__(self, filters, use_include_order):
+        """Initialize the history period view."""
         self.filters = filters
+        self.use_include_order = use_include_order
 
-    @asyncio.coroutine
-    def get(self, request, datetime=None):
+    async def get(self, request, datetime=None):
         """Return history over a period of time."""
         timer_start = time.perf_counter()
         if datetime:
@@ -276,23 +313,44 @@ class HistoryPeriodView(HomeAssistantView):
 
         end_time = request.query.get('end_time')
         if end_time:
-            end_time = dt_util.as_utc(
-                dt_util.parse_datetime(end_time))
-            if end_time is None:
+            end_time = dt_util.parse_datetime(end_time)
+            if end_time:
+                end_time = dt_util.as_utc(end_time)
+            else:
                 return self.json_message('Invalid end_time', HTTP_BAD_REQUEST)
         else:
             end_time = start_time + one_day
-        entity_id = request.query.get('filter_entity_id')
+        entity_ids = request.query.get('filter_entity_id')
+        if entity_ids:
+            entity_ids = entity_ids.lower().split(',')
+        include_start_time_state = 'skip_initial_state' not in request.query
 
-        result = yield from request.app['hass'].async_add_job(
-            get_significant_states, request.app['hass'], start_time, end_time,
-            entity_id, self.filters)
-        result = result.values()
+        hass = request.app['hass']
+
+        result = await hass.async_add_job(
+            get_significant_states, hass, start_time, end_time,
+            entity_ids, self.filters, include_start_time_state)
+        result = list(result.values())
         if _LOGGER.isEnabledFor(logging.DEBUG):
             elapsed = time.perf_counter() - timer_start
             _LOGGER.debug(
                 'Extracted %d states in %fs', sum(map(len, result)), elapsed)
-        return self.json(result)
+
+        # Optionally reorder the result to respect the ordering given
+        # by any entities explicitly included in the configuration.
+
+        if self.use_include_order:
+            sorted_result = []
+            for order_entity in self.filters.included_entities:
+                for state_list in result:
+                    if state_list[0].entity_id == order_entity:
+                        sorted_result.append(state_list)
+                        result.remove(state_list)
+                        break
+            sorted_result.extend(result)
+            result = sorted_result
+
+        return await hass.async_add_job(self.json, result)
 
 
 class Filters(object):

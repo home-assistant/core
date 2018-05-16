@@ -8,11 +8,9 @@ import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
-import os
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
@@ -20,7 +18,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED,
-    STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK)
+    STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK, SERVICE_OPEN)
 from homeassistant.components import group
 
 ATTR_CHANGED_BY = 'changed_by'
@@ -41,7 +39,15 @@ LOCK_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_CODE): cv.string,
 })
 
+# Bitfield of features supported by the lock entity
+SUPPORT_OPEN = 1
+
 _LOGGER = logging.getLogger(__name__)
+
+PROP_TO_ATTR = {
+    'changed_by': ATTR_CHANGED_BY,
+    'code_format': ATTR_CODE_FORMAT,
+}
 
 
 @bind_hass
@@ -75,6 +81,18 @@ def unlock(hass, entity_id=None, code=None):
     hass.services.call(DOMAIN, SERVICE_UNLOCK, data)
 
 
+@bind_hass
+def open_lock(hass, entity_id=None, code=None):
+    """Open all or specified locks."""
+    data = {}
+    if code:
+        data[ATTR_CODE] = code
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_OPEN, data)
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for locks."""
@@ -90,38 +108,31 @@ def async_setup(hass, config):
 
         code = service.data.get(ATTR_CODE)
 
+        update_tasks = []
         for entity in target_locks:
             if service.service == SERVICE_LOCK:
                 yield from entity.async_lock(code=code)
+            elif service.service == SERVICE_OPEN:
+                yield from entity.async_open(code=code)
             else:
                 yield from entity.async_unlock(code=code)
 
-        update_tasks = []
-
-        for entity in target_locks:
             if not entity.should_poll:
                 continue
-
-            update_coro = hass.async_add_job(
-                entity.async_update_ha_state(True))
-            if hasattr(entity, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(entity.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(
         DOMAIN, SERVICE_UNLOCK, async_handle_lock_service,
-        descriptions.get(SERVICE_UNLOCK), schema=LOCK_SERVICE_SCHEMA)
+        schema=LOCK_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_LOCK, async_handle_lock_service,
-        descriptions.get(SERVICE_LOCK), schema=LOCK_SERVICE_SCHEMA)
+        schema=LOCK_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_OPEN, async_handle_lock_service,
+        schema=LOCK_SERVICE_SCHEMA)
 
     return True
 
@@ -167,15 +178,25 @@ class LockDevice(Entity):
         """
         return self.hass.async_add_job(ft.partial(self.unlock, **kwargs))
 
+    def open(self, **kwargs):
+        """Open the door latch."""
+        raise NotImplementedError()
+
+    def async_open(self, **kwargs):
+        """Open the door latch.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(ft.partial(self.open, **kwargs))
+
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        if self.code_format is None:
-            return None
-        state_attr = {
-            ATTR_CODE_FORMAT: self.code_format,
-            ATTR_CHANGED_BY: self.changed_by
-        }
+        state_attr = {}
+        for prop, attr in PROP_TO_ATTR.items():
+            value = getattr(self, prop)
+            if value is not None:
+                state_attr[attr] = value
         return state_attr
 
     @property

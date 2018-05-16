@@ -18,11 +18,11 @@ def test_subscribing_config_topic(hass, mqtt_mock):
     assert mqtt_mock.async_subscribe.called
     call_args = mqtt_mock.async_subscribe.mock_calls[0][1]
     assert call_args[0] == discovery_topic + '/#'
-    assert call_args[1] == 0
+    assert call_args[2] == 0
 
 
-@asyncio.coroutine
 @patch('homeassistant.components.mqtt.discovery.async_load_platform')
+@asyncio.coroutine
 def test_invalid_topic(mock_load_platform, hass, mqtt_mock):
     """Test sending to invalid topic."""
     mock_load_platform.return_value = mock_coro()
@@ -34,8 +34,8 @@ def test_invalid_topic(mock_load_platform, hass, mqtt_mock):
     assert not mock_load_platform.called
 
 
-@asyncio.coroutine
 @patch('homeassistant.components.mqtt.discovery.async_load_platform')
+@asyncio.coroutine
 def test_invalid_json(mock_load_platform, hass, mqtt_mock, caplog):
     """Test sending in invalid JSON."""
     mock_load_platform.return_value = mock_coro()
@@ -48,8 +48,8 @@ def test_invalid_json(mock_load_platform, hass, mqtt_mock, caplog):
     assert not mock_load_platform.called
 
 
-@asyncio.coroutine
 @patch('homeassistant.components.mqtt.discovery.async_load_platform')
+@asyncio.coroutine
 def test_only_valid_components(mock_load_platform, hass, mqtt_mock, caplog):
     """Test for a valid component."""
     mock_load_platform.return_value = mock_coro()
@@ -75,6 +75,23 @@ def test_correct_config_discovery(hass, mqtt_mock, caplog):
     assert state is not None
     assert state.name == 'Beer'
     assert ('binary_sensor', 'bla') in hass.data[ALREADY_DISCOVERED]
+
+
+@asyncio.coroutine
+def test_discover_fan(hass, mqtt_mock, caplog):
+    """Test discovering an MQTT fan."""
+    yield from async_start(hass, 'homeassistant', {})
+
+    async_fire_mqtt_message(hass, 'homeassistant/fan/bla/config',
+                            ('{ "name": "Beer",'
+                             '  "command_topic": "test_topic" }'))
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('fan.beer')
+
+    assert state is not None
+    assert state.name == 'Beer'
+    assert ('fan', 'bla') in hass.data[ALREADY_DISCOVERED]
 
 
 @asyncio.coroutine

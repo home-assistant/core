@@ -12,12 +12,13 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_COLORLOOP,
-    EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
-    SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_EFFECT, ATTR_WHITE_VALUE,
+    EFFECT_COLORLOOP, EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
+    SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
-REQUIREMENTS = ['flux_led==0.19']
+REQUIREMENTS = ['flux_led==0.21']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ ATTR_MODE = 'mode'
 DOMAIN = 'flux_led'
 
 SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
-                    SUPPORT_RGB_COLOR)
+                    SUPPORT_COLOR)
 
 MODE_RGB = 'rgb'
 MODE_RGBW = 'rgbw'
@@ -46,7 +47,7 @@ EFFECT_GREEN_BLUE_CROSS_FADE = 'gb_cross_fade'
 EFFECT_COLORSTROBE = 'colorstrobe'
 EFFECT_RED_STROBE = 'red_strobe'
 EFFECT_GREEN_STROBE = 'green_strobe'
-EFFECT_BLUE_STOBE = 'blue_strobe'
+EFFECT_BLUE_STROBE = 'blue_strobe'
 EFFECT_YELLOW_STROBE = 'yellow_strobe'
 EFFECT_CYAN_STROBE = 'cyan_strobe'
 EFFECT_PURPLE_STROBE = 'purple_strobe'
@@ -68,7 +69,7 @@ EFFECT_MAP = {
     EFFECT_COLORSTROBE:           0x30,
     EFFECT_RED_STROBE:            0x31,
     EFFECT_GREEN_STROBE:          0x32,
-    EFFECT_BLUE_STOBE:            0x33,
+    EFFECT_BLUE_STROBE:            0x33,
     EFFECT_YELLOW_STROBE:         0x34,
     EFFECT_CYAN_STROBE:           0x35,
     EFFECT_PURPLE_STROBE:         0x36,
@@ -78,13 +79,13 @@ EFFECT_MAP = {
 
 FLUX_EFFECT_LIST = [
     EFFECT_RANDOM,
-    ].extend(EFFECT_MAP.keys())
+    ] + list(EFFECT_MAP)
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(ATTR_MODE, default=MODE_RGBW):
         vol.All(cv.string, vol.In([MODE_RGBW, MODE_RGB])),
-    vol.Optional(CONF_PROTOCOL, default=None):
+    vol.Optional(CONF_PROTOCOL):
         vol.All(cv.string, vol.In(['ledenet'])),
 })
 
@@ -104,7 +105,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device = {}
         device['name'] = device_config[CONF_NAME]
         device['ipaddr'] = ipaddr
-        device[CONF_PROTOCOL] = device_config[CONF_PROTOCOL]
+        device[CONF_PROTOCOL] = device_config.get(CONF_PROTOCOL)
         device[ATTR_MODE] = device_config[ATTR_MODE]
         light = FluxLight(device)
         lights.append(light)
@@ -168,11 +169,6 @@ class FluxLight(Light):
         return self._bulb is not None
 
     @property
-    def unique_id(self):
-        """Return the ID of this light."""
-        return '{}.{}'.format(self.__class__, self._ipaddr)
-
-    @property
     def name(self):
         """Return the name of the device if any."""
         return self._name
@@ -188,14 +184,22 @@ class FluxLight(Light):
         return self._bulb.brightness
 
     @property
-    def rgb_color(self):
+    def hs_color(self):
         """Return the color property."""
-        return self._bulb.getRgb()
+        return color_util.color_RGB_to_hs(*self._bulb.getRgb())
 
     @property
     def supported_features(self):
         """Flag supported features."""
+        if self._mode is MODE_RGBW:
+            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE
+
         return SUPPORT_FLUX_LED
+
+    @property
+    def white_value(self):
+        """Return the white value of this light between 0..255."""
+        return self._bulb.getRgbw()[3]
 
     @property
     def effect_list(self):
@@ -207,26 +211,39 @@ class FluxLight(Light):
         if not self.is_on:
             self._bulb.turnOn()
 
-        rgb = kwargs.get(ATTR_RGB_COLOR)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
+
+        if hs_color:
+            rgb = color_util.color_hs_to_RGB(*hs_color)
+        else:
+            rgb = None
+
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
+        white = kwargs.get(ATTR_WHITE_VALUE)
 
-        if rgb is not None and brightness is not None:
-            self._bulb.setRgb(*tuple(rgb), brightness=brightness)
-        elif rgb is not None:
-            self._bulb.setRgb(*tuple(rgb))
+        # color change only
+        if rgb is not None:
+            self._bulb.setRgb(*tuple(rgb), brightness=self.brightness)
+
+        # brightness change only
         elif brightness is not None:
-            if self._mode == MODE_RGBW:
-                self._bulb.setWarmWhite255(brightness)
-            elif self._mode == MODE_RGB:
-                (red, green, blue) = self._bulb.getRgb()
-                self._bulb.setRgb(red, green, blue, brightness=brightness)
+            (red, green, blue) = self._bulb.getRgb()
+            self._bulb.setRgb(red, green, blue, brightness=brightness)
+
+        # random color effect
         elif effect == EFFECT_RANDOM:
             self._bulb.setRgb(random.randint(0, 255),
                               random.randint(0, 255),
                               random.randint(0, 255))
+
+        # effect selection
         elif effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
+
+        # white change only
+        elif white is not None:
+            self._bulb.setWarmWhite255(white)
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""

@@ -7,14 +7,14 @@ import homeassistant.components.prometheus as prometheus
 
 
 @pytest.fixture
-def prometheus_client(loop, hass, test_client):
-    """Initialize a test_client with Prometheus component."""
+def prometheus_client(loop, hass, aiohttp_client):
+    """Initialize an aiohttp_client with Prometheus component."""
     assert loop.run_until_complete(async_setup_component(
         hass,
         prometheus.DOMAIN,
         {},
     ))
-    return loop.run_until_complete(test_client(hass.http.app))
+    return loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @asyncio.coroutine
@@ -30,4 +30,6 @@ def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
     assert len(body) > 3  # At least two comment lines and a metric
     for line in body:
         if line:
-            assert line.startswith('# ') or line.startswith('process_')
+            assert line.startswith('# ') \
+                or line.startswith('process_') \
+                or line.startswith('python_info')

@@ -43,12 +43,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     port = config.get(CONF_PORT)
 
-    transmission_api = transmissionrpc.Client(
-        host, port=port, user=username, password=password)
     try:
+        transmission_api = transmissionrpc.Client(
+            host, port=port, user=username, password=password)
         transmission_api.session_stats()
-    except TransmissionError:
-        _LOGGING.error("Connection to Transmission API failed")
+    except TransmissionError as error:
+        _LOGGING.error(
+            "Connection to Transmission API failed on %s:%s with message %s",
+            host, port, error.original
+        )
         return False
 
     add_devices([TransmissionSwitch(transmission_api, name)])

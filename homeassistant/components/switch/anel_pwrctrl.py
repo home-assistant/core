@@ -101,11 +101,11 @@ class PwrCtrlSwitch(SwitchDevice):
         """Trigger update for all switches on the parent device."""
         self._parent_device.update()
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._port.on()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
         self._port.off()
 

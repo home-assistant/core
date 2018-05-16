@@ -8,13 +8,11 @@ https://home-assistant.io/components/lock.zwave/
 # pylint: disable=import-error
 import asyncio
 import logging
-from os import path
 
 import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.components import zwave
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,6 +49,7 @@ LOCK_NOTIFICATION = {
 
 LOCK_ALARM_TYPE = {
     '9': 'Deadbolt Jammed',
+    '16': 'Unlocked by Bluetooth ',
     '18': 'Locked with Keypad by user ',
     '19': 'Unlocked with Keypad by user ',
     '21': 'Manually Locked ',
@@ -62,6 +61,7 @@ LOCK_ALARM_TYPE = {
     '112': 'Master code changed or User added: ',
     '113': 'Duplicate Pin-code: ',
     '130': 'RF module, power restored',
+    '144': 'Unlocked by NFC Tag or Card by user ',
     '161': 'Tamper Alarm: ',
     '167': 'Low Battery',
     '168': 'Critical Battery Level',
@@ -100,7 +100,8 @@ ALARM_TYPE_STD = [
     '19',
     '33',
     '112',
-    '113'
+    '113',
+    '144'
 ]
 
 SET_USERCODE_SCHEMA = vol.Schema({
@@ -126,8 +127,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     yield from zwave.async_setup_platform(
         hass, config, async_add_devices, discovery_info)
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
     network = hass.data[zwave.const.DATA_NETWORK]
 
     def set_usercode(service):
@@ -184,13 +183,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_USERCODE, set_usercode,
-        descriptions.get(SERVICE_SET_USERCODE), schema=SET_USERCODE_SCHEMA)
+        schema=SET_USERCODE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_GET_USERCODE, get_usercode,
-        descriptions.get(SERVICE_GET_USERCODE), schema=GET_USERCODE_SCHEMA)
+        schema=GET_USERCODE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_CLEAR_USERCODE, clear_usercode,
-        descriptions.get(SERVICE_CLEAR_USERCODE), schema=CLEAR_USERCODE_SCHEMA)
+        schema=CLEAR_USERCODE_SCHEMA)
 
 
 def get_device(node, values, **kwargs):

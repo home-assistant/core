@@ -5,17 +5,17 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.nadtcp/
 """
 import logging
+
 import voluptuous as vol
+
 from homeassistant.components.media_player import (
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_MUTE, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
-    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, MediaPlayerDevice,
-    PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_NAME, STATE_OFF, STATE_ON)
+    PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice)
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['nad_receiver==0.0.6']
+REQUIREMENTS = ['nad_receiver==0.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,6 @@ SUPPORT_NAD = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | SUPPORT_TURN_ON | \
 CONF_MIN_VOLUME = 'min_volume'
 CONF_MAX_VOLUME = 'max_volume'
 CONF_VOLUME_STEP = 'volume_step'
-CONF_HOST = 'host'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -42,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the NAD platform."""
+    """Set up the NAD platform."""
     from nad_receiver import NADReceiverTCP
     add_devices([NADtcp(
         NADReceiverTCP(config.get(CONF_HOST)),

@@ -15,7 +15,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['blockchain==1.3.3']
+REQUIREMENTS = ['blockchain==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ OPTION_TYPES = {
     'number_of_transactions': ['No. of Transactions', None],
     'hash_rate': ['Hash rate', 'PH/s'],
     'timestamp': ['Timestamp', None],
-    'mined_blocks': ['Minded Blocks', None],
+    'mined_blocks': ['Mined Blocks', None],
     'blocks_size': ['Block size', None],
     'total_fees_btc': ['Total fees', 'BTC'],
     'total_btc_sent': ['Total sent', 'BTC'],

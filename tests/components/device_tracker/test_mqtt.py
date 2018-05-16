@@ -56,7 +56,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
     def test_new_message(self):
         """Test new message."""
         dev_id = 'paulus'
-        enttiy_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+        entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         topic = '/location/paulus'
         location = 'work'
 
@@ -69,4 +69,80 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        self.assertEqual(location, self.hass.states.get(enttiy_id).state)
+        self.assertEqual(location, self.hass.states.get(entity_id).state)
+
+    def test_single_level_wildcard_topic(self):
+        """Test single level wildcard topic."""
+        dev_id = 'paulus'
+        entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+        subscription = '/location/+/paulus'
+        topic = '/location/room/paulus'
+        location = 'work'
+
+        self.hass.config.components = set(['mqtt', 'zone'])
+        assert setup_component(self.hass, device_tracker.DOMAIN, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'mqtt',
+                'devices': {dev_id: subscription}
+            }
+        })
+        fire_mqtt_message(self.hass, topic, location)
+        self.hass.block_till_done()
+        self.assertEqual(location, self.hass.states.get(entity_id).state)
+
+    def test_multi_level_wildcard_topic(self):
+        """Test multi level wildcard topic."""
+        dev_id = 'paulus'
+        entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+        subscription = '/location/#'
+        topic = '/location/room/paulus'
+        location = 'work'
+
+        self.hass.config.components = set(['mqtt', 'zone'])
+        assert setup_component(self.hass, device_tracker.DOMAIN, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'mqtt',
+                'devices': {dev_id: subscription}
+            }
+        })
+        fire_mqtt_message(self.hass, topic, location)
+        self.hass.block_till_done()
+        self.assertEqual(location, self.hass.states.get(entity_id).state)
+
+    def test_single_level_wildcard_topic_not_matching(self):
+        """Test not matching single level wildcard topic."""
+        dev_id = 'paulus'
+        entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+        subscription = '/location/+/paulus'
+        topic = '/location/paulus'
+        location = 'work'
+
+        self.hass.config.components = set(['mqtt', 'zone'])
+        assert setup_component(self.hass, device_tracker.DOMAIN, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'mqtt',
+                'devices': {dev_id: subscription}
+            }
+        })
+        fire_mqtt_message(self.hass, topic, location)
+        self.hass.block_till_done()
+        self.assertIsNone(self.hass.states.get(entity_id))
+
+    def test_multi_level_wildcard_topic_not_matching(self):
+        """Test not matching multi level wildcard topic."""
+        dev_id = 'paulus'
+        entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+        subscription = '/location/#'
+        topic = '/somewhere/room/paulus'
+        location = 'work'
+
+        self.hass.config.components = set(['mqtt', 'zone'])
+        assert setup_component(self.hass, device_tracker.DOMAIN, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'mqtt',
+                'devices': {dev_id: subscription}
+            }
+        })
+        fire_mqtt_message(self.hass, topic, location)
+        self.hass.block_till_done()
+        self.assertIsNone(self.hass.states.get(entity_id))

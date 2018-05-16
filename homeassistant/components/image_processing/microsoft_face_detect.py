@@ -9,13 +9,12 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.image_processing import (
+    ATTR_AGE, ATTR_GENDER, ATTR_GLASSES, CONF_ENTITY_ID, CONF_NAME,
+    CONF_SOURCE, PLATFORM_SCHEMA, ImageProcessingFaceEntity)
+from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE
 from homeassistant.core import split_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE
-from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)
-from homeassistant.components.image_processing.microsoft_face_identify import (
-    ImageProcessingFaceEntity, ATTR_GENDER, ATTR_AGE, ATTR_GLASSES)
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['microsoft_face']
@@ -36,7 +35,7 @@ def validate_attributes(list_attributes):
     """Validate face attributes."""
     for attr in list_attributes:
         if attr not in SUPPORTED_ATTRIBUTES:
-            raise vol.Invalid("Invalid attribtue {0}".format(attr))
+            raise vol.Invalid("Invalid attribute {0}".format(attr))
     return list_attributes
 
 

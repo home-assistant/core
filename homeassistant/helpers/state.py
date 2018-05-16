@@ -4,6 +4,7 @@ import json
 import logging
 from collections import defaultdict
 
+from homeassistant.loader import bind_hass
 import homeassistant.util.dt as dt_util
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_SEEK_POSITION,
@@ -20,7 +21,8 @@ from homeassistant.components.climate import (
     ATTR_HUMIDITY, ATTR_OPERATION_MODE, ATTR_SWING_MODE,
     SERVICE_SET_AUX_HEAT, SERVICE_SET_AWAY_MODE, SERVICE_SET_HOLD_MODE,
     SERVICE_SET_FAN_MODE, SERVICE_SET_HUMIDITY, SERVICE_SET_OPERATION_MODE,
-    SERVICE_SET_SWING_MODE, SERVICE_SET_TEMPERATURE)
+    SERVICE_SET_SWING_MODE, SERVICE_SET_TEMPERATURE, STATE_HEAT, STATE_COOL,
+    STATE_IDLE)
 from homeassistant.components.climate.ecobee import (
     ATTR_FAN_MIN_ON_TIME, SERVICE_SET_FAN_MIN_ON_TIME,
     ATTR_RESUME_ALL, SERVICE_RESUME_PROGRAM)
@@ -29,7 +31,7 @@ from homeassistant.components.cover import (
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_OPTION, ATTR_TEMPERATURE, SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_DISARM, SERVICE_ALARM_TRIGGER,
-    SERVICE_LOCK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
+    SERVICE_LOCK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_STOP,
     SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_UNLOCK,
     SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_OPEN_COVER,
     SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION, STATE_ALARM_ARMED_AWAY,
@@ -38,7 +40,7 @@ from homeassistant.const import (
     STATE_ON, STATE_OPEN, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN,
     STATE_UNLOCKED, SERVICE_SELECT_OPTION)
 from homeassistant.core import State
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,6 +78,7 @@ SERVICE_TO_STATE = {
     SERVICE_TURN_OFF: STATE_OFF,
     SERVICE_MEDIA_PLAY: STATE_PLAYING,
     SERVICE_MEDIA_PAUSE: STATE_PAUSED,
+    SERVICE_MEDIA_STOP: STATE_IDLE,
     SERVICE_ALARM_ARM_AWAY: STATE_ALARM_ARMED_AWAY,
     SERVICE_ALARM_ARM_HOME: STATE_ALARM_ARMED_HOME,
     SERVICE_ALARM_DISARM: STATE_ALARM_DISARMED,
@@ -120,14 +123,15 @@ def get_changed_since(states, utc_point_in_time):
             if state.last_updated >= utc_point_in_time]
 
 
+@bind_hass
 def reproduce_state(hass, states, blocking=False):
     """Reproduce given state."""
     return run_coroutine_threadsafe(
         async_reproduce_state(hass, states, blocking), hass.loop).result()
 
 
-@asyncio.coroutine
-def async_reproduce_state(hass, states, blocking=False):
+@bind_hass
+async def async_reproduce_state(hass, states, blocking=False):
     """Reproduce given state."""
     if isinstance(states, State):
         states = [states]
@@ -188,16 +192,15 @@ def async_reproduce_state(hass, states, blocking=False):
             hass.services.async_call(service_domain, service, data, blocking)
         )
 
-    @asyncio.coroutine
-    def async_handle_service_calls(coro_list):
+    async def async_handle_service_calls(coro_list):
         """Handle service calls by domain sequence."""
         for coro in coro_list:
-            yield from coro
+            await coro
 
     execute_tasks = [async_handle_service_calls(coro_list)
                      for coro_list in domain_tasks.values()]
     if execute_tasks:
-        yield from asyncio.wait(execute_tasks, loop=hass.loop)
+        await asyncio.wait(execute_tasks, loop=hass.loop)
 
 
 def state_as_number(state):
@@ -207,10 +210,11 @@ def state_as_number(state):
     Raises ValueError if this is not possible.
     """
     if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON,
-                       STATE_OPEN, STATE_HOME):
+                       STATE_OPEN, STATE_HOME, STATE_HEAT, STATE_COOL):
         return 1
     elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
-                         STATE_BELOW_HORIZON, STATE_CLOSED, STATE_NOT_HOME):
+                         STATE_BELOW_HORIZON, STATE_CLOSED, STATE_NOT_HOME,
+                         STATE_IDLE):
         return 0
 
     return float(state.state)

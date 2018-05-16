@@ -19,7 +19,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.helpers.event import async_track_point_in_time
 
-REQUIREMENTS = ['TwitterAPI==2.4.6']
+REQUIREMENTS = ['TwitterAPI==2.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class TwitterNotificationService(BaseNotificationService):
 
         self.upload_media_then_callback(callback, media)
 
-    def send_message_callback(self, message, media_id):
+    def send_message_callback(self, message, media_id=None):
         """Tweet a message, optionally with media."""
         if self.user:
             resp = self.api.request('direct_messages/new',
@@ -95,7 +95,7 @@ class TwitterNotificationService(BaseNotificationService):
     def upload_media_then_callback(self, callback, media_path=None):
         """Upload media."""
         if not media_path:
-            return None
+            return callback()
 
         with open(media_path, 'rb') as file:
             total_bytes = os.path.getsize(media_path)
@@ -115,6 +115,9 @@ class TwitterNotificationService(BaseNotificationService):
             if 199 > resp.status_code < 300:
                 self.log_error_resp(resp)
                 return None
+
+            if resp.json().get('processing_info') is None:
+                return callback(media_id)
 
             self.check_status_until_done(media_id, callback)
 

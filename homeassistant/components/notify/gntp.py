@@ -44,7 +44,8 @@ def get_service(hass, config, discovery_info=None):
     if config.get(CONF_APP_ICON) is None:
         icon_file = os.path.join(os.path.dirname(__file__), "..", "frontend",
                                  "www_static", "icons", "favicon-192x192.png")
-        app_icon = open(icon_file, 'rb').read()
+        with open(icon_file, 'rb') as file:
+            app_icon = file.read()
     else:
         app_icon = config.get(CONF_APP_ICON)
 

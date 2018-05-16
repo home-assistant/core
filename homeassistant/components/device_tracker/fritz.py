@@ -13,7 +13,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-REQUIREMENTS = ['fritzconnection==0.6.3']
+REQUIREMENTS = ['fritzconnection==0.6.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,9 +75,9 @@ class FritzBoxScanner(DeviceScanner):
                 active_hosts.append(known_host['mac'])
         return active_hosts
 
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Return the name of the given device or None if is not known."""
-        ret = self.fritz_box.get_specific_host_entry(mac).get(
+        ret = self.fritz_box.get_specific_host_entry(device).get(
             'NewHostName'
         )
         if ret == {}:

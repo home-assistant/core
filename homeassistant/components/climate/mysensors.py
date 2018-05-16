@@ -7,7 +7,10 @@ https://home-assistant.io/components/climate.mysensors/
 from homeassistant.components import mysensors
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW, DOMAIN, STATE_AUTO,
-    STATE_COOL, STATE_HEAT, STATE_OFF, ClimateDevice)
+    STATE_COOL, STATE_HEAT, STATE_OFF, SUPPORT_FAN_MODE,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW,
+    ClimateDevice)
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 DICT_HA_TO_MYS = {
@@ -23,15 +26,26 @@ DICT_MYS_TO_HA = {
     'Off': STATE_OFF,
 }
 
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
+                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_FAN_MODE |
+                 SUPPORT_OPERATION_MODE)
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors climate."""
+
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
+    """Set up the mysensors climate."""
     mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsHVAC, add_devices=add_devices)
+        hass, DOMAIN, discovery_info, MySensorsHVAC,
+        async_add_devices=async_add_devices)
 
 
 class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
     """Representation of a MySensors HVAC."""
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def assumed_state(self):
@@ -41,8 +55,7 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return (TEMP_CELSIUS
-                if self.gateway.metric else TEMP_FAHRENHEIT)
+        return TEMP_CELSIUS if self.gateway.metric else TEMP_FAHRENHEIT
 
     @property
     def current_temperature(self):
@@ -102,7 +115,7 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
         """List of available fan modes."""
         return ['Auto', 'Min', 'Normal', 'Max']
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
         temp = kwargs.get(ATTR_TEMPERATURE)
@@ -128,32 +141,32 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
             self.gateway.set_child_value(
                 self.node_id, self.child_id, value_type, value)
             if self.gateway.optimistic:
-                # optimistically assume that device has changed state
+                # Optimistically assume that device has changed state
                 self._values[value_type] = value
-                self.schedule_update_ha_state()
+                self.async_schedule_update_ha_state()
 
-    def set_fan_mode(self, fan):
+    async def async_set_fan_mode(self, fan_mode):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
-            self.node_id, self.child_id, set_req.V_HVAC_SPEED, fan)
+            self.node_id, self.child_id, set_req.V_HVAC_SPEED, fan_mode)
         if self.gateway.optimistic:
-            # optimistically assume that device has changed state
-            self._values[set_req.V_HVAC_SPEED] = fan
-            self.schedule_update_ha_state()
+            # Optimistically assume that device has changed state
+            self._values[set_req.V_HVAC_SPEED] = fan_mode
+            self.async_schedule_update_ha_state()
 
-    def set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set new target temperature."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type,
             DICT_HA_TO_MYS[operation_mode])
         if self.gateway.optimistic:
-            # optimistically assume that device has changed state
+            # Optimistically assume that device has changed state
             self._values[self.value_type] = operation_mode
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def update(self):
+    async def async_update(self):
         """Update the controller with the latest value from a sensor."""
-        super().update()
+        await super().async_update()
         self._values[self.value_type] = DICT_MYS_TO_HA[
             self._values[self.value_type]]

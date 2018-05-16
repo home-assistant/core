@@ -1,56 +1,64 @@
 # Describes the format for available remote services
 
 turn_on:
-  description: Sends the Power On Command
-
+  description: Sends the Power On Command.
   fields:
     entity_id:
-      description: Name(s) of entities to turn on
+      description: Name(s) of entities to turn on.
       example: 'remote.family_room'
     activity:
-      description: Activity ID or Activity Name to start
+      description: Activity ID or Activity Name to start.
       example: 'BedroomTV'
 
 toggle:
-  description: Toggles a device
-
+  description: Toggles a device.
   fields:
     entity_id:
-      description: Name(s) of entities to toggle
+      description: Name(s) of entities to toggle.
       example: 'remote.family_room'
 
 turn_off:
-  description: Sends the Power Off Command
-
+  description: Sends the Power Off Command.
   fields:
     entity_id:
-      description: Name(s) of entities to turn off
+      description: Name(s) of entities to turn off.
       example: 'remote.family_room'
 
 send_command:
-  description: Sends a single command to a single device
-
+  description: Sends a single command to a single device.
   fields:
     entity_id:
-      description: Name(s) of entities to send command from
+      description: Name(s) of entities to send command from.
       example: 'remote.family_room'
     device:
-      description: Device ID to send command to
+      description: Device ID to send command to.
       example: '32756745'
     command:
       description: A single command or a list of commands to send.
       example: 'Play'
     num_repeats:
-      description: An optional value that specifies the number of times you want to repeat the command(s). If not specified, the command(s) will not be repeated
+      description: An optional value that specifies the number of times you want to repeat the command(s). If not specified, the command(s) will not be repeated.
       example: '5'
     delay_secs:
-      description: An optional value that specifies that number of seconds you want to wait in between repeated commands. If not specified, the default of 0.4 seconds will be used
+      description: An optional value that specifies that number of seconds you want to wait in between repeated commands. If not specified, the default of 0.4 seconds will be used.
       example: '0.75'
 
 harmony_sync:
-  description: Syncs the remote's configuration
-
+  description: Syncs the remote's configuration.
   fields:
     entity_id:
-      description: Name(s) of entities to sync
+      description: Name(s) of entities to sync.
       example: 'remote.family_room'
+
+xiaomi_miio_learn_command:
+  description: 'Learn an IR command, press "Call Service", point the remote at the IR device, and the learned command will be shown as a notification in Overview.'
+  fields:
+    entity_id:
+      description: 'Name of the entity to learn command from.'
+      example: 'remote.xiaomi_miio'
+    slot:
+      description: 'Define the slot used to save the IR command (Value from 1 to 1000000)'
+      example: '1'
+    timeout:
+      description: 'Define the timeout in seconds, before which the command must be learned.'
+      example: '30'

@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON, CONF_ZONE, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.5.3']
+REQUIREMENTS = ['denonavr==0.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,12 +43,12 @@ SUPPORT_MEDIA_MODES = SUPPORT_PLAY_MEDIA | \
 
 DENON_ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONE): vol.In(CONF_VALID_ZONES, CONF_INVALID_ZONES_ERR),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES):
         cv.boolean,
     vol.Optional(CONF_ZONES):
@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if zones is not None:
         add_zones = {}
         for entry in zones:
-            add_zones[entry[CONF_ZONE]] = entry[CONF_NAME]
+            add_zones[entry[CONF_ZONE]] = entry.get(CONF_NAME)
     else:
         add_zones = None
 
@@ -102,12 +102,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if config.get(CONF_HOST) is None and discovery_info is None:
         d_receivers = denonavr.discover()
         # More than one receiver could be discovered by that method
-        if d_receivers is not None:
-            for d_receiver in d_receivers:
-                host = d_receiver["host"]
-                name = d_receiver["friendlyName"]
-                new_hosts.append(
-                    NewHost(host=host, name=name))
+        for d_receiver in d_receivers:
+            host = d_receiver["host"]
+            name = d_receiver["friendlyName"]
+            new_hosts.append(
+                NewHost(host=host, name=name))
 
     for entry in new_hosts:
         # Check if host not in cache, append it and save for later

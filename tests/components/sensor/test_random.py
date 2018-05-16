@@ -18,7 +18,7 @@ class TestRandomSensor(unittest.TestCase):
         self.hass.stop()
 
     def test_random_sensor(self):
-        """Test the Randowm number sensor."""
+        """Test the Random number sensor."""
         config = {
             'sensor': {
                 'platform': 'random',

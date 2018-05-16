@@ -158,7 +158,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         self.hass.stop()
 
     @mock.patch('libsoundtouch.soundtouch_device', side_effect=None)
-    def test_ensure_setup_config(self, mocked_sountouch_device):
+    def test_ensure_setup_config(self, mocked_soundtouch_device):
         """Test setup OK with custom config."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
@@ -167,10 +167,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         self.assertEqual(len(all_devices), 1)
         self.assertEqual(all_devices[0].name, 'soundtouch')
         self.assertEqual(all_devices[0].config['port'], 8090)
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
 
     @mock.patch('libsoundtouch.soundtouch_device', side_effect=None)
-    def test_ensure_setup_discovery(self, mocked_sountouch_device):
+    def test_ensure_setup_discovery(self, mocked_soundtouch_device):
         """Test setup with discovery."""
         new_device = {"port": "8090",
                       "host": "192.168.1.1",
@@ -184,11 +184,11 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         self.assertEqual(len(all_devices), 1)
         self.assertEqual(all_devices[0].config['port'], 8090)
         self.assertEqual(all_devices[0].config['host'], '192.168.1.1')
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
 
     @mock.patch('libsoundtouch.soundtouch_device', side_effect=None)
     def test_ensure_setup_discovery_no_duplicate(self,
-                                                 mocked_sountouch_device):
+                                                 mocked_soundtouch_device):
         """Test setup OK if device already exists."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
@@ -213,20 +213,20 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   mock.MagicMock(),
                                   existing_device  # Existing device
                                   )
-        self.assertEqual(mocked_sountouch_device.call_count, 2)
+        self.assertEqual(mocked_soundtouch_device.call_count, 2)
         self.assertEqual(len(self.hass.data[soundtouch.DATA_SOUNDTOUCH]), 2)
 
     @mock.patch('libsoundtouch.device.SoundTouchDevice.volume')
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_update(self, mocked_sountouch_device, mocked_status,
+    def test_update(self, mocked_soundtouch_device, mocked_status,
                     mocked_volume):
         """Test update device state."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
                                   mock.MagicMock())
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 1)
         self.hass.data[soundtouch.DATA_SOUNDTOUCH][0].update()
@@ -238,13 +238,13 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                 side_effect=MockStatusPlaying)
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_playing_media(self, mocked_sountouch_device, mocked_status,
+    def test_playing_media(self, mocked_soundtouch_device, mocked_status,
                            mocked_volume):
         """Test playing media info."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
                                   mock.MagicMock())
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 1)
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
@@ -261,13 +261,13 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                 side_effect=MockStatusUnknown)
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_playing_unknown_media(self, mocked_sountouch_device,
+    def test_playing_unknown_media(self, mocked_soundtouch_device,
                                    mocked_status, mocked_volume):
         """Test playing media info."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
                                   mock.MagicMock())
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 1)
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
@@ -278,13 +278,13 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                 side_effect=MockStatusPlayingRadio)
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_playing_radio(self, mocked_sountouch_device, mocked_status,
+    def test_playing_radio(self, mocked_soundtouch_device, mocked_status,
                            mocked_volume):
         """Test playing radio info."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
                                   mock.MagicMock())
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 1)
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
@@ -301,13 +301,13 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_get_volume_level(self, mocked_sountouch_device, mocked_status,
+    def test_get_volume_level(self, mocked_soundtouch_device, mocked_status,
                               mocked_volume):
         """Test volume level."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
                                   mock.MagicMock())
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 1)
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
@@ -318,13 +318,13 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                 side_effect=MockStatusStandby)
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_get_state_off(self, mocked_sountouch_device, mocked_status,
+    def test_get_state_off(self, mocked_soundtouch_device, mocked_status,
                            mocked_volume):
         """Test state device is off."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
                                   mock.MagicMock())
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 1)
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
@@ -335,13 +335,13 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                 side_effect=MockStatusPause)
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_get_state_pause(self, mocked_sountouch_device, mocked_status,
+    def test_get_state_pause(self, mocked_soundtouch_device, mocked_status,
                              mocked_volume):
         """Test state device is paused."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
                                   mock.MagicMock())
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 1)
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
@@ -352,25 +352,25 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_is_muted(self, mocked_sountouch_device, mocked_status,
+    def test_is_muted(self, mocked_soundtouch_device, mocked_status,
                       mocked_volume):
         """Test device volume is muted."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
                                   mock.MagicMock())
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 1)
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         self.assertEqual(all_devices[0].is_volume_muted, True)
 
     @mock.patch('libsoundtouch.soundtouch_device')
-    def test_media_commands(self, mocked_sountouch_device):
+    def test_media_commands(self, mocked_soundtouch_device):
         """Test supported media commands."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
                                   mock.MagicMock())
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         self.assertEqual(all_devices[0].supported_features, 17853)
 
@@ -379,7 +379,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_should_turn_off(self, mocked_sountouch_device, mocked_status,
+    def test_should_turn_off(self, mocked_soundtouch_device, mocked_status,
                              mocked_volume, mocked_power_off):
         """Test device is turned off."""
         soundtouch.setup_platform(self.hass,
@@ -387,7 +387,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   mock.MagicMock())
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         all_devices[0].turn_off()
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 2)
         self.assertEqual(mocked_volume.call_count, 1)
         self.assertEqual(mocked_power_off.call_count, 1)
@@ -397,7 +397,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_should_turn_on(self, mocked_sountouch_device, mocked_status,
+    def test_should_turn_on(self, mocked_soundtouch_device, mocked_status,
                             mocked_volume, mocked_power_on):
         """Test device is turned on."""
         soundtouch.setup_platform(self.hass,
@@ -405,7 +405,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   mock.MagicMock())
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         all_devices[0].turn_on()
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 2)
         self.assertEqual(mocked_volume.call_count, 1)
         self.assertEqual(mocked_power_on.call_count, 1)
@@ -415,7 +415,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_volume_up(self, mocked_sountouch_device, mocked_status,
+    def test_volume_up(self, mocked_soundtouch_device, mocked_status,
                        mocked_volume, mocked_volume_up):
         """Test volume up."""
         soundtouch.setup_platform(self.hass,
@@ -423,7 +423,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   mock.MagicMock())
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         all_devices[0].volume_up()
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 2)
         self.assertEqual(mocked_volume_up.call_count, 1)
@@ -433,7 +433,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_volume_down(self, mocked_sountouch_device, mocked_status,
+    def test_volume_down(self, mocked_soundtouch_device, mocked_status,
                          mocked_volume, mocked_volume_down):
         """Test volume down."""
         soundtouch.setup_platform(self.hass,
@@ -441,7 +441,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   mock.MagicMock())
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         all_devices[0].volume_down()
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 2)
         self.assertEqual(mocked_volume_down.call_count, 1)
@@ -451,7 +451,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_set_volume_level(self, mocked_sountouch_device, mocked_status,
+    def test_set_volume_level(self, mocked_soundtouch_device, mocked_status,
                               mocked_volume, mocked_set_volume):
         """Test set volume level."""
         soundtouch.setup_platform(self.hass,
@@ -459,7 +459,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   mock.MagicMock())
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         all_devices[0].set_volume_level(0.17)
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 2)
         mocked_set_volume.assert_called_with(17)
@@ -469,7 +469,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_mute(self, mocked_sountouch_device, mocked_status, mocked_volume,
+    def test_mute(self, mocked_soundtouch_device, mocked_status, mocked_volume,
                   mocked_mute):
         """Test mute volume."""
         soundtouch.setup_platform(self.hass,
@@ -477,7 +477,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   mock.MagicMock())
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         all_devices[0].mute_volume(None)
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 2)
         self.assertEqual(mocked_mute.call_count, 1)
@@ -487,7 +487,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_play(self, mocked_sountouch_device, mocked_status, mocked_volume,
+    def test_play(self, mocked_soundtouch_device, mocked_status, mocked_volume,
                   mocked_play):
         """Test play command."""
         soundtouch.setup_platform(self.hass,
@@ -495,7 +495,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   mock.MagicMock())
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         all_devices[0].media_play()
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 2)
         self.assertEqual(mocked_volume.call_count, 1)
         self.assertEqual(mocked_play.call_count, 1)
@@ -505,15 +505,15 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_pause(self, mocked_sountouch_device, mocked_status, mocked_volume,
-                   mocked_pause):
+    def test_pause(self, mocked_soundtouch_device, mocked_status,
+                   mocked_volume, mocked_pause):
         """Test pause command."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
                                   mock.MagicMock())
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         all_devices[0].media_pause()
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 2)
         self.assertEqual(mocked_volume.call_count, 1)
         self.assertEqual(mocked_pause.call_count, 1)
@@ -523,7 +523,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_play_pause_play(self, mocked_sountouch_device, mocked_status,
+    def test_play_pause_play(self, mocked_soundtouch_device, mocked_status,
                              mocked_volume, mocked_play_pause):
         """Test play/pause."""
         soundtouch.setup_platform(self.hass,
@@ -531,7 +531,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   mock.MagicMock())
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         all_devices[0].media_play_pause()
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 2)
         self.assertEqual(mocked_volume.call_count, 1)
         self.assertEqual(mocked_play_pause.call_count, 1)
@@ -542,7 +542,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_next_previous_track(self, mocked_sountouch_device, mocked_status,
+    def test_next_previous_track(self, mocked_soundtouch_device, mocked_status,
                                  mocked_volume, mocked_next_track,
                                  mocked_previous_track):
         """Test next/previous track."""
@@ -550,7 +550,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   default_component(),
                                   mock.MagicMock())
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 1)
         all_devices[0].media_next_track()
@@ -567,14 +567,14 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_play_media(self, mocked_sountouch_device, mocked_status,
+    def test_play_media(self, mocked_soundtouch_device, mocked_status,
                         mocked_volume, mocked_presets, mocked_select_preset):
         """Test play preset 1."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
                                   mock.MagicMock())
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 1)
         all_devices[0].play_media('PLAYLIST', 1)
@@ -589,14 +589,14 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_play_media_url(self, mocked_sountouch_device, mocked_status,
+    def test_play_media_url(self, mocked_soundtouch_device, mocked_status,
                             mocked_volume, mocked_play_url):
         """Test play preset 1."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
                                   mock.MagicMock())
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
-        self.assertEqual(mocked_sountouch_device.call_count, 1)
+        self.assertEqual(mocked_soundtouch_device.call_count, 1)
         self.assertEqual(mocked_status.call_count, 1)
         self.assertEqual(mocked_volume.call_count, 1)
         all_devices[0].play_media('MUSIC', "http://fqdn/file.mp3")
@@ -607,7 +607,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_play_everywhere(self, mocked_sountouch_device, mocked_status,
+    def test_play_everywhere(self, mocked_soundtouch_device, mocked_status,
                              mocked_volume, mocked_create_zone):
         """Test play everywhere."""
         soundtouch.setup_platform(self.hass,
@@ -619,7 +619,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         all_devices[0].entity_id = "media_player.entity_1"
         all_devices[1].entity_id = "media_player.entity_2"
-        self.assertEqual(mocked_sountouch_device.call_count, 2)
+        self.assertEqual(mocked_soundtouch_device.call_count, 2)
         self.assertEqual(mocked_status.call_count, 2)
         self.assertEqual(mocked_volume.call_count, 2)
 
@@ -647,7 +647,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_create_zone(self, mocked_sountouch_device, mocked_status,
+    def test_create_zone(self, mocked_soundtouch_device, mocked_status,
                          mocked_volume, mocked_create_zone):
         """Test creating a zone."""
         soundtouch.setup_platform(self.hass,
@@ -659,7 +659,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         all_devices[0].entity_id = "media_player.entity_1"
         all_devices[1].entity_id = "media_player.entity_2"
-        self.assertEqual(mocked_sountouch_device.call_count, 2)
+        self.assertEqual(mocked_soundtouch_device.call_count, 2)
         self.assertEqual(mocked_status.call_count, 2)
         self.assertEqual(mocked_volume.call_count, 2)
 
@@ -689,7 +689,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_remove_zone_slave(self, mocked_sountouch_device, mocked_status,
+    def test_remove_zone_slave(self, mocked_soundtouch_device, mocked_status,
                                mocked_volume, mocked_remove_zone_slave):
         """Test adding a slave to an existing zone."""
         soundtouch.setup_platform(self.hass,
@@ -701,7 +701,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         all_devices[0].entity_id = "media_player.entity_1"
         all_devices[1].entity_id = "media_player.entity_2"
-        self.assertEqual(mocked_sountouch_device.call_count, 2)
+        self.assertEqual(mocked_soundtouch_device.call_count, 2)
         self.assertEqual(mocked_status.call_count, 2)
         self.assertEqual(mocked_volume.call_count, 2)
 
@@ -731,7 +731,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
     @mock.patch('libsoundtouch.soundtouch_device',
                 side_effect=_mock_soundtouch_device)
-    def test_add_zone_slave(self, mocked_sountouch_device, mocked_status,
+    def test_add_zone_slave(self, mocked_soundtouch_device, mocked_status,
                             mocked_volume, mocked_add_zone_slave):
         """Test removing a slave from a zone."""
         soundtouch.setup_platform(self.hass,
@@ -743,7 +743,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         all_devices[0].entity_id = "media_player.entity_1"
         all_devices[1].entity_id = "media_player.entity_2"
-        self.assertEqual(mocked_sountouch_device.call_count, 2)
+        self.assertEqual(mocked_soundtouch_device.call_count, 2)
         self.assertEqual(mocked_status.call_count, 2)
         self.assertEqual(mocked_volume.call_count, 2)
 

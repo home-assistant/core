@@ -73,8 +73,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
             'prob_false': 0.1,
             'prob_true': 0.9
         }], state.attributes.get('observations'))
-        self.assertAlmostEqual(0.7714285714285715,
-                               state.attributes.get('probability'))
+        self.assertAlmostEqual(0.77, state.attributes.get('probability'))
 
         assert state.state == 'on'
 
@@ -141,7 +140,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
             'prob_true': 0.8,
             'prob_false': 0.4
         }], state.attributes.get('observations'))
-        self.assertAlmostEqual(0.33333333, state.attributes.get('probability'))
+        self.assertAlmostEqual(0.33, state.attributes.get('probability'))
 
         assert state.state == 'on'
 
@@ -152,6 +151,71 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get('binary_sensor.test_binary')
         self.assertAlmostEqual(0.2, state.attributes.get('probability'))
+
+        assert state.state == 'off'
+
+    def test_multiple_observations(self):
+        """Test sensor with multiple observations of same entity."""
+        config = {
+            'binary_sensor': {
+                'name':
+                'Test_Binary',
+                'platform':
+                'bayesian',
+                'observations': [{
+                    'platform': 'state',
+                    'entity_id': 'sensor.test_monitored',
+                    'to_state': 'blue',
+                    'prob_given_true': 0.8,
+                    'prob_given_false': 0.4
+                }, {
+                    'platform': 'state',
+                    'entity_id': 'sensor.test_monitored',
+                    'to_state': 'red',
+                    'prob_given_true': 0.2,
+                    'prob_given_false': 0.4
+                }],
+                'prior':
+                0.2,
+                'probability_threshold':
+                0.32,
+            }
+        }
+
+        assert setup_component(self.hass, 'binary_sensor', config)
+
+        self.hass.states.set('sensor.test_monitored', 'off')
+
+        state = self.hass.states.get('binary_sensor.test_binary')
+
+        self.assertEqual([], state.attributes.get('observations'))
+        self.assertEqual(0.2, state.attributes.get('probability'))
+
+        assert state.state == 'off'
+
+        self.hass.states.set('sensor.test_monitored', 'blue')
+        self.hass.block_till_done()
+        self.hass.states.set('sensor.test_monitored', 'off')
+        self.hass.block_till_done()
+        self.hass.states.set('sensor.test_monitored', 'blue')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test_binary')
+        self.assertEqual([{
+            'prob_true': 0.8,
+            'prob_false': 0.4
+        }], state.attributes.get('observations'))
+        self.assertAlmostEqual(0.33, state.attributes.get('probability'))
+
+        assert state.state == 'on'
+
+        self.hass.states.set('sensor.test_monitored', 'blue')
+        self.hass.block_till_done()
+        self.hass.states.set('sensor.test_monitored', 'red')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test_binary')
+        self.assertAlmostEqual(0.11, state.attributes.get('probability'))
 
         assert state.state == 'off'
 

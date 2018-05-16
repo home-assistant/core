@@ -11,7 +11,7 @@ from homeassistant.components.tts import Provider, PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['boto3==1.4.3']
+REQUIREMENTS = ['boto3==1.4.7']
 
 CONF_REGION = 'region_name'
 CONF_ACCESS_KEY_ID = 'aws_access_key_id'
@@ -20,7 +20,11 @@ CONF_PROFILE_NAME = 'profile_name'
 ATTR_CREDENTIALS = 'credentials'
 
 DEFAULT_REGION = 'us-east-1'
-SUPPORTED_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2', 'eu-west-1']
+SUPPORTED_REGIONS = ['us-east-1', 'us-east-2', 'us-west-1', 'us-west-2',
+                     'ca-central-1', 'eu-west-1', 'eu-central-1', 'eu-west-2',
+                     'eu-west-3', 'ap-southeast-1', 'ap-southeast-2',
+                     'ap-northeast-2', 'ap-northeast-1', 'ap-south-1',
+                     'sa-east-1']
 
 CONF_VOICE = 'voice'
 CONF_OUTPUT_FORMAT = 'output_format'

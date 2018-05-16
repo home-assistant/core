@@ -6,7 +6,7 @@ https://home-assistant.io/ecosystem/ios/
 """
 from homeassistant.components import ios
 from homeassistant.helpers.entity import Entity
-from homeassistant.util.icon import icon_for_battery_level
+from homeassistant.helpers.icon import icon_for_battery_level
 
 DEPENDENCIES = ['ios']
 
@@ -58,7 +58,7 @@ class IOSSensor(Entity):
     def unique_id(self):
         """Return the unique ID of this sensor."""
         device_id = self._device[ios.ATTR_DEVICE_ID]
-        return "sensor_ios_battery_{}_{}".format(self.type, device_id)
+        return "{}_{}".format(self.type, device_id)
 
     @property
     def unit_of_measurement(self):

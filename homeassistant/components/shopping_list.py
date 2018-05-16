@@ -1,8 +1,6 @@
-"""Component to manage a shoppling list."""
+"""Component to manage a shopping list."""
 import asyncio
-import json
 import logging
-import os
 import uuid
 
 import voluptuous as vol
@@ -10,9 +8,11 @@ import voluptuous as vol
 from homeassistant.const import HTTP_NOT_FOUND, HTTP_BAD_REQUEST
 from homeassistant.core import callback
 from homeassistant.components import http
+from homeassistant.components.http.data_validator import (
+    RequestDataValidator)
 from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
-
+from homeassistant.util.json import load_json, save_json
 
 DOMAIN = 'shopping_list'
 DEPENDENCIES = ['http']
@@ -38,18 +38,19 @@ def async_setup(hass, config):
     intent.async_register(hass, ListTopItemsIntent())
 
     hass.http.register_view(ShoppingListView)
+    hass.http.register_view(CreateShoppingListItemView)
     hass.http.register_view(UpdateShoppingListItemView)
     hass.http.register_view(ClearCompletedItemsView)
 
     hass.components.conversation.async_register(INTENT_ADD_ITEM, [
-        'Add {item} to my shopping list',
+        'Add [the] [a] [an] {item} to my shopping list',
     ])
     hass.components.conversation.async_register(INTENT_LAST_ITEMS, [
         'What is on my shopping list'
     ])
 
-    hass.components.frontend.register_built_in_panel(
-        'shopping-list', 'Shopping List', 'mdi:cart')
+    yield from hass.components.frontend.async_register_built_in_panel(
+        'shopping-list', 'shopping_list', 'mdi:cart')
 
     return True
 
@@ -65,12 +66,14 @@ class ShoppingData:
     @callback
     def async_add(self, name):
         """Add a shopping list item."""
-        self.items.append({
+        item = {
             'name': name,
             'id': uuid.uuid4().hex,
             'complete': False
-        })
+        }
+        self.items.append(item)
         self.hass.async_add_job(self.save)
+        return item
 
     @callback
     def async_update(self, item_id, info):
@@ -96,19 +99,13 @@ class ShoppingData:
         """Load items."""
         def load():
             """Load the items synchronously."""
-            path = self.hass.config.path(PERSISTENCE)
-            if not os.path.isfile(path):
-                return []
-            with open(path) as file:
-                return json.loads(file.read())
+            return load_json(self.hass.config.path(PERSISTENCE), default=[])
 
-        items = yield from self.hass.async_add_job(load)
-        self.items = items
+        self.items = yield from self.hass.async_add_job(load)
 
     def save(self):
         """Save the items."""
-        with open(self.hass.config.path(PERSISTENCE), 'wt') as file:
-            file.write(json.dumps(self.items, sort_keys=True, indent=4))
+        save_json(self.hass.config.path(PERSISTENCE), self.items)
 
 
 class AddItemIntent(intent.IntentHandler):
@@ -166,7 +163,7 @@ class ShoppingListView(http.HomeAssistantView):
 
     @callback
     def get(self, request):
-        """Retrieve if API is running."""
+        """Retrieve shopping list items."""
         return self.json(request.app['hass'].data[DOMAIN].items)
 
 
@@ -176,10 +173,9 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
     url = '/api/shopping_list/item/{item_id}'
     name = "api:shopping_list:item:id"
 
-    @callback
-    def post(self, request, item_id):
-        """Retrieve if API is running."""
-        data = yield from request.json()
+    async def post(self, request, item_id):
+        """Update a shopping list item."""
+        data = await request.json()
 
         try:
             item = request.app['hass'].data[DOMAIN].async_update(item_id, data)
@@ -189,6 +185,23 @@ class UpdateShoppingListItemView(http.HomeAssistantView):
             return self.json_message('Item not found', HTTP_NOT_FOUND)
         except vol.Invalid:
             return self.json_message('Item not found', HTTP_BAD_REQUEST)
+
+
+class CreateShoppingListItemView(http.HomeAssistantView):
+    """View to retrieve shopping list content."""
+
+    url = '/api/shopping_list/item'
+    name = "api:shopping_list:item"
+
+    @RequestDataValidator(vol.Schema({
+        vol.Required('name'): str,
+    }))
+    @asyncio.coroutine
+    def post(self, request, data):
+        """Create a new shopping list item."""
+        item = request.app['hass'].data[DOMAIN].async_add(data['name'])
+        request.app['hass'].bus.async_fire(EVENT)
+        return self.json(item)
 
 
 class ClearCompletedItemsView(http.HomeAssistantView):

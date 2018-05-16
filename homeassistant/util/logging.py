@@ -3,7 +3,7 @@ import asyncio
 import logging
 import threading
 
-from .async import run_coroutine_threadsafe
+from .async_ import run_coroutine_threadsafe
 
 
 class HideSensitiveDataFilter(logging.Filter):
@@ -23,7 +23,7 @@ class HideSensitiveDataFilter(logging.Filter):
 
 # pylint: disable=invalid-name
 class AsyncHandler(object):
-    """Logging handler wrapper to add a async layer."""
+    """Logging handler wrapper to add an async layer."""
 
     def __init__(self, loop, handler):
         """Initialize async logging handler wrapper."""
@@ -49,17 +49,16 @@ class AsyncHandler(object):
         """Wrap close to handler."""
         self.emit(None)
 
-    @asyncio.coroutine
-    def async_close(self, blocking=False):
+    async def async_close(self, blocking=False):
         """Close the handler.
 
         When blocking=True, will wait till closed.
         """
-        yield from self._queue.put(None)
+        await self._queue.put(None)
 
         if blocking:
             while self._thread.is_alive():
-                yield from asyncio.sleep(0, loop=self.loop)
+                await asyncio.sleep(0, loop=self.loop)
 
     def emit(self, record):
         """Process a record."""
@@ -116,6 +115,6 @@ class AsyncHandler(object):
         return self.handler.get_name()
 
     @name.setter
-    def set_name(self, name):
+    def name(self, name):
         """Wrap property get_name to handler."""
         self.handler.name = name

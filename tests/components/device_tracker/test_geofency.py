@@ -107,7 +107,7 @@ BEACON_EXIT_CAR = {
 
 
 @pytest.fixture
-def geofency_client(loop, hass, test_client):
+def geofency_client(loop, hass, aiohttp_client):
     """Geofency mock client."""
     assert loop.run_until_complete(async_setup_component(
         hass, device_tracker.DOMAIN, {
@@ -117,7 +117,7 @@ def geofency_client(loop, hass, test_client):
             }}))
 
     with patch('homeassistant.components.device_tracker.update_config'):
-        yield loop.run_until_complete(test_client(hass.http.app))
+        yield loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture(autouse=True)
@@ -169,6 +169,21 @@ def test_gps_enter_and_exit_home(hass, geofency_client):
     state_name = hass.states.get('{}.{}'.format(
         'device_tracker', device_name)).state
     assert STATE_NOT_HOME == state_name
+
+    # Exit the Home zone with "Send Current Position" enabled
+    data = GPS_EXIT_HOME.copy()
+    data['currentLatitude'] = NOT_HOME_LATITUDE
+    data['currentLongitude'] = NOT_HOME_LONGITUDE
+
+    req = yield from geofency_client.post(URL, data=data)
+    assert req.status == HTTP_OK
+    device_name = slugify(GPS_EXIT_HOME['device'])
+    current_latitude = hass.states.get('{}.{}'.format(
+        'device_tracker', device_name)).attributes['latitude']
+    assert NOT_HOME_LATITUDE == current_latitude
+    current_longitude = hass.states.get('{}.{}'.format(
+        'device_tracker', device_name)).attributes['longitude']
+    assert NOT_HOME_LONGITUDE == current_longitude
 
 
 @asyncio.coroutine

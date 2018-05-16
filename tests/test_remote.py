@@ -28,7 +28,7 @@ def _url(path=''):
 
 # pylint: disable=invalid-name
 def setUpModule():
-    """Initalization of a Home Assistant server instance."""
+    """Initialization of a Home Assistant server instance."""
     global hass, master_api
 
     hass = get_test_home_assistant()

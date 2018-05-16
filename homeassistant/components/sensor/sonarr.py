@@ -132,10 +132,12 @@ class SonarrSensor(Entity):
                     show['seasonNumber'], show['episodeNumber'])
         elif self.type == 'queue':
             for show in self.data:
+                remaining = (1 if show['size'] == 0
+                             else show['sizeleft']/show['size'])
                 attributes[show['series']['title'] + ' S{:02d}E{:02d}'.format(
                     show['episode']['seasonNumber'],
                     show['episode']['episodeNumber']
-                )] = '{:.2f}%'.format(100*(1-(show['sizeleft']/show['size'])))
+                )] = '{:.2f}%'.format(100*(1-(remaining)))
         elif self.type == 'wanted':
             for show in self.data:
                 attributes[show['series']['title'] + ' S{:02d}E{:02d}'.format(
@@ -179,7 +181,7 @@ class SonarrSensor(Entity):
                 headers={'X-Api-Key': self.apikey},
                 timeout=10)
         except OSError:
-            _LOGGER.error("Host %s is not available", self.host)
+            _LOGGER.warning("Host %s is not available", self.host)
             self._available = False
             self._state = None
             return

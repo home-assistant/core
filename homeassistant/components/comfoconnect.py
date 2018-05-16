@@ -8,11 +8,11 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_TOKEN, CONF_PIN, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.helpers import (discovery)
-from homeassistant.helpers.dispatcher import (dispatcher_send)
+    CONF_HOST, CONF_NAME, CONF_PIN, CONF_TOKEN, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 REQUIREMENTS = ['pycomfoconnect==0.3']
 
@@ -115,7 +115,7 @@ class ComfoConnectBridge(object):
         self.comfoconnect.disconnect()
 
     def sensor_callback(self, var, value):
-        """Callback function for sensor updates."""
+        """Call function for sensor updates."""
         _LOGGER.debug("Got value from bridge: %d = %d", var, value)
 
         from pycomfoconnect import (

@@ -1,16 +1,14 @@
 """The tests for the  Template light platform."""
 import logging
-import asyncio
 
-from homeassistant.core import callback, State, CoreState
+from homeassistant.core import callback
 from homeassistant import setup
 import homeassistant.components as core
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 
 from tests.common import (
-    get_test_home_assistant, assert_setup_component, mock_component)
+    get_test_home_assistant, assert_setup_component)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -38,7 +36,7 @@ class TestTemplateLight:
         self.hass.stop()
 
     def test_template_state_text(self):
-        """"Test the state text of a template."""
+        """Test the state text of a template."""
         with assert_setup_component(1, 'light'):
             assert setup.setup_component(self.hass, 'light', {
                 'light': {
@@ -588,50 +586,136 @@ class TestTemplateLight:
         state = self.hass.states.get('light.test_template_light')
         assert state is not None
 
-        assert state.attributes.get('brightness') == '42'
+        assert state.attributes.get('brightness') == 42
 
-
-@asyncio.coroutine
-def test_restore_state(hass):
-    """Ensure states are restored on startup."""
-    hass.data[DATA_RESTORE_CACHE] = {
-        'light.test_template_light':
-            State('light.test_template_light', 'on'),
-    }
-
-    hass.state = CoreState.starting
-    mock_component(hass, 'recorder')
-    yield from setup.async_setup_component(hass, 'light', {
-        'light': {
-            'platform': 'template',
-            'lights': {
-                'test_template_light': {
-                    'value_template':
-                        "{{states.light.test_state.state}}",
-                    'turn_on': {
-                        'service': 'test.automation',
-                    },
-                    'turn_off': {
-                        'service': 'light.turn_off',
-                        'entity_id': 'light.test_state'
-                    },
-                    'set_level': {
-                        'service': 'test.automation',
-                        'data_template': {
-                            'entity_id': 'light.test_state',
-                            'brightness': '{{brightness}}'
+    def test_friendly_name(self):
+        """Test the accessibility of the friendly_name attribute."""
+        with assert_setup_component(1, 'light'):
+            assert setup.setup_component(self.hass, 'light', {
+                'light': {
+                    'platform': 'template',
+                    'lights': {
+                        'test_template_light': {
+                            'friendly_name': 'Template light',
+                            'value_template': "{{ 1 == 1 }}",
+                            'turn_on': {
+                                'service': 'light.turn_on',
+                                'entity_id': 'light.test_state'
+                            },
+                            'turn_off': {
+                                'service': 'light.turn_off',
+                                'entity_id': 'light.test_state'
+                            },
+                            'set_level': {
+                                'service': 'light.turn_on',
+                                'data_template': {
+                                    'entity_id': 'light.test_state',
+                                    'brightness': '{{brightness}}'
+                                }
+                            }
                         }
                     }
                 }
-            }
-        }
-    })
+            })
 
-    state = hass.states.get('light.test_template_light')
-    assert state.state == 'on'
+        self.hass.start()
+        self.hass.block_till_done()
 
-    yield from hass.async_start()
-    yield from hass.async_block_till_done()
+        state = self.hass.states.get('light.test_template_light')
+        assert state is not None
 
-    state = hass.states.get('light.test_template_light')
-    assert state.state == 'off'
+        assert state.attributes.get('friendly_name') == 'Template light'
+
+    def test_icon_template(self):
+        """Test icon template."""
+        with assert_setup_component(1, 'light'):
+            assert setup.setup_component(self.hass, 'light', {
+                'light': {
+                    'platform': 'template',
+                    'lights': {
+                        'test_template_light': {
+                            'friendly_name': 'Template light',
+                            'value_template': "{{ 1 == 1 }}",
+                            'turn_on': {
+                                'service': 'light.turn_on',
+                                'entity_id': 'light.test_state'
+                            },
+                            'turn_off': {
+                                'service': 'light.turn_off',
+                                'entity_id': 'light.test_state'
+                            },
+                            'set_level': {
+                                'service': 'light.turn_on',
+                                'data_template': {
+                                    'entity_id': 'light.test_state',
+                                    'brightness': '{{brightness}}'
+                                }
+                            },
+                            'icon_template':
+                                "{% if states.light.test_state.state %}"
+                                "mdi:check"
+                                "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+        assert state.attributes.get('icon') == ''
+
+        state = self.hass.states.set('light.test_state', STATE_ON)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+
+        assert state.attributes['icon'] == 'mdi:check'
+
+    def test_entity_picture_template(self):
+        """Test entity_picture template."""
+        with assert_setup_component(1, 'light'):
+            assert setup.setup_component(self.hass, 'light', {
+                'light': {
+                    'platform': 'template',
+                    'lights': {
+                        'test_template_light': {
+                            'friendly_name': 'Template light',
+                            'value_template': "{{ 1 == 1 }}",
+                            'turn_on': {
+                                'service': 'light.turn_on',
+                                'entity_id': 'light.test_state'
+                            },
+                            'turn_off': {
+                                'service': 'light.turn_off',
+                                'entity_id': 'light.test_state'
+                            },
+                            'set_level': {
+                                'service': 'light.turn_on',
+                                'data_template': {
+                                    'entity_id': 'light.test_state',
+                                    'brightness': '{{brightness}}'
+                                }
+                            },
+                            'entity_picture_template':
+                                "{% if states.light.test_state.state %}"
+                                "/local/light.png"
+                                "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+        assert state.attributes.get('entity_picture') == ''
+
+        state = self.hass.states.set('light.test_state', STATE_ON)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+
+        assert state.attributes['entity_picture'] == '/local/light.png'

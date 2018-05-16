@@ -7,7 +7,6 @@ https://home-assistant.io/components/binary_sensor.wemo/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wemo']
 
@@ -25,18 +24,18 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         device = discovery.device_from_description(location, mac)
 
         if device:
-            add_devices_callback([WemoBinarySensor(device)])
+            add_devices_callback([WemoBinarySensor(hass, device)])
 
 
 class WemoBinarySensor(BinarySensorDevice):
     """Representation a WeMo binary sensor."""
 
-    def __init__(self, device):
+    def __init__(self, hass, device):
         """Initialize the WeMo sensor."""
         self.wemo = device
         self._state = None
 
-        wemo = get_component('wemo')
+        wemo = hass.components.wemo
         wemo.SUBSCRIPTION_REGISTRY.register(self.wemo)
         wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)
 
@@ -58,11 +57,11 @@ class WemoBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self):
         """Return the id of this WeMo device."""
-        return '{}.{}'.format(self.__class__, self.wemo.serialnumber)
+        return self.wemo.serialnumber
 
     @property
     def name(self):
-        """Return the name of the sevice if any."""
+        """Return the name of the service if any."""
         return self.wemo.name
 
     @property

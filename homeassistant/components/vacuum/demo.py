@@ -7,7 +7,7 @@ https://home-assistant.io/components/demo/
 import logging
 
 from homeassistant.components.vacuum import (
-    ATTR_CLEANED_AREA, DEFAULT_ICON, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT,
+    ATTR_CLEANED_AREA, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
     SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, VacuumDevice)
@@ -65,11 +65,6 @@ class DemoVacuum(VacuumDevice):
     def name(self):
         """Return the name of the vacuum."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for the vacuum."""
-        return DEFAULT_ICON
 
     @property
     def should_poll(self):
@@ -142,7 +137,7 @@ class DemoVacuum(VacuumDevice):
         self.schedule_update_ha_state()
 
     def stop(self, **kwargs):
-        """Turn the vacuum off."""
+        """Stop the vacuum."""
         if self.supported_features & SUPPORT_STOP == 0:
             return
 
@@ -162,7 +157,7 @@ class DemoVacuum(VacuumDevice):
         self.schedule_update_ha_state()
 
     def locate(self, **kwargs):
-        """Turn the vacuum off."""
+        """Locate the vacuum (usually by playing a song)."""
         if self.supported_features & SUPPORT_LOCATE == 0:
             return
 
@@ -184,7 +179,7 @@ class DemoVacuum(VacuumDevice):
         self.schedule_update_ha_state()
 
     def set_fan_speed(self, fan_speed, **kwargs):
-        """Tell the vacuum to return to its dock."""
+        """Set the vacuum's fan speed."""
         if self.supported_features & SUPPORT_FAN_SPEED == 0:
             return
 

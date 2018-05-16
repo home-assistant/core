@@ -36,7 +36,7 @@ NOTIFICATION_TITLE = 'myLeviton Decora Setup'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Decora WiFi platform."""
-    # pylint: disable=import-error
+    # pylint: disable=import-error, no-member, no-name-in-module
     from decora_wifi import DecoraWiFiSession
     from decora_wifi.models.person import Person
     from decora_wifi.models.residential_account import ResidentialAccount
@@ -93,8 +93,7 @@ class DecoraWifiLight(Light):
         """Return supported features."""
         if self._switch.canSetLevel:
             return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
-        else:
-            return 0
+        return 0
 
     @property
     def name(self):

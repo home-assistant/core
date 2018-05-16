@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['nad_receiver==0.0.6']
+REQUIREMENTS = ['nad_receiver==0.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 

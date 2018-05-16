@@ -10,10 +10,10 @@ import os
 
 from homeassistant.components import zone
 from homeassistant.core import callback, State
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.helpers import discovery
 from homeassistant.loader import get_component
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN,
@@ -23,10 +23,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.remote import JSONEncoder
 
 from tests.common import (
-    get_test_home_assistant, fire_time_changed, fire_service_discovered,
-    patch_yaml_files, assert_setup_component, mock_restore_cache, mock_coro)
-
-from ...test_util.aiohttp import mock_aiohttp_client
+    get_test_home_assistant, fire_time_changed,
+    patch_yaml_files, assert_setup_component, mock_restore_cache)
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}}
 
@@ -111,7 +109,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         self.assertEqual(device.config_picture, config.config_picture)
         self.assertEqual(device.away_hide, config.away_hide)
         self.assertEqual(device.consider_home, config.consider_home)
-        self.assertEqual(device.vendor, config.vendor)
         self.assertEqual(device.icon, config.icon)
 
     # pylint: disable=invalid-name
@@ -123,7 +120,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                   'My device', None, None, False),
             device_tracker.Device(self.hass, True, True, 'your_device',
                                   'AB:01', 'Your device', None, None, False)]
-        device_tracker.DeviceTracker(self.hass, False, True, devices)
+        device_tracker.DeviceTracker(self.hass, False, True, {}, devices)
         _LOGGER.debug(mock_warning.call_args_list)
         assert mock_warning.call_count == 1, \
             "The only warning call should be duplicates (check DEBUG)"
@@ -137,7 +134,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                   'AB:01', 'My device', None, None, False),
             device_tracker.Device(self.hass, True, True, 'my_device',
                                   None, 'Your device', None, None, False)]
-        device_tracker.DeviceTracker(self.hass, False, True, devices)
+        device_tracker.DeviceTracker(self.hass, False, True, {}, devices)
 
         _LOGGER.debug(mock_warning.call_args_list)
         assert mock_warning.call_count == 1, \
@@ -151,26 +148,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         with assert_setup_component(1, device_tracker.DOMAIN):
             assert setup_component(self.hass, device_tracker.DOMAIN,
                                    TEST_PLATFORM)
-
-    # pylint: disable=invalid-name
-    def test_adding_unknown_device_to_config(self):
-        """Test the adding of unknown devices to configuration file."""
-        scanner = get_component('device_tracker.test').SCANNER
-        scanner.reset()
-        scanner.come_home('DEV1')
-
-        with assert_setup_component(1, device_tracker.DOMAIN):
-            assert setup_component(self.hass, device_tracker.DOMAIN, {
-                device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}})
-
-        # wait for async calls (macvendor) to finish
-        self.hass.block_till_done()
-
-        config = device_tracker.load_config(self.yaml_devices, self.hass,
-                                            timedelta(seconds=0))
-        assert len(config) == 1
-        assert config[0].dev_id == 'dev1'
-        assert config[0].track
 
     def test_gravatar(self):
         """Test the Gravatar generation."""
@@ -193,137 +170,6 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                         "55502f40dc8b7c769880b10874abc9d0.jpg?s=80&d=wavatar")
         self.assertEqual(device.config_picture, gravatar_url)
 
-    def test_mac_vendor_lookup(self):
-        """Test if vendor string is lookup on macvendors API."""
-        mac = 'B8:27:EB:00:00:00'
-        vendor_string = 'Raspberry Pi Foundation'
-
-        device = device_tracker.Device(
-            self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
-
-        with mock_aiohttp_client() as aioclient_mock:
-            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
-                               text=vendor_string)
-
-            run_coroutine_threadsafe(device.set_vendor_for_mac(),
-                                     self.hass.loop).result()
-            assert aioclient_mock.call_count == 1
-
-        self.assertEqual(device.vendor, vendor_string)
-
-    def test_mac_vendor_mac_formats(self):
-        """Verify all variations of MAC addresses are handled correctly."""
-        vendor_string = 'Raspberry Pi Foundation'
-
-        with mock_aiohttp_client() as aioclient_mock:
-            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
-                               text=vendor_string)
-            aioclient_mock.get('http://api.macvendors.com/00:27:eb',
-                               text=vendor_string)
-
-            mac = 'B8:27:EB:00:00:00'
-            device = device_tracker.Device(
-                self.hass, timedelta(seconds=180),
-                True, 'test', mac, 'Test name')
-            run_coroutine_threadsafe(device.set_vendor_for_mac(),
-                                     self.hass.loop).result()
-            self.assertEqual(device.vendor, vendor_string)
-
-            mac = '0:27:EB:00:00:00'
-            device = device_tracker.Device(
-                self.hass, timedelta(seconds=180),
-                True, 'test', mac, 'Test name')
-            run_coroutine_threadsafe(device.set_vendor_for_mac(),
-                                     self.hass.loop).result()
-            self.assertEqual(device.vendor, vendor_string)
-
-            mac = 'PREFIXED_B8:27:EB:00:00:00'
-            device = device_tracker.Device(
-                self.hass, timedelta(seconds=180),
-                True, 'test', mac, 'Test name')
-            run_coroutine_threadsafe(device.set_vendor_for_mac(),
-                                     self.hass.loop).result()
-            self.assertEqual(device.vendor, vendor_string)
-
-    def test_mac_vendor_lookup_unknown(self):
-        """Prevent another mac vendor lookup if was not found first time."""
-        mac = 'B8:27:EB:00:00:00'
-
-        device = device_tracker.Device(
-            self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
-
-        with mock_aiohttp_client() as aioclient_mock:
-            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
-                               status=404)
-
-            run_coroutine_threadsafe(device.set_vendor_for_mac(),
-                                     self.hass.loop).result()
-
-            self.assertEqual(device.vendor, 'unknown')
-
-    def test_mac_vendor_lookup_error(self):
-        """Prevent another lookup if failure during API call."""
-        mac = 'B8:27:EB:00:00:00'
-
-        device = device_tracker.Device(
-            self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
-
-        with mock_aiohttp_client() as aioclient_mock:
-            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
-                               status=500)
-
-            run_coroutine_threadsafe(device.set_vendor_for_mac(),
-                                     self.hass.loop).result()
-
-            self.assertEqual(device.vendor, 'unknown')
-
-    def test_mac_vendor_lookup_exception(self):
-        """Prevent another lookup if exception during API call."""
-        mac = 'B8:27:EB:00:00:00'
-
-        device = device_tracker.Device(
-            self.hass, timedelta(seconds=180), True, 'test', mac, 'Test name')
-
-        with mock_aiohttp_client() as aioclient_mock:
-            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
-                               exc=asyncio.TimeoutError())
-
-            run_coroutine_threadsafe(device.set_vendor_for_mac(),
-                                     self.hass.loop).result()
-
-            self.assertEqual(device.vendor, 'unknown')
-
-    def test_mac_vendor_lookup_on_see(self):
-        """Test if macvendor is looked up when device is seen."""
-        mac = 'B8:27:EB:00:00:00'
-        vendor_string = 'Raspberry Pi Foundation'
-
-        tracker = device_tracker.DeviceTracker(
-            self.hass, timedelta(seconds=60), 0, [])
-
-        with mock_aiohttp_client() as aioclient_mock:
-            aioclient_mock.get('http://api.macvendors.com/b8:27:eb',
-                               text=vendor_string)
-
-            run_coroutine_threadsafe(
-                tracker.async_see(mac=mac), self.hass.loop).result()
-            assert aioclient_mock.call_count == 1, \
-                'No http request for macvendor made!'
-        self.assertEqual(tracker.devices['b827eb000000'].vendor, vendor_string)
-
-    def test_discovery(self):
-        """Test discovery."""
-        scanner = get_component('device_tracker.test').SCANNER
-
-        with patch.dict(device_tracker.DISCOVERY_PLATFORMS, {'test': 'test'}):
-            with patch.object(scanner, 'scan_devices',
-                              autospec=True) as mock_scan:
-                with assert_setup_component(1, device_tracker.DOMAIN):
-                    assert setup_component(
-                        self.hass, device_tracker.DOMAIN, TEST_PLATFORM)
-                fire_service_discovered(self.hass, 'test', {})
-                self.assertTrue(mock_scan.called)
-
     @patch(
         'homeassistant.components.device_tracker.DeviceTracker.see')
     @patch(
@@ -343,7 +189,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
     def test_update_stale(self):
         """Test stalled update."""
-        scanner = get_component('device_tracker.test').SCANNER
+        scanner = get_component(self.hass, 'device_tracker.test').SCANNER
         scanner.reset()
         scanner.come_home('DEV1')
 
@@ -358,6 +204,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                         CONF_PLATFORM: 'test',
                         device_tracker.CONF_CONSIDER_HOME: 59,
                     }})
+                self.hass.block_till_done()
 
         self.assertEqual(STATE_HOME,
                          self.hass.states.get('device_tracker.dev1').state)
@@ -404,7 +251,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             hide_if_away=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
-        scanner = get_component('device_tracker.test').SCANNER
+        scanner = get_component(self.hass, 'device_tracker.test').SCANNER
         scanner.reset()
 
         with assert_setup_component(1, device_tracker.DOMAIN):
@@ -423,7 +270,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             hide_if_away=True)
         device_tracker.update_config(self.yaml_devices, dev_id, device)
 
-        scanner = get_component('device_tracker.test').SCANNER
+        scanner = get_component(self.hass, 'device_tracker.test').SCANNER
         scanner.reset()
 
         with assert_setup_component(1, device_tracker.DOMAIN):
@@ -494,6 +341,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert test_events[0].data == {
             'entity_id': 'device_tracker.hello',
             'host_name': 'hello',
+            'mac': 'MAC_1',
         }
 
     # pylint: disable=invalid-name
@@ -525,9 +373,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                             timedelta(seconds=0))
         assert len(config) == 0
 
-    @patch('homeassistant.components.device_tracker.Device'
-           '.set_vendor_for_mac', return_value=mock_coro())
-    def test_see_state(self, mock_set_vendor):
+    def test_see_state(self):
         """Test device tracker see records state correctly."""
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
                                         TEST_PLATFORM))
@@ -585,7 +431,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                 'zone': zone_info
             })
 
-        scanner = get_component('device_tracker.test').SCANNER
+        scanner = get_component(self.hass, 'device_tracker.test').SCANNER
         scanner.reset()
         scanner.come_home('dev1')
 
@@ -597,6 +443,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                         CONF_PLATFORM: 'test',
                         device_tracker.CONF_CONSIDER_HOME: 59,
                     }})
+                self.hass.block_till_done()
 
         state = self.hass.states.get('device_tracker.dev1')
         attrs = state.attributes
@@ -633,7 +480,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     def test_see_failures(self, mock_warning):
         """Test that the device tracker see failures."""
         tracker = device_tracker.DeviceTracker(
-            self.hass, timedelta(seconds=60), 0, [])
+            self.hass, timedelta(seconds=60), 0, {}, [])
 
         # MAC is not a string (but added)
         tracker.see(mac=567, host_name="Number MAC")
@@ -655,29 +502,10 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         assert len(config) == 4
 
-    def test_config_failure(self):
-        """Test that the device tracker see failures."""
-        with assert_setup_component(0, device_tracker.DOMAIN):
-            setup_component(self.hass, device_tracker.DOMAIN,
-                            {device_tracker.DOMAIN: {
-                                device_tracker.CONF_CONSIDER_HOME: -1}})
-
-    def test_picture_and_icon_on_see_discovery(self):
-        """Test that picture and icon are set in initial see."""
-        tracker = device_tracker.DeviceTracker(
-            self.hass, timedelta(seconds=60), False, [])
-        tracker.see(dev_id=11, picture='pic_url', icon='mdi:icon')
-        self.hass.block_till_done()
-        config = device_tracker.load_config(self.yaml_devices, self.hass,
-                                            timedelta(seconds=0))
-        assert len(config) == 1
-        assert config[0].icon == 'mdi:icon'
-        assert config[0].entity_picture == 'pic_url'
-
 
 @asyncio.coroutine
 def test_async_added_to_hass(hass):
-    """Test resoring state."""
+    """Test restoring state."""
     attr = {
         device_tracker.ATTR_LONGITUDE: 18,
         device_tracker.ATTR_LATITUDE: -33,
@@ -715,3 +543,81 @@ def test_bad_platform(hass):
     }
     with assert_setup_component(0, device_tracker.DOMAIN):
         assert (yield from device_tracker.async_setup(hass, config))
+
+
+async def test_adding_unknown_device_to_config(mock_device_tracker_conf, hass):
+    """Test the adding of unknown devices to configuration file."""
+    scanner = get_component(hass, 'device_tracker.test').SCANNER
+    scanner.reset()
+    scanner.come_home('DEV1')
+
+    await async_setup_component(hass, device_tracker.DOMAIN, {
+            device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}})
+
+    await hass.async_block_till_done()
+
+    assert len(mock_device_tracker_conf) == 1
+    device = mock_device_tracker_conf[0]
+    assert device.dev_id == 'dev1'
+    assert device.track
+
+
+async def test_picture_and_icon_on_see_discovery(mock_device_tracker_conf,
+                                                 hass):
+    """Test that picture and icon are set in initial see."""
+    tracker = device_tracker.DeviceTracker(
+        hass, timedelta(seconds=60), False, {}, [])
+    await tracker.async_see(dev_id=11, picture='pic_url', icon='mdi:icon')
+    await hass.async_block_till_done()
+    assert len(mock_device_tracker_conf) == 1
+    assert mock_device_tracker_conf[0].icon == 'mdi:icon'
+    assert mock_device_tracker_conf[0].entity_picture == 'pic_url'
+
+
+async def test_default_hide_if_away_is_used(mock_device_tracker_conf, hass):
+    """Test that default track_new is used."""
+    tracker = device_tracker.DeviceTracker(
+        hass, timedelta(seconds=60), False,
+        {device_tracker.CONF_AWAY_HIDE: True}, [])
+    await tracker.async_see(dev_id=12)
+    await hass.async_block_till_done()
+    assert len(mock_device_tracker_conf) == 1
+    assert mock_device_tracker_conf[0].away_hide
+
+
+async def test_backward_compatibility_for_track_new(mock_device_tracker_conf,
+                                                    hass):
+    """Test backward compatibility for track new."""
+    tracker = device_tracker.DeviceTracker(
+        hass, timedelta(seconds=60), False,
+        {device_tracker.CONF_TRACK_NEW: True}, [])
+    await tracker.async_see(dev_id=13)
+    await hass.async_block_till_done()
+    assert len(mock_device_tracker_conf) == 1
+    assert mock_device_tracker_conf[0].track is False
+
+
+async def test_old_style_track_new_is_skipped(mock_device_tracker_conf, hass):
+    """Test old style config is skipped."""
+    tracker = device_tracker.DeviceTracker(
+        hass, timedelta(seconds=60), None,
+        {device_tracker.CONF_TRACK_NEW: False}, [])
+    await tracker.async_see(dev_id=14)
+    await hass.async_block_till_done()
+    assert len(mock_device_tracker_conf) == 1
+    assert mock_device_tracker_conf[0].track is False
+
+
+def test_see_schema_allowing_ios_calls():
+    """Test SEE service schema allows extra keys.
+
+    Temp work around because the iOS app sends incorrect data.
+    """
+    device_tracker.SERVICE_SEE_PAYLOAD_SCHEMA({
+        'dev_id': 'Test',
+        "battery": 35,
+        "battery_status": 'Unplugged',
+        "gps": [10.0, 10.0],
+        "gps_accuracy": 300,
+        "hostname": 'beer',
+    })

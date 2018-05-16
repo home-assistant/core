@@ -6,12 +6,12 @@ https://home-assistant.io/components/alarm_control_panel.abode/
 """
 import logging
 
-from homeassistant.components.abode import (
-    AbodeDevice, DATA_ABODE, DEFAULT_NAME, CONF_ATTRIBUTION)
-from homeassistant.components.alarm_control_panel import (AlarmControlPanel)
-from homeassistant.const import (ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY,
-                                 STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
-
+from homeassistant.components.abode import CONF_ATTRIBUTION, AbodeDevice
+from homeassistant.components.abode import DOMAIN as ABODE_DOMAIN
+from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED)
 
 DEPENDENCIES = ['abode']
 
@@ -21,23 +21,27 @@ ICON = 'mdi:security'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up a sensor for an Abode device."""
-    abode = hass.data[DATA_ABODE]
+    """Set up an alarm control panel for an Abode device."""
+    data = hass.data[ABODE_DOMAIN]
 
-    add_devices([AbodeAlarm(abode, abode.get_alarm())])
+    alarm_devices = [AbodeAlarm(data, data.abode.get_alarm(), data.name)]
+
+    data.devices.extend(alarm_devices)
+
+    add_devices(alarm_devices)
 
 
 class AbodeAlarm(AbodeDevice, AlarmControlPanel):
     """An alarm_control_panel implementation for Abode."""
 
-    def __init__(self, controller, device):
+    def __init__(self, data, device, name):
         """Initialize the alarm control panel."""
-        AbodeDevice.__init__(self, controller, device)
-        self._name = "{0}".format(DEFAULT_NAME)
+        super().__init__(data, device)
+        self._name = name
 
     @property
     def icon(self):
-        """Return icon."""
+        """Return the icon."""
         return ICON
 
     @property
@@ -66,11 +70,16 @@ class AbodeAlarm(AbodeDevice, AlarmControlPanel):
         self._device.set_away()
 
     @property
+    def name(self):
+        """Return the name of the alarm."""
+        return self._name or super().name
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             'device_id': self._device.device_id,
             'battery_backup': self._device.battery,
-            'cellular_backup': self._device.is_cellular
+            'cellular_backup': self._device.is_cellular,
         }

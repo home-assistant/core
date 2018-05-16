@@ -4,11 +4,12 @@ import json
 import unittest
 from unittest.mock import patch
 import requests
+from aiohttp.hdrs import CONTENT_TYPE
 
 from homeassistant import setup, const, core
 import homeassistant.components as core_components
 from homeassistant.components import emulated_hue, http
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import get_test_instance_port, get_test_home_assistant
 
@@ -16,7 +17,7 @@ HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
 
 BRIDGE_URL_BASE = 'http://127.0.0.1:{}'.format(BRIDGE_SERVER_PORT) + '{}'
-JSON_HEADERS = {const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON}
+JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 
 
 def setup_hass_instance(emulated_hue_config):
@@ -86,10 +87,9 @@ class TestEmulatedHue(unittest.TestCase):
         self.assertTrue('text/xml' in result.headers['content-type'])
 
         # Make sure the XML is parsable
-        # pylint: disable=bare-except
         try:
             ET.fromstring(result.text)
-        except:
+        except:  # noqa: E722  # pylint: disable=bare-except
             self.fail('description.xml is not valid XML!')
 
     def test_create_username(self):

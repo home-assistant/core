@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 from homeassistant.util.dt import now, parse_date
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['fedexdeliverymanager==1.0.4']
+REQUIREMENTS = ['fedexdeliverymanager==1.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +81,11 @@ class FedexSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return 'packages'
 
     def _update(self):
         """Update device state."""

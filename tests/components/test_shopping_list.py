@@ -9,9 +9,11 @@ from homeassistant.helpers import intent
 
 
 @pytest.fixture(autouse=True)
-def mock_shopping_list_save():
+def mock_shopping_list_io():
     """Stub out the persistence."""
-    with patch('homeassistant.components.shopping_list.ShoppingData.save'):
+    with patch('homeassistant.components.shopping_list.ShoppingData.save'), \
+            patch('homeassistant.components.shopping_list.'
+                  'ShoppingData.async_load'):
         yield
 
 
@@ -52,7 +54,7 @@ def test_recent_items_intent(hass):
 
 
 @asyncio.coroutine
-def test_api_get_all(hass, test_client):
+def test_api_get_all(hass, aiohttp_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
@@ -63,7 +65,7 @@ def test_api_get_all(hass, test_client):
         hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'wine'}}
     )
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
     resp = yield from client.get('/api/shopping_list')
 
     assert resp.status == 200
@@ -76,7 +78,7 @@ def test_api_get_all(hass, test_client):
 
 
 @asyncio.coroutine
-def test_api_update(hass, test_client):
+def test_api_update(hass, aiohttp_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
@@ -90,7 +92,7 @@ def test_api_update(hass, test_client):
     beer_id = hass.data['shopping_list'].items[0]['id']
     wine_id = hass.data['shopping_list'].items[1]['id']
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
     resp = yield from client.post(
         '/api/shopping_list/item/{}'.format(beer_id), json={
             'name': 'soda'
@@ -131,7 +133,7 @@ def test_api_update(hass, test_client):
 
 
 @asyncio.coroutine
-def test_api_update_fails(hass, test_client):
+def test_api_update_fails(hass, aiohttp_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
@@ -139,7 +141,7 @@ def test_api_update_fails(hass, test_client):
         hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'beer'}}
     )
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
     resp = yield from client.post(
         '/api/shopping_list/non_existing', json={
             'name': 'soda'
@@ -148,7 +150,6 @@ def test_api_update_fails(hass, test_client):
     assert resp.status == 404
 
     beer_id = hass.data['shopping_list'].items[0]['id']
-    client = yield from test_client(hass.http.app)
     resp = yield from client.post(
         '/api/shopping_list/item/{}'.format(beer_id), json={
             'name': 123,
@@ -158,7 +159,7 @@ def test_api_update_fails(hass, test_client):
 
 
 @asyncio.coroutine
-def test_api_clear_completed(hass, test_client):
+def test_api_clear_completed(hass, aiohttp_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
@@ -172,7 +173,7 @@ def test_api_clear_completed(hass, test_client):
     beer_id = hass.data['shopping_list'].items[0]['id']
     wine_id = hass.data['shopping_list'].items[1]['id']
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
 
     # Mark beer as completed
     resp = yield from client.post(
@@ -192,3 +193,38 @@ def test_api_clear_completed(hass, test_client):
         'name': 'wine',
         'complete': False
     }
+
+
+@asyncio.coroutine
+def test_api_create(hass, aiohttp_client):
+    """Test the API."""
+    yield from async_setup_component(hass, 'shopping_list', {})
+
+    client = yield from aiohttp_client(hass.http.app)
+    resp = yield from client.post('/api/shopping_list/item', json={
+        'name': 'soda'
+    })
+
+    assert resp.status == 200
+    data = yield from resp.json()
+    assert data['name'] == 'soda'
+    assert data['complete'] is False
+
+    items = hass.data['shopping_list'].items
+    assert len(items) == 1
+    assert items[0]['name'] == 'soda'
+    assert items[0]['complete'] is False
+
+
+@asyncio.coroutine
+def test_api_create_fail(hass, aiohttp_client):
+    """Test the API."""
+    yield from async_setup_component(hass, 'shopping_list', {})
+
+    client = yield from aiohttp_client(hass.http.app)
+    resp = yield from client.post('/api/shopping_list/item', json={
+        'name': 1234
+    })
+
+    assert resp.status == 400
+    assert len(hass.data['shopping_list'].items) == 0

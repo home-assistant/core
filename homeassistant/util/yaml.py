@@ -13,7 +13,7 @@ except ImportError:
     keyring = None
 
 try:
-    import credstash
+    import credstash  # pylint: disable=import-error, no-member
 except ImportError:
     credstash = None
 
@@ -21,7 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 _SECRET_NAMESPACE = 'homeassistant'
-_SECRET_YAML = 'secrets.yaml'
+SECRET_YAML = 'secrets.yaml'
 __SECRET_CACHE = {}  # type: Dict
 
 
@@ -78,8 +78,17 @@ def load_yaml(fname: str) -> Union[List, Dict]:
 
 def dump(_dict: dict) -> str:
     """Dump YAML to a string and remove null."""
-    return yaml.safe_dump(_dict, default_flow_style=False) \
+    return yaml.safe_dump(
+        _dict, default_flow_style=False, allow_unicode=True) \
         .replace(': null\n', ':\n')
+
+
+def save_yaml(path, data):
+    """Save YAML to a file."""
+    # Dump before writing to not truncate the file if dumping fails
+    data = dump(data)
+    with open(path, 'w', encoding='utf-8') as outfile:
+        outfile.write(data)
 
 
 def clear_secret_cache() -> None:
@@ -133,7 +142,7 @@ def _include_dir_merge_named_yaml(loader: SafeLineLoader,
     mapping = OrderedDict()  # type: OrderedDict
     loc = os.path.join(os.path.dirname(loader.name), node.value)
     for fname in _find_files(loc, '*.yaml'):
-        if os.path.basename(fname) == _SECRET_YAML:
+        if os.path.basename(fname) == SECRET_YAML:
             continue
         loaded_yaml = load_yaml(fname)
         if isinstance(loaded_yaml, dict):
@@ -146,7 +155,7 @@ def _include_dir_list_yaml(loader: SafeLineLoader,
     """Load multiple files from directory as a list."""
     loc = os.path.join(os.path.dirname(loader.name), node.value)
     return [load_yaml(f) for f in _find_files(loc, '*.yaml')
-            if os.path.basename(f) != _SECRET_YAML]
+            if os.path.basename(f) != SECRET_YAML]
 
 
 def _include_dir_merge_list_yaml(loader: SafeLineLoader,
@@ -156,7 +165,7 @@ def _include_dir_merge_list_yaml(loader: SafeLineLoader,
                        node.value)  # type: str
     merged_list = []  # type: List
     for fname in _find_files(loc, '*.yaml'):
-        if os.path.basename(fname) == _SECRET_YAML:
+        if os.path.basename(fname) == SECRET_YAML:
             continue
         loaded_yaml = load_yaml(fname)
         if isinstance(loaded_yaml, list):
@@ -216,7 +225,7 @@ def _env_var_yaml(loader: SafeLineLoader,
 
 def _load_secret_yaml(secret_path: str) -> Dict:
     """Load the secrets yaml from path."""
-    secret_path = os.path.join(secret_path, _SECRET_YAML)
+    secret_path = os.path.join(secret_path, SECRET_YAML)
     if secret_path in __SECRET_CACHE:
         return __SECRET_CACHE[secret_path]
 
@@ -264,7 +273,10 @@ def _secret_yaml(loader: SafeLineLoader,
             _LOGGER.debug("Secret %s retrieved from keyring", node.value)
             return pwd
 
+    global credstash  # pylint: disable=invalid-name
+
     if credstash:
+        # pylint: disable=no-member
         try:
             pwd = credstash.getSecret(node.value, table=_SECRET_NAMESPACE)
             if pwd:
@@ -272,9 +284,11 @@ def _secret_yaml(loader: SafeLineLoader,
                 return pwd
         except credstash.ItemNotFound:
             pass
+        except Exception:  # pylint: disable=broad-except
+            # Catch if package installed and no config
+            credstash = None
 
-    _LOGGER.error("Secret %s not defined", node.value)
-    raise HomeAssistantError(node.value)
+    raise HomeAssistantError("Secret {} not defined".format(node.value))
 
 
 yaml.SafeLoader.add_constructor('!include', _include_yaml)

@@ -133,14 +133,12 @@ class RadarrSensor(Entity):
                 attributes[command['name']] = command['state']
         elif self.type == 'diskspace':
             for data in self.data:
+                free_space = to_unit(data['freeSpace'], self._unit)
+                total_space = to_unit(data['totalSpace'], self._unit)
+                percentage_used = (0 if total_space == 0
+                                   else free_space / total_space * 100)
                 attributes[data['path']] = '{:.2f}/{:.2f}{} ({:.2f}%)'.format(
-                    to_unit(data['freeSpace'], self._unit),
-                    to_unit(data['totalSpace'], self._unit),
-                    self._unit, (
-                        to_unit(data['freeSpace'], self._unit) /
-                        to_unit(data['totalSpace'], self._unit) * 100
-                    )
-                )
+                    free_space, total_space, self._unit, percentage_used)
         elif self.type == 'movies':
             for movie in self.data:
                 attributes[to_key(movie)] = movie['downloaded']
@@ -164,7 +162,7 @@ class RadarrSensor(Entity):
                     self.ssl, self.host, self.port, self.urlbase, start, end),
                 headers={'X-Api-Key': self.apikey}, timeout=10)
         except OSError:
-            _LOGGER.error("Host %s is not available", self.host)
+            _LOGGER.warning("Host %s is not available", self.host)
             self._available = False
             self._state = None
             return

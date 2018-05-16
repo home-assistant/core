@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker import (
     YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
-    PLATFORM_SCHEMA, load_config
+    PLATFORM_SCHEMA, load_config, SOURCE_TYPE_BLUETOOTH_LE
 )
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
@@ -54,7 +54,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 new_devices[address] = 1
                 return
 
-        see(mac=BLE_PREFIX + address, host_name=name.strip("\x00"))
+        see(mac=BLE_PREFIX + address, host_name=name.strip("\x00"),
+            source_type=SOURCE_TYPE_BLUETOOTH_LE)
 
     def discover_ble_devices():
         """Discover Bluetooth LE devices."""
@@ -101,7 +102,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         """Lookup Bluetooth LE devices and update status."""
         devs = discover_ble_devices()
         for mac in devs_to_track:
-            _LOGGER.debug("Checking " + mac)
+            _LOGGER.debug("Checking %s", mac)
             result = mac in devs
             if not result:
                 # Could not lookup device name

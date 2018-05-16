@@ -8,12 +8,10 @@ import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.components import group
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_ENTITY_ID, SERVICE_TOGGLE,
     SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
@@ -22,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.util.icon import icon_for_battery_level
+from homeassistant.helpers.icon import icon_for_battery_level
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +57,7 @@ VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
 
 VACUUM_SEND_COMMAND_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_COMMAND): cv.string,
-    vol.Optional(ATTR_PARAMS): cv.Dict,
+    vol.Optional(ATTR_PARAMS): vol.Any(cv.Dict, cv.ensure_list),
 })
 
 SERVICE_TO_METHOD = {
@@ -78,7 +76,6 @@ SERVICE_TO_METHOD = {
 }
 
 DEFAULT_NAME = 'Vacuum cleaner robot'
-DEFAULT_ICON = 'mdi:roomba'
 
 SUPPORT_TURN_ON = 1
 SUPPORT_TURN_OFF = 2
@@ -183,10 +180,6 @@ def async_setup(hass, config):
 
     yield from component.async_setup(config)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     @asyncio.coroutine
     def async_handle_vacuum_service(service):
         """Map services to methods on VacuumDevice."""
@@ -200,13 +193,7 @@ def async_setup(hass, config):
             yield from getattr(vacuum, method['method'])(**params)
             if not vacuum.should_poll:
                 continue
-
-            update_coro = hass.async_add_job(
-                vacuum.async_update_ha_state(True))
-            if hasattr(vacuum, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(vacuum.async_update_ha_state(True))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
@@ -216,7 +203,7 @@ def async_setup(hass, config):
             'schema', VACUUM_SERVICE_SCHEMA)
         hass.services.async_register(
             DOMAIN, service, async_handle_vacuum_service,
-            descriptions.get(service), schema=schema)
+            schema=schema)
 
     return True
 

@@ -87,7 +87,7 @@ class SCSGate(object):
         self._logger.debug("Received message {}".format(message))
         if not isinstance(message, StateMessage) and \
            not isinstance(message, ScenarioTriggeredMessage):
-            msg = "Ignored message {} - not releavant type".format(
+            msg = "Ignored message {} - not relevant type".format(
                 message)
             self._logger.debug(msg)
             return
@@ -109,7 +109,7 @@ class SCSGate(object):
                 self._logger.error(msg)
         else:
             self._logger.info(
-                "Ignoring state message for device {} because unknonw".format(
+                "Ignoring state message for device {} because unknown".format(
                     message.entity))
 
     @property

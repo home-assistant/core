@@ -128,13 +128,13 @@ class VelbusFan(FanEntity):
         """Get the list of available speeds."""
         return [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def turn_on(self, speed, **kwargs):
+    def turn_on(self, speed=None, **kwargs):
         """Turn on the entity."""
         if speed is None:
             speed = SPEED_MEDIUM
         self.set_speed(speed)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn off the entity."""
         self.set_speed(STATE_OFF)
 

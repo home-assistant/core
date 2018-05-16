@@ -8,4 +8,4 @@ set_theme:
       example: 'light'
 
 reload_themes:
-  description: Reload themes from yaml config.
+  description: Reload themes from yaml configuration.

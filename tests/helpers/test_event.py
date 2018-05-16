@@ -5,11 +5,14 @@ import unittest
 from datetime import datetime, timedelta
 
 from astral import Astral
+import pytest
 
+from homeassistant.core import callback
 from homeassistant.setup import setup_component
 import homeassistant.core as ha
 from homeassistant.const import MATCH_ALL
 from homeassistant.helpers.event import (
+    async_call_later,
     track_point_in_utc_time,
     track_point_in_time,
     track_utc_time_change,
@@ -51,7 +54,7 @@ class TestEventHelpers(unittest.TestCase):
         runs = []
 
         track_point_in_utc_time(
-            self.hass, lambda x: runs.append(1), birthday_paulus)
+            self.hass, callback(lambda x: runs.append(1)), birthday_paulus)
 
         self._send_time_changed(before_birthday)
         self.hass.block_till_done()
@@ -67,14 +70,14 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(1, len(runs))
 
         track_point_in_time(
-            self.hass, lambda x: runs.append(1), birthday_paulus)
+            self.hass, callback(lambda x: runs.append(1)), birthday_paulus)
 
         self._send_time_changed(after_birthday)
         self.hass.block_till_done()
         self.assertEqual(2, len(runs))
 
         unsub = track_point_in_time(
-            self.hass, lambda x: runs.append(1), birthday_paulus)
+            self.hass, callback(lambda x: runs.append(1)), birthday_paulus)
         unsub()
 
         self._send_time_changed(after_birthday)
@@ -274,7 +277,8 @@ class TestEventHelpers(unittest.TestCase):
             thread_runs.append(1)
 
         track_same_state(
-            self.hass, 'on', period, thread_run_callback,
+            self.hass, period, thread_run_callback,
+            lambda _, _2, to_s: to_s.state == 'on',
             entity_ids='light.Bowl')
 
         @ha.callback
@@ -282,7 +286,8 @@ class TestEventHelpers(unittest.TestCase):
             callback_runs.append(1)
 
         track_same_state(
-            self.hass, 'on', period, callback_run_callback,
+            self.hass, period, callback_run_callback,
+            lambda _, _2, to_s: to_s.state == 'on',
             entity_ids='light.Bowl')
 
         @asyncio.coroutine
@@ -290,7 +295,8 @@ class TestEventHelpers(unittest.TestCase):
             coroutine_runs.append(1)
 
         track_same_state(
-            self.hass, 'on', period, coroutine_run_callback)
+            self.hass, period, coroutine_run_callback,
+            lambda _, _2, to_s: to_s.state == 'on')
 
         # Adding state to state machine
         self.hass.states.set("light.Bowl", "on")
@@ -317,7 +323,8 @@ class TestEventHelpers(unittest.TestCase):
             callback_runs.append(1)
 
         track_same_state(
-            self.hass, 'on', period, callback_run_callback,
+            self.hass, period, callback_run_callback,
+            lambda _, _2, to_s: to_s.state == 'on',
             entity_ids='light.Bowl')
 
         # Adding state to state machine
@@ -349,11 +356,11 @@ class TestEventHelpers(unittest.TestCase):
         @ha.callback
         def async_check_func(entity, from_s, to_s):
             check_func.append((entity, from_s, to_s))
-            return 'on'
+            return True
 
         track_same_state(
-            self.hass, 'on', period, callback_run_callback,
-            entity_ids='light.Bowl', async_check_func=async_check_func)
+            self.hass, period, callback_run_callback,
+            entity_ids='light.Bowl', async_check_same_func=async_check_func)
 
         # Adding state to state machine
         self.hass.states.set("light.Bowl", "on")
@@ -630,9 +637,29 @@ class TestEventHelpers(unittest.TestCase):
         """Test periodic tasks with wrong input."""
         specific_runs = []
 
-        track_utc_time_change(
-            self.hass, lambda x: specific_runs.append(1), year='/two')
+        with pytest.raises(ValueError):
+            track_utc_time_change(
+                self.hass, lambda x: specific_runs.append(1), year='/two')
 
         self._send_time_changed(datetime(2014, 5, 2, 0, 0, 0))
         self.hass.block_till_done()
         self.assertEqual(0, len(specific_runs))
+
+
+@asyncio.coroutine
+def test_async_call_later(hass):
+    """Test calling an action later."""
+    def action(): pass
+    now = datetime(2017, 12, 19, 15, 40, 0, tzinfo=dt_util.UTC)
+
+    with patch('homeassistant.helpers.event'
+               '.async_track_point_in_utc_time') as mock, \
+            patch('homeassistant.util.dt.utcnow', return_value=now):
+        remove = async_call_later(hass, 3, action)
+
+    assert len(mock.mock_calls) == 1
+    p_hass, p_action, p_point = mock.mock_calls[0][1]
+    assert hass is hass
+    assert p_action is action
+    assert p_point == now + timedelta(seconds=3)
+    assert remove is mock()

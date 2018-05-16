@@ -4,14 +4,11 @@ Component that will help set the level of logging for components.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logger/
 """
-import asyncio
 import logging
-import os
 from collections import OrderedDict
 
 import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'logger'
@@ -75,8 +72,7 @@ class HomeAssistantLogFilter(logging.Filter):
         return record.levelno >= default
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the logger component."""
     logfilter = {}
 
@@ -95,7 +91,7 @@ def async_setup(hass, config):
         if LOGGER_LOGS in logfilter:
             logs.update(logfilter[LOGGER_LOGS])
 
-        # Add new logpoints mapped to correc severity
+        # Add new logpoints mapped to correct severity
         for key, value in logpoints.items():
             logs[key] = LOGSEVERITY[value]
 
@@ -118,18 +114,12 @@ def async_setup(hass, config):
     if LOGGER_LOGS in config.get(DOMAIN):
         set_log_levels(config.get(DOMAIN)[LOGGER_LOGS])
 
-    @asyncio.coroutine
-    def async_service_handler(service):
+    async def async_service_handler(service):
         """Handle logger services."""
         set_log_levels(service.data)
 
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-
     hass.services.async_register(
         DOMAIN, SERVICE_SET_LEVEL, async_service_handler,
-        descriptions[DOMAIN].get(SERVICE_SET_LEVEL),
         schema=SERVICE_SET_LEVEL_SCHEMA)
 
     return True

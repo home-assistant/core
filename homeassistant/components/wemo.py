@@ -14,19 +14,20 @@ from homeassistant.helpers import config_validation as cv
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.20']
+REQUIREMENTS = ['pywemo==0.4.25']
 
 DOMAIN = 'wemo'
 
 # Mapping from Wemo model_name to component.
 WEMO_MODEL_DISPATCH = {
     'Bridge':  'light',
+    'CoffeeMaker': 'switch',
+    'Dimmer': 'light',
     'Insight': 'switch',
+    'LightSwitch': 'switch',
     'Maker':   'switch',
     'Sensor':  'binary_sensor',
-    'Socket':  'switch',
-    'LightSwitch': 'switch',
-    'CoffeeMaker': 'switch'
+    'Socket':  'switch'
 }
 
 SUBSCRIPTION_REGISTRY = None

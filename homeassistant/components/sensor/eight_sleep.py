@@ -65,7 +65,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class EightHeatSensor(EightSleepHeatEntity):
-    """Representation of a eight sleep heat-based sensor."""
+    """Representation of an eight sleep heat-based sensor."""
 
     def __init__(self, name, eight, sensor):
         """Initialize the sensor."""
@@ -116,7 +116,7 @@ class EightHeatSensor(EightSleepHeatEntity):
 
 
 class EightUserSensor(EightSleepUserEntity):
-    """Representation of a eight sleep user-based sensor."""
+    """Representation of an eight sleep user-based sensor."""
 
     def __init__(self, name, eight, sensor, units):
         """Initialize the sensor."""
@@ -232,7 +232,7 @@ class EightUserSensor(EightSleepUserEntity):
 
 
 class EightRoomSensor(EightSleepUserEntity):
-    """Representation of a eight sleep room sensor."""
+    """Representation of an eight sleep room sensor."""
 
     def __init__(self, name, eight, sensor, units):
         """Initialize the sensor."""

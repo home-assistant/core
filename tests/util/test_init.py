@@ -1,6 +1,6 @@
 """Test Home Assistant util methods."""
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 
 from homeassistant import util
@@ -266,3 +266,36 @@ class TestUtil(unittest.TestCase):
 
         self.assertTrue(tester.hello())
         self.assertTrue(tester.goodbye())
+
+    @patch.object(util, 'random')
+    def test_get_random_string(self, mock_random):
+        """Test get random string."""
+        results = ['A', 'B', 'C']
+
+        def mock_choice(choices):
+            return results.pop(0)
+
+        generator = MagicMock()
+        generator.choice.side_effect = mock_choice
+        mock_random.SystemRandom.return_value = generator
+
+        assert util.get_random_string(length=3) == 'ABC'
+
+
+async def test_throttle_async():
+    """Test Throttle decorator with async method."""
+    @util.Throttle(timedelta(seconds=2))
+    async def test_method():
+        """Only first call should return a value."""
+        return True
+
+    assert (await test_method()) is True
+    assert (await test_method()) is None
+
+    @util.Throttle(timedelta(seconds=2), timedelta(seconds=0.1))
+    async def test_method2():
+        """Only first call should return a value."""
+        return True
+
+    assert (await test_method2()) is True
+    assert (await test_method2()) is None

@@ -1,89 +1,77 @@
 """The tests for the panel_custom component."""
-import os
-import shutil
-import unittest
+import asyncio
 from unittest.mock import Mock, patch
 
+import pytest
+
 from homeassistant import setup
-from homeassistant.components import panel_custom
+from homeassistant.components import frontend
 
-from tests.common import get_test_home_assistant
+from tests.common import mock_component
 
 
-@patch('homeassistant.components.frontend.setup',
-       autospec=True, return_value=True)
-class TestPanelCustom(unittest.TestCase):
-    """Test the panel_custom component."""
+@pytest.fixture(autouse=True)
+def mock_frontend_loaded(hass):
+    """Mock frontend is loaded."""
+    mock_component(hass, 'frontend')
 
-    def setup_method(self, method):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
-        shutil.rmtree(self.hass.config.path(panel_custom.PANEL_DIR),
-                      ignore_errors=True)
+@asyncio.coroutine
+def test_webcomponent_custom_path_not_found(hass):
+    """Test if a web component is found in config panels dir."""
+    filename = 'mock.file'
 
-    @patch('homeassistant.components.panel_custom.register_panel')
-    def test_webcomponent_in_panels_dir(self, mock_register, _mock_setup):
-        """Test if a web component is found in config panels dir."""
-        config = {
-            'panel_custom': {
-                'name': 'todomvc',
-            }
+    config = {
+        'panel_custom': {
+            'name': 'todomvc',
+            'webcomponent_path': filename,
+            'sidebar_title': 'Sidebar Title',
+            'sidebar_icon': 'mdi:iconicon',
+            'url_path': 'nice_url',
+            'config': 5,
         }
+    }
 
-        assert not setup.setup_component(self.hass, 'panel_custom', config)
-        assert not mock_register.called
+    with patch('os.path.isfile', Mock(return_value=False)):
+        result = yield from setup.async_setup_component(
+            hass, 'panel_custom', config
+        )
+        assert not result
+        assert len(hass.data.get(frontend.DATA_PANELS, {})) == 0
 
-        path = self.hass.config.path(panel_custom.PANEL_DIR)
-        os.mkdir(path)
-        self.hass.data.pop(setup.DATA_SETUP)
 
-        with open(os.path.join(path, 'todomvc.html'), 'a'):
-            assert setup.setup_component(self.hass, 'panel_custom', config)
-            assert mock_register.called
+@asyncio.coroutine
+def test_webcomponent_custom_path(hass):
+    """Test if a web component is found in config panels dir."""
+    filename = 'mock.file'
 
-    @patch('homeassistant.components.panel_custom.register_panel')
-    def test_webcomponent_custom_path(self, mock_register, _mock_setup):
-        """Test if a web component is found in config panels dir."""
-        filename = 'mock.file'
-
-        config = {
-            'panel_custom': {
-                'name': 'todomvc',
-                'webcomponent_path': filename,
-                'sidebar_title': 'Sidebar Title',
-                'sidebar_icon': 'mdi:iconicon',
-                'url_path': 'nice_url',
-                'config': 5,
-            }
+    config = {
+        'panel_custom': {
+            'name': 'todomvc',
+            'webcomponent_path': filename,
+            'sidebar_title': 'Sidebar Title',
+            'sidebar_icon': 'mdi:iconicon',
+            'url_path': 'nice_url',
+            'config': 5,
         }
+    }
 
-        with patch('os.path.isfile', Mock(return_value=False)):
-            assert not setup.setup_component(
-                self.hass, 'panel_custom', config
+    with patch('os.path.isfile', Mock(return_value=True)):
+        with patch('os.access', Mock(return_value=True)):
+            result = yield from setup.async_setup_component(
+                hass, 'panel_custom', config
             )
-            assert not mock_register.called
+            assert result
 
-        self.hass.data.pop(setup.DATA_SETUP)
+            panels = hass.data.get(frontend.DATA_PANELS, [])
 
-        with patch('os.path.isfile', Mock(return_value=True)):
-            with patch('os.access', Mock(return_value=True)):
-                assert setup.setup_component(
-                    self.hass, 'panel_custom', config
-                )
+            assert len(panels) == 1
+            assert 'nice_url' in panels
 
-                assert mock_register.called
+            panel = panels['nice_url']
 
-                args = mock_register.mock_calls[0][1]
-                assert args == (self.hass, 'todomvc', filename)
-
-                kwargs = mock_register.mock_calls[0][2]
-                assert kwargs == {
-                    'config': 5,
-                    'url_path': 'nice_url',
-                    'sidebar_icon': 'mdi:iconicon',
-                    'sidebar_title': 'Sidebar Title'
-                }
+            assert panel.config == 5
+            assert panel.frontend_url_path == 'nice_url'
+            assert panel.sidebar_icon == 'mdi:iconicon'
+            assert panel.sidebar_title == 'Sidebar Title'
+            assert panel.path == filename

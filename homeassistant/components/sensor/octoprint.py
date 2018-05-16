@@ -32,7 +32,7 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
@@ -45,7 +45,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
     tools = octoprint_api.get_tools()
-    _LOGGER.error(str(tools))
 
     if "Temperatures" in monitored_conditions:
         if not tools:

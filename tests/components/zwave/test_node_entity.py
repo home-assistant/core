@@ -43,7 +43,7 @@ def test_node_event_activated(hass, mock_openzwave):
     node = mock_zwave.MockNode(node_id=11)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave, True)
+        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave)
 
     assert len(mock_receivers) == 1
 
@@ -86,7 +86,7 @@ def test_scene_activated(hass, mock_openzwave):
     node = mock_zwave.MockNode(node_id=11)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave, True)
+        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave)
 
     assert len(mock_receivers) == 1
 
@@ -129,7 +129,7 @@ def test_central_scene_activated(hass, mock_openzwave):
     node = mock_zwave.MockNode(node_id=11)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave, True)
+        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave)
 
     assert len(mock_receivers) == 1
 
@@ -182,10 +182,8 @@ class TestZWaveNodeEntity(unittest.TestCase):
             query_stage='Dynamic', is_awake=True, is_ready=False,
             is_failed=False, is_info_received=True, max_baud_rate=40000,
             is_zwave_plus=False, capabilities=[], neighbors=[], location=None)
-        self.node.manufacturer_name = 'Test Manufacturer'
-        self.node.product_name = 'Test Product'
         self.entity = node_entity.ZWaveNodeEntity(self.node,
-                                                  self.zwave_network, True)
+                                                  self.zwave_network)
 
     def test_network_node_changed_from_value(self):
         """Test for network_node_changed."""
@@ -226,8 +224,6 @@ class TestZWaveNodeEntity(unittest.TestCase):
             {'node_id': self.node.node_id,
              'node_name': 'Mock Node',
              'manufacturer_name': 'Test Manufacturer',
-             'old_entity_id': 'zwave.mock_node_567',
-             'new_entity_id': 'zwave.mock_node',
              'product_name': 'Test Product'},
             self.entity.device_state_attributes)
 
@@ -286,8 +282,6 @@ class TestZWaveNodeEntity(unittest.TestCase):
             {'node_id': self.node.node_id,
              'node_name': 'Mock Node',
              'manufacturer_name': 'Test Manufacturer',
-             'old_entity_id': 'zwave.mock_node_567',
-             'new_entity_id': 'zwave.mock_node',
              'product_name': 'Test Product',
              'query_stage': 'Dynamic',
              'is_awake': True,
@@ -330,38 +324,45 @@ class TestZWaveNodeEntity(unittest.TestCase):
         """Test state property."""
         self.node.is_ready = False
         self.entity.node_changed()
-        self.assertEqual('Dynamic', self.entity.state)
+        self.assertEqual('initializing', self.entity.state)
 
         self.node.is_failed = True
+        self.node.query_stage = 'Complete'
         self.entity.node_changed()
-        self.assertEqual('Dead (Dynamic)', self.entity.state)
+        self.assertEqual('dead', self.entity.state)
 
         self.node.is_failed = False
         self.node.is_awake = False
         self.entity.node_changed()
-        self.assertEqual('Sleeping (Dynamic)', self.entity.state)
+        self.assertEqual('sleeping', self.entity.state)
 
     def test_state_ready(self):
         """Test state property."""
+        self.node.query_stage = 'Complete'
         self.node.is_ready = True
         self.entity.node_changed()
-        self.assertEqual('Ready', self.entity.state)
+        self.assertEqual('ready', self.entity.state)
 
         self.node.is_failed = True
         self.entity.node_changed()
-        self.assertEqual('Dead', self.entity.state)
+        self.assertEqual('dead', self.entity.state)
 
         self.node.is_failed = False
         self.node.is_awake = False
         self.entity.node_changed()
-        self.assertEqual('Sleeping', self.entity.state)
+        self.assertEqual('sleeping', self.entity.state)
 
     def test_not_polled(self):
         """Test should_poll property."""
         self.assertFalse(self.entity.should_poll)
 
+    def test_unique_id(self):
+        """Test unique_id."""
+        self.assertEqual('node-567', self.entity.unique_id)
 
-def test_sub_status():
-    """Test sub_status function."""
-    assert node_entity.sub_status('Status', 'Stage') == 'Status (Stage)'
-    assert node_entity.sub_status('Status', '') == 'Status'
+    def test_unique_id_missing_data(self):
+        """Test unique_id."""
+        self.node.manufacturer_name = None
+        entity = node_entity.ZWaveNodeEntity(self.node, self.zwave_network)
+
+        self.assertIsNone(entity.unique_id)

@@ -7,15 +7,15 @@ https://home-assistant.io/components/scene.lifx_cloud/
 import asyncio
 import logging
 
+import aiohttp
+from aiohttp.hdrs import AUTHORIZATION
+import async_timeout
 import voluptuous as vol
 
-import aiohttp
-import async_timeout
-
 from homeassistant.components.scene import Scene
-from homeassistant.const import (CONF_PLATFORM, CONF_TOKEN, CONF_TIMEOUT)
+from homeassistant.const import CONF_TOKEN, CONF_TIMEOUT, CONF_PLATFORM
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import (async_get_clientsession)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     timeout = config.get(CONF_TIMEOUT)
 
     headers = {
-        "Authorization": "Bearer %s" % token,
+        AUTHORIZATION: "Bearer {}".format(token),
     }
 
     url = LIFX_API_URL.format('scenes')

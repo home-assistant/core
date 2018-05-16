@@ -131,7 +131,7 @@ class PAServer():
         self._send_command(str.format(UNLOAD_CMD, module_idx), False)
 
     def get_module_idx(self, sink_name, source_name):
-        """For a sink/source, return it's module id in our cache, if found."""
+        """For a sink/source, return its module id in our cache, if found."""
         result = re.search(str.format(MOD_REGEX, re.escape(sink_name),
                                       re.escape(source_name)),
                            self._current_module_state)

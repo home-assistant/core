@@ -7,17 +7,16 @@ https://home-assistant.io/components/tesla/
 from collections import defaultdict
 import logging
 
-from urllib.error import HTTPError
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
-from homeassistant.helpers import discovery
+    ATTR_BATTERY_LEVEL, CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['teslajsonpy==0.0.11']
+REQUIREMENTS = ['teslajsonpy==0.0.23']
 
 DOMAIN = 'tesla'
 
@@ -39,13 +38,13 @@ NOTIFICATION_ID = 'tesla_integration_notification'
 NOTIFICATION_TITLE = 'Tesla integration setup'
 
 TESLA_COMPONENTS = [
-    'sensor', 'lock', 'climate', 'binary_sensor', 'device_tracker'
+    'sensor', 'lock', 'climate', 'binary_sensor', 'device_tracker', 'switch'
 ]
 
 
 def setup(hass, base_config):
-    """Set up of Tesla platform."""
-    from teslajsonpy.controller import Controller as teslaApi
+    """Set up of Tesla component."""
+    from teslajsonpy import Controller as teslaAPI, TeslaException
 
     config = base_config.get(DOMAIN)
 
@@ -55,11 +54,11 @@ def setup(hass, base_config):
     if hass.data.get(DOMAIN) is None:
         try:
             hass.data[DOMAIN] = {
-                'controller': teslaApi(email, password, update_interval),
+                'controller': teslaAPI(email, password, update_interval),
                 'devices': defaultdict(list)
             }
             _LOGGER.debug("Connected to the Tesla API.")
-        except HTTPError as ex:
+        except TeslaException as ex:
             if ex.code == 401:
                 hass.components.persistent_notification.create(
                     "Error:<br />Please check username and password."
@@ -71,12 +70,11 @@ def setup(hass, base_config):
                     "Error:<br />Can't communicate with Tesla API.<br />"
                     "Error code: {} Reason: {}"
                     "You will need to restart Home Assistant after fixing."
-                    "".format(ex.code, ex.reason),
+                    "".format(ex.code, ex.message),
                     title=NOTIFICATION_TITLE,
                     notification_id=NOTIFICATION_ID)
             _LOGGER.error("Unable to communicate with Tesla API: %s",
-                          ex.reason)
-
+                          ex.message)
             return False
 
     all_devices = hass.data[DOMAIN]['controller'].list_vehicles()
@@ -97,7 +95,7 @@ class TeslaDevice(Entity):
     """Representation of a Tesla device."""
 
     def __init__(self, tesla_device, controller):
-        """Initialisation of the Tesla device."""
+        """Initialise of the Tesla device."""
         self.tesla_device = tesla_device
         self.controller = controller
         self._name = self.tesla_device.name
@@ -110,7 +108,7 @@ class TeslaDevice(Entity):
 
     @property
     def should_poll(self):
-        """Get polling requirement from tesla device."""
+        """Return the polling state."""
         return self.tesla_device.should_poll
 
     @property

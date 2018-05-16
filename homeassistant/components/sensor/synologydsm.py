@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, TEMP_CELSIUS,
-    CONF_MONITORED_CONDITIONS, EVENT_HOMEASSISTANT_START)
+    CONF_MONITORED_CONDITIONS, EVENT_HOMEASSISTANT_START, CONF_DISKS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -21,7 +21,6 @@ REQUIREMENTS = ['python-synology==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DISKS = 'disks'
 CONF_VOLUMES = 'volumes'
 DEFAULT_NAME = 'Synology DSM'
 DEFAULT_PORT = 5000
@@ -79,8 +78,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]),
-    vol.Optional(CONF_DISKS, default=None): cv.ensure_list,
-    vol.Optional(CONF_VOLUMES, default=None): cv.ensure_list,
+    vol.Optional(CONF_DISKS): cv.ensure_list,
+    vol.Optional(CONF_VOLUMES): cv.ensure_list,
 })
 
 
@@ -107,22 +106,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                    if variable in _UTILISATION_MON_COND]
 
         # Handle all volumes
-        volumes = config['volumes']
-        if volumes is None:
-            volumes = api.storage.volumes
-
-        for volume in volumes:
+        for volume in config.get(CONF_VOLUMES, api.storage.volumes):
             sensors += [SynoNasStorageSensor(
                 api, variable, _STORAGE_VOL_MON_COND[variable], volume)
                         for variable in monitored_conditions
                         if variable in _STORAGE_VOL_MON_COND]
 
         # Handle all disks
-        disks = config['disks']
-        if disks is None:
-            disks = api.storage.disks
-
-        for disk in disks:
+        for disk in config.get(CONF_DISKS, api.storage.disks):
             sensors += [SynoNasStorageSensor(
                 api, variable, _STORAGE_DSK_MON_COND[variable], disk)
                         for variable in monitored_conditions
@@ -137,7 +128,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SynoApi(object):
     """Class to interface with Synology DSM API."""
 
-    # pylint: disable=bare-except
     def __init__(self, host, port, username, password, temp_unit):
         """Initialize the API wrapper class."""
         from SynologyDSM import SynologyDSM
@@ -145,7 +135,7 @@ class SynoApi(object):
 
         try:
             self._api = SynologyDSM(host, port, username, password)
-        except:
+        except:  # noqa: E722  # pylint: disable=bare-except
             _LOGGER.error("Error setting up Synology DSM")
 
         # Will be updated when update() gets called.

@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 
-REQUIREMENTS = ['wakeonlan==0.2.2']
+REQUIREMENTS = ['wakeonlan==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class WOLSwitch(SwitchDevice):
     def __init__(self, hass, name, host, mac_address,
                  off_action, broadcast_address):
         """Initialize the WOL switch."""
-        from wakeonlan import wol
+        import wakeonlan
         self._hass = hass
         self._name = name
         self._host = host
@@ -61,7 +61,7 @@ class WOLSwitch(SwitchDevice):
         self._broadcast_address = broadcast_address
         self._off_script = Script(hass, off_action) if off_action else None
         self._state = False
-        self._wol = wol
+        self._wol = wakeonlan
 
     @property
     def should_poll(self):
@@ -78,7 +78,7 @@ class WOLSwitch(SwitchDevice):
         """Return the name of the switch."""
         return self._name
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         if self._broadcast_address:
             self._wol.send_magic_packet(
@@ -86,7 +86,7 @@ class WOLSwitch(SwitchDevice):
         else:
             self._wol.send_magic_packet(self._mac_address)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off if an off action is present."""
         if self._off_script is not None:
             self._off_script.run()

@@ -66,7 +66,7 @@ class APCUPSdData(object):
     """
 
     def __init__(self, host, port):
-        """Initialize the data oject."""
+        """Initialize the data object."""
         from apcaccess import status
         self._host = host
         self._port = port

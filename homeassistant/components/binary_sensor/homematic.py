@@ -25,6 +25,7 @@ SENSOR_TYPES_CLASS = {
     'RemoteMotion': None,
     'WeatherSensor': None,
     'TiltSensor': None,
+    'PresenceIP': 'motion',
 }
 
 

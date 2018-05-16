@@ -9,11 +9,11 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pylast==1.9.0']
+REQUIREMENTS = ['pylast==2.2.0']
 
 ATTR_LAST_PLAYED = 'last_played'
 ATTR_PLAY_COUNT = 'play_count'

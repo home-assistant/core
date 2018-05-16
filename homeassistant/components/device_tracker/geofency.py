@@ -21,6 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
 
+ATTR_CURRENT_LATITUDE = 'currentLatitude'
+ATTR_CURRENT_LONGITUDE = 'currentLongitude'
+
 BEACON_DEV_PREFIX = 'beacon'
 CONF_MOBILE_BEACONS = 'mobile_beacons'
 
@@ -72,6 +75,9 @@ class GeofencyView(HomeAssistantView):
                 location_name = data['name']
             else:
                 location_name = STATE_NOT_HOME
+                if ATTR_CURRENT_LATITUDE in data:
+                    data[ATTR_LATITUDE] = data[ATTR_CURRENT_LATITUDE]
+                    data[ATTR_LONGITUDE] = data[ATTR_CURRENT_LONGITUDE]
 
             return (yield from self._set_location(hass, data, location_name))
 
@@ -96,8 +102,12 @@ class GeofencyView(HomeAssistantView):
         data['device'] = slugify(data['device'])
         data['name'] = slugify(data['name'])
 
-        data[ATTR_LATITUDE] = float(data[ATTR_LATITUDE])
-        data[ATTR_LONGITUDE] = float(data[ATTR_LONGITUDE])
+        gps_attributes = [ATTR_LATITUDE, ATTR_LONGITUDE,
+                          ATTR_CURRENT_LATITUDE, ATTR_CURRENT_LONGITUDE]
+
+        for attribute in gps_attributes:
+            if attribute in data:
+                data[attribute] = float(data[attribute])
 
         return data
 
@@ -110,8 +120,7 @@ class GeofencyView(HomeAssistantView):
         """Return name of device tracker."""
         if 'beaconUUID' in data:
             return "{}_{}".format(BEACON_DEV_PREFIX, data['name'])
-        else:
-            return data['device']
+        return data['device']
 
     @asyncio.coroutine
     def _set_location(self, hass, data, location_name):

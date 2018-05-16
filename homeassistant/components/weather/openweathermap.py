@@ -4,27 +4,30 @@ Support for the OpenWeatherMap (OWM) service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/weather.openweathermap/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.weather import (
-    WeatherEntity, PLATFORM_SCHEMA, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
-from homeassistant.const import (CONF_API_KEY, CONF_NAME, CONF_LATITUDE,
-                                 CONF_LONGITUDE, STATE_UNKNOWN, TEMP_CELSIUS)
+    ATTR_FORECAST_CONDITION, ATTR_FORECAST_PRECIPITATION, ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
+from homeassistant.const import (
+    CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, STATE_UNKNOWN,
+    TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.7.1']
+REQUIREMENTS = ['pyowm==2.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'OpenWeatherMap'
 ATTRIBUTION = 'Data provided by OpenWeatherMap'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+DEFAULT_NAME = 'OpenWeatherMap'
+
 MIN_TIME_BETWEEN_FORECAST_UPDATES = timedelta(minutes=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 CONDITION_CLASSES = {
     'cloudy': [804],
@@ -135,15 +138,30 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        return [{
-            ATTR_FORECAST_TIME: entry.get_reference_time('iso'),
-            ATTR_FORECAST_TEMP: entry.get_temperature('celsius').get('temp')}
-                for entry in self.forecast_data.get_weathers()]
+        data = []
+        for entry in self.forecast_data.get_weathers():
+            data.append({
+                ATTR_FORECAST_TIME: entry.get_reference_time('unix') * 1000,
+                ATTR_FORECAST_TEMP:
+                    entry.get_temperature('celsius').get('temp'),
+                ATTR_FORECAST_PRECIPITATION: entry.get_rain().get('3h'),
+                ATTR_FORECAST_CONDITION:
+                    [k for k, v in CONDITION_CLASSES.items()
+                     if entry.get_weather_code() in v][0]
+            })
+        return data
 
     def update(self):
         """Get the latest data from OWM and updates the states."""
-        self._owm.update()
-        self._owm.update_forecast()
+        from pyowm.exceptions.api_call_error import APICallError
+
+        try:
+            self._owm.update()
+            self._owm.update_forecast()
+        except APICallError:
+            _LOGGER.error("Exception when calling OWM web API to update data")
+            return
+
         self.data = self._owm.data
         self.forecast_data = self._owm.forecast_data
 
@@ -171,9 +189,16 @@ class WeatherData(object):
 
     @Throttle(MIN_TIME_BETWEEN_FORECAST_UPDATES)
     def update_forecast(self):
-        """Get the lastest forecast from OpenWeatherMap."""
-        fcd = self.owm.three_hours_forecast_at_coords(
-            self.latitude, self.longitude)
+        """Get the latest forecast from OpenWeatherMap."""
+        from pyowm.exceptions.api_call_error import APICallError
+
+        try:
+            fcd = self.owm.three_hours_forecast_at_coords(
+                self.latitude, self.longitude)
+        except APICallError:
+            _LOGGER.error("Exception when calling OWM web API "
+                          "to update forecast")
+            return
 
         if fcd is None:
             _LOGGER.warning("Failed to fetch forecast data from OWM")

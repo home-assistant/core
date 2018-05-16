@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Avion switch."""
-    # pylint: disable=import-error
+    # pylint: disable=import-error, no-member
     import avion
 
     lights = []
@@ -70,7 +70,7 @@ class AvionLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        # pylint: disable=import-error
+        # pylint: disable=import-error, no-member
         import avion
 
         self._name = device['name']
@@ -83,7 +83,7 @@ class AvionLight(Light):
     @property
     def unique_id(self):
         """Return the ID of this light."""
-        return "{}.{}".format(self.__class__, self._address)
+        return self._address
 
     @property
     def name(self):
@@ -117,7 +117,7 @@ class AvionLight(Light):
 
     def set_state(self, brightness):
         """Set the state of this lamp to the provided brightness."""
-        # pylint: disable=import-error
+        # pylint: disable=import-error, no-member
         import avion
 
         # Bluetooth LE is unreliable, and the connection may drop at any

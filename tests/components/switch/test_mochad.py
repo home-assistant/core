@@ -16,6 +16,7 @@ def pymochad_mock():
     """Mock pymochad."""
     with mock.patch.dict('sys.modules', {
         'pymochad': mock.MagicMock(),
+        'pymochad.exceptions': mock.MagicMock(),
     }):
         yield
 
@@ -32,7 +33,7 @@ class TestMochadSwitchSetup(unittest.TestCase):
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
-        """Stop everyhing that was started."""
+        """Stop everything that was started."""
         self.hass.stop()
 
     @mock.patch('homeassistant.components.switch.mochad.MochadSwitch')

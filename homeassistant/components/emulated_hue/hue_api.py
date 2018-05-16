@@ -24,9 +24,6 @@ from homeassistant.components.http import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_EMULATED_HUE = 'emulated_hue'
-ATTR_EMULATED_HUE_NAME = 'emulated_hue_name'
-
 HUE_API_STATE_ON = 'on'
 HUE_API_STATE_BRI = 'bri'
 
@@ -54,6 +51,29 @@ class HueUsernameView(HomeAssistantView):
         return self.json([{'success': {'username': '12345678901234567890'}}])
 
 
+class HueGroupView(HomeAssistantView):
+    """Group handler to get Logitech Pop working."""
+
+    url = '/api/{username}/groups/0/action'
+    name = 'emulated_hue:groups:state'
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def put(self, request, username):
+        """Process a request to make the Logitech Pop working."""
+        return self.json([{
+            'error': {
+                'address': '/groups/0/action/scene',
+                'type': 7,
+                'description': 'invalid value, dummy for parameter, scene'
+            }
+        }])
+
+
 class HueAllLightsStateView(HomeAssistantView):
     """Handle requests for getting and setting info about entities."""
 
@@ -77,7 +97,7 @@ class HueAllLightsStateView(HomeAssistantView):
 
                 number = self.config.entity_id_to_number(entity.entity_id)
                 json_response[number] = entity_to_json(
-                    entity, state, brightness)
+                    self.config, entity, state, brightness)
 
         return self.json(json_response)
 
@@ -110,7 +130,7 @@ class HueOneLightStateView(HomeAssistantView):
 
         state, brightness = get_entity_state(self.config, entity)
 
-        json_response = entity_to_json(entity, state, brightness)
+        json_response = entity_to_json(self.config, entity, state, brightness)
 
         return self.json(json_response)
 
@@ -287,6 +307,11 @@ def parse_hue_api_put_light_body(request_json, entity):
                 report_brightness = True
                 result = (brightness > 0)
 
+        elif entity.domain == "scene":
+            brightness = None
+            report_brightness = False
+            result = True
+
         elif (entity.domain == "script" or
               entity.domain == "media_player" or
               entity.domain == "fan"):
@@ -339,10 +364,8 @@ def get_entity_state(config, entity):
     return (final_state, final_brightness)
 
 
-def entity_to_json(entity, is_on=None, brightness=None):
+def entity_to_json(config, entity, is_on=None, brightness=None):
     """Convert an entity to its Hue bridge JSON representation."""
-    name = entity.attributes.get(ATTR_EMULATED_HUE_NAME, entity.name)
-
     return {
         'state':
         {
@@ -351,7 +374,7 @@ def entity_to_json(entity, is_on=None, brightness=None):
             'reachable': True
         },
         'type': 'Dimmable light',
-        'name': name,
+        'name': config.get_entity_name(entity),
         'modelid': 'HASS123',
         'uniqueid': entity.entity_id,
         'swversion': '123'

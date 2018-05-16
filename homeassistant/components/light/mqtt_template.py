@@ -4,7 +4,6 @@ Support for MQTT Template lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mqtt_template/
 """
-import asyncio
 import logging
 import voluptuous as vol
 
@@ -12,13 +11,17 @@ from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, Light, PLATFORM_SCHEMA,
+    ATTR_HS_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, Light, PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
+    SUPPORT_COLOR, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, STATE_ON, STATE_OFF
 from homeassistant.components.mqtt import (
-    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
+    CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
+    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
+    MqttAvailability)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
+from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,11 +63,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS):
         vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
-})
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up a MQTT Template light."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -95,16 +98,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         },
         config.get(CONF_OPTIMISTIC),
         config.get(CONF_QOS),
-        config.get(CONF_RETAIN)
+        config.get(CONF_RETAIN),
+        config.get(CONF_AVAILABILITY_TOPIC),
+        config.get(CONF_PAYLOAD_AVAILABLE),
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
     )])
 
 
-class MqttTemplate(Light):
+class MqttTemplate(MqttAvailability, Light):
     """Representation of a MQTT Template light."""
 
     def __init__(self, hass, name, effect_list, topics, templates, optimistic,
-                 qos, retain):
+                 qos, retain, availability_topic, payload_available,
+                 payload_not_available):
         """Initialize a MQTT Template light."""
+        super().__init__(availability_topic, qos, payload_available,
+                         payload_not_available)
         self._name = name
         self._effect_list = effect_list
         self._topics = topics
@@ -134,21 +143,21 @@ class MqttTemplate(Light):
         if (self._templates[CONF_RED_TEMPLATE] is not None and
                 self._templates[CONF_GREEN_TEMPLATE] is not None and
                 self._templates[CONF_BLUE_TEMPLATE] is not None):
-            self._rgb = [0, 0, 0]
+            self._hs = [0, 0]
         else:
-            self._rgb = None
+            self._hs = None
         self._effect = None
 
         for tpl in self._templates.values():
             if tpl is not None:
                 tpl.hass = hass
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Subscribe to MQTT events.
+    async def async_added_to_hass(self):
+        """Subscribe to MQTT events."""
+        await super().async_added_to_hass()
 
-        This method is a coroutine.
-        """
+        last_state = await async_get_last_state(self.hass, self.entity_id)
+
         @callback
         def state_received(topic, payload, qos):
             """Handle new MQTT messages."""
@@ -179,17 +188,18 @@ class MqttTemplate(Light):
                 except ValueError:
                     _LOGGER.warning("Invalid color temperature value received")
 
-            if self._rgb is not None:
+            if self._hs is not None:
                 try:
-                    self._rgb[0] = int(
+                    red = int(
                         self._templates[CONF_RED_TEMPLATE].
                         async_render_with_possible_json_value(payload))
-                    self._rgb[1] = int(
+                    green = int(
                         self._templates[CONF_GREEN_TEMPLATE].
                         async_render_with_possible_json_value(payload))
-                    self._rgb[2] = int(
+                    blue = int(
                         self._templates[CONF_BLUE_TEMPLATE].
                         async_render_with_possible_json_value(payload))
+                    self._hs = color_util.color_RGB_to_hs(red, green, blue)
                 except ValueError:
                     _LOGGER.warning("Invalid color value received")
 
@@ -211,12 +221,25 @@ class MqttTemplate(Light):
                 else:
                     _LOGGER.warning("Unsupported effect value received")
 
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
         if self._topics[CONF_STATE_TOPIC] is not None:
-            yield from mqtt.async_subscribe(
+            await mqtt.async_subscribe(
                 self.hass, self._topics[CONF_STATE_TOPIC], state_received,
                 self._qos)
+
+        if self._optimistic and last_state:
+            self._state = last_state.state == STATE_ON
+            if last_state.attributes.get(ATTR_BRIGHTNESS):
+                self._brightness = last_state.attributes.get(ATTR_BRIGHTNESS)
+            if last_state.attributes.get(ATTR_HS_COLOR):
+                self._hs = last_state.attributes.get(ATTR_HS_COLOR)
+            if last_state.attributes.get(ATTR_COLOR_TEMP):
+                self._color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
+            if last_state.attributes.get(ATTR_EFFECT):
+                self._effect = last_state.attributes.get(ATTR_EFFECT)
+            if last_state.attributes.get(ATTR_WHITE_VALUE):
+                self._white_value = last_state.attributes.get(ATTR_WHITE_VALUE)
 
     @property
     def brightness(self):
@@ -229,9 +252,9 @@ class MqttTemplate(Light):
         return self._color_temp
 
     @property
-    def rgb_color(self):
-        """Return the RGB color value [int, int, int]."""
-        return self._rgb
+    def hs_color(self):
+        """Return the hs color value [int, int]."""
+        return self._hs
 
     @property
     def white_value(self):
@@ -271,8 +294,7 @@ class MqttTemplate(Light):
         """Return the current effect."""
         return self._effect
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the entity on.
 
         This method is a coroutine.
@@ -293,13 +315,18 @@ class MqttTemplate(Light):
             if self._optimistic:
                 self._color_temp = kwargs[ATTR_COLOR_TEMP]
 
-        if ATTR_RGB_COLOR in kwargs:
-            values['red'] = kwargs[ATTR_RGB_COLOR][0]
-            values['green'] = kwargs[ATTR_RGB_COLOR][1]
-            values['blue'] = kwargs[ATTR_RGB_COLOR][2]
+        if ATTR_HS_COLOR in kwargs:
+            hs_color = kwargs[ATTR_HS_COLOR]
+            brightness = kwargs.get(
+                ATTR_BRIGHTNESS, self._brightness if self._brightness else 255)
+            rgb = color_util.color_hsv_to_RGB(
+                hs_color[0], hs_color[1], brightness / 255 * 100)
+            values['red'] = rgb[0]
+            values['green'] = rgb[1]
+            values['blue'] = rgb[2]
 
             if self._optimistic:
-                self._rgb = kwargs[ATTR_RGB_COLOR]
+                self._hs = kwargs[ATTR_HS_COLOR]
 
         if ATTR_WHITE_VALUE in kwargs:
             values['white_value'] = int(kwargs[ATTR_WHITE_VALUE])
@@ -323,10 +350,9 @@ class MqttTemplate(Light):
         )
 
         if self._optimistic:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the entity off.
 
         This method is a coroutine.
@@ -345,7 +371,7 @@ class MqttTemplate(Light):
         )
 
         if self._optimistic:
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
     @property
     def supported_features(self):
@@ -353,8 +379,8 @@ class MqttTemplate(Light):
         features = (SUPPORT_FLASH | SUPPORT_TRANSITION)
         if self._brightness is not None:
             features = features | SUPPORT_BRIGHTNESS
-        if self._rgb is not None:
-            features = features | SUPPORT_RGB_COLOR
+        if self._hs is not None:
+            features = features | SUPPORT_COLOR
         if self._effect_list is not None:
             features = features | SUPPORT_EFFECT
         if self._color_temp is not None:

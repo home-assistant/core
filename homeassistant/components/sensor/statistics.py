@@ -19,6 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.util import dt as dt_util
+from homeassistant.components.recorder.util import session_scope, execute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +34,8 @@ ATTR_VARIANCE = 'variance'
 ATTR_STANDARD_DEVIATION = 'standard_deviation'
 ATTR_SAMPLING_SIZE = 'sampling_size'
 ATTR_TOTAL = 'total'
+ATTR_MAX_AGE = 'max_age'
+ATTR_MIN_AGE = 'min_age'
 
 CONF_SAMPLING_SIZE = 'sampling_size'
 CONF_MAX_AGE = 'max_age'
@@ -87,6 +90,11 @@ class StatisticsSensor(Entity):
         self.median = self.mean = self.variance = self.stdev = 0
         self.min = self.max = self.total = self.count = 0
         self.average_change = self.change = 0
+        self.max_age = self.min_age = 0
+
+        if 'recorder' in self._hass.config.components:
+            # only use the database if it's configured
+            hass.async_add_job(self._initialize_from_database)
 
         @callback
         # pylint: disable=invalid-name
@@ -95,19 +103,21 @@ class StatisticsSensor(Entity):
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
 
-            try:
-                self.states.append(float(new_state.state))
-                if self._max_age is not None:
-                    now = dt_util.utcnow()
-                    self.ages.append(now)
-                self.count = self.count + 1
-            except ValueError:
-                self.count = self.count + 1
+            self._add_state_to_queue(new_state)
 
             hass.async_add_job(self.async_update_ha_state, True)
 
         async_track_state_change(
             hass, entity_id, async_stats_sensor_state_listener)
+
+    def _add_state_to_queue(self, new_state):
+        try:
+            self.states.append(float(new_state.state))
+            if self._max_age is not None:
+                self.ages.append(new_state.last_updated)
+            self.count = self.count + 1
+        except ValueError:
+            self.count = self.count + 1
 
     @property
     def name(self):
@@ -133,7 +143,7 @@ class StatisticsSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         if not self.is_binary:
-            return {
+            state = {
                 ATTR_MEAN: self.mean,
                 ATTR_COUNT: self.count,
                 ATTR_MAX_VALUE: self.max,
@@ -146,6 +156,13 @@ class StatisticsSensor(Entity):
                 ATTR_CHANGE: self.change,
                 ATTR_AVERAGE_CHANGE: self.average_change,
             }
+            # Only return min/max age if we have an age span
+            if self._max_age:
+                state.update({
+                    ATTR_MAX_AGE: self.max_age,
+                    ATTR_MIN_AGE: self.min_age,
+                })
+            return state
 
     @property
     def icon(self):
@@ -156,7 +173,7 @@ class StatisticsSensor(Entity):
         """Remove states which are older than self._max_age."""
         now = dt_util.utcnow()
 
-        while (len(self.ages) > 0) and (now - self.ages[0]) > self._max_age:
+        while self.ages and (now - self.ages[0]) > self._max_age:
             self.ages.popleft()
             self.states.popleft()
 
@@ -167,16 +184,22 @@ class StatisticsSensor(Entity):
             self._purge_old()
 
         if not self.is_binary:
-            try:
+            try:  # require only one data point
                 self.mean = round(statistics.mean(self.states), 2)
                 self.median = round(statistics.median(self.states), 2)
+            except statistics.StatisticsError as err:
+                _LOGGER.error(err)
+                self.mean = self.median = STATE_UNKNOWN
+
+            try:  # require at least two data points
                 self.stdev = round(statistics.stdev(self.states), 2)
                 self.variance = round(statistics.variance(self.states), 2)
             except statistics.StatisticsError as err:
                 _LOGGER.error(err)
-                self.mean = self.median = STATE_UNKNOWN
                 self.stdev = self.variance = STATE_UNKNOWN
+
             if self.states:
+                self.count = len(self.states)
                 self.total = round(sum(self.states), 2)
                 self.min = min(self.states)
                 self.max = max(self.states)
@@ -184,6 +207,33 @@ class StatisticsSensor(Entity):
                 self.average_change = self.change
                 if len(self.states) > 1:
                     self.average_change /= len(self.states) - 1
+                if self._max_age is not None:
+                    self.max_age = max(self.ages)
+                    self.min_age = min(self.ages)
             else:
                 self.min = self.max = self.total = STATE_UNKNOWN
                 self.average_change = self.change = STATE_UNKNOWN
+
+    @asyncio.coroutine
+    def _initialize_from_database(self):
+        """Initialize the list of states from the database.
+
+        The query will get the list of states in DESCENDING order so that we
+        can limit the result to self._sample_size. Afterwards reverse the
+        list so that we get it in the right order again.
+        """
+        from homeassistant.components.recorder.models import States
+        _LOGGER.debug("initializing values for %s from the database",
+                      self.entity_id)
+
+        with session_scope(hass=self._hass) as session:
+            query = session.query(States)\
+                .filter(States.entity_id == self._entity_id.lower())\
+                .order_by(States.last_updated.desc())\
+                .limit(self._sampling_size)
+            states = execute(query)
+
+        for state in reversed(states):
+            self._add_state_to_queue(state)
+
+        _LOGGER.debug("initializing from database completed")

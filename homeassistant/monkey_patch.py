@@ -37,7 +37,7 @@ def patch_weakref_tasks():
     asyncio.tasks.Task._all_tasks = IgnoreCalls()
     try:
         del asyncio.tasks.Task.__del__
-    except:
+    except:  # noqa: E722
         pass
 
 
@@ -61,7 +61,7 @@ def disable_c_asyncio():
         def find_module(self, fullname, path=None):
             """Find a module."""
             if fullname == self.PATH_TRIGGER:
-                # We lint in Py34, exception is introduced in Py36
+                # We lint in Py35, exception is introduced in Py36
                 # pylint: disable=undefined-variable
                 raise ModuleNotFoundError()  # noqa
             return None

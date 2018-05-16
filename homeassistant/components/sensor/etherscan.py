@@ -8,23 +8,25 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-etherscan-api==0.0.1']
+REQUIREMENTS = ['python-etherscan-api==0.0.3']
 
 CONF_ADDRESS = 'address'
+CONF_TOKEN = 'token'
+CONF_TOKEN_ADDRESS = 'token_address'
 CONF_ATTRIBUTION = "Data provided by etherscan.io"
-
-DEFAULT_NAME = 'Ethereum Balance'
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADDRESS): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_TOKEN): cv.string,
+    vol.Optional(CONF_TOKEN_ADDRESS): cv.string,
 })
 
 
@@ -32,19 +34,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Etherscan.io sensors."""
     address = config.get(CONF_ADDRESS)
     name = config.get(CONF_NAME)
+    token = config.get(CONF_TOKEN)
+    token_address = config.get(CONF_TOKEN_ADDRESS)
 
-    add_devices([EtherscanSensor(name, address)], True)
+    if token:
+        token = token.upper()
+        if not name:
+            name = "%s Balance" % token
+    if not name:
+        name = "ETH Balance"
+
+    add_devices([EtherscanSensor(name, address, token, token_address)], True)
 
 
 class EtherscanSensor(Entity):
     """Representation of an Etherscan.io sensor."""
 
-    def __init__(self, name, address):
+    def __init__(self, name, address, token, token_address):
         """Initialize the sensor."""
         self._name = name
-        self.address = address
+        self._address = address
+        self._token_address = token_address
+        self._token = token
         self._state = None
-        self._unit_of_measurement = 'ETH'
+        self._unit_of_measurement = self._token or "ETH"
 
     @property
     def name(self):
@@ -71,4 +84,9 @@ class EtherscanSensor(Entity):
     def update(self):
         """Get the latest state of the sensor."""
         from pyetherscan import get_balance
-        self._state = get_balance(self.address)
+        if self._token_address:
+            self._state = get_balance(self._address, self._token_address)
+        elif self._token:
+            self._state = get_balance(self._address, self._token)
+        else:
+            self._state = get_balance(self._address)

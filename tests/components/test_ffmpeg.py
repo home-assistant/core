@@ -97,7 +97,7 @@ def test_setup_component_test_register_no_startup(hass):
 
 
 @asyncio.coroutine
-def test_setup_component_test_servcie_start(hass):
+def test_setup_component_test_service_start(hass):
     """Setup ffmpeg component test service start."""
     with assert_setup_component(2):
         yield from async_setup_component(
@@ -113,7 +113,7 @@ def test_setup_component_test_servcie_start(hass):
 
 
 @asyncio.coroutine
-def test_setup_component_test_servcie_stop(hass):
+def test_setup_component_test_service_stop(hass):
     """Setup ffmpeg component test service stop."""
     with assert_setup_component(2):
         yield from async_setup_component(
@@ -129,7 +129,7 @@ def test_setup_component_test_servcie_stop(hass):
 
 
 @asyncio.coroutine
-def test_setup_component_test_servcie_restart(hass):
+def test_setup_component_test_service_restart(hass):
     """Setup ffmpeg component test service restart."""
     with assert_setup_component(2):
         yield from async_setup_component(
@@ -146,7 +146,7 @@ def test_setup_component_test_servcie_restart(hass):
 
 
 @asyncio.coroutine
-def test_setup_component_test_servcie_start_with_entity(hass):
+def test_setup_component_test_service_start_with_entity(hass):
     """Setup ffmpeg component test service start."""
     with assert_setup_component(2):
         yield from async_setup_component(

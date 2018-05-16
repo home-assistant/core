@@ -10,9 +10,9 @@ import voluptuous as vol
 
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 from homeassistant.components.climate import (
-    STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
+    STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE)
 from homeassistant.util import Throttle
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['netatmo']
@@ -23,7 +23,7 @@ CONF_RELAY = 'relay'
 CONF_THERMOSTAT = 'thermostat'
 
 DEFAULT_AWAY_TEMPERATURE = 14
-# # The default offeset is 2 hours (when you use the thermostat itself)
+# # The default offset is 2 hours (when you use the thermostat itself)
 DEFAULT_TIME_OFFSET = 7200
 # # Return cached results if last scan was less then this time ago
 # # NetAtmo Data is uploaded to server every hour
@@ -35,10 +35,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.string]),
 })
 
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                 SUPPORT_AWAY_MODE)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
-    netatmo = get_component('netatmo')
+    netatmo = hass.components.netatmo
     device = config.get(CONF_RELAY)
 
     import lnetatmo
@@ -66,14 +69,14 @@ class NetatmoThermostat(ClimateDevice):
         self._away = None
 
     @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._target_temperature
 
     @property
     def temperature_unit(self):

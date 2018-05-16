@@ -22,12 +22,12 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
         self.hass = get_test_home_assistant()
 
         self.scanner = loader.get_component(
-            'device_tracker.test').get_scanner(None, None)
+            self.hass, 'device_tracker.test').get_scanner(None, None)
 
         self.scanner.reset()
         self.scanner.come_home('DEV1')
 
-        loader.get_component('light.test').init()
+        loader.get_component(self.hass, 'light.test').init()
 
         with patch(
             'homeassistant.components.device_tracker.load_yaml_config_file',

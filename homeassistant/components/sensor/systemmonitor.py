@@ -16,39 +16,39 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['psutil==5.3.0']
+REQUIREMENTS = ['psutil==5.4.5']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ARG = 'arg'
 
 SENSOR_TYPES = {
-    'disk_free': ['Disk Free', 'GiB', 'mdi:harddisk'],
-    'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
-    'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
+    'disk_free': ['Disk free', 'GiB', 'mdi:harddisk'],
+    'disk_use': ['Disk use', 'GiB', 'mdi:harddisk'],
+    'disk_use_percent': ['Disk use (percent)', '%', 'mdi:harddisk'],
     'ipv4_address': ['IPv4 address', '', 'mdi:server-network'],
     'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
-    'last_boot': ['Last Boot', '', 'mdi:clock'],
-    'load_15m': ['Average Load (15m)', '', 'mdi:memory'],
-    'load_1m': ['Average Load (1m)', '', 'mdi:memory'],
-    'load_5m': ['Average Load (5m)', '', 'mdi:memory'],
-    'memory_free': ['RAM Free', 'MiB', 'mdi:memory'],
-    'memory_use': ['RAM Use', 'MiB', 'mdi:memory'],
-    'memory_use_percent': ['RAM Use', '%', 'mdi:memory'],
-    'network_in': ['Received', 'MiB', 'mdi:server-network'],
-    'network_out': ['Sent', 'MiB', 'mdi:server-network'],
-    'packets_in': ['Packets received', ' ', 'mdi:server-network'],
-    'packets_out': ['Packets sent', ' ', 'mdi:server-network'],
+    'last_boot': ['Last boot', '', 'mdi:clock'],
+    'load_15m': ['Load (15m)', ' ', 'mdi:memory'],
+    'load_1m': ['Load (1m)', ' ', 'mdi:memory'],
+    'load_5m': ['Load (5m)', ' ', 'mdi:memory'],
+    'memory_free': ['Memory free', 'MiB', 'mdi:memory'],
+    'memory_use': ['Memory use', 'MiB', 'mdi:memory'],
+    'memory_use_percent': ['Memory use (percent)', '%', 'mdi:memory'],
+    'network_in': ['Network in', 'MiB', 'mdi:server-network'],
+    'network_out': ['Network out', 'MiB', 'mdi:server-network'],
+    'packets_in': ['Packets in', ' ', 'mdi:server-network'],
+    'packets_out': ['Packets out', ' ', 'mdi:server-network'],
     'process': ['Process', ' ', 'mdi:memory'],
-    'processor_use': ['CPU Use', '%', 'mdi:memory'],
-    'since_last_boot': ['Since Last Boot', '', 'mdi:clock'],
-    'swap_free': ['Swap Free', 'GiB', 'mdi:harddisk'],
-    'swap_use': ['Swap Use', 'GiB', 'mdi:harddisk'],
-    'swap_use_percent': ['Swap Use', '%', 'mdi:harddisk'],
+    'processor_use': ['Processor use', '%', 'mdi:memory'],
+    'since_last_boot': ['Since last boot', '', 'mdi:clock'],
+    'swap_free': ['Swap free', 'MiB', 'mdi:harddisk'],
+    'swap_use': ['Swap use', 'MiB', 'mdi:harddisk'],
+    'swap_use_percent': ['Swap use (percent)', '%', 'mdi:harddisk'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_RESOURCES, default=['disk_use']):
+    vol.Optional(CONF_RESOURCES, default={CONF_TYPE: 'disk_use'}):
         vol.All(cv.ensure_list, [vol.Schema({
             vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
             vol.Optional(CONF_ARG): cv.string,
@@ -126,24 +126,31 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'memory_use_percent':
             self._state = psutil.virtual_memory().percent
         elif self.type == 'memory_use':
-            self._state = round((psutil.virtual_memory().total -
-                                 psutil.virtual_memory().available) /
+            virtual_memory = psutil.virtual_memory()
+            self._state = round((virtual_memory.total -
+                                 virtual_memory.available) /
                                 1024**2, 1)
         elif self.type == 'memory_free':
             self._state = round(psutil.virtual_memory().available / 1024**2, 1)
         elif self.type == 'swap_use_percent':
             self._state = psutil.swap_memory().percent
         elif self.type == 'swap_use':
-            self._state = round(psutil.swap_memory().used / 1024**3, 1)
+            self._state = round(psutil.swap_memory().used / 1024**2, 1)
         elif self.type == 'swap_free':
-            self._state = round(psutil.swap_memory().free / 1024**3, 1)
+            self._state = round(psutil.swap_memory().free / 1024**2, 1)
         elif self.type == 'processor_use':
             self._state = round(psutil.cpu_percent(interval=None))
         elif self.type == 'process':
-            if any(self.argument in l.name() for l in psutil.process_iter()):
-                self._state = STATE_ON
-            else:
-                self._state = STATE_OFF
+            for proc in psutil.process_iter():
+                try:
+                    if self.argument == proc.name():
+                        self._state = STATE_ON
+                        return
+                except psutil.NoSuchProcess as err:
+                    _LOGGER.warning(
+                        "Failed to load process with id: %s, old name: %s",
+                        err.pid, err.name)
+            self._state = STATE_OFF
         elif self.type == 'network_out' or self.type == 'network_in':
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:

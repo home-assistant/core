@@ -14,7 +14,7 @@ from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['eliqonline==1.0.13']
+REQUIREMENTS = ['eliqonline==1.0.14']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ UNIT_OF_MEASUREMENT = 'W'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_CHANNEL_ID): cv.positive_int,
+    vol.Required(CONF_CHANNEL_ID): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 

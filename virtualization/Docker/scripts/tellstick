@@ -11,7 +11,7 @@ PACKAGES=(
 
 # Add Tellstick repository
 echo "deb http://download.telldus.com/debian/ stable main" >> /etc/apt/sources.list.d/telldus.list
-wget -qO - http://download.telldus.se/debian/telldus-public.key | apt-key add -
+wget -qO - http://download.telldus.com/debian/telldus-public.key | apt-key add -
 
 apt-get update
 apt-get install -y --no-install-recommends ${PACKAGES[@]}

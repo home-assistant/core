@@ -7,12 +7,10 @@ https://home-assistant.io/components/alert/
 import asyncio
 from datetime import datetime, timedelta
 import logging
-import os
 
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_ENTITY_ID, STATE_IDLE, CONF_NAME, CONF_STATE, STATE_ON, STATE_OFF,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_ENTITY_ID)
@@ -36,7 +34,7 @@ DEFAULT_SKIP_FIRST = False
 
 ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_DONE_MESSAGE, default=None): cv.string,
+    vol.Optional(CONF_DONE_MESSAGE): cv.string,
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_STATE, default=STATE_ON): cv.string,
     vol.Required(CONF_REPEAT): vol.All(cv.ensure_list, [vol.Coerce(float)]),
@@ -123,28 +121,22 @@ def async_setup(hass, config):
     # Setup alerts
     for entity_id, alert in alerts.items():
         entity = Alert(hass, entity_id,
-                       alert[CONF_NAME], alert[CONF_DONE_MESSAGE],
+                       alert[CONF_NAME], alert.get(CONF_DONE_MESSAGE),
                        alert[CONF_ENTITY_ID], alert[CONF_STATE],
                        alert[CONF_REPEAT], alert[CONF_SKIP_FIRST],
                        alert[CONF_NOTIFIERS], alert[CONF_CAN_ACK])
         all_alerts[entity.entity_id] = entity
 
-    # Read descriptions
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
-    descriptions = descriptions.get(DOMAIN, {})
-
     # Setup service calls
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_alert_service,
-        descriptions.get(SERVICE_TURN_OFF), schema=ALERT_SERVICE_SCHEMA)
+        schema=ALERT_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_handle_alert_service,
-        descriptions.get(SERVICE_TURN_ON), schema=ALERT_SERVICE_SCHEMA)
+        schema=ALERT_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, async_handle_alert_service,
-        descriptions.get(SERVICE_TOGGLE), schema=ALERT_SERVICE_SCHEMA)
+        schema=ALERT_SERVICE_SCHEMA)
 
     tasks = [alert.async_update_ha_state() for alert in all_alerts.values()]
     if tasks:
@@ -285,7 +277,7 @@ class Alert(ToggleEntity):
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
-    def async_toggle(self):
+    def async_toggle(self, **kwargs):
         """Async toggle alert."""
         if self._ack:
             return self.async_turn_on()

@@ -5,26 +5,21 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/ecosystem/ios/
 """
 import asyncio
-import os
-import json
 import logging
 import datetime
 
 import voluptuous as vol
 # from voluptuous.humanize import humanize_error
 
-from homeassistant.helpers import config_validation as cv
-
-from homeassistant.helpers import discovery
-
-from homeassistant.core import callback
-
 from homeassistant.components.http import HomeAssistantView
-
-from homeassistant.remote import JSONEncoder
-
 from homeassistant.const import (HTTP_INTERNAL_SERVER_ERROR,
                                  HTTP_BAD_REQUEST)
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import discovery
+from homeassistant.util.json import load_json, save_json
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +72,7 @@ ATTR_DEVICE_SYSTEM_VERSION = 'systemVersion'
 ATTR_DEVICE_TYPE = 'type'
 ATTR_DEVICE_SYSTEM_NAME = 'systemName'
 
-ATTR_APP_BUNDLE_IDENTIFER = 'bundleIdentifer'
+ATTR_APP_BUNDLE_IDENTIFIER = 'bundleIdentifier'
 ATTR_APP_BUILD_NUMBER = 'buildNumber'
 ATTR_APP_VERSION_NUMBER = 'versionNumber'
 
@@ -121,7 +116,7 @@ CONFIG_SCHEMA = vol.Schema({
         CONF_PUSH: {
             CONF_PUSH_CATEGORIES: vol.All(cv.ensure_list, [{
                 vol.Required(CONF_PUSH_CATEGORIES_NAME): cv.string,
-                vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Upper,
+                vol.Required(CONF_PUSH_CATEGORIES_IDENTIFIER): vol.Lower,
                 vol.Required(CONF_PUSH_CATEGORIES_ACTIONS): ACTION_SCHEMA_LIST
             }])
         }
@@ -141,7 +136,7 @@ IDENTIFY_DEVICE_SCHEMA = vol.Schema({
 IDENTIFY_DEVICE_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_DEVICE_SCHEMA)
 
 IDENTIFY_APP_SCHEMA = vol.Schema({
-    vol.Required(ATTR_APP_BUNDLE_IDENTIFER): cv.string,
+    vol.Required(ATTR_APP_BUNDLE_IDENTIFIER): cv.string,
     vol.Required(ATTR_APP_BUILD_NUMBER): cv.positive_int,
     vol.Optional(ATTR_APP_VERSION_NUMBER): cv.string
 }, extra=vol.ALLOW_EXTRA)
@@ -174,36 +169,6 @@ CONFIG_FILE = {ATTR_DEVICES: {}}
 CONFIG_FILE_PATH = ""
 
 
-def _load_config(filename):
-    """Load configuration."""
-    if not os.path.isfile(filename):
-        return {}
-
-    try:
-        with open(filename, "r") as fdesc:
-            inp = fdesc.read()
-
-        # In case empty file
-        if not inp:
-            return {}
-
-        return json.loads(inp)
-    except (IOError, ValueError) as error:
-        _LOGGER.error("Reading config file %s failed: %s", filename, error)
-        return None
-
-
-def _save_config(filename, config):
-    """Save configuration."""
-    try:
-        with open(filename, 'w') as fdesc:
-            fdesc.write(json.dumps(config, cls=JSONEncoder))
-    except (IOError, TypeError) as error:
-        _LOGGER.error("Saving config file failed: %s", error)
-        return False
-    return True
-
-
 def devices_with_push():
     """Return a dictionary of push enabled targets."""
     targets = {}
@@ -217,7 +182,7 @@ def enabled_push_ids():
     """Return a list of push enabled target push IDs."""
     push_ids = list()
     # pylint: disable=unused-variable
-    for device_name, device in CONFIG_FILE[ATTR_DEVICES].items():
+    for device in CONFIG_FILE[ATTR_DEVICES].values():
         if device.get(ATTR_PUSH_ID) is not None:
             push_ids.append(device.get(ATTR_PUSH_ID))
     return push_ids
@@ -244,7 +209,7 @@ def setup(hass, config):
 
     CONFIG_FILE_PATH = hass.config.path(CONFIGURATION_FILE)
 
-    CONFIG_FILE = _load_config(CONFIG_FILE_PATH)
+    CONFIG_FILE = load_json(CONFIG_FILE_PATH)
 
     if CONFIG_FILE == {}:
         CONFIG_FILE[ATTR_DEVICES] = {}
@@ -299,13 +264,15 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         #     return self.json_message(humanize_error(request.json, ex),
         #                              HTTP_BAD_REQUEST)
 
-        data[ATTR_LAST_SEEN_AT] = datetime.datetime.now()
+        data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
 
         name = data.get(ATTR_DEVICE_ID)
 
         CONFIG_FILE[ATTR_DEVICES][name] = data
 
-        if not _save_config(CONFIG_FILE_PATH, CONFIG_FILE):
+        try:
+            save_json(CONFIG_FILE_PATH, CONFIG_FILE)
+        except HomeAssistantError:
             return self.json_message("Error saving device.",
                                      HTTP_INTERNAL_SERVER_ERROR)
 

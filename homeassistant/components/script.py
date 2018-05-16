@@ -156,7 +156,7 @@ def _async_process_config(hass, config, component):
     def service_handler(service):
         """Execute a service call to script.<script name>."""
         entity_id = ENTITY_ID_FORMAT.format(service.service)
-        script = component.entities.get(entity_id)
+        script = component.get_entity(entity_id)
         if script.is_on:
             _LOGGER.warning("Script %s already running.", entity_id)
             return
@@ -219,15 +219,11 @@ class ScriptEntity(ToggleEntity):
         """Turn script off."""
         self.script.async_stop()
 
-    def async_remove(self):
-        """Remove script from HASS.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    @asyncio.coroutine
+    def async_will_remove_from_hass(self):
+        """Stop script and remove service when it will be removed from HASS."""
         if self.script.is_running:
             self.script.async_stop()
 
         # remove service
         self.hass.services.async_remove(DOMAIN, self.object_id)
-
-        return super().async_remove()

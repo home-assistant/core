@@ -4,28 +4,29 @@ HTML5 Push Messaging notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.html5/
 """
-import asyncio
-import os
-import logging
-import json
-import time
 import datetime
+import json
+import logging
+import time
 import uuid
 
+from aiohttp.hdrs import AUTHORIZATION
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant.const import (HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR,
-                                 HTTP_UNAUTHORIZED, URL_ROOT)
-from homeassistant.util import ensure_unique_string
-from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA,
-    BaseNotificationService, PLATFORM_SCHEMA)
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.util.json import load_json, save_json
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components.frontend import add_manifest_json_key
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.notify import (
+    ATTR_DATA, ATTR_TITLE, ATTR_TARGET, PLATFORM_SCHEMA, ATTR_TITLE_DEFAULT,
+    BaseNotificationService)
+from homeassistant.const import (
+    URL_ROOT, HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_INTERNAL_SERVER_ERROR)
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util import ensure_unique_string
 
-REQUIREMENTS = ['pywebpush==1.0.6', 'PyJWT==1.5.2']
+REQUIREMENTS = ['pywebpush==1.6.0', 'PyJWT==1.6.0']
 
 DEPENDENCIES = ['frontend']
 
@@ -62,24 +63,25 @@ ATTR_JWT = 'jwt'
 # is valid.
 JWT_VALID_DAYS = 7
 
-KEYS_SCHEMA = vol.All(dict,
-                      vol.Schema({
-                          vol.Required(ATTR_AUTH): cv.string,
-                          vol.Required(ATTR_P256DH): cv.string
-                          }))
+KEYS_SCHEMA = vol.All(
+    dict, vol.Schema({
+        vol.Required(ATTR_AUTH): cv.string,
+        vol.Required(ATTR_P256DH): cv.string,
+    })
+)
 
-SUBSCRIPTION_SCHEMA = vol.All(dict,
-                              vol.Schema({
-                                  # pylint: disable=no-value-for-parameter
-                                  vol.Required(ATTR_ENDPOINT): vol.Url(),
-                                  vol.Required(ATTR_KEYS): KEYS_SCHEMA,
-                                  vol.Optional(ATTR_EXPIRATIONTIME):
-                                      vol.Any(None, cv.positive_int)
-                                  }))
+SUBSCRIPTION_SCHEMA = vol.All(
+    dict, vol.Schema({
+        # pylint: disable=no-value-for-parameter
+        vol.Required(ATTR_ENDPOINT): vol.Url(),
+        vol.Required(ATTR_KEYS): KEYS_SCHEMA,
+        vol.Optional(ATTR_EXPIRATIONTIME): vol.Any(None, cv.positive_int),
+    })
+)
 
 REGISTER_SCHEMA = vol.Schema({
     vol.Required(ATTR_SUBSCRIPTION): SUBSCRIPTION_SCHEMA,
-    vol.Required(ATTR_BROWSER): vol.In(['chrome', 'firefox'])
+    vol.Required(ATTR_BROWSER): vol.In(['chrome', 'firefox']),
 })
 
 CALLBACK_EVENT_PAYLOAD_SCHEMA = vol.Schema({
@@ -94,8 +96,8 @@ NOTIFY_CALLBACK_EVENT = 'html5_notification'
 
 # Badge and timestamp are Chrome specific (not in official spec)
 HTML5_SHOWNOTIFICATION_PARAMETERS = (
-    'actions', 'badge', 'body', 'dir', 'icon', 'lang', 'renotify',
-    'requireInteraction', 'tag', 'timestamp', 'vibrate')
+    'actions', 'badge', 'body', 'dir', 'icon', 'image', 'lang',
+    'renotify', 'requireInteraction', 'tag', 'timestamp', 'vibrate')
 
 
 def get_service(hass, config, discovery_info=None):
@@ -123,44 +125,22 @@ def get_service(hass, config, discovery_info=None):
 
 def _load_config(filename):
     """Load configuration."""
-    if not os.path.isfile(filename):
-        return {}
-
     try:
-        with open(filename, 'r') as fdesc:
-            inp = fdesc.read()
-
-        # In case empty file
-        if not inp:
-            return {}
-
-        return json.loads(inp)
-    except (IOError, ValueError) as error:
-        _LOGGER.error("Reading config file %s failed: %s", filename, error)
-        return None
+        return load_json(filename)
+    except HomeAssistantError:
+        pass
+    return {}
 
 
 class JSONBytesDecoder(json.JSONEncoder):
     """JSONEncoder to decode bytes objects to unicode."""
 
-    # pylint: disable=method-hidden
+    # pylint: disable=method-hidden, arguments-differ
     def default(self, obj):
-        """Decode object if it's a bytes object, else defer to baseclass."""
+        """Decode object if it's a bytes object, else defer to base class."""
         if isinstance(obj, bytes):
             return obj.decode()
         return json.JSONEncoder.default(self, obj)
-
-
-def _save_config(filename, config):
-    """Save configuration."""
-    try:
-        with open(filename, 'w') as fdesc:
-            fdesc.write(json.dumps(
-                config, cls=JSONBytesDecoder, indent=4, sort_keys=True))
-    except (IOError, TypeError) as error:
-        _LOGGER.error("Saving config file failed: %s", error)
-        return False
-    return True
 
 
 class HTML5PushRegistrationView(HomeAssistantView):
@@ -174,11 +154,10 @@ class HTML5PushRegistrationView(HomeAssistantView):
         self.registrations = registrations
         self.json_path = json_path
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Accept the POST request for push registrations from a browser."""
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
@@ -188,21 +167,40 @@ class HTML5PushRegistrationView(HomeAssistantView):
             return self.json_message(
                 humanize_error(data, ex), HTTP_BAD_REQUEST)
 
-        name = ensure_unique_string('unnamed device', self.registrations)
+        name = self.find_registration_name(data)
+        previous_registration = self.registrations.get(name)
 
         self.registrations[name] = data
 
-        if not _save_config(self.json_path, self.registrations):
+        try:
+            hass = request.app['hass']
+
+            await hass.async_add_job(save_json, self.json_path,
+                                     self.registrations)
+            return self.json_message(
+                'Push notification subscriber registered.')
+        except HomeAssistantError:
+            if previous_registration is not None:
+                self.registrations[name] = previous_registration
+            else:
+                self.registrations.pop(name)
+
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
 
-        return self.json_message('Push notification subscriber registered.')
+    def find_registration_name(self, data):
+        """Find a registration name matching data or generate a unique one."""
+        endpoint = data.get(ATTR_SUBSCRIPTION).get(ATTR_ENDPOINT)
+        for key, registration in self.registrations.items():
+            subscription = registration.get(ATTR_SUBSCRIPTION)
+            if subscription.get(ATTR_ENDPOINT) == endpoint:
+                return key
+        return ensure_unique_string('unnamed device', self.registrations)
 
-    @asyncio.coroutine
-    def delete(self, request):
+    async def delete(self, request):
         """Delete a registration."""
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
@@ -221,7 +219,12 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         reg = self.registrations.pop(found)
 
-        if not _save_config(self.json_path, self.registrations):
+        try:
+            hass = request.app['hass']
+
+            await hass.async_add_job(save_json, self.json_path,
+                                     self.registrations)
+        except HomeAssistantError:
             self.registrations[found] = reg
             return self.json_message(
                 'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
@@ -249,12 +252,12 @@ class HTML5PushCallbackView(HomeAssistantView):
         # 2a. If decode is successful, return the payload.
         # 2b. If decode is unsuccessful, return a 401.
 
-        target_check = jwt.decode(token, options={'verify_signature': False})
+        target_check = jwt.decode(token, verify=False)
         if target_check[ATTR_TARGET] in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
             try:
-                return jwt.decode(token, key)
+                return jwt.decode(token, key, algorithms=["ES256", "HS256"])
             except jwt.exceptions.DecodeError:
                 pass
 
@@ -266,7 +269,7 @@ class HTML5PushCallbackView(HomeAssistantView):
     def check_authorization_header(self, request):
         """Check the authorization header."""
         import jwt
-        auth = request.headers.get('Authorization', None)
+        auth = request.headers.get(AUTHORIZATION, None)
         if not auth:
             return self.json_message('Authorization header is expected',
                                      status_code=HTTP_UNAUTHORIZED)
@@ -290,15 +293,14 @@ class HTML5PushCallbackView(HomeAssistantView):
                                      status_code=HTTP_UNAUTHORIZED)
         return payload
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Accept the POST request for push registrations event callback."""
         auth_check = self.check_authorization_header(request)
         if not isinstance(auth_check, dict):
             return auth_check
 
         try:
-            data = yield from request.json()
+            data = await request.json()
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
@@ -323,8 +325,7 @@ class HTML5PushCallbackView(HomeAssistantView):
         event_name = '{}.{}'.format(NOTIFY_CALLBACK_EVENT,
                                     event_payload[ATTR_TYPE])
         request.app['hass'].bus.fire(event_name, event_payload)
-        return self.json({'status': 'ok',
-                          'event': event_payload[ATTR_TYPE]})
+        return self.json({'status': 'ok', 'event': event_payload[ATTR_TYPE]})
 
 
 class HTML5NotificationService(BaseNotificationService):
@@ -403,16 +404,22 @@ class HTML5NotificationService(BaseNotificationService):
             jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
             payload[ATTR_DATA][ATTR_JWT] = jwt_token
 
+            # Only pass the gcm key if we're actually using GCM
+            # If we don't, notifications break on FireFox
+            gcm_key = self._gcm_key \
+                if 'googleapis.com' in info[ATTR_SUBSCRIPTION][ATTR_ENDPOINT] \
+                else None
             response = WebPusher(info[ATTR_SUBSCRIPTION]).send(
-                json.dumps(payload), gcm_key=self._gcm_key, ttl='86400')
+                json.dumps(payload), gcm_key=gcm_key, ttl='86400'
+            )
 
             # pylint: disable=no-member
             if response.status_code == 410:
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)
-                if not _save_config(self.registrations_json_path,
-                                    self.registrations):
+                if not save_json(self.registrations_json_path,
+                                 self.registrations):
                     self.registrations[target] = reg
-                    _LOGGER.error("Error saving registration.")
+                    _LOGGER.error("Error saving registration")
                 else:
                     _LOGGER.info("Configuration saved")

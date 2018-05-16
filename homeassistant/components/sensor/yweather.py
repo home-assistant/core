@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['yahooweather==0.8']
+REQUIREMENTS = ['yahooweather==0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_WOEID, default=None): cv.string,
+    vol.Optional(CONF_WOEID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_FORECAST, default=0):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
@@ -131,9 +131,12 @@ class YahooWeatherSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-        }
+        attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
+
+        if self._code is not None and "weather" in self._type:
+            attrs['condition_code'] = self._code
+
+        return attrs
 
     def update(self):
         """Get the latest data from Yahoo! and updates the states."""
@@ -160,13 +163,15 @@ class YahooWeatherSensor(Entity):
             self._code = self._data.yahoo.Forecast[self._forecast]['code']
             self._state = self._data.yahoo.Forecast[self._forecast]['high']
         elif self._type == 'wind_speed':
-            self._state = self._data.yahoo.Wind['speed']
+            self._state = round(float(self._data.yahoo.Wind['speed'])/1.61, 2)
         elif self._type == 'humidity':
             self._state = self._data.yahoo.Atmosphere['humidity']
         elif self._type == 'pressure':
-            self._state = self._data.yahoo.Atmosphere['pressure']
+            self._state = round(
+                float(self._data.yahoo.Atmosphere['pressure'])/33.8637526, 2)
         elif self._type == 'visibility':
-            self._state = self._data.yahoo.Atmosphere['visibility']
+            self._state = round(
+                float(self._data.yahoo.Atmosphere['visibility'])/1.61, 2)
 
 
 class YahooWeatherData(object):

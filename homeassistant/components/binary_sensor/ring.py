@@ -11,7 +11,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.ring import (
-    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE)
+    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DATA_RING)
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
@@ -28,25 +28,31 @@ SCAN_INTERVAL = timedelta(seconds=5)
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
     'ding': ['Ding', ['doorbell'], 'occupancy'],
-    'motion': ['Motion', ['doorbell'], 'motion'],
+    'motion': ['Motion', ['doorbell', 'stickup_cams'], 'motion'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
         cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
+    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for a Ring device."""
-    ring = hass.data.get('ring')
+    ring = hass.data[DATA_RING]
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         for device in ring.doorbells:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
+                sensors.append(RingBinarySensor(hass,
+                                                device,
+                                                sensor_type))
+
+        for device in ring.stickup_cams:
+            if 'stickup_cams' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingBinarySensor(hass,
                                                 device,
                                                 sensor_type))

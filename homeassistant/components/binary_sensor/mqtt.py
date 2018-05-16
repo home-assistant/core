@@ -14,16 +14,21 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_ON, CONF_PAYLOAD_OFF,
-    CONF_DEVICE_CLASS)
-from homeassistant.components.mqtt import (CONF_STATE_TOPIC, CONF_QOS)
+    CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_ON,
+    CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS)
+from homeassistant.components.mqtt import (
+    CONF_STATE_TOPIC, CONF_AVAILABILITY_TOPIC, CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, MqttAvailability)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'MQTT Binary sensor'
+
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
+DEFAULT_FORCE_UPDATE = False
+
 DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
@@ -31,7 +36,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-})
+    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+}).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 @asyncio.coroutine
@@ -47,37 +53,45 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices([MqttBinarySensor(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
+        config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_DEVICE_CLASS),
         config.get(CONF_QOS),
+        config.get(CONF_FORCE_UPDATE),
         config.get(CONF_PAYLOAD_ON),
         config.get(CONF_PAYLOAD_OFF),
+        config.get(CONF_PAYLOAD_AVAILABLE),
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
         value_template
     )])
 
 
-class MqttBinarySensor(BinarySensorDevice):
+class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
     """Representation a binary sensor that is updated by MQTT."""
 
-    def __init__(self, name, state_topic, device_class, qos, payload_on,
-                 payload_off, value_template):
+    def __init__(self, name, state_topic, availability_topic, device_class,
+                 qos, force_update, payload_on, payload_off, payload_available,
+                 payload_not_available, value_template):
         """Initialize the MQTT binary sensor."""
+        super().__init__(availability_topic, qos, payload_available,
+                         payload_not_available)
         self._name = name
-        self._state = False
+        self._state = None
         self._state_topic = state_topic
         self._device_class = device_class
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._qos = qos
+        self._force_update = force_update
         self._template = value_template
 
+    @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
+        """Subscribe mqtt events."""
+        yield from super().async_added_to_hass()
 
-        This method must be run in the event loop and returns a coroutine.
-        """
         @callback
-        def message_received(topic, payload, qos):
-            """Handle a new received MQTT message."""
+        def state_message_received(topic, payload, qos):
+            """Handle a new received MQTT state message."""
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload)
@@ -85,11 +99,16 @@ class MqttBinarySensor(BinarySensorDevice):
                 self._state = True
             elif payload == self._payload_off:
                 self._state = False
+            else:  # Payload is not for this entity
+                _LOGGER.warning('No matching payload found'
+                                ' for entity: %s with state_topic: %s',
+                                self._name, self._state_topic)
+                return
 
-            self.hass.async_add_job(self.async_update_ha_state())
+            self.async_schedule_update_ha_state()
 
-        return mqtt.async_subscribe(
-            self.hass, self._state_topic, message_received, self._qos)
+        yield from mqtt.async_subscribe(
+            self.hass, self._state_topic, state_message_received, self._qos)
 
     @property
     def should_poll(self):
@@ -110,3 +129,8 @@ class MqttBinarySensor(BinarySensorDevice):
     def device_class(self):
         """Return the class of this sensor."""
         return self._device_class
+
+    @property
+    def force_update(self):
+        """Force update."""
+        return self._force_update

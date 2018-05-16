@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['decora==0.6', 'bluepy==1.1.1']
+REQUIREMENTS = ['decora==0.6', 'bluepy==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,9 +35,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def retry(method):
     """Retry bluetooth commands."""
     @wraps(method)
-    def wrapper_retry(device, *args, **kwds):
+    def wrapper_retry(device, *args, **kwargs):
         """Try send command and retry on error."""
-        # pylint: disable=import-error
+        # pylint: disable=import-error, no-member
         import decora
         import bluepy
 
@@ -46,7 +46,7 @@ def retry(method):
             if time.monotonic() - initial >= 10:
                 return None
             try:
-                return method(device, *args, **kwds)
+                return method(device, *args, **kwargs)
             except (decora.decoraException, AttributeError,
                     bluepy.btle.BTLEException):
                 _LOGGER.warning("Decora connect error for device %s. "
@@ -75,7 +75,7 @@ class DecoraLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        # pylint: disable=import-error
+        # pylint: disable=import-error, no-member
         import decora
 
         self._name = device['name']
@@ -88,7 +88,7 @@ class DecoraLight(Light):
     @property
     def unique_id(self):
         """Return the ID of this light."""
-        return "{}.{}".format(self.__class__, self._address)
+        return self._address
 
     @property
     def name(self):

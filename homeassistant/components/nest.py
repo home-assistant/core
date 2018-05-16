@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_STRUCTURE, CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
     CONF_MONITORED_CONDITIONS)
 
-REQUIREMENTS = ['python-nest==3.1.0']
+REQUIREMENTS = ['python-nest==3.7.0']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -183,7 +183,7 @@ class NestDevice(object):
                 "Connection error logging into the nest web service.")
 
     def smoke_co_alarms(self):
-        """Generate a list of smoke co alarams."""
+        """Generate a list of smoke co alarms."""
         try:
             for structure in self.nest.structures:
                 if structure.name in self.local_structure:

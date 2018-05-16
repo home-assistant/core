@@ -6,13 +6,15 @@ https://home-assistant.io/components/sensor.uk_transport/
 import logging
 import re
 from datetime import datetime, timedelta
+
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_MODE
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +30,6 @@ ATTR_NEXT_TRAINS = 'next_trains'
 CONF_API_APP_KEY = 'app_key'
 CONF_API_APP_ID = 'app_id'
 CONF_QUERIES = 'queries'
-CONF_MODE = 'mode'
 CONF_ORIGIN = 'origin'
 CONF_DESTINATION = 'destination'
 
@@ -131,7 +132,7 @@ class UkTransportSensor(Entity):
             _LOGGER.warning('Invalid response from API')
         elif 'error' in response.json():
             if 'exceeded' in response.json()['error']:
-                self._state = 'Useage limites exceeded'
+                self._state = 'Usage limits exceeded'
             if 'invalid' in response.json()['error']:
                 self._state = 'Credentials invalid'
         else:

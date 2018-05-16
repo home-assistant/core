@@ -1,5 +1,5 @@
 """
-Support for microsoft face recognition.
+Support for Microsoft face recognition.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/microsoft_face/
@@ -7,46 +7,40 @@ https://home-assistant.io/components/microsoft_face/
 import asyncio
 import json
 import logging
-import os
 
 import aiohttp
 from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_TIMEOUT
-from homeassistant.config import load_yaml_config_file
+from homeassistant.const import CONF_API_KEY, CONF_TIMEOUT, ATTR_NAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.loader import get_component
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'microsoft_face'
-DEPENDENCIES = ['camera']
-
-FACE_API_URL = "api.cognitive.microsoft.com/face/v1.0/{0}"
-
-DATA_MICROSOFT_FACE = 'microsoft_face'
+ATTR_CAMERA_ENTITY = 'camera_entity'
+ATTR_GROUP = 'group'
+ATTR_PERSON = 'person'
 
 CONF_AZURE_REGION = 'azure_region'
 
+DATA_MICROSOFT_FACE = 'microsoft_face'
+DEFAULT_TIMEOUT = 10
+DEPENDENCIES = ['camera']
+DOMAIN = 'microsoft_face'
+
+FACE_API_URL = "api.cognitive.microsoft.com/face/v1.0/{0}"
+
 SERVICE_CREATE_GROUP = 'create_group'
-SERVICE_DELETE_GROUP = 'delete_group'
-SERVICE_TRAIN_GROUP = 'train_group'
 SERVICE_CREATE_PERSON = 'create_person'
+SERVICE_DELETE_GROUP = 'delete_group'
 SERVICE_DELETE_PERSON = 'delete_person'
 SERVICE_FACE_PERSON = 'face_person'
-
-ATTR_GROUP = 'group'
-ATTR_PERSON = 'person'
-ATTR_CAMERA_ENTITY = 'camera_entity'
-ATTR_NAME = 'name'
-
-DEFAULT_TIMEOUT = 10
+SERVICE_TRAIN_GROUP = 'train_group'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -114,7 +108,7 @@ def face_person(hass, group, person, camera_entity):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up microsoft face."""
+    """Set up Microsoft Face."""
     entities = {}
     face = MicrosoftFace(
         hass,
@@ -132,10 +126,6 @@ def async_setup(hass, config):
         return False
 
     hass.data[DATA_MICROSOFT_FACE] = face
-
-    descriptions = yield from hass.async_add_job(
-        load_yaml_config_file,
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
     def async_create_group(service):
@@ -155,7 +145,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_CREATE_GROUP, async_create_group,
-        descriptions[DOMAIN].get(SERVICE_CREATE_GROUP),
         schema=SCHEMA_GROUP_SERVICE)
 
     @asyncio.coroutine
@@ -168,13 +157,12 @@ def async_setup(hass, config):
             face.store.pop(g_id)
 
             entity = entities.pop(g_id)
-            yield from entity.async_remove()
+            hass.states.async_remove(entity.entity_id)
         except HomeAssistantError as err:
             _LOGGER.error("Can't delete group '%s' with error: %s", g_id, err)
 
     hass.services.async_register(
         DOMAIN, SERVICE_DELETE_GROUP, async_delete_group,
-        descriptions[DOMAIN].get(SERVICE_DELETE_GROUP),
         schema=SCHEMA_GROUP_SERVICE)
 
     @asyncio.coroutine
@@ -190,7 +178,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_TRAIN_GROUP, async_train_group,
-        descriptions[DOMAIN].get(SERVICE_TRAIN_GROUP),
         schema=SCHEMA_TRAIN_SERVICE)
 
     @asyncio.coroutine
@@ -211,7 +198,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_CREATE_PERSON, async_create_person,
-        descriptions[DOMAIN].get(SERVICE_CREATE_PERSON),
         schema=SCHEMA_PERSON_SERVICE)
 
     @asyncio.coroutine
@@ -232,7 +218,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_DELETE_PERSON, async_delete_person,
-        descriptions[DOMAIN].get(SERVICE_DELETE_PERSON),
         schema=SCHEMA_PERSON_SERVICE)
 
     @asyncio.coroutine
@@ -242,7 +227,7 @@ def async_setup(hass, config):
         p_id = face.store[g_id].get(service.data[ATTR_PERSON])
 
         camera_entity = service.data[ATTR_CAMERA_ENTITY]
-        camera = get_component('camera')
+        camera = hass.components.camera
 
         try:
             image = yield from camera.async_get_image(hass, camera_entity)
@@ -251,7 +236,7 @@ def async_setup(hass, config):
                 'post',
                 "persongroups/{0}/persons/{1}/persistedFaces".format(
                     g_id, p_id),
-                image,
+                image.content,
                 binary=True
             )
         except HomeAssistantError as err:
@@ -259,7 +244,6 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_FACE_PERSON, async_face_person,
-        descriptions[DOMAIN].get(SERVICE_FACE_PERSON),
         schema=SCHEMA_FACE_SERVICE)
 
     return True
@@ -349,7 +333,7 @@ class MicrosoftFace(object):
     @asyncio.coroutine
     def call_api(self, method, function, data=None, binary=False,
                  params=None):
-        """Make a api call."""
+        """Make an api call."""
         headers = {"Ocp-Apim-Subscription-Key": self._api_key}
         url = self._server_url.format(function)
 

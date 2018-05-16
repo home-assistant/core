@@ -6,8 +6,9 @@ https://home-assistant.io/components/climate.tado/
 """
 import logging
 
-from homeassistant.const import TEMP_CELSIUS
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.const import (PRECISION_TENTHS, TEMP_CELSIUS)
+from homeassistant.components.climate import (
+    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.components.tado import DATA_TADO
 
@@ -43,6 +44,8 @@ OPERATION_LIST = {
     CONST_MODE_OFF: 'Off',
 }
 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tado climate platform."""
@@ -56,8 +59,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     climate_devices = []
     for zone in zones:
-        climate_devices.append(create_climate_device(
-            tado, hass, zone, zone['name'], zone['id']))
+        device = create_climate_device(
+            tado, hass, zone, zone['name'], zone['id'])
+        if not device:
+            continue
+        climate_devices.append(device)
 
     if climate_devices:
         add_devices(climate_devices, True)
@@ -72,8 +78,11 @@ def create_climate_device(tado, hass, zone, name, zone_id):
 
     if ac_mode:
         temperatures = capabilities['HEAT']['temperatures']
-    else:
+    elif 'temperatures' in capabilities:
         temperatures = capabilities['temperatures']
+    else:
+        _LOGGER.debug("Received zone %s has no temperature; not adding", name)
+        return
 
     min_temp = float(temperatures['celsius']['min'])
     max_temp = float(temperatures['celsius']['max'])
@@ -128,6 +137,11 @@ class TadoClimate(ClimateDevice):
         self._overlay_mode = CONST_MODE_SMART_SCHEDULE
 
     @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
+
+    @property
     def name(self):
         """Return the name of the device."""
         return self.zone_name
@@ -179,6 +193,11 @@ class TadoClimate(ClimateDevice):
         return self._is_away
 
     @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        return PRECISION_TENTHS
+
+    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temp
@@ -194,6 +213,7 @@ class TadoClimate(ClimateDevice):
         self._target_temp = temperature
         self._control_heating()
 
+    # pylint: disable=arguments-differ
     def set_operation_mode(self, readable_operation_mode):
         """Set new operation mode."""
         operation_mode = CONST_MODE_SMART_SCHEDULE
@@ -230,7 +250,7 @@ class TadoClimate(ClimateDevice):
         data = self._store.get_data(self._data_id)
 
         if data is None:
-            _LOGGER.debug("Recieved no data for zone %s", self.zone_name)
+            _LOGGER.debug("Received no data for zone %s", self.zone_name)
             return
 
         if 'sensorDataPoints' in data:
@@ -275,7 +295,7 @@ class TadoClimate(ClimateDevice):
 
         overlay = False
         overlay_data = None
-        termination = self._current_operation
+        termination = CONST_MODE_SMART_SCHEDULE
         cooling = False
         fan_speed = CONST_MODE_OFF
 
@@ -298,7 +318,7 @@ class TadoClimate(ClimateDevice):
                     fan_speed = setting_data['fanSpeed']
 
         if self._device_is_active:
-            # If you set mode manualy to off, there will be an overlay
+            # If you set mode manually to off, there will be an overlay
             # and a termination, but we want to see the mode "OFF"
             self._overlay_mode = termination
             self._current_operation = termination

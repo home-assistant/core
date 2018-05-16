@@ -9,8 +9,9 @@ import logging
 
 from homeassistant.components.nest import DATA_NEST
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT,
-                                 CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_MONITORED_CONDITIONS,
+    DEVICE_CLASS_TEMPERATURE)
 
 DEPENDENCIES = ['nest']
 SENSOR_TYPES = ['humidity',
@@ -139,6 +140,11 @@ class NestTempSensor(NestSensor):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_TEMPERATURE
 
     def update(self):
         """Retrieve latest state."""

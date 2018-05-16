@@ -9,14 +9,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
+    MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, STATE_HOME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-roku==3.1.3']
+REQUIREMENTS = ['python-roku==3.1.5']
 
 KNOWN_HOSTS = []
 DEFAULT_PORT = 8060
@@ -147,6 +147,11 @@ class RokuDevice(MediaPlayerDevice):
         return SUPPORT_ROKU
 
     @property
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return self.device_info.sernum
+
+    @property
     def media_content_type(self):
         """Content type of current playing media."""
         if self.current_app is None:
@@ -155,7 +160,7 @@ class RokuDevice(MediaPlayerDevice):
             return None
         elif self.current_app.name == "Roku":
             return None
-        return MEDIA_TYPE_VIDEO
+        return MEDIA_TYPE_MOVIE
 
     @property
     def media_image_url(self):
