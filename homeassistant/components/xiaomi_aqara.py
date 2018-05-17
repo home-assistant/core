@@ -36,7 +36,7 @@ CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
 CONF_KEY = 'key'
-CONF_DISABLED = 'disabled'
+CONF_DISABLE = 'disable'
 
 DOMAIN = 'xiaomi_aqara'
 
@@ -74,7 +74,7 @@ GATEWAY_CONFIG = vol.Schema({
         vol.All(cv.string, vol.Length(min=16, max=16)),
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=9898): cv.port,
-    vol.Optional(CONF_DISABLED, default=False): cv.boolean,
+    vol.Optional(CONF_DISABLE, default=False): cv.boolean,
 })
 
 
