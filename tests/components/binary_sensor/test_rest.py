@@ -1,11 +1,13 @@
 """The tests for the REST binary sensor platform."""
 import unittest
+from pytest import raises
 from unittest.mock import patch, Mock
 
 import requests
 from requests.exceptions import Timeout, MissingSchema
 import requests_mock
 
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
 import homeassistant.components.binary_sensor as binary_sensor
 import homeassistant.components.binary_sensor.rest as rest
@@ -54,22 +56,22 @@ class TestRestBinarySensorSetup(unittest.TestCase):
            side_effect=requests.exceptions.ConnectionError())
     def test_setup_failed_connect(self, mock_req):
         """Test setup when connection error occurs."""
-        self.assertFalse(rest.setup_platform(self.hass, {
-            'platform': 'rest',
-            'resource': 'http://localhost',
-        }, self.add_devices, None))
-        self.assertEqual(len(self.DEVICES), 1)
-        self.assertEqual(STATE_OFF, self.DEVICES[0].state)
+        with raises(PlatformNotReady):
+            rest.setup_platform(self.hass, {
+                'platform': 'rest',
+                'resource': 'http://localhost',
+            }, self.add_devices, None)
+        self.assertEqual(len(self.DEVICES), 0)
 
     @patch('requests.Session.send', side_effect=Timeout())
     def test_setup_timeout(self, mock_req):
         """Test setup when connection timeout occurs."""
-        self.assertFalse(rest.setup_platform(self.hass, {
-            'platform': 'rest',
-            'resource': 'http://localhost',
-        }, self.add_devices, None))
-        self.assertEqual(len(self.DEVICES), 1)
-        self.assertEqual(STATE_OFF, self.DEVICES[0].state)
+        with raises(PlatformNotReady):
+            rest.setup_platform(self.hass, {
+                'platform': 'rest',
+                'resource': 'http://localhost',
+            }, self.add_devices, None)
+        self.assertEqual(len(self.DEVICES), 0)
 
     @requests_mock.Mocker()
     def test_setup_minimum(self, mock_req):

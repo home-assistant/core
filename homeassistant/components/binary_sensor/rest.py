@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_HEADERS, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION, CONF_DEVICE_CLASS)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +66,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         auth = None
 
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
+    rest.update()
+    if rest.data is None:
+        raise PlatformNotReady
 
     add_devices([RestBinarySensor(
         hass, rest, name, device_class, value_template)], True)
