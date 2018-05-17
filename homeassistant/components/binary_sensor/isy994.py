@@ -209,8 +209,10 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         """
         if self._status_was_unknown and self._computed_state is None:
             # pylint: disable=protected-access
-            self._computed_state = bool(self._node._val)
+            self._computed_state = bool(self._node.status._val)
             self._status_was_unknown = False
+            self.schedule_update_ha_state()
+            self._heartbeat()
 
     @property
     def value(self) -> object:
