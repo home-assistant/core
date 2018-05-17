@@ -177,8 +177,8 @@ class TestFeedreaderComponent(unittest.TestCase):
         data_file = self.hass.config.path("{}.pickle".format(
             feedreader.DOMAIN))
         storage = StoredData(data_file)
-        manager = FeedManager("FEED DATA", DEFAULT_SCAN_INTERVAL, DEFAULT_MAX_ENTRIES,
-                              self.hass, storage)
+        manager = FeedManager("FEED DATA", DEFAULT_SCAN_INTERVAL,
+                              DEFAULT_MAX_ENTRIES, self.hass, storage)
         # Artificially trigger update.
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         # Collect events.
