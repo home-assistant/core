@@ -78,9 +78,9 @@ class KonnectedSwitch(ToggleEntity):
     def _boolean_state(self, int_state):
         if int_state is None:
             return False
-        elif int_state == 0:
+        if int_state == 0:
             return self._activation == STATE_LOW
-        else:
+        if int_state == 1:
             return self._activation == STATE_HIGH
 
     def _set_state(self, state):
