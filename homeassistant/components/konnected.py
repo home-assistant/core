@@ -19,7 +19,8 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR, HTTP_UNAUTHORIZED,
     CONF_DEVICES, CONF_BINARY_SENSORS, CONF_SWITCHES, CONF_HOST, CONF_PORT,
     CONF_ID, CONF_NAME, CONF_TYPE, CONF_PIN, CONF_ZONE, CONF_ACCESS_TOKEN,
-    ATTR_STATE)
+    ATTR_ENTITY_ID, ATTR_STATE)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 
@@ -75,6 +76,7 @@ DEPENDENCIES = ['http', 'discovery']
 
 ENDPOINT_ROOT = '/api/konnected'
 UPDATE_ENDPOINT = (ENDPOINT_ROOT + r'/device/{device_id:[a-zA-Z0-9]+}')
+SIGNAL_SENSOR_UPDATE = 'konnected.{}.update'
 
 
 async def async_setup(hass, config):
@@ -87,19 +89,19 @@ async def async_setup(hass, config):
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {CONF_ACCESS_TOKEN: access_token}
 
-    async def async_device_discovered(service, info):
+    def device_discovered(service, info):
         """Call when a Konnected device has been discovered."""
         _LOGGER.debug("Discovered a new Konnected device: %s", info)
         host = info.get(CONF_HOST)
         port = info.get(CONF_PORT)
 
         device = KonnectedDevice(hass, host, port, cfg)
-        await device.async_setup()
+        device.setup()
 
     discovery.async_listen(
         hass,
         SERVICE_KONNECTED,
-        async_device_discovered)
+        device_discovered)
 
     hass.http.register_view(KonnectedView(access_token))
 
@@ -121,17 +123,17 @@ class KonnectedDevice(object):
         self.status = self.client.get_status()
         _LOGGER.info('Initialized Konnected device %s', self.device_id)
 
-    async def async_setup(self):
+    def setup(self):
         """Set up a newly discovered Konnected device."""
         user_config = self.config()
         if user_config:
             _LOGGER.debug('Configuring Konnected device %s', self.device_id)
             self.save_data()
-            await self.async_sync_device_config()
-            await discovery.async_load_platform(
+            self.sync_device_config()
+            discovery.load_platform(
                 self.hass, 'binary_sensor',
                 DOMAIN, {'device_id': self.device_id})
-            await discovery.async_load_platform(
+            discovery.load_platform(
                 self.hass, 'switch', DOMAIN,
                 {'device_id': self.device_id})
 
@@ -225,7 +227,7 @@ class KonnectedDevice(object):
     def sensor_configuration(self):
         """Return the configuration map for syncing sensors."""
         return [{'pin': p} for p in
-                self.stored_configuration[CONF_BINARY_SENSORS].keys()]
+                self.stored_configuration[CONF_BINARY_SENSORS]]
 
     def actuator_configuration(self):
         """Return the configuration map for syncing actuators."""
@@ -235,7 +237,7 @@ class KonnectedDevice(object):
                 for p, data in
                 self.stored_configuration[CONF_SWITCHES].items()]
 
-    async def async_sync_device_config(self):
+    def sync_device_config(self):
         """Sync the new pin configuration to the Konnected device."""
         desired_sensor_configuration = self.sensor_configuration()
         current_sensor_configuration = [
@@ -306,10 +308,12 @@ class KonnectedView(HomeAssistantView):
         if pin_data is None:
             return self.json_message('unregistered sensor/actuator',
                                      status_code=HTTP_BAD_REQUEST)
-        entity = pin_data.get('entity')
-        if entity is None:
+
+        entity_id = pin_data.get(ATTR_ENTITY_ID)
+        if entity_id is None:
             return self.json_message('uninitialized sensor/actuator',
                                      status_code=HTTP_INTERNAL_SERVER_ERROR)
 
-        await entity.async_set_state(state)
+        async_dispatcher_send(
+            hass, SIGNAL_SENSOR_UPDATE.format(entity_id), state)
         return self.json_message('ok')
