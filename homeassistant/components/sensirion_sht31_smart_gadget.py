@@ -184,7 +184,7 @@ class SHT31SmartGadgetSensor(Entity):
         return self._state
 
     def update(self):
-        """Fetch temperature and humidity from the sensor."""
+        """Fetch battery, temperature and humidity from the sensor."""
         self._client.update()
 
 
@@ -197,7 +197,7 @@ class SHT31SmartGadgetSensorBattery(SHT31SmartGadgetSensor):
         return "%"
 
     def update(self):
-        """Fetch temperature from the sensor."""
+        """Fetch battery from the sensor."""
         super().update()
         battery = self._client.battery
         if battery is not None:
