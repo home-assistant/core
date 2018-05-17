@@ -201,6 +201,9 @@ omit =
     homeassistant/components/netatmo.py
     homeassistant/components/*/netatmo.py
 
+    homeassistant/components/netgear_lte.py
+    homeassistant/components/*/netgear_lte.py
+
     homeassistant/components/octoprint.py
     homeassistant/components/*/octoprint.py
 
