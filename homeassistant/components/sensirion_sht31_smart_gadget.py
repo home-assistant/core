@@ -16,7 +16,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import PRECISION_TENTHS
-from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, CONF_MONITORED_CONDITIONS, CONF_MAC)
+from homeassistant.const import \
+    (TEMP_CELSIUS, CONF_NAME, CONF_MONITORED_CONDITIONS, CONF_MAC)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import display_temp
 from homeassistant.util import Throttle
@@ -87,12 +88,15 @@ class BluetoothSHT31SmartGadgetSensor(object):
 
             self.adapter.start()
 
+            type = pygatt.BLEAddressType.random
+
             try:
                 self.device = self.adapter.connect(self.mac,
                                                    timeout=CONNECT_TIMEOUT,
-                                                   address_type=pygatt.BLEAddressType.random)
+                                                   address_type=type)
             except NotConnectedError as ex:
-                _LOGGER.error("Failed to connect to SHT31 Smart-Gadget\nException: %s", str(ex))
+                _LOGGER.error("Failed to connect to SHT31 Smart-Gadget\n"
+                              "Exception: %s", str(ex))
 
     def _is_connected(self):
         from pygatt.exceptions import NotConnectedError
@@ -158,7 +162,10 @@ class SHT31SmartGadgetClient(object):
 
 
 class SHT31SmartGadgetSensor(Entity):
-    """An abstract SHT31 Smart-Gadget Sensor, can be either battery, temperature or humidity."""
+    """
+    An abstract SHT31 Smart-Gadget Sensor,
+    can be either battery, temperature or humidity.
+    """
 
     def __init__(self, client, name):
         """Initialize the sensor."""
