@@ -41,7 +41,7 @@ TEMPERATURE_HANDLE = "0x37"
 
 CONNECT_TIMEOUT = 30
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MAC): cv.string,
