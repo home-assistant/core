@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.konnected/
 """
 
-import asyncio
 import logging
 
 from homeassistant.components.konnected import (
@@ -47,7 +46,6 @@ class KonnectedSwitch(ToggleEntity):
         self._name = self._data.get(
             'name', 'Konnected {} Actuator {}'.format(
                 device_id, PIN_TO_ZONE[pin_num]))
-        self._data['entity'] = self
         self._client = client
         _LOGGER.debug('Created new switch: %s', self._name)
 
@@ -80,8 +78,11 @@ class KonnectedSwitch(ToggleEntity):
         _LOGGER.debug('Setting status of %s actuator pin %s to %s',
                       self._device_id, self.name, state)
 
-    @asyncio.coroutine
-    def async_set_state(self, state):
+    async def async_added_to_hass(self):
+        """Register update callback."""
+        self._data['entity_id'] = self.entity_id
+
+    async def async_set_state(self, state):
         """Update the switch's state."""
         self._state = state
         self._data[ATTR_STATE] = state

@@ -8,9 +8,11 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.konnected import (
-    DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE)
+    DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, SIGNAL_SENSOR_UPDATE)
 from homeassistant.const import (
-    CONF_DEVICES, CONF_TYPE, CONF_NAME, CONF_BINARY_SENSORS, ATTR_STATE)
+    CONF_DEVICES, CONF_TYPE, CONF_NAME, CONF_BINARY_SENSORS, ATTR_ENTITY_ID,
+    ATTR_STATE)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +45,6 @@ class KonnectedBinarySensor(BinarySensorDevice):
         self._device_class = self._data.get(CONF_TYPE)
         self._name = self._data.get(CONF_NAME, 'Konnected {} Zone {}'.format(
             device_id, PIN_TO_ZONE[pin_num]))
-        self._data['entity'] = self
         _LOGGER.debug('Created new Konnected sensor: %s', self._name)
 
     @property
@@ -66,8 +67,15 @@ class KonnectedBinarySensor(BinarySensorDevice):
         """Return the device class."""
         return self._device_class
 
-    async def async_set_state(self, state):
+    async def async_added_to_hass(self):
+        """Store entity_id and register state change callback."""
+        self._data[ATTR_ENTITY_ID] = self.entity_id
+        async_dispatcher_connect(
+            self.hass, SIGNAL_SENSOR_UPDATE,
+            self.async_set_state)
+
+    async def async_set_state(self, entity_id, state):
         """Update the sensor's state."""
-        self._state = state
-        self._data[ATTR_STATE] = state
-        self.async_schedule_update_ha_state()
+        if self.entity_id == entity_id:
+            self._state = state
+            self.async_schedule_update_ha_state()

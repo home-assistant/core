@@ -19,7 +19,8 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_INTERNAL_SERVER_ERROR, HTTP_UNAUTHORIZED,
     CONF_DEVICES, CONF_BINARY_SENSORS, CONF_SWITCHES, CONF_HOST, CONF_PORT,
     CONF_ID, CONF_NAME, CONF_TYPE, CONF_PIN, CONF_ZONE, CONF_ACCESS_TOKEN,
-    ATTR_STATE)
+    ATTR_ENTITY_ID, ATTR_STATE)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 
@@ -75,6 +76,7 @@ DEPENDENCIES = ['http', 'discovery']
 
 ENDPOINT_ROOT = '/api/konnected'
 UPDATE_ENDPOINT = (ENDPOINT_ROOT + r'/device/{device_id:[a-zA-Z0-9]+}')
+SIGNAL_SENSOR_UPDATE = 'konnected.sensor_updated'
 
 
 async def async_setup(hass, config):
@@ -306,10 +308,11 @@ class KonnectedView(HomeAssistantView):
         if pin_data is None:
             return self.json_message('unregistered sensor/actuator',
                                      status_code=HTTP_BAD_REQUEST)
-        entity = pin_data.get('entity')
-        if entity is None:
+
+        entity_id = pin_data.get(ATTR_ENTITY_ID)
+        if entity_id is None:
             return self.json_message('uninitialized sensor/actuator',
                                      status_code=HTTP_INTERNAL_SERVER_ERROR)
 
-        await entity.async_set_state(state)
+        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, entity_id, state)
         return self.json_message('ok')
