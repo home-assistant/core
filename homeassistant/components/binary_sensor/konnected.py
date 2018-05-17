@@ -12,6 +12,7 @@ from homeassistant.components.konnected import (
 from homeassistant.const import (
     CONF_DEVICES, CONF_TYPE, CONF_NAME, CONF_BINARY_SENSORS, ATTR_ENTITY_ID,
     ATTR_STATE)
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +75,8 @@ class KonnectedBinarySensor(BinarySensorDevice):
             self.hass, SIGNAL_SENSOR_UPDATE.format(self.entity_id),
             self.async_set_state)
 
-    async def async_set_state(self, state):
+    @callback
+    def async_set_state(self, state):
         """Update the sensor's state."""
         self._state = state
         self.async_schedule_update_ha_state()
