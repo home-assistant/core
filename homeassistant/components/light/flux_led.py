@@ -216,26 +216,41 @@ class FluxLight(Light):
         if hs_color:
             rgb = color_util.color_hs_to_RGB(*hs_color)
         else:
-            rgb = self._bulb.getRgb()
+            rgb = None
 
-        brightness = kwargs.get(ATTR_BRIGHTNESS) or self.brightness
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
         white = kwargs.get(ATTR_WHITE_VALUE)
+
+        # show warning if effect set with rgb, brightness, or white level
+        if effect and (brightness or white or rgb):
+            _LOGGER.warning("RGB, brightness, and white level are ignored when"
+                            " an effect is specified for a flux bulb.")
+
+        # preserve current brightness on color/white level change
+        if brightness is None:
+            brightness = self.brightness
+
+        # preserve color on brightness/white level change
+        if rgb is None:
+            rgb = self._bulb.getRgb()
+
+        # random color effect
+        if effect == EFFECT_RANDOM:
+            self._bulb.setRgb(random.randint(0, 255),
+                              random.randint(0, 255),
+                              random.randint(0, 255))
+            return
+
+        # effect selection
+        elif effect in EFFECT_MAP:
+            self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
+            return
 
         self._bulb.setRgb(*tuple(rgb), brightness=brightness)
 
         if white is not None:
             self._bulb.setWarmWhite255(white)
-
-        # random color effect
-        elif effect == EFFECT_RANDOM:
-            self._bulb.setRgb(random.randint(0, 255),
-                              random.randint(0, 255),
-                              random.randint(0, 255))
-
-        # effect selection
-        elif effect in EFFECT_MAP:
-            self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
