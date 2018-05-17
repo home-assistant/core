@@ -1,7 +1,8 @@
 """
 Support for Sensirion SHT31 Smart-Gadget temperature and humidity sensor.
 
-https://www.sensirion.com/fileadmin/user_upload/customers/sensirion/Dokumente/2_Humidity_Sensors/Sensirion_Humidity_Sensors_SHT3x_Smart-Gadget_User-Guide.pdf
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/sensirion_sht31_smart_gadget/
 """
 
 import binascii
@@ -50,6 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     mac = config.get(CONF_MAC)
     sensor = BluetoothSHT31SmartGadgetSensor(mac)
@@ -71,6 +73,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class BluetoothSHT31SmartGadgetSensor(object):
+    """Logic to get the data from the SHT31 Smart-Gadget sensor."""
+
     def __init__(self, mac):
         import pygatt
 
@@ -80,6 +84,7 @@ class BluetoothSHT31SmartGadgetSensor(object):
         self.adapter = pygatt.GATTToolBackend()
 
     def _connect(self):
+        """Connect to SHT31 Smart-Gadget sensor."""
         import pygatt
         from pygatt.exceptions import NotConnectedError
 
@@ -88,17 +93,18 @@ class BluetoothSHT31SmartGadgetSensor(object):
 
             self.adapter.start()
 
-            type = pygatt.BLEAddressType.random
+            ble_type = pygatt.BLEAddressType.random
 
             try:
                 self.device = self.adapter.connect(self.mac,
                                                    timeout=CONNECT_TIMEOUT,
-                                                   address_type=type)
+                                                   address_type=ble_type)
             except NotConnectedError as ex:
                 _LOGGER.error("Failed to connect to SHT31 Smart-Gadget\n"
                               "Exception: %s", str(ex))
 
     def _is_connected(self):
+        """Check if SHT31 Smart-Gadget sensor is connected."""
         from pygatt.exceptions import NotConnectedError
 
         if self.device is not None:
@@ -111,6 +117,7 @@ class BluetoothSHT31SmartGadgetSensor(object):
             return False
 
     def read_values(self):
+        """Read values from SHT31 Smart-Gadget sensor."""
         self._connect()
         battery = self._read_battery()
         temperature = self._read_temperature()
@@ -118,14 +125,17 @@ class BluetoothSHT31SmartGadgetSensor(object):
         return battery, temperature, humidity
 
     def _read_battery(self):
+        """Read battery value from SHT31 Smart-Gadget sensor."""
         raw = self.device.char_read_handle(BATTERY_HANDLE)
         return int(binascii.hexlify(raw))
 
     def _read_temperature(self):
+        """Read temperature value from SHT31 Smart-Gadget sensor."""
         raw = self.device.char_read_handle(TEMPERATURE_HANDLE)
         return struct.unpack("f", raw)[0]
 
     def _read_humidity(self):
+        """Read humidity value from SHT31 Smart-Gadget sensor."""
         raw = self.device.char_read_handle(HUMIDITY_HANDLE)
         return struct.unpack("f", raw)[0]
 
