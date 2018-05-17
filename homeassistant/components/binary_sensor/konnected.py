@@ -71,11 +71,10 @@ class KonnectedBinarySensor(BinarySensorDevice):
         """Store entity_id and register state change callback."""
         self._data[ATTR_ENTITY_ID] = self.entity_id
         async_dispatcher_connect(
-            self.hass, SIGNAL_SENSOR_UPDATE,
+            self.hass, SIGNAL_SENSOR_UPDATE.format(self.entity_id),
             self.async_set_state)
 
-    async def async_set_state(self, entity_id, state):
+    async def async_set_state(self, state):
         """Update the sensor's state."""
-        if self.entity_id == entity_id:
-            self._state = state
-            self.async_schedule_update_ha_state()
+        self._state = state
+        self.async_schedule_update_ha_state()

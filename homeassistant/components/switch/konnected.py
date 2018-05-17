@@ -76,7 +76,9 @@ class KonnectedSwitch(ToggleEntity):
             self._set_state(self._boolean_state(resp.get(ATTR_STATE)))
 
     def _boolean_state(self, int_state):
-        if int_state == 0:
+        if int_state is None:
+            return False
+        elif int_state == 0:
             return self._activation == STATE_LOW
         else:
             return self._activation == STATE_HIGH
@@ -88,5 +90,5 @@ class KonnectedSwitch(ToggleEntity):
                       self._device_id, self.name, state)
 
     async def async_added_to_hass(self):
-        """Register update callback."""
+        """Store entity_id."""
         self._data['entity_id'] = self.entity_id

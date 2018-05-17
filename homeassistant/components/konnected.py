@@ -76,7 +76,7 @@ DEPENDENCIES = ['http', 'discovery']
 
 ENDPOINT_ROOT = '/api/konnected'
 UPDATE_ENDPOINT = (ENDPOINT_ROOT + r'/device/{device_id:[a-zA-Z0-9]+}')
-SIGNAL_SENSOR_UPDATE = 'konnected.sensor_updated'
+SIGNAL_SENSOR_UPDATE = 'konnected.{}.update'
 
 
 async def async_setup(hass, config):
@@ -314,5 +314,6 @@ class KonnectedView(HomeAssistantView):
             return self.json_message('uninitialized sensor/actuator',
                                      status_code=HTTP_INTERNAL_SERVER_ERROR)
 
-        async_dispatcher_send(hass, SIGNAL_SENSOR_UPDATE, entity_id, state)
+        async_dispatcher_send(
+            hass, SIGNAL_SENSOR_UPDATE.format(entity_id), state)
         return self.json_message('ok')
