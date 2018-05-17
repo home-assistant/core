@@ -227,14 +227,6 @@ class FluxLight(Light):
             _LOGGER.warning("RGB, brightness, and white level are ignored when"
                             " an effect is specified for a flux bulb.")
 
-        # preserve current brightness on color/white level change
-        if brightness is None:
-            brightness = self.brightness
-
-        # preserve color on brightness/white level change
-        if rgb is None:
-            rgb = self._bulb.getRgb()
-
         # random color effect
         if effect == EFFECT_RANDOM:
             self._bulb.setRgb(random.randint(0, 255),
@@ -246,6 +238,14 @@ class FluxLight(Light):
         elif effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
             return
+
+        # preserve current brightness on color/white level change
+        if brightness is None:
+            brightness = self.brightness
+
+        # preserve color on brightness/white level change
+        if rgb is None:
+            rgb = self._bulb.getRgb()
 
         self._bulb.setRgb(*tuple(rgb), brightness=brightness)
 
