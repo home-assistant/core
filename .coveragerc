@@ -599,6 +599,7 @@ omit =
     homeassistant/components/sensor/fastdotcom.py
     homeassistant/components/sensor/fedex.py
     homeassistant/components/sensor/filesize.py
+    homeassistant/components/sensor/fints.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/folder.py
