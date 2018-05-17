@@ -41,8 +41,8 @@ class KonnectedSwitch(ToggleEntity):
         self._data = data
         self._device_id = device_id
         self._pin_num = pin_num
-        self._state = self._data.get(ATTR_STATE)
         self._activation = self._data.get(CONF_ACTIVATION, STATE_HIGH)
+        self._state = self._boolean_state(self._data.get(ATTR_STATE))
         self._name = self._data.get(
             'name', 'Konnected {} Actuator {}'.format(
                 device_id, PIN_TO_ZONE[pin_num]))
@@ -61,19 +61,28 @@ class KonnectedSwitch(ToggleEntity):
 
     def turn_on(self, **kwargs):
         """Send a command to turn on the switch."""
-        self._client.put_device(self._pin_num,
-                                int(self._activation == STATE_HIGH))
-        self._set_state(True)
+        resp = self._client.put_device(
+            self._pin_num, int(self._activation == STATE_HIGH))
+
+        if resp.get(ATTR_STATE) is not None:
+            self._set_state(self._boolean_state(resp.get(ATTR_STATE)))
 
     def turn_off(self, **kwargs):
         """Send a command to turn off the switch."""
-        self._client.put_device(self._pin_num,
-                                int(self._activation == STATE_LOW))
-        self._set_state(False)
+        resp = self._client.put_device(
+            self._pin_num, int(self._activation == STATE_LOW))
+
+        if resp.get(ATTR_STATE) is not None:
+            self._set_state(self._boolean_state(resp.get(ATTR_STATE)))
+
+    def _boolean_state(self, int_state):
+        if int_state == 0:
+            return self._activation == STATE_LOW
+        else:
+            return self._activation == STATE_HIGH
 
     def _set_state(self, state):
         self._state = state
-        self._data[ATTR_STATE] = state
         self.schedule_update_ha_state()
         _LOGGER.debug('Setting status of %s actuator pin %s to %s',
                       self._device_id, self.name, state)
@@ -81,9 +90,3 @@ class KonnectedSwitch(ToggleEntity):
     async def async_added_to_hass(self):
         """Register update callback."""
         self._data['entity_id'] = self.entity_id
-
-    async def async_set_state(self, state):
-        """Update the switch's state."""
-        self._state = state
-        self._data[ATTR_STATE] = state
-        self.async_schedule_update_ha_state()
