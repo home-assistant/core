@@ -12,7 +12,7 @@ from unittest.mock import patch
 from homeassistant.components import feedreader
 from homeassistant.components.feedreader import CONF_URLS, FeedManager, \
     StoredData, EVENT_FEEDREADER, DEFAULT_SCAN_INTERVAL, CONF_MAX_ENTRIES, \
-    MAX_ENTRIES
+    DEFAULT_MAX_ENTRIES
 from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
@@ -78,7 +78,7 @@ class TestFeedreaderComponent(unittest.TestCase):
         self.assertTrue(setup_component(self.hass, feedreader.DOMAIN,
                                         VALID_CONFIG_3))
 
-    def setup_manager(self, feed_data, max_entries=MAX_ENTRIES):
+    def setup_manager(self, feed_data, max_entries=DEFAULT_MAX_ENTRIES):
         """Generic test setup method."""
         events = []
 
@@ -177,7 +177,7 @@ class TestFeedreaderComponent(unittest.TestCase):
         data_file = self.hass.config.path("{}.pickle".format(
             feedreader.DOMAIN))
         storage = StoredData(data_file)
-        manager = FeedManager("FEED DATA", DEFAULT_SCAN_INTERVAL, MAX_ENTRIES,
+        manager = FeedManager("FEED DATA", DEFAULT_SCAN_INTERVAL, DEFAULT_MAX_ENTRIES,
                               self.hass, storage)
         # Artificially trigger update.
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)

@@ -23,20 +23,20 @@ _LOGGER = getLogger(__name__)
 CONF_URLS = 'urls'
 CONF_MAX_ENTRIES = 'max_entries'
 
+DEFAULT_MAX_ENTRIES = 20
 DEFAULT_SCAN_INTERVAL = timedelta(hours=1)
 
 DOMAIN = 'feedreader'
 
 EVENT_FEEDREADER = 'feedreader'
 
-MAX_ENTRIES = 20
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {
         vol.Required(CONF_URLS): vol.All(cv.ensure_list, [cv.url]),
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
             cv.time_period,
-        vol.Optional(CONF_MAX_ENTRIES, default=MAX_ENTRIES): cv.positive_int
+        vol.Optional(CONF_MAX_ENTRIES, default=DEFAULT_MAX_ENTRIES):
+            cv.positive_int
     }
 }, extra=vol.ALLOW_EXTRA)
 
