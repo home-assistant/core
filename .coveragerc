@@ -220,9 +220,6 @@ omit =
     homeassistant/components/rpi_pfio.py
     homeassistant/components/*/rpi_pfio.py
 
-    homeassistant/components/ryobi_gdo.py
-    homeassistant/components/*/ryobi_gdo.py
-
     homeassistant/components/satel_integra.py
     homeassistant/components/*/satel_integra.py
 
@@ -370,6 +367,7 @@ omit =
     homeassistant/components/cover/myq.py
     homeassistant/components/cover/opengarage.py
     homeassistant/components/cover/rpi_gpio.py
+    homeassistant/components/cover/ryobi_gdo.py
     homeassistant/components/cover/scsgate.py
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py

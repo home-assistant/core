@@ -685,6 +685,9 @@ pyTibber==0.4.1
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
 
+# homeassistant.components.cover.ryobi_gdo
+py_ryobi_gdo==0.0.9
+
 # homeassistant.components.ads
 pyads==2.2.6
 
@@ -1323,7 +1326,6 @@ watchdog==0.8.3
 # homeassistant.components.waterfurnace
 waterfurnace==0.4.0
 
-# homeassistant.components.cover.ryobi_gdo
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0
 
