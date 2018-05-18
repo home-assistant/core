@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the KIWI lock platform."""
     from kiwiki import KiwiClient
-    kiwi = KiwiClient(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
+    kiwi = KiwiClient(config[CONF_USERNAME], config[CONF_PASSWORD])
     add_devices([KiwiLock(lock, kiwi) for lock in kiwi.get_locks()], True)
 
 
@@ -40,7 +40,6 @@ class KiwiLock(LockDevice):
     def __init__(self, kiwi_lock, client):
         """Initialize the lock."""
         self._sensor = kiwi_lock
-        self._device_attrs = None
         self._client = client
         self.lock_id = kiwi_lock['sensor_id']
 
