@@ -33,6 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         for light in lights:
             entities.append(DeconzLight(light))
         async_add_devices(entities, True)
+
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_light', async_add_light))
 
@@ -40,10 +41,13 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     def async_add_group(groups):
         """Add group from deCONZ."""
         entities = []
+        CONF_ALLOW_GROUP = 'allow_group'
+        allow_group = config_entry.data.get(CONF_ALLOW_GROUP, True)
         for group in groups:
-            if group.lights:
+            if group.lights and allow_group:
                 entities.append(DeconzLight(group))
         async_add_devices(entities, True)
+
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_group', async_add_group))
 
