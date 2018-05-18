@@ -30,8 +30,15 @@ def test_validate_entity_config():
     assert vec({}) == {}
     assert vec({'demo.test': {CONF_NAME: 'Name'}}) == \
         {'demo.test': {CONF_NAME: 'Name'}}
+
+    assert vec({'alarm_control_panel.demo': {}}) == \
+        {'alarm_control_panel.demo': {ATTR_CODE: None}}
     assert vec({'alarm_control_panel.demo': {ATTR_CODE: '1234'}}) == \
         {'alarm_control_panel.demo': {ATTR_CODE: '1234'}}
+
+    assert vec({'lock.demo': {}}) == {'lock.demo': {ATTR_CODE: None}}
+    assert vec({'lock.demo': {ATTR_CODE: '1234'}}) == \
+        {'lock.demo': {ATTR_CODE: '1234'}}
 
 
 def test_convert_to_float():

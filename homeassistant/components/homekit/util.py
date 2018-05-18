@@ -30,7 +30,7 @@ def validate_entity_config(values):
 
         domain, _ = split_entity_id(entity)
 
-        if domain == 'alarm_control_panel':
+        if domain in ('alarm_control_panel', 'lock'):
             code = config.get(ATTR_CODE)
             params[ATTR_CODE] = cv.string(code) if code else None
 
