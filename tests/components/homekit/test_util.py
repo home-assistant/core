@@ -2,7 +2,6 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import HOMEKIT_NOTIFY_ID
 from homeassistant.components.homekit.util import (
     show_setup_message, dismiss_setup_message, convert_to_float,
@@ -10,7 +9,7 @@ from homeassistant.components.homekit.util import (
 from homeassistant.components.homekit.util import validate_entity_config \
     as vec
 from homeassistant.components.persistent_notification import (
-    DOMAIN, ATTR_NOTIFICATION_ID)
+    DOMAIN, ATTR_MESSAGE, ATTR_NOTIFICATION_ID)
 from homeassistant.const import (
     ATTR_CODE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME)
 
@@ -74,16 +73,17 @@ def test_density_to_air_quality():
 
 async def test_show_setup_msg(hass):
     """Test show setup message as persistence notification."""
-    bridge = HomeBridge(hass)
+    pincode = b'123-45-678'
 
     call_create_notification = async_mock_service(hass, DOMAIN, 'create')
 
-    await hass.async_add_job(show_setup_message, hass, bridge)
+    await hass.async_add_job(show_setup_message, hass, pincode)
     await hass.async_block_till_done()
 
     assert call_create_notification
     assert call_create_notification[0].data[ATTR_NOTIFICATION_ID] == \
         HOMEKIT_NOTIFY_ID
+    assert pincode.decode() in call_create_notification[0].data[ATTR_MESSAGE]
 
 
 async def test_dismiss_setup_msg(hass):
