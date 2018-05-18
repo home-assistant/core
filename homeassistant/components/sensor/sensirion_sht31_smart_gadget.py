@@ -52,6 +52,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the HT31 Smart-Gadget sensor."""
+
     mac = config.get(CONF_MAC)
     sensor = BluetoothSHT31SmartGadgetSensor(mac)
 
