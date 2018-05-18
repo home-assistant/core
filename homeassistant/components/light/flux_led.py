@@ -222,27 +222,34 @@ class FluxLight(Light):
         effect = kwargs.get(ATTR_EFFECT)
         white = kwargs.get(ATTR_WHITE_VALUE)
 
-        # color change only
-        if rgb is not None:
-            self._bulb.setRgb(*tuple(rgb), brightness=self.brightness)
+        # Show warning if effect set with rgb, brightness, or white level
+        if effect and (brightness or white or rgb):
+            _LOGGER.warning("RGB, brightness and white level are ignored when"
+                            " an effect is specified for a flux bulb")
 
-        # brightness change only
-        elif brightness is not None:
-            (red, green, blue) = self._bulb.getRgb()
-            self._bulb.setRgb(red, green, blue, brightness=brightness)
-
-        # random color effect
-        elif effect == EFFECT_RANDOM:
+        # Random color effect
+        if effect == EFFECT_RANDOM:
             self._bulb.setRgb(random.randint(0, 255),
                               random.randint(0, 255),
                               random.randint(0, 255))
+            return
 
-        # effect selection
+        # Effect selection
         elif effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
+            return
 
-        # white change only
-        elif white is not None:
+        # Preserve current brightness on color/white level change
+        if brightness is None:
+            brightness = self.brightness
+
+        # Preserve color on brightness/white level change
+        if rgb is None:
+            rgb = self._bulb.getRgb()
+
+        self._bulb.setRgb(*tuple(rgb), brightness=brightness)
+
+        if white is not None:
             self._bulb.setWarmWhite255(white)
 
     def turn_off(self, **kwargs):
