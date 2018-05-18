@@ -116,26 +116,6 @@ def test_home_bridge():
     # setup_message
     bridge.setup_message()
 
-    # add_paired_client
-    with patch('pyhap.accessory.Accessory.add_paired_client') \
-        as mock_add_paired_client, \
-        patch('homeassistant.components.homekit.accessories.'
-              'dismiss_setup_message') as mock_dissmiss_msg:
-        bridge.add_paired_client('client_uuid', 'client_public')
-
-    mock_add_paired_client.assert_called_with('client_uuid', 'client_public')
-    mock_dissmiss_msg.assert_called_with('hass')
-
-    # remove_paired_client
-    with patch('pyhap.accessory.Accessory.remove_paired_client') \
-        as mock_remove_paired_client, \
-        patch('homeassistant.components.homekit.accessories.'
-              'show_setup_message') as mock_show_msg:
-        bridge.remove_paired_client('client_uuid')
-
-    mock_remove_paired_client.assert_called_with('client_uuid')
-    mock_show_msg.assert_called_with('hass', bridge)
-
 
 def test_home_driver():
     """Test HomeDriver class."""
@@ -143,9 +123,30 @@ def test_home_driver():
     ip_address = '127.0.0.1'
     port = 51826
     path = '.homekit.state'
+    pin = b'123-45-678'
 
     with patch('pyhap.accessory_driver.AccessoryDriver.__init__') \
             as mock_driver:
-        HomeDriver(bridge, ip_address, port, path)
+        driver = HomeDriver('hass', bridge, ip_address, port, path)
 
     mock_driver.assert_called_with(bridge, ip_address, port, path)
+    driver.state = Mock(pincode=pin)
+
+    # pair
+    with patch('pyhap.accessory_driver.AccessoryDriver.pair') as mock_pair, \
+        patch('homeassistant.components.homekit.accessories.'
+              'dismiss_setup_message') as mock_dissmiss_msg:
+        driver.pair('client_uuid', 'client_public')
+
+    mock_pair.assert_called_with('client_uuid', 'client_public')
+    mock_dissmiss_msg.assert_called_with('hass')
+
+    # unpair
+    with patch('pyhap.accessory_driver.AccessoryDriver.unpair') \
+        as mock_unpair, \
+        patch('homeassistant.components.homekit.accessories.'
+              'show_setup_message') as mock_show_msg:
+        driver.unpair('client_uuid')
+
+    mock_unpair.assert_called_with('client_uuid')
+    mock_show_msg.assert_called_with('hass', pin)
