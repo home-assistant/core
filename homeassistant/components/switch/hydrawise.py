@@ -2,7 +2,7 @@
 Support for Hydrawise cloud.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.hydrawise
+https://home-assistant.io/components/switch.hydrawise/
 """
 import logging
 
@@ -11,7 +11,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.hydrawise import (
     ALLOWED_WATERING_TIME, CONF_ATTRIBUTION, CONF_WATERING_TIME,
-    DATA_HYDRAWISE, DEFAULT_WATERING_TIME, HydrawiseEntity, SWITCHES)
+    DATA_HYDRAWISE, DEFAULT_WATERING_TIME, HydrawiseEntity, SWITCHES,
+    DEVICE_MAP, DEVICE_MAP_INDEX)
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS)
@@ -21,7 +22,7 @@ DEPENDENCIES = ['hydrawise']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SWITCHES)):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=SWITCHES):
         vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
     vol.Optional(CONF_WATERING_TIME, default=DEFAULT_WATERING_TIME):
         vol.All(vol.In(ALLOWED_WATERING_TIME)),
@@ -29,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up a sensor for a hydrawise device."""
+    """Set up a sensor for a Hydrawise device."""
     hydrawise = hass.data[DATA_HYDRAWISE].data
 
     default_watering_timer = config.get(CONF_WATERING_TIME)
@@ -48,10 +49,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class HydrawiseSwitch(HydrawiseEntity, SwitchDevice):
-    """A switch implementation for hydrawise device."""
+    """A switch implementation for Hydrawise device."""
 
     def __init__(self, default_watering_timer, *args):
-        """Initialize a switch for hydrawise device."""
+        """Initialize a switch for Hydrawise device."""
         super().__init__(*args)
         self._default_watering_timer = default_watering_timer
 
@@ -107,6 +108,12 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchDevice):
             controller_info['controllers'][0]['last_contact_readable']
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            'identifier': self.data.get('relay'),
-            'last contact:': temp
+            "identifier": self.data.get('relay'),
+            "last contact": temp
         }
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return DEVICE_MAP.get(self._sensor_type)[
+            DEVICE_MAP_INDEX.index('ICON_INDEX')]

@@ -2,7 +2,7 @@
 Support for Hydrawise sprinkler.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.hydrawise
+https://home-assistant.io/components/sensor.hydrawise/
 """
 import logging
 
@@ -10,7 +10,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.hydrawise import (
-    DATA_HYDRAWISE, HydrawiseEntity, ICON_MAP, SENSORS)
+    DATA_HYDRAWISE, HydrawiseEntity, DEVICE_MAP, DEVICE_MAP_INDEX, SENSORS)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 
@@ -19,13 +19,13 @@ DEPENDENCIES = ['hydrawise']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSORS):
         vol.All(cv.ensure_list, [vol.In(SENSORS)]),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up a sensor for a hydrawise device."""
+    """Set up a sensor for a Hydrawise device."""
     hydrawise = hass.data[DATA_HYDRAWISE].data
 
     sensors = []
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class HydrawiseSensor(HydrawiseEntity):
-    """A sensor implementation for hydrawise device."""
+    """A sensor implementation for Hydrawise device."""
 
     @property
     def state(self):
@@ -69,4 +69,5 @@ class HydrawiseSensor(HydrawiseEntity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return ICON_MAP.get(self._sensor_type)
+        return DEVICE_MAP.get(self._sensor_type)[
+            DEVICE_MAP_INDEX.index('ICON_INDEX')]

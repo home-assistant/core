@@ -2,7 +2,7 @@
 Support for Hydrawise cloud.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/hydrawise
+https://home-assistant.io/components/hydrawise/
 """
 import asyncio
 from datetime import timedelta
@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['hydrawiser==0.1.0']
+REQUIREMENTS = ['hydrawiser==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,33 +35,16 @@ DATA_HYDRAWISE = 'hydrawise'
 DOMAIN = 'hydrawise'
 DEFAULT_WATERING_TIME = 15
 
-KEY_MAP = {
-    'auto_watering': 'Automatic Watering',
-    'is_watering': 'Watering',
-    'manual_watering': 'Manual Watering',
-    'next_cycle': 'Next Cycle',
-    'status': 'Status',
-    'watering_time': 'Watering Time',
-    'rain_sensor': 'Rain Sensor',
-}
-
-ICON_MAP = {
-    'auto_watering': 'mdi:autorenew',
-    'is_watering': '',
-    'manual_watering': 'mdi:water-pump',
-    'next_cycle': 'mdi:calendar-clock',
-    'status': '',
-    'watering_time': 'mdi:water-pump',
-    'rain_sensor': ''
-}
-
-UNIT_OF_MEASUREMENT_MAP = {
-    'auto_watering': '',
-    'is_watering': '',
-    'manual_watering': '',
-    'next_cycle': '',
-    'status': '',
-    'watering_time': 'min',
+DEVICE_MAP_INDEX = ['KEY_INDEX', 'ICON_INDEX', 'DEVICE_CLASS_INDEX',
+                    'UNIT_OF_MEASURE_INDEX']
+DEVICE_MAP = {
+    'auto_watering': ['Automatic Watering', 'mdi:autorenew', '', ''],
+    'is_watering': ['Watering', '', 'moisture', ''],
+    'manual_watering': ['Manual Watering', 'mdi:water-pump', '', ''],
+    'next_cycle': ['Next Cycle', 'mdi:calendar-clock', '', ''],
+    'status': ['Status', '', 'connectivity', ''],
+    'watering_time': ['Watering Time', 'mdi:water-pump', '', 'min'],
+    'rain_sensor': ['Rain Sensor', '', 'moisture', '']
 }
 
 BINARY_SENSORS = ['is_watering', 'status', 'rain_sensor']
@@ -70,7 +53,7 @@ SENSORS = ['next_cycle', 'watering_time']
 
 SWITCHES = ['auto_watering', 'manual_watering']
 
-SCAN_INTERVAL = timedelta(seconds=20)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 SIGNAL_UPDATE_HYDRAWISE = "hydrawise_update"
 
@@ -133,7 +116,9 @@ class HydrawiseEntity(Entity):
         self.data = data
         self._sensor_type = sensor_type
         self._name = "{0} {1}".format(
-            self.data.get('name'), KEY_MAP.get(self._sensor_type))
+            self.data.get('name'),
+            DEVICE_MAP.get(self._sensor_type)[
+                DEVICE_MAP_INDEX.index('KEY_INDEX')])
         self._state = None
 
     @property
@@ -154,7 +139,8 @@ class HydrawiseEntity(Entity):
     @property
     def unit_of_measurement(self):
         """Return the units of measurement."""
-        return UNIT_OF_MEASUREMENT_MAP.get(self._sensor_type)
+        return DEVICE_MAP.get(self._sensor_type)[
+            DEVICE_MAP_INDEX.index('UNIT_OF_MEASURE_INDEX')]
 
     @property
     def device_state_attributes(self):
@@ -164,10 +150,5 @@ class HydrawiseEntity(Entity):
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             'identifier': self.data.get('relay'),
-            'last contact:': temp
+            "last contact": temp
         }
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON_MAP.get(self._sensor_type)

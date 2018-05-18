@@ -10,7 +10,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.hydrawise import (
-    BINARY_SENSORS, DATA_HYDRAWISE, HydrawiseEntity, ICON_MAP)
+    BINARY_SENSORS, DATA_HYDRAWISE, HydrawiseEntity, DEVICE_MAP,
+    DEVICE_MAP_INDEX)
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
@@ -20,13 +21,13 @@ DEPENDENCIES = ['hydrawise']
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSORS)):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=BINARY_SENSORS):
         vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)]),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up a sensor for a hydrawise device."""
+    """Set up a sensor for a Hydrawise device."""
     hydrawise = hass.data[DATA_HYDRAWISE].data
 
     sensors = []
@@ -44,12 +45,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     hydrawise.controller_status.get('running', False)
                 sensors.append(HydrawiseBinarySensor(zone_data, sensor_type))
 
-    add_devices(sensors, True)
+    add_devices(sensors)
     return True
 
 
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorDevice):
-    """A sensor implementation for hydrawise device."""
+    """A sensor implementation for Hydrawise device."""
 
     @property
     def is_on(self):
@@ -61,27 +62,27 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorDevice):
         _LOGGER.debug("Updating Hydrawise binary sensor: %s", self._name)
         mydata = self.hass.data['hydrawise'].data
         if self._sensor_type == 'status':
-            self._state = mydata.status == 'All good!'
+            if mydata.status == 'All good!':
+                self._state = True
+            else:
+                self._state = False
         elif self._sensor_type == 'rain_sensor':
             for sensor in mydata.sensors:
                 if sensor['name'] == 'Rain':
-                    self._state = sensor['active'] == 1
+                    if sensor['active'] == 1:
+                        self._state = True
+                    else:
+                        self._state = False
                     break
         elif self._sensor_type == 'is_watering':
             if mydata.running is None or not mydata.running:
                 self._state = False
+            elif int(mydata.running[0]['relay']) == self.data.get('relay'):
+                self._state = True
             else:
-                self._state = int(
-                    mydata.running[0]['relay']) == self.data.get('relay')
+                self._state = False
 
     @property
-    def icon(self):
-        """Return the icon of this device."""
-        if self._sensor_type == 'is_watering':
-            return 'mdi:water' if self.is_on else 'mdi:water-off'
-        elif self._sensor_type == 'status':
-            return (
-                'mdi:cloud-outline' if self.is_on else 'mdi:cloud-off-outline')
-        elif self._sensor_type == 'rain_sensor':
-            return 'mdi:water' if self.is_on else 'mdi:water-off'
-        return ICON_MAP.get(self._sensor_type)
+    def device_class(self):
+        return DEVICE_MAP.get(self._sensor_type)[
+            DEVICE_MAP_INDEX.index('DEVICE_CLASS_INDEX')]
