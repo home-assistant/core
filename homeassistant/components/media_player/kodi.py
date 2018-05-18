@@ -505,9 +505,8 @@ class KodiDevice(MediaPlayerDevice):
 
         If the media type cannot be detected, the player type is used.
         """
-        if MEDIA_TYPES.get(self._item.get('type')) is None and self._players:
-            return MEDIA_TYPES.get(self._players[0]['type'])
-        return MEDIA_TYPES.get(self._item.get('type'))
+        return self._item.get('title') or self._item.get('label') or self._item.get('file')
+
 
     @property
     def media_duration(self):
