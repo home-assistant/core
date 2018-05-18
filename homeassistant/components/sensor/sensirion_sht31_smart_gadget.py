@@ -87,6 +87,8 @@ class BluetoothSHT31SmartGadgetSensor(object):
     def _connect(self):
         """Connect to SHT31 Smart-Gadget sensor."""
         import pygatt
+        from pygatt.exceptions \
+            import (BLEError, NotConnectedError)
 
         if not self._is_connected():
             self.device = None
@@ -98,7 +100,7 @@ class BluetoothSHT31SmartGadgetSensor(object):
                 self.device = self.adapter.connect(self.mac,
                                                    timeout=CONNECT_TIMEOUT,
                                                    address_type=ble_type)
-            except Exception as ex:
+            except (BLEError, NotConnectedError) as ex:
                 _LOGGER.error("Failed to connect to SHT31 Smart-Gadget\n"
                               "Exception: %s", str(ex))
 
@@ -125,27 +127,27 @@ class BluetoothSHT31SmartGadgetSensor(object):
 
     def _read_battery(self):
         """Read battery value from SHT31 Smart-Gadget sensor."""
+        raw = self._read_raw_data(BATTERY_HANDLE)
+        return int(binascii.hexlify(raw))
+
+    def _read_raw_data(self, handle):
+        from pygatt.exceptions \
+            import (BLEError, NotConnectedError, NotificationTimeout)
+
         try:
-            raw = self.device.char_read_handle(BATTERY_HANDLE)
-            return int(binascii.hexlify(raw))
-        except Exception:
+            return self.device.char_read_handle(handle)
+        except (BLEError, NotConnectedError, NotificationTimeout):
             return None
 
     def _read_temperature(self):
         """Read temperature value from SHT31 Smart-Gadget sensor."""
-        try:
-            raw = self.device.char_read_handle(TEMPERATURE_HANDLE)
-            return struct.unpack("f", raw)[0]
-        except Exception:
-            return None
+        raw = self._read_raw_data(TEMPERATURE_HANDLE)
+        return struct.unpack("f", raw)[0]
 
     def _read_humidity(self):
         """Read humidity value from SHT31 Smart-Gadget sensor."""
-        try:
-            raw = self.device.char_read_handle(HUMIDITY_HANDLE)
-            return struct.unpack("f", raw)[0]
-        except Exception:
-            return None
+        raw = self._read_raw_data(HUMIDITY_HANDLE)
+        return struct.unpack("f", raw)[0]
 
 
 class SHT31SmartGadgetClient(object):
