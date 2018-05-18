@@ -1,6 +1,6 @@
 requests==2.18.4
 pyyaml>=3.11,<4
-pytz>=2017.02
+pytz>=2018.04
 pip>=8.0.3
 jinja2>=2.10
 voluptuous==0.11.1
