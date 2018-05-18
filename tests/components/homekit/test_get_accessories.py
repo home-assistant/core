@@ -39,7 +39,7 @@ def test_customize_options(config, name):
 @pytest.mark.parametrize('type_name, entity_id, state, attrs, config', [
     ('Fan', 'fan.test', 'on', {}, {}),
     ('Light', 'light.test', 'on', {}, {}),
-    ('Lock', 'lock.test', 'locked', {}, {}),
+    ('Lock', 'lock.test', 'locked', {}, {ATTR_CODE: '1234'}),
 
     ('Thermostat', 'climate.test', 'auto', {}, {}),
     ('Thermostat', 'climate.test', 'auto',
