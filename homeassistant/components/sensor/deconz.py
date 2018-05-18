@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.deconz/
 """
 from homeassistant.components.deconz import (
-    CONF_CLIP_SENSOR, DOMAIN as DATA_DECONZ, DATA_DECONZ_ID,
+    CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ, DATA_DECONZ_ID,
     DATA_DECONZ_UNSUB)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         """Add sensors from deCONZ."""
         from pydeconz.sensor import DECONZ_SENSOR, SWITCH as DECONZ_REMOTE
         entities = []
-        allow_clip_sensor = config_entry.data.get(CONF_CLIP_SENSOR, True)
+        allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
         for sensor in sensors:
             if sensor.type in DECONZ_SENSOR and \
                not (not allow_clip_sensor and sensor.type.startswith('CLIP')):

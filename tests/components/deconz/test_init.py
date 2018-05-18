@@ -174,7 +174,7 @@ async def test_add_new_remote(hass):
     assert len(hass.data[deconz.DATA_DECONZ_EVENT]) == 1
 
 
-async def test_do_not_add_clip_sensor(hass):
+async def test_do_not_allow_clip_sensor(hass):
     """Test that clip sensors can be ignored."""
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'port': 80,

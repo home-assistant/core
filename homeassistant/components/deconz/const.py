@@ -9,4 +9,4 @@ DATA_DECONZ_EVENT = 'deconz_events'
 DATA_DECONZ_ID = 'deconz_entities'
 DATA_DECONZ_UNSUB = 'deconz_dispatchers'
 
-CONF_CLIP_SENSOR = 'allow_clip_sensor'
+CONF_ALLOW_CLIP_SENSOR = 'allow_clip_sensor'

@@ -8,7 +8,7 @@ from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.helpers import aiohttp_client
 from homeassistant.util.json import load_json
 
-from .const import CONF_CLIP_SENSOR, CONFIG_FILE, DOMAIN
+from .const import CONF_ALLOW_CLIP_SENSOR, CONFIG_FILE, DOMAIN
 
 CONF_BRIDGEID = 'bridgeid'
 
@@ -98,7 +98,8 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
         from pydeconz.utils import async_get_bridgeid
 
         if user_input is not None:
-            self.deconz_config[CONF_CLIP_SENSOR] = user_input[CONF_CLIP_SENSOR]
+            self.deconz_config[CONF_ALLOW_CLIP_SENSOR] = \
+                user_input[CONF_ALLOW_CLIP_SENSOR]
 
             if CONF_BRIDGEID not in self.deconz_config:
                 session = aiohttp_client.async_get_clientsession(self.hass)
@@ -113,7 +114,7 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
         return self.async_show_form(
             step_id='options',
             data_schema=vol.Schema({
-                vol.Optional(CONF_CLIP_SENSOR): bool,
+                vol.Optional(CONF_ALLOW_CLIP_SENSOR): bool,
             }),
         )
 
@@ -155,4 +156,9 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
         self.deconz_config = import_config
         if CONF_API_KEY not in import_config:
             return await self.async_step_link()
-        return await self.async_step_options()
+
+        self.deconz_config[CONF_ALLOW_CLIP_SENSOR] = True
+        return self.async_create_entry(
+            title='deCONZ-' + self.deconz_config[CONF_BRIDGEID],
+            data=self.deconz_config
+        )

@@ -144,13 +144,11 @@ async def test_bridge_discovery_config_file(hass):
                       return_value={'host': '1.2.3.4',
                                     'port': 8080,
                                     'api_key': '1234567890ABCDEF'}):
-        await flow.async_step_discovery({
+        result = await flow.async_step_discovery({
             'host': '1.2.3.4',
             'port': 80,
             'serial': 'id'
         })
-    result = await flow.async_step_options(
-        user_input={'allow_clip_sensor': True})
     assert result['type'] == 'create_entry'
     assert result['title'] == 'deCONZ-id'
     assert result['data'] == {
@@ -213,14 +211,12 @@ async def test_import_with_api_key(hass):
     flow = config_flow.DeconzFlowHandler()
     flow.hass = hass
 
-    await flow.async_step_import({
+    result = await flow.async_step_import({
         'bridgeid': 'id',
         'host': '1.2.3.4',
         'port': 80,
         'api_key': '1234567890ABCDEF'
     })
-    result = await flow.async_step_options(
-        user_input={'allow_clip_sensor': True})
     assert result['type'] == 'create_entry'
     assert result['title'] == 'deCONZ-id'
     assert result['data'] == {

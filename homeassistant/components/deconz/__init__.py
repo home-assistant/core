@@ -19,7 +19,7 @@ from homeassistant.util.json import load_json
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
 from .const import (
-    CONF_CLIP_SENSOR, CONFIG_FILE, DATA_DECONZ_EVENT,
+    CONF_ALLOW_CLIP_SENSOR, CONFIG_FILE, DATA_DECONZ_EVENT,
     DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
 
 REQUIREMENTS = ['pydeconz==38']
@@ -104,7 +104,7 @@ async def async_setup_entry(hass, config_entry):
     def async_add_remote(sensors):
         """Setup remote from deCONZ."""
         from pydeconz.sensor import SWITCH as DECONZ_REMOTE
-        allow_clip_sensor = config_entry.data.get(CONF_CLIP_SENSOR, True)
+        allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
         for sensor in sensors:
             if sensor.type in DECONZ_REMOTE and \
                not (not allow_clip_sensor and sensor.type.startswith('CLIP')):

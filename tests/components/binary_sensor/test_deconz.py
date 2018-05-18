@@ -80,7 +80,7 @@ async def test_add_new_sensor(hass):
     assert "binary_sensor.name" in hass.data[deconz.DATA_DECONZ_ID]
 
 
-async def test_do_not_add_clip_sensor(hass):
+async def test_do_not_allow_clip_sensor(hass):
     """Test that clip sensors can be ignored."""
     data = {}
     await setup_bridge(hass, data, allow_clip_sensor=False)
