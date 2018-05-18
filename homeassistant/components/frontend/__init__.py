@@ -25,7 +25,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180516.1']
+REQUIREMENTS = ['home-assistant-frontend==20180518.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -301,47 +301,28 @@ def async_setup(hass, config):
     hass.data[DATA_JS_VERSION] = js_version = conf.get(CONF_JS_VERSION)
 
     if is_dev:
-        for subpath in ["src", "build-translations", "build-temp", "build",
-                        "hass_frontend", "bower_components", "panels",
-                        "hassio"]:
-            hass.http.register_static_path(
-                "/home-assistant-polymer/{}".format(subpath),
-                os.path.join(repo_path, subpath),
-                False)
-
-        hass.http.register_static_path(
-            "/static/translations",
-            os.path.join(repo_path, "build-translations/output"), False)
-        sw_path_es5 = os.path.join(repo_path, "build-es5/service_worker.js")
-        sw_path_latest = os.path.join(repo_path, "build/service_worker.js")
-        static_path = os.path.join(repo_path, 'hass_frontend')
-        frontend_es5_path = os.path.join(repo_path, 'build-es5')
-        frontend_latest_path = os.path.join(repo_path, 'build')
+        hass_frontend_path = os.path.join(repo_path, 'hass_frontend')
+        hass_frontend_es5_path = os.path.join(repo_path, 'hass_frontend_es5')
     else:
         import hass_frontend
         import hass_frontend_es5
-        sw_path_es5 = os.path.join(hass_frontend_es5.where(),
-                                   "service_worker.js")
-        sw_path_latest = os.path.join(hass_frontend.where(),
-                                      "service_worker.js")
-        # /static points to dir with files that are JS-type agnostic.
-        # ES5 files are served from /frontend_es5.
-        # ES6 files are served from /frontend_latest.
-        static_path = hass_frontend.where()
-        frontend_es5_path = hass_frontend_es5.where()
-        frontend_latest_path = static_path
+        hass_frontend_path = hass_frontend.where()
+        hass_frontend_es5_path = hass_frontend_es5.where()
 
     hass.http.register_static_path(
-        "/service_worker_es5.js", sw_path_es5, False)
+        "/service_worker_es5.js",
+        os.path.join(hass_frontend_es5_path, "service_worker.js"), False)
     hass.http.register_static_path(
-        "/service_worker.js", sw_path_latest, False)
+        "/service_worker.js",
+        os.path.join(hass_frontend_path, "service_worker.js"), False)
     hass.http.register_static_path(
-        "/robots.txt", os.path.join(static_path, "robots.txt"), not is_dev)
-    hass.http.register_static_path("/static", static_path, not is_dev)
+        "/robots.txt",
+        os.path.join(hass_frontend_path, "robots.txt"), False)
+    hass.http.register_static_path("/static", hass_frontend_path, not is_dev)
     hass.http.register_static_path(
-        "/frontend_latest", frontend_latest_path, not is_dev)
+        "/frontend_latest", hass_frontend_path, not is_dev)
     hass.http.register_static_path(
-        "/frontend_es5", frontend_es5_path, not is_dev)
+        "/frontend_es5", hass_frontend_es5_path, not is_dev)
 
     local = hass.config.path('www')
     if os.path.isdir(local):
