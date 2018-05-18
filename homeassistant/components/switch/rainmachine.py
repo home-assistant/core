@@ -174,29 +174,29 @@ class RainMachineProgram(RainMachineSwitch):
 
     def turn_off(self, **kwargs) -> None:
         """Turn the program off."""
-        from regenmaschine.exceptions import HTTPError
+        from regenmaschine.exceptions import RainMachineError
 
         try:
             self.rainmachine.client.programs.stop(self._rainmachine_entity_id)
             dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
-        except HTTPError as exc_info:
+        except RainMachineError as exc_info:
             _LOGGER.error('Unable to turn off program "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the program on."""
-        from regenmaschine.exceptions import HTTPError
+        from regenmaschine.exceptions import RainMachineError
 
         try:
             self.rainmachine.client.programs.start(self._rainmachine_entity_id)
             dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
-        except HTTPError as exc_info:
+        except RainMachineError as exc_info:
             _LOGGER.error('Unable to turn on program "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def update(self) -> None:
         """Update info for the program."""
-        from regenmaschine.exceptions import HTTPError
+        from regenmaschine.exceptions import RainMachineError
 
         try:
             self._obj = self.rainmachine.client.programs.get(
@@ -209,7 +209,7 @@ class RainMachineProgram(RainMachineSwitch):
                     PROGRAM_STATUS_MAP[self._obj.get('status')],
                 ATTR_ZONES: ', '.join(z['name'] for z in self.zones)
             })
-        except HTTPError as exc_info:
+        except RainMachineError as exc_info:
             _LOGGER.error('Unable to update info for program "%s"',
                           self.unique_id)
             _LOGGER.debug(exc_info)
@@ -243,28 +243,28 @@ class RainMachineZone(RainMachineSwitch):
 
     def turn_off(self, **kwargs) -> None:
         """Turn the zone off."""
-        from regenmaschine.exceptions import HTTPError
+        from regenmaschine.exceptions import RainMachineError
 
         try:
             self.rainmachine.client.zones.stop(self._rainmachine_entity_id)
-        except HTTPError as exc_info:
+        except RainMachineError as exc_info:
             _LOGGER.error('Unable to turn off zone "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the zone on."""
-        from regenmaschine.exceptions import HTTPError
+        from regenmaschine.exceptions import RainMachineError
 
         try:
             self.rainmachine.client.zones.start(self._rainmachine_entity_id,
                                                 self._run_time)
-        except HTTPError as exc_info:
+        except RainMachineError as exc_info:
             _LOGGER.error('Unable to turn on zone "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def update(self) -> None:
         """Update info for the zone."""
-        from regenmaschine.exceptions import HTTPError
+        from regenmaschine.exceptions import RainMachineError
 
         try:
             self._obj = self.rainmachine.client.zones.get(
@@ -295,7 +295,7 @@ class RainMachineZone(RainMachineSwitch):
                 ATTR_VEGETATION_TYPE:
                     VEGETATION_MAP[self._obj.get('type')],
             })
-        except HTTPError as exc_info:
+        except RainMachineError as exc_info:
             _LOGGER.error('Unable to update info for zone "%s"',
                           self.unique_id)
             _LOGGER.debug(exc_info)

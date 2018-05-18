@@ -9,9 +9,6 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor.rainmachine import (
-    SENSORS as BINARY_SENSORS)
-from homeassistant.components.sensor.rainmachine import SENSORS
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_BINARY_SENSORS, CONF_IP_ADDRESS, CONF_PASSWORD,
     CONF_PORT, CONF_SENSORS, CONF_SSL, CONF_MONITORED_CONDITIONS,
@@ -21,7 +18,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['regenmaschine==0.4.1']
+REQUIREMENTS = ['regenmaschine==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +27,9 @@ DOMAIN = 'rainmachine'
 
 NOTIFICATION_ID = 'rainmachine_notification'
 NOTIFICATION_TITLE = 'RainMachine Component Setup'
+
+DATA_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
+PROGRAM_UPDATE_TOPIC = '{0}_program_update'.format(DOMAIN)
 
 CONF_PROGRAM_ID = 'program_id'
 CONF_ZONE_ID = 'zone_id'
@@ -42,8 +42,30 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_SSL = True
 DEFAULT_ZONE_RUN = 60 * 10
 
-DATA_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
-PROGRAM_UPDATE_TOPIC = '{0}_program_update'.format(DOMAIN)
+TYPE_FREEZE = 'freeze'
+TYPE_FREEZE_PROTECTION = 'freeze_protection'
+TYPE_FREEZE_TEMP = 'freeze_protect_temp'
+TYPE_HOT_DAYS = 'extra_water_on_hot_days'
+TYPE_HOURLY = 'hourly'
+TYPE_MONTH = 'month'
+TYPE_RAINDELAY = 'raindelay'
+TYPE_RAINSENSOR = 'rainsensor'
+TYPE_WEEKDAY = 'weekday'
+
+BINARY_SENSORS = {
+    TYPE_FREEZE: ('Freeze Restrictions', 'mdi:cancel'),
+    TYPE_FREEZE_PROTECTION: ('Freeze Protection', 'mdi:weather-snowy'),
+    TYPE_HOT_DAYS: ('Extra Water on Hot Days', 'mdi:thermometer-lines'),
+    TYPE_HOURLY: ('Hourly Restrictions', 'mdi:cancel'),
+    TYPE_MONTH: ('Month Restrictions', 'mdi:cancel'),
+    TYPE_RAINDELAY: ('Rain Delay Restrictions', 'mdi:cancel'),
+    TYPE_RAINSENSOR: ('Rain Sensor Restrictions', 'mdi:cancel'),
+    TYPE_WEEKDAY: ('Weekday Restrictions', 'mdi:cancel'),
+}
+
+SENSORS = {
+    TYPE_FREEZE_TEMP: ('Freeze Protect Temperature', 'mdi:thermometer', '°C'),
+}
 
 BINARY_SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_MONITORED_CONDITIONS):
@@ -95,8 +117,7 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Set up the RainMachine component."""
     from regenmaschine import Authenticator, Client
-    from regenmaschine.exceptions import HTTPError
-    from requests.exceptions import ConnectTimeout
+    from regenmaschine.exceptions import RainMachineError
 
     conf = config[DOMAIN]
     ip_address = conf[CONF_IP_ADDRESS]
@@ -110,7 +131,7 @@ def setup(hass, config):
         rainmachine = RainMachine(hass, Client(auth))
         rainmachine.update()
         hass.data[DATA_RAINMACHINE] = rainmachine
-    except (HTTPError, ConnectTimeout, UnboundLocalError) as exc:
+    except RainMachineError as exc:
         _LOGGER.error('An error occurred: %s', str(exc))
         hass.components.persistent_notification.create(
             'Error: {0}<br />'

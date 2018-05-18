@@ -9,7 +9,9 @@ from logging import getLogger
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.rainmachine import (
-    DATA_RAINMACHINE, DATA_UPDATE_TOPIC, RainMachineEntity)
+    BINARY_SENSORS, DATA_RAINMACHINE, DATA_UPDATE_TOPIC, TYPE_FREEZE,
+    TYPE_FREEZE_PROTECTION, TYPE_HOT_DAYS, TYPE_HOURLY, TYPE_MONTH,
+    TYPE_RAINDELAY, TYPE_RAINSENSOR, TYPE_WEEKDAY, RainMachineEntity)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -17,26 +19,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 DEPENDENCIES = ['rainmachine']
 
 _LOGGER = getLogger(__name__)
-
-TYPE_FREEZE = 'freeze'
-TYPE_FREEZE_PROTECTION = 'freeze_protection'
-TYPE_HOT_DAYS = 'extra_water_on_hot_days'
-TYPE_HOURLY = 'hourly'
-TYPE_MONTH = 'month'
-TYPE_RAINDELAY = 'raindelay'
-TYPE_RAINSENSOR = 'rainsensor'
-TYPE_WEEKDAY = 'weekday'
-
-SENSORS = {
-    TYPE_FREEZE: ('Freeze Restrictions', 'mdi:cancel'),
-    TYPE_FREEZE_PROTECTION: ('Freeze Protection', 'mdi:weather-snowy'),
-    TYPE_HOT_DAYS: ('Extra Water on Hot Days', 'mdi:thermometer-lines'),
-    TYPE_HOURLY: ('Hourly Restrictions', 'mdi:cancel'),
-    TYPE_MONTH: ('Month Restrictions', 'mdi:cancel'),
-    TYPE_RAINDELAY: ('Rain Delay Restrictions', 'mdi:cancel'),
-    TYPE_RAINSENSOR: ('Rain Sensor Restrictions', 'mdi:cancel'),
-    TYPE_WEEKDAY: ('Weekday Restrictions', 'mdi:cancel'),
-}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -49,8 +31,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rainmachine = hass.data[DATA_RAINMACHINE]
 
     binary_sensors = []
-    for sensor_type in discovery_info.get(CONF_MONITORED_CONDITIONS, SENSORS):
-        name, icon = SENSORS[sensor_type]
+    for sensor_type in discovery_info.get(CONF_MONITORED_CONDITIONS,
+                                          BINARY_SENSORS):
+        name, icon = BINARY_SENSORS[sensor_type]
         binary_sensors.append(
             RainMachineBinarySensor(rainmachine, sensor_type, name, icon))
 
@@ -80,6 +63,7 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
     @callback
     async def async_added_to_hass(self):
         """Register callbacks."""
+
         def update_data():
             """Update the state."""
             self.async_schedule_update_ha_state(True)

@@ -8,8 +8,7 @@ https://home-assistant.io/components/sensor.rainmachine/
 from logging import getLogger
 
 from homeassistant.components.rainmachine import (
-    DATA_RAINMACHINE,
-    DATA_UPDATE_TOPIC,
+    DATA_RAINMACHINE, DATA_UPDATE_TOPIC, SENSORS, TYPE_FREEZE_TEMP,
     RainMachineEntity)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
@@ -18,12 +17,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 DEPENDENCIES = ['rainmachine']
 
 _LOGGER = getLogger(__name__)
-
-TYPE_FREEZE_TEMP = 'freeze_protect_temp'
-
-SENSORS = {
-    TYPE_FREEZE_TEMP: ('Freeze Protect Temperature', 'mdi:thermometer', '°C'),
-}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
