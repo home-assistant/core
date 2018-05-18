@@ -115,20 +115,23 @@ class HomeBridge(Bridge):
         """Prevent print of pyhap setup message to terminal."""
         pass
 
-    def add_paired_client(self, client_uuid, client_public):
-        """Override super function to dismiss setup message if paired."""
-        super().add_paired_client(client_uuid, client_public)
-        dismiss_setup_message(self.hass)
-
-    def remove_paired_client(self, client_uuid):
-        """Override super function to show setup message if unpaired."""
-        super().remove_paired_client(client_uuid)
-        show_setup_message(self.hass, self)
-
 
 class HomeDriver(AccessoryDriver):
     """Adapter class for AccessoryDriver."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, hass, *args, **kwargs):
         """Initialize a AccessoryDriver object."""
         super().__init__(*args, **kwargs)
+        self.hass = hass
+
+    def pair(self, client_uuid, client_public):
+        """Override super function to dismiss setup message if paired."""
+        value = super().pair(client_uuid, client_public)
+        if value:
+            dismiss_setup_message(self.hass)
+        return value
+
+    def unpair(self, client_uuid):
+        """Override super function to show setup message if unpaired."""
+        super().unpair(client_uuid)
+        show_setup_message(self.hass, self.state.pincode)

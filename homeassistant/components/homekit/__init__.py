@@ -29,7 +29,7 @@ from .util import show_setup_message, validate_entity_config
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==2.0.0']
+REQUIREMENTS = ['HAP-python==2.1.0']
 
 # #### Driver Status ####
 STATUS_READY = 0
@@ -185,7 +185,8 @@ class HomeKit():
         ip_addr = self._ip_address or get_local_ip()
         path = self.hass.config.path(HOMEKIT_FILE)
         self.bridge = HomeBridge(self.hass)
-        self.driver = HomeDriver(self.bridge, self._port, ip_addr, path)
+        self.driver = HomeDriver(self.hass, self.bridge, port=self._port,
+                                 address=ip_addr, persist_file=path)
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
@@ -213,8 +214,8 @@ class HomeKit():
             self.add_bridge_accessory(state)
         self.bridge.set_driver(self.driver)
 
-        if not self.bridge.paired:
-            show_setup_message(self.hass, self.bridge)
+        if not self.driver.state.paired:
+            show_setup_message(self.hass, self.driver.state.pincode)
 
         _LOGGER.debug('Driver start')
         self.hass.add_job(self.driver.start)
