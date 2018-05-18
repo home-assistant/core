@@ -62,18 +62,11 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorDevice):
         _LOGGER.debug("Updating Hydrawise binary sensor: %s", self._name)
         mydata = self.hass.data['hydrawise'].data
         if self._sensor_type == 'status':
-            if mydata.status == 'All good!':
-                self._state = True
-            else:
-                self._state = False
+            self._state = mydata.status == 'All good!'
         elif self._sensor_type == 'rain_sensor':
             for sensor in mydata.sensors:
                 if sensor['name'] == 'Rain':
-                    if sensor['active'] == 1:
-                        self._state = True
-                    else:
-                        self._state = False
-                    break
+                    self._state = sensor['active'] == 1
         elif self._sensor_type == 'is_watering':
             if mydata.running is None or not mydata.running:
                 self._state = False
