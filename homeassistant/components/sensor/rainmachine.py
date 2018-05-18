@@ -39,6 +39,7 @@ class RainMachineSensor(RainMachineEntity):
     """A sensor implementation for raincloud device."""
 
     def __init__(self, rainmachine, sensor_type, name, icon, unit):
+        """Initialize."""
         super().__init__(rainmachine)
 
         self._icon = icon
