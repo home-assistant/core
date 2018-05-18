@@ -31,8 +31,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     binary_sensors = []
     for sensor_type in discovery_info.get(CONF_MONITORED_CONDITIONS,
                                           BINARY_SENSORS):
+        name, icon = BINARY_SENSORS[sensor_type]
         binary_sensors.append(
-            RainMachineBinarySensor(rainmachine, sensor_type, name))
+            RainMachineBinarySensor(rainmachine, sensor_type, name, icon))
 
     add_devices(binary_sensors, True)
 
@@ -40,13 +41,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
     """A sensor implementation for raincloud device."""
 
-    def __init__(self, rainmachine, sensor_type, name):
+    def __init__(self, rainmachine, sensor_type, name, icon):
         """Initialize the sensor."""
         super().__init__(rainmachine)
 
+        self._icon = icon
         self._name = name
         self._sensor_type = sensor_type
         self._state = None
+
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return self._icon
 
     @property
     def is_on(self):
