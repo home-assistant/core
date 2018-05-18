@@ -17,14 +17,15 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
-BATTERY_SENSOR = "percent"
+BATTERY_SENSOR = "batteryLevel"
 
 SENSORS = [
-    EVSensorConfig("Mileage", "mileage", "miles", "mdi:speedometer"),
-    EVSensorConfig("Range", "range", "miles", "mdi:speedometer"),
-    EVSensorConfig("Charging", "charging"),
-    EVSensorConfig("Charge Mode", "charge_mode"),
-    EVSensorConfig("EVCharge", BATTERY_SENSOR, "%", "mdi:battery")
+    EVSensorConfig("Mileage", "totalMiles", "miles", "mdi:speedometer"),
+    EVSensorConfig("Electric Range", "electricRange", "miles",
+                   "mdi:speedometer"),
+    EVSensorConfig("Charged By", "estimatedFullChargeBy"),
+    EVSensorConfig("Charge Mode", "chargeMode"),
+    EVSensorConfig("Battery Level", BATTERY_SENSOR, "%", "mdi:battery")
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +39,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hub = hass.data[MYCHEVY_DOMAIN]
     sensors = [MyChevyStatus()]
     for sconfig in SENSORS:
-        sensors.append(EVSensor(hub, sconfig))
+        for car in hub.cars:
+            sensors.append(EVSensor(hub, sconfig, car.vid))
 
     add_devices(sensors)
 
@@ -112,7 +114,7 @@ class EVSensor(Entity):
 
     """
 
-    def __init__(self, connection, config):
+    def __init__(self, connection, config, car_vid):
         """Initialize sensor with car connection."""
         self._conn = connection
         self._name = config.name
@@ -120,15 +122,23 @@ class EVSensor(Entity):
         self._unit_of_measurement = config.unit_of_measurement
         self._icon = config.icon
         self._state = None
+        self._car_vid = car_vid
 
         self.entity_id = ENTITY_ID_FORMAT.format(
-            '{}_{}'.format(MYCHEVY_DOMAIN, slugify(self._name)))
+            '{}_{}_{}'.format(MYCHEVY_DOMAIN,
+                              slugify(self._car.name),
+                              slugify(self._name)))
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             UPDATE_TOPIC, self.async_update_callback)
+
+    @property
+    def _car(self):
+        """Return the car."""
+        return self._conn.get_car(self._car_vid)
 
     @property
     def icon(self):
@@ -145,8 +155,8 @@ class EVSensor(Entity):
     @callback
     def async_update_callback(self):
         """Update state."""
-        if self._conn.car is not None:
-            self._state = getattr(self._conn.car, self._attr, None)
+        if self._car is not None:
+            self._state = getattr(self._car, self._attr, None)
             self.async_schedule_update_ha_state()
 
     @property
