@@ -29,7 +29,7 @@ from .util import show_setup_message, validate_entity_config
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==2.0.0']
+REQUIREMENTS = ['HAP-python==2.1.0']
 
 # #### Driver Status ####
 STATUS_READY = 0
