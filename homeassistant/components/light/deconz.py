@@ -6,6 +6,7 @@ https://home-assistant.io/components/light.deconz/
 """
 from homeassistant.components.deconz import (
     DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
+from homeassistant.components.deconz.const import CONF_ALLOW_DECONZ_GROUPS
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -41,8 +42,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     def async_add_group(groups):
         """Add group from deCONZ."""
         entities = []
-        CONF_ALLOW_GROUP = 'allow_group'
-        allow_group = config_entry.data.get(CONF_ALLOW_GROUP, True)
+        allow_group = config_entry.data.get(CONF_ALLOW_DECONZ_GROUPS, True)
         for group in groups:
             if group.lights and allow_group:
                 entities.append(DeconzLight(group))
