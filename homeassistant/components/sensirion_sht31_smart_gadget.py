@@ -128,7 +128,7 @@ class BluetoothSHT31SmartGadgetSensor(object):
         try:
             raw = self.device.char_read_handle(BATTERY_HANDLE)
             return int(binascii.hexlify(raw))
-        except: # pylint: disable=bare-except
+        except Exception:
             return None
 
     def _read_temperature(self):
@@ -136,7 +136,7 @@ class BluetoothSHT31SmartGadgetSensor(object):
         try:
             raw = self.device.char_read_handle(TEMPERATURE_HANDLE)
             return struct.unpack("f", raw)[0]
-        except: # pylint: disable=bare-except
+        except Exception:
             return None
 
     def _read_humidity(self):
@@ -144,7 +144,7 @@ class BluetoothSHT31SmartGadgetSensor(object):
         try:
             raw = self.device.char_read_handle(HUMIDITY_HANDLE)
             return struct.unpack("f", raw)[0]
-        except: # pylint: disable=bare-except
+        except Exception:
             return None
 
 
@@ -169,17 +169,21 @@ class SHT31SmartGadgetClient(object):
             self.humidity = None
         else:
             if isinstance(battery, int) and math.isnan(battery):
-                _LOGGER.warning("Bad Battery sample from SHT31 Smart-Gadget")
+                _LOGGER.warning("Bad Battery sample from "
+                                "SHT31 Smart-Gadget")
             else:
                 self.battery = battery
 
-            if isinstance(temperature, float) and math.isnan(temperature):
-                _LOGGER.warning("Bad Temperature sample from SHT31 Smart-Gadget")
+            if isinstance(temperature, float) \
+                    and math.isnan(temperature):
+                _LOGGER.warning("Bad Temperature sample from "
+                                "SHT31 Smart-Gadget")
             else:
                 self.temperature = temperature
 
             if isinstance(humidity, float) and math.isnan(humidity):
-                _LOGGER.warning("Bad Humidity sample from SHT31 Smart-Gadget")
+                _LOGGER.warning("Bad Humidity sample from "
+                                "SHT31 Smart-Gadget")
             else:
                 self.humidity = humidity
 
