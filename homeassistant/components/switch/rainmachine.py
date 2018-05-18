@@ -139,28 +139,47 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class RainMachineSwitch(RainMachineEntity, SwitchDevice):
-    """A class to represent a generic RainMachine entity."""
+    """A class to represent a generic RainMachine switch."""
 
-    def __init__(self, rainmachine, rainmachine_type, obj, name):
-        """Initialize a generic RainMachine entity."""
+    def __init__(self, rainmachine, switch_type, obj):
+        """Initialize a generic RainMachine switch."""
+        super().__init__(rainmachine)
+
+        self._name = obj['name']
         self._obj = obj
-        self._type = rainmachine_type
+        self._rainmachine_entity_id = obj['uid']
+        self._switch_type = switch_type
 
-        super().__init__(rainmachine, rainmachine_type, obj.get('uid'), name)
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return 'mdi:water'
 
     @property
     def is_enabled(self) -> bool:
         """Return whether the entity is enabled."""
         return self._obj.get('active')
 
+    @property
+    def should_poll(self):
+        """Enable polling."""
+        return True
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return '{0}_{1}_{2}'.format(
+            self.rainmachine.device_mac.replace(':', ''),
+            self._switch_type,
+            self._rainmachine_entity_id)
+
 
 class RainMachineProgram(RainMachineSwitch):
     """A RainMachine program."""
 
     def __init__(self, rainmachine, obj):
-        """Initialize."""
-        super().__init__(rainmachine, 'program', obj, 'Program: {0}'.format(
-            obj.get('name')))
+        """Initialize a generic RainMachine switch."""
+        super().__init__(rainmachine, 'program', obj)
 
     @property
     def is_on(self) -> bool:
@@ -205,8 +224,7 @@ class RainMachineProgram(RainMachineSwitch):
             self._attrs.update({
                 ATTR_ID: self._obj['uid'],
                 ATTR_SOAK: self._obj.get('soak'),
-                ATTR_STATUS:
-                    PROGRAM_STATUS_MAP[self._obj.get('status')],
+                ATTR_STATUS: PROGRAM_STATUS_MAP[self._obj.get('status')],
                 ATTR_ZONES: ', '.join(z['name'] for z in self.zones)
             })
         except RainMachineError as exc_info:
@@ -220,8 +238,7 @@ class RainMachineZone(RainMachineSwitch):
 
     def __init__(self, rainmachine, obj, zone_run_time):
         """Initialize a RainMachine zone."""
-        super().__init__(rainmachine, 'zone', obj, 'Zone: {0}'.format(
-            obj.get('name')))
+        super().__init__(rainmachine, 'zone', obj)
 
         self._properties_json = {}
         self._run_time = zone_run_time

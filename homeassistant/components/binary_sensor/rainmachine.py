@@ -26,16 +26,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    _LOGGER.debug('Config received: %s', discovery_info)
-
     rainmachine = hass.data[DATA_RAINMACHINE]
 
     binary_sensors = []
     for sensor_type in discovery_info.get(CONF_MONITORED_CONDITIONS,
                                           BINARY_SENSORS):
-        name, icon = BINARY_SENSORS[sensor_type]
         binary_sensors.append(
-            RainMachineBinarySensor(rainmachine, sensor_type, name, icon))
+            RainMachineBinarySensor(rainmachine, sensor_type, name))
 
     add_devices(binary_sensors, True)
 
@@ -43,12 +40,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
     """A sensor implementation for raincloud device."""
 
-    def __init__(self, rainmachine, sensor_type, name, icon):
-        """Initialize."""
-        super().__init__(
-            rainmachine, 'binary_sensor', sensor_type, name, icon=icon)
+    def __init__(self, rainmachine, sensor_type, name):
+        """Initialize the sensor."""
+        super().__init__(rainmachine)
 
+        self._name = name
         self._sensor_type = sensor_type
+        self._state = None
 
     @property
     def is_on(self):
@@ -59,6 +57,13 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
     def should_poll(self):
         """Disable polling."""
         return False
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return '{0}_{1}'.format(
+            self.rainmachine.device_mac.replace(':', ''),
+            self._sensor_type)
 
     @callback
     async def async_added_to_hass(self):

@@ -39,12 +39,18 @@ class RainMachineSensor(RainMachineEntity):
     """A sensor implementation for raincloud device."""
 
     def __init__(self, rainmachine, sensor_type, name, icon, unit):
-        """Initialize."""
-        super().__init__(
-            rainmachine, 'binary_sensor', sensor_type, name, icon=icon)
+        super().__init__(rainmachine)
 
+        self._icon = icon
+        self._name = name
         self._sensor_type = sensor_type
+        self._state = None
         self._unit = unit
+
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return self._icon
 
     @property
     def should_poll(self):
@@ -55,6 +61,18 @@ class RainMachineSensor(RainMachineEntity):
     def state(self) -> str:
         """Return the name of the entity."""
         return self._state
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return '{0}_{1}'.format(
+            self.rainmachine.device_mac.replace(':', ''),
+            self._sensor_type)
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._unit
 
     @callback
     async def async_added_to_hass(self):

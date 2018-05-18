@@ -223,20 +223,10 @@ class RainMachine(object):
 class RainMachineEntity(Entity):
     """Define a generic RainMachine entity."""
 
-    def __init__(self,
-                 rainmachine,
-                 rainmachine_type,
-                 rainmachine_entity_id,
-                 name,
-                 icon=DEFAULT_ICON):
+    def __init__(self, rainmachine):
         """Initialize."""
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        self._icon = icon
-        self._name = name
-        self._rainmachine_type = rainmachine_type
-        self._rainmachine_entity_id = rainmachine_entity_id
-        self._state = None
-        self._unit = None
+        self._name = None
         self.rainmachine = rainmachine
 
     @property
@@ -245,23 +235,6 @@ class RainMachineEntity(Entity):
         return self._attrs
 
     @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
-
-    @property
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_{1}_{2}'.format(
-            self.rainmachine.device_mac.replace(':', ''),
-            self._rainmachine_type, self._rainmachine_entity_id)
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
