@@ -161,7 +161,6 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
             # in use for this device. Next we need to check to see if the
             # negative and positive nodes disagree on the state (both ON or
             # both OFF).
-            _LOGGER.debug(self._node)
             if self._negative_node.status._val == self._node.status._val:
                 # The states disagree, therefore we cannot determine the state
                 # of the sensor until we receive our first ON event.
