@@ -77,5 +77,6 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorDevice):
 
     @property
     def device_class(self):
+        """Return the device class of the sensor type."""
         return DEVICE_MAP.get(self._sensor_type)[
             DEVICE_MAP_INDEX.index('DEVICE_CLASS_INDEX')]
