@@ -72,7 +72,7 @@ class GoogleMapsScanner(object):
             try:
                 dev_id = 'google_maps_{0}'.format(person.id)
             except TypeError:
-                _LOGGER.error("No location(s) shared with this account")
+                _LOGGER.warning("No location(s) shared with this account")
                 return
 
             attrs = {
