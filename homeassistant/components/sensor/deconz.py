@@ -118,9 +118,12 @@ class DeconzSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
+        from pydeconz.sensor import LIGHTLEVEL
         attr = {}
         if self._sensor.battery:
             attr[ATTR_BATTERY_LEVEL] = self._sensor.battery
+        if self._sensor.type in LIGHTLEVEL and self._sensor.dark is not None:
+            attr['dark'] = self._sensor.dark
         if self.unit_of_measurement == 'Watts':
             attr[ATTR_CURRENT] = self._sensor.current
             attr[ATTR_VOLTAGE] = self._sensor.voltage
