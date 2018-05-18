@@ -295,6 +295,7 @@ class KodiDevice(MediaPlayerDevice):
             self._ws_server.Player.OnPause = self.async_on_speed_event
             self._ws_server.Player.OnPlay = self.async_on_speed_event
             self._ws_server.Player.OnSpeedChanged = self.async_on_speed_event
+            self._ws_server.Player.OnResume = self.async_on_speed_event
             self._ws_server.Player.OnStop = self.async_on_stop
             self._ws_server.Application.OnVolumeChanged = \
                 self.async_on_volume_changed
@@ -392,7 +393,7 @@ class KodiDevice(MediaPlayerDevice):
         if not self._players:
             return STATE_IDLE
 
-        if self._properties['speed'] == 0 and not self._properties['live']:
+        if self._properties['speed'] == 0:
             return STATE_PAUSED
 
         return STATE_PLAYING
@@ -504,9 +505,8 @@ class KodiDevice(MediaPlayerDevice):
 
         If the media type cannot be detected, the player type is used.
         """
-        if MEDIA_TYPES.get(self._item.get('type')) is None and self._players:
-            return MEDIA_TYPES.get(self._players[0]['type'])
-        return MEDIA_TYPES.get(self._item.get('type'))
+        return self._item.get('title') or self._item.get('label') or self._item.get('file')
+
 
     @property
     def media_duration(self):
