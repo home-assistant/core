@@ -9,6 +9,9 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor.rainmachine import (
+    SENSORS as BINARY_SENSORS)
+from homeassistant.components.sensor.rainmachine import SENSORS
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_BINARY_SENSORS, CONF_IP_ADDRESS, CONF_PASSWORD,
     CONF_PORT, CONF_SENSORS, CONF_SSL, CONF_MONITORED_CONDITIONS,
@@ -43,11 +46,13 @@ DATA_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
 PROGRAM_UPDATE_TOPIC = '{0}_program_update'.format(DOMAIN)
 
 BINARY_SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list, cv.string)
+    vol.Optional(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)])
 })
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list, cv.string)
+    vol.Optional(CONF_MONITORED_CONDITIONS):
+        vol.All(cv.ensure_list, [vol.In(SENSORS)])
 })
 
 SERVICE_START_PROGRAM_SCHEMA = vol.Schema({
@@ -99,35 +104,30 @@ def setup(hass, config):
     port = conf[CONF_PORT]
     ssl = conf[CONF_SSL]
 
-    _LOGGER.debug('Setting up RainMachine client')
-
     try:
         auth = Authenticator.create_local(
             ip_address, password, port=port, https=ssl)
         rainmachine = RainMachine(hass, Client(auth))
         rainmachine.update()
         hass.data[DATA_RAINMACHINE] = rainmachine
-    except (HTTPError, ConnectTimeout, UnboundLocalError) as exc_info:
-        _LOGGER.error('An error occurred: %s', str(exc_info))
+    except (HTTPError, ConnectTimeout, UnboundLocalError) as exc:
+        _LOGGER.error('An error occurred: %s', str(exc))
         hass.components.persistent_notification.create(
             'Error: {0}<br />'
             'You will need to restart hass after fixing.'
-            ''.format(exc_info),
+            ''.format(exc),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False
 
-    _LOGGER.debug('Setting up binary sensor platform')
     binary_sensor_config = conf.get(CONF_BINARY_SENSORS, {})
     discovery.load_platform(
         hass, 'binary_sensor', DOMAIN, binary_sensor_config, config)
 
-    _LOGGER.debug('Setting up sensor platform')
     sensor_config = conf.get(CONF_SENSORS, {})
     discovery.load_platform(
         hass, 'sensor', DOMAIN, sensor_config, config)
 
-    _LOGGER.debug('Setting up switch platform')
     switch_config = conf.get(CONF_SWITCHES, {})
     discovery.load_platform(hass, 'switch', DOMAIN, switch_config, config)
 
@@ -138,8 +138,6 @@ def setup(hass, config):
         dispatcher_send(hass, DATA_UPDATE_TOPIC)
 
     track_time_interval(hass, refresh, DEFAULT_SCAN_INTERVAL)
-
-    _LOGGER.debug('Setting up services')
 
     def start_program(service):
         """Start a particular program."""
@@ -180,8 +178,6 @@ def setup(hass, config):
 
     hass.services.register(
         DOMAIN, 'stop_zone', stop_zone, schema=SERVICE_STOP_ZONE_SCHEMA)
-
-    _LOGGER.debug('Setup complete')
 
     return True
 

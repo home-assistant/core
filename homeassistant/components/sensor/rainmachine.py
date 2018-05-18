@@ -12,16 +12,17 @@ from homeassistant.components.rainmachine import (
     DATA_UPDATE_TOPIC,
     RainMachineEntity)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['rainmachine']
 
 _LOGGER = getLogger(__name__)
 
-ATTR_FREEZE_TEMP = 'freeze_protect_temp'
+TYPE_FREEZE_TEMP = 'freeze_protect_temp'
 
 SENSORS = {
-    ATTR_FREEZE_TEMP: ('Freeze Protect Temperature', 'mdi:thermometer', '°C'),
+    TYPE_FREEZE_TEMP: ('Freeze Protect Temperature', 'mdi:thermometer', '°C'),
 }
 
 
@@ -30,19 +31,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    _LOGGER.debug('Config received: %s', discovery_info)
-
     rainmachine = hass.data[DATA_RAINMACHINE]
 
     sensors = []
-    for sensor_type in discovery_info.get(
-            CONF_MONITORED_CONDITIONS, SENSORS.keys()):
-        try:
-            name, icon, unit = SENSORS[sensor_type]
-            sensors.append(
-                RainMachineSensor(rainmachine, sensor_type, name, icon, unit))
-        except KeyError:
-            continue
+    for sensor_type in discovery_info.get(CONF_MONITORED_CONDITIONS, SENSORS):
+        name, icon, unit = SENSORS[sensor_type]
+        sensors.append(
+            RainMachineSensor(rainmachine, sensor_type, name, icon, unit))
 
     add_devices(sensors, True)
 
@@ -68,6 +63,7 @@ class RainMachineSensor(RainMachineEntity):
         """Return the name of the entity."""
         return self._state
 
+    @callback
     async def async_added_to_hass(self):
         """Register callbacks."""
         def update_data():
@@ -78,6 +74,6 @@ class RainMachineSensor(RainMachineEntity):
 
     def update(self):
         """Update the sensor's state."""
-        if self._sensor_type == ATTR_FREEZE_TEMP:
+        if self._sensor_type == TYPE_FREEZE_TEMP:
             self._state = self.rainmachine.restrictions['global'][
                 'freezeProtectTemp']
