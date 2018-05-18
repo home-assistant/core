@@ -6,6 +6,7 @@ https://home-assistant.io/components/wemo/
 """
 import logging
 
+import requests
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_WEMO
@@ -79,23 +80,53 @@ def setup(hass, config):
 
     discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
 
-    _LOGGER.info("Scanning for WeMo devices.")
-    devices = [(device.host, device) for device in pywemo.discover_devices()]
+    def setup_url_for_device(device):
+        """Determine setup.xml url for given device."""
+        return 'http://{}:{}/setup.xml'.format(device.host, device.port)
 
-    # Add static devices from the config file.
-    devices.extend((address, None)
-                   for address in config.get(DOMAIN, {}).get(CONF_STATIC, []))
+    def setup_url_for_address(address):
+        """Determine setup.xml url for given address."""
+        host, _, port = address.partition(':')
 
-    for address, device in devices:
-        port = pywemo.ouimeaux_device.probe_wemo(address)
+        if port:
+            port = cv.port(port)
+        else:
+            port = pywemo.ouimeaux_device.probe_wemo(host)
+
         if not port:
-            _LOGGER.warning('Unable to probe wemo at %s', address)
-            continue
-        _LOGGER.info('Adding wemo at %s:%i', address, port)
+            return None
 
-        url = 'http://%s:%i/setup.xml' % (address, port)
-        if device is None:
+        return 'http://{}:{}/setup.xml'.format(host, port)
+
+    devices = []
+
+    for address in config.get(DOMAIN, {}).get(CONF_STATIC, []):
+        try:
+            url = setup_url_for_address(address)
+        except vol.Invalid as err:
+            _LOGGER.error('Invalid address %s (%s)', address, err)
+            return False
+
+        if not url:
+            _LOGGER.error('Unable to get description url for %s', address)
+            return False
+
+        try:
             device = pywemo.discovery.device_from_description(url, None)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as err:
+            _LOGGER.error('Unable to access %s (%s)', url, err)
+            return False
+
+        devices.append((url, device))
+
+    _LOGGER.info("Scanning for WeMo devices.")
+    devices.extend(
+        (setup_url_for_device(device), device)
+        for device in pywemo.discover_devices())
+
+    for url, device in devices:
+        _LOGGER.info('Adding wemo at %s:%i', device.host, device.port)
 
         discovery_info = {
             'model_name': device.model_name,
