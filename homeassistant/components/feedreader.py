@@ -4,7 +4,7 @@ Support for RSS/Atom feeds.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/feedreader/
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 from logging import getLogger
 from os.path import exists
 from threading import Lock
@@ -12,8 +12,8 @@ import pickle
 
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
+from homeassistant.helpers.event import track_time_interval
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['feedparser==5.2.1']
@@ -21,16 +21,22 @@ REQUIREMENTS = ['feedparser==5.2.1']
 _LOGGER = getLogger(__name__)
 
 CONF_URLS = 'urls'
+CONF_MAX_ENTRIES = 'max_entries'
+
+DEFAULT_MAX_ENTRIES = 20
+DEFAULT_SCAN_INTERVAL = timedelta(hours=1)
 
 DOMAIN = 'feedreader'
 
 EVENT_FEEDREADER = 'feedreader'
 
-MAX_ENTRIES = 20
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {
         vol.Required(CONF_URLS): vol.All(cv.ensure_list, [cv.url]),
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+            cv.time_period,
+        vol.Optional(CONF_MAX_ENTRIES, default=DEFAULT_MAX_ENTRIES):
+            cv.positive_int
     }
 }, extra=vol.ALLOW_EXTRA)
 
@@ -38,18 +44,23 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the Feedreader component."""
     urls = config.get(DOMAIN)[CONF_URLS]
+    scan_interval = config.get(DOMAIN).get(CONF_SCAN_INTERVAL)
+    max_entries = config.get(DOMAIN).get(CONF_MAX_ENTRIES)
     data_file = hass.config.path("{}.pickle".format(DOMAIN))
     storage = StoredData(data_file)
-    feeds = [FeedManager(url, hass, storage) for url in urls]
+    feeds = [FeedManager(url, scan_interval, max_entries, hass, storage) for
+             url in urls]
     return len(feeds) > 0
 
 
 class FeedManager(object):
     """Abstraction over Feedparser module."""
 
-    def __init__(self, url, hass, storage):
-        """Initialize the FeedManager object, poll every hour."""
+    def __init__(self, url, scan_interval, max_entries, hass, storage):
+        """Initialize the FeedManager object, poll as per scan interval."""
         self._url = url
+        self._scan_interval = scan_interval
+        self._max_entries = max_entries
         self._feed = None
         self._hass = hass
         self._firstrun = True
@@ -69,8 +80,8 @@ class FeedManager(object):
 
     def _init_regular_updates(self, hass):
         """Schedule regular updates at the top of the clock."""
-        track_utc_time_change(
-            hass, lambda now: self._update(), minute=0, second=0)
+        track_time_interval(hass, lambda now: self._update(),
+                            self._scan_interval)
 
     @property
     def last_update_successful(self):
@@ -116,10 +127,10 @@ class FeedManager(object):
 
     def _filter_entries(self):
         """Filter the entries provided and return the ones to keep."""
-        if len(self._feed.entries) > MAX_ENTRIES:
+        if len(self._feed.entries) > self._max_entries:
             _LOGGER.debug("Processing only the first %s entries "
-                          "in feed %s", MAX_ENTRIES, self._url)
-            self._feed.entries = self._feed.entries[0:MAX_ENTRIES]
+                          "in feed %s", self._max_entries, self._url)
+            self._feed.entries = self._feed.entries[0:self._max_entries]
 
     def _update_and_fire_entry(self, entry):
         """Update last_entry_timestamp and fire entry."""
