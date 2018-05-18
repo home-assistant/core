@@ -1,5 +1,5 @@
 requests==2.18.4
-pyyaml>=3.11,<4
+pyyaml>=3.11,<4 ; python_version < '3.7'
 pytz>=2017.02
 pip>=8.0.3
 jinja2>=2.10
