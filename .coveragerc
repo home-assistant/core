@@ -661,6 +661,7 @@ omit =
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sense.py
     homeassistant/components/sensor/sensehat.py
+    homeassistant/components/sensor/sensirion_sht31_smart_gadget.py
     homeassistant/components/sensor/serial_pm.py
     homeassistant/components/sensor/serial.py
     homeassistant/components/sensor/sht31.py
