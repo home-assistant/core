@@ -19,7 +19,7 @@ requests_mock==1.5
 
 
 # homeassistant.components.homekit
-HAP-python==2.0.0
+HAP-python==2.1.0
 
 # homeassistant.components.notify.html5
 PyJWT==1.6.0
