@@ -12,6 +12,7 @@ import aiohttp
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.components.websocket_api as api
 from homeassistant.core import EventOrigin, split_entity_id
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
@@ -48,7 +49,8 @@ INSTANCES_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_INSTANCES): [INSTANCES_SCHEMA],
+        vol.Required(CONF_INSTANCES): vol.All(cv.ensure_list,
+                                              [INSTANCES_SCHEMA]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -83,10 +85,15 @@ class RemoteConnection(object):
 
         self.__id = 1
 
+    @callback
+    def _get_url(self):
+        """Get url to connect to."""
+        return '%s://%s:%s/api/websocket' % (
+            'wss' if self._secure else 'ws', self._host, self._port)
+
     async def async_connect(self):
         """Connect to remote home-assistant websocket..."""
-        url = '%s://%s:%s/api/websocket' % (
-            'wss' if self._secure else 'ws', self._host, self._port)
+        url = self._get_url()
 
         session = async_get_clientsession(self._hass)
 
