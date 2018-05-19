@@ -982,6 +982,9 @@ python-family-hub-local==0.0.2
 # homeassistant.components.weather.darksky
 python-forecastio==1.4.0
 
+# homeassistant.components.fpl
+python-fpl-api==0.0.2
+
 # homeassistant.components.gc100
 python-gc100==1.0.3a
 
