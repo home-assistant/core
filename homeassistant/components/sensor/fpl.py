@@ -39,10 +39,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FplSensor(Entity):
     """An FPL sensor."""
 
-    def __init__(self, fpl_api, sensor_key, range, unit):
+    def __init__(self, fpl_api, sensor_key, daterange, unit):
         """Initialize the sensor."""
         self._sensor_key = sensor_key
-        self._name = "FPL {} {}".format(range, unit)
+        self._name = "FPL {} {}".format(daterange, unit)
         self._unit_of_measurement = unit
         self.fpl_api = fpl_api
 
@@ -66,8 +66,7 @@ class FplSensor(Entity):
         """Return the icon to use in the frontend."""
         if self._unit_of_measurement == "kWh":
             return "mdi:flash"
-        else:
-            return "mdi:currency-usd"
+        return "mdi:currency-usd"
 
     @property
     def device_state_attributes(self):

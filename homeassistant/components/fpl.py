@@ -11,7 +11,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.const import (
-        CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
+    CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import load_platform
@@ -47,7 +47,7 @@ def setup(hass, config):
 
     session = async_get_clientsession(hass)
     hass.data[DATA_FPL] = FplData(
-            username, password, is_tou, hass.loop, session)
+        username, password, is_tou, hass.loop, session)
     load_platform(
         hass, 'sensor', DOMAIN,
         {
@@ -58,7 +58,7 @@ def setup(hass, config):
     return True
 
 
-class FplData (object):
+class FplData(object):
     """Get the latest data from the FPL API."""
 
     def __init__(self, username, password, is_tou, loop, session):
