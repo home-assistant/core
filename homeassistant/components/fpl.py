@@ -6,17 +6,15 @@ https://home-assistant.io/components/fpl/
 """
 import asyncio
 import logging
-from datetime import timedelta, date
+from datetime import timedelta
 
-import aiohttp
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
+from homeassistant.const import (
+        CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['python-fpl-api==0.0.2']
@@ -48,11 +46,13 @@ def setup(hass, config):
     is_tou = conf.get(CONF_IS_TOU_USER)
 
     session = async_get_clientsession(hass)
-    hass.data[DATA_FPL] = FplData(username, password, is_tou, hass.loop, session)
+    hass.data[DATA_FPL] = FplData(
+            username, password, is_tou, hass.loop, session)
     load_platform(hass, 'sensor', DOMAIN,
-        {'yesterday_kwh': True, 'yesterday_dollars': True,
+            {'yesterday_kwh': True, 'yesterday_dollars': True,
             'mtd_kwh': True, 'mtd_dollars': True}, config)
     return True
+
 
 class FplData (object):
     """Get the latest data from the FPL API."""
@@ -67,4 +67,4 @@ class FplData (object):
         _LOGGER.debug("Updating FPL component")
         await self.client.login()
         await asyncio.wait([self.client.async_get_yesterday_usage(),
-            self.client.async_get_mtd_usage()])
+                self.client.async_get_mtd_usage()])
