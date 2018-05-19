@@ -29,6 +29,10 @@ CONF_CAT = 'cat'
 CONF_SUBCAT = 'subcat'
 CONF_FIRMWARE = 'firmware'
 CONF_PRODUCT_KEY = 'product_key'
+CONF_X10 = 'x10_devices'
+CONF_HOUSECODE = 'housecode'
+CONF_UNITCODE = 'unitcode'
+CONF_DIM_STEPS = 'dim_steps'
 
 SRV_ADD_ALL_LINK = 'add_all_link'
 SRV_DEL_ALL_LINK = 'delete_all_link'
@@ -51,11 +55,21 @@ CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
         vol.Optional(CONF_PLATFORM): cv.string,
         }))
 
+CONF_X10_SCHEMA = vol.All(
+    vol.Schema({
+        vol.Required(CONF_HOUSECODE): cv.string,
+        vol.Required(CONF_UNITCODE): vol.Range(min=1, max=16),
+        vol.Required(CONF_PLATFORM): cv.string,
+        vol.Optional(CONF_DIM_STEPS): vol.Range(min=2, max=255)
+        }))
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): cv.string,
         vol.Optional(CONF_OVERRIDE): vol.All(
-            cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA])
+            cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA]),
+        vol.Optional(CONF_X10): vol.All(
+            cv.ensure_list_csv, [CONF_X10_SCHEMA])
         })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -89,6 +103,7 @@ def async_setup(hass, config):
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
     overrides = conf.get(CONF_OVERRIDE, [])
+    x10_devices = conf.get(CONF_X10, [])
 
     @callback
     def async_plm_new_device(device):
@@ -185,6 +200,17 @@ def async_setup(hass, config):
                 plm.devices.add_override(address, CONF_PRODUCT_KEY,
                                          device_override[prop])
 
+    for device in x10_devices:
+        x10_type = 'OnOff'
+        steps = device.get(CONF_DIM_STEPS, 22)
+        if device.get(CONF_PLATFORM) == 'light':
+            x10_type = 'Dimmable'
+        device = plm.add_x10_device(device.get(CONF_HOUSECODE),
+                                    device.get(CONF_UNITCODE),
+                                    x10_type)
+        if device and hasattr(device.states[0x01], 'steps'):
+            device.states[0x01].steps = steps
+
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]['plm'] = plm
     hass.data[DOMAIN]['entities'] = {}
@@ -219,6 +245,9 @@ class IPDB(object):
                                               IoLincSensor,
                                               LeakSensorDryWet)
 
+        from insteonplm.states.x10 import (X10DimmableSwitch,
+                                           X10OnOffSwitch)
+
         self.states = [State(OnOffSwitch_OutletTop, 'switch'),
                        State(OnOffSwitch_OutletBottom, 'switch'),
                        State(OpenClosedRelay, 'switch'),
@@ -231,7 +260,10 @@ class IPDB(object):
                        State(VariableSensor, 'sensor'),
 
                        State(DimmableSwitch_Fan, 'fan'),
-                       State(DimmableSwitch, 'light')]
+                       State(DimmableSwitch, 'light'),
+
+                       State(X10DimmableSwitch, 'light'),
+                       State(X10OnOffSwitch, 'switch')]
 
     def __len__(self):
         """Return the number of INSTEON state types mapped to HA platforms."""
