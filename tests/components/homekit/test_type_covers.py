@@ -10,7 +10,7 @@ from homeassistant.const import (
     STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE, STATE_UNKNOWN)
 
 from tests.common import async_mock_service
-from tests.components.homekit.test_accessories import patch_debounce
+from tests.components.homekit.common import patch_debounce
 
 
 @pytest.fixture(scope='module')

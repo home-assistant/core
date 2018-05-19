@@ -17,12 +17,6 @@ from homeassistant.const import __version__, ATTR_NOW, EVENT_TIME_CHANGED
 import homeassistant.util.dt as dt_util
 
 
-def patch_debounce():
-    """Return patch for debounce method."""
-    return patch('homeassistant.components.homekit.accessories.debounce',
-                 lambda f: lambda *args, **kwargs: f(*args, **kwargs))
-
-
 async def test_debounce(hass):
     """Test add_timeout decorator function."""
     def demo_func(*args):
