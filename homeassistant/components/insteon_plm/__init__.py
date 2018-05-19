@@ -121,7 +121,7 @@ def async_setup(hass, config):
                     hass.async_add_job(
                         discovery.async_load_platform(
                             hass, platform, DOMAIN,
-                            discovered={'address': device.address.hex,
+                            discovered={'address': device.address.id,
                                         'state_key': state_key},
                             hass_config=config))
 
