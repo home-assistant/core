@@ -62,6 +62,7 @@ class FplData (object):
     """Get the latest data from the FPL API."""
 
     def __init__(self, username, password, is_tou, loop, session):
+        """Init the 3rd party library."""
         from pyfplapi import FplApi
         self.client = FplApi(username, password, is_tou, loop, session)
 
