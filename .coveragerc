@@ -222,6 +222,9 @@ omit =
     homeassistant/components/raspihats.py
     homeassistant/components/*/raspihats.py
 
+    homeassistant/components/remote_homeassistant.py
+    homeassistant/components/*/remote_homeassistant.py
+
     homeassistant/components/rfxtrx.py
     homeassistant/components/*/rfxtrx.py
 
