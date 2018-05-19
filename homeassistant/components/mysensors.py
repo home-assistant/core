@@ -12,13 +12,14 @@ import socket
 import sys
 from timeit import default_timer as timer
 
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.mqtt import (
     valid_publish_topic, valid_subscribe_topic)
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, CONF_NAME, CONF_OPTIMISTIC,
-    EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON)
+    ATTR_BATTERY_LEVEL, CONF_NAME, CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_STOP,
+    STATE_OFF, STATE_ON)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -57,9 +58,11 @@ DEFAULT_TCP_PORT = 5003
 DEFAULT_VERSION = '1.4'
 DOMAIN = 'mysensors'
 
+GATEWAY_READY_TIMEOUT = 15.0
 MQTT_COMPONENT = 'mqtt'
 MYSENSORS_GATEWAYS = 'mysensors_gateways'
 MYSENSORS_PLATFORM_DEVICES = 'mysensors_devices_{}'
+MYSENSORS_GATEWAY_READY = 'mysensors_gateway_ready_{}'
 PLATFORM = 'platform'
 SCHEMA = 'schema'
 SIGNAL_CALLBACK = 'mysensors_callback_{}_{}_{}_{}'
@@ -353,12 +356,12 @@ async def async_setup(hass, config):
         tcp_port = gway.get(CONF_TCP_PORT)
         in_prefix = gway.get(CONF_TOPIC_IN_PREFIX, '')
         out_prefix = gway.get(CONF_TOPIC_OUT_PREFIX, '')
-        ready_gateway = await setup_gateway(
+        gateway = await setup_gateway(
             device, persistence_file, baud_rate, tcp_port, in_prefix,
             out_prefix)
-        if ready_gateway is not None:
-            ready_gateway.nodes_config = gway.get(CONF_NODES)
-            gateways[id(ready_gateway)] = ready_gateway
+        if gateway is not None:
+            gateway.nodes_config = gway.get(CONF_NODES)
+            gateways[id(gateway)] = gateway
 
     if not gateways:
         _LOGGER.error(
@@ -395,6 +398,35 @@ async def gw_start(hass, gateway):
 
     await gateway.start()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gw_stop)
+    if gateway.device == 'mqtt':
+        # Gatways connected via mqtt doesn't send gateway ready message.
+        return
+    gateway_ready = asyncio.Future()
+    gateway_ready_key = MYSENSORS_GATEWAY_READY.format(id(gateway))
+    hass.data[gateway_ready_key] = gateway_ready
+
+    try:
+        with async_timeout.timeout(GATEWAY_READY_TIMEOUT, loop=hass.loop):
+            await gateway_ready
+    except asyncio.TimeoutError:
+        _LOGGER.warning(
+            "Gateway %s not ready after %s secs so continuing with setup",
+            gateway.device, GATEWAY_READY_TIMEOUT)
+    finally:
+        hass.data.pop(gateway_ready_key, None)
+
+
+@callback
+def set_gateway_ready(hass, msg):
+    """Set asyncio future result if gateway is ready."""
+    if (msg.type != msg.gateway.const.MessageType.internal or
+            msg.sub_type != msg.gateway.const.Internal.I_GATEWAY_READY):
+        return
+    gateway_ready = hass.data.get(MYSENSORS_GATEWAY_READY.format(
+        id(msg.gateway)))
+    if gateway_ready is None or gateway_ready.cancelled():
+        return
+    gateway_ready.set_result(True)
 
 
 def validate_child(gateway, node_id, child):
@@ -494,6 +526,8 @@ def gw_callback_factory(hass):
         start = timer()
         _LOGGER.debug(
             "Node update: node %s child %s", msg.node_id, msg.child_id)
+
+        set_gateway_ready(hass, msg)
 
         try:
             child = msg.gateway.sensors[msg.node_id].children[msg.child_id]
