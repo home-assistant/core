@@ -42,18 +42,18 @@ DOWNLOAD_URL = '{}/archive/{}.zip'.format(GITHUB_URL, hass_const.__version__)
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
-    'requests==2.18.4',
-    'pyyaml>=3.11,<4',
-    'pytz>=2018.04',
-    'pip>=8.0.3',
-    'jinja2>=2.10',
-    'voluptuous==0.11.1',
-    'typing>=3,<4',
-    'aiohttp==3.1.3',
-    'async_timeout==2.0.1',
+    'aiohttp==3.2.1',
     'astral==1.6.1',
-    'certifi>=2018.04.16',
+    'async_timeout==3.0.0',
     'attrs==18.1.0',
+    'certifi>=2018.04.16',
+    'jinja2>=2.10',
+    'pip>=8.0.3',
+    'pytz>=2018.04',
+    'pyyaml>=3.11,<4',
+    'requests==2.18.4',
+    'typing>=3,<4',
+    'voluptuous==0.11.1',
 ]
 
 MIN_PY_VERSION = '.'.join(map(str, hass_const.REQUIRED_PYTHON_VER))
