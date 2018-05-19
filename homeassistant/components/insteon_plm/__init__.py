@@ -200,6 +200,14 @@ def async_setup(hass, config):
                 plm.devices.add_override(address, CONF_PRODUCT_KEY,
                                          device_override[prop])
 
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN]['plm'] = plm
+    hass.data[DOMAIN]['entities'] = {}
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, conn.close)
+
+    plm.devices.add_device_callback(async_plm_new_device)
+
     for device in x10_devices:
         x10_type = 'OnOff'
         steps = device.get(CONF_DIM_STEPS, 22)
@@ -211,13 +219,6 @@ def async_setup(hass, config):
         if device and hasattr(device.states[0x01], 'steps'):
             device.states[0x01].steps = steps
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN]['plm'] = plm
-    hass.data[DOMAIN]['entities'] = {}
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, conn.close)
-
-    plm.devices.add_device_callback(async_plm_new_device)
     hass.async_add_job(_register_services)
 
     return True
