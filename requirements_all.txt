@@ -1090,7 +1090,7 @@ pyupnp-async==0.1.0.2
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.42
+pyvera==0.2.43
 
 # homeassistant.components.switch.vesync
 pyvesync==0.1.1
