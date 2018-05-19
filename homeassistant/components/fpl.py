@@ -71,4 +71,4 @@ class FplData (object):
         _LOGGER.debug("Updating FPL component")
         await self.client.login()
         await asyncio.wait([self.client.async_get_yesterday_usage(),
-                self.client.async_get_mtd_usage()])
+                            self.client.async_get_mtd_usage()])
