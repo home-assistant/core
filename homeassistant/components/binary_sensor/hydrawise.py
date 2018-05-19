@@ -45,8 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     hydrawise.controller_status.get('running', False)
                 sensors.append(HydrawiseBinarySensor(zone_data, sensor_type))
 
-    add_devices(sensors)
-    return True
+    add_devices(sensors, True)
 
 
 class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorDevice):
@@ -78,5 +77,5 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the device class of the sensor type."""
-        return DEVICE_MAP.get(self._sensor_type)[
+        return DEVICE_MAP[self._sensor_type][
             DEVICE_MAP_INDEX.index('DEVICE_CLASS_INDEX')]

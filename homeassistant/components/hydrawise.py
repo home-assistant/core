@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
 from homeassistant.helpers.entity import Entity
@@ -117,7 +118,7 @@ class HydrawiseEntity(Entity):
         self._sensor_type = sensor_type
         self._name = "{0} {1}".format(
             self.data.get('name'),
-            DEVICE_MAP.get(self._sensor_type)[
+            DEVICE_MAP[self._sensor_type][
                 DEVICE_MAP_INDEX.index('KEY_INDEX')])
         self._state = None
 
@@ -132,14 +133,15 @@ class HydrawiseEntity(Entity):
         async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_HYDRAWISE, self._update_callback)
 
+    @callback
     def _update_callback(self):
         """Call update method."""
-        self.schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state(True)
 
     @property
     def unit_of_measurement(self):
         """Return the units of measurement."""
-        return DEVICE_MAP.get(self._sensor_type)[
+        return DEVICE_MAP[self._sensor_type][
             DEVICE_MAP_INDEX.index('UNIT_OF_MEASURE_INDEX')]
 
     @property
@@ -149,6 +151,6 @@ class HydrawiseEntity(Entity):
             controller_info['controllers'][0]['last_contact_readable']
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            'identifier': self.data.get('relay'),
-            "last contact": temp
+            "identifier": self.data.get('relay'),
+            "last_contact": temp
         }

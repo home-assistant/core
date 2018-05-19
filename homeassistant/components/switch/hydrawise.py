@@ -45,7 +45,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                 sensor_type))
 
     add_devices(sensors, True)
-    return True
 
 
 class HydrawiseSwitch(HydrawiseEntity, SwitchDevice):
@@ -69,7 +68,6 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchDevice):
         elif self._sensor_type == 'auto_watering':
             self.hass.data['hydrawise'].data.suspend_zone(
                 0, (self.data.get('relay')-1))
-        self._state = True
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
@@ -79,15 +77,13 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchDevice):
         elif self._sensor_type == 'auto_watering':
             self.hass.data['hydrawise'].data.suspend_zone(
                 365, (self.data.get('relay')-1))
-        self._state = False
 
     def update(self):
         """Update device state."""
         mydata = self.hass.data['hydrawise'].data
         _LOGGER.debug("Updating Hydrawise switch: %s", self._name)
         if self._sensor_type == 'manual_watering':
-
-            if mydata.running is None or not mydata.running:
+            if not mydata.running:
                 self._state = False
             else:
                 self._state = int(
@@ -109,11 +105,11 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchDevice):
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             "identifier": self.data.get('relay'),
-            "last contact": temp
+            "last_contact": temp
         }
 
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return DEVICE_MAP.get(self._sensor_type)[
+        return DEVICE_MAP[self._sensor_type][
             DEVICE_MAP_INDEX.index('ICON_INDEX')]

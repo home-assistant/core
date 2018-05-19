@@ -34,7 +34,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensors.append(HydrawiseSensor(zone, sensor_type))
 
     add_devices(sensors, True)
-    return True
 
 
 class HydrawiseSensor(HydrawiseEntity):
@@ -69,5 +68,5 @@ class HydrawiseSensor(HydrawiseEntity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return DEVICE_MAP.get(self._sensor_type)[
+        return DEVICE_MAP[self._sensor_type][
             DEVICE_MAP_INDEX.index('ICON_INDEX')]
