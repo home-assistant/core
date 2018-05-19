@@ -5,12 +5,15 @@ import voluptuous as vol
 
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
-    ATTR_CODE, CONF_NAME, TEMP_CELSIUS)
+    ATTR_CODE, CONF_NAME, TEMP_CELSIUS, CONF_MODE)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
-from .const import HOMEKIT_NOTIFY_ID
+from .const import (
+    HOMEKIT_NOTIFY_ID, ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_MEDIA_PLAYER_MODES = (ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
 
 
 def validate_entity_config(values):
@@ -33,6 +36,23 @@ def validate_entity_config(values):
         if domain in ('alarm_control_panel', 'lock'):
             code = config.get(ATTR_CODE)
             params[ATTR_CODE] = cv.string(code) if code else None
+
+        if domain == 'media_player':
+            config_modes = config.get(CONF_MODE)
+            if config_modes:
+                config_modes = cv.ensure_list(config_modes)
+                validated_modes = []
+                for mode in config_modes:
+                    if mode in DEFAULT_MEDIA_PLAYER_MODES and mode \
+                            not in validated_modes:
+                        validated_modes.append(cv.string(mode))
+                    if mode not in DEFAULT_MEDIA_PLAYER_MODES:
+                        _LOGGER('%s, mode: %s is not a valid mode. Valid '
+                                'modes are %s',
+                                entity_id, mode, DEFAULT_MEDIA_PLAYER_MODES)
+                params[CONF_MODE] = validated_modes
+            else:
+                params[CONF_MODE] = DEFAULT_MEDIA_PLAYER_MODES
 
         entities[entity] = params
     return entities

@@ -11,9 +11,12 @@ import voluptuous as vol
 
 from homeassistant.components.cover import (
     SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION)
+from homeassistant.components.media_player import (
+    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_PAUSE,
+    SUPPORT_STOP, SUPPORT_VOLUME_MUTE)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    CONF_IP_ADDRESS, CONF_NAME, CONF_PORT,
+    CONF_IP_ADDRESS, CONF_MODE, CONF_NAME, CONF_PORT,
     DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -24,7 +27,7 @@ from homeassistant.util.decorator import Registry
 from .const import (
     CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FILTER, DEFAULT_AUTO_START,
     DEFAULT_PORT, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25, DOMAIN, HOMEKIT_FILE,
-    SERVICE_HOMEKIT_START)
+    ON_OFF, PLAY_PAUSE, PLAY_STOP, SERVICE_HOMEKIT_START, TOGGLE_MUTE)
 from .util import show_setup_message, validate_entity_config
 
 TYPES = Registry()
@@ -37,7 +40,6 @@ STATUS_READY = 0
 STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
-
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
@@ -125,6 +127,33 @@ def get_accessory(hass, state, aid, config):
     elif state.domain == 'lock':
         a_type = 'Lock'
 
+    elif state.domain == 'media_player':
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        supported_modes = []
+        if features & (SUPPORT_TURN_ON | SUPPORT_TURN_OFF):
+            supported_modes.append(ON_OFF)
+        if features & (SUPPORT_PLAY | SUPPORT_PAUSE):
+            supported_modes.append(PLAY_PAUSE)
+        if features & (SUPPORT_PLAY | SUPPORT_STOP):
+            supported_modes.append(PLAY_STOP)
+        if features & SUPPORT_VOLUME_MUTE:
+            supported_modes.append(TOGGLE_MUTE)
+
+        config_modes = config.get(CONF_MODE)
+
+        mode_list = []
+        for mode in config_modes:
+            if mode in supported_modes and mode not in mode_list:
+                mode_list.append(mode)
+            if mode not in supported_modes:
+                _LOGGER.warning('%s does not support mode: %s, supported '
+                                'modes are: %s',
+                                state.entity_id, mode, supported_modes)
+        if mode_list is not None:
+            config[CONF_MODE] = mode_list
+            a_type = 'MediaPlayer'
+
     elif state.domain == 'sensor':
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
@@ -208,8 +237,8 @@ class HomeKit():
         # pylint: disable=unused-variable
         from . import (  # noqa F401
             type_covers, type_fans, type_lights, type_locks,
-            type_security_systems, type_sensors, type_switches,
-            type_thermostats)
+            type_media_players, type_security_systems, type_sensors,
+            type_switches, type_thermostats)
 
         for state in self.hass.states.all():
             self.add_bridge_accessory(state)

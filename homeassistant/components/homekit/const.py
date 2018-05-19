@@ -4,6 +4,10 @@ DEBOUNCE_TIMEOUT = 0.5
 DOMAIN = 'homekit'
 HOMEKIT_FILE = '.homekit.state'
 HOMEKIT_NOTIFY_ID = 4663548
+ON_OFF = 'on_off'
+PLAY_PAUSE = 'play_pause'
+PLAY_STOP = 'play_stop'
+TOGGLE_MUTE = 'toggle_mute'
 
 # #### Config ####
 CONF_AUTO_START = 'auto_start'
