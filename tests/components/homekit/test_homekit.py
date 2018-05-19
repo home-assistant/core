@@ -6,12 +6,11 @@ import pytest
 from homeassistant import setup
 from homeassistant.core import State
 from homeassistant.components.homekit import (
-    HomeKit, generate_aid,
-    STATUS_READY, STATUS_RUNNING, STATUS_STOPPED, STATUS_WAIT)
+    generate_aid, HomeKit, STATUS_READY, STATUS_RUNNING,
+    STATUS_STOPPED, STATUS_WAIT)
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
-    DOMAIN, HOMEKIT_FILE, CONF_AUTO_START,
-    DEFAULT_PORT, SERVICE_HOMEKIT_START)
+    CONF_AUTO_START, DEFAULT_PORT, DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START)
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.const import (
     CONF_IP_ADDRESS, CONF_PORT,

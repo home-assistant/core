@@ -4,7 +4,7 @@ from collections import namedtuple
 import pytest
 
 from homeassistant.components.cover import (
-    DOMAIN, ATTR_CURRENT_POSITION, ATTR_POSITION, SUPPORT_STOP)
+    ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN, SUPPORT_STOP)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
     STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE, STATE_UNKNOWN)
