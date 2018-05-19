@@ -48,9 +48,13 @@ def setup(hass, config):
     session = async_get_clientsession(hass)
     hass.data[DATA_FPL] = FplData(
             username, password, is_tou, hass.loop, session)
-    load_platform(hass, 'sensor', DOMAIN,
-            {'yesterday_kwh': True, 'yesterday_dollars': True,
-            'mtd_kwh': True, 'mtd_dollars': True}, config)
+    load_platform(
+        hass, 'sensor', DOMAIN,
+        {
+            'yesterday_kwh': True, 'yesterday_dollars': True,
+            'mtd_kwh': True, 'mtd_dollars': True
+        }, config
+    )
     return True
 
 
