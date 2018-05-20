@@ -152,7 +152,6 @@ class BluetoothSHT31SmartGadgetSensor(object):
         else:
             return None
 
-
     def _read_humidity(self):
         """Read humidity value from SHT31 Smart-Gadget sensor."""
         raw = self._read_raw_data(HUMIDITY_HANDLE)
