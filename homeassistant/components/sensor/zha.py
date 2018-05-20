@@ -34,6 +34,7 @@ def make_sensor(discovery_info):
     from zigpy.zcl.clusters.measurement import (
         RelativeHumidity, TemperatureMeasurement, PressureMeasurement
     )
+    from zigpy.zcl.clusters.smartenergy import Metering
     in_clusters = discovery_info['in_clusters']
     if RelativeHumidity.cluster_id in in_clusters:
         sensor = RelativeHumiditySensor(**discovery_info)
@@ -41,6 +42,8 @@ def make_sensor(discovery_info):
         sensor = TemperatureSensor(**discovery_info)
     elif PressureMeasurement.cluster_id in in_clusters:
         sensor = PressureSensor(**discovery_info)
+    elif Metering.cluster_id in in_clusters:
+        sensor = MeteringSensor(**discovery_info)
     else:
         sensor = Sensor(**discovery_info)
 
@@ -135,6 +138,25 @@ class PressureSensor(Sensor):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return 'hPa'
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        if self._state is None:
+            return None
+
+        return round(float(self._state))
+
+
+class MeteringSensor(Sensor):
+    """ZHA Metering sensor."""
+
+    value_attribute = 1024
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return 'W'
 
     @property
     def state(self):
