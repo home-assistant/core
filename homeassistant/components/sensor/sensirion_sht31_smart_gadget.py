@@ -132,8 +132,6 @@ class BluetoothSHT31SmartGadgetSensor(object):
         raw = self._read_raw_data(BATTERY_HANDLE)
         if raw is not None:
             return int(binascii.hexlify(raw))
-        else:
-            return None
 
     def _read_raw_data(self, handle):
         from pygatt.exceptions \
@@ -149,16 +147,12 @@ class BluetoothSHT31SmartGadgetSensor(object):
         raw = self._read_raw_data(TEMPERATURE_HANDLE)
         if raw is not None:
             return struct.unpack("f", raw)[0]
-        else:
-            return None
 
     def _read_humidity(self):
         """Read humidity value from SHT31 Smart-Gadget sensor."""
         raw = self._read_raw_data(HUMIDITY_HANDLE)
         if raw is not None:
             return struct.unpack("f", raw)[0]
-        else:
-            return None
 
 
 class SHT31SmartGadgetClient(object):
