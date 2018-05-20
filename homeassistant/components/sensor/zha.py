@@ -213,11 +213,12 @@ class ElectricalMeasurementSensor(Sensor):
         """
         return True
 
-    @asyncio.coroutine
     async def async_update(self):
         """Retrieve latest state."""
         _LOGGER.debug("%s async_update", self.entity_id)
 
         result = await zha.safe_read(
-            self._endpoint.electrical_measurement, ['active_power'])
+            self._endpoint.electrical_measurement,
+            ['active_power'],
+            allow_cache=False)
         self._state = result.get('active_power', self._state)
