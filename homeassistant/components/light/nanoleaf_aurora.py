@@ -67,8 +67,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not token:
         token = nanoleaf.setup.generate_auth_token(host)
         if not token:
-            _LOGGER.error("Could not generate the auth token, did you press"
-            " and hold the power button on %s for 5-7 seconds?", name)
+            _LOGGER.error("Could not generate the auth token, did you press "
+                          "and hold the power button on %s for 5-7 seconds?", name)
             return
         conf = load_json(hass.config.path(CONFIG_FILE))
         conf[host] = {'token': token}
