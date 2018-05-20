@@ -52,17 +52,20 @@ class ZhongHongClimate(ClimateDevice):
     """Representation of a ZhongHong controller support HVAC."""
 
     def __init__(self, hub, addr_out, addr_in):
+        """Setup platform."""
         from zhong_hong_hvac.hvac import HVAC
         self._device = HVAC(hub, addr_out, addr_in)
         self._hub = hub
         self._device.register_update_callback(self._after_update)
 
     def _after_update(self, climate):
+        """Callback to update state."""
         _LOGGER.info("async update ha state")
         self.schedule_update_ha_state()
 
     @property
     def should_poll(self):
+        """Return the polling state."""
         return False
 
     @property
@@ -72,10 +75,12 @@ class ZhongHongClimate(ClimateDevice):
 
     @property
     def unique_id(self):
+        """Return the unique ID of the HVAC."""
         return "%s-%s" % (self._device.addr_out, self._device.addr_in)
 
     @property
     def supported_features(self):
+        """Return the list of supported features."""
         return (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
                 | SUPPORT_OPERATION_MODE | SUPPORT_ON_OFF)
 
@@ -137,11 +142,11 @@ class ZhongHongClimate(ClimateDevice):
                                    self.temperature_unit)
 
     def turn_on(self):
-        """turn on ac."""
+        """Turn on ac."""
         return self._device.turn_on()
 
     def turn_off(self):
-        """turn off ac."""
+        """Turn off ac."""
         return self._device.turn_off()
 
     def set_temperature(self, **kwargs):
