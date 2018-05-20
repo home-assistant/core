@@ -27,7 +27,7 @@ DEFAULT_NAME = 'Aurora'
 
 DATA_NANOLEAF_AURORA = 'nanoleaf_aurora'
 
-CONFIG_FILE = 'nanoleaf_aurora.conf'
+CONFIG_FILE = '.nanoleaf_aurora.conf'
 
 ICON = 'mdi:triangle-outline'
 
