@@ -212,6 +212,11 @@ class Switch(zha.Entity, BinarySensorDevice):
         }
 
     @property
+    def should_poll(self) -> bool:
+        """Let zha handle polling."""
+        return False
+
+    @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._state
