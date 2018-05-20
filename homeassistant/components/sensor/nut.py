@@ -31,7 +31,7 @@ KEY_STATUS = 'ups.status'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
-    'ups.status': ['Status Data', '', 'mdi:information-outline'],
+    'ups.status': ['Status', '', 'mdi:information-outline'],
     'ups.alarm': ['Alarms', '', 'mdi:alarm'],
     'ups.time': ['Internal Time', '', 'mdi:calendar-clock'],
     'ups.date': ['Internal Date', '', 'mdi:calendar'],
@@ -210,7 +210,8 @@ class NUTSensor(Entity):
     def device_state_attributes(self):
         """Return the sensor attributes."""
         attr = dict()
-        attr[ATTR_STATE] = self.operating_state()
+        attr[ATTR_STATE] = self.operating_state() + " (" + \
+            self._data.status[KEY_STATUS] + ")"
         return attr
 
     def operating_state(self):
@@ -294,5 +295,5 @@ class PyNUTData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, **kwargs):
-        """Fetch the latest status from APCUPSd."""
+        """Fetch the latest status from NUT."""
         self._status = self._get_status()
