@@ -159,7 +159,5 @@ class IlluminanceMeasurementSensor(Sensor):
     @property
     def state(self):
         """Return the state of the entity."""
-        if self._state is None:
-            return None
 
         return self._state
