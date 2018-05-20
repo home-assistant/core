@@ -59,16 +59,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         conf = load_json(hass.config.path(CONFIG_FILE))
         if conf.get(host, {}).get('token'):
             token = conf[host]['token']
-    elif config is not None:
-        host = config.get(CONF_HOST)
-        name = config.get(CONF_NAME)
-        token = config.get(CONF_TOKEN)
+    else:
+        host = config[CONF_HOST]
+        name = config[CONF_NAME]
+        token = config[CONF_TOKEN]
 
     if not token:
         token = nanoleaf.setup.generate_auth_token(host)
         if not token:
-            _LOGGER.error("""Could not generate the auth token, did you press
-            and hold the power button on %s for 5-7 seconds?""", name)
+            _LOGGER.error("Could not generate the auth token, did you press"
+            " and hold the power button on %s for 5-7 seconds?", name)
             return
         conf = load_json(hass.config.path(CONFIG_FILE))
         conf[host] = {'token': token}
@@ -80,23 +80,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error(
             "Could not connect to Nanoleaf Aurora: %s on %s", name, host)
         return
-    else:
-        aurora_light.hass_name = name
-        hass.data[DATA_NANOLEAF_AURORA][host] = aurora_light
-        add_devices([AuroraLight(aurora_light)], True)
+
+    hass.data[DATA_NANOLEAF_AURORA][host] = aurora_light
+    add_devices([AuroraLight(aurora_light, name)], True)
 
 
 class AuroraLight(Light):
     """Representation of a Nanoleaf Aurora."""
 
-    def __init__(self, light):
+    def __init__(self, light, name):
         """Initialize an Aurora light."""
         self._brightness = None
         self._color_temp = None
         self._effect = None
         self._effects_list = None
         self._light = light
-        self._name = light.hass_name
+        self._name = name
         self._hs_color = None
         self._state = None
 
