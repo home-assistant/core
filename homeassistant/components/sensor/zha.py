@@ -201,7 +201,7 @@ class ElectricalMeasurementSensor(Sensor):
     @property
     def state(self):
         """Return the state of the entity."""
-        if self._state == None:
+        if self._state is None:
             return None
 
         return round(float(self._state) / 10, 1)
