@@ -203,8 +203,8 @@ class Switch(zha.Entity, BinarySensorDevice):
     def __init__(self, **kwargs):
         """Initialize Switch."""
         super().__init__(**kwargs)
-        self._state = True
-        self._level = 255
+        self._state = False
+        self._level = 0
         from zigpy.zcl.clusters import general
         self._out_listeners = {
             general.OnOff.cluster_id: self.OnOffListener(self),
