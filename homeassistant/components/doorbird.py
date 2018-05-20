@@ -102,7 +102,7 @@ def setup(hass, config):
 class ConfiguredDoorbird():
     """Attach additional information to pass along with configured device."""
 
-    def __init__(self, device, name, events=[], custom_url=None):
+    def __init__(self, device, name, events=None, custom_url=None):
         """Initialize configured device."""
         self._name = name
         self._device = device
@@ -126,6 +126,10 @@ class ConfiguredDoorbird():
 
     @property
     def monitored_events(self):
+        """Get monitored events"""
+        if self._monitored_events is None:
+            return []
+
         return self._monitored_events
 
 
@@ -154,7 +158,7 @@ class DoorbirdEventSubscriber():
                          url)
 
             _LOGGER.info("You may use the following event name for automations"
-                         ": {}_{}".format(DOMAIN, slug))
+                         ": %s_%s", DOMAIN, slug)
 
             doorstation.device.subscribe_notification(event_type, url)
 
