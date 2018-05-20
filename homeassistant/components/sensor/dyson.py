@@ -14,8 +14,8 @@ from homeassistant.helpers.entity import Entity
 DEPENDENCIES = ['dyson']
 
 SENSOR_UNITS = {
-    'air_quality': '',
-    'dust': '',
+    'air_quality': None,
+    'dust': None,
     'filter_life': 'hours',
     'humidity': '%',
 }
