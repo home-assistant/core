@@ -164,7 +164,7 @@ class IlluminanceMeasurementSensor(Sensor):
         """Return the state of the entity."""
         return self._state
 
-    
+
 class MeteringSensor(Sensor):
     """ZHA Metering sensor."""
 
