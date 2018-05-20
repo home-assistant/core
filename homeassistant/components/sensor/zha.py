@@ -201,8 +201,7 @@ class ElectricalMeasurementSensor(Sensor):
     @property
     def state(self):
         """Return the state of the entity."""
-<<<<<<< Upstream, based on branch 'dm/electrical-sensor' of https://github.com/dmulcahey/home-assistant.git
-        if self._state is None:
+        if self._state == None:
             return None
 
         return round(float(self._state) / 10, 1)
@@ -222,25 +221,4 @@ class ElectricalMeasurementSensor(Sensor):
             self._endpoint.electrical_measurement,
             ['active_power'],
             allow_cache=False)
-=======
-        if self._state == None:
-            return None
-
-        return round(float(self._state) / 10, 1)
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-        False if entity pushes its state to HA.
-        """
-        return True
-
-    @asyncio.coroutine
-    async def async_update(self):
-        """Retrieve latest state."""
-        _LOGGER.debug("%s async_update", self.entity_id)
-
-        result = await zha.safe_read(
-            self._endpoint.electrical_measurement, ['active_power'])
->>>>>>> 0888943 Add electrical measurement sensor
         self._state = result.get('active_power', self._state)
