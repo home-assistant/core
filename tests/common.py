@@ -10,7 +10,7 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from homeassistant import core as ha, loader, data_entry_flow, config_entries
+from homeassistant import auth, core as ha, data_entry_flow, config_entries
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
@@ -113,6 +113,9 @@ def async_test_home_assistant(loop):
     hass.config_entries = config_entries.ConfigEntries(hass, {})
     hass.config_entries._entries = []
     hass.config.async_load = Mock()
+    store = auth.AuthStore(hass)
+    hass.auth = auth.AuthManager(hass, store, {})
+    ensure_auth_manager_loaded(hass.auth)
     INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
@@ -133,9 +136,6 @@ def async_test_home_assistant(loop):
     hass.config.time_zone = date_util.get_time_zone('US/Pacific')
     hass.config.units = METRIC_SYSTEM
     hass.config.skip_pip = True
-
-    if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
-        yield from loop.run_in_executor(None, loader.prepare, hass)
 
     hass.state = ha.CoreState.running
 
@@ -301,6 +301,34 @@ def mock_registry(hass, mock_entries=None):
     registry.entities = mock_entries or {}
     hass.data[entity_registry.DATA_REGISTRY] = registry
     return registry
+
+
+class MockUser(auth.User):
+    """Mock a user in Home Assistant."""
+
+    def __init__(self, id='mock-id', is_owner=True, is_active=True,
+                 name='Mock User'):
+        """Initialize mock user."""
+        super().__init__(id, is_owner, is_active, name)
+
+    def add_to_hass(self, hass):
+        """Test helper to add entry to hass."""
+        return self.add_to_auth_manager(hass.auth)
+
+    def add_to_auth_manager(self, auth_mgr):
+        """Test helper to add entry to hass."""
+        auth_mgr._store.users[self.id] = self
+        return self
+
+
+@ha.callback
+def ensure_auth_manager_loaded(auth_mgr):
+    """Ensure an auth manager is considered loaded."""
+    store = auth_mgr._store
+    if store.clients is None:
+        store.clients = {}
+    if store.users is None:
+        store.users = {}
 
 
 class MockModule(object):

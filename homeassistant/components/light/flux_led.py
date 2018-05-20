@@ -12,9 +12,9 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_EFFECT, EFFECT_COLORLOOP,
-    EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
-    SUPPORT_COLOR, Light, PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_EFFECT, ATTR_WHITE_VALUE,
+    EFFECT_COLORLOOP, EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
+    SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -191,7 +191,15 @@ class FluxLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
+        if self._mode is MODE_RGBW:
+            return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE
+
         return SUPPORT_FLUX_LED
+
+    @property
+    def white_value(self):
+        """Return the white value of this light between 0..255."""
+        return self._bulb.getRgbw()[3]
 
     @property
     def effect_list(self):
@@ -212,23 +220,30 @@ class FluxLight(Light):
 
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
+        white = kwargs.get(ATTR_WHITE_VALUE)
 
-        if rgb is not None and brightness is not None:
-            self._bulb.setRgb(*tuple(rgb), brightness=brightness)
-        elif rgb is not None:
-            self._bulb.setRgb(*tuple(rgb))
+        # color change only
+        if rgb is not None:
+            self._bulb.setRgb(*tuple(rgb), brightness=self.brightness)
+
+        # brightness change only
         elif brightness is not None:
-            if self._mode == MODE_RGBW:
-                self._bulb.setWarmWhite255(brightness)
-            elif self._mode == MODE_RGB:
-                (red, green, blue) = self._bulb.getRgb()
-                self._bulb.setRgb(red, green, blue, brightness=brightness)
+            (red, green, blue) = self._bulb.getRgb()
+            self._bulb.setRgb(red, green, blue, brightness=brightness)
+
+        # random color effect
         elif effect == EFFECT_RANDOM:
             self._bulb.setRgb(random.randint(0, 255),
                               random.randint(0, 255),
                               random.randint(0, 255))
+
+        # effect selection
         elif effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
+
+        # white change only
+        elif white is not None:
+            self._bulb.setWarmWhite255(white)
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""

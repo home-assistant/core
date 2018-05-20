@@ -4,7 +4,6 @@ Support for Google Actions Smart Home Control.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/google_assistant/
 """
-import asyncio
 import logging
 
 from aiohttp.hdrs import AUTHORIZATION
@@ -77,14 +76,13 @@ class GoogleAssistantView(HomeAssistantView):
         self.access_token = access_token
         self.gass_config = gass_config
 
-    @asyncio.coroutine
-    def post(self, request: Request) -> Response:
+    async def post(self, request: Request) -> Response:
         """Handle Google Assistant requests."""
         auth = request.headers.get(AUTHORIZATION, None)
         if 'Bearer {}'.format(self.access_token) != auth:
             return self.json_message("missing authorization", status_code=401)
 
-        message = yield from request.json()  # type: dict
-        result = yield from async_handle_message(
+        message = await request.json()  # type: dict
+        result = await async_handle_message(
             request.app['hass'], self.gass_config, message)
         return self.json(result)

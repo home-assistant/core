@@ -35,7 +35,8 @@ class TestRequirements:
         mock_dirname.return_value = 'ha_package_path'
         self.hass.config.skip_pip = False
         loader.set_component(
-            'comp', MockModule('comp', requirements=['package==0.0.1']))
+            self.hass, 'comp',
+            MockModule('comp', requirements=['package==0.0.1']))
         assert setup.setup_component(self.hass, 'comp')
         assert 'comp' in self.hass.config.components
         assert mock_install.call_args == mock.call(
@@ -53,7 +54,8 @@ class TestRequirements:
         mock_dirname.return_value = 'ha_package_path'
         self.hass.config.skip_pip = False
         loader.set_component(
-            'comp', MockModule('comp', requirements=['package==0.0.1']))
+            self.hass, 'comp',
+            MockModule('comp', requirements=['package==0.0.1']))
         assert setup.setup_component(self.hass, 'comp')
         assert 'comp' in self.hass.config.components
         assert mock_install.call_args == mock.call(

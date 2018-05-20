@@ -12,7 +12,6 @@ import homeassistant.util as util
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR, SUPPORT_TRANSITION)
-from homeassistant.loader import get_component
 import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['wemo']
@@ -151,7 +150,7 @@ class WemoDimmer(Light):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register update callback."""
-        wemo = get_component('wemo')
+        wemo = self.hass.components.wemo
         # The register method uses a threading condition, so call via executor.
         # and yield from to wait until the task is done.
         yield from self.hass.async_add_job(

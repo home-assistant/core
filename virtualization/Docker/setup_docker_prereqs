@@ -25,6 +25,8 @@ PACKAGES=(
   libsodium13
   # homeassistant.components.zwave
   libudev-dev
+  # homeassistant.components.homekit_controller
+  libmpc-dev libmpfr-dev libgmp-dev
 )
 
 # Required debian packages for building dependencies
