@@ -76,6 +76,7 @@ class HomeAccessory(Accessory):
         self.config = config
         self.entity_id = entity_id
         self.hass = hass
+        self.name = name
 
     def run(self):
         """Method called by accessory after driver is started."""

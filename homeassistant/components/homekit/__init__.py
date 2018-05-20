@@ -41,6 +41,8 @@ STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
+DEFAULT_MEDIA_PLAYER_MODES = (ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -140,18 +142,18 @@ def get_accessory(hass, state, aid, config):
         if features & SUPPORT_VOLUME_MUTE:
             supported_modes.append(TOGGLE_MUTE)
 
-        config_modes = config.get(CONF_MODE)
+        config_modes = config.get(CONF_MODE, DEFAULT_MEDIA_PLAYER_MODES)
 
-        mode_list = []
+        validated_modes = []
         for mode in config_modes:
-            if mode in supported_modes and mode not in mode_list:
-                mode_list.append(mode)
+            if mode in supported_modes and mode not in validated_modes:
+                validated_modes.append(mode)
             if mode not in supported_modes:
-                _LOGGER.warning('%s does not support mode: %s, supported '
-                                'modes are: %s',
+                _LOGGER.warning('The entity "%s" does not support '
+                                'mode: "%s", supported modes are: %s',
                                 state.entity_id, mode, supported_modes)
-        if mode_list is not None:
-            config[CONF_MODE] = mode_list
+        if validated_modes is not None:
+            config[CONF_MODE] = validated_modes
             a_type = 'MediaPlayer'
 
     elif state.domain == 'sensor':
