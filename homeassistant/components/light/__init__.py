@@ -334,7 +334,7 @@ class SetIntentHandler(intent.IntentHandler):
 
 async def async_setup(hass, config):
     """Expose light control via state machine and services."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LIGHTS)
     await component.async_setup(config)
 
@@ -386,6 +386,16 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(SetIntentHandler())
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class Profiles:

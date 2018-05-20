@@ -149,6 +149,74 @@ class TestHelpersTemplate(unittest.TestCase):
                     '{{ log(%s, %s) | round(1) }}' % (value, base),
                     self.hass).render())
 
+    def test_sine(self):
+        """Test sine."""
+        tests = [
+            (0, '0.0'),
+            (math.pi / 2, '1.0'),
+            (math.pi, '0.0'),
+            (math.pi * 1.5, '-1.0'),
+            (math.pi / 10, '0.309')
+        ]
+
+        for value, expected in tests:
+            self.assertEqual(
+                expected,
+                template.Template(
+                    '{{ %s | sin | round(3) }}' % value,
+                    self.hass).render())
+
+    def test_cos(self):
+        """Test cosine."""
+        tests = [
+            (0, '1.0'),
+            (math.pi / 2, '0.0'),
+            (math.pi, '-1.0'),
+            (math.pi * 1.5, '-0.0'),
+            (math.pi / 10, '0.951')
+        ]
+
+        for value, expected in tests:
+            self.assertEqual(
+                expected,
+                template.Template(
+                    '{{ %s | cos | round(3) }}' % value,
+                    self.hass).render())
+
+    def test_tan(self):
+        """Test tangent."""
+        tests = [
+            (0, '0.0'),
+            (math.pi, '-0.0'),
+            (math.pi / 180 * 45, '1.0'),
+            (math.pi / 180 * 90, '1.633123935319537e+16'),
+            (math.pi / 180 * 135, '-1.0')
+        ]
+
+        for value, expected in tests:
+            self.assertEqual(
+                expected,
+                template.Template(
+                    '{{ %s | tan | round(3) }}' % value,
+                    self.hass).render())
+
+    def test_sqrt(self):
+        """Test square root."""
+        tests = [
+            (0, '0.0'),
+            (1, '1.0'),
+            (2, '1.414'),
+            (10, '3.162'),
+            (100, '10.0'),
+        ]
+
+        for value, expected in tests:
+            self.assertEqual(
+                expected,
+                template.Template(
+                    '{{ %s | sqrt | round(3) }}' % value,
+                    self.hass).render())
+
     def test_strptime(self):
         """Test the parse timestamp method."""
         tests = [

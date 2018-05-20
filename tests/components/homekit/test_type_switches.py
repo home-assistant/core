@@ -34,7 +34,7 @@ class TestHomekitSwitches(unittest.TestCase):
         entity_id = 'switch.test'
         domain = split_entity_id(entity_id)[0]
 
-        acc = Switch(self.hass, entity_id, 'Switch', aid=2)
+        acc = Switch(self.hass, 'Switch', entity_id, 2, config=None)
         acc.run()
 
         self.assertEqual(acc.aid, 2)
@@ -51,14 +51,14 @@ class TestHomekitSwitches(unittest.TestCase):
         self.assertEqual(acc.char_on.value, False)
 
         # Set from HomeKit
-        acc.char_on.set_value(True)
+        acc.char_on.client_update_value(True)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[0].data[ATTR_DOMAIN], domain)
         self.assertEqual(
             self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
 
-        acc.char_on.set_value(False)
+        acc.char_on.client_update_value(False)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[1].data[ATTR_DOMAIN], domain)
@@ -70,13 +70,13 @@ class TestHomekitSwitches(unittest.TestCase):
         entity_id = 'remote.test'
         domain = split_entity_id(entity_id)[0]
 
-        acc = Switch(self.hass, entity_id, 'Switch', aid=2)
+        acc = Switch(self.hass, 'Switch', entity_id, 2, config=None)
         acc.run()
 
         self.assertEqual(acc.char_on.value, False)
 
         # Set from HomeKit
-        acc.char_on.set_value(True)
+        acc.char_on.client_update_value(True)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[0].data[ATTR_DOMAIN], domain)
@@ -89,13 +89,13 @@ class TestHomekitSwitches(unittest.TestCase):
         entity_id = 'input_boolean.test'
         domain = split_entity_id(entity_id)[0]
 
-        acc = Switch(self.hass, entity_id, 'Switch', aid=2)
+        acc = Switch(self.hass, 'Switch', entity_id, 2, config=None)
         acc.run()
 
         self.assertEqual(acc.char_on.value, False)
 
         # Set from HomeKit
-        acc.char_on.set_value(True)
+        acc.char_on.client_update_value(True)
         self.hass.block_till_done()
         self.assertEqual(
             self.events[0].data[ATTR_DOMAIN], domain)

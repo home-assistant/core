@@ -16,15 +16,16 @@ import voluptuous as vol
 import jinja2
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.http.const import KEY_AUTHENTICATED
+from homeassistant.components import websocket_api
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180404.0']
+REQUIREMENTS = ['home-assistant-frontend==20180509.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -93,6 +94,10 @@ SERVICE_SET_THEME = 'set_theme'
 SERVICE_RELOAD_THEMES = 'reload_themes'
 SERVICE_SET_THEME_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
+})
+WS_TYPE_GET_PANELS = 'get_panels'
+SCHEMA_GET_PANELS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_GET_PANELS,
 })
 
 
@@ -291,6 +296,8 @@ def add_manifest_json_key(key, val):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the serving of the frontend."""
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_GET_PANELS, websocket_handle_get_panels, SCHEMA_GET_PANELS)
     hass.http.register_view(ManifestJSONView)
 
     conf = config.get(DOMAIN, {})
@@ -597,3 +604,19 @@ def _is_latest(js_option, request):
     useragent = request.headers.get('User-Agent')
 
     return useragent and hass_frontend.version(useragent)
+
+
+@callback
+def websocket_handle_get_panels(hass, connection, msg):
+    """Handle get panels command.
+
+    Async friendly.
+    """
+    panels = {
+        panel:
+        connection.hass.data[DATA_PANELS][panel].to_response(
+            connection.hass, connection.request)
+        for panel in connection.hass.data[DATA_PANELS]}
+
+    connection.to_write.put_nowait(websocket_api.result_message(
+        msg['id'], panels))

@@ -4,10 +4,10 @@ Support for MQTT sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mqtt/
 """
-import asyncio
 import logging
 import json
 from datetime import timedelta
+from typing import Optional
 
 import voluptuous as vol
 
@@ -15,12 +15,14 @@ from homeassistant.core import callback
 from homeassistant.components.mqtt import (
     CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, MqttAvailability)
+from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
-    CONF_UNIT_OF_MEASUREMENT, CONF_ICON)
+    CONF_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_DEVICE_CLASS)
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -28,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_EXPIRE_AFTER = 'expire_after'
 CONF_JSON_ATTRS = 'json_attributes'
+CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Sensor'
 DEFAULT_FORCE_UPDATE = False
@@ -37,14 +40,18 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    # Integrations shouldn't never expose unique_id through configuration
+    # this here is an exception because MQTT is a msg transport, not a protocol
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                               async_add_devices, discovery_info=None):
     """Set up MQTT Sensor."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -61,8 +68,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_FORCE_UPDATE),
         config.get(CONF_EXPIRE_AFTER),
         config.get(CONF_ICON),
+        config.get(CONF_DEVICE_CLASS),
         value_template,
         config.get(CONF_JSON_ATTRS),
+        config.get(CONF_UNIQUE_ID),
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
@@ -73,8 +82,9 @@ class MqttSensor(MqttAvailability, Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
-                 force_update, expire_after, icon, value_template,
-                 json_attributes, availability_topic, payload_available,
+                 force_update, expire_after, icon, device_class: Optional[str],
+                 value_template, json_attributes, unique_id: Optional[str],
+                 availability_topic, payload_available,
                  payload_not_available):
         """Initialize the sensor."""
         super().__init__(availability_topic, qos, payload_available,
@@ -88,14 +98,15 @@ class MqttSensor(MqttAvailability, Entity):
         self._template = value_template
         self._expire_after = expire_after
         self._icon = icon
+        self._device_class = device_class
         self._expiration_trigger = None
         self._json_attributes = set(json_attributes)
+        self._unique_id = unique_id
         self._attributes = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        yield from super().async_added_to_hass()
+        await super().async_added_to_hass()
 
         @callback
         def message_received(topic, payload, qos):
@@ -134,8 +145,8 @@ class MqttSensor(MqttAvailability, Entity):
             self._state = payload
             self.async_schedule_update_ha_state()
 
-        yield from mqtt.async_subscribe(
-            self.hass, self._state_topic, message_received, self._qos)
+        await mqtt.async_subscribe(self.hass, self._state_topic,
+                                   message_received, self._qos)
 
     @callback
     def value_is_expired(self, *_):
@@ -175,6 +186,16 @@ class MqttSensor(MqttAvailability, Entity):
         return self._attributes
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
     def icon(self):
         """Return the icon."""
         return self._icon
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the device class of the sensor."""
+        return self._device_class

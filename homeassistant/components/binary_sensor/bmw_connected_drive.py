@@ -46,6 +46,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         self._vehicle = vehicle
         self._attribute = attribute
         self._name = '{} {}'.format(self._vehicle.name, self._attribute)
+        self._unique_id = '{}-{}'.format(self._vehicle.vin, self._attribute)
         self._sensor_name = sensor_name
         self._device_class = device_class
         self._state = None
@@ -54,6 +55,11 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
     def should_poll(self) -> bool:
         """Data update is triggered from BMWConnectedDriveEntity."""
         return False
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the binary sensor."""
+        return self._unique_id
 
     @property
     def name(self):

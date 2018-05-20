@@ -24,16 +24,25 @@ REQUIREMENTS = ['yeelight==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TRANSITION = 'transition'
+LEGACY_DEVICE_TYPE_MAP = {
+    'color1': 'rgb',
+    'mono1': 'white',
+    'strip1': 'strip',
+    'bslamp1': 'bedside',
+    'ceiling1': 'ceiling',
+}
+
+DEFAULT_NAME = 'Yeelight'
 DEFAULT_TRANSITION = 350
 
+CONF_TRANSITION = 'transition'
 CONF_SAVE_ON_CHANGE = 'save_on_change'
 CONF_MODE_MUSIC = 'use_music_mode'
 
 DATA_KEY = 'light.yeelight'
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
     vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
     vol.Optional(CONF_SAVE_ON_CHANGE, default=True): cv.boolean,
@@ -122,23 +131,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is not None:
         _LOGGER.debug("Adding autodetected %s", discovery_info['hostname'])
 
+        device_type = discovery_info['device_type']
+        device_type = LEGACY_DEVICE_TYPE_MAP.get(device_type, device_type)
+
         # Not using hostname, as it seems to vary.
-        name = "yeelight_%s_%s" % (discovery_info['device_type'],
+        name = "yeelight_%s_%s" % (device_type,
                                    discovery_info['properties']['mac'])
-        device = {'name': name, 'ipaddr': discovery_info['host']}
+        host = discovery_info['host']
+        device = {'name': name, 'ipaddr': host}
 
         light = YeelightLight(device, DEVICE_SCHEMA({}))
         lights.append(light)
-        hass.data[DATA_KEY][name] = light
+        hass.data[DATA_KEY][host] = light
     else:
-        for ipaddr, device_config in config[CONF_DEVICES].items():
-            name = device_config[CONF_NAME]
-            _LOGGER.debug("Adding configured %s", name)
-
-            device = {'name': name, 'ipaddr': ipaddr}
+        for host, device_config in config[CONF_DEVICES].items():
+            device = {'name': device_config[CONF_NAME], 'ipaddr': host}
             light = YeelightLight(device, device_config)
             lights.append(light)
-            hass.data[DATA_KEY][name] = light
+            hass.data[DATA_KEY][host] = light
 
     add_devices(lights, True)
 

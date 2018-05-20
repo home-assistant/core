@@ -27,9 +27,9 @@ class QSLight(QSToggleEntity, Light):
     @property
     def brightness(self):
         """Return the brightness of this light (0-255)."""
-        return self._qsusb[self.qsid, 1] if self._dim else None
+        return self.device.value if self.device.is_dimmer else None
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS if self._dim else 0
+        return SUPPORT_BRIGHTNESS if self.device.is_dimmer else 0

@@ -4,7 +4,6 @@ Provide pre-made queries on top of the recorder component.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/history/
 """
-import asyncio
 from collections import defaultdict
 from datetime import timedelta
 from itertools import groupby
@@ -116,6 +115,30 @@ def state_changes_during_period(hass, start_time, end_time=None,
             query.order_by(States.last_updated))
 
     return states_to_json(hass, states, start_time, entity_ids)
+
+
+def get_last_state_changes(hass, number_of_states, entity_id):
+    """Return the last number_of_states."""
+    from homeassistant.components.recorder.models import States
+
+    start_time = dt_util.utcnow()
+
+    with session_scope(hass=hass) as session:
+        query = session.query(States).filter(
+            (States.last_changed == States.last_updated))
+
+        if entity_id is not None:
+            query = query.filter_by(entity_id=entity_id.lower())
+
+        entity_ids = [entity_id] if entity_id is not None else None
+
+        states = execute(
+            query.order_by(States.last_updated.desc()).limit(number_of_states))
+
+    return states_to_json(hass, reversed(states),
+                          start_time,
+                          entity_ids,
+                          include_start_time_state=False)
 
 
 def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
@@ -235,8 +258,7 @@ def get_state(hass, utc_point_in_time, entity_id, run=None):
     return states[0] if states else None
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the history hooks."""
     filters = Filters()
     conf = config.get(DOMAIN, {})
@@ -251,7 +273,7 @@ def async_setup(hass, config):
     use_include_order = conf.get(CONF_ORDER)
 
     hass.http.register_view(HistoryPeriodView(filters, use_include_order))
-    yield from hass.components.frontend.async_register_built_in_panel(
+    await hass.components.frontend.async_register_built_in_panel(
         'history', 'history', 'mdi:poll-box')
 
     return True
@@ -269,8 +291,7 @@ class HistoryPeriodView(HomeAssistantView):
         self.filters = filters
         self.use_include_order = use_include_order
 
-    @asyncio.coroutine
-    def get(self, request, datetime=None):
+    async def get(self, request, datetime=None):
         """Return history over a period of time."""
         timer_start = time.perf_counter()
         if datetime:
@@ -306,7 +327,7 @@ class HistoryPeriodView(HomeAssistantView):
 
         hass = request.app['hass']
 
-        result = yield from hass.async_add_job(
+        result = await hass.async_add_job(
             get_significant_states, hass, start_time, end_time,
             entity_ids, self.filters, include_start_time_state)
         result = list(result.values())
@@ -329,8 +350,7 @@ class HistoryPeriodView(HomeAssistantView):
             sorted_result.extend(result)
             result = sorted_result
 
-        response = yield from hass.async_add_job(self.json, result)
-        return response
+        return await hass.async_add_job(self.json, result)
 
 
 class Filters(object):

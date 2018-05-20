@@ -11,6 +11,7 @@ from datetime import timedelta
 from homeassistant.components.calendar import CalendarEventDevice
 from homeassistant.components.google import (
     CONF_CAL_ID, CONF_ENTITIES, CONF_TRACK, TOKEN_FILE,
+    CONF_IGNORE_AVAILABILITY, CONF_SEARCH,
     GoogleCalendarService)
 from homeassistant.util import Throttle, dt
 
@@ -18,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_GOOGLE_SEARCH_PARAMS = {
     'orderBy': 'startTime',
-    'maxResults': 1,
+    'maxResults': 5,
     'singleEvents': True,
 }
 
@@ -45,18 +46,22 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
     def __init__(self, hass, calendar_service, calendar, data):
         """Create the Calendar event device."""
         self.data = GoogleCalendarData(calendar_service, calendar,
-                                       data.get('search', None))
+                                       data.get(CONF_SEARCH),
+                                       data.get(CONF_IGNORE_AVAILABILITY))
+
         super().__init__(hass, data)
 
 
 class GoogleCalendarData(object):
     """Class to utilize calendar service object to get next event."""
 
-    def __init__(self, calendar_service, calendar_id, search=None):
+    def __init__(self, calendar_service, calendar_id, search,
+                 ignore_availability):
         """Set up how we are going to search the google calendar."""
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
         self.search = search
+        self.ignore_availability = ignore_availability
         self.event = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -80,5 +85,17 @@ class GoogleCalendarData(object):
         result = events.list(**params).execute()
 
         items = result.get('items', [])
-        self.event = items[0] if len(items) == 1 else None
+
+        new_event = None
+        for item in items:
+            if (not self.ignore_availability
+                    and 'transparency' in item.keys()):
+                if item['transparency'] == 'opaque':
+                    new_event = item
+                    break
+            else:
+                new_event = item
+                break
+
+        self.event = new_event
         return True

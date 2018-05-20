@@ -12,8 +12,7 @@ from typing import Any, Optional, Dict
 import voluptuous as vol
 
 from homeassistant import (
-    core, config as conf_util, config_entries, loader,
-    components as core_components)
+    core, config as conf_util, config_entries, components as core_components)
 from homeassistant.components import persistent_notification
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
@@ -42,7 +41,8 @@ def from_config_dict(config: Dict[str, Any],
                      verbose: bool = False,
                      skip_pip: bool = False,
                      log_rotate_days: Any = None,
-                     log_file: Any = None) \
+                     log_file: Any = None,
+                     log_no_color: bool = False) \
                      -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
@@ -60,21 +60,21 @@ def from_config_dict(config: Dict[str, Any],
     hass = hass.loop.run_until_complete(
         async_from_config_dict(
             config, hass, config_dir, enable_log, verbose, skip_pip,
-            log_rotate_days, log_file)
+            log_rotate_days, log_file, log_no_color)
     )
 
     return hass
 
 
-@asyncio.coroutine
-def async_from_config_dict(config: Dict[str, Any],
-                           hass: core.HomeAssistant,
-                           config_dir: Optional[str] = None,
-                           enable_log: bool = True,
-                           verbose: bool = False,
-                           skip_pip: bool = False,
-                           log_rotate_days: Any = None,
-                           log_file: Any = None) \
+async def async_from_config_dict(config: Dict[str, Any],
+                                 hass: core.HomeAssistant,
+                                 config_dir: Optional[str] = None,
+                                 enable_log: bool = True,
+                                 verbose: bool = False,
+                                 skip_pip: bool = False,
+                                 log_rotate_days: Any = None,
+                                 log_file: Any = None,
+                                 log_no_color: bool = False) \
                            -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a configuration dictionary.
 
@@ -84,32 +84,30 @@ def async_from_config_dict(config: Dict[str, Any],
     start = time()
 
     if enable_log:
-        async_enable_logging(hass, verbose, log_rotate_days, log_file)
+        async_enable_logging(hass, verbose, log_rotate_days, log_file,
+                             log_no_color)
 
     core_config = config.get(core.DOMAIN, {})
 
     try:
-        yield from conf_util.async_process_ha_core_config(hass, core_config)
+        await conf_util.async_process_ha_core_config(hass, core_config)
     except vol.Invalid as ex:
         conf_util.async_log_exception(ex, 'homeassistant', core_config, hass)
         return None
 
-    yield from hass.async_add_job(conf_util.process_ha_config_upgrade, hass)
+    await hass.async_add_job(conf_util.process_ha_config_upgrade, hass)
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
         _LOGGER.warning("Skipping pip installation of required modules. "
                         "This may cause issues")
 
-    if not loader.PREPARED:
-        yield from hass.async_add_job(loader.prepare, hass)
-
     # Make a copy because we are mutating it.
     config = OrderedDict(config)
 
     # Merge packages
     conf_util.merge_packages_config(
-        config, core_config.get(conf_util.CONF_PACKAGES, {}))
+        hass, config, core_config.get(conf_util.CONF_PACKAGES, {}))
 
     # Ensure we have no None values after merge
     for key, value in config.items():
@@ -117,7 +115,7 @@ def async_from_config_dict(config: Dict[str, Any],
             config[key] = {}
 
     hass.config_entries = config_entries.ConfigEntries(hass, config)
-    yield from hass.config_entries.async_load()
+    await hass.config_entries.async_load()
 
     # Filter out the repeating and common config section [homeassistant]
     components = set(key.split(' ')[0] for key in config.keys()
@@ -126,13 +124,13 @@ def async_from_config_dict(config: Dict[str, Any],
 
     # setup components
     # pylint: disable=not-an-iterable
-    res = yield from core_components.async_setup(hass, config)
+    res = await core_components.async_setup(hass, config)
     if not res:
         _LOGGER.error("Home Assistant core failed to initialize. "
                       "further initialization aborted")
         return hass
 
-    yield from persistent_notification.async_setup(hass, config)
+    await persistent_notification.async_setup(hass, config)
 
     _LOGGER.info("Home Assistant core initialized")
 
@@ -142,7 +140,7 @@ def async_from_config_dict(config: Dict[str, Any],
             continue
         hass.async_add_job(async_setup_component(hass, component, config))
 
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     # stage 2
     for component in components:
@@ -150,7 +148,7 @@ def async_from_config_dict(config: Dict[str, Any],
             continue
         hass.async_add_job(async_setup_component(hass, component, config))
 
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop-start)
@@ -164,7 +162,8 @@ def from_config_file(config_path: str,
                      verbose: bool = False,
                      skip_pip: bool = True,
                      log_rotate_days: Any = None,
-                     log_file: Any = None):
+                     log_file: Any = None,
+                     log_no_color: bool = False):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter if given,
@@ -176,19 +175,20 @@ def from_config_file(config_path: str,
     # run task
     hass = hass.loop.run_until_complete(
         async_from_config_file(
-            config_path, hass, verbose, skip_pip, log_rotate_days, log_file)
+            config_path, hass, verbose, skip_pip,
+            log_rotate_days, log_file, log_no_color)
     )
 
     return hass
 
 
-@asyncio.coroutine
-def async_from_config_file(config_path: str,
-                           hass: core.HomeAssistant,
-                           verbose: bool = False,
-                           skip_pip: bool = True,
-                           log_rotate_days: Any = None,
-                           log_file: Any = None):
+async def async_from_config_file(config_path: str,
+                                 hass: core.HomeAssistant,
+                                 verbose: bool = False,
+                                 skip_pip: bool = True,
+                                 log_rotate_days: Any = None,
+                                 log_file: Any = None,
+                                 log_no_color: bool = False):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter.
@@ -197,12 +197,13 @@ def async_from_config_file(config_path: str,
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))
     hass.config.config_dir = config_dir
-    yield from async_mount_local_lib_path(config_dir, hass.loop)
+    await async_mount_local_lib_path(config_dir, hass.loop)
 
-    async_enable_logging(hass, verbose, log_rotate_days, log_file)
+    async_enable_logging(hass, verbose, log_rotate_days, log_file,
+                         log_no_color)
 
     try:
-        config_dict = yield from hass.async_add_job(
+        config_dict = await hass.async_add_job(
             conf_util.load_yaml_config_file, config_path)
     except HomeAssistantError as err:
         _LOGGER.error("Error loading %s: %s", config_path, err)
@@ -210,45 +211,56 @@ def async_from_config_file(config_path: str,
     finally:
         clear_secret_cache()
 
-    hass = yield from async_from_config_dict(
+    hass = await async_from_config_dict(
         config_dict, hass, enable_log=False, skip_pip=skip_pip)
     return hass
 
 
 @core.callback
-def async_enable_logging(hass: core.HomeAssistant, verbose: bool = False,
-                         log_rotate_days=None, log_file=None) -> None:
+def async_enable_logging(hass: core.HomeAssistant,
+                         verbose: bool = False,
+                         log_rotate_days=None,
+                         log_file=None,
+                         log_no_color: bool = False) -> None:
     """Set up the logging.
 
     This method must be run in the event loop.
     """
-    logging.basicConfig(level=logging.INFO)
     fmt = ("%(asctime)s %(levelname)s (%(threadName)s) "
            "[%(name)s] %(message)s")
-    colorfmt = "%(log_color)s{}%(reset)s".format(fmt)
     datefmt = '%Y-%m-%d %H:%M:%S'
+
+    if not log_no_color:
+        try:
+            from colorlog import ColoredFormatter
+            # basicConfig must be called after importing colorlog in order to
+            # ensure that the handlers it sets up wraps the correct streams.
+            logging.basicConfig(level=logging.INFO)
+
+            colorfmt = "%(log_color)s{}%(reset)s".format(fmt)
+            logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
+                colorfmt,
+                datefmt=datefmt,
+                reset=True,
+                log_colors={
+                    'DEBUG': 'cyan',
+                    'INFO': 'green',
+                    'WARNING': 'yellow',
+                    'ERROR': 'red',
+                    'CRITICAL': 'red',
+                }
+            ))
+        except ImportError:
+            pass
+
+    # If the above initialization failed for any reason, setup the default
+    # formatting.  If the above succeeds, this wil result in a no-op.
+    logging.basicConfig(format=fmt, datefmt=datefmt, level=logging.INFO)
 
     # Suppress overly verbose logs from libraries that aren't helpful
     logging.getLogger('requests').setLevel(logging.WARNING)
     logging.getLogger('urllib3').setLevel(logging.WARNING)
     logging.getLogger('aiohttp.access').setLevel(logging.WARNING)
-
-    try:
-        from colorlog import ColoredFormatter
-        logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
-            colorfmt,
-            datefmt=datefmt,
-            reset=True,
-            log_colors={
-                'DEBUG': 'cyan',
-                'INFO': 'green',
-                'WARNING': 'yellow',
-                'ERROR': 'red',
-                'CRITICAL': 'red',
-            }
-        ))
-    except ImportError:
-        pass
 
     # Log errors to a file if we have write access to file or config dir
     if log_file is None:
@@ -276,11 +288,10 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool = False,
 
         async_handler = AsyncHandler(hass.loop, err_handler)
 
-        @asyncio.coroutine
-        def async_stop_async_handler(event):
+        async def async_stop_async_handler(event):
             """Cleanup async handler."""
             logging.getLogger('').removeHandler(async_handler)
-            yield from async_handler.async_close(blocking=True)
+            await async_handler.async_close(blocking=True)
 
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_CLOSE, async_stop_async_handler)
@@ -305,15 +316,14 @@ def mount_local_lib_path(config_dir: str) -> str:
     return deps_dir
 
 
-@asyncio.coroutine
-def async_mount_local_lib_path(config_dir: str,
-                               loop: asyncio.AbstractEventLoop) -> str:
+async def async_mount_local_lib_path(config_dir: str,
+                                     loop: asyncio.AbstractEventLoop) -> str:
     """Add local library to Python Path.
 
     This function is a coroutine.
     """
     deps_dir = os.path.join(config_dir, 'deps')
-    lib_dir = yield from async_get_user_site(deps_dir, loop=loop)
+    lib_dir = await async_get_user_site(deps_dir, loop=loop)
     if lib_dir not in sys.path:
         sys.path.insert(0, lib_dir)
     return deps_dir

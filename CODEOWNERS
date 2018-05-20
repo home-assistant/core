@@ -54,8 +54,11 @@ homeassistant/components/device_tracker/tile.py @bachya
 homeassistant/components/history_graph.py @andrey-git
 homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/light/yeelight.py @rytilahti
+homeassistant/components/lock/nello.py @pschmitt
+homeassistant/components/lock/nuki.py @pschmitt
 homeassistant/components/media_player/emby.py @mezz64
 homeassistant/components/media_player/kodi.py @armills
+homeassistant/components/media_player/liveboxplaytv.py @pschmitt
 homeassistant/components/media_player/mediaroom.py @dgomes
 homeassistant/components/media_player/monoprice.py @etsinko
 homeassistant/components/media_player/sonos.py @amelchio
@@ -63,6 +66,7 @@ homeassistant/components/media_player/xiaomi_tv.py @fattdev
 homeassistant/components/media_player/yamaha_musiccast.py @jalmeroth
 homeassistant/components/plant.py @ChristianKuehnel
 homeassistant/components/sensor/airvisual.py @bachya
+homeassistant/components/sensor/filter.py @dgomes
 homeassistant/components/sensor/gearbest.py @HerrHofrat
 homeassistant/components/sensor/irish_rail_transport.py @ttroy50
 homeassistant/components/sensor/miflora.py @danielhiversen @ChristianKuehnel
@@ -72,9 +76,11 @@ homeassistant/components/sensor/sma.py @kellerza
 homeassistant/components/sensor/sql.py @dgomes
 homeassistant/components/sensor/sytadin.py @gautric
 homeassistant/components/sensor/tibber.py @danielhiversen
+homeassistant/components/sensor/upnp.py @dgomes
 homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/switch/rainmachine.py @bachya
 homeassistant/components/switch/tplink.py @rytilahti
+homeassistant/components/vacuum/roomba.py @pschmitt
 homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
 
 homeassistant/components/*/axis.py @kane610
@@ -88,6 +94,8 @@ homeassistant/components/*/hive.py @Rendili @KJonline
 homeassistant/components/homekit/* @cdce8p
 homeassistant/components/knx.py @Julius2342
 homeassistant/components/*/knx.py @Julius2342
+homeassistant/components/matrix.py @tinloaf
+homeassistant/components/*/matrix.py @tinloaf
 homeassistant/components/qwikswitch.py @kellerza
 homeassistant/components/*/qwikswitch.py @kellerza
 homeassistant/components/*/rfxtrx.py @danielhiversen

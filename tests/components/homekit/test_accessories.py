@@ -2,108 +2,127 @@
 
 This includes tests for all mock object types.
 """
+from datetime import datetime, timedelta
 import unittest
 from unittest.mock import call, patch, Mock
 
 from homeassistant.components.homekit.accessories import (
-    add_preload_service, set_accessory_info,
-    HomeAccessory, HomeBridge, HomeDriver)
+    debounce, HomeAccessory, HomeBridge, HomeDriver)
 from homeassistant.components.homekit.const import (
-    ACCESSORY_MODEL, ACCESSORY_NAME, BRIDGE_MODEL, BRIDGE_NAME,
-    SERV_ACCESSORY_INFO, CHAR_MANUFACTURER, CHAR_MODEL,
-    CHAR_NAME, CHAR_SERIAL_NUMBER)
+    BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER, SERV_ACCESSORY_INFO,
+    CHAR_FIRMWARE_REVISION, CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME,
+    CHAR_SERIAL_NUMBER, MANUFACTURER)
+from homeassistant.const import __version__, ATTR_NOW, EVENT_TIME_CHANGED
+import homeassistant.util.dt as dt_util
+
+from tests.common import get_test_home_assistant
+
+
+def patch_debounce():
+    """Return patch for debounce method."""
+    return patch('homeassistant.components.homekit.accessories.debounce',
+                 lambda f: lambda *args, **kwargs: f(*args, **kwargs))
 
 
 class TestAccessories(unittest.TestCase):
     """Test pyhap adapter methods."""
 
-    def test_add_preload_service(self):
-        """Test add_preload_service without additional characteristics."""
-        acc = Mock()
-        serv = add_preload_service(acc, 'AirPurifier')
-        self.assertEqual(acc.mock_calls, [call.add_service(serv)])
-        with self.assertRaises(ValueError):
-            serv.get_characteristic('Name')
+    def test_debounce(self):
+        """Test add_timeout decorator function."""
+        def demo_func(*args):
+            nonlocal arguments, counter
+            counter += 1
+            arguments = args
 
-        # Test with typo in service name
-        with self.assertRaises(KeyError):
-            add_preload_service(Mock(), 'AirPurifierTypo')
+        arguments = None
+        counter = 0
+        hass = get_test_home_assistant()
+        mock = Mock(hass=hass)
 
-        # Test adding additional characteristic as string
-        serv = add_preload_service(Mock(), 'AirPurifier', 'Name')
-        serv.get_characteristic('Name')
+        debounce_demo = debounce(demo_func)
+        self.assertEqual(debounce_demo.__name__, 'demo_func')
+        now = datetime(2018, 1, 1, 20, 0, 0, tzinfo=dt_util.UTC)
 
-        # Test adding additional characteristics as list
-        serv = add_preload_service(Mock(), 'AirPurifier',
-                                   ['Name', 'RotationSpeed'])
-        serv.get_characteristic('Name')
-        serv.get_characteristic('RotationSpeed')
+        with patch('homeassistant.util.dt.utcnow', return_value=now):
+            debounce_demo(mock, 'value')
+        hass.bus.fire(
+            EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
+        hass.block_till_done()
+        assert counter == 1
+        assert len(arguments) == 2
 
-        # Test adding additional characteristic with typo
-        with self.assertRaises(KeyError):
-            add_preload_service(Mock(), 'AirPurifier', 'NameTypo')
+        with patch('homeassistant.util.dt.utcnow', return_value=now):
+            debounce_demo(mock, 'value')
+            debounce_demo(mock, 'value')
 
-    def test_set_accessory_info(self):
-        """Test setting the basic accessory information."""
-        # Test HomeAccessory
-        acc = HomeAccessory()
-        set_accessory_info(acc, 'name', 'model', 'manufacturer', '0000')
+        hass.bus.fire(
+            EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
+        hass.block_till_done()
+        assert counter == 2
 
-        serv = acc.get_service(SERV_ACCESSORY_INFO)
-        self.assertEqual(serv.get_characteristic(CHAR_NAME).value, 'name')
-        self.assertEqual(serv.get_characteristic(CHAR_MODEL).value, 'model')
-        self.assertEqual(
-            serv.get_characteristic(CHAR_MANUFACTURER).value, 'manufacturer')
-        self.assertEqual(
-            serv.get_characteristic(CHAR_SERIAL_NUMBER).value, '0000')
-
-        # Test HomeBridge
-        acc = HomeBridge(None)
-        set_accessory_info(acc, 'name', 'model', 'manufacturer', '0000')
-
-        serv = acc.get_service(SERV_ACCESSORY_INFO)
-        self.assertEqual(serv.get_characteristic(CHAR_MODEL).value, 'model')
-        self.assertEqual(
-            serv.get_characteristic(CHAR_MANUFACTURER).value, 'manufacturer')
-        self.assertEqual(
-            serv.get_characteristic(CHAR_SERIAL_NUMBER).value, '0000')
+        hass.stop()
 
     def test_home_accessory(self):
         """Test HomeAccessory class."""
-        acc = HomeAccessory()
-        self.assertEqual(acc.display_name, ACCESSORY_NAME)
+        hass = get_test_home_assistant()
+
+        acc = HomeAccessory(hass, 'Home Accessory', 'homekit.accessory', 2)
+        self.assertEqual(acc.hass, hass)
+        self.assertEqual(acc.display_name, 'Home Accessory')
         self.assertEqual(acc.category, 1)  # Category.OTHER
         self.assertEqual(len(acc.services), 1)
         serv = acc.services[0]  # SERV_ACCESSORY_INFO
+        self.assertEqual(serv.display_name, SERV_ACCESSORY_INFO)
         self.assertEqual(
-            serv.get_characteristic(CHAR_MODEL).value, ACCESSORY_MODEL)
+            serv.get_characteristic(CHAR_NAME).value, 'Home Accessory')
+        self.assertEqual(
+            serv.get_characteristic(CHAR_MANUFACTURER).value, MANUFACTURER)
+        self.assertEqual(
+            serv.get_characteristic(CHAR_MODEL).value, 'Homekit')
+        self.assertEqual(serv.get_characteristic(CHAR_SERIAL_NUMBER).value,
+                         'homekit.accessory')
 
-        acc = HomeAccessory('test_name', 'test_model', 'FAN', aid=2)
+        hass.states.set('homekit.accessory', 'on')
+        hass.block_till_done()
+        acc.run()
+        hass.states.set('homekit.accessory', 'off')
+        hass.block_till_done()
+
+        acc = HomeAccessory('hass', 'test_name', 'test_model.demo', 2)
         self.assertEqual(acc.display_name, 'test_name')
-        self.assertEqual(acc.category, 3)  # Category.FAN
         self.assertEqual(acc.aid, 2)
         self.assertEqual(len(acc.services), 1)
         serv = acc.services[0]  # SERV_ACCESSORY_INFO
         self.assertEqual(
-            serv.get_characteristic(CHAR_MODEL).value, 'test_model')
+            serv.get_characteristic(CHAR_MODEL).value, 'Test Model')
+
+        hass.stop()
 
     def test_home_bridge(self):
         """Test HomeBridge class."""
-        bridge = HomeBridge(None)
+        bridge = HomeBridge('hass')
+        self.assertEqual(bridge.hass, 'hass')
         self.assertEqual(bridge.display_name, BRIDGE_NAME)
         self.assertEqual(bridge.category, 2)  # Category.BRIDGE
         self.assertEqual(len(bridge.services), 1)
         serv = bridge.services[0]  # SERV_ACCESSORY_INFO
         self.assertEqual(serv.display_name, SERV_ACCESSORY_INFO)
         self.assertEqual(
+            serv.get_characteristic(CHAR_NAME).value, BRIDGE_NAME)
+        self.assertEqual(
+            serv.get_characteristic(CHAR_FIRMWARE_REVISION).value, __version__)
+        self.assertEqual(
+            serv.get_characteristic(CHAR_MANUFACTURER).value, MANUFACTURER)
+        self.assertEqual(
             serv.get_characteristic(CHAR_MODEL).value, BRIDGE_MODEL)
+        self.assertEqual(
+            serv.get_characteristic(CHAR_SERIAL_NUMBER).value,
+            BRIDGE_SERIAL_NUMBER)
 
-        bridge = HomeBridge('hass', 'test_name', 'test_model')
+        bridge = HomeBridge('hass', 'test_name')
         self.assertEqual(bridge.display_name, 'test_name')
         self.assertEqual(len(bridge.services), 1)
         serv = bridge.services[0]  # SERV_ACCESSORY_INFO
-        self.assertEqual(
-            serv.get_characteristic(CHAR_MODEL).value, 'test_model')
 
         # setup_message
         bridge.setup_message()
@@ -128,11 +147,11 @@ class TestAccessories(unittest.TestCase):
 
         self.assertEqual(
             mock_remove_paired_client.call_args, call('client_uuid'))
-        self.assertEqual(mock_show_msg.call_args, call(bridge, 'hass'))
+        self.assertEqual(mock_show_msg.call_args, call('hass', bridge))
 
     def test_home_driver(self):
         """Test HomeDriver class."""
-        bridge = HomeBridge(None)
+        bridge = HomeBridge('hass')
         ip_address = '127.0.0.1'
         port = 51826
         path = '.homekit.state'

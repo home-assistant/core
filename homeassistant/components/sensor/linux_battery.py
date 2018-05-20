@@ -10,7 +10,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_BATTERY
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -47,8 +47,6 @@ DEFAULT_PATH = '/sys/class/power_supply'
 DEFAULT_SYSTEM = 'linux'
 
 SYSTEMS = ['android', 'linux']
-
-ICON = 'mdi:battery'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
@@ -95,6 +93,11 @@ class LinuxBatterySensor(Entity):
         return self._name
 
     @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_BATTERY
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._battery_stat.capacity
@@ -103,11 +106,6 @@ class LinuxBatterySensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend, if any."""
-        return ICON
 
     @property
     def device_state_attributes(self):

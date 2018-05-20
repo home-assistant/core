@@ -8,6 +8,9 @@ import logging
 import statistics
 from collections import deque, Counter
 from numbers import Number
+from functools import partial
+from copy import copy
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -20,6 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.decorator import Registry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
+import homeassistant.components.history as history
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +43,9 @@ CONF_FILTER_TIME_CONSTANT = 'time_constant'
 CONF_TIME_SMA_TYPE = 'type'
 
 TIME_SMA_LAST = 'last'
+
+WINDOW_SIZE_UNIT_NUMBER_EVENTS = 1
+WINDOW_SIZE_UNIT_TIME = 2
 
 DEFAULT_WINDOW_SIZE = 1
 DEFAULT_PRECISION = 2
@@ -82,6 +89,8 @@ FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend({
 
 FILTER_THROTTLE_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_THROTTLE,
+    vol.Optional(CONF_FILTER_WINDOW_SIZE,
+                 default=DEFAULT_WINDOW_SIZE): vol.Coerce(int),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -123,21 +132,22 @@ class SensorFilter(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
-        def filter_sensor_state_listener(entity, old_state, new_state):
+        def filter_sensor_state_listener(entity, old_state, new_state,
+                                         update_ha=True):
             """Handle device state changes."""
             if new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]:
                 return
 
-            temp_state = new_state.state
+            temp_state = new_state
 
             try:
                 for filt in self._filters:
-                    filtered_state = filt.filter_state(temp_state)
+                    filtered_state = filt.filter_state(copy(temp_state))
                     _LOGGER.debug("%s(%s=%s) -> %s", filt.name,
                                   self._entity,
-                                  temp_state,
+                                  temp_state.state,
                                   "skip" if filt.skip_processing else
-                                  filtered_state)
+                                  filtered_state.state)
                     if filt.skip_processing:
                         return
                     temp_state = filtered_state
@@ -146,7 +156,7 @@ class SensorFilter(Entity):
                               self._state)
                 return
 
-            self._state = temp_state
+            self._state = temp_state.state
 
             if self._icon is None:
                 self._icon = new_state.attributes.get(
@@ -156,7 +166,50 @@ class SensorFilter(Entity):
                 self._unit_of_measurement = new_state.attributes.get(
                     ATTR_UNIT_OF_MEASUREMENT)
 
-            self.async_schedule_update_ha_state()
+            if update_ha:
+                self.async_schedule_update_ha_state()
+
+        if 'recorder' in self.hass.config.components:
+            history_list = []
+            largest_window_items = 0
+            largest_window_time = timedelta(0)
+
+            # Determine the largest window_size by type
+            for filt in self._filters:
+                if filt.window_unit == WINDOW_SIZE_UNIT_NUMBER_EVENTS\
+                        and largest_window_items < filt.window_size:
+                    largest_window_items = filt.window_size
+                elif filt.window_unit == WINDOW_SIZE_UNIT_TIME\
+                        and largest_window_time < filt.window_size:
+                    largest_window_time = filt.window_size
+
+            # Retrieve the largest window_size of each type
+            if largest_window_items > 0:
+                filter_history = await self.hass.async_add_job(partial(
+                    history.get_last_state_changes, self.hass,
+                    largest_window_items, entity_id=self._entity))
+                history_list.extend(
+                    [state for state in filter_history[self._entity]])
+            if largest_window_time > timedelta(seconds=0):
+                start = dt_util.utcnow() - largest_window_time
+                filter_history = await self.hass.async_add_job(partial(
+                    history.state_changes_during_period, self.hass,
+                    start, entity_id=self._entity))
+                history_list.extend(
+                    [state for state in filter_history[self._entity]
+                     if state not in history_list])
+
+            # Sort the window states
+            history_list = sorted(history_list, key=lambda s: s.last_updated)
+            _LOGGER.debug("Loading from history: %s",
+                          [(s.state, s.last_updated) for s in history_list])
+
+            # Replay history through the filter chain
+            prev_state = None
+            for state in history_list:
+                filter_sensor_state_listener(
+                    self._entity, prev_state, state, False)
+                prev_state = state
 
         async_track_state_change(
             self.hass, self._entity, filter_sensor_state_listener)
@@ -195,6 +248,31 @@ class SensorFilter(Entity):
         return state_attr
 
 
+class FilterState(object):
+    """State abstraction for filter usage."""
+
+    def __init__(self, state):
+        """Initialize with HA State object."""
+        self.timestamp = state.last_updated
+        try:
+            self.state = float(state.state)
+        except ValueError:
+            self.state = state.state
+
+    def set_precision(self, precision):
+        """Set precision of Number based states."""
+        if isinstance(self.state, Number):
+            self.state = round(float(self.state), precision)
+
+    def __str__(self):
+        """Return state as the string representation of FilterState."""
+        return str(self.state)
+
+    def __repr__(self):
+        """Return timestamp and state as the representation of FilterState."""
+        return "{} : {}".format(self.timestamp, self.state)
+
+
 class Filter(object):
     """Filter skeleton.
 
@@ -207,11 +285,22 @@ class Filter(object):
 
     def __init__(self, name, window_size=1, precision=None, entity=None):
         """Initialize common attributes."""
-        self.states = deque(maxlen=window_size)
+        if isinstance(window_size, int):
+            self.states = deque(maxlen=window_size)
+            self.window_unit = WINDOW_SIZE_UNIT_NUMBER_EVENTS
+        else:
+            self.states = deque(maxlen=0)
+            self.window_unit = WINDOW_SIZE_UNIT_TIME
         self.precision = precision
         self._name = name
         self._entity = entity
         self._skip_processing = False
+        self._window_size = window_size
+
+    @property
+    def window_size(self):
+        """Return window size."""
+        return self._window_size
 
     @property
     def name(self):
@@ -229,11 +318,11 @@ class Filter(object):
 
     def filter_state(self, new_state):
         """Implement a common interface for filters."""
-        filtered = self._filter_state(new_state)
-        if isinstance(filtered, Number):
-            filtered = round(float(filtered), self.precision)
-        self.states.append(filtered)
-        return filtered
+        filtered = self._filter_state(FilterState(new_state))
+        filtered.set_precision(self.precision)
+        self.states.append(copy(filtered))
+        new_state.state = filtered.state
+        return new_state
 
 
 @FILTERS.register(FILTER_NAME_OUTLIER)
@@ -254,11 +343,10 @@ class OutlierFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the outlier filter."""
-        new_state = float(new_state)
-
-        if (self.states and
-                abs(new_state - statistics.median(self.states))
-                > self._radius):
+        if (len(self.states) == self.states.maxlen and
+                abs(new_state.state -
+                    statistics.median([s.state for s in self.states])) >
+                self._radius):
 
             self._stats_internal['erasures'] += 1
 
@@ -284,16 +372,15 @@ class LowPassFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the low pass filter."""
-        new_state = float(new_state)
-
         if not self.states:
             return new_state
 
         new_weight = 1.0 / self._time_constant
         prev_weight = 1.0 - new_weight
-        filtered = prev_weight * self.states[-1] + new_weight * new_state
+        new_state.state = prev_weight * self.states[-1].state +\
+            new_weight * new_state.state
 
-        return filtered
+        return new_state
 
 
 @FILTERS.register(FILTER_NAME_TIME_SMA)
@@ -308,35 +395,36 @@ class TimeSMAFilter(Filter):
 
     def __init__(self, window_size, precision, entity, type):
         """Initialize Filter."""
-        super().__init__(FILTER_NAME_TIME_SMA, 0, precision, entity)
-        self._time_window = int(window_size.total_seconds())
+        super().__init__(FILTER_NAME_TIME_SMA, window_size, precision, entity)
+        self._time_window = window_size
         self.last_leak = None
         self.queue = deque()
 
-    def _leak(self, now):
+    def _leak(self, left_boundary):
         """Remove timeouted elements."""
         while self.queue:
-            timestamp, _ = self.queue[0]
-            if timestamp + self._time_window <= now:
+            if self.queue[0].timestamp + self._time_window <= left_boundary:
                 self.last_leak = self.queue.popleft()
             else:
                 return
 
     def _filter_state(self, new_state):
-        now = int(dt_util.utcnow().timestamp())
+        """Implement the Simple Moving Average filter."""
+        self._leak(new_state.timestamp)
+        self.queue.append(copy(new_state))
 
-        self._leak(now)
-        self.queue.append((now, float(new_state)))
         moving_sum = 0
-        start = now - self._time_window
-        _, prev_val = self.last_leak or (0, float(new_state))
+        start = new_state.timestamp - self._time_window
+        prev_state = self.last_leak or self.queue[0]
+        for state in self.queue:
+            moving_sum += (state.timestamp-start).total_seconds()\
+                          * prev_state.state
+            start = state.timestamp
+            prev_state = state
 
-        for timestamp, val in self.queue:
-            moving_sum += (timestamp-start)*prev_val
-            start, prev_val = timestamp, val
-        moving_sum += (now-start)*prev_val
+        new_state.state = moving_sum / self._time_window.total_seconds()
 
-        return moving_sum/self._time_window
+        return new_state
 
 
 @FILTERS.register(FILTER_NAME_THROTTLE)

@@ -110,6 +110,7 @@ class Smappee(object):
         self.locations = {}
         self.info = {}
         self.consumption = {}
+        self.sensor_consumption = {}
         self.instantaneous = {}
 
         if self._remote_active or self._local_active:
@@ -124,11 +125,22 @@ class Smappee(object):
             for location in service_locations:
                 location_id = location.get('serviceLocationId')
                 if location_id is not None:
+                    self.sensor_consumption[location_id] = {}
                     self.locations[location_id] = location.get('name')
                     self.info[location_id] = self._smappy \
                         .get_service_location_info(location_id)
                     _LOGGER.debug("Remote info %s %s",
-                                  self.locations, self.info)
+                                  self.locations, self.info[location_id])
+
+                    for sensors in self.info[location_id].get('sensors'):
+                        sensor_id = sensors.get('id')
+                        self.sensor_consumption[location_id]\
+                            .update({sensor_id: self.get_sensor_consumption(
+                                location_id, sensor_id,
+                                aggregation=3, delta=1440)})
+                    _LOGGER.debug("Remote sensors %s %s",
+                                  self.locations,
+                                  self.sensor_consumption[location_id])
 
                     self.consumption[location_id] = self.get_consumption(
                         location_id, aggregation=3, delta=1440)
@@ -190,7 +202,8 @@ class Smappee(object):
                 "Error getting comsumption from Smappee cloud. (%s)",
                 error)
 
-    def get_sensor_consumption(self, location_id, sensor_id):
+    def get_sensor_consumption(self, location_id, sensor_id,
+                               aggregation, delta):
         """Update data from Smappee."""
         # Start & End accept epoch (in milliseconds),
         #   datetime and pandas timestamps
@@ -203,13 +216,13 @@ class Smappee(object):
         if not self.is_remote_active:
             return
 
-        start = datetime.utcnow() - timedelta(minutes=30)
         end = datetime.utcnow()
+        start = end - timedelta(minutes=delta)
         try:
             return self._smappy.get_sensor_consumption(location_id,
                                                        sensor_id,
                                                        start,
-                                                       end, 1)
+                                                       end, aggregation)
         except RequestException as error:
             _LOGGER.error(
                 "Error getting comsumption from Smappee cloud. (%s)",

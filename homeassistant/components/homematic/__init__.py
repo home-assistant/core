@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.40']
+REQUIREMENTS = ['pyhomematic==0.1.42']
 DOMAIN = 'homematic'
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,8 @@ HM_DEVICE_TYPES = {
         'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
         'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch',
         'FillingLevel', 'ValveDrive', 'EcoLogic', 'IPThermostatWall',
-        'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat'],
+        'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat',
+        'IPWeatherSensor'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
@@ -78,7 +79,7 @@ HM_DEVICE_TYPES = {
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
         'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
-        'WiredSensor', 'PresenceIP'],
+        'WiredSensor', 'PresenceIP', 'IPWeatherSensor'],
     DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
     DISCOVER_LOCKS: ['KeyMatic']
 }
@@ -89,7 +90,7 @@ HM_IGNORE_DISCOVERY_NODE = [
 ]
 
 HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
-    'ACTUAL_TEMPERATURE': ['IPAreaThermostat'],
+    'ACTUAL_TEMPERATURE': ['IPAreaThermostat', 'IPWeatherSensor'],
 }
 
 HM_ATTRIBUTE_SUPPORT = {

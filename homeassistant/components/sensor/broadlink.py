@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['broadlink==0.8.0']
+REQUIREMENTS = ['broadlink==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,9 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     timeout = config.get(CONF_TIMEOUT)
     update_interval = config.get(CONF_UPDATE_INTERVAL)
-
     broadlink_data = BroadlinkData(update_interval, host, mac_addr, timeout)
-
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         dev.append(BroadlinkSensor(name, broadlink_data, variable))
@@ -104,10 +102,11 @@ class BroadlinkData(object):
 
     def __init__(self, interval, ip_addr, mac_addr, timeout):
         """Initialize the data object."""
-        import broadlink
         self.data = None
-        self._device = broadlink.a1((ip_addr, 80), mac_addr, None)
-        self._device.timeout = timeout
+        self.ip_addr = ip_addr
+        self.mac_addr = mac_addr
+        self.timeout = timeout
+        self._connect()
         self._schema = vol.Schema({
             vol.Optional('temperature'): vol.Range(min=-50, max=150),
             vol.Optional('humidity'): vol.Range(min=0, max=100),
@@ -118,6 +117,11 @@ class BroadlinkData(object):
         self.update = Throttle(interval)(self._update)
         if not self._auth():
             _LOGGER.warning("Failed to connect to device")
+
+    def _connect(self):
+        import broadlink
+        self._device = broadlink.a1((self.ip_addr, 80), self.mac_addr, None)
+        self._device.timeout = self.timeout
 
     def _update(self, retry=3):
         try:
@@ -140,5 +144,6 @@ class BroadlinkData(object):
         except socket.timeout:
             auth = False
         if not auth and retry > 0:
+            self._connect()
             return self._auth(retry-1)
         return auth

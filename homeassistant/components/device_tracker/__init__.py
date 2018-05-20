@@ -15,6 +15,7 @@ from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.components import group, zone
+from homeassistant.components.zone.zone import async_active_zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
@@ -23,7 +24,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
-from homeassistant.loader import get_component
 import homeassistant.util as util
 from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
@@ -321,7 +321,7 @@ class DeviceTracker(object):
         # During init, we ignore the group
         if self.group and self.track_new:
             self.group.async_set_group(
-                self.hass, util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
+                util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
                 name=GROUP_NAME_ALL_DEVICES, add=[device.entity_id])
 
         self.hass.bus.async_fire(EVENT_NEW_DEVICE, {
@@ -356,9 +356,9 @@ class DeviceTracker(object):
         entity_ids = [dev.entity_id for dev in self.devices.values()
                       if dev.track]
 
-        self.group = get_component('group')
+        self.group = self.hass.components.group
         self.group.async_set_group(
-            self.hass, util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
+            util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
             name=GROUP_NAME_ALL_DEVICES, entity_ids=entity_ids)
 
     @callback
@@ -541,7 +541,7 @@ class Device(Entity):
         elif self.location_name:
             self._state = self.location_name
         elif self.gps is not None and self.source_type == SOURCE_TYPE_GPS:
-            zone_state = zone.async_active_zone(
+            zone_state = async_active_zone(
                 self.hass, self.gps[0], self.gps[1], self.gps_accuracy)
             if zone_state is None:
                 self._state = STATE_NOT_HOME
@@ -604,6 +604,17 @@ class DeviceScanner(object):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(self.get_device_name, device)
+
+    def get_extra_attributes(self, device: str) -> dict:
+        """Get the extra attributes of a device."""
+        raise NotImplementedError()
+
+    def async_get_extra_attributes(self, device: str) -> Any:
+        """Get the extra attributes of a device.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.get_extra_attributes, device)
 
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
@@ -690,10 +701,20 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
                 host_name = yield from scanner.async_get_device_name(mac)
                 seen.add(mac)
 
+            try:
+                extra_attributes = (yield from
+                                    scanner.async_get_extra_attributes(mac))
+            except NotImplementedError:
+                extra_attributes = dict()
+
             kwargs = {
                 'mac': mac,
                 'host_name': host_name,
-                'source_type': SOURCE_TYPE_ROUTER
+                'source_type': SOURCE_TYPE_ROUTER,
+                'attributes': {
+                    'scanner': scanner.__class__.__name__,
+                    **extra_attributes
+                }
             }
 
             zone_home = hass.states.get(zone.ENTITY_ID_HOME)

@@ -4,17 +4,17 @@ Weather information for air and road temperature, provided by Trafikverket.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.trafikverket_weatherstation/
 """
+from datetime import timedelta
 import json
 import logging
-from datetime import timedelta
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, ATTR_ATTRIBUTION, TEMP_CELSIUS, CONF_API_KEY, CONF_TYPE)
+    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME, CONF_TYPE, TEMP_CELSIUS)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -25,6 +25,7 @@ CONF_ATTRIBUTION = "Data provided by Trafikverket API"
 CONF_STATION = 'station'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+
 SCAN_INTERVAL = timedelta(seconds=300)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -36,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Set up the Trafikverket sensor platform."""
     sensor_name = config.get(CONF_NAME)
     sensor_api = config.get(CONF_API_KEY)
     sensor_station = config.get(CONF_STATION)
@@ -47,10 +48,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class TrafikverketWeatherStation(Entity):
-    """Representation of a Sensor."""
+    """Representation of a Trafikverket sensor."""
 
     def __init__(self, sensor_name, sensor_api, sensor_station, sensor_type):
-        """Initialize the sensor."""
+        """Initialize the Trafikverket sensor."""
         self._name = sensor_name
         self._api = sensor_api
         self._station = sensor_station
@@ -82,10 +83,7 @@ class TrafikverketWeatherStation(Entity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Fetch new state data for the sensor.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
+        """Fetch new state data for the sensor."""
         url = 'http://api.trafikinfo.trafikverket.se/v1.3/data.json'
 
         if self._type == 'road':
@@ -117,7 +115,7 @@ class TrafikverketWeatherStation(Entity):
             result = data["RESPONSE"]["RESULT"][0]
             final = result["WeatherStation"][0]["Measurement"]
         except KeyError:
-            _LOGGER.error("Incorrect weather station or API key.")
+            _LOGGER.error("Incorrect weather station or API key")
             return
 
         # air_vs_road contains "Air" or "Road" depending on user input.

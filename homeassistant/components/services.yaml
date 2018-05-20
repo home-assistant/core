@@ -395,6 +395,18 @@ snips:
       intent_filter:
         description: Optional Array of Strings - A list of intents names to restrict the NLU resolution to on the first query.
         example: turnOnLights, turnOffLights
+  feedback_on:
+    description: Turns feedback sounds on.
+    fields:
+      site_id:
+        description: Site to turn sounds on, defaults to all sites (optional)
+        example: bedroom
+  feedback_off:
+    description: Turns feedback sounds off.
+    fields:
+      site_id:
+        description: Site to turn sounds on, defaults to all sites (optional)
+        example: bedroom
 
 input_boolean:
   toggle:

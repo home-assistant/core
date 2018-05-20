@@ -19,8 +19,9 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
+from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyTibber==0.4.0']
+REQUIREMENTS = ['pyTibber==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 ICON = 'mdi:currency-usd'
 SCAN_INTERVAL = timedelta(minutes=1)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 
 async def async_setup_platform(hass, config, async_add_devices,
@@ -58,7 +60,9 @@ class TibberSensor(Entity):
         """Initialize the sensor."""
         self._tibber_home = tibber_home
         self._last_updated = None
+        self._last_data_timestamp = None
         self._state = None
+        self._is_available = False
         self._device_state_attributes = {}
         self._unit_of_measurement = self._tibber_home.price_unit
         self._name = 'Electricity price {}'.format(tibber_home.info['viewer']
@@ -66,51 +70,28 @@ class TibberSensor(Entity):
 
     async def async_update(self):
         """Get the latest data and updates the states."""
-        now = dt_util.utcnow()
+        now = dt_util.now()
         if self._tibber_home.current_price_total and self._last_updated and \
-           dt_util.as_utc(dt_util.parse_datetime(self._last_updated)).hour\
-           == now.hour:
+           self._last_updated.hour == now.hour and self._last_data_timestamp:
             return
 
-        def _find_current_price():
-            state = None
-            max_price = None
-            min_price = None
-            for key, price_total in self._tibber_home.price_total.items():
-                price_time = dt_util.as_utc(dt_util.parse_datetime(key))
-                price_total = round(price_total, 3)
-                time_diff = (now - price_time).total_seconds()/60
-                if time_diff >= 0 and time_diff < 60:
-                    state = price_total
-                    self._last_updated = key
-                if now.date() == price_time.date():
-                    if max_price is None or price_total > max_price:
-                        max_price = price_total
-                    if min_price is None or price_total < min_price:
-                        min_price = price_total
-                self._state = state
-                self._device_state_attributes['max_price'] = max_price
-                self._device_state_attributes['min_price'] = min_price
-            return state is not None
+        if (not self._last_data_timestamp or
+                (self._last_data_timestamp - now).total_seconds()/3600 < 12
+                or not self._is_available):
+            _LOGGER.debug("Asking for new data.")
+            await self._fetch_data()
 
-        if _find_current_price():
-            return
-
-        _LOGGER.debug("No cached data found, so asking for new data")
-        await self._tibber_home.update_info()
-        await self._tibber_home.update_price_info()
-        data = self._tibber_home.info['viewer']['home']
-        self._device_state_attributes['app_nickname'] = data['appNickname']
-        self._device_state_attributes['grid_company'] =\
-            data['meteringPointData']['gridCompany']
-        self._device_state_attributes['estimated_annual_consumption'] =\
-            data['meteringPointData']['estimatedAnnualConsumption']
-        _find_current_price()
+        self._is_available = self._update_current_price()
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._device_state_attributes
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._is_available
 
     @property
     def name(self):
@@ -137,3 +118,40 @@ class TibberSensor(Entity):
         """Return a unique ID."""
         home = self._tibber_home.info['viewer']['home']
         return home['meteringPointData']['consumptionEan']
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def _fetch_data(self):
+        try:
+            await self._tibber_home.update_info()
+            await  self._tibber_home.update_price_info()
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            return
+        data = self._tibber_home.info['viewer']['home']
+        self._device_state_attributes['app_nickname'] = data['appNickname']
+        self._device_state_attributes['grid_company'] = \
+            data['meteringPointData']['gridCompany']
+        self._device_state_attributes['estimated_annual_consumption'] = \
+            data['meteringPointData']['estimatedAnnualConsumption']
+
+    def _update_current_price(self):
+        state = None
+        max_price = 0
+        min_price = 10000
+        now = dt_util.now()
+        for key, price_total in self._tibber_home.price_total.items():
+            price_time = dt_util.as_local(dt_util.parse_datetime(key))
+            price_total = round(price_total, 3)
+            time_diff = (now - price_time).total_seconds()/60
+            if (not self._last_data_timestamp or
+                    price_time > self._last_data_timestamp):
+                self._last_data_timestamp = price_time
+            if 0 <= time_diff < 60:
+                state = price_total
+                self._last_updated = price_time
+            if now.date() == price_time.date():
+                max_price = max(max_price, price_total)
+                min_price = min(min_price, price_total)
+            self._state = state
+            self._device_state_attributes['max_price'] = max_price
+            self._device_state_attributes['min_price'] = min_price
+        return state is not None

@@ -30,6 +30,7 @@ class HueBridge(object):
         self.allow_groups = allow_groups
         self.available = True
         self.api = None
+        self._cancel_retry_setup = None
 
     @property
     def host(self):
@@ -39,18 +40,17 @@ class HueBridge(object):
     async def async_setup(self, tries=0):
         """Set up a phue bridge based on host parameter."""
         host = self.host
+        hass = self.hass
 
         try:
             self.api = await get_bridge(
-                self.hass, host,
-                self.config_entry.data['username']
-            )
+                hass, host, self.config_entry.data['username'])
         except AuthenticationRequired:
             # usernames can become invalid if hub is reset or user removed.
             # We are going to fail the config entry setup and initiate a new
             # linking procedure. When linking succeeds, it will remove the
             # old config entry.
-            self.hass.async_add_job(self.hass.config_entries.flow.async_init(
+            hass.async_add_job(hass.config_entries.flow.async_init(
                 DOMAIN, source='import', data={
                     'host': host,
                 }
@@ -68,8 +68,8 @@ class HueBridge(object):
                     # This feels hacky, we should find a better way to do this
                     self.config_entry.state = config_entries.ENTRY_STATE_LOADED
 
-            # Unhandled edge case: cancel this if we discover bridge on new IP
-            self.hass.helpers.event.async_call_later(retry_delay, retry_setup)
+            self._cancel_retry_setup = hass.helpers.event.async_call_later(
+                retry_delay, retry_setup)
 
             return False
 
@@ -78,15 +78,42 @@ class HueBridge(object):
                              host)
             return False
 
-        self.hass.async_add_job(
-            self.hass.helpers.discovery.async_load_platform(
-                'light', DOMAIN, {'host': host}))
+        hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+            self.config_entry, 'light'))
 
-        self.hass.services.async_register(
+        hass.services.async_register(
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene,
             schema=SCENE_SCHEMA)
 
         return True
+
+    async def async_reset(self):
+        """Reset this bridge to default state.
+
+        Will cancel any scheduled setup retry and will unload
+        the config entry.
+        """
+        # The bridge can be in 3 states:
+        #  - Setup was successful, self.api is not None
+        #  - Authentication was wrong, self.api is None, not retrying setup.
+        #  - Host was down. self.api is None, we're retrying setup
+
+        # If we have a retry scheduled, we were never setup.
+        if self._cancel_retry_setup is not None:
+            self._cancel_retry_setup()
+            self._cancel_retry_setup = None
+            return True
+
+        # If the authentication was wrong.
+        if self.api is None:
+            return True
+
+        self.hass.services.async_remove(DOMAIN, SERVICE_HUE_SCENE)
+
+        # If setup was successful, we set api variable, forwarded entry and
+        # register service
+        return await self.hass.config_entries.async_forward_entry_unload(
+            self.config_entry, 'light')
 
     async def hue_activate_scene(self, call, updated=False):
         """Service to call directly into bridge to set scenes."""

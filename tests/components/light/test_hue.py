@@ -9,6 +9,7 @@ from aiohue.lights import Lights
 from aiohue.groups import Groups
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import hue
 import homeassistant.components.light.hue as hue_light
 from homeassistant.util import color
@@ -196,9 +197,11 @@ async def setup_bridge(hass, mock_bridge):
     """Load the Hue light platform with the provided bridge."""
     hass.config.components.add(hue.DOMAIN)
     hass.data[hue.DOMAIN] = {'mock-host': mock_bridge}
-    await hass.helpers.discovery.async_load_platform('light', 'hue', {
+    config_entry = config_entries.ConfigEntry(1, hue.DOMAIN, 'Mock Title', {
         'host': 'mock-host'
-    })
+    }, 'test')
+    await hass.config_entries.async_forward_entry_setup(config_entry, 'light')
+    # To flush out the service call to update the group
     await hass.async_block_till_done()
 
 
@@ -234,7 +237,7 @@ async def test_lights(hass, mock_bridge):
     assert lamp_1 is not None
     assert lamp_1.state == 'on'
     assert lamp_1.attributes['brightness'] == 144
-    assert lamp_1.attributes['hs_color'] == (71.896, 83.137)
+    assert lamp_1.attributes['hs_color'] == (36.067, 69.804)
 
     lamp_2 = hass.states.get('light.hue_lamp_2')
     assert lamp_2 is not None
@@ -250,7 +253,7 @@ async def test_lights_color_mode(hass, mock_bridge):
     assert lamp_1 is not None
     assert lamp_1.state == 'on'
     assert lamp_1.attributes['brightness'] == 144
-    assert lamp_1.attributes['hs_color'] == (71.896, 83.137)
+    assert lamp_1.attributes['hs_color'] == (36.067, 69.804)
     assert 'color_temp' not in lamp_1.attributes
 
     new_light1_on = LIGHT_1_ON.copy()
@@ -658,25 +661,12 @@ def test_hs_color():
         is_group=False,
     )
 
-    assert light.hs_color == (1234 / 65535 * 360, 123 / 255 * 100)
+    assert light.hs_color is None
 
     light = hue_light.HueLight(
         light=Mock(state={
             'colormode': 'xy',
             'hue': 1234,
-            'sat': 123,
-        }),
-        request_bridge_update=None,
-        bridge=Mock(),
-        is_group=False,
-    )
-
-    assert light.hs_color == (1234 / 65535 * 360, 123 / 255 * 100)
-
-    light = hue_light.HueLight(
-        light=Mock(state={
-            'colormode': 'xy',
-            'hue': None,
             'sat': 123,
             'xy': [0.4, 0.5]
         }),

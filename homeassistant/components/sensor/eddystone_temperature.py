@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_NAME, TEMP_CELSIUS, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP,
     EVENT_HOMEASSISTANT_START)
 
-REQUIREMENTS = ['beacontools[scan]==1.2.1', 'construct==2.9.41']
+REQUIREMENTS = ['beacontools[scan]==1.2.3', 'construct==2.9.41']
 
 _LOGGER = logging.getLogger(__name__)
 

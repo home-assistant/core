@@ -49,11 +49,17 @@ GROUP_MIN_API_VERSION = (1, 13, 0)
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Set up the Hue lights."""
-    if discovery_info is None:
-        return
+    """Old way of setting up Hue lights.
 
-    bridge = hass.data[hue.DOMAIN][discovery_info['host']]
+    Can only be called when a user accidentally mentions hue platform in their
+    config. But even in that case it would have been ignored.
+    """
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the Hue lights from a config entry."""
+    bridge = hass.data[hue.DOMAIN][config_entry.data['host']]
     cur_lights = {}
     cur_groups = {}
 
@@ -236,26 +242,13 @@ class HueLight(Light):
     @property
     def hs_color(self):
         """Return the hs color value."""
-        # pylint: disable=redefined-outer-name
         mode = self._color_mode
-
-        if mode not in ('hs', 'xy'):
-            return
-
         source = self.light.action if self.is_group else self.light.state
 
-        hue = source.get('hue')
-        sat = source.get('sat')
+        if mode in ('xy', 'hs') and 'xy' in source:
+            return color.color_xy_to_hs(*source['xy'])
 
-        # Sometimes the state will not include valid hue/sat values.
-        # Reported as issue 13434
-        if hue is not None and sat is not None:
-            return hue / 65535 * 360, sat / 255 * 100
-
-        if 'xy' not in source:
-            return None
-
-        return color.color_xy_to_hs(*source['xy'])
+        return None
 
     @property
     def color_temp(self):

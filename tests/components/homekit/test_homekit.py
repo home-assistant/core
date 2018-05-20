@@ -4,16 +4,20 @@ from unittest.mock import call, patch, ANY, Mock
 
 from homeassistant import setup
 from homeassistant.core import State
-from homeassistant.components.homekit import HomeKit, generate_aid
+from homeassistant.components.homekit import (
+    HomeKit, generate_aid,
+    STATUS_READY, STATUS_RUNNING, STATUS_STOPPED, STATUS_WAIT)
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
     DOMAIN, HOMEKIT_FILE, CONF_AUTO_START,
     DEFAULT_PORT, SERVICE_HOMEKIT_START)
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.const import (
-    CONF_PORT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    CONF_IP_ADDRESS, CONF_PORT,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 from tests.common import get_test_home_assistant
+from tests.components.homekit.test_accessories import patch_debounce
 
 IP_ADDRESS = '127.0.0.1'
 PATH_HOMEKIT = 'homeassistant.components.homekit'
@@ -21,6 +25,17 @@ PATH_HOMEKIT = 'homeassistant.components.homekit'
 
 class TestHomeKit(unittest.TestCase):
     """Test setup of HomeKit component and HomeKit class."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Setup debounce patcher."""
+        cls.patcher = patch_debounce()
+        cls.patcher.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        """Stop debounce patcher."""
+        cls.patcher.stop()
 
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -47,7 +62,7 @@ class TestHomeKit(unittest.TestCase):
             self.hass, DOMAIN, {DOMAIN: {}}))
 
         self.assertEqual(mock_homekit.mock_calls, [
-            call(self.hass, DEFAULT_PORT, ANY, {}),
+            call(self.hass, DEFAULT_PORT, None, ANY, {}),
             call().setup()])
 
         # Test auto start enabled
@@ -62,34 +77,39 @@ class TestHomeKit(unittest.TestCase):
         """Test async_setup with auto start disabled and test service calls."""
         mock_homekit.return_value = homekit = Mock()
 
-        config = {DOMAIN: {CONF_AUTO_START: False, CONF_PORT: 11111}}
+        config = {DOMAIN: {CONF_AUTO_START: False, CONF_PORT: 11111,
+                           CONF_IP_ADDRESS: '172.0.0.0'}}
         self.assertTrue(setup.setup_component(
             self.hass, DOMAIN, config))
-
-        self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
 
         self.assertEqual(mock_homekit.mock_calls, [
-            call(self.hass, 11111, ANY, {}),
+            call(self.hass, 11111, '172.0.0.0', ANY, {}),
             call().setup()])
 
-        # Test start call with driver stopped.
+        # Test auto_start disabled
         homekit.reset_mock()
-        homekit.configure_mock(**{'started': False})
+        self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
+        self.hass.block_till_done()
+        self.assertEqual(homekit.mock_calls, [])
+
+        # Test start call with driver is ready
+        homekit.reset_mock()
+        homekit.status = STATUS_READY
 
         self.hass.services.call('homekit', 'start')
         self.assertEqual(homekit.mock_calls, [call.start()])
 
-        # Test start call with driver started.
+        # Test start call with driver started
         homekit.reset_mock()
-        homekit.configure_mock(**{'started': True})
+        homekit.status = STATUS_STOPPED
 
         self.hass.services.call(DOMAIN, SERVICE_HOMEKIT_START)
         self.assertEqual(homekit.mock_calls, [])
 
     def test_homekit_setup(self):
         """Test setup of bridge and driver."""
-        homekit = HomeKit(self.hass, DEFAULT_PORT, {}, {})
+        homekit = HomeKit(self.hass, DEFAULT_PORT, None, {}, {})
 
         with patch(PATH_HOMEKIT + '.accessories.HomeDriver') as mock_driver, \
                 patch('homeassistant.util.get_local_ip') as mock_ip:
@@ -105,9 +125,17 @@ class TestHomeKit(unittest.TestCase):
         self.assertEqual(
             self.hass.bus.listeners.get(EVENT_HOMEASSISTANT_STOP), 1)
 
+    def test_homekit_setup_ip_address(self):
+        """Test setup with given IP address."""
+        homekit = HomeKit(self.hass, DEFAULT_PORT, '172.0.0.0', {}, {})
+
+        with patch(PATH_HOMEKIT + '.accessories.HomeDriver') as mock_driver:
+            homekit.setup()
+        mock_driver.assert_called_with(ANY, DEFAULT_PORT, '172.0.0.0', ANY)
+
     def test_homekit_add_accessory(self):
         """Add accessory if config exists and get_acc returns an accessory."""
-        homekit = HomeKit(self.hass, None, lambda entity_id: True, {})
+        homekit = HomeKit(self.hass, None, None, lambda entity_id: True, {})
         homekit.bridge = HomeBridge(self.hass)
 
         with patch(PATH_HOMEKIT + '.accessories.HomeBridge.add_accessory') \
@@ -130,7 +158,7 @@ class TestHomeKit(unittest.TestCase):
     def test_homekit_entity_filter(self):
         """Test the entity filter."""
         entity_filter = generate_filter(['cover'], ['demo.test'], [], [])
-        homekit = HomeKit(self.hass, None, entity_filter, {})
+        homekit = HomeKit(self.hass, None, None, entity_filter, {})
 
         with patch(PATH_HOMEKIT + '.get_accessory') as mock_get_acc:
             mock_get_acc.return_value = None
@@ -150,7 +178,7 @@ class TestHomeKit(unittest.TestCase):
     @patch(PATH_HOMEKIT + '.HomeKit.add_bridge_accessory')
     def test_homekit_start(self, mock_add_bridge_acc, mock_show_setup_msg):
         """Test HomeKit start method."""
-        homekit = HomeKit(self.hass, None, {}, {'cover.demo': {}})
+        homekit = HomeKit(self.hass, None, None, {}, {'cover.demo': {}})
         homekit.bridge = HomeBridge(self.hass)
         homekit.driver = Mock()
 
@@ -158,34 +186,38 @@ class TestHomeKit(unittest.TestCase):
         state = self.hass.states.all()[0]
 
         homekit.start()
+        self.hass.block_till_done()
 
         self.assertEqual(mock_add_bridge_acc.mock_calls, [call(state)])
         self.assertEqual(mock_show_setup_msg.mock_calls, [
-            call(homekit.bridge, self.hass)])
+            call(self.hass, homekit.bridge)])
         self.assertEqual(homekit.driver.mock_calls, [call.start()])
-        self.assertTrue(homekit.started)
+        self.assertEqual(homekit.status, STATUS_RUNNING)
 
         # Test start() if already started
         homekit.driver.reset_mock()
         homekit.start()
+        self.hass.block_till_done()
         self.assertEqual(homekit.driver.mock_calls, [])
 
     def test_homekit_stop(self):
         """Test HomeKit stop method."""
-        homekit = HomeKit(None, None, None, None)
+        homekit = HomeKit(self.hass, None, None, None, None)
         homekit.driver = Mock()
 
-        # Test if started = False
+        self.assertEqual(homekit.status, STATUS_READY)
         homekit.stop()
-        self.assertFalse(homekit.driver.stop.called)
-
-        # Test if driver not started
-        homekit.started = True
-        homekit.driver.configure_mock(**{'run_sentinel': None})
+        self.hass.block_till_done()
+        homekit.status = STATUS_WAIT
         homekit.stop()
+        self.hass.block_till_done()
+        homekit.status = STATUS_STOPPED
+        homekit.stop()
+        self.hass.block_till_done()
         self.assertFalse(homekit.driver.stop.called)
 
         # Test if driver is started
-        homekit.driver.configure_mock(**{'run_sentinel': 'sentinel'})
+        homekit.status = STATUS_RUNNING
         homekit.stop()
+        self.hass.block_till_done()
         self.assertTrue(homekit.driver.stop.called)

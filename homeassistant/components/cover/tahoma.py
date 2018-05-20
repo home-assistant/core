@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up Tahoma covers."""
+    """Set up the Tahoma covers."""
     controller = hass.data[TAHOMA_DOMAIN]['controller']
     devices = []
     for device in hass.data[TAHOMA_DOMAIN]['devices']['cover']:
@@ -79,5 +79,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
         if self.tahoma_device.type == \
            'io:RollerShutterWithLowSpeedManagementIOComponent':
             self.apply_action('setPosition', 'secured')
+        elif self.tahoma_device.type == 'rts:BlindRTSComponent':
+            self.apply_action('my')
         else:
             self.apply_action('stopIdentify')

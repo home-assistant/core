@@ -1,25 +1,26 @@
 {
     "config": {
-        "title": "deCONZ",
-        "step": {
-            "init": {
-                "title": "Define deCONZ gateway",
-                "data": {
-                    "host": "Host",
-                    "port": "Port (default value: '80')"
-                }
-            },
-            "link": {
-                "title": "Link with deCONZ",
-                "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ system settings\n2. Press \"Unlock Gateway\" button"
-            }
+        "abort": {
+            "already_configured": "Bridge is already configured",
+            "no_bridges": "No deCONZ bridges discovered",
+            "one_instance_only": "Component only supports one deCONZ instance"
         },
         "error": {
             "no_key": "Couldn't get an API key"
         },
-        "abort": {
-            "no_bridges": "No deCONZ bridges discovered",
-            "one_instance_only": "Component only supports one deCONZ instance"
-        }
+        "step": {
+            "init": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port (default value: '80')"
+                },
+                "title": "Define deCONZ gateway"
+            },
+            "link": {
+                "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ system settings\n2. Press \"Unlock Gateway\" button",
+                "title": "Link with deCONZ"
+            }
+        },
+        "title": "deCONZ"
     }
 }

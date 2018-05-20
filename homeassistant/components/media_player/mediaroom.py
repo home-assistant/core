@@ -8,6 +8,7 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.media_player import (
     MEDIA_TYPE_CHANNEL, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_STOP, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
@@ -20,11 +21,11 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_OPTIMISTIC, STATE_OFF,
     CONF_TIMEOUT, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY,
-    STATE_UNAVAILABLE
+    STATE_UNAVAILABLE, EVENT_HOMEASSISTANT_STOP
 )
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pymediaroom==0.6']
+REQUIREMENTS = ['pymediaroom==0.6.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,12 +82,21 @@ async def async_setup_platform(hass, config, async_add_devices,
     if not config[CONF_OPTIMISTIC]:
         from pymediaroom import install_mediaroom_protocol
 
-        already_installed = hass.data.get(DISCOVERY_MEDIAROOM, False)
+        already_installed = hass.data.get(DISCOVERY_MEDIAROOM, None)
         if not already_installed:
-            await install_mediaroom_protocol(
+            hass.data[DISCOVERY_MEDIAROOM] = await install_mediaroom_protocol(
                 responses_callback=callback_notify)
+
+            @callback
+            def stop_discovery(event):
+                """Stop discovery of new mediaroom STB's."""
+                _LOGGER.debug("Stopping internal pymediaroom discovery.")
+                hass.data[DISCOVERY_MEDIAROOM].close()
+
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                       stop_discovery)
+
             _LOGGER.debug("Auto discovery installed")
-            hass.data[DISCOVERY_MEDIAROOM] = True
 
 
 class MediaroomDevice(MediaPlayerDevice):
@@ -120,7 +130,7 @@ class MediaroomDevice(MediaPlayerDevice):
         self._channel = None
         self._optimistic = optimistic
         self._state = STATE_PLAYING if optimistic else STATE_STANDBY
-        self._name = 'Mediaroom {}'.format(device_id)
+        self._name = 'Mediaroom {}'.format(device_id if device_id else host)
         self._available = True
         if device_id:
             self._unique_id = device_id

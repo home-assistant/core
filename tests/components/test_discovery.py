@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from homeassistant import config_entries
+from homeassistant import data_entry_flow
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
 from homeassistant.util.dt import utcnow
@@ -25,7 +25,8 @@ UNKNOWN_SERVICE = 'this_service_will_never_be_supported'
 
 BASE_CONFIG = {
     discovery.DOMAIN: {
-        'ignore': []
+        'ignore': [],
+        'enable': []
     }
 }
 
@@ -168,11 +169,11 @@ async def test_discover_config_flow(hass):
 
     with patch.dict(discovery.CONFIG_ENTRY_HANDLERS, {
         'mock-service': 'mock-component'}), patch(
-            'homeassistant.config_entries.FlowManager.async_init') as m_init:
+            'homeassistant.data_entry_flow.FlowManager.async_init') as m_init:
         await mock_discovery(hass, discover)
 
     assert len(m_init.mock_calls) == 1
     args, kwargs = m_init.mock_calls[0][1:]
     assert args == ('mock-component',)
-    assert kwargs['source'] == config_entries.SOURCE_DISCOVERY
+    assert kwargs['source'] == data_entry_flow.SOURCE_DISCOVERY
     assert kwargs['data'] == discovery_info
