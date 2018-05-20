@@ -3,14 +3,20 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.media_player import (
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_STOP, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE)
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
-    ATTR_CODE, CONF_NAME, TEMP_CELSIUS, CONF_MODE)
+    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_MODE, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
-from .const import HOMEKIT_NOTIFY_ID
+from .const import (
+    HOMEKIT_NOTIFY_ID, ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
 
 _LOGGER = logging.getLogger(__name__)
+
+MEDIA_PLAYER_MODES = (ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
 
 
 def validate_entity_config(values):
@@ -38,9 +44,41 @@ def validate_entity_config(values):
             mode = config.get(CONF_MODE)
             if mode:
                 params[CONF_MODE] = cv.ensure_list(mode)
+                for mode in params[CONF_MODE]:
+                    if mode not in MEDIA_PLAYER_MODES:
+                        raise vol.Invalid(
+                            'Invalid mode: "{}", valid modes are: "{}".'
+                            .format(mode, MEDIA_PLAYER_MODES))
 
         entities[entity] = params
     return entities
+
+
+def validate_media_player_modes(state, config):
+    """Validate modes for media playeres."""
+    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+    supported_modes = []
+    if features & (SUPPORT_TURN_ON | SUPPORT_TURN_OFF):
+        supported_modes.append(ON_OFF)
+    if features & (SUPPORT_PLAY | SUPPORT_PAUSE):
+        supported_modes.append(PLAY_PAUSE)
+    if features & (SUPPORT_PLAY | SUPPORT_STOP):
+        supported_modes.append(PLAY_STOP)
+    if features & SUPPORT_VOLUME_MUTE:
+        supported_modes.append(TOGGLE_MUTE)
+
+    config_modes = config.get(CONF_MODE, MEDIA_PLAYER_MODES)
+
+    validated_modes = []
+    for mode in config_modes:
+        if mode in supported_modes and mode not in validated_modes:
+            validated_modes.append(mode)
+        if mode not in supported_modes:
+            _LOGGER.warning('The entity "%s" does not support '
+                            'mode: "%s", supported modes are: %s',
+                            state.entity_id, mode, supported_modes)
+    return validated_modes
 
 
 def show_setup_message(hass, pincode):

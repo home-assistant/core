@@ -11,9 +11,6 @@ import voluptuous as vol
 
 from homeassistant.components.cover import (
     SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION)
-from homeassistant.components.media_player import (
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_PAUSE,
-    SUPPORT_STOP, SUPPORT_VOLUME_MUTE)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS, CONF_MODE, CONF_NAME, CONF_PORT,
@@ -28,7 +25,8 @@ from .const import (
     CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FILTER, DEFAULT_AUTO_START,
     DEFAULT_PORT, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25, DOMAIN, HOMEKIT_FILE,
     ON_OFF, PLAY_PAUSE, PLAY_STOP, SERVICE_HOMEKIT_START, TOGGLE_MUTE)
-from .util import show_setup_message, validate_entity_config
+from .util import (
+    show_setup_message, validate_entity_config, validate_media_player_modes)
 
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +39,6 @@ STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
-DEFAULT_MEDIA_PLAYER_MODES = (ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
@@ -130,30 +127,8 @@ def get_accessory(hass, state, aid, config):
         a_type = 'Lock'
 
     elif state.domain == 'media_player':
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-
-        supported_modes = []
-        if features & (SUPPORT_TURN_ON | SUPPORT_TURN_OFF):
-            supported_modes.append(ON_OFF)
-        if features & (SUPPORT_PLAY | SUPPORT_PAUSE):
-            supported_modes.append(PLAY_PAUSE)
-        if features & (SUPPORT_PLAY | SUPPORT_STOP):
-            supported_modes.append(PLAY_STOP)
-        if features & SUPPORT_VOLUME_MUTE:
-            supported_modes.append(TOGGLE_MUTE)
-
-        config_modes = config.get(CONF_MODE, DEFAULT_MEDIA_PLAYER_MODES)
-
-        validated_modes = []
-        for mode in config_modes:
-            if mode in supported_modes and mode not in validated_modes:
-                validated_modes.append(mode)
-            if mode not in supported_modes:
-                _LOGGER.warning('The entity "%s" does not support '
-                                'mode: "%s", supported modes are: %s',
-                                state.entity_id, mode, supported_modes)
-        if validated_modes is not None:
-            config[CONF_MODE] = validated_modes
+        config[CONF_MODE] = validate_media_player_modes(state, config)
+        if config[CONF_MODE] is not None:
             a_type = 'MediaPlayer'
 
     elif state.domain == 'sensor':

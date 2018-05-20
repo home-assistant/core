@@ -10,7 +10,8 @@ from homeassistant.components.climate import (
 from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_UNIT_OF_MEASUREMENT, CONF_MODE, CONF_NAME, TEMP_CELSIUS,
+    TEMP_FAHRENHEIT)
 
 
 def test_not_supported(caplog):
@@ -38,10 +39,16 @@ def test_customize_options(config, name):
 
 @pytest.mark.parametrize('type_name, entity_id, state, attrs, config', [
     ('Fan', 'fan.test', 'on', {}, {}),
+
     ('Light', 'light.test', 'on', {}, {}),
+
     ('Lock', 'lock.test', 'locked', {}, {ATTR_CODE: '1234'}),
+
+    ('MediaPlayer', 'media_player.test', 'on', {}, {CONF_MODE: 'on_off'}),
+
     ('SecuritySystem', 'alarm_control_panel.test', 'armed', {},
      {ATTR_CODE: '1234'}),
+
     ('Thermostat', 'climate.test', 'auto', {}, {}),
     ('Thermostat', 'climate.test', 'auto',
      {ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_LOW |

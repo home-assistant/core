@@ -2,16 +2,19 @@
 import pytest
 import voluptuous as vol
 
+from homeassistant.core import State
 from homeassistant.components.homekit.const import HOMEKIT_NOTIFY_ID
 from homeassistant.components.homekit.util import (
     convert_to_float, density_to_air_quality, dismiss_setup_message,
-    show_setup_message, temperature_to_homekit, temperature_to_states)
+    show_setup_message, temperature_to_homekit, temperature_to_states,
+    validate_media_player_modes)
 from homeassistant.components.homekit.util import validate_entity_config \
     as vec
 from homeassistant.components.persistent_notification import (
     ATTR_MESSAGE, ATTR_NOTIFICATION_ID, DOMAIN)
 from homeassistant.const import (
-    ATTR_CODE, CONF_NAME, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_MODE, CONF_NAME, STATE_UNKNOWN,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.common import async_mock_service
 
@@ -20,7 +23,8 @@ def test_validate_entity_config():
     """Test validate entities."""
     configs = [{'invalid_entity_id': {}}, {'demo.test': 1},
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
-               {'demo.test': None}, {'demo.test': {CONF_NAME: None}}]
+               {'demo.test': None}, {'demo.test': {CONF_NAME: None}},
+               {'media_player.test': {CONF_MODE: 'on_on'}}]
 
     for conf in configs:
         with pytest.raises(vol.Invalid):
@@ -38,6 +42,22 @@ def test_validate_entity_config():
     assert vec({'lock.demo': {}}) == {'lock.demo': {ATTR_CODE: None}}
     assert vec({'lock.demo': {ATTR_CODE: '1234'}}) == \
         {'lock.demo': {ATTR_CODE: '1234'}}
+
+    assert vec({'media_player.demo': {}}) == {'media_player.demo': {}}
+    assert vec({'media_player.demo': {CONF_MODE: 'on_off'}}) == \
+        {'media_player.demo': {CONF_MODE: ['on_off']}}
+
+
+@pytest.mark.parametrize('config, attrs, validated_modes', [
+    ({}, {ATTR_SUPPORTED_FEATURES: 20873},
+     ['on_off', 'play_pause', 'play_stop', 'toggle_mute']),
+    ({CONF_MODE: ['on_off', 'play_pause']}, {ATTR_SUPPORTED_FEATURES: 384},
+     ['on_off']),
+])
+def test_validate_media_player_modes(config, attrs, validated_modes):
+    """Test validating modes for media playeres."""
+    entity_state = State('media_player.demo', 'on', attrs)
+    assert validate_media_player_modes(entity_state, config) == validated_modes
 
 
 def test_convert_to_float():
