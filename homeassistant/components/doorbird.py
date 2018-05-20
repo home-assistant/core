@@ -137,7 +137,6 @@ class DoorbirdEventSubscriber():
         for sensor_type in doorstation.monitored_events:
             name = '{} {}'.format(doorstation.name,
                                   SENSOR_TYPES[sensor_type][0])
-            device_class = SENSOR_TYPES[sensor_type][1]
             event_type = SENSOR_TYPES[sensor_type][2]
 
             # Get the URL of this server
