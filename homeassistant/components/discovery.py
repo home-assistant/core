@@ -83,6 +83,7 @@ SERVICE_HANDLERS = {
     'songpal': ('media_player', 'songpal'),
     'kodi': ('media_player', 'kodi'),
     'volumio': ('media_player', 'volumio'),
+    'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
