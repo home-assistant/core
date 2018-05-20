@@ -4,7 +4,7 @@ import logging
 from pyhap.const import CATEGORY_DOOR_LOCK
 
 from homeassistant.components.lock import (
-    ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN)
+    ATTR_ENTITY_ID, DOMAIN, STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN)
 from homeassistant.const import ATTR_CODE
 
 from . import TYPES
@@ -46,6 +46,10 @@ class Lock(HomeAccessory):
 
     def set_state(self, value):
         """Set lock state to value if call came from HomeKit."""
+        self.hass.add_job(self.async_set_state, value)
+
+    async def async_set_state(self, value):
+        """Set lock state to value if call came from HomeKit. Coroutine."""
         _LOGGER.debug("%s: Set state to %d", self.entity_id, value)
         self.flag_target_state = True
 
@@ -55,19 +59,24 @@ class Lock(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._code:
             params[ATTR_CODE] = self._code
-        self.hass.services.call('lock', service, params)
+        await self.hass.services.async_call(DOMAIN, service, params)
 
-    def update_state(self, new_state):
-        """Update lock after state changed."""
+    def async_update_state(self, new_state):
+        """Update lock after state changed.
+
+        Method is run in the event loop.
+        """
         hass_state = new_state.state
         if hass_state in HASS_TO_HOMEKIT:
             current_lock_state = HASS_TO_HOMEKIT[hass_state]
-            self.char_current_state.set_value(current_lock_state)
+            self.hass.async_add_job(
+                self.char_current_state.set_value, current_lock_state)
             _LOGGER.debug('%s: Updated current state to %s (%d)',
                           self.entity_id, hass_state, current_lock_state)
 
             # LockTargetState only supports locked and unlocked
             if hass_state in (STATE_LOCKED, STATE_UNLOCKED):
                 if not self.flag_target_state:
-                    self.char_target_state.set_value(current_lock_state)
+                    self.hass.async_add_job(
+                        self.char_target_state.set_value, current_lock_state)
                 self.flag_target_state = False

@@ -41,24 +41,36 @@ class GarageDoorOpener(HomeAccessory):
 
     def set_state(self, value):
         """Change garage state if call came from HomeKit."""
+        self.hass.add_job(self.async_set_state, value)
+
+    async def async_set_state(self, value):
+        """Change garage state if call came from HomeKit. Coroutine."""
         _LOGGER.debug('%s: Set state to %d', self.entity_id, value)
         self.flag_target_state = True
 
+        params = {ATTR_ENTITY_ID: self.entity_id}
         if value == 0:
-            self.char_current_state.set_value(3)
-            self.hass.components.cover.open_cover(self.entity_id)
+            self.hass.async_add_job(self.char_current_state.set_value, 3)
+            await self.hass.services.async_call(
+                DOMAIN, SERVICE_OPEN_COVER, params)
         elif value == 1:
-            self.char_current_state.set_value(2)
-            self.hass.components.cover.close_cover(self.entity_id)
+            self.hass.async_add_job(self.char_current_state.set_value, 2)
+            await self.hass.services.async_call(
+                DOMAIN, SERVICE_CLOSE_COVER, params)
 
-    def update_state(self, new_state):
-        """Update cover state after state changed."""
+    def async_update_state(self, new_state):
+        """Update cover state after state changed.
+
+        Method is run in the event loop.
+        """
         hass_state = new_state.state
         if hass_state in (STATE_OPEN, STATE_CLOSED):
             current_state = 0 if hass_state == STATE_OPEN else 1
-            self.char_current_state.set_value(current_state)
+            self.hass.async_add_job(
+                self.char_current_state.set_value, current_state)
             if not self.flag_target_state:
-                self.char_target_state.set_value(current_state)
+                self.hass.async_add_job(
+                    self.char_target_state.set_value, current_state)
             self.flag_target_state = False
 
 
@@ -83,20 +95,31 @@ class WindowCovering(HomeAccessory):
     @debounce
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
+        self.hass.add_job(self.async_move_cover, value)
+
+    async def async_move_cover(self, value):
+        """Move cover to value if call came from HomeKit. Coroutine."""
         _LOGGER.debug('%s: Set position to %d', self.entity_id, value)
         self.homekit_target = value
 
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_POSITION: value}
-        self.hass.services.call(DOMAIN, SERVICE_SET_COVER_POSITION, params)
+        params = {ATTR_ENTITY_ID: self.entity_id,
+                  ATTR_POSITION: value}
+        await self.hass.services.async_call(
+            DOMAIN, SERVICE_SET_COVER_POSITION, params)
 
-    def update_state(self, new_state):
-        """Update cover position after state changed."""
+    def async_update_state(self, new_state):
+        """Update cover position after state changed.
+
+        Method is run in the event loop.
+        """
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
         if isinstance(current_position, int):
-            self.char_current_position.set_value(current_position)
+            self.hass.async_add_job(
+                self.char_current_position.set_value, current_position)
             if self.homekit_target is None or \
                     abs(current_position - self.homekit_target) < 6:
-                self.char_target_position.set_value(current_position)
+                self.hass.async_add_job(
+                    self.char_target_position.set_value, current_position)
                 self.homekit_target = None
 
 
@@ -126,6 +149,10 @@ class WindowCoveringBasic(HomeAccessory):
     @debounce
     def move_cover(self, value):
         """Move cover to value if call came from HomeKit."""
+        self.hass.add_job(self.async_move_cover, value)
+
+    async def async_move_cover(self, value):
+        """Move cover to value if call came from HomeKit. Coroutine."""
         _LOGGER.debug('%s: Set position to %d', self.entity_id, value)
 
         if self.supports_stop:
@@ -141,19 +168,24 @@ class WindowCoveringBasic(HomeAccessory):
             else:
                 service, position = (SERVICE_CLOSE_COVER, 0)
 
-        self.hass.services.call(DOMAIN, service,
-                                {ATTR_ENTITY_ID: self.entity_id})
+        params = {ATTR_ENTITY_ID: self.entity_id}
+        await self.hass.services.async_call(DOMAIN, service, params)
 
         # Snap the current/target position to the expected final position.
-        self.char_current_position.set_value(position)
-        self.char_target_position.set_value(position)
-        self.char_position_state.set_value(2)
+        self.hass.async_add_job(self.char_current_position.set_value, position)
+        self.hass.async_add_job(self.char_target_position.set_value, position)
+        self.hass.async_add_job(self.char_position_state.set_value, 2)
 
-    def update_state(self, new_state):
-        """Update cover position after state changed."""
+    def async_update_state(self, new_state):
+        """Update cover position after state changed.
+
+        Method is run in the event loop.
+        """
         position_mapping = {STATE_OPEN: 100, STATE_CLOSED: 0}
         hk_position = position_mapping.get(new_state.state)
         if hk_position is not None:
-            self.char_current_position.set_value(hk_position)
-            self.char_target_position.set_value(hk_position)
-            self.char_position_state.set_value(2)
+            self.hass.async_add_job(
+                self.char_current_position.set_value, hk_position)
+            self.hass.async_add_job(
+                self.char_target_position.set_value, hk_position)
+            self.hass.async_add_job(self.char_position_state.set_value, 2)

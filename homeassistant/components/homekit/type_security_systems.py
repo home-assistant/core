@@ -3,6 +3,7 @@ import logging
 
 from pyhap.const import CATEGORY_ALARM_SYSTEM
 
+from homeassistant.components.alarm_control_panel import DOMAIN
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
@@ -47,6 +48,13 @@ class SecuritySystem(HomeAccessory):
 
     def set_security_state(self, value):
         """Move security state to value if call came from HomeKit."""
+        self.hass.add_job(self.async_set_security_state, value)
+
+    async def async_set_security_state(self, value):
+        """Move security state to value if call came from HomeKit.
+
+        Coroutine.
+        """
         _LOGGER.debug('%s: Set security state to %d',
                       self.entity_id, value)
         self.flag_target_state = True
@@ -56,19 +64,24 @@ class SecuritySystem(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._alarm_code:
             params[ATTR_CODE] = self._alarm_code
-        self.hass.services.call('alarm_control_panel', service, params)
+        await self.hass.services.async_call(DOMAIN, service, params)
 
-    def update_state(self, new_state):
-        """Update security state after state changed."""
+    def async_update_state(self, new_state):
+        """Update security state after state changed.
+
+        Method is run in the event loop.
+        """
         hass_state = new_state.state
         if hass_state in HASS_TO_HOMEKIT:
             current_security_state = HASS_TO_HOMEKIT[hass_state]
-            self.char_current_state.set_value(current_security_state)
+            self.hass.async_add_job(
+                self.char_current_state.set_value, current_security_state)
             _LOGGER.debug('%s: Updated current state to %s (%d)',
                           self.entity_id, hass_state, current_security_state)
 
             # SecuritySystemTargetState does not support triggered
             if not self.flag_target_state and \
                     hass_state != STATE_ALARM_TRIGGERED:
-                self.char_target_state.set_value(current_security_state)
+                self.hass.async_add_job(
+                    self.char_target_state.set_value, current_security_state)
             self.flag_target_state = False

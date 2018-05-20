@@ -4,9 +4,12 @@ import logging
 from pyhap.const import CATEGORY_LIGHTBULB
 
 from homeassistant.components.light import (
-    ATTR_HS_COLOR, ATTR_COLOR_TEMP, ATTR_BRIGHTNESS, ATTR_MIN_MIREDS,
+    DOMAIN, ATTR_HS_COLOR, ATTR_COLOR_TEMP, ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT, ATTR_MIN_MIREDS,
     ATTR_MAX_MIREDS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_BRIGHTNESS)
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_OFF)
 
 from . import TYPES
 from .accessories import HomeAccessory, debounce
@@ -74,50 +77,78 @@ class Light(HomeAccessory):
 
     def set_state(self, value):
         """Set state if call came from HomeKit."""
+        self.hass.add_job(self.async_set_state, value)
+
+    async def async_set_state(self, value):
+        """Set state if call came from HomeKit. Coroutine."""
         if self._state == value:
             return
 
         _LOGGER.debug('%s: Set state to %d', self.entity_id, value)
         self._flag[CHAR_ON] = True
 
+        params = {ATTR_ENTITY_ID: self.entity_id}
         if value == 1:
-            self.hass.components.light.turn_on(self.entity_id)
+            await self.hass.services.async_call(
+                DOMAIN, SERVICE_TURN_ON, params)
         elif value == 0:
-            self.hass.components.light.turn_off(self.entity_id)
+            await self.hass.services.async_call(
+                DOMAIN, SERVICE_TURN_OFF, params)
 
     @debounce
     def set_brightness(self, value):
         """Set brightness if call came from HomeKit."""
+        self.hass.add_job(self.async_set_brightness, value)
+
+    async def async_set_brightness(self, value):
+        """Set brightness if call came from HomeKit. Coroutine."""
         _LOGGER.debug('%s: Set brightness to %d', self.entity_id, value)
         self._flag[CHAR_BRIGHTNESS] = True
         if value != 0:
-            self.hass.components.light.turn_on(
-                self.entity_id, brightness_pct=value)
+            params = {ATTR_ENTITY_ID: self.entity_id,
+                      ATTR_BRIGHTNESS_PCT: value}
+            await self.hass.services.async_call(
+                DOMAIN, SERVICE_TURN_ON, params)
         else:
-            self.hass.components.light.turn_off(self.entity_id)
+            params = {ATTR_ENTITY_ID: self.entity_id}
+            await self.hass.services.async_call(
+                DOMAIN, SERVICE_TURN_OFF, params)
 
     def set_color_temperature(self, value):
         """Set color temperature if call came from HomeKit."""
+        self.hass.add_job(self.async_set_color_temperature, value)
+
+    async def async_set_color_temperature(self, value):
+        """Set color temperature if call came from HomeKit. Coroutine."""
         _LOGGER.debug('%s: Set color temp to %s', self.entity_id, value)
         self._flag[CHAR_COLOR_TEMPERATURE] = True
-        self.hass.components.light.turn_on(self.entity_id, color_temp=value)
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_COLOR_TEMP: value}
+        await self.hass.services.async_call(DOMAIN, SERVICE_TURN_ON, params)
 
     def set_saturation(self, value):
         """Set saturation if call came from HomeKit."""
+        self.hass.add_job(self.async_set_saturation, value)
+
+    async def async_set_saturation(self, value):
+        """Set saturation if call came from HomeKit. Coroutine."""
         _LOGGER.debug('%s: Set saturation to %d', self.entity_id, value)
         self._flag[CHAR_SATURATION] = True
         self._saturation = value
-        self.set_color()
+        await self.async_set_color()
 
     def set_hue(self, value):
         """Set hue if call came from HomeKit."""
+        self.hass.add_job(self.async_set_hue, value)
+
+    async def async_set_hue(self, value):
+        """Set hue if call came from HomeKit. Coroutine."""
         _LOGGER.debug('%s: Set hue to %d', self.entity_id, value)
         self._flag[CHAR_HUE] = True
         self._hue = value
-        self.set_color()
+        await self.async_set_color()
 
-    def set_color(self):
-        """Set color if call came from HomeKit."""
+    async def async_set_color(self):
+        """Set color if call came from HomeKit. Coroutine."""
         # Handle Color
         if self._features & SUPPORT_COLOR and self._flag[CHAR_HUE] and \
                 self._flag[CHAR_SATURATION]:
@@ -125,17 +156,22 @@ class Light(HomeAccessory):
             _LOGGER.debug('%s: Set hs_color to %s', self.entity_id, color)
             self._flag.update({
                 CHAR_HUE: False, CHAR_SATURATION: False, RGB_COLOR: True})
-            self.hass.components.light.turn_on(
-                self.entity_id, hs_color=color)
+            params = {ATTR_ENTITY_ID: self.entity_id,
+                      ATTR_HS_COLOR: color}
+            await self.hass.services.async_call(
+                DOMAIN, SERVICE_TURN_ON, params)
 
-    def update_state(self, new_state):
-        """Update light after state change."""
+    def async_update_state(self, new_state):
+        """Update light after state change.
+
+        Method is run in the event loop.
+        """
         # Handle State
         state = new_state.state
         if state in (STATE_ON, STATE_OFF):
             self._state = 1 if state == STATE_ON else 0
             if not self._flag[CHAR_ON] and self.char_on.value != self._state:
-                self.char_on.set_value(self._state)
+                self.hass.async_add_job(self.char_on.set_value, self._state)
             self._flag[CHAR_ON] = False
 
         # Handle Brightness
@@ -144,7 +180,8 @@ class Light(HomeAccessory):
             if not self._flag[CHAR_BRIGHTNESS] and isinstance(brightness, int):
                 brightness = round(brightness / 255 * 100, 0)
                 if self.char_brightness.value != brightness:
-                    self.char_brightness.set_value(brightness)
+                    self.hass.async_add_job(
+                        self.char_brightness.set_value, brightness)
             self._flag[CHAR_BRIGHTNESS] = False
 
         # Handle color temperature
@@ -153,7 +190,8 @@ class Light(HomeAccessory):
             if not self._flag[CHAR_COLOR_TEMPERATURE] \
                 and isinstance(color_temperature, int) and \
                     self.char_color_temperature.value != color_temperature:
-                self.char_color_temperature.set_value(color_temperature)
+                self.hass.async_add_job(
+                    self.char_color_temperature.set_value, color_temperature)
             self._flag[CHAR_COLOR_TEMPERATURE] = False
 
         # Handle Color
@@ -164,7 +202,8 @@ class Light(HomeAccessory):
                     hue != self._hue or saturation != self._saturation) and \
                     isinstance(hue, (int, float)) and \
                     isinstance(saturation, (int, float)):
-                self.char_hue.set_value(hue)
-                self.char_saturation.set_value(saturation)
+                self.hass.async_add_job(self.char_hue.set_value, hue)
+                self.hass.async_add_job(
+                    self.char_saturation.set_value, saturation)
                 self._hue, self._saturation = (hue, saturation)
             self._flag[RGB_COLOR] = False

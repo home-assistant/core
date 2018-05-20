@@ -57,6 +57,10 @@ class Fan(HomeAccessory):
 
     def set_state(self, value):
         """Set state if call came from HomeKit."""
+        self.hass.add_job(self.async_set_state, value)
+
+    async def async_set_state(self, value):
+        """Set state if call came from HomeKit. Coroutine."""
         if self._state == value:
             return
 
@@ -64,35 +68,48 @@ class Fan(HomeAccessory):
         self._flag[CHAR_ACTIVE] = True
         service = SERVICE_TURN_ON if value == 1 else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
-        self.hass.services.call(DOMAIN, service, params)
+        await self.hass.services.async_call(DOMAIN, service, params)
 
     def set_direction(self, value):
         """Set state if call came from HomeKit."""
+        self.hass.add_job(self.async_set_direction, value)
+
+    async def async_set_direction(self, value):
+        """Set state if call came from HomeKit. Coroutine."""
         _LOGGER.debug('%s: Set direction to %d', self.entity_id, value)
         self._flag[CHAR_ROTATION_DIRECTION] = True
         direction = DIRECTION_REVERSE if value == 1 else DIRECTION_FORWARD
         params = {ATTR_ENTITY_ID: self.entity_id,
                   ATTR_DIRECTION: direction}
-        self.hass.services.call(DOMAIN, SERVICE_SET_DIRECTION, params)
+        await self.hass.services.async_call(
+            DOMAIN, SERVICE_SET_DIRECTION, params)
 
     def set_oscillating(self, value):
         """Set state if call came from HomeKit."""
+        self.hass.add_job(self.async_set_oscillating, value)
+
+    async def async_set_oscillating(self, value):
+        """Set state if call came from HomeKit. Coroutine."""
         _LOGGER.debug('%s: Set oscillating to %d', self.entity_id, value)
         self._flag[CHAR_SWING_MODE] = True
         oscillating = True if value == 1 else False
         params = {ATTR_ENTITY_ID: self.entity_id,
                   ATTR_OSCILLATING: oscillating}
-        self.hass.services.call(DOMAIN, SERVICE_OSCILLATE, params)
+        await self.hass.services.async_call(DOMAIN, SERVICE_OSCILLATE, params)
 
-    def update_state(self, new_state):
-        """Update fan after state change."""
+    def async_update_state(self, new_state):
+        """Update fan after state change.
+
+        Method is run in the event loop.
+        """
         # Handle State
         state = new_state.state
         if state in (STATE_ON, STATE_OFF):
             self._state = 1 if state == STATE_ON else 0
             if not self._flag[CHAR_ACTIVE] and \
                     self.char_active.value != self._state:
-                self.char_active.set_value(self._state)
+                self.hass.async_add_job(
+                    self.char_active.set_value, self._state)
             self._flag[CHAR_ACTIVE] = False
 
         # Handle Direction
@@ -102,7 +119,8 @@ class Fan(HomeAccessory):
                     direction in (DIRECTION_FORWARD, DIRECTION_REVERSE):
                 hk_direction = 1 if direction == DIRECTION_REVERSE else 0
                 if self.char_direction.value != hk_direction:
-                    self.char_direction.set_value(hk_direction)
+                    self.hass.async_add_job(
+                        self.char_direction.set_value, hk_direction)
             self._flag[CHAR_ROTATION_DIRECTION] = False
 
         # Handle Oscillating
@@ -112,5 +130,6 @@ class Fan(HomeAccessory):
                     oscillating in (True, False):
                 hk_oscillating = 1 if oscillating else 0
                 if self.char_swing.value != hk_oscillating:
-                    self.char_swing.set_value(hk_oscillating)
+                    self.hass.async_add_job(
+                        self.char_swing.set_value, hk_oscillating)
             self._flag[CHAR_SWING_MODE] = False

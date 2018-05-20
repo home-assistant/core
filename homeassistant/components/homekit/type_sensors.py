@@ -59,13 +59,16 @@ class TemperatureSensor(HomeAccessory):
             CHAR_CURRENT_TEMPERATURE, value=0, properties=PROP_CELSIUS)
         self.unit = None
 
-    def update_state(self, new_state):
-        """Update temperature after state changed."""
+    def async_update_state(self, new_state):
+        """Update temperature after state changed.
+
+        Method is run in the event loop.
+        """
         unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
         temperature = convert_to_float(new_state.state)
         if temperature:
             temperature = temperature_to_homekit(temperature, unit)
-            self.char_temp.set_value(temperature)
+            self.hass.async_add_job(self.char_temp.set_value, temperature)
             _LOGGER.debug('%s: Current temperature set to %d°C',
                           self.entity_id, temperature)
 
@@ -81,13 +84,15 @@ class HumiditySensor(HomeAccessory):
         self.char_humidity = serv_humidity.configure_char(
             CHAR_CURRENT_HUMIDITY, value=0)
 
-    def update_state(self, new_state):
-        """Update accessory after state change."""
+    def async_update_state(self, new_state):
+        """Update accessory after state change.
+
+        Method is run in the event loop.
+        """
         humidity = convert_to_float(new_state.state)
         if humidity:
-            self.char_humidity.set_value(humidity)
-            _LOGGER.debug('%s: Percent set to %d%%',
-                          self.entity_id, humidity)
+            self.hass.async_add_job(self.char_humidity.set_value, humidity)
+            _LOGGER.debug('%s: Percent set to %d%%', self.entity_id, humidity)
 
 
 @TYPES.register('AirQualitySensor')
@@ -105,12 +110,16 @@ class AirQualitySensor(HomeAccessory):
         self.char_density = serv_air_quality.configure_char(
             CHAR_AIR_PARTICULATE_DENSITY, value=0)
 
-    def update_state(self, new_state):
-        """Update accessory after state change."""
+    def async_update_state(self, new_state):
+        """Update accessory after state change.
+
+        Method is run in the event loop.
+        """
         density = convert_to_float(new_state.state)
         if density is not None:
-            self.char_density.set_value(density)
-            self.char_quality.set_value(density_to_air_quality(density))
+            self.hass.async_add_job(self.char_density.set_value, density)
+            self.hass.async_add_job(
+                self.char_quality.set_value, density_to_air_quality(density))
             _LOGGER.debug('%s: Set to %d', self.entity_id, density)
 
 
@@ -131,14 +140,17 @@ class CarbonDioxideSensor(HomeAccessory):
         self.char_detected = serv_co2.configure_char(
             CHAR_CARBON_DIOXIDE_DETECTED, value=0)
 
-    def update_state(self, new_state):
-        """Update accessory after state change."""
+    def async_update_state(self, new_state):
+        """Update accessory after state change.
+
+        Method is run in the event loop.
+        """
         co2 = convert_to_float(new_state.state)
         if co2 is not None:
-            self.char_co2.set_value(co2)
+            self.hass.async_add_job(self.char_co2.set_value, co2)
             if co2 > self.char_peak.value:
-                self.char_peak.set_value(co2)
-            self.char_detected.set_value(co2 > 1000)
+                self.hass.async_add_job(self.char_peak.set_value, co2)
+            self.hass.async_add_job(self.char_detected.set_value, co2 > 1000)
             _LOGGER.debug('%s: Set to %d', self.entity_id, co2)
 
 
@@ -154,11 +166,14 @@ class LightSensor(HomeAccessory):
         self.char_light = serv_light.configure_char(
             CHAR_CURRENT_AMBIENT_LIGHT_LEVEL, value=0)
 
-    def update_state(self, new_state):
-        """Update accessory after state change."""
+    def async_update_state(self, new_state):
+        """Update accessory after state change.
+
+        Method is run in the event loop.
+        """
         luminance = convert_to_float(new_state.state)
         if luminance is not None:
-            self.char_light.set_value(luminance)
+            self.hass.async_add_job(self.char_light.set_value, luminance)
             _LOGGER.debug('%s: Set to %d', self.entity_id, luminance)
 
 
@@ -178,9 +193,12 @@ class BinarySensor(HomeAccessory):
         service = self.add_preload_service(service_char[0])
         self.char_detected = service.configure_char(service_char[1], value=0)
 
-    def update_state(self, new_state):
-        """Update accessory after state change."""
+    def async_update_state(self, new_state):
+        """Update accessory after state change.
+
+        Method is run in the event loop.
+        """
         state = new_state.state
         detected = (state == STATE_ON) or (state == STATE_HOME)
-        self.char_detected.set_value(detected)
+        self.hass.async_add_job(self.char_detected.set_value, detected)
         _LOGGER.debug('%s: Set to %d', self.entity_id, detected)
