@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
     TEMP_CELSIUS, CONF_RESOURCES, CONF_ALIAS, ATTR_STATE, STATE_UNKNOWN)
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -130,7 +131,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ALIAS): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_RESOURCES, default=[]):
+    vol.Required(CONF_RESOURCES):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
@@ -148,7 +149,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if data.status is None:
         _LOGGER.error("NUT Sensor has no data, unable to setup")
-        return False
+        raise PlatformNotReady
 
     _LOGGER.debug('NUT Sensors Available: %s', data.status)
 
@@ -169,7 +170,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except data.pynuterror as err:
         _LOGGER.error("Failure while testing NUT status retrieval. "
                       "Cannot continue setup: %s", err)
-        return False
+        raise PlatformNotReady
 
     add_entities(entities, True)
 
@@ -209,10 +210,10 @@ class NUTSensor(Entity):
     def device_state_attributes(self):
         """Return the sensor attributes."""
         attr = dict()
-        attr[ATTR_STATE] = self.opp_state()
+        attr[ATTR_STATE] = self.operating_state()
         return attr
 
-    def opp_state(self):
+    def operating_state(self):
         """Return UPS operating state."""
         if self._data.status is None:
             return STATE_TYPES['OFF']
@@ -233,7 +234,12 @@ class NUTSensor(Entity):
         if self.type not in self._data.status:
             self._state = None
         else:
-            self._state = self._data.status[self.type]
+            # Special treatment for overall UPS status to make it
+            # human-readable
+            if self.type == KEY_STATUS:
+                self._state = self.operating_state()
+            else:
+                self._state = self._data.status[self.type]
 
 
 class PyNUTData(object):
