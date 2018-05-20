@@ -143,7 +143,7 @@ class DoorbirdEventSubscriber():
             # Get the URL of this server
             hass_url = hass.config.api.base_url
 
-            # Override url if another is specified in the doorstation configuration
+            # Override url if another is specified onth configuration
             if doorstation.custom_url is not None:
                 hass_url = doorstation.custom_url
 
