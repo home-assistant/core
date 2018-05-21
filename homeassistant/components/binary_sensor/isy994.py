@@ -195,7 +195,6 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
             self.schedule_update_ha_state()
             self._heartbeat()
 
-    # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
         """Primary node status updates.
 
