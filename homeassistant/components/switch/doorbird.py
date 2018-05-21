@@ -47,11 +47,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the DoorBird switch platform."""
+    switches = []
+
     for doorstation in hass.data[DOORBIRD_DOMAIN]:
 
         device = doorstation.device
 
-        switches = []
         for switch in SWITCHES:
 
             _LOGGER.debug("Adding DoorBird switch %s",

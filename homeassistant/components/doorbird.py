@@ -5,13 +5,14 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/doorbird/
 """
 import logging
+
 import asyncio
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_HOST, CONF_USERNAME, \
     CONF_PASSWORD, CONF_NAME, CONF_DEVICES, CONF_MONITORED_CONDITIONS
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 
 REQUIREMENTS = ['DoorBirdPy==0.1.3']
@@ -92,11 +93,37 @@ def setup(hass, config):
         doorstation.device.reset_notifications()
 
         # Subscribe to doorbell or motion events
-        DoorbirdEventSubscriber(hass, doorstation)
+        subscribe_events(hass, doorstation)
 
     hass.data[DOMAIN] = doorstations
 
     return True
+
+def subscribe_events(hass, doorstation):
+    """Initialize the subscriber."""
+    for sensor_type in doorstation.monitored_events:
+        name = '{} {}'.format(doorstation.name,
+                              SENSOR_TYPES[sensor_type][0])
+        event_type = SENSOR_TYPES[sensor_type][2]
+
+        # Get the URL of this server
+        hass_url = hass.config.api.base_url
+
+        # Override url if another is specified onth configuration
+        if doorstation.custom_url is not None:
+            hass_url = doorstation.custom_url
+
+        slug = slugify(name)
+
+        url = '{}{}/{}'.format(hass_url, API_URL, slug)
+
+        _LOGGER.info("DoorBird will connect to this instance via %s",
+                     url)
+
+        _LOGGER.info("You may use the following event name for automations"
+                     ": %s_%s", DOMAIN, slug)
+
+        doorstation.device.subscribe_notification(event_type, url)
 
 
 class ConfiguredDoorbird():
@@ -131,36 +158,6 @@ class ConfiguredDoorbird():
             return []
 
         return self._monitored_events
-
-
-class DoorbirdEventSubscriber():
-    """Doorbird event subscriber."""
-
-    def __init__(self, hass, doorstation):
-        """Initialize the subscriber."""
-        for sensor_type in doorstation.monitored_events:
-            name = '{} {}'.format(doorstation.name,
-                                  SENSOR_TYPES[sensor_type][0])
-            event_type = SENSOR_TYPES[sensor_type][2]
-
-            # Get the URL of this server
-            hass_url = hass.config.api.base_url
-
-            # Override url if another is specified onth configuration
-            if doorstation.custom_url is not None:
-                hass_url = doorstation.custom_url
-
-            slug = slugify(name)
-
-            url = '{}{}/{}'.format(hass_url, API_URL, slug)
-
-            _LOGGER.info("DoorBird will connect to this instance via %s",
-                         url)
-
-            _LOGGER.info("You may use the following event name for automations"
-                         ": %s_%s", DOMAIN, slug)
-
-            doorstation.device.subscribe_notification(event_type, url)
 
 
 class DoorbirdRequestView(HomeAssistantView):
