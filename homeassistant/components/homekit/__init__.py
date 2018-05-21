@@ -24,7 +24,7 @@ from homeassistant.util.decorator import Registry
 from .const import (
     CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FILTER, DEFAULT_AUTO_START,
     DEFAULT_PORT, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25, DOMAIN, HOMEKIT_FILE,
-    ON_OFF, PLAY_PAUSE, PLAY_STOP, SERVICE_HOMEKIT_START, TOGGLE_MUTE)
+    SERVICE_HOMEKIT_START)
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_modes)
 
