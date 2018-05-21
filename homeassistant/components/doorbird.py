@@ -126,7 +126,7 @@ class ConfiguredDoorbird():
 
     @property
     def monitored_events(self):
-        """Get monitored events"""
+        """Get monitored events."""
         if self._monitored_events is None:
             return []
 
@@ -175,7 +175,6 @@ class DoorbirdRequestView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request, sensor):
         """Respond to requests from the device."""
-
         hass = request.app['hass']
 
         hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor))
