@@ -4,14 +4,14 @@ import voluptuous as vol
 
 from homeassistant.components.homekit.const import HOMEKIT_NOTIFY_ID
 from homeassistant.components.homekit.util import (
-    show_setup_message, dismiss_setup_message, convert_to_float,
-    temperature_to_homekit, temperature_to_states, density_to_air_quality)
+    convert_to_float, density_to_air_quality, dismiss_setup_message,
+    show_setup_message, temperature_to_homekit, temperature_to_states)
 from homeassistant.components.homekit.util import validate_entity_config \
     as vec
 from homeassistant.components.persistent_notification import (
-    DOMAIN, ATTR_MESSAGE, ATTR_NOTIFICATION_ID)
+    ATTR_MESSAGE, ATTR_NOTIFICATION_ID, DOMAIN)
 from homeassistant.const import (
-    ATTR_CODE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME)
+    ATTR_CODE, CONF_NAME, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.common import async_mock_service
 

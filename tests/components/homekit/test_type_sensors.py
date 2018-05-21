@@ -1,11 +1,11 @@
 """Test different accessory types: Sensors."""
 from homeassistant.components.homekit.const import PROP_CELSIUS
 from homeassistant.components.homekit.type_sensors import (
-    TemperatureSensor, HumiditySensor, AirQualitySensor, CarbonDioxideSensor,
-    LightSensor, BinarySensor, BINARY_SENSOR_SERVICE_MAP)
+    AirQualitySensor, BinarySensor, CarbonDioxideSensor, HumiditySensor,
+    LightSensor, TemperatureSensor, BINARY_SENSOR_SERVICE_MAP)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, ATTR_DEVICE_CLASS, STATE_UNKNOWN, STATE_ON,
-    STATE_OFF, STATE_HOME, STATE_NOT_HOME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT, STATE_HOME, STATE_NOT_HOME,
+    STATE_OFF, STATE_ON, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 
 async def test_temperature(hass):
