@@ -48,6 +48,7 @@ def populate_data():
         zcl.clusters.measurement.RelativeHumidity: 'sensor',
         zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
         zcl.clusters.measurement.PressureMeasurement: 'sensor',
+        zcl.clusters.measurement.IlluminanceMeasurement: 'sensor',
         zcl.clusters.smartenergy.Metering: 'sensor',
         zcl.clusters.security.IasZone: 'binary_sensor',
         zcl.clusters.hvac.Fan: 'fan',
