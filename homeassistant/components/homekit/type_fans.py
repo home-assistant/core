@@ -4,12 +4,12 @@ import logging
 from pyhap.const import CATEGORY_FAN
 
 from homeassistant.components.fan import (
-    ATTR_DIRECTION, ATTR_OSCILLATING,
-    DIRECTION_FORWARD, DIRECTION_REVERSE, DOMAIN, SERVICE_OSCILLATE,
-    SERVICE_SET_DIRECTION, SUPPORT_DIRECTION, SUPPORT_OSCILLATE)
+    ATTR_DIRECTION, ATTR_OSCILLATING, DIRECTION_FORWARD, DIRECTION_REVERSE,
+    DOMAIN, SERVICE_OSCILLATE, SERVICE_SET_DIRECTION, SUPPORT_DIRECTION,
+    SUPPORT_OSCILLATE)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_TURN_OFF,
+    SERVICE_TURN_ON, STATE_OFF, STATE_ON)
 
 from . import TYPES
 from .accessories import HomeAccessory
@@ -71,8 +71,7 @@ class Fan(HomeAccessory):
         _LOGGER.debug('%s: Set direction to %d', self.entity_id, value)
         self._flag[CHAR_ROTATION_DIRECTION] = True
         direction = DIRECTION_REVERSE if value == 1 else DIRECTION_FORWARD
-        params = {ATTR_ENTITY_ID: self.entity_id,
-                  ATTR_DIRECTION: direction}
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_DIRECTION: direction}
         self.hass.services.call(DOMAIN, SERVICE_SET_DIRECTION, params)
 
     def set_oscillating(self, value):
