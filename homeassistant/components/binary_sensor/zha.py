@@ -23,6 +23,8 @@ CLASS_MAPPING = {
     0x002d: 'vibration',
 }
 
+DEVICE_CLASS_OCCUPANCY = 'occupancy'
+
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
@@ -31,14 +33,18 @@ async def async_setup_platform(hass, config, async_add_devices,
     if discovery_info is None:
         return
 
-    from zigpy.zcl.clusters.general import OnOff
     from zigpy.zcl.clusters.security import IasZone
+    from zigpy.zcl.clusters.general import OnOff
+    from zigpy.zcl.clusters.measurement import OccupancySensing
     if IasZone.cluster_id in discovery_info['in_clusters']:
         await _async_setup_iaszone(hass, config, async_add_devices,
                                    discovery_info)
     elif OnOff.cluster_id in discovery_info['out_clusters']:
         await _async_setup_remote(hass, config, async_add_devices,
                                   discovery_info)
+    elif OccupancySensing.cluster_id in discovery_info['in_clusters']:
+        await _async_setup_occupancy(hass, config, async_add_devices,
+                                     discovery_info)
 
 
 async def _async_setup_iaszone(hass, config, async_add_devices,
@@ -60,6 +66,35 @@ async def _async_setup_iaszone(hass, config, async_add_devices,
 
     sensor = BinarySensor(device_class, **discovery_info)
     async_add_devices([sensor], update_before_add=True)
+
+
+async def _async_setup_occupancy(hass, config, async_add_devices,
+                                 discovery_info):
+    from zigpy.exceptions import ZigbeeException
+    from zigpy.zcl.clusters.measurement import OccupancySensing
+
+    sensor = OccupancySensor(**discovery_info)
+    endpoint = discovery_info['endpoint']
+    cluster = discovery_info['in_clusters'][OccupancySensing.cluster_id]
+
+    attr, min_report, max_report, report_change = [0, 0, 900, 1]
+    if discovery_info['new_join']:
+        try:
+            await cluster.bind()
+        except ZigbeeException as ex:
+            _LOGGER.debug("Failed to bind {}-{}-{}: {}".
+                          format(endpoint.device.ieee, endpoint.endpoint_id,
+                                 cluster.cluster_id, ex))
+        try:
+            await cluster.configure_reporting(attr, min_report,
+                                              max_report, report_change)
+        except ZigbeeException as ex:
+            _LOGGER.debug(
+                "Failed to configure reporting for attr {} on {}-{}-{}: {}"
+                .format(attr, endpoint.device.ieee, endpoint.endpoint_id,
+                        cluster.cluster_id, ex))
+
+    async_add_devices([sensor])
 
 
 async def _async_setup_remote(hass, config, async_add_devices, discovery_info):
@@ -138,6 +173,28 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
         state = result.get('zone_status', self._state)
         if isinstance(state, (int, uint16_t)):
             self._state = result.get('zone_status', self._state) & 3
+
+
+class OccupancySensor(zha.Entity, BinarySensorDevice):
+    """ZHA occupancy sensor"""
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if entity is on."""
+        if self._state is None:
+            return False
+        return self._state
+
+    @property
+    def device_class(self) -> str:
+        """Return device class from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_OCCUPANCY
+
+    def attribute_updated(self, attribute, value):
+        """Handle attribute update from device."""
+        if attribute == 0:
+            self._state = bool(value)
+            self.async_schedule_update_ha_state()
 
 
 class Switch(zha.Entity, BinarySensorDevice):
