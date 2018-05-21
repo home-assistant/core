@@ -2,12 +2,12 @@
 import pytest
 
 from homeassistant.components.alarm_control_panel import DOMAIN
-from homeassistant.components.homekit.type_security_systems import (
-    SecuritySystem)
+from homeassistant.components.homekit.type_security_systems import \
+    SecuritySystem
 from homeassistant.const import (
-    ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED)
+    ATTR_CODE, ATTR_ENTITY_ID, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED,
+    STATE_UNKNOWN)
 
 from tests.common import async_mock_service
 
