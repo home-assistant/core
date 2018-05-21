@@ -84,20 +84,21 @@ class HomeAccessory(Accessory):
         async_track_state_change(
             self.hass, self.entity_id, self.update_state_callback)
 
+    @ha_callback
     def update_state_callback(self, entity_id=None, old_state=None,
                               new_state=None):
         """Callback from state change listener."""
         _LOGGER.debug('New_state: %s', new_state)
         if new_state is None:
             return
-        self.update_state(new_state)
+        self.hass.async_add_job(self.update_state, new_state)
 
     def update_state(self, new_state):
         """Method called on state change to update HomeKit value.
 
         Overridden by accessory types.
         """
-        pass
+        raise NotImplementedError()
 
 
 class HomeBridge(Bridge):

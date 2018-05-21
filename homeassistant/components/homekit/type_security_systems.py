@@ -3,16 +3,16 @@ import logging
 
 from pyhap.const import CATEGORY_ALARM_SYSTEM
 
+from homeassistant.components.alarm_control_panel import DOMAIN
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED, ATTR_ENTITY_ID, ATTR_CODE)
+    ATTR_ENTITY_ID, ATTR_CODE, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_TRIGGERED, STATE_ALARM_DISARMED)
 
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
-    SERV_SECURITY_SYSTEM, CHAR_CURRENT_SECURITY_STATE,
-    CHAR_TARGET_SECURITY_STATE)
+    CHAR_CURRENT_SECURITY_STATE, CHAR_TARGET_SECURITY_STATE,
+    SERV_SECURITY_SYSTEM)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class SecuritySystem(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._alarm_code:
             params[ATTR_CODE] = self._alarm_code
-        self.hass.services.call('alarm_control_panel', service, params)
+        self.hass.services.call(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update security state after state changed."""
