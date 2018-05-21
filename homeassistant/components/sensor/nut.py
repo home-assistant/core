@@ -27,11 +27,13 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 3493
 
 KEY_STATUS = 'ups.status'
+KEY_STATUS_DISPLAY = 'ups.status.display'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
-    'ups.status': ['Status', '', 'mdi:information-outline'],
+    'ups.status.display': ['Status', '', 'mdi:information-outline'],
+    'ups.status': ['Status Data', '', 'mdi:information-outline'],
     'ups.alarm': ['Alarms', '', 'mdi:alarm'],
     'ups.time': ['Internal Time', '', 'mdi:calendar-clock'],
     'ups.date': ['Internal Date', '', 'mdi:calendar'],
@@ -158,7 +160,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for resource in config[CONF_RESOURCES]:
         sensor_type = resource.lower()
 
-        if sensor_type in data.status:
+        # Display status is a special case that falls back to the status value
+        # of the UPS instead.
+        if sensor_type in data.status or (sensor_type == KEY_STATUS_DISPLAY
+                                          and KEY_STATUS in data.status):
             entities.append(NUTSensor(name, data, sensor_type))
         else:
             _LOGGER.warning(
@@ -232,15 +237,14 @@ class NUTSensor(Entity):
             self._state = None
             return
 
-        if self.type not in self._data.status:
+        # In case of the display status sensor, keep a human-readable form
+        # as the sensor state.
+        if self.type == KEY_STATUS_DISPLAY:
+            self._state = self.operating_state()
+        elif self.type not in self._data.status:
             self._state = None
         else:
-            # Special treatment for overall UPS status to make it
-            # human-readable
-            if self.type == KEY_STATUS:
-                self._state = self.operating_state()
-            else:
-                self._state = self._data.status[self.type]
+            self._state = self._data.status[self.type]
 
 
 class PyNUTData(object):
