@@ -63,7 +63,6 @@ SUPPORT_SWING_MODE = 512
 SUPPORT_AWAY_MODE = 1024
 SUPPORT_AUX_HEAT = 2048
 SUPPORT_ON_OFF = 4096
-SUPPORT_BATTERY = 8192
 
 ATTR_CURRENT_TEMPERATURE = 'current_temperature'
 ATTR_MAX_TEMP = 'max_temp'
@@ -542,9 +541,8 @@ class ClimateDevice(Entity):
             is_aux_heat = self.is_aux_heat_on
             data[ATTR_AUX_HEAT] = STATE_ON if is_aux_heat else STATE_OFF
 
-        if supported_features & SUPPORT_BATTERY:
-            if self.battery:
-                data[ATTR_BATTERY] = self.battery
+        if self.battery:
+            data[ATTR_BATTERY] = self.battery
 
         return data
 

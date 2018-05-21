@@ -55,7 +55,6 @@ FIELD_TO_FLAG = {
     'swing': SUPPORT_SWING_MODE,
     'targetTemperature': SUPPORT_TARGET_TEMPERATURE,
     'on': SUPPORT_ON_OFF,
-    'battery': SUPPORT_BATTERY
 }
 
 
