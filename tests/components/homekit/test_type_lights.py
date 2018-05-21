@@ -4,14 +4,14 @@ from collections import namedtuple
 import pytest
 
 from homeassistant.components.light import (
-    DOMAIN, ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP,
-    ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR)
+    ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP, ATTR_HS_COLOR,
+    DOMAIN, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
     STATE_ON, STATE_OFF, STATE_UNKNOWN)
 
 from tests.common import async_mock_service
-from tests.components.homekit.test_accessories import patch_debounce
+from tests.components.homekit.common import patch_debounce
 
 
 @pytest.fixture(scope='module')

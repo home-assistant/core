@@ -4,13 +4,13 @@ from unittest.mock import patch, Mock
 import pytest
 
 from homeassistant.core import State
-from homeassistant.components.cover import SUPPORT_OPEN, SUPPORT_CLOSE
+from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN
 from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME)
+    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 
 def test_not_supported(caplog):
@@ -40,14 +40,12 @@ def test_customize_options(config, name):
     ('Fan', 'fan.test', 'on', {}, {}),
     ('Light', 'light.test', 'on', {}, {}),
     ('Lock', 'lock.test', 'locked', {}, {ATTR_CODE: '1234'}),
-
+    ('SecuritySystem', 'alarm_control_panel.test', 'armed', {},
+     {ATTR_CODE: '1234'}),
     ('Thermostat', 'climate.test', 'auto', {}, {}),
     ('Thermostat', 'climate.test', 'auto',
      {ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_LOW |
       SUPPORT_TARGET_TEMPERATURE_HIGH}, {}),
-
-    ('SecuritySystem', 'alarm_control_panel.test', 'armed', {},
-     {ATTR_CODE: '1234'}),
 ])
 def test_types(type_name, entity_id, state, attrs, config):
     """Test if types are associated correctly."""
@@ -83,22 +81,17 @@ def test_type_covers(type_name, entity_id, state, attrs):
     ('BinarySensor', 'binary_sensor.opening', 'on',
      {ATTR_DEVICE_CLASS: 'opening'}),
     ('BinarySensor', 'device_tracker.someone', 'not_home', {}),
-
     ('AirQualitySensor', 'sensor.air_quality_pm25', '40', {}),
     ('AirQualitySensor', 'sensor.air_quality', '40',
      {ATTR_DEVICE_CLASS: 'pm25'}),
-
     ('CarbonDioxideSensor', 'sensor.airmeter_co2', '500', {}),
     ('CarbonDioxideSensor', 'sensor.airmeter', '500',
      {ATTR_DEVICE_CLASS: 'co2'}),
-
     ('HumiditySensor', 'sensor.humidity', '20',
      {ATTR_DEVICE_CLASS: 'humidity', ATTR_UNIT_OF_MEASUREMENT: '%'}),
-
     ('LightSensor', 'sensor.light', '900', {ATTR_DEVICE_CLASS: 'illuminance'}),
     ('LightSensor', 'sensor.light', '900', {ATTR_UNIT_OF_MEASUREMENT: 'lm'}),
     ('LightSensor', 'sensor.light', '900', {ATTR_UNIT_OF_MEASUREMENT: 'lx'}),
-
     ('TemperatureSensor', 'sensor.temperature', '23',
      {ATTR_DEVICE_CLASS: 'temperature'}),
     ('TemperatureSensor', 'sensor.temperature', '23',
