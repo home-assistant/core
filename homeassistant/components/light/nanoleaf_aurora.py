@@ -29,9 +29,6 @@ DATA_NANOLEAF_AURORA = 'nanoleaf_aurora'
 
 CONFIG_FILE = '.nanoleaf_aurora.conf'
 
-NANOLEAF_AURORA_MIN_MIRED = 154
-NANOLEAF_AURORA_MAX_MIRED = 833
-
 ICON = 'mdi:triangle-outline'
 
 SUPPORT_AURORA = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
@@ -131,12 +128,12 @@ class AuroraLight(Light):
     @property
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
-        return NANOLEAF_AURORA_MIN_MIRED
+        return 154
 
     @property
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
-        return NANOLEAF_AURORA_MAX_MIRED
+        return 833
 
     @property
     def name(self):
