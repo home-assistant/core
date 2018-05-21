@@ -391,7 +391,6 @@ class ZhaEndpointEntity(entity.Entity):
     def __init__(self, endpoint, manufacturer, model, application_listener,
                  unique_id, keepalive_interval=7200, **kwargs):
         """Init ZHA endpoint entity."""
-
         self._device_state_attributes = {}
         ieee = endpoint.device.ieee
         ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
