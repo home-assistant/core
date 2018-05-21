@@ -6,29 +6,28 @@ import pytest
 from homeassistant import setup
 from homeassistant.core import State
 from homeassistant.components.homekit import (
-    HomeKit, generate_aid,
-    STATUS_READY, STATUS_RUNNING, STATUS_STOPPED, STATUS_WAIT)
+    generate_aid, HomeKit, STATUS_READY, STATUS_RUNNING,
+    STATUS_STOPPED, STATUS_WAIT)
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
-    DOMAIN, HOMEKIT_FILE, CONF_AUTO_START,
-    DEFAULT_PORT, SERVICE_HOMEKIT_START)
+    CONF_AUTO_START, DEFAULT_PORT, DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START)
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.const import (
     CONF_IP_ADDRESS, CONF_PORT,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
-from tests.components.homekit.test_accessories import patch_debounce
+from tests.components.homekit.common import patch_debounce
 
 IP_ADDRESS = '127.0.0.1'
 PATH_HOMEKIT = 'homeassistant.components.homekit'
 
 
-@pytest.fixture('module')
-def debounce_patcher(request):
+@pytest.fixture(scope='module')
+def debounce_patcher():
     """Patch debounce method."""
     patcher = patch_debounce()
-    patcher.start()
-    request.addfinalizer(patcher.stop)
+    yield patcher.start()
+    patcher.stop()
 
 
 def test_generate_aid():
@@ -124,27 +123,25 @@ async def test_homekit_setup_ip_address(hass):
         hass, ANY, port=DEFAULT_PORT, address='172.0.0.0', persist_file=ANY)
 
 
-async def test_homekit_add_accessory(hass):
+async def test_homekit_add_accessory():
     """Add accessory if config exists and get_acc returns an accessory."""
-    homekit = HomeKit(hass, None, None, lambda entity_id: True, {})
-    homekit.bridge = HomeBridge(hass)
+    homekit = HomeKit('hass', None, None, lambda entity_id: True, {})
+    homekit.bridge = mock_bridge = Mock()
 
-    with patch(PATH_HOMEKIT + '.accessories.HomeBridge.add_accessory') \
-        as mock_add_acc, \
-            patch(PATH_HOMEKIT + '.get_accessory') as mock_get_acc:
+    with patch(PATH_HOMEKIT + '.get_accessory') as mock_get_acc:
 
         mock_get_acc.side_effect = [None, 'acc', None]
         homekit.add_bridge_accessory(State('light.demo', 'on'))
-        mock_get_acc.assert_called_with(hass, ANY, 363398124, {})
-        assert mock_add_acc.called is False
+        mock_get_acc.assert_called_with('hass', ANY, 363398124, {})
+        assert not mock_bridge.add_accessory.called
 
         homekit.add_bridge_accessory(State('demo.test', 'on'))
-        mock_get_acc.assert_called_with(hass, ANY, 294192020, {})
-        assert mock_add_acc.called is True
+        mock_get_acc.assert_called_with('hass', ANY, 294192020, {})
+        assert mock_bridge.add_accessory.called
 
         homekit.add_bridge_accessory(State('demo.test_2', 'on'))
-        mock_get_acc.assert_called_with(hass, ANY, 429982757, {})
-        mock_add_acc.assert_called_with('acc')
+        mock_get_acc.assert_called_with('hass', ANY, 429982757, {})
+        mock_bridge.add_accessory.assert_called_with('acc')
 
 
 async def test_homekit_entity_filter(hass):
@@ -171,8 +168,8 @@ async def test_homekit_start(hass, debounce_patcher):
     """Test HomeKit start method."""
     pin = b'123-45-678'
     homekit = HomeKit(hass, None, None, {}, {'cover.demo': {}})
-    homekit.bridge = HomeBridge(hass)
-    homekit.driver = Mock(state=Mock(paired=False, pincode=pin))
+    homekit.bridge = Mock()
+    homekit.driver = mock_driver = Mock(state=Mock(paired=False, pincode=pin))
 
     hass.states.async_set('light.demo', 'on')
     state = hass.states.async_all()[0]
@@ -184,13 +181,13 @@ async def test_homekit_start(hass, debounce_patcher):
 
     mock_add_acc.assert_called_with(state)
     mock_setup_msg.assert_called_with(hass, pin)
-    assert homekit.driver.start.called is True
+    assert mock_driver.start.called is True
     assert homekit.status == STATUS_RUNNING
 
     # Test start() if already started
-    homekit.driver.reset_mock()
+    mock_driver.reset_mock()
     await hass.async_add_job(homekit.start)
-    assert homekit.driver.start.called is False
+    assert mock_driver.start.called is False
 
 
 async def test_homekit_stop(hass):
