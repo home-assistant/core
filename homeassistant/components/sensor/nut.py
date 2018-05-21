@@ -215,12 +215,12 @@ class NUTSensor(Entity):
     def device_state_attributes(self):
         """Return the sensor attributes."""
         attr = dict()
-        attr[ATTR_STATE] = self.operating_state() + " (" + \
+        attr[ATTR_STATE] = self.display_state() + " (" + \
             self._data.status[KEY_STATUS] + ")"
         return attr
 
-    def operating_state(self):
-        """Return UPS operating state."""
+    def display_state(self):
+        """Return UPS display state."""
         if self._data.status is None:
             return STATE_TYPES['OFF']
         else:
@@ -240,7 +240,7 @@ class NUTSensor(Entity):
         # In case of the display status sensor, keep a human-readable form
         # as the sensor state.
         if self.type == KEY_STATUS_DISPLAY:
-            self._state = self.operating_state()
+            self._state = self.display_state()
         elif self.type not in self._data.status:
             self._state = None
         else:
