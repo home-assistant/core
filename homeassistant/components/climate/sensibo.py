@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY, ClimateDevice, DOMAIN, PLATFORM_SCHEMA,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_ON_OFF)
+    SUPPORT_ON_OFF, SUPPORT_BATTERY)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -55,6 +55,7 @@ FIELD_TO_FLAG = {
     'swing': SUPPORT_SWING_MODE,
     'targetTemperature': SUPPORT_TARGET_TEMPERATURE,
     'on': SUPPORT_ON_OFF,
+    'battery': SUPPORT_BATTERY
 }
 
 
@@ -192,8 +193,8 @@ class SensiboClimate(ClimateDevice):
         return self._measurements['humidity']
 
     @property
-    def battery_voltage(self):
-        """Return the current battery level."""
+    def battery(self):
+        """Return the current battery state."""
         return self._measurements['batteryVoltage']
 
     @property
