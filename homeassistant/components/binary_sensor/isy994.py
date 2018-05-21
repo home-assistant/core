@@ -206,8 +206,7 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         an accompanying Control event, so we need to watch for it.
         """
         if self._status_was_unknown and self._computed_state is None:
-            # pylint: disable=protected-access
-            self._computed_state = bool(self._node.status._val)
+            self._computed_state = bool(int(self._node.status))
             self._status_was_unknown = False
             self.schedule_update_ha_state()
             self._heartbeat()
