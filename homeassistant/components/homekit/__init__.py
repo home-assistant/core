@@ -127,9 +127,8 @@ def get_accessory(hass, state, aid, config):
         a_type = 'Lock'
 
     elif state.domain == 'media_player':
-        config[CONF_MODE] = validate_media_player_modes(state, config)
-        if config[CONF_MODE] is not None:
-            a_type = 'MediaPlayer'
+        validate_media_player_modes(state, config)
+        a_type = 'MediaPlayer'
 
     elif state.domain == 'sensor':
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)

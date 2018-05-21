@@ -33,11 +33,9 @@ class MediaPlayer(HomeAccessory):
         super().__init__(*args, category=CATEGORY_SWITCH)
         self._flag = {ON_OFF: False, PLAY_PAUSE: False,
                       PLAY_STOP: False, TOGGLE_MUTE: False}
-
         self.chars = {ON_OFF: None, PLAY_PAUSE: None,
                       PLAY_STOP: None, TOGGLE_MUTE: None}
-
-        modes = self.config.get(CONF_MODE)
+        modes = self.config[CONF_MODE]
 
         if ON_OFF in modes:
             serv_on_off = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
@@ -112,8 +110,7 @@ class MediaPlayer(HomeAccessory):
         current_state = new_state.state
 
         if self.chars[ON_OFF]:
-            hk_state = current_state \
-                not in (STATE_OFF, STATE_UNKNOWN, 'None')
+            hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN, 'None')
             if not self._flag[ON_OFF]:
                 _LOGGER.debug('%s: Set current state for "on_off" to %s',
                               self.entity_id, hk_state)
@@ -138,9 +135,8 @@ class MediaPlayer(HomeAccessory):
 
         if self.chars[TOGGLE_MUTE]:
             current_state = new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED)
-            hk_state = current_state
             if not self._flag[TOGGLE_MUTE]:
                 _LOGGER.debug('%s: Set current state for "toggle_mute" to %s',
-                              self.entity_id, hk_state)
-                self.chars[TOGGLE_MUTE].set_value(hk_state)
+                              self.entity_id, current_state)
+                self.chars[TOGGLE_MUTE].set_value(current_state)
             self._flag[TOGGLE_MUTE] = False

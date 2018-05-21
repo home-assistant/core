@@ -2,12 +2,16 @@
 from unittest.mock import patch, Mock
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.core import State
 from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN
 from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
+from homeassistant.components.media_player import (
+    SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.components.homekit import get_accessory, TYPES
+from homeassistant.components.homekit.const import ON_OFF
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT, CONF_MODE, CONF_NAME, TEMP_CELSIUS,
@@ -24,6 +28,11 @@ def test_not_supported(caplog):
     assert caplog.records[0].levelname == 'WARNING'
     assert 'invalid aid' in caplog.records[0].msg
 
+    with pytest.raises(vol.Invalid):
+        attrs = {ATTR_SUPPORTED_FEATURES: SUPPORT_PAUSE | SUPPORT_SEEK}
+        entity_state = State('media_player.demo', 'on', attrs)
+        get_accessory(None, entity_state, 2, {CONF_MODE: [ON_OFF]})
+
 
 @pytest.mark.parametrize('config, name', [
     ({CONF_NAME: 'Customize Name'}, 'Customize Name'),
@@ -39,16 +48,13 @@ def test_customize_options(config, name):
 
 @pytest.mark.parametrize('type_name, entity_id, state, attrs, config', [
     ('Fan', 'fan.test', 'on', {}, {}),
-
     ('Light', 'light.test', 'on', {}, {}),
-
     ('Lock', 'lock.test', 'locked', {}, {ATTR_CODE: '1234'}),
-
-    ('MediaPlayer', 'media_player.test', 'on', {}, {CONF_MODE: 'on_off'}),
-
+    ('MediaPlayer', 'media_player.test', 'on',
+     {ATTR_SUPPORTED_FEATURES: SUPPORT_TURN_ON | SUPPORT_TURN_OFF},
+     {CONF_MODE: [ON_OFF]}),
     ('SecuritySystem', 'alarm_control_panel.test', 'armed', {},
      {ATTR_CODE: '1234'}),
-
     ('Thermostat', 'climate.test', 'auto', {}, {}),
     ('Thermostat', 'climate.test', 'auto',
      {ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_LOW |

@@ -3,7 +3,8 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.core import State
-from homeassistant.components.homekit.const import HOMEKIT_NOTIFY_ID
+from homeassistant.components.homekit.const import (
+    HOMEKIT_NOTIFY_ID, ON_OFF, PLAY_PAUSE)
 from homeassistant.components.homekit.util import (
     convert_to_float, density_to_air_quality, dismiss_setup_message,
     show_setup_message, temperature_to_homekit, temperature_to_states,
@@ -43,21 +44,23 @@ def test_validate_entity_config():
     assert vec({'lock.demo': {ATTR_CODE: '1234'}}) == \
         {'lock.demo': {ATTR_CODE: '1234'}}
 
-    assert vec({'media_player.demo': {}}) == {'media_player.demo': {}}
-    assert vec({'media_player.demo': {CONF_MODE: 'on_off'}}) == \
-        {'media_player.demo': {CONF_MODE: ['on_off']}}
+    assert vec({'media_player.demo': {}}) == \
+        {'media_player.demo': {CONF_MODE: []}}
+    assert vec({'media_player.demo': {CONF_MODE: [ON_OFF]}}) == \
+        {'media_player.demo': {CONF_MODE: [ON_OFF]}}
 
 
-@pytest.mark.parametrize('config, attrs, validated_modes', [
-    ({}, {ATTR_SUPPORTED_FEATURES: 20873},
-     ['on_off', 'play_pause', 'play_stop', 'toggle_mute']),
-    ({CONF_MODE: ['on_off', 'play_pause']}, {ATTR_SUPPORTED_FEATURES: 384},
-     ['on_off']),
-])
-def test_validate_media_player_modes(config, attrs, validated_modes):
-    """Test validating modes for media playeres."""
+def test_validate_media_player_modes():
+    """Test validate modes for media playeres."""
+    attrs = {ATTR_SUPPORTED_FEATURES: 20873}
     entity_state = State('media_player.demo', 'on', attrs)
-    assert validate_media_player_modes(entity_state, config) == validated_modes
+    validate_media_player_modes(entity_state, {CONF_MODE: []})
+
+    attrs = {ATTR_SUPPORTED_FEATURES: 384}
+    entity_state = State('media_player.demo', 'on', attrs)
+    config = {CONF_MODE: [ON_OFF, PLAY_PAUSE]}
+    with pytest.raises(vol.Invalid):
+        validate_media_player_modes(entity_state, config)
 
 
 def test_convert_to_float():
