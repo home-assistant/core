@@ -192,6 +192,11 @@ class SensiboClimate(ClimateDevice):
         return self._measurements['humidity']
 
     @property
+    def battery_voltage(self):
+        """Return the current battery level."""
+        return self._measurements['batteryVoltage']
+
+    @property
     def current_temperature(self):
         """Return the current temperature."""
         # This field is not affected by temperatureUnit.
