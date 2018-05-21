@@ -117,8 +117,10 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         # pylint: disable=protected-access
         if _is_val_unknown(self._node.status._val):
             self._computed_state = None
+            self._status_was_unknown = True
         else:
             self._computed_state = bool(self._node.status._val)
+            self._status_was_unknown = False
 
     @asyncio.coroutine
     def async_added_to_hass(self) -> None:
@@ -156,9 +158,13 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         # pylint: disable=protected-access
         if not _is_val_unknown(self._negative_node.status._val):
             # If the negative node has a value, it means the negative node is
-            # in use for this device. Therefore, we cannot determine the state
-            # of the sensor until we receive our first ON event.
-            self._computed_state = None
+            # in use for this device. Next we need to check to see if the
+            # negative and positive nodes disagree on the state (both ON or
+            # both OFF).
+            if self._negative_node.status._val == self._node.status._val:
+                # The states disagree, therefore we cannot determine the state
+                # of the sensor until we receive our first ON event.
+                self._computed_state = None
 
     def _negative_node_control_handler(self, event: object) -> None:
         """Handle an "On" control event from the "negative" node."""
@@ -189,14 +195,21 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
             self.schedule_update_ha_state()
             self._heartbeat()
 
-    # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
-        """Ignore primary node status updates.
+        """Primary node status updates.
 
-        We listen directly to the Control events on all nodes for this
-        device.
+        We MOSTLY ignore these updates, as we listen directly to the Control
+        events on all nodes for this device. However, there is one edge case:
+        If a leak sensor is unknown, due to a recent reboot of the ISY, the
+        status will get updated to dry upon the first heartbeat. This status
+        update is the only way that a leak sensor's status changes without
+        an accompanying Control event, so we need to watch for it.
         """
-        pass
+        if self._status_was_unknown and self._computed_state is None:
+            self._computed_state = bool(int(self._node.status))
+            self._status_was_unknown = False
+            self.schedule_update_ha_state()
+            self._heartbeat()
 
     @property
     def value(self) -> object:
