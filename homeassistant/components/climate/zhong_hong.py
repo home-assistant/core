@@ -12,13 +12,14 @@ from homeassistant.components.climate import (
     PLATFORM_SCHEMA, SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, CONF_PORT,
-                                 TEMP_CELSIUS)
+                                 EVENT_HOMEASSISTANT_START, TEMP_CELSIUS)
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.temperature import convert as convert_temperature
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_GW_ADDR = 'gw_addr'
+CONF_GATEWAY_ADDRRESS = 'gateway_address'
 
 REQUIREMENTS = ['zhong_hong_hvac==1.0.1']
 
@@ -27,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.string,
     vol.Optional(CONF_PORT, default=9999):
     vol.Coerce(int),
-    vol.Optional(CONF_GW_ADDR, default=1):
+    vol.Optional(CONF_GATEWAY_ADDRRESS, default=1):
     vol.Coerce(int),
 })
 
@@ -37,22 +38,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from zhong_hong_hvac.hub import ZhongHongGateway
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    gw_addr = config.get(CONF_GW_ADDR)
+    gw_addr = config.get(CONF_GATEWAY_ADDRRESS)
     hub = ZhongHongGateway(host, port, gw_addr)
-    devices = [
-        ZhongHongClimate(hub, addr_out, addr_in)
-        for (addr_out, addr_in) in hub.discovery_ac()
-    ]
-    add_devices(devices)
-    hub.start_listen()
-    hub.query_all_status()
+    try:
+        devices = [
+            ZhongHongClimate(hub, addr_out, addr_in)
+            for (addr_out, addr_in) in hub.discovery_ac()
+        ]
+    except Exception as exc:
+        _LOGGER.error("ZhongHong controller is not ready", exc_info=exc)
+        raise PlatformNotReady
+
+    def startup(event):
+        """Add devices to HA and start hub socket."""
+        add_devices(devices)
+        hub.start_listen()
+        hub.query_all_status()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, startup)
 
 
 class ZhongHongClimate(ClimateDevice):
     """Representation of a ZhongHong controller support HVAC."""
 
     def __init__(self, hub, addr_out, addr_in):
-        """Setup platform."""
+        """Set up the ZhongHong climate devices."""
         from zhong_hong_hvac.hvac import HVAC
         self._device = HVAC(hub, addr_out, addr_in)
         self._hub = hub
@@ -76,8 +86,8 @@ class ZhongHongClimate(ClimateDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the HVAC."""
-        return "zhong_hong_hvac_%s_%s" % (self._device.addr_out,
-                                          self._device.addr_in)
+        return "zhong_hong_hvac_{}_{}".format(self._device.addr_out,
+                                              self._device.addr_in)
 
     @property
     def supported_features(self):
