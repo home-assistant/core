@@ -99,6 +99,7 @@ def setup(hass, config):
 
     return True
 
+
 def subscribe_events(hass, doorstation):
     """Initialize the subscriber."""
     for sensor_type in doorstation.monitored_events:
