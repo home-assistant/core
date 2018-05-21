@@ -215,8 +215,7 @@ class NUTSensor(Entity):
     def device_state_attributes(self):
         """Return the sensor attributes."""
         attr = dict()
-        attr[ATTR_STATE] = "{} ({})".format(self.display_state(),
-                                            self._data.status[KEY_STATUS])
+        attr[ATTR_STATE] = self.display_state()
         return attr
 
     def display_state(self):
