@@ -14,7 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['sisyphus-control==1.1.1']
+REQUIREMENTS = ['sisyphus-control==2.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,12 +39,13 @@ CONFIG_SCHEMA = vol.Any(AUTODETECT_SCHEMA, TABLES_SCHEMA)
 
 async def async_setup(hass, config):
     """Set up the sisyphus component."""
-    import sisyphus.control
+    from sisyphus_control import Table
     tables = hass.data.setdefault(DATA_SISYPHUS, {})
     table_configs = config.get(DOMAIN)
 
     async def add_table(host, name=None):
-        table = await sisyphus.control.Table.connect(host)
+        """Adds platforms for a single table with the given hostname"""
+        table = await Table.connect(host)
         if name is None:
             name = table.name
         tables[name] = table
@@ -63,14 +64,15 @@ async def async_setup(hass, config):
         ))
 
     if isinstance(table_configs, dict):  # AUTODETECT_SCHEMA
-        for ip in await sisyphus.control.Table.find_table_ips():
-            await add_table(ip)
+        for ip_address in await Table.find_table_ips():
+            await add_table(ip_address)
     else:  # TABLES_SCHEMA
         for conf in table_configs:
             if conf.get(CONF_HOST) is not None:
                 await add_table(conf.get(CONF_HOST), conf.get(CONF_NAME))
 
     async def close_tables(*args):
+        """Closes all table objects"""
         for table in tables.values():
             await table.close()
 

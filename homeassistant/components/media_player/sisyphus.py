@@ -84,8 +84,8 @@ class SisyphusPlayer(MediaPlayerDevice):
         elif self._table.state == "paused":
             if self._table.is_sleeping:
                 return STATE_OFF
-            else:
-                return STATE_PAUSED
+
+            return STATE_PAUSED
         elif self._table.state == "waiting":
             return STATE_IDLE
         raise Exception("Unknown state: {0}".format(self._table.state))
@@ -149,18 +149,18 @@ class SisyphusPlayer(MediaPlayerDevice):
                     features |= SUPPORT_NEXT_TRACK
 
             return features
-        else:
-            return ALWAYS_FEATURES | SUPPORT_PLAY
+
+        return ALWAYS_FEATURES | SUPPORT_PLAY
 
     @property
     def media_image_url(self):
         """Return the URL for a thumbnail image of the current track."""
-        from sisyphus.control import Track
+        from sisyphus_control import Track
         if self._table.active_track:
             return self._table.active_track.get_thumbnail_url(
                 Track.ThumbnailSize.LARGE)
-        else:
-            return super.media_image_url()
+
+        return super.media_image_url()
 
     async def async_turn_on(self):
         """Wake up a sleeping table."""
