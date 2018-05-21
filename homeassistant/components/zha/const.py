@@ -48,10 +48,7 @@ def populate_data():
         zcl.clusters.measurement.RelativeHumidity: 'sensor',
         zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
         zcl.clusters.measurement.PressureMeasurement: 'sensor',
-<<<<<<< Upstream, based on upstream/dev
         zcl.clusters.measurement.IlluminanceMeasurement: 'sensor',
-=======
->>>>>>> ab616b7 zha: Add metering sensor (#14562)
         zcl.clusters.smartenergy.Metering: 'sensor',
         zcl.clusters.homeautomation.ElectricalMeasurement: 'sensor',
         zcl.clusters.security.IasZone: 'binary_sensor',

@@ -44,11 +44,8 @@ def make_sensor(discovery_info):
         sensor = TemperatureSensor(**discovery_info)
     elif PressureMeasurement.cluster_id in in_clusters:
         sensor = PressureSensor(**discovery_info)
-<<<<<<< Upstream, based on upstream/dev
     elif IlluminanceMeasurement.cluster_id in in_clusters:
         sensor = IlluminanceMeasurementSensor(**discovery_info)
-=======
->>>>>>> ab616b7 zha: Add metering sensor (#14562)
     elif Metering.cluster_id in in_clusters:
         sensor = MeteringSensor(**discovery_info)
     elif ElectricalMeasurement.cluster_id in in_clusters:
@@ -158,7 +155,6 @@ class PressureSensor(Sensor):
         return round(float(self._state))
 
 
-<<<<<<< Upstream, based on upstream/dev
 class IlluminanceMeasurementSensor(Sensor):
     """ZHA lux sensor."""
 
@@ -173,8 +169,6 @@ class IlluminanceMeasurementSensor(Sensor):
         return self._state
 
 
-=======
->>>>>>> ab616b7 zha: Add metering sensor (#14562)
 class MeteringSensor(Sensor):
     """ZHA Metering sensor."""
 
