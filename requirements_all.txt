@@ -1388,7 +1388,7 @@ zeroconf==0.20.0
 ziggo-mediabox-xl==1.0.0
 
 # homeassistant.components.zha
-zigpy-xbee==0.1.0
+zigpy-xbee==0.1.1
 
 # homeassistant.components.zha
 zigpy==0.1.0
