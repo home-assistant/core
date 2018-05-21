@@ -54,7 +54,7 @@ def test_validate_media_player_modes():
     """Test validate modes for media playeres."""
     attrs = {ATTR_SUPPORTED_FEATURES: 20873}
     entity_state = State('media_player.demo', 'on', attrs)
-    validate_media_player_modes(entity_state, {CONF_MODE: []})
+    validate_media_player_modes(entity_state, {})
 
     attrs = {ATTR_SUPPORTED_FEATURES: 384}
     entity_state = State('media_player.demo', 'on', attrs)

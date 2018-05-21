@@ -67,7 +67,7 @@ def validate_media_player_modes(state, config):
     if features & SUPPORT_VOLUME_MUTE:
         supported_modes.append(TOGGLE_MUTE)
 
-    if not config[CONF_MODE]:
+    if not config.get(CONF_MODE):
         config[CONF_MODE] = supported_modes
         return
 

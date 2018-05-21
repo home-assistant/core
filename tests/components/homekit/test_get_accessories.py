@@ -28,10 +28,18 @@ def test_not_supported(caplog):
     assert caplog.records[0].levelname == 'WARNING'
     assert 'invalid aid' in caplog.records[0].msg
 
+
+def test_not_supported_media_player():
+    """Test if mode isn't supported and if no supported modes."""
+    # selected mode for entity not supported
     with pytest.raises(vol.Invalid):
         attrs = {ATTR_SUPPORTED_FEATURES: SUPPORT_PAUSE | SUPPORT_SEEK}
         entity_state = State('media_player.demo', 'on', attrs)
         get_accessory(None, entity_state, 2, {CONF_MODE: [ON_OFF]})
+
+    # no supported modes for entity
+    entity_state = State('media_player.demo', 'on')
+    assert get_accessory(None, entity_state, 2, {}) is None
 
 
 @pytest.mark.parametrize('config, name', [
