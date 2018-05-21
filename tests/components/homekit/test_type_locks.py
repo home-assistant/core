@@ -4,7 +4,7 @@ import pytest
 from homeassistant.components.homekit.type_locks import Lock
 from homeassistant.components.lock import DOMAIN
 from homeassistant.const import (
-    ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN, STATE_UNLOCKED, STATE_LOCKED)
+    ATTR_CODE, ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED)
 
 from tests.common import async_mock_service
 

@@ -3,7 +3,7 @@ import pytest
 
 from homeassistant.core import split_entity_id
 from homeassistant.components.homekit.type_switches import Switch
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_OFF
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 
 from tests.common import async_mock_service
 
