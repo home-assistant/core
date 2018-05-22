@@ -22,6 +22,7 @@ DOMAIN = 'doorbird'
 API_URL = '/api/{}'.format(DOMAIN)
 
 CONF_DOORBELL_EVENTS = 'doorbell_events'
+CONF_MOTION_EVENTS = 'motion_events'
 CONF_CUSTOM_URL = 'hass_url_override'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -30,11 +31,13 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_DOORBELL_EVENTS): cv.boolean,
+        vol.Optional(CONF_MOTION_EVENTS): cv.boolean,
         vol.Optional(CONF_CUSTOM_URL): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
 SENSOR_DOORBELL = 'doorbell'
+SENSOR_MOTION = 'motionsensor'
 
 
 def setup(hass, config):
@@ -59,7 +62,8 @@ def setup(hass, config):
                       device_ip, str(status[1]))
         return False
 
-    if config[DOMAIN].get(CONF_DOORBELL_EVENTS):
+    if (config[DOMAIN].get(CONF_DOORBELL_EVENTS) or
+            config[DOMAIN].get(CONF_MOTION_EVENTS)):
         # Provide an endpoint for the device to call to trigger events
         hass.http.register_view(DoorbirdRequestView())
 
@@ -71,11 +75,17 @@ def setup(hass, config):
             hass_url = config[DOMAIN].get(CONF_CUSTOM_URL)
             _LOGGER.info("DoorBird will connect to this instance via %s",
                          hass_url)
-
         # This will make HA the only service that gets doorbell events
-        url = '{}{}/{}'.format(hass_url, API_URL, SENSOR_DOORBELL)
         device.reset_notifications()
-        device.subscribe_notification(SENSOR_DOORBELL, url)
+
+        if config[DOMAIN].get(CONF_DOORBELL_EVENTS):
+            url = '{}{}/{}'.format(hass_url, API_URL, SENSOR_DOORBELL)
+            device.subscribe_notification(SENSOR_DOORBELL, url)
+            _LOGGER.info("DoorBird subscribing to %s", url)
+        if config[DOMAIN].get(CONF_MOTION_EVENTS):
+            url = '{}{}/{}'.format(hass_url, API_URL, SENSOR_MOTION)
+            device.subscribe_notification(SENSOR_MOTION, url)
+            _LOGGER.info("DoorBird subscribing to %s", url)
 
     return True
 
