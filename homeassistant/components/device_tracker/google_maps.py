@@ -12,14 +12,18 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, SOURCE_TYPE_GPS)
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, ATTR_ID
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import slugify
+
+REQUIREMENTS = ['locationsharinglib==2.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['locationsharinglib==1.2.2']
+ATTR_ADDRESS = 'address'
+ATTR_FULL_NAME = 'full_name'
+ATTR_LAST_SEEN = 'last_seen'
+ATTR_NICKNAME = 'nickname'
 
 CREDENTIALS_FILE = '.google_maps_location_sharing.cookies'
 
@@ -60,19 +64,23 @@ class GoogleMapsScanner(object):
             self.success_init = True
 
         except InvalidUser:
-            _LOGGER.error('You have specified invalid login credentials')
+            _LOGGER.error("You have specified invalid login credentials")
             self.success_init = False
 
     def _update_info(self, now=None):
         for person in self.service.get_all_people():
-            dev_id = 'google_maps_{0}'.format(slugify(person.id))
+            try:
+                dev_id = 'google_maps_{0}'.format(person.id)
+            except TypeError:
+                _LOGGER.warning("No location(s) shared with this account")
+                return
 
             attrs = {
-                'id': person.id,
-                'nickname': person.nickname,
-                'full_name': person.full_name,
-                'last_seen': person.datetime,
-                'address': person.address
+                ATTR_ADDRESS: person.address,
+                ATTR_FULL_NAME: person.full_name,
+                ATTR_ID: person.id,
+                ATTR_LAST_SEEN: person.datetime,
+                ATTR_NICKNAME: person.nickname,
             }
             self.see(
                 dev_id=dev_id,
@@ -80,5 +88,5 @@ class GoogleMapsScanner(object):
                 picture=person.picture_url,
                 source_type=SOURCE_TYPE_GPS,
                 gps_accuracy=person.accuracy,
-                attributes=attrs
+                attributes=attrs,
             )

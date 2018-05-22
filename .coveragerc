@@ -153,6 +153,9 @@ omit =
     homeassistant/components/knx.py
     homeassistant/components/*/knx.py
 
+    homeassistant/components/konnected.py
+    homeassistant/components/*/konnected.py
+
     homeassistant/components/lametric.py
     homeassistant/components/*/lametric.py
 
@@ -347,6 +350,7 @@ omit =
     homeassistant/components/calendar/todoist.py
     homeassistant/components/camera/bloomsky.py
     homeassistant/components/camera/canary.py
+    homeassistant/components/camera/familyhub.py
     homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
@@ -417,7 +421,6 @@ omit =
     homeassistant/components/emoncms_history.py
     homeassistant/components/emulated_hue/upnp.py
     homeassistant/components/fan/mqtt.py
-    homeassistant/components/feedreader.py
     homeassistant/components/folder_watcher.py
     homeassistant/components/foursquare.py
     homeassistant/components/goalfeed.py
@@ -539,7 +542,6 @@ omit =
     homeassistant/components/notify/rest.py
     homeassistant/components/notify/rocketchat.py
     homeassistant/components/notify/sendgrid.py
-    homeassistant/components/notify/simplepush.py
     homeassistant/components/notify/slack.py
     homeassistant/components/notify/smtp.py
     homeassistant/components/notify/stride.py
@@ -597,6 +599,7 @@ omit =
     homeassistant/components/sensor/fastdotcom.py
     homeassistant/components/sensor/fedex.py
     homeassistant/components/sensor/filesize.py
+    homeassistant/components/sensor/fints.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/folder.py

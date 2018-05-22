@@ -30,7 +30,7 @@ def validate_entity_config(values):
 
         domain, _ = split_entity_id(entity)
 
-        if domain == 'alarm_control_panel':
+        if domain in ('alarm_control_panel', 'lock'):
             code = config.get(ATTR_CODE)
             params[ATTR_CODE] = cv.string(code) if code else None
 
@@ -38,9 +38,9 @@ def validate_entity_config(values):
     return entities
 
 
-def show_setup_message(hass, bridge):
+def show_setup_message(hass, pincode):
     """Display persistent notification with setup information."""
-    pin = bridge.pincode.decode()
+    pin = pincode.decode()
     _LOGGER.info('Pincode: %s', pin)
     message = 'To setup Home Assistant in the Home App, enter the ' \
               'following code:\n### {}'.format(pin)

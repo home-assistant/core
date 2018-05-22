@@ -4,26 +4,26 @@ from collections import namedtuple
 import pytest
 
 from homeassistant.components.light import (
-    DOMAIN, ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP,
-    ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR)
+    ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP, ATTR_HS_COLOR,
+    DOMAIN, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
     STATE_ON, STATE_OFF, STATE_UNKNOWN)
 
 from tests.common import async_mock_service
-from tests.components.homekit.test_accessories import patch_debounce
+from tests.components.homekit.common import patch_debounce
 
 
 @pytest.fixture(scope='module')
-def cls(request):
+def cls():
     """Patch debounce decorator during import of type_lights."""
     patcher = patch_debounce()
     patcher.start()
     _import = __import__('homeassistant.components.homekit.type_lights',
                          fromlist=['Light'])
-    request.addfinalizer(patcher.stop)
     patcher_tuple = namedtuple('Cls', ['light'])
-    return patcher_tuple(light=_import.Light)
+    yield patcher_tuple(light=_import.Light)
+    patcher.stop()
 
 
 async def test_light_basic(hass, cls):

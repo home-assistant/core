@@ -13,12 +13,13 @@ import voluptuous as vol
 
 from homeassistant.components import SERVICE_CHECK_CONFIG
 from homeassistant.const import (
-    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP)
+    ATTR_NAME, SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP)
 from homeassistant.core import DOMAIN as HASS_DOMAIN
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
+
 from .handler import HassIO
 from .http import HassIOView
 
@@ -47,7 +48,6 @@ ATTR_SNAPSHOT = 'snapshot'
 ATTR_ADDONS = 'addons'
 ATTR_FOLDERS = 'folders'
 ATTR_HOMEASSISTANT = 'homeassistant'
-ATTR_NAME = 'name'
 ATTR_PASSWORD = 'password'
 
 SCHEMA_NO_DATA = vol.Schema({})

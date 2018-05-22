@@ -4,27 +4,27 @@ from collections import namedtuple
 import pytest
 
 from homeassistant.components.climate import (
-    DOMAIN, ATTR_CURRENT_TEMPERATURE, ATTR_TEMPERATURE,
-    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, ATTR_OPERATION_MODE,
-    ATTR_OPERATION_LIST, STATE_COOL, STATE_HEAT, STATE_AUTO)
+    ATTR_CURRENT_TEMPERATURE, ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_HIGH, ATTR_OPERATION_MODE, ATTR_OPERATION_LIST,
+    DOMAIN, STATE_AUTO, STATE_COOL, STATE_HEAT)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.common import async_mock_service
-from tests.components.homekit.test_accessories import patch_debounce
+from tests.components.homekit.common import patch_debounce
 
 
 @pytest.fixture(scope='module')
-def cls(request):
+def cls():
     """Patch debounce decorator during import of type_thermostats."""
     patcher = patch_debounce()
     patcher.start()
     _import = __import__('homeassistant.components.homekit.type_thermostats',
                          fromlist=['Thermostat'])
-    request.addfinalizer(patcher.stop)
     patcher_tuple = namedtuple('Cls', ['thermostat'])
-    return patcher_tuple(thermostat=_import.Thermostat)
+    yield patcher_tuple(thermostat=_import.Thermostat)
+    patcher.stop()
 
 
 async def test_default_thermostat(hass, cls):

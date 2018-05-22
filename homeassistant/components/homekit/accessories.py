@@ -84,20 +84,21 @@ class HomeAccessory(Accessory):
         async_track_state_change(
             self.hass, self.entity_id, self.update_state_callback)
 
+    @ha_callback
     def update_state_callback(self, entity_id=None, old_state=None,
                               new_state=None):
         """Callback from state change listener."""
         _LOGGER.debug('New_state: %s', new_state)
         if new_state is None:
             return
-        self.update_state(new_state)
+        self.hass.async_add_job(self.update_state, new_state)
 
     def update_state(self, new_state):
         """Method called on state change to update HomeKit value.
 
         Overridden by accessory types.
         """
-        pass
+        raise NotImplementedError()
 
 
 class HomeBridge(Bridge):
@@ -115,20 +116,23 @@ class HomeBridge(Bridge):
         """Prevent print of pyhap setup message to terminal."""
         pass
 
-    def add_paired_client(self, client_uuid, client_public):
-        """Override super function to dismiss setup message if paired."""
-        super().add_paired_client(client_uuid, client_public)
-        dismiss_setup_message(self.hass)
-
-    def remove_paired_client(self, client_uuid):
-        """Override super function to show setup message if unpaired."""
-        super().remove_paired_client(client_uuid)
-        show_setup_message(self.hass, self)
-
 
 class HomeDriver(AccessoryDriver):
     """Adapter class for AccessoryDriver."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, hass, *args, **kwargs):
         """Initialize a AccessoryDriver object."""
         super().__init__(*args, **kwargs)
+        self.hass = hass
+
+    def pair(self, client_uuid, client_public):
+        """Override super function to dismiss setup message if paired."""
+        value = super().pair(client_uuid, client_public)
+        if value:
+            dismiss_setup_message(self.hass)
+        return value
+
+    def unpair(self, client_uuid):
+        """Override super function to show setup message if unpaired."""
+        super().unpair(client_uuid)
+        show_setup_message(self.hass, self.state.pincode)

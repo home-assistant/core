@@ -5,20 +5,16 @@ This includes tests for all mock object types.
 from datetime import datetime, timedelta
 from unittest.mock import patch, Mock
 
+import pytest
+
 from homeassistant.components.homekit.accessories import (
     debounce, HomeAccessory, HomeBridge, HomeDriver)
 from homeassistant.components.homekit.const import (
-    BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER, SERV_ACCESSORY_INFO,
-    CHAR_FIRMWARE_REVISION, CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME,
-    CHAR_SERIAL_NUMBER, MANUFACTURER)
+    BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER, CHAR_FIRMWARE_REVISION,
+    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER,
+    MANUFACTURER, SERV_ACCESSORY_INFO)
 from homeassistant.const import __version__, ATTR_NOW, EVENT_TIME_CHANGED
 import homeassistant.util.dt as dt_util
-
-
-def patch_debounce():
-    """Return patch for debounce method."""
-    return patch('homeassistant.components.homekit.accessories.debounce',
-                 lambda f: lambda *args, **kwargs: f(*args, **kwargs))
 
 
 async def test_debounce(hass):
@@ -74,20 +70,23 @@ async def test_home_accessory(hass):
     assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == \
         'homekit.accessory'
 
-    hass.states.async_set('homekit.accessory', 'on')
+    hass.states.async_set(entity_id, 'on')
     await hass.async_block_till_done()
-    await hass.async_add_job(acc.run)
-    hass.states.async_set('homekit.accessory', 'off')
-    await hass.async_block_till_done()
+    with patch('homeassistant.components.homekit.accessories.'
+               'HomeAccessory.update_state') as mock_update_state:
+        await hass.async_add_job(acc.run)
+        state = hass.states.get(entity_id)
+        mock_update_state.assert_called_with(state)
 
-    entity_id = 'test_model.demo'
-    hass.states.async_set(entity_id, None)
-    await hass.async_block_till_done()
+        hass.states.async_remove(entity_id)
+        await hass.async_block_till_done()
+        assert mock_update_state.call_count == 1
 
-    acc = HomeAccessory('hass', 'test_name', entity_id, 2, None)
-    assert acc.display_name == 'test_name'
-    assert acc.aid == 2
-    assert len(acc.services) == 1
+    with pytest.raises(NotImplementedError):
+        acc.update_state('new_state')
+
+    # Test model name from domain
+    acc = HomeAccessory('hass', 'test_name', 'test_model.demo', 2, None)
     serv = acc.services[0]  # SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_MODEL).value == 'Test Model'
 
@@ -116,26 +115,6 @@ def test_home_bridge():
     # setup_message
     bridge.setup_message()
 
-    # add_paired_client
-    with patch('pyhap.accessory.Accessory.add_paired_client') \
-        as mock_add_paired_client, \
-        patch('homeassistant.components.homekit.accessories.'
-              'dismiss_setup_message') as mock_dissmiss_msg:
-        bridge.add_paired_client('client_uuid', 'client_public')
-
-    mock_add_paired_client.assert_called_with('client_uuid', 'client_public')
-    mock_dissmiss_msg.assert_called_with('hass')
-
-    # remove_paired_client
-    with patch('pyhap.accessory.Accessory.remove_paired_client') \
-        as mock_remove_paired_client, \
-        patch('homeassistant.components.homekit.accessories.'
-              'show_setup_message') as mock_show_msg:
-        bridge.remove_paired_client('client_uuid')
-
-    mock_remove_paired_client.assert_called_with('client_uuid')
-    mock_show_msg.assert_called_with('hass', bridge)
-
 
 def test_home_driver():
     """Test HomeDriver class."""
@@ -143,9 +122,30 @@ def test_home_driver():
     ip_address = '127.0.0.1'
     port = 51826
     path = '.homekit.state'
+    pin = b'123-45-678'
 
     with patch('pyhap.accessory_driver.AccessoryDriver.__init__') \
             as mock_driver:
-        HomeDriver(bridge, ip_address, port, path)
+        driver = HomeDriver('hass', bridge, ip_address, port, path)
 
     mock_driver.assert_called_with(bridge, ip_address, port, path)
+    driver.state = Mock(pincode=pin)
+
+    # pair
+    with patch('pyhap.accessory_driver.AccessoryDriver.pair') as mock_pair, \
+        patch('homeassistant.components.homekit.accessories.'
+              'dismiss_setup_message') as mock_dissmiss_msg:
+        driver.pair('client_uuid', 'client_public')
+
+    mock_pair.assert_called_with('client_uuid', 'client_public')
+    mock_dissmiss_msg.assert_called_with('hass')
+
+    # unpair
+    with patch('pyhap.accessory_driver.AccessoryDriver.unpair') \
+        as mock_unpair, \
+        patch('homeassistant.components.homekit.accessories.'
+              'show_setup_message') as mock_show_msg:
+        driver.unpair('client_uuid')
+
+    mock_unpair.assert_called_with('client_uuid')
+    mock_show_msg.assert_called_with('hass', pin)

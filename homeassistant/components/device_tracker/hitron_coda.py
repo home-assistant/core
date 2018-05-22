@@ -55,7 +55,7 @@ class HitronCODADeviceScanner(DeviceScanner):
         if config.get(CONF_TYPE) == "shaw":
             self._type = 'pwd'
         else:
-            self.type = 'pws'
+            self._type = 'pws'
 
         self._userid = None
 

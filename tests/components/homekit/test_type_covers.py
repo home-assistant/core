@@ -4,28 +4,28 @@ from collections import namedtuple
 import pytest
 
 from homeassistant.components.cover import (
-    DOMAIN, ATTR_CURRENT_POSITION, ATTR_POSITION, SUPPORT_STOP)
+    ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN, SUPPORT_STOP)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
     STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE, STATE_UNKNOWN)
 
 from tests.common import async_mock_service
-from tests.components.homekit.test_accessories import patch_debounce
+from tests.components.homekit.common import patch_debounce
 
 
 @pytest.fixture(scope='module')
-def cls(request):
+def cls():
     """Patch debounce decorator during import of type_covers."""
     patcher = patch_debounce()
     patcher.start()
     _import = __import__('homeassistant.components.homekit.type_covers',
                          fromlist=['GarageDoorOpener', 'WindowCovering,',
                                    'WindowCoveringBasic'])
-    request.addfinalizer(patcher.stop)
     patcher_tuple = namedtuple('Cls', ['window', 'window_basic', 'garage'])
-    return patcher_tuple(window=_import.WindowCovering,
-                         window_basic=_import.WindowCoveringBasic,
-                         garage=_import.GarageDoorOpener)
+    yield patcher_tuple(window=_import.WindowCovering,
+                        window_basic=_import.WindowCoveringBasic,
+                        garage=_import.GarageDoorOpener)
+    patcher.stop()
 
 
 async def test_garage_door_open_close(hass, cls):

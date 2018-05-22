@@ -33,9 +33,9 @@ class Switch(HomeAccessory):
         _LOGGER.debug('%s: Set switch state to %s',
                       self.entity_id, value)
         self.flag_target_state = True
+        params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.hass.services.call(self._domain, service,
-                                {ATTR_ENTITY_ID: self.entity_id})
+        self.hass.services.call(self._domain, service, params)
 
     def update_state(self, new_state):
         """Update switch state after state changed."""
