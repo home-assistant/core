@@ -4,6 +4,7 @@ Support for Plum Lightpad switches.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/plum_lightpad
 """
+import logging
 import warnings
 
 import voluptuous as vol
@@ -17,6 +18,8 @@ from homeassistant.helpers import discovery
 
 REQUIREMENTS = ['plumlightpad==0.0.9']
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'plum_lightpad'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -27,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Setup the Plum Lightpad component."""
     from plumlightpad import Plum
 
@@ -43,7 +46,7 @@ async def async_setup(hass, config):
     def cleanup(event):
         """Clean up resources."""
         plum.cleanup()
-        # shut down listeners, ports, etc.
+
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 
@@ -51,6 +54,6 @@ async def async_setup(hass, config):
     discovery.load_platform(hass, 'sensor', DOMAIN, None, conf)
     discovery.load_platform(hass, 'binary_sensor', DOMAIN, None, conf)
 
-    hass.async_add_job(plum.discover(hass.loop))
+    hass.add_job(plum.discover(hass.loop))
 
     return True
