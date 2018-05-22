@@ -139,7 +139,8 @@ def setup(hass, config):
     xiaomi.listen()
     _LOGGER.debug("Gateways discovered. Listening for broadcasts")
 
-    for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover']:
+    for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover',
+                      'lock']:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     def stop_xiaomi(event):
