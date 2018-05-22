@@ -919,7 +919,7 @@ pypollencom==1.1.2
 pyqwikswitch==0.8
 
 # homeassistant.components.rainbird
-pyrainbird==0.1.4
+pyrainbird==0.1.5
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.0.1
