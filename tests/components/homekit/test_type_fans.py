@@ -4,15 +4,15 @@ from collections import namedtuple
 import pytest
 
 from homeassistant.components.fan import (
-    ATTR_DIRECTION, ATTR_OSCILLATING,
-    DIRECTION_FORWARD, DIRECTION_REVERSE, DOMAIN, SERVICE_OSCILLATE,
-    SERVICE_SET_DIRECTION, SUPPORT_DIRECTION, SUPPORT_OSCILLATE)
+    ATTR_DIRECTION, ATTR_OSCILLATING, DIRECTION_FORWARD, DIRECTION_REVERSE,
+    DOMAIN, SERVICE_OSCILLATE, SERVICE_SET_DIRECTION,
+    SUPPORT_DIRECTION, SUPPORT_OSCILLATE)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
-    STATE_ON, STATE_OFF, STATE_UNKNOWN, SERVICE_TURN_ON, SERVICE_TURN_OFF)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF,
+    STATE_UNKNOWN, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 
 from tests.common import async_mock_service
-from tests.components.homekit.test_accessories import patch_debounce
+from tests.components.homekit.common import patch_debounce
 
 
 @pytest.fixture(scope='module')

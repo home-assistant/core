@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.42']
+REQUIREMENTS = ['pyhomematic==0.1.43']
 
 _LOGGER = logging.getLogger(__name__)
 
