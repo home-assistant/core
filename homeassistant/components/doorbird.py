@@ -88,12 +88,12 @@ def setup(hass, config):
             return False
 
         # SETUP EVENT SUBSCRIBERS
+        if events is not None:
+            # This will make HA the only service that receives events.
+            doorstation.device.reset_notifications()
 
-        # This will make HA the only service that receives events.
-        doorstation.device.reset_notifications()
-
-        # Subscribe to doorbell or motion events
-        subscribe_events(hass, doorstation)
+            # Subscribe to doorbell or motion events
+            subscribe_events(hass, doorstation)
 
     hass.data[DOMAIN] = doorstations
 
