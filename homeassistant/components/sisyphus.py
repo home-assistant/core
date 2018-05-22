@@ -44,7 +44,7 @@ async def async_setup(hass, config):
     table_configs = config.get(DOMAIN)
 
     async def add_table(host, name=None):
-        """Adds platforms for a single table with the given hostname"""
+        """Add platforms for a single table with the given hostname."""
         table = await Table.connect(host)
         if name is None:
             name = table.name
@@ -72,7 +72,7 @@ async def async_setup(hass, config):
                 await add_table(conf.get(CONF_HOST), conf.get(CONF_NAME))
 
     async def close_tables(*args):
-        """Closes all table objects"""
+        """Close all table objects."""
         for table in tables.values():
             await table.close()
 
