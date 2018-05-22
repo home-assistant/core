@@ -314,12 +314,13 @@ class LIFXManager(object):
 
             # Read initial state
             ack = AwaitAioLIFX().wait
-            version_resp = await ack(device.get_version)
-            if version_resp:
-                color_resp = await ack(device.get_color)
+            color_resp = await ack(device.get_color)
+            if color_resp:
+                version_resp = await ack(device.get_version)
 
-            if version_resp is None or color_resp is None:
+            if color_resp is None or version_resp is None:
                 _LOGGER.error("Failed to initialize %s", device.ip_addr)
+                device.registered = False
             else:
                 device.timeout = MESSAGE_TIMEOUT
                 device.retry_count = MESSAGE_RETRIES
@@ -440,18 +441,13 @@ class LIFXLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        brightness = convert_16_to_8(self.device.color[2])
-        _LOGGER.debug("brightness: %d", brightness)
-        return brightness
+        return convert_16_to_8(self.device.color[2])
 
     @property
     def color_temp(self):
         """Return the color temperature."""
         kelvin = self.device.color[3]
-        temperature = color_util.color_temperature_kelvin_to_mired(kelvin)
-
-        _LOGGER.debug("color_temp: %d", temperature)
-        return temperature
+        return color_util.color_temperature_kelvin_to_mired(kelvin)
 
     @property
     def is_on(self):
@@ -564,7 +560,6 @@ class LIFXLight(Light):
 
     async def async_update(self):
         """Update bulb status."""
-        _LOGGER.debug("%s async_update", self.who)
         if self.available and not self.lock.locked():
             await AwaitAioLIFX().wait(self.device.get_color)
 
