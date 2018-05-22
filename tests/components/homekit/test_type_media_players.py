@@ -2,13 +2,13 @@
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
-from homeassistant.components.homekit.type_media_players import (MediaPlayer)
+from homeassistant.components.homekit.type_media_players import MediaPlayer
 from homeassistant.components.homekit.const import (
     ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_MODE, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_STOP, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_VOLUME_MUTE, STATE_OFF, STATE_ON, STATE_IDLE, STATE_PAUSED,
+    SERVICE_VOLUME_MUTE, STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED,
     STATE_PLAYING)
 
 from tests.common import async_mock_service

@@ -9,7 +9,7 @@ from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN
 from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.components.media_player import (
-    SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.components.homekit.const import ON_OFF
 from homeassistant.const import (
@@ -33,8 +33,7 @@ def test_not_supported_media_player():
     """Test if mode isn't supported and if no supported modes."""
     # selected mode for entity not supported
     with pytest.raises(vol.Invalid):
-        attrs = {ATTR_SUPPORTED_FEATURES: SUPPORT_PAUSE | SUPPORT_SEEK}
-        entity_state = State('media_player.demo', 'on', attrs)
+        entity_state = State('media_player.demo', 'on')
         get_accessory(None, entity_state, 2, {CONF_MODE: [ON_OFF]})
 
     # no supported modes for entity
