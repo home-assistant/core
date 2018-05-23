@@ -9,8 +9,11 @@ from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize('entity_id', [
-    'automation.test', 'input_boolean.test', 'remote.test', 'script.test',
-    'switch.test'
+    'automation.test',
+    'input_boolean.test',
+    'remote.test',
+    'script.test',
+    'switch.test',
 ])
 async def test_switch_set_state(hass, entity_id):
     """Test if accessory and HA are updated accordingly."""
