@@ -53,7 +53,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the HT31 Smart-Gadget sensor."""
-
     mac = config.get(CONF_MAC)
     sensor = BluetoothSHT31SmartGadgetSensor(mac)
 
@@ -78,7 +77,6 @@ class BluetoothSHT31SmartGadgetSensor(object):
 
     def __init__(self, mac):
         """Initialize the sensor."""
-
         import pygatt
 
         self.mac = mac
@@ -196,10 +194,7 @@ class SHT31SmartGadgetClient(object):
 
 
 class SHT31SmartGadgetSensor(Entity):
-    """
-    An abstract SHT31 Smart-Gadget Sensor,
-    can be either battery, temperature or humidity.
-    """
+    """An abstract sensor."""
 
     def __init__(self, client, name):
         """Initialize the sensor."""
@@ -239,6 +234,7 @@ class SHT31SmartGadgetSensorBattery(SHT31SmartGadgetSensor):
 
     @property
     def icon(self):
+        """Return the icon of the sensor."""
         return "mdi:battery"
 
 
@@ -262,6 +258,7 @@ class SHT31SmartGadgetSensorTemperature(SHT31SmartGadgetSensor):
 
     @property
     def icon(self):
+        """Return the icon of the sensor."""
         return "mdi:thermometer-lines"
 
 
@@ -282,4 +279,5 @@ class SHT31SmartGadgetSensorHumidity(SHT31SmartGadgetSensor):
 
     @property
     def icon(self):
+        """Return the icon of the sensor."""
         return "mdi:water-percent"
