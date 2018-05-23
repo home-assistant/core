@@ -17,6 +17,7 @@ REQUIREMENTS = ['pymyq==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_DEVICE_CLASS = 'garage'
 DEFAULT_NAME = 'myq'
 
 NOTIFICATION_ID = 'myq_notification'
@@ -68,6 +69,11 @@ class MyQDevice(CoverDevice):
         self.device_id = device['deviceid']
         self._name = device['name']
         self._status = STATE_CLOSED
+
+    @property
+    def device_class(self):
+        """Poll for state."""
+        return DEFAULT_DEVICE_CLASS
 
     @property
     def should_poll(self):
