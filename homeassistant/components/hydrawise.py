@@ -151,6 +151,6 @@ class HydrawiseEntity(Entity):
             controller_info['controllers'][0]['last_contact_readable']
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            "identifier": self.data.get('relay'),
-            "last_contact": temp
+            'identifier': self.data.get('relay'),
+            'last_contact': temp
         }
