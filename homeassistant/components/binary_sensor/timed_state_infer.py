@@ -86,6 +86,9 @@ class TimedStateInferBinarySensor(BinarySensorDevice):
         async_track_state_change(self._hass, self._observed_entity_id,
                                  async_sensor_state_listener)
 
+        # update the sensor when added to hass
+        yield from self.async_pending_expired(dt_util.utcnow())
+
     @asyncio.coroutine
     def async_pending_expired(self, time):
         device_state = self.hass.states.get(self._observed_entity_id)
@@ -107,11 +110,11 @@ class TimedStateInferBinarySensor(BinarySensorDevice):
 
         """If we are already in the correct state, no need to do anything"""
         if self._is_on:
-            if obs_value >= self._value_on:
+            if obs_value > self._value_off:
                 self._pending = False
                 return
         else:
-            if obs_value <= self._value_off:
+            if obs_value < self._value_on:
                 self._pending = False
                 return
 
