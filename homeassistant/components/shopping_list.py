@@ -44,7 +44,7 @@ def async_setup(hass, config):
     def add_item_service(call):
         """Add an item with `name`."""
         data = hass.data[DOMAIN]
-        name = call.data.get(ATTR_NAME, None)
+        name = call.data.get(ATTR_NAME)
         if name is not None:
             data.async_add(name)
 
@@ -52,7 +52,7 @@ def async_setup(hass, config):
     def complete_item_service(call):
         """Mark the item provided via `name` as completed."""
         data = hass.data[DOMAIN]
-        name = call.data.get(ATTR_NAME, None)
+        name = call.data.get(ATTR_NAME)
         if name is None:
             return
         try:
