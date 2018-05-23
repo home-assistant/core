@@ -38,6 +38,8 @@ SENSOR_TEMP_TYPES = ['temperature', 'target']
 
 STRUCTURE_SENSOR_TYPES = ['eta']
 
+VARIABLE_NAME_MAPPING = {'eta': 'eta_begin', 'operation_mode': 'mode'}
+
 _SENSOR_TYPES_DEPRECATED = SENSOR_TYPES_DEPRECATED \
     + list(DEPRECATED_WEATHER_VARS.keys()) + PROTECT_VARS_DEPRECATED
 
@@ -108,12 +110,12 @@ class NestSensor(Entity):
             self.device = device
             self._location = self.device.where
             self._name = "{} {}".format(self.device.name_long,
-                                        self.variable.replace("_", " "))
+                                        self.variable.replace('_', ' '))
         else:
             # structure only
             self.device = structure
             self._name = "{} {}".format(self.structure.name,
-                                        self.variable.replace("_", " "))
+                                        self.variable.replace('_', ' '))
 
         self._state = None
         self._unit = None
@@ -141,10 +143,9 @@ class NestBasicSensor(NestSensor):
         """Retrieve latest state."""
         self._unit = SENSOR_UNITS.get(self.variable, None)
 
-        if self.variable == 'operation_mode':
-            self._state = getattr(self.device, "mode")
-        elif self.variable == 'eta':
-            self._state = getattr(self.device, 'eta_begin')
+        if self.variable in VARIABLE_NAME_MAPPING:
+            self._state = getattr(self.device,
+                                  VARIABLE_NAME_MAPPING[self.variable])
         else:
             self._state = getattr(self.device, self.variable)
 

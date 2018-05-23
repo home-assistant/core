@@ -201,7 +201,7 @@ class NestDevice(object):
             for structure in self.nest.structures:
                 if structure.name in self.local_structure:
                     for device in structure.smoke_co_alarms:
-                        yield(structure, device)
+                        yield (structure, device)
                 else:
                     _LOGGER.debug("Ignoring structure %s, not in %s",
                                   structure.name, self.local_structure)
@@ -215,7 +215,7 @@ class NestDevice(object):
             for structure in self.nest.structures:
                 if structure.name in self.local_structure:
                     for device in structure.cameras:
-                        yield(structure, device)
+                        yield (structure, device)
                 else:
                     _LOGGER.debug("Ignoring structure %s, not in %s",
                                   structure.name, self.local_structure)
