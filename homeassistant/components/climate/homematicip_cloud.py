@@ -8,8 +8,8 @@ https://home-assistant.io/components/climate.homematicip_cloud/
 import logging
 
 from homeassistant.components.climate import (
-    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
-from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
+    ClimateDevice, SUPPORT_TARGET_TEMPERATURE)
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.components.homematicip_cloud import (
     HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
     ATTR_HOME_ID)
@@ -31,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     devices = []
     for device in home.groups:
         if isinstance(device, HeatingGroup):
-            devices.append(HomematicipHeatingGroup(hass, home, device))
+            devices.append(HomematicipHeatingGroup(home, device))
 
     if devices:
         async_add_devices(devices)
@@ -40,15 +40,10 @@ async def async_setup_platform(hass, config, async_add_devices,
 class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     """Representation of a MomematicIP heating group."""
 
-    def __init__(self, hass, home, device):
+    def __init__(self, home, device):
         """Initialize heating group."""
-        device.modelType = 'Group'
+        device.modelType = 'HeatingGroup'
         super().__init__(home, device)
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return 'mdi:thermostat'
 
     @property
     def temperature_unit(self):
@@ -58,7 +53,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def target_temperature(self):
@@ -91,35 +86,3 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         if temperature is None:
             return
         await self._device.set_point_temperature(temperature)
-
-    @property
-    def current_operation(self):
-        """Return current operation (auto, manual, boost, vacation)."""
-        if self._device.boostMode:
-            return STATE_BOOST
-        elif self._device.controlMode == 'AUTOMATIC':
-            return self._device.activeProfile.name
-        return self._device.controlMode
-
-    @property
-    def operation_list(self):
-        """Return the list of available operation modes."""
-        modes = []
-        for profile in self._device.profiles:
-            if profile.name != '' and profile.enabled and profile.visible:
-                modes.append(profile.name)
-        modes.append(STATE_BOOST)
-        return modes
-
-    async def async_set_operation_mode(self, operation_mode):
-        """Set operation mode."""
-        if operation_mode == 'Boost':
-            await self._device.set_boost()
-        else:
-            await self._device.set_boost(False)
-            index = 0
-            for profile in self._device.profiles:
-                if profile.name == operation_mode:
-                    await self._device.set_active_profile(index)
-                    return
-                index = index + 1
