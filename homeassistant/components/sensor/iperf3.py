@@ -4,7 +4,6 @@ Support for Iperf3 network measurement tool.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.iperf3/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -12,11 +11,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_HOST, CONF_PORT)
+    ATTR_ATTRIBUTION, ATTR_ENTITY_ID, CONF_MONITORED_CONDITIONS,
+    CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.restore_state import async_get_last_state
 
 REQUIREMENTS = ['iperf3==0.1.10']
 
@@ -33,7 +31,11 @@ CONF_DURATION = 'duration'
 DEFAULT_DURATION = 10
 DEFAULT_PORT = 5201
 
+IPERF3_DATA = 'iperf3'
+
 SCAN_INTERVAL = timedelta(minutes=30)
+
+SERVICE_NAME = 'iperf3_update'
 
 ICON = 'mdi:speedometer'
 
@@ -51,8 +53,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.string,
+})
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Iperf3 sensor."""
+    if hass.data.get(IPERF3_DATA) is None:
+        hass.data[IPERF3_DATA] = {}
+        hass.data[IPERF3_DATA]['sensors'] = []
+
     dev = []
     for sensor in config[CONF_MONITORED_CONDITIONS]:
         dev.append(
@@ -60,16 +71,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                          config[CONF_PORT],
                          config[CONF_DURATION],
                          sensor))
+
+    hass.data[IPERF3_DATA]['sensors'].extend(dev)
     add_devices(dev)
 
-    def update(call=None):
+    def _service_handler(service):
         """Update service for manual updates."""
-        for sensor in dev:
-            sensor.update()
-            sensor.schedule_update_ha_state()
+        entity_id = service.data.get('entity_id')
+        all_iperf3_sensors = hass.data[IPERF3_DATA]['sensors']
+
+        for sensor in all_iperf3_sensors:
+            if entity_id is not None:
+                if sensor.entity_id == entity_id:
+                    sensor.update()
+                    sensor.schedule_update_ha_state()
+                    break
+            else:
+                sensor.update()
+                sensor.schedule_update_ha_state()
 
     for sensor in dev:
-        hass.services.register(DOMAIN, sensor.service_name, update)
+        hass.services.register(DOMAIN, SERVICE_NAME, _service_handler,
+                               schema=SERVICE_SCHEMA)
 
 
 class Iperf3Sensor(Entity):
@@ -94,11 +117,6 @@ class Iperf3Sensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def service_name(self):
-        """Return the service name of the sensor."""
-        return slugify("{} {}".format('update_iperf3', self._server))
 
     @property
     def state(self):
@@ -153,14 +171,6 @@ class Iperf3Sensor(Entity):
 
         elif self._sensor_type == 'upload':
             self._state = round(self.result.sent_Mbps, 2)
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Handle entity which will be added."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if not state:
-            return
-        self._state = state.state
 
     @property
     def icon(self):
