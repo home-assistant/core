@@ -17,7 +17,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
 
-REQUIREMENTS = ['homematicip==0.9.3.3']
+REQUIREMENTS = ['homematicip==0.9.4']
 
 _LOGGER = logging.getLogger(__name__)
 
