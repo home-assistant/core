@@ -48,7 +48,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     @property
     def icon(self):
         """Return the icon."""
-        return 'mdi:nest-thermostat'
+        return 'mdi:thermostat'
 
     @property
     def temperature_unit(self):
