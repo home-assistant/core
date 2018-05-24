@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import uuid
+import datetime
 
 import voluptuous as vol
 
@@ -72,7 +73,7 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
                                  schema=EVENT_SCHEMA)
 
     yield from hass.components.frontend.async_register_built_in_panel(
-        'calendar', 'Calendar', 'mdi:calendar')
+        'calendar', 'calendar', 'mdi:calendar')
 
     return True
 
@@ -157,7 +158,26 @@ class CalendarView(http.HomeAssistantView):
     url = '/api/calendar'
     name = "api:calendar"
 
-    @callback
-    def get(self, request):
+    async def get(self, request):
         """Retrieve calendar items."""
+        import time
+        time.sleep(5)
+        events = [{
+            'id': 0,
+            'title': 'All Day Event very long title',
+            'allDay': True,
+            'start': (2015, 3, 1),
+            'end': (2015, 3, 2),
+          },
+{
+            'id': 1,
+            'title': 'All Day Event very long title',
+            'allDay': True,
+            'start': (2015, 3, 1),
+            'end': (2015, 3, 2),
+          },
+            ]
+
+
+        return self.json(events)
         return self.json(request.app['hass'].data[DOMAIN].items)
