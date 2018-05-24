@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.components.climate import (
     ClimateDevice, SUPPORT_TARGET_TEMPERATURE, ATTR_TEMPERATURE,
-    STATE_AUTO, STATE_MANUAL, STATE_PERFORMANCE)
+    STATE_AUTO, STATE_MANUAL)
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.components.homematicip_cloud import (
     HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
