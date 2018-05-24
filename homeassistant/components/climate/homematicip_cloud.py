@@ -82,7 +82,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
     def current_operation(self):
         """Return current operation ie. automatic or manual."""
         return HMIP_STATE_TO_HA.get(self._device.controlMode)
-        
+
     @property
     def min_temp(self):
         """Return the minimum temperature."""
