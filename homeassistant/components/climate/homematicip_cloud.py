@@ -8,7 +8,8 @@ https://home-assistant.io/components/climate.homematicip_cloud/
 import logging
 
 from homeassistant.components.climate import (
-    ClimateDevice, SUPPORT_TARGET_TEMPERATURE)
+    ClimateDevice, SUPPORT_TARGET_TEMPERATURE, ATTR_TEMPERATURE,
+    STATE_AUTO, STATE_MANUAL, STATE_PERFORMANCE)
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.components.homematicip_cloud import (
     HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
@@ -17,6 +18,13 @@ from homeassistant.components.homematicip_cloud import (
 _LOGGER = logging.getLogger(__name__)
 
 STATE_BOOST = 'Boost'
+
+HA_STATE_TO_HMIP = {
+    STATE_AUTO: 'AUTOMATIC',
+    STATE_MANUAL: 'MANUAL',
+}
+
+HMIP_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_HMIP.items()}
 
 
 async def async_setup_platform(hass, config, async_add_devices,
@@ -42,7 +50,7 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
 
     def __init__(self, home, device):
         """Initialize heating group."""
-        device.modelType = 'HeatingGroup'
+        device.modelType = 'Group-Heating'
         super().__init__(home, device)
 
     @property
@@ -70,6 +78,11 @@ class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):
         """Return the current humidity."""
         return self._device.humidity
 
+    @property
+    def current_operation(self):
+        """Return current operation ie. automatic or manual."""
+        return HMIP_STATE_TO_HA.get(self._device.controlMode)
+        
     @property
     def min_temp(self):
         """Return the minimum temperature."""
