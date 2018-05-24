@@ -110,9 +110,6 @@ class FlowManager:
         # Abort and Success results both finish the flow
         self._progress.pop(flow.flow_id)
 
-        if result['type'] == RESULT_TYPE_ABORT:
-            return result
-
         # We pass a copy of the result because we're mutating our version
         result['result'] = await self._async_finish_flow(dict(result))
         return result
