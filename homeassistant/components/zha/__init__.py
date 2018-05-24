@@ -413,6 +413,8 @@ class ZhaEndpointEntity(entity.Entity):
                 endpoint.endpoint_id,
             )
 
+        nwk = endpoint.device.nwk
+        self._device_state_attributes['nwk'] = '0x{0:04x}'.format(nwk)
         self._device_state_attributes['ieee'] = str(endpoint.device.ieee)
         self._device_state_attributes['last_update'] = None
         self._device_state_attributes['lqi'] = endpoint.device.lqi
