@@ -451,6 +451,9 @@ insteonlocal==0.53
 # homeassistant.components.insteon_plm
 insteonplm==0.9.2
 
+# homeassistant.components.sensor.iperf3
+iperf3==0.1.10
+
 # homeassistant.components.verisure
 jsonpath==0.75
 

@@ -1,0 +1,11 @@
+#!/bin/bash
+# Sets up iperf3.
+
+# Stop on errors
+set -e
+
+PACKAGES=(
+  iperf3
+)
+
+apt-get install -y --no-install-recommends ${PACKAGES[@]}
