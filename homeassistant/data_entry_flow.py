@@ -111,7 +111,10 @@ class FlowManager:
         self._progress.pop(flow.flow_id)
 
         # We pass a copy of the result because we're mutating our version
-        result['result'] = await self._async_finish_flow(dict(result))
+        entry = await self._async_finish_flow(dict(result))
+
+        if result['type'] == RESULT_TYPE_CREATE_ENTRY:
+            result['result'] = entry
         return result
 
 
