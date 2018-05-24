@@ -29,6 +29,16 @@ CAMERA_BINARY_TYPES = [
     'person_detected',
 ]
 
+STRUCTURE_BINARY_TYPES = [
+    'away',
+    # 'security_state', # wait for pending python-nest update
+]
+
+STRUCTURE_BINARY_STATE_MAP = {
+    'away': {'away': True, 'home': False},
+    'security_state': {'deter': True, 'ok': False},
+}
+
 _BINARY_TYPES_DEPRECATED = [
     'hvac_ac_state',
     'hvac_aux_heater_state',
@@ -41,7 +51,7 @@ _BINARY_TYPES_DEPRECATED = [
 ]
 
 _VALID_BINARY_SENSOR_TYPES = BINARY_TYPES + CLIMATE_BINARY_TYPES \
-    + CAMERA_BINARY_TYPES
+    + CAMERA_BINARY_TYPES + STRUCTURE_BINARY_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +78,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error(wstr)
 
     sensors = []
+    for structure in nest.structures():
+        sensors += [NestBinarySensor(structure, None, variable)
+                    for variable in conditions
+                    if variable in STRUCTURE_BINARY_TYPES]
     device_chain = chain(nest.thermostats(),
                          nest.smoke_co_alarms(),
                          nest.cameras())
@@ -88,7 +102,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 sensors += [NestActivityZoneSensor(structure,
                                                    device,
                                                    activity_zone)]
-
     add_devices(sensors, True)
 
 
@@ -102,7 +115,12 @@ class NestBinarySensor(NestSensor, BinarySensorDevice):
 
     def update(self):
         """Retrieve latest state."""
-        self._state = bool(getattr(self.device, self.variable))
+        value = getattr(self.device, self.variable)
+        if self.variable in STRUCTURE_BINARY_TYPES:
+            self._state = bool(STRUCTURE_BINARY_STATE_MAP
+                               [self.variable][value])
+        else:
+            self._state = bool(value)
 
 
 class NestActivityZoneSensor(NestBinarySensor):

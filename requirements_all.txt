@@ -61,7 +61,7 @@ SoCo==0.14
 TravisPy==0.3.5
 
 # homeassistant.components.notify.twitter
-TwitterAPI==2.5.0
+TwitterAPI==2.5.3
 
 # homeassistant.components.sensor.waze_travel_time
 WazeRouteCalculator==0.5
@@ -389,7 +389,7 @@ hipnotify==1.0.8
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180521.0
+home-assistant-frontend==20180524.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.6
@@ -451,6 +451,9 @@ insteonlocal==0.53
 # homeassistant.components.insteon_plm
 insteonplm==0.9.2
 
+# homeassistant.components.sensor.iperf3
+iperf3==0.1.10
+
 # homeassistant.components.verisure
 jsonpath==0.75
 
@@ -499,7 +502,7 @@ lightify==1.0.6.1
 limitlessled==1.1.0
 
 # homeassistant.components.linode
-linode-api==4.1.4b2
+linode-api==4.1.9b1
 
 # homeassistant.components.media_player.liveboxplaytv
 liveboxplaytv==2.0.2
