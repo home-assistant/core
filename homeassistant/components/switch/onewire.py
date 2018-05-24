@@ -100,9 +100,8 @@ class OneWireSwitch(SwitchDevice):
 
     def _write_value_raw(self, value):
         """Write the value to the switch."""
-        if value not in [DEVICE_SWITCH_ON,DEVICE_SWITCH_OFF]:
+        if value not in [DEVICE_SWITCH_ON, DEVICE_SWITCH_OFF]:
             _LOGGER.error("Error in setting wrong value %s", value)
-            return False
         else:
             try:
                 with open(self._device_file, 'w') as ds_device_file:
@@ -114,7 +113,7 @@ class OneWireSwitch(SwitchDevice):
             except OSError:
                 msg = "Error writing switch file %s", self._device_file
                 _LOGGER.warning(msg)
-            return False
+        return False
 
     @property
     def name(self):
@@ -132,12 +131,12 @@ class OneWireSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        if self._write_value_raw(self, DEVICE_SWITCH_ON):
+        if self._write_value_raw(DEVICE_SWITCH_ON):
             self._state = True
             self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        if self._write_value_raw(self, DEVICE_SWITCH_OFF):
+        if self._write_value_raw(DEVICE_SWITCH_OFF):
             self._state = False
             self.schedule_update_ha_state()
