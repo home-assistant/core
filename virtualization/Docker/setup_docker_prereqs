@@ -10,6 +10,7 @@ INSTALL_FFMPEG="${INSTALL_FFMPEG:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
 INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
 INSTALL_SSOCR="${INSTALL_SSOCR:-yes}"
+INSTALL_IPERF3="${INSTALL_IPERF3:-yes}"
 
 # Required debian packages for running hass or components
 PACKAGES=(
@@ -62,6 +63,10 @@ fi
 
 if [ "$INSTALL_SSOCR" == "yes" ]; then
   virtualization/Docker/scripts/ssocr
+fi
+
+if [ "$INSTALL_IPERF3" == "yes" ]; then
+  virtualization/Docker/scripts/iperf3
 fi
 
 # Remove packages
