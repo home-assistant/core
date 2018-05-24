@@ -60,7 +60,7 @@ class HydrawiseSensor(HydrawiseEntity):
             for relay in mydata.relays:
                 if relay.get('relay') == self.data.get('relay'):
                     if relay.get('nicetime') == 'Not scheduled':
-                        self._state = 'NS'
+                        self._state = 'not_scheduled'
                     else:
                         self._state = relay.get('nicetime').split(',')[0] + \
                             ' ' + relay.get('nicetime').split(' ')[3]
