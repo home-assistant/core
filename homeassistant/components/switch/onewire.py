@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.onewire/
 """
 import os
-import time
 import logging
 from glob import glob
 
@@ -59,16 +58,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         with open(family_file_path, "r") as family_file:
             family = family_file.read()
         if family in DEVICE_SWITCHES:
-           switch_id = os.path.split(
-               os.path.split(family_file_path)[0])[1]
-           device_files = {}
-           for switch_key, switch_value in DEVICE_SWITCHES[family].items():
-               switch_id_complete = switch_id + "_" + switch_key
-               device_file = os.path.join(
+            switch_id = os.path.split(
+                os.path.split(family_file_path)[0])[1]
+            device_files = {}
+            for switch_key, switch_value in DEVICE_SWITCHES[family].items():
+                switch_id_complete = switch_id + "_" + switch_key
+                device_file = os.path.join(
                     os.path.split(family_file_path)[0], switch_value)
-               devs.append(OneWireSwitch(device_names.get(switch_id_complete,
-                                                          switch_id_complete),
-                                         device_file))
+                devs.append(OneWireSwitch(device_names.get(switch_id_complete,
+                                                           switch_id_complete),
+                                          device_file))
 
     if devs == []:
         _LOGGER.error("No onewire sensor found. Check if dtoverlay=w1-gpio "
@@ -95,10 +94,8 @@ class OneWireSwitch(SwitchDevice):
         except ValueError:
             _LOGGER.warning("Invalid value read from %s", self._device_file)
         except FileNotFoundError:
-            _LOGGER.warning("OneWire Switch file not found: %s", self._device_file)
-        except:
-            _LOGGER.warning("Other error in using switch file: %s", self._device_file)
-            raise
+            msg = "1Wire switch file not found: %s", self._device_file
+            _LOGGER.warning(msg)
         return state
 
     def _read_value_raw(self):
@@ -109,7 +106,7 @@ class OneWireSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """Currently easyer - if control of OneWire Switch is only done by hass"""
+        """tbd, if control of OneWire Switch is not only done by hass"""
         return False
 
     @property
@@ -120,7 +117,7 @@ class OneWireSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        if self._state == None:
+        if self._state is None:
             self._state = self._readState()
         return self._state
 
