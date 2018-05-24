@@ -25,33 +25,33 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def get_service(hass, config, discovery_info=None):
-    """Get the Flock.io notification service."""
+    """Get the Flock notification service."""
     access_token = config.get(CONF_ACCESS_TOKEN)
     url = '{}{}'.format(_RESOURCE, access_token)
+    session = async_get_clientsession(hass)
 
-    return FlockNotificationService(hass, url)
+    return FlockNotificationService(url, session, hass.loop)
 
 
 class FlockNotificationService(BaseNotificationService):
     """Implement the notification service for Flock."""
 
-    def __init__(self, hass, url):
-        """Initialize the Flock.io notification service."""
-        self._hass = hass
+    def __init__(self, url, session, loop):
+        """Initialize the Flock notification service."""
+        self._loop = loop
         self._url = url
+        self._session = session
 
-    @asyncio.coroutine
-    def async_send_message(self, message, **kwargs):
+    async def async_send_message(self, message, **kwargs):
         """Send the message to the user."""
         payload = {'text': message}
 
         _LOGGER.debug("Attempting to call Flock at %s", self._url)
-        session = async_get_clientsession(self._hass)
 
         try:
-            with async_timeout.timeout(10, loop=self._hass.loop):
-                response = yield from session.post(self._url, json=payload)
-                result = yield from response.json()
+            with async_timeout.timeout(10, loop=self._loop):
+                response = await self._session.post(self._url, json=payload)
+                result = await response.json()
 
             if response.status != 200 or 'error' in result:
                 _LOGGER.error(
