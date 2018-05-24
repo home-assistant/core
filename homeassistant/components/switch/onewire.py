@@ -84,30 +84,37 @@ class OneWireSwitch(SwitchDevice):
         """Initialize the OneWire switch."""
         self._name = name or DEVICE_DEFAULT_NAME
         self._device_file = device_file
-        self._state = self._readState()
-
-    def _readState(self):
-        state = None
-        try:
-            state = self._read_value_raw() == DEVICE_SWITCH_ON
-        except ValueError:
-            _LOGGER.warning("Invalid value read from %s", self._device_file)
-        except FileNotFoundError:
-            msg = "1Wire switch file not found: %s", self._device_file
-            _LOGGER.warning(msg)
-        return state
+        self._state = None
 
     def _read_value_raw(self):
         """Read the value as it is returned by the switch."""
-        with open(self._device_file, 'r') as ds_device_file:
-            content = ds_device_file.read()
+        try:
+            with open(self._device_file, 'r') as ds_device_file:
+                content = ds_device_file.read()
+        except FileNotFoundError:
+            msg = "1Wire switch file not found: %s", self._device_file
+            _LOGGER.warning(msg)
+        except OSError:
+            _LOGGER.warning("Error reading switch file %s", self._device_file)
         return content
 
-    @property
-    def should_poll(self):
-        """tbd, if control of OneWire Switch is not only done by hass"""
-        return False
-
+    def _write_value_raw(self,value):
+        """Write the value to the switch."""
+        if not value in [DEVICE_SWITCH_ON,DEVICE_SWITCH_OFF]:
+            _LOGGER.error("Error in setting wrong value %s", value)
+            return False
+        else:
+            try:
+                with open(self._device_file, 'w') as ds_device_file:
+                    ds_device_file.write(value)
+                return True
+            except FileNotFoundError:
+                msg = "1Wire switch file not found: %s", self._device_file
+                _LOGGER.warning(msg)
+            except OSError:
+                _LOGGER.warning("Error writing switch file %s", self._device_file)
+            return False
+          
     @property
     def name(self):
         """Return the name of the device if any."""
@@ -116,20 +123,20 @@ class OneWireSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        if self._state is None:
-            self._state = self._readState()
         return self._state
 
+    def update(self):
+        self._state = self._read_value_raw() == DEVICE_SWITCH_ON
+        return self._state
+        
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        with open(self._device_file, 'w') as ds_device_file:
-            ds_device_file.write("1")
-        self._state = True
-        self.schedule_update_ha_state()
+        if self._write_value_raw(self,DEVICE_SWITCH_ON):
+            self._state = True
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        with open(self._device_file, 'w') as ds_device_file:
-            ds_device_file.write("0")
-        self._state = False
-        self.schedule_update_ha_state()
+        if self._write_value_raw(self,DEVICE_SWITCH_OFF):
+            self._state = False
+            self.schedule_update_ha_state()
