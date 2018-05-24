@@ -70,6 +70,11 @@ class MyQDevice(CoverDevice):
         self._status = STATE_CLOSED
 
     @property
+    def device_class(self):
+        """Define this cover as a garage door."""
+        return 'garage'
+
+    @property
     def should_poll(self):
         """Poll for state."""
         return True
