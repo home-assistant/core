@@ -60,7 +60,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if family in DEVICE_SWITCHES:
             switch_id = os.path.split(
                 os.path.split(family_file_path)[0])[1]
-            device_files = {}
             for switch_key, switch_value in DEVICE_SWITCHES[family].items():
                 switch_id_complete = switch_id + "_" + switch_key
                 device_file = os.path.join(
