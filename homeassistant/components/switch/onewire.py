@@ -126,6 +126,7 @@ class OneWireSwitch(SwitchDevice):
         return self._state
 
     def update(self):
+        """Get the latest data from the switch and update the state."""
         self._state = self._read_value_raw() == DEVICE_SWITCH_ON
         return self._state
 
