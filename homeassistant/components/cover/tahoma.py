@@ -68,11 +68,19 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self.apply_action('open')
+        if self.tahoma_device.type == 'io:HorizontalAwningIOComponent':
+            # The commands open and close seem to be reversed.
+            self.apply_action('close')
+        else:
+            self.apply_action('open')
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        self.apply_action('close')
+        if self.tahoma_device.type == 'io:HorizontalAwningIOComponent':
+            # The commands open and close seem to be reversed.
+            self.apply_action('open')
+        else:
+            self.apply_action('close')
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
@@ -83,5 +91,9 @@ class TahomaCover(TahomaDevice, CoverDevice):
                 ('rts:BlindRTSComponent',
                  'io:ExteriorVenetianBlindIOComponent'):
             self.apply_action('my')
+        elif self.tahoma_device.type in \
+                ('io:VerticalExteriorAwningIOComponent',
+                 'io:HorizontalAwningIOComponent'):
+            self.apply_action('stop')
         else:
             self.apply_action('stopIdentify')
