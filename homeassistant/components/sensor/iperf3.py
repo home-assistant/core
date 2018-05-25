@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_ENTITY_ID, CONF_MONITORED_CONDITIONS,
-    CONF_HOST, CONF_PORT)
+    CONF_HOST, CONF_PORT, CONF_PROTOCOL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -27,13 +27,16 @@ ATTR_VERSION = 'Version'
 
 CONF_ATTRIBUTION = 'Data retrieved using Iperf3'
 CONF_DURATION = 'duration'
+CONF_PARALLEL = 'parallel'
 
 DEFAULT_DURATION = 10
 DEFAULT_PORT = 5201
+DEFAULT_PARALLEL = 1
+DEFAULT_PROTOCOL = 'tcp'
 
 IPERF3_DATA = 'iperf3'
 
-SCAN_INTERVAL = timedelta(minutes=30)
+SCAN_INTERVAL = timedelta(minutes=60)
 
 SERVICE_NAME = 'iperf3_update'
 
@@ -50,6 +53,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): vol.Range(5, 10),
+    vol.Optional(CONF_PARALLEL, default=DEFAULT_PARALLEL): vol.Range(1, 20),
+    vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
+        vol.In(['tcp', 'udp']),
 })
 
 
@@ -70,6 +76,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             Iperf3Sensor(config[CONF_HOST],
                          config[CONF_PORT],
                          config[CONF_DURATION],
+                         config[CONF_PARALLEL],
+                         config[CONF_PROTOCOL],
                          sensor))
 
     hass.data[IPERF3_DATA]['sensors'].extend(dev)
@@ -98,10 +106,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class Iperf3Sensor(Entity):
     """A Iperf3 sensor implementation."""
 
-    def __init__(self, server, port, duration, sensor_type):
+    def __init__(self, server, port, duration, streams,
+                 protocol, sensor_type):
         """Initialize the sensor."""
         self._attrs = {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_PROTOCOL: protocol,
         }
         self._name = \
             "{} {}".format(SENSOR_TYPES[sensor_type][0], server)
@@ -111,6 +121,8 @@ class Iperf3Sensor(Entity):
         self._port = port
         self._server = server
         self._duration = duration
+        self._num_streams = streams
+        self._protocol = protocol
         self.result = None
 
     @property
@@ -133,7 +145,6 @@ class Iperf3Sensor(Entity):
         """Return the state attributes."""
         if self.result is not None:
             self._attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
-            self._attrs[ATTR_PROTOCOL] = self.result.protocol
             self._attrs[ATTR_REMOTE_HOST] = self.result.remote_host
             self._attrs[ATTR_REMOTE_PORT] = self.result.remote_port
             self._attrs[ATTR_VERSION] = self.result.version
@@ -147,6 +158,8 @@ class Iperf3Sensor(Entity):
         client.server_hostname = self._server
         client.port = self._port
         client.verbose = False
+        client.num_streams = self._num_streams
+        client.protocol = self._protocol
 
         # when testing download bandwith, reverse must be True
         if self._sensor_type == 'download':
@@ -154,7 +167,7 @@ class Iperf3Sensor(Entity):
 
         try:
             self.result = client.run()
-        except (OSError, AttributeError) as error:
+        except (AttributeError, OSError, ValueError) as error:
             self.result = None
             _LOGGER.error("Iperf3 sensor error: %s", error)
             return
@@ -166,7 +179,11 @@ class Iperf3Sensor(Entity):
             self.result = None
             return
 
-        if self._sensor_type == 'download':
+        # UDP only have 1 way attribute
+        if self._protocol == 'udp':
+            self._state = round(self.result.Mbps, 2)
+
+        elif self._sensor_type == 'download':
             self._state = round(self.result.received_Mbps, 2)
 
         elif self._sensor_type == 'upload':
