@@ -44,7 +44,7 @@ apns2==0.3.0
 caldav==0.5.0
 
 # homeassistant.components.sensor.coinmarketcap
-coinmarketcap==4.2.1
+coinmarketcap==5.0.3
 
 # homeassistant.components.device_tracker.upc_connect
 defusedxml==0.5.0
