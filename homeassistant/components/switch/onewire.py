@@ -133,11 +133,9 @@ class OneWireSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         if self._write_value_raw(DEVICE_SWITCH_ON):
-            self._state = True
             self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if self._write_value_raw(DEVICE_SWITCH_OFF):
-            self._state = False
             self.schedule_update_ha_state()
