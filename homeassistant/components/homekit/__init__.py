@@ -9,6 +9,7 @@ from zlib import adler32
 
 import voluptuous as vol
 
+from homeassistant.components import vacuum
 from homeassistant.components.cover import (
     SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION)
 from homeassistant.const import (
@@ -152,6 +153,11 @@ def get_accessory(hass, state, aid, config):
     elif state.domain in ('automation', 'input_boolean', 'remote', 'script',
                           'switch'):
         a_type = 'Switch'
+
+    elif state.domain == 'vacuum':
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if features & (vacuum.SUPPORT_TURN_OFF | vacuum.SUPPORT_TURN_ON):
+            a_type = 'Switch'
 
     if a_type is None:
         return None

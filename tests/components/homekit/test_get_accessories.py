@@ -5,6 +5,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.core import State
+from homeassistant.components import vacuum
 from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN
 from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
@@ -38,6 +39,13 @@ def test_not_supported_media_player():
 
     # no supported modes for entity
     entity_state = State('media_player.demo', 'on')
+    assert get_accessory(None, entity_state, 2, {}) is None
+
+
+def test_not_supported_switch():
+    """Test that component which don't support TURN_ON / OFF aren't added."""
+    # Vacuum must have supported features TURN_ON and TURN_OFF
+    entity_state = State('vacuum.demo', 'off')
     assert get_accessory(None, entity_state, 2, {}) is None
 
 
@@ -134,6 +142,9 @@ def test_type_sensors(type_name, entity_id, state, attrs):
     ('Switch', 'remote.test', 'on', {}),
     ('Switch', 'script.test', 'on', {}),
     ('Switch', 'switch.test', 'on', {}),
+    ('Switch', 'vacuum.test', 'on',
+     {ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_TURN_OFF |
+      vacuum.SUPPORT_TURN_ON}),
 ])
 def test_type_switches(type_name, entity_id, state, attrs):
     """Test if switch types are associated correctly."""
