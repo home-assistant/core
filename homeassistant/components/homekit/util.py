@@ -3,14 +3,20 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.components.media_player import (
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_STOP, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE)
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
-    ATTR_CODE, CONF_NAME, TEMP_CELSIUS)
+    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_MODE, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
-from .const import HOMEKIT_NOTIFY_ID
+from .const import (
+    HOMEKIT_NOTIFY_ID, ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
 
 _LOGGER = logging.getLogger(__name__)
+
+MEDIA_PLAYER_MODES = (ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
 
 
 def validate_entity_config(values):
@@ -34,8 +40,41 @@ def validate_entity_config(values):
             code = config.get(ATTR_CODE)
             params[ATTR_CODE] = cv.string(code) if code else None
 
+        if domain == 'media_player':
+            mode = config.get(CONF_MODE)
+            params[CONF_MODE] = cv.ensure_list(mode)
+            for key in params[CONF_MODE]:
+                if key not in MEDIA_PLAYER_MODES:
+                    raise vol.Invalid(
+                        'Invalid mode: "{}", valid modes are: "{}".'
+                        .format(key, MEDIA_PLAYER_MODES))
+
         entities[entity] = params
     return entities
+
+
+def validate_media_player_modes(state, config):
+    """Validate modes for media playeres."""
+    features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+    supported_modes = []
+    if features & (SUPPORT_TURN_ON | SUPPORT_TURN_OFF):
+        supported_modes.append(ON_OFF)
+    if features & (SUPPORT_PLAY | SUPPORT_PAUSE):
+        supported_modes.append(PLAY_PAUSE)
+    if features & (SUPPORT_PLAY | SUPPORT_STOP):
+        supported_modes.append(PLAY_STOP)
+    if features & SUPPORT_VOLUME_MUTE:
+        supported_modes.append(TOGGLE_MUTE)
+
+    if not config.get(CONF_MODE):
+        config[CONF_MODE] = supported_modes
+        return
+
+    for mode in config[CONF_MODE]:
+        if mode not in supported_modes:
+            raise vol.Invalid('"{}" does not support mode: "{}".'
+                              .format(state.entity_id, mode))
 
 
 def show_setup_message(hass, pincode):
