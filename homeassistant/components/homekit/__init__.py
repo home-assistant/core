@@ -9,9 +9,9 @@ from zlib import adler32
 
 import voluptuous as vol
 
-from homeassistant.components import vacuum
 from homeassistant.components.cover import (
     SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION)
+import homeassistant.components.vacuum as vacuum
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS, CONF_MODE, CONF_NAME, CONF_PORT,

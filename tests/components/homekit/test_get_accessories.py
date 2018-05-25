@@ -5,7 +5,6 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.core import State
-from homeassistant.components import vacuum
 from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN
 from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
@@ -13,6 +12,7 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.components.homekit.const import ON_OFF
+import homeassistant.components.vacuum as vacuum
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT, CONF_MODE, CONF_NAME, TEMP_CELSIUS,
