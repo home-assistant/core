@@ -38,6 +38,7 @@ CONF_DUMMY = 'dummy'
 CONF_DEBUG = 'debug'
 CONF_OFF_DELAY = 'off_delay'
 EVENT_BUTTON_PRESSED = 'button_pressed'
+EVENT_NEW_DEVICE = 'new_device_added'
 
 DATA_TYPES = OrderedDict([
     ('Temperature', TEMP_CELSIUS),
@@ -250,6 +251,11 @@ def get_new_device(event, config, device):
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
     new_device = device(pkt_id, event, datas,
                         signal_repetitions)
+    new_device.hass.bus.fire(
+        EVENT_NEW_DEVICE, {
+            ATTR_ENTITY_ID: new_device.entity_id,
+        }
+    )
     RFX_DEVICES[device_id] = new_device
     return new_device
 

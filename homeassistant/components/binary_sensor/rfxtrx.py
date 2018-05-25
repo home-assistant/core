@@ -12,8 +12,8 @@ from homeassistant.components import rfxtrx
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.components.rfxtrx import (
-    ATTR_NAME, CONF_AUTOMATIC_ADD, CONF_DATA_BITS, CONF_DEVICES,
-    CONF_FIRE_EVENT, CONF_OFF_DELAY)
+    ATTR_ENTITY_ID, ATTR_NAME, EVENT_NEW_DEVICE, CONF_AUTOMATIC_ADD,
+    CONF_DATA_BITS, CONF_DEVICES, CONF_FIRE_EVENT, CONF_OFF_DELAY)
 from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_DEVICE_CLASS, CONF_NAME)
 from homeassistant.helpers import config_validation as cv
@@ -100,6 +100,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             pkt_id = "".join("{0:02x}".format(x) for x in event.data)
             sensor = RfxtrxBinarySensor(event, pkt_id)
             sensor.hass = hass
+            hass.bus.fire(
+                EVENT_NEW_DEVICE, {
+                    ATTR_ENTITY_ID: sensor.entity_id,
+                }
+            )
             rfxtrx.RFX_DEVICES[device_id] = sensor
             add_devices([sensor])
             _LOGGER.info(

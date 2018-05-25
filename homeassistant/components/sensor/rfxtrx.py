@@ -10,8 +10,8 @@ import voluptuous as vol
 
 import homeassistant.components.rfxtrx as rfxtrx
 from homeassistant.components.rfxtrx import (
-    ATTR_DATA_TYPE, ATTR_FIRE_EVENT, CONF_AUTOMATIC_ADD, CONF_DATA_TYPE,
-    CONF_DEVICES, CONF_FIRE_EVENT, DATA_TYPES)
+    ATTR_DATA_TYPE, ATTR_FIRE_EVENT, EVENT_NEW_DEVICE, CONF_AUTOMATIC_ADD,
+    CONF_DATA_TYPE, CONF_DEVICES, CONF_FIRE_EVENT, DATA_TYPES)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME, CONF_NAME
 import homeassistant.helpers.config_validation as cv
@@ -104,6 +104,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sub_sensors = {}
         sub_sensors[new_sensor.data_type] = new_sensor
         rfxtrx.RFX_DEVICES[device_id] = sub_sensors
+        hass.bus.fire(
+            EVENT_NEW_DEVICE, {
+                ATTR_ENTITY_ID: new_sensor.entity_id,
+            }
+        )
         add_devices([new_sensor])
 
     if sensor_update not in rfxtrx.RECEIVED_EVT_SUBSCRIBERS:
