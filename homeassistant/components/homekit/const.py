@@ -23,6 +23,12 @@ BRIDGE_NAME = 'Home Assistant Bridge'
 BRIDGE_SERIAL_NUMBER = 'homekit.bridge'
 MANUFACTURER = 'Home Assistant'
 
+# #### Media Player Modes ####
+ON_OFF = 'on_off'
+PLAY_PAUSE = 'play_pause'
+PLAY_STOP = 'play_stop'
+TOGGLE_MUTE = 'toggle_mute'
+
 # #### Services ####
 SERV_ACCESSORY_INFO = 'AccessoryInformation'
 SERV_AIR_QUALITY_SENSOR = 'AirQualitySensor'
