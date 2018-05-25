@@ -6,12 +6,12 @@ import voluptuous as vol
 import homeassistant.components.media_player as media_player
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
-    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, TEMP_CELSIUS)
+    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
 from .const import (
     CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
-    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE)
+    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, OUTLET)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +34,8 @@ MEDIA_PLAYER_SCHEMA = vol.Schema({
         cv.string, vol.In((FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
                            FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE))),
 })
+
+SWITCH_TYPES = (OUTLET)
 
 
 def validate_entity_config(values):
@@ -61,6 +63,15 @@ def validate_entity_config(values):
                                       .format(entity))
                 feature_list[key] = params
             config[CONF_FEATURE_LIST] = feature_list
+
+        if domain == 'switch':
+            switch_type = config.get(CONF_TYPE)
+            if switch_type:
+                params[CONF_TYPE] = cv.string(switch_type)
+                if params[CONF_TYPE] not in SWITCH_TYPES:
+                    raise vol.Invalid(
+                        'Invalid type: "{}", valid types are: "{}".'
+                        .format(params[CONF_TYPE], SWITCH_TYPES))
 
         else:
             config = BASIC_INFO_SCHEMA(config)

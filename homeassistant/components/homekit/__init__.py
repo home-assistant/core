@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.components.cover as cover
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, DEVICE_CLASS_HUMIDITY,
+    CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, CONF_TYPE, DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -23,7 +23,7 @@ from homeassistant.util.decorator import Registry
 from .const import (
     CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FEATURE_LIST, CONF_FILTER,
     DEFAULT_AUTO_START, DEFAULT_PORT, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25,
-    DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START)
+    DOMAIN, HOMEKIT_FILE, OUTLET, SERVICE_HOMEKIT_START)
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
 
@@ -38,6 +38,8 @@ STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
+SWITCH_TYPES = {OUTLET: 'Outlet',
+                'switch': 'Switch'}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
@@ -149,8 +151,12 @@ def get_accessory(hass, driver, state, aid, config):
         elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ('lm', 'lx'):
             a_type = 'LightSensor'
 
-    elif state.domain in ('automation', 'input_boolean', 'remote', 'script',
-                          'switch'):
+    elif state.domain == 'switch':
+        switch_type = config.get(CONF_TYPE, 'switch')
+
+        a_type = SWITCH_TYPES[switch_type]
+
+    elif state.domain in ('automation', 'input_boolean', 'remote', 'script'):
         a_type = 'Switch'
 
     if a_type is None:
