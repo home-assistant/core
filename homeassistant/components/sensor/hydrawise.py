@@ -46,24 +46,24 @@ class HydrawiseSensor(HydrawiseEntity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        mydata = self.hass.data['hydrawise'].data
+        mydata = self.hass.data[DATA_HYDRAWISE].data
         _LOGGER.debug("Updating Hydrawise sensor: %s", self._name)
         if self._sensor_type == 'watering_time':
-            if mydata.running is None or not mydata.running:
+            if not mydata.running:
                 self._state = 0
             else:
-                if int(mydata.running[0]['relay']) == self.data.get('relay'):
+                if int(mydata.running[0]['relay']) == self.data['relay']:
                     self._state = int(mydata.running[0]['time_left']/60)
                 else:
                     self._state = 0
         else:  # _sensor_type == 'next_cycle'
             for relay in mydata.relays:
-                if relay.get('relay') == self.data.get('relay'):
-                    if relay.get('nicetime') == 'Not scheduled':
+                if relay['relay'] == self.data['relay']:
+                    if relay['nicetime'] == 'Not scheduled':
                         self._state = 'not_scheduled'
                     else:
-                        self._state = relay.get('nicetime').split(',')[0] + \
-                            ' ' + relay.get('nicetime').split(' ')[3]
+                        self._state = relay['nicetime'].split(',')[0] + \
+                            ' ' + relay['nicetime'].split(' ')[3]
 
     @property
     def icon(self):

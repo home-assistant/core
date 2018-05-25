@@ -70,7 +70,7 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the Hunter Hydrawise component."""
     conf = config[DOMAIN]
-    access_token = conf.get(CONF_ACCESS_TOKEN)
+    access_token = conf[CONF_ACCESS_TOKEN]
     scan_interval = conf.get(CONF_SCAN_INTERVAL)
 
     try:
@@ -117,7 +117,7 @@ class HydrawiseEntity(Entity):
         self.data = data
         self._sensor_type = sensor_type
         self._name = "{0} {1}".format(
-            self.data.get('name'),
+            self.data['name'],
             DEVICE_MAP[self._sensor_type][
                 DEVICE_MAP_INDEX.index('KEY_INDEX')])
         self._state = None
@@ -147,10 +147,7 @@ class HydrawiseEntity(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        temp = self.hass.data['hydrawise'].data.\
-            controller_info['controllers'][0]['last_contact_readable']
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             'identifier': self.data.get('relay'),
-            'last_contact': temp
         }

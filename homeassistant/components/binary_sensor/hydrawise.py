@@ -59,7 +59,7 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorDevice):
     def update(self):
         """Get the latest data and updates the state."""
         _LOGGER.debug("Updating Hydrawise binary sensor: %s", self._name)
-        mydata = self.hass.data['hydrawise'].data
+        mydata = self.hass.data[DATA_HYDRAWISE].data
         if self._sensor_type == 'status':
             self._state = mydata.status == 'All good!'
         elif self._sensor_type == 'rain_sensor':
@@ -67,9 +67,9 @@ class HydrawiseBinarySensor(HydrawiseEntity, BinarySensorDevice):
                 if sensor['name'] == 'Rain':
                     self._state = sensor['active'] == 1
         elif self._sensor_type == 'is_watering':
-            if mydata.running is None or not mydata.running:
+            if not mydata.running:
                 self._state = False
-            elif int(mydata.running[0]['relay']) == self.data.get('relay'):
+            elif int(mydata.running[0]['relay']) == self.data['relay']:
                 self._state = True
             else:
                 self._state = False

@@ -62,34 +62,34 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         if self._sensor_type == 'manual_watering':
-            self.hass.data['hydrawise'].data.run_zone(
-                self._default_watering_timer, (self.data.get('relay')-1))
+            self.hass.data[DATA_HYDRAWISE].data.run_zone(
+                self._default_watering_timer, (self.data['relay']-1))
         elif self._sensor_type == 'auto_watering':
-            self.hass.data['hydrawise'].data.suspend_zone(
-                0, (self.data.get('relay')-1))
+            self.hass.data[DATA_HYDRAWISE].data.suspend_zone(
+                0, (self.data['relay']-1))
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if self._sensor_type == 'manual_watering':
-            self.hass.data['hydrawise'].data.run_zone(
-                0, (self.data.get('relay')-1))
+            self.hass.data[DATA_HYDRAWISE].data.run_zone(
+                0, (self.data['relay']-1))
         elif self._sensor_type == 'auto_watering':
-            self.hass.data['hydrawise'].data.suspend_zone(
-                365, (self.data.get('relay')-1))
+            self.hass.data[DATA_HYDRAWISE].data.suspend_zone(
+                365, (self.data['relay']-1))
 
     def update(self):
         """Update device state."""
-        mydata = self.hass.data['hydrawise'].data
+        mydata = self.hass.data[DATA_HYDRAWISE].data
         _LOGGER.debug("Updating Hydrawise switch: %s", self._name)
         if self._sensor_type == 'manual_watering':
             if not mydata.running:
                 self._state = False
             else:
                 self._state = int(
-                    mydata.running[0]['relay']) == self.data.get('relay')
+                    mydata.running[0]['relay']) == self.data['relay']
         elif self._sensor_type == 'auto_watering':
             for relay in mydata.relays:
-                if relay.get('relay') == self.data.get('relay'):
+                if relay['relay'] == self.data['relay']:
                     if relay.get('suspended') is not None:
                         self._state = False
                     else:
