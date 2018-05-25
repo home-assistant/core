@@ -548,6 +548,31 @@ def _identify_config_schema(module):
     return '', schema
 
 
+def _recursive_merge(pack_name, comp_name, config, conf, package):
+    """Merge package into conf, recursively."""
+    for key, pack_conf in package.items():
+        if isinstance(pack_conf, dict):
+            if not pack_conf:
+                continue
+            conf[key] = conf.get(key, OrderedDict())
+            _recursive_merge(pack_name, comp_name, config,
+                             conf=conf[key], package=pack_conf)
+
+        elif isinstance(pack_conf, list):
+            if not pack_conf:
+                continue
+            conf[key] = cv.ensure_list(conf.get(key))
+            conf[key].extend(cv.ensure_list(pack_conf))
+
+        else:
+            if conf.get(key) is not None:
+                _log_pkg_error(
+                    pack_name, comp_name, config,
+                    'has keys that are defined multiple times')
+            else:
+                conf[key] = pack_conf
+
+
 def merge_packages_config(hass, config, packages,
                           _log_pkg_error=_log_pkg_error):
     """Merge packages into the top-level configuration. Mutate config."""
@@ -607,11 +632,10 @@ def merge_packages_config(hass, config, packages,
                         config[comp_name][key] = val
                     continue
 
-            # The last merge type are sections that may occur only once
+            # The last merge type are sections that require recursive merging
             if comp_name in config:
-                _log_pkg_error(
-                    pack_name, comp_name, config, "may occur only once"
-                    " and it already exist in your main configuration")
+                _recursive_merge(pack_name, comp_name, config,
+                                 conf=config[comp_name], package=comp_conf)
                 continue
             config[comp_name] = comp_conf
 

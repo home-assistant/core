@@ -654,21 +654,81 @@ def test_merge_type_mismatch(merge_log_err, hass):
     assert len(config['light']) == 2
 
 
-def test_merge_once_only(merge_log_err, hass):
-    """Test if we have a merge for a comp that may occur only once."""
-    packages = {
-        'pack_2': {
-            'mqtt': {},
-            'api': {},  # No config schema
-        },
-    }
+def test_merge_once_only_keys(merge_log_err, hass):
+    """Test if we have a merge for a comp that may occur only once. Keys."""
+    packages = {'pack_2': {'api': {
+        'key_3': 3,
+    }}}
     config = {
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
-        'mqtt': {}, 'api': {}
+        'api': {
+            'key_1': 1,
+            'key_2': 2,
+        }
+    }
+    config_util.merge_packages_config(hass, config, packages)
+    assert config['api'] == {'key_1': 1, 'key_2': 2, 'key_3': 3, }
+
+    # Duplicate keys error
+    packages = {'pack_2': {'api': {
+        'key': 2,
+    }}}
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'api': {'key': 1, }
     }
     config_util.merge_packages_config(hass, config, packages)
     assert merge_log_err.call_count == 1
-    assert len(config) == 3
+
+
+def test_merge_once_only_lists(hass):
+    """Test if we have a merge for a comp that may occur only once. Lists."""
+    packages = {'pack_2': {'api': {
+        'list_1': ['item_2', 'item_3'],
+        'list_2': ['item_1'],
+        'list_3': [],
+    }}}
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'api': {
+            'list_1': ['item_1'],
+        }
+    }
+    config_util.merge_packages_config(hass, config, packages)
+    assert config['api'] == {
+        'list_1': ['item_1', 'item_2', 'item_3'],
+        'list_2': ['item_1'],
+    }
+
+
+def test_merge_once_only_dictionaries(hass):
+    """Test if we have a merge for a comp that may occur only once. Dicts."""
+    packages = {'pack_2': {'api': {
+        'dict_1': {
+            'key_2': 2,
+            'dict_1.1': {'key_1.2': 1.2, },
+        },
+        'dict_2': {'key_1': 1, },
+        'dict_3': {},
+    }}}
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'api': {
+            'dict_1': {
+                'key_1': 1,
+                'dict_1.1': {'key_1.1': 1.1, }
+            },
+        }
+    }
+    config_util.merge_packages_config(hass, config, packages)
+    assert config['api'] == {
+        'dict_1': {
+            'key_1': 1,
+            'key_2': 2,
+            'dict_1.1': {'key_1.1': 1.1, 'key_1.2': 1.2, },
+        },
+        'dict_2': {'key_1': 1, },
+    }
 
 
 def test_merge_id_schema(hass):
