@@ -2,7 +2,7 @@
 A component to monitor Uptime Robot monitors.
 
 For more details about this component, please refer to the documentation at
-https://github.com/HalfDecent/HA-Custom_components/uptimerobot
+https://www.home-assistant.io/components/sensor.uptimerobot
 """
 import logging
 from datetime import timedelta
@@ -47,8 +47,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             monitorid = monitor['id']
             name = monitor['friendly_name']
             target = monitor['url']
-            dev.append(UptimeRobotSensor(apikey, monitorid,
-                                         name, target, uptimerobot))
+            dev.append(UptimeRobotSensor(apikey, monitorid, name, target))
         add_devices_callback(dev, True)
         retval = True
     return retval
@@ -57,18 +56,20 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class UptimeRobotSensor(Entity):
     """Representation of a Uptime Robot sensor."""
 
-    def __init__(self, apikey, monitorid, name, target, uptimerobot):
+    def __init__(self, apikey, monitorid, name, target):
         """Initialize the sensor."""
         self._name = name
         self._monitorid = monitorid
         self._apikey = apikey
-        self._ur = uptimerobot
         self._target = target
         self.update()
 
     def update(self):
         """Get the latest state of the sensor."""
-        monitor = self._ur.getMonitors(self._apikey, str(self._monitorid))
+        from pyuptimerobot import UptimeRobot
+        uptimerobot = UptimeRobot()
+
+        monitor = uptimerobot.getMonitors(self._apikey, str(self._monitorid))
         if not monitor:
             _LOGGER.debug("Failed to get new state, trying again later.")
             return False
