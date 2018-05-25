@@ -25,7 +25,7 @@ CONF_DEVICE_ID = 'device_id'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_DEVICE_ID): [cv.string],
+    vol.Required(CONF_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
 })
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -41,28 +41,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     devices = config.get(CONF_DEVICE_ID)
-    auth_ok = False
-    device_to_add = False
+
     _LOGGER.debug("%s devices to set up", len(devices))
 
     for device_id in devices:
         my_door = ryobi_door(username, password, device_id)
         if my_door.get_api_key() is True:
             _LOGGER.debug("Credentials OK, api key retrieved")
-            auth_ok = True
         else:
-            _LOGGER.error("Credentials KO, no api key retrieved")
-        if auth_ok is True:
-            _LOGGER.debug('Checking device_id')
-            if my_door.check_device_id() is True:
-                _LOGGER.debug("Adding device %s to covers", device_id)
-                covers.append(RyobiCover(hass, my_door))
-                device_to_add = True
-            else:
-                _LOGGER.error("%s not in your devices. Check conf", device_id)
-    if device_to_add is True:
+            _LOGGER.error("Wrong credentials, no api key retrieved")
+            return
+        _LOGGER.debug('Checking device_id')
+        if my_door.check_device_id() is True:
+            _LOGGER.debug("Adding device %s to covers", device_id)
+            covers.append(RyobiCover(hass, my_door))
+        else:
+            _LOGGER.error("%s not in your devices. Check conf", device_id)
+    if covers:
         _LOGGER.debug("Adding covers")
-        add_devices(covers)
+        add_devices(covers, True)
 
 
 class RyobiCover(CoverDevice):
@@ -70,11 +67,8 @@ class RyobiCover(CoverDevice):
 
     def __init__(self, hass, ryobi_door):
         """Initialize the cover."""
-        self.hass = hass
         self.ryobi_door = ryobi_door
-        self._name = 'ryobi_gdo' + ryobi_door.get_device_id()
-        self.ryobi_door.update()
-        self._door_state = ryobi_door.get_door_status()
+        self._name = 'ryobi_gdo_{}'.format(ryobi_door.get_device_id())
 
     @property
     def name(self):
@@ -100,15 +94,13 @@ class RyobiCover(CoverDevice):
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        _LOGGER.info("Closing garage door")
+        _LOGGER.debug("Closing garage door")
         self.ryobi_door.close_device()
-        return
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        _LOGGER.info("Opening garage door")
+        _LOGGER.debug("Opening garage door")
         self.ryobi_door.open_device()
-        return
 
     def update(self):
         """Update status from the door."""
