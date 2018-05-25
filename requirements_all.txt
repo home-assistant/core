@@ -199,7 +199,7 @@ ciscosparkapi==0.4.2
 coinbase==2.1.0
 
 # homeassistant.components.sensor.coinmarketcap
-coinmarketcap==4.2.1
+coinmarketcap==5.0.3
 
 # homeassistant.scripts.check_config
 colorlog==3.1.4
