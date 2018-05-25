@@ -1092,6 +1092,9 @@ pyunifi==2.13
 # homeassistant.components.upnp
 pyupnp-async==0.1.0.2
 
+# homeassistant.components.sensor.uptimerobot
+pyuptimerobot==0.0.4
+
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
 
