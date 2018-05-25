@@ -36,7 +36,7 @@ RESOURCE_SCHEMA = vol.Any({
     vol.Required(CONF_ELEMENT): cv.string,
     vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
     vol.Optional(CONF_NAME): cv.string,
-}, None)
+})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
