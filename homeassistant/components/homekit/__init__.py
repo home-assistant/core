@@ -149,7 +149,8 @@ def get_accessory(hass, state, aid, config):
         elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ('lm', 'lx'):
             a_type = 'LightSensor'
 
-    elif state.domain in ('switch', 'remote', 'input_boolean', 'script'):
+    elif state.domain in ('automation', 'input_boolean', 'remote', 'script',
+                          'switch'):
         a_type = 'Switch'
 
     if a_type is None:
