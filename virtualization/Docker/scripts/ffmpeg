@@ -8,9 +8,4 @@ PACKAGES=(
   ffmpeg
 )
 
-# Add jessie-backports
-echo "Adding jessie-backports"
-echo "deb http://deb.debian.org/debian jessie-backports main" >> /etc/apt/sources.list
-apt-get update
-
-apt-get install -y --no-install-recommends -t jessie-backports ${PACKAGES[@]}
+apt-get install -y --no-install-recommends ${PACKAGES[@]}
