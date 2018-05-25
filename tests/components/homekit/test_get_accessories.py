@@ -129,9 +129,11 @@ def test_type_sensors(type_name, entity_id, state, attrs):
 
 
 @pytest.mark.parametrize('type_name, entity_id, state, attrs', [
-    ('Switch', 'switch.test', 'on', {}),
-    ('Switch', 'remote.test', 'on', {}),
+    ('Switch', 'automation.test', 'on', {}),
     ('Switch', 'input_boolean.test', 'on', {}),
+    ('Switch', 'remote.test', 'on', {}),
+    ('Switch', 'script.test', 'on', {}),
+    ('Switch', 'switch.test', 'on', {}),
 ])
 def test_type_switches(type_name, entity_id, state, attrs):
     """Test if switch types are associated correctly."""
