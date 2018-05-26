@@ -123,6 +123,9 @@ omit =
     homeassistant/components/homematicip_cloud.py
     homeassistant/components/*/homematicip_cloud.py
 
+    homeassistant/components/hydrawise.py
+    homeassistant/components/*/hydrawise.py
+
     homeassistant/components/ihc/*
     homeassistant/components/*/ihc.py
 

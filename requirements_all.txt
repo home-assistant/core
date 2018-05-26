@@ -430,6 +430,9 @@ https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
+# homeassistant.components.hydrawise
+hydrawiser==0.1.1
+
 # homeassistant.components.sensor.bh1750
 # homeassistant.components.sensor.bme280
 # homeassistant.components.sensor.htu21d
