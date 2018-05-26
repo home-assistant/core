@@ -16,38 +16,43 @@ _LOGGER = logging.getLogger(__name__)
 
 MEDIA_PLAYER_MODES = (ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
 
+BASIC_INFO_SCHEMA = vol.Schema({
+    vol.Optional(CONF_NAME): cv.string,
+})
+
+
+CODE_SCHEMA = BASIC_INFO_SCHEMA.extend({
+    vol.Optional(ATTR_CODE, default=None): vol.Any(None, cv.string),
+})
+
 
 def validate_entity_config(values):
     """Validate config entry for CONF_ENTITY."""
     entities = {}
     for entity_id, config in values.items():
         entity = cv.entity_id(entity_id)
-        params = {}
-        if not isinstance(config, dict):
-            raise vol.Invalid('The configuration for "{}" must be '
-                              ' a dictionary.'.format(entity))
-
-        for key in (CONF_NAME, ):
-            value = config.get(key, -1)
-            if value != -1:
-                params[key] = cv.string(value)
-
         domain, _ = split_entity_id(entity)
 
-        if domain in ('alarm_control_panel', 'lock'):
-            code = config.get(ATTR_CODE)
-            params[ATTR_CODE] = cv.string(code) if code else None
+        if not isinstance(config, dict):
+            raise vol.Invalid('The configuration for {} must be '
+                              ' a dictionary.'.format(entity))
 
-        if domain == 'media_player':
+        if domain in ('alarm_control_panel', 'lock'):
+            config = CODE_SCHEMA(config)
+
+        elif domain == media_player.DOMAIN:
             mode = config.get(CONF_MODE)
-            params[CONF_MODE] = cv.ensure_list(mode)
-            for key in params[CONF_MODE]:
+            config[CONF_MODE] = cv.ensure_list(mode)
+            for key in config[CONF_MODE]:
                 if key not in MEDIA_PLAYER_MODES:
                     raise vol.Invalid(
                         'Invalid mode: "{}", valid modes are: "{}".'
                         .format(key, MEDIA_PLAYER_MODES))
 
-        entities[entity] = params
+        else:
+            config = BASIC_INFO_SCHEMA(config)
+
+        entities[entity] = config
     return entities
 
 
