@@ -38,30 +38,30 @@ class MediaPlayer(HomeAccessory):
         modes = self.config[CONF_MODE]
 
         if ON_OFF in modes:
+            name = self.generate_service_name(ON_OFF)
             serv_on_off = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
-            serv_on_off.configure_char(
-                CHAR_NAME, value=self.generate_service_name(ON_OFF))
+            serv_on_off.configure_char(CHAR_NAME, value=name)
             self.chars[ON_OFF] = serv_on_off.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_on_off)
 
         if PLAY_PAUSE in modes:
+            name = self.generate_service_name(PLAY_PAUSE)
             serv_play_pause = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
-            serv_play_pause.configure_char(
-                CHAR_NAME, value=self.generate_service_name(PLAY_PAUSE))
+            serv_play_pause.configure_char(CHAR_NAME, value=name)
             self.chars[PLAY_PAUSE] = serv_play_pause.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_play_pause)
 
         if PLAY_STOP in modes:
+            name = self.generate_service_name(PLAY_STOP)
             serv_play_stop = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
-            serv_play_stop.configure_char(
-                CHAR_NAME, value=self.generate_service_name(PLAY_STOP))
+            serv_play_stop.configure_char(CHAR_NAME, value=name)
             self.chars[PLAY_STOP] = serv_play_stop.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_play_stop)
 
         if TOGGLE_MUTE in modes:
+            name = self.generate_service_name(TOGGLE_MUTE)
             serv_toggle_mute = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
-            serv_toggle_mute.configure_char(
-                CHAR_NAME, value=self.generate_service_name(TOGGLE_MUTE))
+            serv_toggle_mute.configure_char(CHAR_NAME, value=name)
             self.chars[TOGGLE_MUTE] = serv_toggle_mute.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_toggle_mute)
 
