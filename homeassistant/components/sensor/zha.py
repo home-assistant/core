@@ -201,16 +201,14 @@ class ElectricalMeasurementSensor(Sensor):
     @property
     def state(self):
         """Return the state of the entity."""
-        if self._state == None:
+        if self._state is None:
             return None
 
         return round(float(self._state) / 10, 1)
 
     @property
     def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-        False if entity pushes its state to HA.
-        """
+        """Poll state from device."""
         return True
 
     async def async_update(self):
