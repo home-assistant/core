@@ -36,6 +36,7 @@ def make_sensor(discovery_info):
         IlluminanceMeasurement
     )
     from zigpy.zcl.clusters.smartenergy import Metering
+    from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
     in_clusters = discovery_info['in_clusters']
     if RelativeHumidity.cluster_id in in_clusters:
         sensor = RelativeHumiditySensor(**discovery_info)
@@ -47,6 +48,9 @@ def make_sensor(discovery_info):
         sensor = IlluminanceMeasurementSensor(**discovery_info)
     elif Metering.cluster_id in in_clusters:
         sensor = MeteringSensor(**discovery_info)
+    elif ElectricalMeasurement.cluster_id in in_clusters:
+        sensor = ElectricalMeasurementSensor(**discovery_info)
+        return sensor
     else:
         sensor = Sensor(**discovery_info)
 
@@ -182,3 +186,37 @@ class MeteringSensor(Sensor):
             return None
 
         return round(float(self._state))
+
+
+class ElectricalMeasurementSensor(Sensor):
+    """ZHA Electrical Measurement sensor."""
+
+    value_attribute = 1291
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return 'W'
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        if self._state is None:
+            return None
+
+        return round(float(self._state) / 10, 1)
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll state from device."""
+        return True
+
+    async def async_update(self):
+        """Retrieve latest state."""
+        _LOGGER.debug("%s async_update", self.entity_id)
+
+        result = await zha.safe_read(
+            self._endpoint.electrical_measurement,
+            ['active_power'],
+            allow_cache=False)
+        self._state = result.get('active_power', self._state)
