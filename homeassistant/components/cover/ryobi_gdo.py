@@ -46,17 +46,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for device_id in devices:
         my_door = ryobi_door(username, password, device_id)
-        if my_door.get_api_key() is True:
-            _LOGGER.debug("Credentials OK, api key retrieved")
-        else:
+        _LOGGER.debug("Getting api key")
+        if my_door.get_api_key() is False:
             _LOGGER.error("Wrong credentials, no api key retrieved")
             return
         _LOGGER.debug('Checking device_id')
-        if my_door.check_device_id() is True:
-            _LOGGER.debug("Adding device %s to covers", device_id)
-            covers.append(RyobiCover(hass, my_door))
-        else:
+        if my_door.check_device_id() is False:
             _LOGGER.error("%s not in your devices. Check conf", device_id)
+            return
+        _LOGGER.debug("Adding device %s to covers", device_id)
+        covers.append(RyobiCover(hass, my_door))
     if covers:
         _LOGGER.debug("Adding covers")
         add_devices(covers, True)
