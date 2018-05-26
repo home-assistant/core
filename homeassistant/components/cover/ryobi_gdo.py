@@ -68,6 +68,7 @@ class RyobiCover(CoverDevice):
         """Initialize the cover."""
         self.ryobi_door = ryobi_door
         self._name = 'ryobi_gdo_{}'.format(ryobi_door.get_device_id())
+        self._door_state = None
 
     @property
     def name(self):
