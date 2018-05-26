@@ -50,7 +50,7 @@ class LuciDeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         host = config[CONF_HOST]
         protocol = 'http' if not config[CONF_SSL] else 'https'
-        self.origin =  '{}://{}'.format(protocol, host)
+        self.origin = '{}://{}'.format(protocol, host)
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
 
