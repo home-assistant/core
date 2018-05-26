@@ -6,25 +6,33 @@ import voluptuous as vol
 import homeassistant.components.media_player as media_player
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
-    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_MODE, CONF_NAME, TEMP_CELSIUS)
+    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
 from .const import (
-    HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP,
-    FEATURE_TOGGLE_MUTE)
+    CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
+    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE)
 
 _LOGGER = logging.getLogger(__name__)
 
-MEDIA_PLAYER_MODES = (FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP,
-                      FEATURE_TOGGLE_MUTE)
 
 BASIC_INFO_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
 })
 
+FEATURE_SCHEMA = BASIC_INFO_SCHEMA.extend({
+    vol.Optional(CONF_FEATURE_LIST, default=None): cv.ensure_list,
+})
+
 
 CODE_SCHEMA = BASIC_INFO_SCHEMA.extend({
     vol.Optional(ATTR_CODE, default=None): vol.Any(None, cv.string),
+})
+
+MEDIA_PLAYER_SCHEMA = vol.Schema({
+    vol.Required(CONF_FEATURE): vol.All(
+        cv.string, vol.In((FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
+                           FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE))),
 })
 
 
@@ -43,13 +51,16 @@ def validate_entity_config(values):
             config = CODE_SCHEMA(config)
 
         elif domain == media_player.DOMAIN:
-            mode = config.get(CONF_MODE)
-            config[CONF_MODE] = cv.ensure_list(mode)
-            for key in config[CONF_MODE]:
-                if key not in MEDIA_PLAYER_MODES:
-                    raise vol.Invalid(
-                        'Invalid mode: "{}", valid modes are: "{}".'
-                        .format(key, MEDIA_PLAYER_MODES))
+            config = FEATURE_SCHEMA(config)
+            feature_list = {}
+            for feature in config[CONF_FEATURE_LIST]:
+                params = MEDIA_PLAYER_SCHEMA(feature)
+                key = params.pop(CONF_FEATURE)
+                if key in feature_list:
+                    raise vol.Invalid('A feature can be added only once for {}'
+                                      .format(entity))
+                feature_list[key] = params
+            config[CONF_FEATURE_LIST] = feature_list
 
         else:
             config = BASIC_INFO_SCHEMA(config)
@@ -58,7 +69,7 @@ def validate_entity_config(values):
     return entities
 
 
-def validate_media_player_features(state, config):
+def validate_media_player_features(state, feature_list):
     """Validate features for media players."""
     features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
@@ -73,14 +84,16 @@ def validate_media_player_features(state, config):
     if features & media_player.SUPPORT_VOLUME_MUTE:
         supported_modes.append(FEATURE_TOGGLE_MUTE)
 
-    if not config.get(CONF_MODE):
-        config[CONF_MODE] = supported_modes
-        return
+    error_list = []
+    for feature in feature_list:
+        if feature not in supported_modes:
+            error_list.append(feature)
 
-    for mode in config[CONF_MODE]:
-        if mode not in supported_modes:
-            raise vol.Invalid('"{}" does not support mode: "{}".'
-                              .format(state.entity_id, mode))
+    if error_list:
+        _LOGGER.error("%s does not support features: %s",
+                      state.entity_id, error_list)
+        return False
+    return True
 
 
 def show_setup_message(hass, pincode):

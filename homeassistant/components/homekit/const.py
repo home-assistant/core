@@ -8,6 +8,8 @@ HOMEKIT_NOTIFY_ID = 4663548
 # #### Config ####
 CONF_AUTO_START = 'auto_start'
 CONF_ENTITY_CONFIG = 'entity_config'
+CONF_FEATURE = 'feature'
+CONF_FEATURE_LIST = 'feature_list'
 CONF_FILTER = 'filter'
 
 # #### Config Defaults ####

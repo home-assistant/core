@@ -4,9 +4,10 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
 from homeassistant.components.homekit.type_media_players import MediaPlayer
 from homeassistant.components.homekit.const import (
-    FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE)
+    CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP,
+    FEATURE_TOGGLE_MUTE)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, CONF_MODE, SERVICE_MEDIA_PAUSE,
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_STOP, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE, STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED,
     STATE_PLAYING)
@@ -16,8 +17,9 @@ from tests.common import async_mock_service
 
 async def test_media_player_set_state(hass):
     """Test if accessory and HA are updated accordingly."""
-    config = {CONF_MODE: [FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
-                          FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE]}
+    config = {CONF_FEATURE_LIST: {
+        FEATURE_ON_OFF: None, FEATURE_PLAY_PAUSE: None,
+        FEATURE_PLAY_STOP: None, FEATURE_TOGGLE_MUTE: None}}
     entity_id = 'media_player.test'
 
     hass.states.async_set(entity_id, None, {ATTR_SUPPORTED_FEATURES: 20873,

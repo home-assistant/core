@@ -2,18 +2,17 @@
 from unittest.mock import patch, Mock
 
 import pytest
-import voluptuous as vol
 
 from homeassistant.core import State
 import homeassistant.components.cover as cover
 import homeassistant.components.climate as climate
 import homeassistant.components.media_player as media_player
 from homeassistant.components.homekit import get_accessory, TYPES
-from homeassistant.components.homekit.const import FEATURE_ON_OFF
+from homeassistant.components.homekit.const import (
+    CONF_FEATURE_LIST, FEATURE_ON_OFF)
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT, CONF_MODE, CONF_NAME, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT)
+    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 
 def test_not_supported(caplog):
@@ -30,9 +29,9 @@ def test_not_supported(caplog):
 def test_not_supported_media_player():
     """Test if mode isn't supported and if no supported modes."""
     # selected mode for entity not supported
-    with pytest.raises(vol.Invalid):
-        entity_state = State('media_player.demo', 'on')
-        get_accessory(None, entity_state, 2, {CONF_MODE: [FEATURE_ON_OFF]})
+    config = {CONF_FEATURE_LIST: {FEATURE_ON_OFF: None}}
+    entity_state = State('media_player.demo', 'on')
+    get_accessory(None, entity_state, 2, config) is None
 
     # no supported modes for entity
     entity_state = State('media_player.demo', 'on')
@@ -57,7 +56,8 @@ def test_customize_options(config, name):
     ('Lock', 'lock.test', 'locked', {}, {ATTR_CODE: '1234'}),
     ('MediaPlayer', 'media_player.test', 'on',
      {ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_TURN_ON |
-      media_player.SUPPORT_TURN_OFF}, {CONF_MODE: [FEATURE_ON_OFF]}),
+      media_player.SUPPORT_TURN_OFF}, {CONF_FEATURE_LIST:
+                                       {FEATURE_ON_OFF: None}}),
     ('SecuritySystem', 'alarm_control_panel.test', 'armed', {},
      {ATTR_CODE: '1234'}),
     ('Thermostat', 'climate.test', 'auto', {}, {}),

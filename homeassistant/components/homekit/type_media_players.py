@@ -4,7 +4,7 @@ import logging
 from pyhap.const import CATEGORY_SWITCH
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_MODE, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
+    ATTR_ENTITY_ID, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_STOP, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_MUTE,
     STATE_OFF, STATE_PLAYING, STATE_UNKNOWN)
 from homeassistant.components.media_player import (
@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
-    CHAR_NAME, CHAR_ON, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
+    CHAR_NAME, CHAR_ON, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
     FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, SERV_SWITCH)
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,30 +35,30 @@ class MediaPlayer(HomeAccessory):
                       FEATURE_PLAY_STOP: False, FEATURE_TOGGLE_MUTE: False}
         self.chars = {FEATURE_ON_OFF: None, FEATURE_PLAY_PAUSE: None,
                       FEATURE_PLAY_STOP: None, FEATURE_TOGGLE_MUTE: None}
-        modes = self.config[CONF_MODE]
+        feature_list = self.config[CONF_FEATURE_LIST]
 
-        if FEATURE_ON_OFF in modes:
+        if FEATURE_ON_OFF in feature_list:
             name = self.generate_service_name(FEATURE_ON_OFF)
             serv_on_off = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
             serv_on_off.configure_char(CHAR_NAME, value=name)
             self.chars[FEATURE_ON_OFF] = serv_on_off.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_on_off)
 
-        if FEATURE_PLAY_PAUSE in modes:
+        if FEATURE_PLAY_PAUSE in feature_list:
             name = self.generate_service_name(FEATURE_PLAY_PAUSE)
             serv_play_pause = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
             serv_play_pause.configure_char(CHAR_NAME, value=name)
             self.chars[FEATURE_PLAY_PAUSE] = serv_play_pause.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_play_pause)
 
-        if FEATURE_PLAY_STOP in modes:
+        if FEATURE_PLAY_STOP in feature_list:
             name = self.generate_service_name(FEATURE_PLAY_STOP)
             serv_play_stop = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
             serv_play_stop.configure_char(CHAR_NAME, value=name)
             self.chars[FEATURE_PLAY_STOP] = serv_play_stop.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_play_stop)
 
-        if FEATURE_TOGGLE_MUTE in modes:
+        if FEATURE_TOGGLE_MUTE in feature_list:
             name = self.generate_service_name(FEATURE_TOGGLE_MUTE)
             serv_toggle_mute = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
             serv_toggle_mute.configure_char(CHAR_NAME, value=name)
