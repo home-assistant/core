@@ -10,7 +10,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.light import PLATFORM_SCHEMA
 from homeassistant.core import callback
-from homeassistant.helpers import event as evt
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
@@ -43,7 +43,7 @@ class PlumMotionSensor(BinarySensorDevice):
     def __init__(self, hass, lightpad):
         self._hass = hass
         self._lightpad = lightpad
-        self.off_delay = 8  # TODO establish by config
+        self.off_delay = 10  # TODO establish by config
         self._signal = None
         self._latest_motion = None
 
@@ -54,14 +54,13 @@ class PlumMotionSensor(BinarySensorDevice):
         self._latest_motion = dt_util.utcnow()
         self.schedule_update_ha_state()
 
-        def off_delay_handler(now):
+        def off_handler(now):
             """Switch sensor off after a delay."""
             if (now - self._latest_motion).seconds >= self.off_delay:
                 self._signal = None
                 self.schedule_update_ha_state()
 
-        motion_timeout = dt_util.utcnow() + timedelta(seconds=self.off_delay)
-        evt.track_point_in_time(self._hass, off_delay_handler, motion_timeout)
+        async_call_later(hass=self.hass, delay=self.off_delay, action=off_handler)
 
     @property
     def lpid(self):
