@@ -36,7 +36,6 @@ async def async_setup_platform(hass, config, add_devices,
         await new_load(load)
 
 
-
 class PowerSensor(Entity):
     """Representation of a Lightpad power meter Sensor."""
 

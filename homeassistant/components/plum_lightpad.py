@@ -5,8 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/plum_lightpad
 """
 import logging
-import warnings
-
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
@@ -34,7 +32,7 @@ def setup(hass, config):
     """Setup the Plum Lightpad component."""
     from plumlightpad import Plum
 
-    hass.loop.set_debug(True)
+    # hass.loop.set_debug(True)
     # hass.loop.slow_callback_duration = 0.03
     # warnings.simplefilter('always', ResourceWarning)
     conf = config[DOMAIN]
@@ -46,7 +44,6 @@ def setup(hass, config):
     def cleanup(event):
         """Clean up resources."""
         plum.cleanup()
-
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
 

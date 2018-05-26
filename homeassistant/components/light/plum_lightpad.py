@@ -9,7 +9,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (Light, PLATFORM_SCHEMA,
                                             SUPPORT_BRIGHTNESS, SUPPORT_COLOR,
                                             ATTR_HS_COLOR, ATTR_BRIGHTNESS)
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.util.color as color_util
 from homeassistant.core import callback
 

@@ -4,7 +4,6 @@ Support for Plum Lightpad switches.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.plum_lightpad
 """
-from datetime import timedelta
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -39,6 +38,7 @@ async def async_setup_platform(hass, config, add_devices,
 
 
 class PlumMotionSensor(BinarySensorDevice):
+    """Representation of a Lightpad's motion detection."""
 
     def __init__(self, hass, lightpad):
         self._hass = hass
@@ -60,7 +60,8 @@ class PlumMotionSensor(BinarySensorDevice):
                 self._signal = None
                 self.schedule_update_ha_state()
 
-        async_call_later(hass=self.hass, delay=self.off_delay, action=off_handler)
+        async_call_later(hass=self.hass,
+                         delay=self.off_delay, action=off_handler)
 
     @property
     def lpid(self):
