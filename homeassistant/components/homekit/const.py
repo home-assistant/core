@@ -14,6 +14,12 @@ CONF_FILTER = 'filter'
 DEFAULT_AUTO_START = True
 DEFAULT_PORT = 51827
 
+# #### Features ####
+FEATURE_ON_OFF = 'on_off'
+FEATURE_PLAY_PAUSE = 'play_pause'
+FEATURE_PLAY_STOP = 'play_stop'
+FEATURE_TOGGLE_MUTE = 'toggle_mute'
+
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = 'start'
 
@@ -22,12 +28,6 @@ BRIDGE_MODEL = 'Bridge'
 BRIDGE_NAME = 'Home Assistant Bridge'
 BRIDGE_SERIAL_NUMBER = 'homekit.bridge'
 MANUFACTURER = 'Home Assistant'
-
-# #### Media Player Modes ####
-ON_OFF = 'on_off'
-PLAY_PAUSE = 'play_pause'
-PLAY_STOP = 'play_stop'
-TOGGLE_MUTE = 'toggle_mute'
 
 # #### Services ####
 SERV_ACCESSORY_INFO = 'AccessoryInformation'

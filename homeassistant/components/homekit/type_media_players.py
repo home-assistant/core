@@ -13,15 +13,15 @@ from homeassistant.components.media_player import (
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
-    CHAR_NAME, CHAR_ON, ON_OFF, PLAY_PAUSE, PLAY_STOP, SERV_SWITCH,
-    TOGGLE_MUTE)
+    CHAR_NAME, CHAR_ON, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
+    FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, SERV_SWITCH)
 
 _LOGGER = logging.getLogger(__name__)
 
-MODE_FRIENDLY_NAME = {ON_OFF: 'Power',
-                      PLAY_PAUSE: 'Play/Pause',
-                      PLAY_STOP: 'Play/Stop',
-                      TOGGLE_MUTE: 'Mute'}
+MODE_FRIENDLY_NAME = {FEATURE_ON_OFF: 'Power',
+                      FEATURE_PLAY_PAUSE: 'Play/Pause',
+                      FEATURE_PLAY_STOP: 'Play/Stop',
+                      FEATURE_TOGGLE_MUTE: 'Mute'}
 
 
 @TYPES.register('MediaPlayer')
@@ -31,38 +31,38 @@ class MediaPlayer(HomeAccessory):
     def __init__(self, *args):
         """Initialize a Switch accessory object."""
         super().__init__(*args, category=CATEGORY_SWITCH)
-        self._flag = {ON_OFF: False, PLAY_PAUSE: False,
-                      PLAY_STOP: False, TOGGLE_MUTE: False}
-        self.chars = {ON_OFF: None, PLAY_PAUSE: None,
-                      PLAY_STOP: None, TOGGLE_MUTE: None}
+        self._flag = {FEATURE_ON_OFF: False, FEATURE_PLAY_PAUSE: False,
+                      FEATURE_PLAY_STOP: False, FEATURE_TOGGLE_MUTE: False}
+        self.chars = {FEATURE_ON_OFF: None, FEATURE_PLAY_PAUSE: None,
+                      FEATURE_PLAY_STOP: None, FEATURE_TOGGLE_MUTE: None}
         modes = self.config[CONF_MODE]
 
-        if ON_OFF in modes:
-            name = self.generate_service_name(ON_OFF)
+        if FEATURE_ON_OFF in modes:
+            name = self.generate_service_name(FEATURE_ON_OFF)
             serv_on_off = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
             serv_on_off.configure_char(CHAR_NAME, value=name)
-            self.chars[ON_OFF] = serv_on_off.configure_char(
+            self.chars[FEATURE_ON_OFF] = serv_on_off.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_on_off)
 
-        if PLAY_PAUSE in modes:
-            name = self.generate_service_name(PLAY_PAUSE)
+        if FEATURE_PLAY_PAUSE in modes:
+            name = self.generate_service_name(FEATURE_PLAY_PAUSE)
             serv_play_pause = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
             serv_play_pause.configure_char(CHAR_NAME, value=name)
-            self.chars[PLAY_PAUSE] = serv_play_pause.configure_char(
+            self.chars[FEATURE_PLAY_PAUSE] = serv_play_pause.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_play_pause)
 
-        if PLAY_STOP in modes:
-            name = self.generate_service_name(PLAY_STOP)
+        if FEATURE_PLAY_STOP in modes:
+            name = self.generate_service_name(FEATURE_PLAY_STOP)
             serv_play_stop = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
             serv_play_stop.configure_char(CHAR_NAME, value=name)
-            self.chars[PLAY_STOP] = serv_play_stop.configure_char(
+            self.chars[FEATURE_PLAY_STOP] = serv_play_stop.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_play_stop)
 
-        if TOGGLE_MUTE in modes:
-            name = self.generate_service_name(TOGGLE_MUTE)
+        if FEATURE_TOGGLE_MUTE in modes:
+            name = self.generate_service_name(FEATURE_TOGGLE_MUTE)
             serv_toggle_mute = self.add_preload_service(SERV_SWITCH, CHAR_NAME)
             serv_toggle_mute.configure_char(CHAR_NAME, value=name)
-            self.chars[TOGGLE_MUTE] = serv_toggle_mute.configure_char(
+            self.chars[FEATURE_TOGGLE_MUTE] = serv_toggle_mute.configure_char(
                 CHAR_ON, value=False, setter_callback=self.set_toggle_mute)
 
     def generate_service_name(self, mode):
@@ -73,7 +73,7 @@ class MediaPlayer(HomeAccessory):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "on_off" to %s',
                       self.entity_id, value)
-        self._flag[ON_OFF] = True
+        self._flag[FEATURE_ON_OFF] = True
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.hass.services.call(DOMAIN, service, params)
@@ -82,7 +82,7 @@ class MediaPlayer(HomeAccessory):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "play_pause" to %s',
                       self.entity_id, value)
-        self._flag[PLAY_PAUSE] = True
+        self._flag[FEATURE_PLAY_PAUSE] = True
         service = SERVICE_MEDIA_PLAY if value else SERVICE_MEDIA_PAUSE
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.hass.services.call(DOMAIN, service, params)
@@ -91,7 +91,7 @@ class MediaPlayer(HomeAccessory):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "play_stop" to %s',
                       self.entity_id, value)
-        self._flag[PLAY_STOP] = True
+        self._flag[FEATURE_PLAY_STOP] = True
         service = SERVICE_MEDIA_PLAY if value else SERVICE_MEDIA_STOP
         params = {ATTR_ENTITY_ID: self.entity_id}
         self.hass.services.call(DOMAIN, service, params)
@@ -100,7 +100,7 @@ class MediaPlayer(HomeAccessory):
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug('%s: Set switch state for "toggle_mute" to %s',
                       self.entity_id, value)
-        self._flag[TOGGLE_MUTE] = True
+        self._flag[FEATURE_TOGGLE_MUTE] = True
         params = {ATTR_ENTITY_ID: self.entity_id,
                   ATTR_MEDIA_VOLUME_MUTED: value}
         self.hass.services.call(DOMAIN, SERVICE_VOLUME_MUTE, params)
@@ -109,34 +109,34 @@ class MediaPlayer(HomeAccessory):
         """Update switch state after state changed."""
         current_state = new_state.state
 
-        if self.chars[ON_OFF]:
+        if self.chars[FEATURE_ON_OFF]:
             hk_state = current_state not in (STATE_OFF, STATE_UNKNOWN, 'None')
-            if not self._flag[ON_OFF]:
+            if not self._flag[FEATURE_ON_OFF]:
                 _LOGGER.debug('%s: Set current state for "on_off" to %s',
                               self.entity_id, hk_state)
-                self.chars[ON_OFF].set_value(hk_state)
-            self._flag[ON_OFF] = False
+                self.chars[FEATURE_ON_OFF].set_value(hk_state)
+            self._flag[FEATURE_ON_OFF] = False
 
-        if self.chars[PLAY_PAUSE]:
+        if self.chars[FEATURE_PLAY_PAUSE]:
             hk_state = current_state == STATE_PLAYING
-            if not self._flag[PLAY_PAUSE]:
+            if not self._flag[FEATURE_PLAY_PAUSE]:
                 _LOGGER.debug('%s: Set current state for "play_pause" to %s',
                               self.entity_id, hk_state)
-                self.chars[PLAY_PAUSE].set_value(hk_state)
-            self._flag[PLAY_PAUSE] = False
+                self.chars[FEATURE_PLAY_PAUSE].set_value(hk_state)
+            self._flag[FEATURE_PLAY_PAUSE] = False
 
-        if self.chars[PLAY_STOP]:
+        if self.chars[FEATURE_PLAY_STOP]:
             hk_state = current_state == STATE_PLAYING
-            if not self._flag[PLAY_STOP]:
+            if not self._flag[FEATURE_PLAY_STOP]:
                 _LOGGER.debug('%s: Set current state for "play_stop" to %s',
                               self.entity_id, hk_state)
-                self.chars[PLAY_STOP].set_value(hk_state)
-            self._flag[PLAY_STOP] = False
+                self.chars[FEATURE_PLAY_STOP].set_value(hk_state)
+            self._flag[FEATURE_PLAY_STOP] = False
 
-        if self.chars[TOGGLE_MUTE]:
+        if self.chars[FEATURE_TOGGLE_MUTE]:
             current_state = new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED)
-            if not self._flag[TOGGLE_MUTE]:
+            if not self._flag[FEATURE_TOGGLE_MUTE]:
                 _LOGGER.debug('%s: Set current state for "toggle_mute" to %s',
                               self.entity_id, current_state)
-                self.chars[TOGGLE_MUTE].set_value(current_state)
-            self._flag[TOGGLE_MUTE] = False
+                self.chars[FEATURE_TOGGLE_MUTE].set_value(current_state)
+            self._flag[FEATURE_TOGGLE_MUTE] = False

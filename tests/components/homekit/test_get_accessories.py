@@ -9,7 +9,7 @@ import homeassistant.components.cover as cover
 import homeassistant.components.climate as climate
 import homeassistant.components.media_player as media_player
 from homeassistant.components.homekit import get_accessory, TYPES
-from homeassistant.components.homekit.const import ON_OFF
+from homeassistant.components.homekit.const import FEATURE_ON_OFF
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT, CONF_MODE, CONF_NAME, TEMP_CELSIUS,
@@ -32,7 +32,7 @@ def test_not_supported_media_player():
     # selected mode for entity not supported
     with pytest.raises(vol.Invalid):
         entity_state = State('media_player.demo', 'on')
-        get_accessory(None, entity_state, 2, {CONF_MODE: [ON_OFF]})
+        get_accessory(None, entity_state, 2, {CONF_MODE: [FEATURE_ON_OFF]})
 
     # no supported modes for entity
     entity_state = State('media_player.demo', 'on')
@@ -57,7 +57,7 @@ def test_customize_options(config, name):
     ('Lock', 'lock.test', 'locked', {}, {ATTR_CODE: '1234'}),
     ('MediaPlayer', 'media_player.test', 'on',
      {ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_TURN_ON |
-      media_player.SUPPORT_TURN_OFF}, {CONF_MODE: [ON_OFF]}),
+      media_player.SUPPORT_TURN_OFF}, {CONF_MODE: [FEATURE_ON_OFF]}),
     ('SecuritySystem', 'alarm_control_panel.test', 'armed', {},
      {ATTR_CODE: '1234'}),
     ('Thermostat', 'climate.test', 'auto', {}, {}),

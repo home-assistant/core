@@ -10,11 +10,13 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
 from .const import (
-    HOMEKIT_NOTIFY_ID, ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
+    HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP,
+    FEATURE_TOGGLE_MUTE)
 
 _LOGGER = logging.getLogger(__name__)
 
-MEDIA_PLAYER_MODES = (ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
+MEDIA_PLAYER_MODES = (FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP,
+                      FEATURE_TOGGLE_MUTE)
 
 BASIC_INFO_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
@@ -56,20 +58,20 @@ def validate_entity_config(values):
     return entities
 
 
-def validate_media_player_modes(state, config):
-    """Validate modes for media players."""
+def validate_media_player_features(state, config):
+    """Validate features for media players."""
     features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     supported_modes = []
     if features & (media_player.SUPPORT_TURN_ON |
                    media_player.SUPPORT_TURN_OFF):
-        supported_modes.append(ON_OFF)
+        supported_modes.append(FEATURE_ON_OFF)
     if features & (media_player.SUPPORT_PLAY | media_player.SUPPORT_PAUSE):
-        supported_modes.append(PLAY_PAUSE)
+        supported_modes.append(FEATURE_PLAY_PAUSE)
     if features & (media_player.SUPPORT_PLAY | media_player.SUPPORT_STOP):
-        supported_modes.append(PLAY_STOP)
+        supported_modes.append(FEATURE_PLAY_STOP)
     if features & media_player.SUPPORT_VOLUME_MUTE:
-        supported_modes.append(TOGGLE_MUTE)
+        supported_modes.append(FEATURE_TOGGLE_MUTE)
 
     if not config.get(CONF_MODE):
         config[CONF_MODE] = supported_modes

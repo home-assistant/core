@@ -25,7 +25,7 @@ from .const import (
     DEFAULT_PORT, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25, DOMAIN, HOMEKIT_FILE,
     SERVICE_HOMEKIT_START)
 from .util import (
-    show_setup_message, validate_entity_config, validate_media_player_modes)
+    show_setup_message, validate_entity_config, validate_media_player_features)
 
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
@@ -126,7 +126,7 @@ def get_accessory(hass, state, aid, config):
         a_type = 'Lock'
 
     elif state.domain == 'media_player':
-        validate_media_player_modes(state, config)
+        validate_media_player_features(state, config)
         if config.get(CONF_MODE):
             a_type = 'MediaPlayer'
 

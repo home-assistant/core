@@ -4,11 +4,12 @@ import voluptuous as vol
 
 from homeassistant.core import State
 from homeassistant.components.homekit.const import (
-    HOMEKIT_NOTIFY_ID, ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
+    HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP,
+    FEATURE_TOGGLE_MUTE)
 from homeassistant.components.homekit.util import (
     convert_to_float, density_to_air_quality, dismiss_setup_message,
     show_setup_message, temperature_to_homekit, temperature_to_states,
-    validate_media_player_modes)
+    validate_media_player_features)
 from homeassistant.components.homekit.util import validate_entity_config \
     as vec
 from homeassistant.components.persistent_notification import (
@@ -46,8 +47,8 @@ def test_validate_entity_config():
 
     assert vec({'media_player.demo': {}}) == \
         {'media_player.demo': {CONF_MODE: []}}
-    assert vec({'media_player.demo': {CONF_MODE: [ON_OFF]}}) == \
-        {'media_player.demo': {CONF_MODE: [ON_OFF]}}
+    assert vec({'media_player.demo': {CONF_MODE: [FEATURE_ON_OFF]}}) == \
+        {'media_player.demo': {CONF_MODE: [FEATURE_ON_OFF]}}
 
 
 def test_validate_media_player_modes():
@@ -55,13 +56,14 @@ def test_validate_media_player_modes():
     config = {}
     attrs = {ATTR_SUPPORTED_FEATURES: 20873}
     entity_state = State('media_player.demo', 'on', attrs)
-    validate_media_player_modes(entity_state, config)
-    assert config == {CONF_MODE: [ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE]}
+    validate_media_player_features(entity_state, config)
+    assert config == {CONF_MODE: [FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
+                                  FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE]}
 
     entity_state = State('media_player.demo', 'on')
-    config = {CONF_MODE: [ON_OFF]}
+    config = {CONF_MODE: [FEATURE_ON_OFF]}
     with pytest.raises(vol.Invalid):
-        validate_media_player_modes(entity_state, config)
+        validate_media_player_features(entity_state, config)
 
 
 def test_convert_to_float():
