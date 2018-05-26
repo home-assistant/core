@@ -706,6 +706,9 @@ pyTibber==0.4.1
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
 
+# homeassistant.components.cover.ryobi_gdo
+py_ryobi_gdo==0.0.10
+
 # homeassistant.components.ads
 pyads==2.2.6
 
