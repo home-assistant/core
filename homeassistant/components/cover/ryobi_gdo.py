@@ -23,12 +23,10 @@ _LOGGER = logging.getLogger(__name__)
 CONF_DEVICE_ID = 'device_id'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
 })
-
-SCAN_INTERVAL = timedelta(seconds=30)
 
 SUPPORTED_FEATURES = (SUPPORT_OPEN | SUPPORT_CLOSE)
 
@@ -42,17 +40,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     devices = config.get(CONF_DEVICE_ID)
 
-    _LOGGER.debug("%s devices to set up", len(devices))
-
     for device_id in devices:
         my_door = ryobi_door(username, password, device_id)
-        _LOGGER.debug("Getting api key")
+        _LOGGER.debug("Getting the API key")
         if my_door.get_api_key() is False:
-            _LOGGER.error("Wrong credentials, no api key retrieved")
+            _LOGGER.error("Wrong credentials, no API key retrieved")
             return
-        _LOGGER.debug('Checking device_id')
+        _LOGGER.debug("Checking if the device ID is present")
         if my_door.check_device_id() is False:
-            _LOGGER.error("%s not in your devices. Check conf", device_id)
+            _LOGGER.error("%s not in your device list", device_id)
             return
         _LOGGER.debug("Adding device %s to covers", device_id)
         covers.append(RyobiCover(hass, my_door))
@@ -79,7 +75,7 @@ class RyobiCover(CoverDevice):
     def is_closed(self):
         """Return if the cover is closed."""
         if self._door_state == STATE_UNKNOWN:
-            return None
+            return False
         return self._door_state == STATE_CLOSED
 
     @property
