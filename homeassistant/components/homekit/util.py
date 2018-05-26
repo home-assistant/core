@@ -3,9 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_STOP, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE)
+import homeassistant.components.media_player as media_player
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
     ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_MODE, CONF_NAME, TEMP_CELSIUS)
@@ -54,17 +52,18 @@ def validate_entity_config(values):
 
 
 def validate_media_player_modes(state, config):
-    """Validate modes for media playeres."""
+    """Validate modes for media players."""
     features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     supported_modes = []
-    if features & (SUPPORT_TURN_ON | SUPPORT_TURN_OFF):
+    if features & (media_player.SUPPORT_TURN_ON |
+                   media_player.SUPPORT_TURN_OFF):
         supported_modes.append(ON_OFF)
-    if features & (SUPPORT_PLAY | SUPPORT_PAUSE):
+    if features & (media_player.SUPPORT_PLAY | media_player.SUPPORT_PAUSE):
         supported_modes.append(PLAY_PAUSE)
-    if features & (SUPPORT_PLAY | SUPPORT_STOP):
+    if features & (media_player.SUPPORT_PLAY | media_player.SUPPORT_STOP):
         supported_modes.append(PLAY_STOP)
-    if features & SUPPORT_VOLUME_MUTE:
+    if features & media_player.SUPPORT_VOLUME_MUTE:
         supported_modes.append(TOGGLE_MUTE)
 
     if not config.get(CONF_MODE):

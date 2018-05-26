@@ -5,11 +5,9 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.core import State
-from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN
-from homeassistant.components.climate import (
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
-from homeassistant.components.media_player import (
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+import homeassistant.components.cover as cover
+import homeassistant.components.climate as climate
+import homeassistant.components.media_player as media_player
 from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.components.homekit.const import ON_OFF
 from homeassistant.const import (
@@ -58,14 +56,14 @@ def test_customize_options(config, name):
     ('Light', 'light.test', 'on', {}, {}),
     ('Lock', 'lock.test', 'locked', {}, {ATTR_CODE: '1234'}),
     ('MediaPlayer', 'media_player.test', 'on',
-     {ATTR_SUPPORTED_FEATURES: SUPPORT_TURN_ON | SUPPORT_TURN_OFF},
-     {CONF_MODE: [ON_OFF]}),
+     {ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_TURN_ON |
+      media_player.SUPPORT_TURN_OFF}, {CONF_MODE: [ON_OFF]}),
     ('SecuritySystem', 'alarm_control_panel.test', 'armed', {},
      {ATTR_CODE: '1234'}),
     ('Thermostat', 'climate.test', 'auto', {}, {}),
     ('Thermostat', 'climate.test', 'auto',
-     {ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_LOW |
-      SUPPORT_TARGET_TEMPERATURE_HIGH}, {}),
+     {ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_LOW |
+      climate.SUPPORT_TARGET_TEMPERATURE_HIGH}, {}),
 ])
 def test_types(type_name, entity_id, state, attrs, config):
     """Test if types are associated correctly."""
@@ -82,7 +80,7 @@ def test_types(type_name, entity_id, state, attrs, config):
 @pytest.mark.parametrize('type_name, entity_id, state, attrs', [
     ('GarageDoorOpener', 'cover.garage_door', 'open',
      {ATTR_DEVICE_CLASS: 'garage',
-      ATTR_SUPPORTED_FEATURES: SUPPORT_OPEN | SUPPORT_CLOSE}),
+      ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE}),
     ('WindowCovering', 'cover.set_position', 'open',
      {ATTR_SUPPORTED_FEATURES: 4}),
     ('WindowCoveringBasic', 'cover.open_window', 'open',
