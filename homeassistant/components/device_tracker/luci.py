@@ -50,7 +50,7 @@ class LuciDeviceScanner(DeviceScanner):
         """Initialize the scanner."""
         host = config[CONF_HOST]
         protocol = 'http' if not config[CONF_SSL] else 'https'
-        self.origin = protocol + '://' + host
+        self.origin =  '{}://{}'.format(protocol, host)
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
 
@@ -74,8 +74,8 @@ class LuciDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         if self.mac2name is None:
             url = '{}/cgi-bin/luci/rpc/uci'.format(self.origin)
-            result = _req_json_rpc(url, 'get_all', 'dhcp',
-                                   params={'auth': self.token})
+            result = _req_json_rpc(
+                url, 'get_all', 'dhcp', params={'auth': self.token})
             if result:
                 hosts = [x for x in result.values()
                          if x['.type'] == 'host' and
@@ -101,8 +101,8 @@ class LuciDeviceScanner(DeviceScanner):
         url = '{}/cgi-bin/luci/rpc/sys'.format(self.origin)
 
         try:
-            result = _req_json_rpc(url, 'net.arptable',
-                                   params={'auth': self.token})
+            result = _req_json_rpc(
+                url, 'net.arptable', params={'auth': self.token})
         except InvalidLuciTokenError:
             _LOGGER.info("Refreshing token")
             self.refresh_token()
@@ -156,6 +156,6 @@ def _req_json_rpc(url, method, *args, **kwargs):
 
 
 def _get_token(origin, username, password):
-    """Get authentication token for the given origin+username+password."""
+    """Get authentication token for the given configuration."""
     url = '{}/cgi-bin/luci/rpc/auth'.format(origin)
     return _req_json_rpc(url, 'login', username, password)
