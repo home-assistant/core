@@ -14,7 +14,6 @@ EVENT = 'calendar_updated'
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_devices, discovery_info=None):
     """Initialize the calendar."""
-
     hass.http.register_view(CalendarView)
     hass.http.register_view(CalendarListView)
 

@@ -123,8 +123,8 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
                                        all_day,
                                        search,
                                        device_data[CONF_NAME],
-                                       device_data[CONF_COLOR],
-                                       hass)
+                                       hass,
+                                       device_data.get(CONF_COLOR))
         super().__init__(hass, device_data)
 
     @property
@@ -141,7 +141,8 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
 class WebDavCalendarData(object):
     """Class to utilize the calendar dav client object to get next event."""
 
-    def __init__(self, calendar, include_all_day, search, name, color, hass):
+    def __init__(self, calendar, include_all_day, search, name,
+                 hass, color=None):
         """Set up how we are going to search the WebDav calendar."""
         self.calendar = calendar
         self.include_all_day = include_all_day
