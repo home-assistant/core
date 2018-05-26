@@ -38,7 +38,8 @@ class CalendarView(http.HomeAssistantView):
             ret = []
             for calendar_name in data.get("calendars"):
                 if calendar_name in request.app['hass'].data[DOMAIN]:
-                    ret.extend(request.app['hass'].data[DOMAIN][calendar_name].items)
+                    ret.extend(request.app['hass'].
+                               data[DOMAIN][calendar_name].items)
             return self.json(ret)
         return self.json([])
 

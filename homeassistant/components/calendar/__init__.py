@@ -33,7 +33,6 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 
-
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for calendars."""
@@ -307,7 +306,8 @@ class EventData:
         for item in self.items:
             if item.get('uid') is not None and uid == item['uid']:
                 return item
-            elif title == item['title'] and self._get_date(start).isoformat() == item['start']:
+            elif title == item['title'] and \
+                    self._get_date(start).isoformat() == item['start']:
                 # Item already created
                 return item
         return None
@@ -339,7 +339,6 @@ class EventData:
             if value is not None:
                 item[key] = value
 
-
         item['start'] = self._get_date(item['start']).isoformat()
         item['end'] = self._get_date(item['end']).isoformat()
 
@@ -352,7 +351,8 @@ class EventData:
         """Load items."""
         def load():
             """Load the items synchronously."""
-            return load_json(self.hass.config.path(self.persistence), default=[])
+            return load_json(self.hass.config.path(self.persistence),
+                             default=[])
 
         self.items = yield from self.hass.async_add_job(load)
 

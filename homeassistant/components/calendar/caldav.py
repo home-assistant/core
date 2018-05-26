@@ -116,7 +116,8 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
                  search=None):
         """Create the WebDav Calendar Event Device."""
         persistence_file = ".{}{}".format(device_data[CONF_NAME], PERSISTENCE)
-        hass.data[DOMAIN][device_data[CONF_NAME]] = EventData(hass, persistence_file)
+        hass.data[DOMAIN][device_data[CONF_NAME]] = \
+            EventData(hass, persistence_file)
 
         self.data = WebDavCalendarData(calendar,
                                        all_day,
