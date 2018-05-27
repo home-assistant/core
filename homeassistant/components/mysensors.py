@@ -18,8 +18,8 @@ import voluptuous as vol
 from homeassistant.components.mqtt import (
     valid_publish_topic, valid_subscribe_topic)
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, CONF_NAME, CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_STOP,
-    STATE_OFF, STATE_ON)
+    ATTR_BATTERY_LEVEL, CONF_NAME, CONF_OPTIMISTIC, CONF_FORCE_UPDATE,
+    EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -56,6 +56,7 @@ CONF_NODE_NAME = 'name'
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
 DEFAULT_VERSION = '1.4'
+DEFAULT_FORCE_UPDATE = False
 DOMAIN = 'mysensors'
 
 GATEWAY_READY_TIMEOUT = 15.0
@@ -139,7 +140,9 @@ def deprecated(key):
 
 NODE_SCHEMA = vol.Schema({
     cv.positive_int: {
-        vol.Required(CONF_NODE_NAME): cv.string
+        vol.Required(CONF_NODE_NAME): cv.string,
+        vol.Optional(CONF_FORCE_UPDATE,
+                     default=DEFAULT_FORCE_UPDATE): cv.boolean,
     }
 })
 
