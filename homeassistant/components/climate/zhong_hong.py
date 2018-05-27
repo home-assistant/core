@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_GATEWAY_ADDRRESS = 'gateway_address'
 
-REQUIREMENTS = ['zhong_hong_hvac==1.0.4']
+REQUIREMENTS = ['zhong_hong_hvac==1.0.7']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST):
