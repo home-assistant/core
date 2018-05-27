@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA, SUPPORT_FAN_MODE, SUPPORT_ON_OFF, SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+    ATTR_OPERATION_MODE, PLATFORM_SCHEMA, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, CONF_PORT,
                                  EVENT_HOMEASSISTANT_START, TEMP_CELSIUS)
 from homeassistant.exceptions import PlatformNotReady
@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_GATEWAY_ADDRRESS = 'gateway_address'
 
-REQUIREMENTS = ['zhong_hong_hvac==1.0.1']
+REQUIREMENTS = ['zhong_hong_hvac==1.0.4']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST):
@@ -40,17 +40,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
     gw_addr = config.get(CONF_GATEWAY_ADDRRESS)
     hub = ZhongHongGateway(host, port, gw_addr)
-    try:
-        devices = [
-            ZhongHongClimate(hub, addr_out, addr_in)
-            for (addr_out, addr_in) in hub.discovery_ac()
-        ]
-    except Exception as exc:
-        _LOGGER.error("ZhongHong controller is not ready", exc_info=exc)
-        raise PlatformNotReady
 
     def startup(event):
         """Add devices to HA and start hub socket."""
+        try:
+            devices = [
+                ZhongHongClimate(hub, addr_out, addr_in)
+                for (addr_out, addr_in) in hub.discovery_ac()
+            ]
+        except Exception as exc:
+            _LOGGER.error("ZhongHong controller is not ready", exc_info=exc)
+            raise PlatformNotReady
         add_devices(devices)
         hub.start_listen()
         hub.query_all_status()
@@ -70,7 +70,7 @@ class ZhongHongClimate(ClimateDevice):
 
     def _after_update(self, climate):
         """Callback to update state."""
-        _LOGGER.info("async update ha state")
+        _LOGGER.debug("async update ha state")
         self.schedule_update_ha_state()
 
     @property
@@ -163,9 +163,12 @@ class ZhongHongClimate(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
-            return
-        self._device.set_temperature(temperature)
+        if temperature is not None:
+            self._device.set_temperature(temperature)
+
+        operation_mode = kwargs.get(ATTR_OPERATION_MODE)
+        if operation_mode is not None:
+            self._device.set_operation_mode(operation_mode)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
