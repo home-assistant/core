@@ -200,6 +200,7 @@ class ElectricalMeasurementSensor(Sensor):
 
     @property
     def force_update(self) -> bool:
+        """Force update this entity."""
         return True
 
     @property
