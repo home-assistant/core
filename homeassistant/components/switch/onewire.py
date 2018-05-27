@@ -120,6 +120,15 @@ class OneWireSwitch(SwitchDevice):
         """Return true if switch is on."""
         return self._state
 
+    def update(self):
+        """Get the latest data from the switch and update the state."""
+        value = self._read_value_raw()
+        if value:
+            self._state = value == DEVICE_SWITCH_ON
+        else:
+            self._state = None
+        return self._state
+
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._write_value_raw(DEVICE_SWITCH_ON)
