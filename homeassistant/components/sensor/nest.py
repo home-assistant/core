@@ -137,11 +137,11 @@ class NestSensor(Entity):
 
     @property
     def should_poll(self):
-        """Do not need poll thanks using Nest streaming API"""
+        """Do not need poll thanks using Nest streaming API."""
         return False
 
     async def async_nest_update_event_handler(self, event):
-        """Update sensor state"""
+        """Update sensor state."""
         await self.async_device_update()
         await self.async_update_ha_state()
 

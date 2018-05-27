@@ -57,10 +57,10 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_nest_update_event_broker(hass, nest):
     """
-    Fire a EVENT_NEST_UPDATE event when nest stream API received data
+    Fire a EVENT_NEST_UPDATE event when nest stream API received data.
 
-    nest.update_event.wait will block the thread in most of time
-    so specific an executor to save default thread pool
+    nest.update_event.wait will block the thread in most of time,
+    so specific an executor to save default thread pool.
     """
     _LOGGER.debug("listening nest.update_event")
     with ThreadPoolExecutor(max_workers=1) as executor:
