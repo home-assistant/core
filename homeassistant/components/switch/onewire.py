@@ -12,7 +12,6 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import DEVICE_DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +87,7 @@ class OneWireSwitch(SwitchDevice):
                 content = ds_device_file.read()
             return content
         except FileNotFoundError:
-            _LOGGER.warning("1Wire switch file not found: %s", 
+            _LOGGER.warning("1Wire switch file not found: %s",
                             self._device_file)
         except OSError:
             _LOGGER.warning("Error reading switch file %s", self._device_file)
@@ -104,7 +103,7 @@ class OneWireSwitch(SwitchDevice):
                 ds_device_file.write(value)
             return True
         except FileNotFoundError:
-            _LOGGER.warning("1Wire switch file not found: %s", 
+            _LOGGER.warning("1Wire switch file not found: %s",
                             self._device_file)
         except OSError:
             _LOGGER.warning("Error writing switch file %s",
@@ -124,9 +123,9 @@ class OneWireSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._write_value_raw(DEVICE_SWITCH_ON)
-        _LOGGER.debug("1Wire switch %s turned on",self._device_file)
+        _LOGGER.debug("1Wire switch %s turned on", self._device_file)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self._write_value_raw(DEVICE_SWITCH_OFF)
-        _LOGGER.debug("1Wire switch %s turned off",self._device_file)
+        _LOGGER.debug("1Wire switch %s turned off", self._device_file)
