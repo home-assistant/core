@@ -344,7 +344,7 @@ gTTS-token==1.1.1
 gearbest_parser==1.0.5
 
 # homeassistant.components.sensor.gitter
-gitterpy==0.1.6
+gitterpy==0.1.7
 
 # homeassistant.components.notify.gntp
 gntp==1.0.3
