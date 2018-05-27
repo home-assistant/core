@@ -577,6 +577,16 @@ def get_mysensors_name(gateway, node_id, child_id):
     return '{} {}'.format(node_name, child_id)
 
 
+def get_mysensors_force_update(gateway, node_id):
+    """Return force_update for a node."""
+    force_update = next(
+        (node[CONF_FORCE_UPDATE] for conf_id, node
+         in gateway.nodes_config.items()
+         if node.get(CONF_FORCE_UPDATE) is not None and conf_id == node_id),
+        DEFAULT_FORCE_UPDATE)
+    return force_update
+
+
 def get_mysensors_gateway(hass, gateway_id):
     """Return MySensors gateway."""
     if MYSENSORS_GATEWAYS not in hass.data:
@@ -612,9 +622,10 @@ def setup_mysensors_platform(
             s_type = gateway.const.Presentation(child.type).name
             device_class_copy = device_class[s_type]
         name = get_mysensors_name(gateway, node_id, child_id)
+        force_update = get_mysensors_force_update(gateway, node_id)
 
         args_copy = (*device_args, gateway, node_id, child_id, name,
-                     value_type)
+                     force_update, value_type)
         devices[dev_id] = device_class_copy(*args_copy)
         new_devices.append(devices[dev_id])
     if new_devices:
@@ -627,12 +638,14 @@ def setup_mysensors_platform(
 class MySensorsDevice(object):
     """Representation of a MySensors device."""
 
-    def __init__(self, gateway, node_id, child_id, name, value_type):
+    def __init__(self, gateway, node_id, child_id, name,
+                 force_update, value_type):
         """Set up the MySensors device."""
         self.gateway = gateway
         self.node_id = node_id
         self.child_id = child_id
         self._name = name
+        self._force_update = force_update
         self.value_type = value_type
         child = gateway.sensors[node_id].children[child_id]
         self.child_type = child.type
@@ -694,6 +707,11 @@ class MySensorsEntity(MySensorsDevice, Entity):
     def available(self):
         """Return true if entity is available."""
         return self.value_type in self._values
+
+    @property
+    def force_update(self):
+        """Return force_update value."""
+        return self._force_update
 
     @callback
     def async_update_callback(self):
