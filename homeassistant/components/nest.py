@@ -79,7 +79,7 @@ async def async_request_configuration(nest, hass, config):
     configurator = hass.components.configurator
     if 'nest' in _CONFIGURING:
         _LOGGER.debug("configurator failed")
-        await configurator.async_notify_errors(
+        configurator.async_notify_errors(
             _CONFIGURING['nest'], "Failed to configure, please try again.")
         return
 
