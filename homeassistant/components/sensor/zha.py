@@ -197,6 +197,10 @@ class ElectricalMeasurementSensor(Sensor):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
         return 'W'
+    
+    @property
+    def force_update(self) -> bool:
+        return True
 
     @property
     def state(self):
