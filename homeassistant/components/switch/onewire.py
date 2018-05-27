@@ -11,8 +11,7 @@ from glob import glob
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import DEVICE_DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,15 +43,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the one wire Switches."""
     base_dir = config.get(CONF_MOUNT_DIR)
     devs = []
-    device_names = {}
-    if 'names' in config:
-        if isinstance(config['names'], dict):
-            device_names = config['names']
+    device_names = config.get('names', {})
 
     for family_file_path in glob(os.path.join(base_dir, '*', 'family')):
         with open(family_file_path, "r") as family_file:
@@ -68,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                            switch_id_complete),
                                           device_file))
 
-    if devs == []:
+    if not devs:
         _LOGGER.error("No onewire sensor found. Check if dtoverlay=w1-gpio "
                       "is in your /boot/config.txt. "
                       "Check the mount_dir parameter if it's defined")
@@ -82,7 +77,7 @@ class OneWireSwitch(SwitchDevice):
 
     def __init__(self, name, device_file):
         """Initialize the OneWire switch."""
-        self._name = name or DEVICE_DEFAULT_NAME
+        self._name = name
         self._device_file = device_file
         self._state = None
 
@@ -91,28 +86,29 @@ class OneWireSwitch(SwitchDevice):
         try:
             with open(self._device_file, 'r') as ds_device_file:
                 content = ds_device_file.read()
+            return content
         except FileNotFoundError:
-            msg = "1Wire switch file not found: %s", self._device_file
-            _LOGGER.warning(msg)
+            _LOGGER.warning("1Wire switch file not found: %s", 
+                            self._device_file)
         except OSError:
             _LOGGER.warning("Error reading switch file %s", self._device_file)
-        return content
+        return False
 
     def _write_value_raw(self, value):
         """Write the value to the switch."""
         if value not in [DEVICE_SWITCH_ON, DEVICE_SWITCH_OFF]:
             _LOGGER.error("Error in setting wrong value %s", value)
-        else:
-            try:
-                with open(self._device_file, 'w') as ds_device_file:
-                    ds_device_file.write(value)
-                return True
-            except FileNotFoundError:
-                msg = "1Wire switch file not found: %s", self._device_file
-                _LOGGER.warning(msg)
-            except OSError:
-                msg = "Error writing switch file %s", self._device_file
-                _LOGGER.warning(msg)
+            return False
+        try:
+            with open(self._device_file, 'w') as ds_device_file:
+                ds_device_file.write(value)
+            return True
+        except FileNotFoundError:
+            _LOGGER.warning("1Wire switch file not found: %s", 
+                            self._device_file)
+        except OSError:
+            _LOGGER.warning("Error writing switch file %s",
+                            self._device_file)
         return False
 
     @property
@@ -125,17 +121,12 @@ class OneWireSwitch(SwitchDevice):
         """Return true if switch is on."""
         return self._state
 
-    def update(self):
-        """Get the latest data from the switch and update the state."""
-        self._state = self._read_value_raw() == DEVICE_SWITCH_ON
-        return self._state
-
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        if self._write_value_raw(DEVICE_SWITCH_ON):
-            self.schedule_update_ha_state()
+        self._write_value_raw(DEVICE_SWITCH_ON)
+        _LOGGER.debug("1Wire switch %s turned on",self._device_file)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        if self._write_value_raw(DEVICE_SWITCH_OFF):
-            self.schedule_update_ha_state()
+        self._write_value_raw(DEVICE_SWITCH_OFF)
+        _LOGGER.debug("1Wire switch %s turned off",self._device_file)
