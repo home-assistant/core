@@ -174,7 +174,11 @@ class KeyboardRemoteThread(threading.Thread):
                 _LOGGER.debug(categorize(event))
                 self.hass.bus.fire(
                     KEYBOARD_REMOTE_COMMAND_RECEIVED,
-                    {KEY_CODE: event.code}
+                    {
+                        KEY_CODE: event.code,
+                        DEVICE_DESCRIPTOR: self.device_descriptor,
+                        DEVICE_NAME: self.device_name
+                    }
                 )
 
 
