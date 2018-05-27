@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.nest import DATA_NEST
+from homeassistant.components.nest import DATA_NEST, EVENT_NEST_UPDATE
 from homeassistant.components.climate import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ECO, ClimateDevice,
     PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
@@ -37,11 +37,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     temp_unit = hass.config.units.temperature_unit
 
-    add_devices(
-        [NestThermostat(structure, device, temp_unit)
-         for structure, device in hass.data[DATA_NEST].thermostats()],
-        True
-    )
+    all_devices = [NestThermostat(structure, device, temp_unit)
+                   for structure, device in hass.data[DATA_NEST].thermostats()]
+
+    add_devices(all_devices, True)
+
+    for device in all_devices:
+        hass.bus.listen(EVENT_NEST_UPDATE,
+                        device.async_nest_update_event_handler)
 
 
 class NestThermostat(ClimateDevice):
@@ -96,6 +99,16 @@ class NestThermostat(ClimateDevice):
         self._locked_temperature = None
         self._min_temperature = None
         self._max_temperature = None
+
+    @property
+    def should_poll(self):
+        """Do not need poll thanks using Nest streaming API"""
+        return False
+
+    async def async_nest_update_event_handler(self, event):
+        """Update device state"""
+        await self.async_device_update()
+        await self.async_update_ha_state()
 
     @property
     def supported_features(self):
@@ -168,16 +181,19 @@ class NestThermostat(ClimateDevice):
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         import nest
+        temp = None
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         if self._mode == NEST_MODE_HEAT_COOL:
             if target_temp_low is not None and target_temp_high is not None:
                 temp = (target_temp_low, target_temp_high)
+                _LOGGER.debug("Nest set_temperature-output-value=%s", temp)
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
-        _LOGGER.debug("Nest set_temperature-output-value=%s", temp)
+            _LOGGER.debug("Nest set_temperature-output-value=%s", temp)
         try:
-            self.device.target = temp
+            if temp is not None:
+                self.device.target = temp
         except nest.nest.APIError:
             _LOGGER.error("An error occurred while setting the temperature")
 

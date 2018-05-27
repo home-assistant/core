@@ -8,9 +8,9 @@ from itertools import chain
 import logging
 
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
+from homeassistant.components.nest import DATA_NEST, EVENT_NEST_UPDATE
 from homeassistant.components.sensor.nest import NestSensor
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.components.nest import DATA_NEST
 
 DEPENDENCIES = ['nest']
 
@@ -103,6 +103,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                    device,
                                                    activity_zone)]
     add_devices(sensors, True)
+
+    for sensor in sensors:
+        hass.bus.listen(EVENT_NEST_UPDATE,
+                        sensor.async_nest_update_event_handler)
 
 
 class NestBinarySensor(NestSensor, BinarySensorDevice):

@@ -4,6 +4,7 @@ Support for Nest devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/nest/
 """
+from concurrent.futures import ThreadPoolExecutor
 import logging
 import socket
 
@@ -13,7 +14,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.const import (
     CONF_STRUCTURE, CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
-    CONF_MONITORED_CONDITIONS)
+    CONF_MONITORED_CONDITIONS,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 
 REQUIREMENTS = ['python-nest==4.0.0']
 
@@ -23,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'nest'
 
 DATA_NEST = 'nest'
+
+EVENT_NEST_UPDATE = 'nest_update'
 
 NEST_CONFIG_FILE = 'nest.conf'
 CONF_CLIENT_ID = 'client_id'
@@ -51,23 +55,44 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def request_configuration(nest, hass, config):
+async def async_nest_update_event_broker(hass, nest):
+    """
+    Fire a EVENT_NEST_UPDATE event when nest stream API received data
+
+    nest.update_event.wait will block the thread in most of time
+    so specific an executor to save default thread pool
+    """
+    _LOGGER.debug("listening nest.update_event")
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        while True:
+            await hass.loop.run_in_executor(executor, nest.update_event.wait)
+            if hass.is_running:
+                _LOGGER.debug("dispatching nest data update")
+                nest.update_event.clear()
+                hass.bus.async_fire(EVENT_NEST_UPDATE)
+            else:
+                return
+
+
+async def async_request_configuration(nest, hass, config):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
     if 'nest' in _CONFIGURING:
         _LOGGER.debug("configurator failed")
-        configurator.notify_errors(
+        await configurator.async_notify_errors(
             _CONFIGURING['nest'], "Failed to configure, please try again.")
         return
 
-    def nest_configuration_callback(data):
+    async def async_nest_configuration_callback(data):
         """Run when the configuration callback is called."""
         _LOGGER.debug("configurator callback")
         pin = data.get('pin')
-        setup_nest(hass, nest, config, pin=pin)
+        await async_setup_nest(hass, nest, config, pin=pin)
+        # start nest update event listener since we missed startup hook
+        hass.async_add_job(async_nest_update_event_broker, hass, nest)
 
-    _CONFIGURING['nest'] = configurator.request_config(
-        "Nest", nest_configuration_callback,
+    _CONFIGURING['nest'] = configurator.async_request_config(
+        "Nest", async_nest_configuration_callback,
         description=('To configure Nest, click Request Authorization below, '
                      'log into your Nest account, '
                      'and then enter the resulting PIN'),
@@ -78,7 +103,7 @@ def request_configuration(nest, hass, config):
     )
 
 
-def setup_nest(hass, nest, config, pin=None):
+async def async_setup_nest(hass, nest, config, pin=None):
     """Set up the Nest devices."""
     if pin is not None:
         _LOGGER.debug("pin acquired, requesting access token")
@@ -86,36 +111,51 @@ def setup_nest(hass, nest, config, pin=None):
 
     if nest.access_token is None:
         _LOGGER.debug("no access_token, requesting configuration")
-        request_configuration(nest, hass, config)
+        await async_request_configuration(nest, hass, config)
         return
 
     if 'nest' in _CONFIGURING:
         _LOGGER.debug("configuration done")
         configurator = hass.components.configurator
-        configurator.request_done(_CONFIGURING.pop('nest'))
+        configurator.async_request_done(_CONFIGURING.pop('nest'))
 
     _LOGGER.debug("proceeding with setup")
     conf = config[DOMAIN]
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
 
-    _LOGGER.debug("proceeding with discovery")
-    discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
+    _LOGGER.debug("proceeding with discovery -- climate")
+    await discovery.async_load_platform(hass, 'climate', DOMAIN, {}, config)
+    _LOGGER.debug("proceeding with discovery -- camera")
+    await discovery.async_load_platform(hass, 'camera', DOMAIN, {}, config)
 
+    _LOGGER.debug("proceeding with discovery -- sensor")
     sensor_config = conf.get(CONF_SENSORS, {})
-    discovery.load_platform(hass, 'sensor', DOMAIN, sensor_config, config)
+    await discovery.async_load_platform(hass, 'sensor', DOMAIN, sensor_config,
+                                        config)
 
+    _LOGGER.debug("proceeding with discovery -- binary_sensor")
     binary_sensor_config = conf.get(CONF_BINARY_SENSORS, {})
-    discovery.load_platform(hass, 'binary_sensor', DOMAIN,
-                            binary_sensor_config, config)
+    await discovery.async_load_platform(hass, 'binary_sensor', DOMAIN,
+                                        binary_sensor_config, config)
+
+    def start_up(event):
+        hass.async_add_job(async_nest_update_event_broker, hass, nest)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_up)
+
+    def shut_down(event):
+        if nest:
+            nest.update_event.set()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
 
     _LOGGER.debug("setup done")
 
     return True
 
 
-def setup(hass, config):
-    """Set up the Nest thermostat component."""
+async def async_setup(hass, config):
+    """Set up Nest components."""
     import nest
 
     if 'nest' in _CONFIGURING:
@@ -131,7 +171,7 @@ def setup(hass, config):
     nest = nest.Nest(
         access_token_cache_file=access_token_cache_file,
         client_id=client_id, client_secret=client_secret)
-    setup_nest(hass, nest, config)
+    await async_setup_nest(hass, nest, config)
 
     def set_mode(service):
         """Set the home/away mode for a Nest structure."""
@@ -148,7 +188,7 @@ def setup(hass, config):
                 _LOGGER.error("Invalid structure %s",
                               service.data[ATTR_STRUCTURE])
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, 'set_mode', set_mode, schema=AWAY_SCHEMA)
 
     return True

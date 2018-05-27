@@ -7,13 +7,14 @@ https://home-assistant.io/components/sensor.nest/
 from itertools import chain
 import logging
 
-from homeassistant.components.nest import DATA_NEST
+from homeassistant.components.nest import DATA_NEST, EVENT_NEST_UPDATE
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_MONITORED_CONDITIONS,
     DEVICE_CLASS_TEMPERATURE)
 
 DEPENDENCIES = ['nest']
+
 SENSOR_TYPES = ['humidity',
                 'operation_mode',
                 'hvac_state']
@@ -96,6 +97,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(all_sensors, True)
 
+    for sensor in all_sensors:
+        hass.bus.listen(EVENT_NEST_UPDATE,
+                        sensor.async_nest_update_event_handler)
+
 
 class NestSensor(Entity):
     """Representation of a Nest sensor."""
@@ -129,6 +134,16 @@ class NestSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit
+
+    @property
+    def should_poll(self):
+        """Do not need poll thanks using Nest streaming API"""
+        return False
+
+    async def async_nest_update_event_handler(self, event):
+        """Update sensor state"""
+        await self.async_device_update()
+        await self.async_update_ha_state()
 
 
 class NestBasicSensor(NestSensor):
