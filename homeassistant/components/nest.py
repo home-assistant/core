@@ -83,7 +83,7 @@ async def async_request_configuration(nest, hass, config):
             _CONFIGURING['nest'], "Failed to configure, please try again.")
         return
 
-    async def async_nest_configuration_callback(data):
+    async def async_nest_configuration_call_back(data):
         """Run when the configuration callback is called."""
         _LOGGER.debug("configurator callback")
         pin = data.get('pin')
@@ -92,7 +92,7 @@ async def async_request_configuration(nest, hass, config):
         hass.async_add_job(async_nest_update_event_broker, hass, nest)
 
     _CONFIGURING['nest'] = configurator.async_request_config(
-        "Nest", async_nest_configuration_callback,
+        "Nest", async_nest_configuration_call_back,
         description=('To configure Nest, click Request Authorization below, '
                      'log into your Nest account, '
                      'and then enter the resulting PIN'),
@@ -139,11 +139,13 @@ async def async_setup_nest(hass, nest, config, pin=None):
                                         binary_sensor_config, config)
 
     def start_up(event):
+        """Start Nest update event listener."""
         hass.async_add_job(async_nest_update_event_broker, hass, nest)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_up)
 
     def shut_down(event):
+        """Stop Nest update event listener."""
         if nest:
             nest.update_event.set()
 
