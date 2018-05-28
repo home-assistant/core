@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.nest import DATA_NEST, EVENT_NEST_UPDATE
+from homeassistant.components.nest import DATA_NEST, SIGNAL_NEST_UPDATE
 from homeassistant.components.climate import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ECO, ClimateDevice,
     PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
@@ -18,6 +18,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, STATE_UNKNOWN)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['nest']
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +44,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(all_devices, True)
 
     for device in all_devices:
-        hass.bus.listen(EVENT_NEST_UPDATE,
-                        device.async_nest_update_event_handler)
+        async_dispatcher_connect(hass, SIGNAL_NEST_UPDATE,
+                                 device.async_nest_update_callback)
 
 
 class NestThermostat(ClimateDevice):
@@ -105,7 +106,7 @@ class NestThermostat(ClimateDevice):
         """Do not need poll thanks using Nest streaming API."""
         return False
 
-    async def async_nest_update_event_handler(self, event):
+    async def async_nest_update_callback(self):
         """Update device state."""
         await self.async_device_update()
         await self.async_update_ha_state()

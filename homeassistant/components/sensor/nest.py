@@ -7,7 +7,8 @@ https://home-assistant.io/components/sensor.nest/
 from itertools import chain
 import logging
 
-from homeassistant.components.nest import DATA_NEST, EVENT_NEST_UPDATE
+from homeassistant.components.nest import DATA_NEST, SIGNAL_NEST_UPDATE
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_MONITORED_CONDITIONS,
@@ -98,8 +99,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(all_sensors, True)
 
     for sensor in all_sensors:
-        hass.bus.listen(EVENT_NEST_UPDATE,
-                        sensor.async_nest_update_event_handler)
+        async_dispatcher_connect(hass, SIGNAL_NEST_UPDATE,
+                                 sensor.async_nest_update_callback)
 
 
 class NestSensor(Entity):
@@ -140,7 +141,7 @@ class NestSensor(Entity):
         """Do not need poll thanks using Nest streaming API."""
         return False
 
-    async def async_nest_update_event_handler(self, event):
+    async def async_nest_update_callback(self):
         """Update sensor state."""
         await self.async_device_update()
         await self.async_update_ha_state()

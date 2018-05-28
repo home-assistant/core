@@ -10,12 +10,12 @@ import socket
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
 from homeassistant.const import (
     CONF_STRUCTURE, CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
     CONF_MONITORED_CONDITIONS,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers import discovery, config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 REQUIREMENTS = ['python-nest==4.0.0']
 
@@ -26,7 +26,7 @@ DOMAIN = 'nest'
 
 DATA_NEST = 'nest'
 
-EVENT_NEST_UPDATE = 'nest_update'
+SIGNAL_NEST_UPDATE = 'nest_update'
 
 NEST_CONFIG_FILE = 'nest.conf'
 CONF_CLIENT_ID = 'client_id'
@@ -57,7 +57,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_nest_update_event_broker(hass, nest):
     """
-    Fire a EVENT_NEST_UPDATE event when nest stream API received data.
+    Dispatch SIGNAL_NEST_UPDATE to devices when nest stream API received data.
 
     nest.update_event.wait will block the thread in most of time,
     so specific an executor to save default thread pool.
@@ -67,9 +67,9 @@ async def async_nest_update_event_broker(hass, nest):
         while True:
             await hass.loop.run_in_executor(executor, nest.update_event.wait)
             if hass.is_running:
-                _LOGGER.debug("dispatching nest data update")
                 nest.update_event.clear()
-                hass.bus.async_fire(EVENT_NEST_UPDATE)
+                _LOGGER.debug("dispatching nest data update")
+                async_dispatcher_send(hass, SIGNAL_NEST_UPDATE)
             else:
                 return
 
