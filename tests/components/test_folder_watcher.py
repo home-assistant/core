@@ -8,7 +8,7 @@ from tests.common import MockDependency
 
 
 async def test_invalid_path_setup(hass):
-    """Test that a invalid path is not setup."""
+    """Test that an invalid path is not setup."""
     assert not await async_setup_component(
         hass, folder_watcher.DOMAIN, {
             folder_watcher.DOMAIN: {

@@ -14,7 +14,7 @@ delete_all_link:
       description: All-Link group number.
       example: 1
 load_all_link_database:
-  description: Load the All-Link Database for a device. WARNING - Loading a device All-LInk database is very time consuming and inconsistant. This may take a LONG time and may need to be repeated to obtain all records.
+  description: Load the All-Link Database for a device. WARNING - Loading a device All-LInk database is very time consuming and inconsistent. This may take a LONG time and may need to be repeated to obtain all records.
   fields:
     entity_id:
       description: Name of the device to print

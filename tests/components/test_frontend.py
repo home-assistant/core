@@ -57,7 +57,7 @@ def test_frontend_and_static(mock_http_client):
 
     # Test we can retrieve frontend.js
     frontendjs = re.search(
-        r'(?P<app>\/frontend_es5\/frontend-[A-Za-z0-9]{32}.html)', text)
+        r'(?P<app>\/frontend_es5\/app-[A-Za-z0-9]{32}.js)', text)
 
     assert frontendjs is not None
     resp = yield from mock_http_client.get(frontendjs.groups(0)[0])

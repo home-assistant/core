@@ -347,6 +347,15 @@ class ConfigEntries:
 
     async def _async_finish_flow(self, result):
         """Finish a config flow and add an entry."""
+        # If no discovery config entries in progress, remove notification.
+        if not any(ent['source'] in DISCOVERY_SOURCES for ent
+                   in self.hass.config_entries.flow.async_progress()):
+            self.hass.components.persistent_notification.async_dismiss(
+                DISCOVERY_NOTIFICATION_ID)
+
+        if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            return None
+
         entry = ConfigEntry(
             version=result['version'],
             domain=result['handler'],
@@ -369,12 +378,6 @@ class ConfigEntries:
         # Return Entry if they not from a discovery request
         if result['source'] not in DISCOVERY_SOURCES:
             return entry
-
-        # If no discovery config entries in progress, remove notification.
-        if not any(ent['source'] in DISCOVERY_SOURCES for ent
-                   in self.hass.config_entries.flow.async_progress()):
-            self.hass.components.persistent_notification.async_dismiss(
-                DISCOVERY_NOTIFICATION_ID)
 
         return entry
 

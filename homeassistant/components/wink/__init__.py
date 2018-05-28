@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, CONF_EMAIL, CONF_PASSWORD,
+    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_NAME, CONF_EMAIL, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON,
     __version__)
 from homeassistant.core import callback
@@ -45,7 +45,6 @@ ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
 ATTR_CLIENT_ID = 'client_id'
 ATTR_CLIENT_SECRET = 'client_secret'
-ATTR_NAME = 'name'
 ATTR_PAIRING_MODE = 'pairing_mode'
 ATTR_KIDDE_RADIO_CODE = 'kidde_radio_code'
 ATTR_HUB_NAME = 'hub_name'
@@ -53,7 +52,8 @@ ATTR_HUB_NAME = 'hub_name'
 WINK_AUTH_CALLBACK_PATH = '/auth/wink/callback'
 WINK_AUTH_START = '/auth/wink'
 WINK_CONFIG_FILE = '.wink.conf'
-USER_AGENT = "Manufacturer/Home-Assistant%s python/3 Wink/3" % __version__
+USER_AGENT = "Manufacturer/Home-Assistant{} python/3 Wink/3".format(
+    __version__)
 
 DEFAULT_CONFIG = {
     'client_id': 'CLIENT_ID_HERE',

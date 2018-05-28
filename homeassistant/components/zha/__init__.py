@@ -16,9 +16,9 @@ from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
 
 REQUIREMENTS = [
-    'bellows==0.5.2',
-    'zigpy==0.0.3',
-    'zigpy-xbee==0.0.2',
+    'bellows==0.6.0',
+    'zigpy==0.1.0',
+    'zigpy-xbee==0.1.0',
 ]
 
 DOMAIN = 'zha'
@@ -256,11 +256,16 @@ class ApplicationListener:
         """Try to set up an entity from a "bare" cluster."""
         if cluster.cluster_id in profile_clusters:
             return
-        # pylint: disable=unidiomatic-typecheck
-        if type(cluster) not in device_classes:
+
+        component = None
+        for cluster_type, candidate_component in device_classes.items():
+            if isinstance(cluster, cluster_type):
+                component = candidate_component
+                break
+
+        if component is None:
             return
 
-        component = device_classes[type(cluster)]
         cluster_key = "{}-{}".format(device_key, cluster.cluster_id)
         discovery_info = {
             'application_listener': self,
@@ -319,7 +324,7 @@ class Entity(entity.Entity):
         self._endpoint = endpoint
         self._in_clusters = in_clusters
         self._out_clusters = out_clusters
-        self._state = ha_const.STATE_UNKNOWN
+        self._state = None
         self._unique_id = unique_id
 
         # Normally the entity itself is the listener. Sub-classes may set this
@@ -410,7 +415,7 @@ def get_discovery_info(hass, discovery_info):
     return all_discovery_info.get(discovery_key, None)
 
 
-async def safe_read(cluster, attributes):
+async def safe_read(cluster, attributes, allow_cache=True):
     """Swallow all exceptions from network read.
 
     If we throw during initialization, setup fails. Rather have an entity that
@@ -420,7 +425,7 @@ async def safe_read(cluster, attributes):
     try:
         result, _ = await cluster.read_attributes(
             attributes,
-            allow_cache=True,
+            allow_cache=allow_cache,
         )
         return result
     except Exception:  # pylint: disable=broad-except

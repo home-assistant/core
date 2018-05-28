@@ -284,3 +284,23 @@ async def test_discovery_notification(hass):
     await hass.async_block_till_done()
     state = hass.states.get('persistent_notification.config_entry_discovery')
     assert state is None
+
+
+async def test_discovery_notification_not_created(hass):
+    """Test that we not create a notification when discovery is aborted."""
+    loader.set_component(hass, 'test', MockModule('test'))
+    await async_setup_component(hass, 'persistent_notification', {})
+
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+
+        async def async_step_discovery(self, user_input=None):
+            return self.async_abort(reason='test')
+
+    with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
+        await hass.config_entries.flow.async_init(
+            'test', source=data_entry_flow.SOURCE_DISCOVERY)
+
+    await hass.async_block_till_done()
+    state = hass.states.get('persistent_notification.config_entry_discovery')
+    assert state is None

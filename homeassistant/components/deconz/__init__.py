@@ -22,7 +22,7 @@ from .const import (
     CONFIG_FILE, DATA_DECONZ_EVENT, DATA_DECONZ_ID,
     DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
 
-REQUIREMENTS = ['pydeconz==37']
+REQUIREMENTS = ['pydeconz==38']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

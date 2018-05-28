@@ -51,8 +51,8 @@ set_direction:
       description: Name(s) of the entities to toggle
       example: 'fan.living_room'
     direction:
-      description: The direction to rotate
-      example: 'left'
+      description: The direction to rotate. Either 'forward' or 'reverse'
+      example: 'forward'
 
 dyson_set_night_mode:
   description: Set the fan in night mode.
