@@ -14,6 +14,7 @@ from tests.common import async_mock_service
     'remote.test',
     'script.test',
     'switch.test',
+    'vacuum.test',
 ])
 async def test_switch_set_state(hass, entity_id):
     """Test if accessory and HA are updated accordingly."""

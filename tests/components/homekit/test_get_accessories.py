@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
 from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.components.homekit.const import ON_OFF
+import homeassistant.components.vacuum as vacuum
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT, CONF_MODE, CONF_NAME, TEMP_CELSIUS,
@@ -38,6 +39,13 @@ def test_not_supported_media_player():
 
     # no supported modes for entity
     entity_state = State('media_player.demo', 'on')
+    assert get_accessory(None, entity_state, 2, {}) is None
+
+
+def test_not_supported_switch():
+    """Test that component which don't support TURN_ON / OFF aren't added."""
+    # Vacuum must have supported features TURN_ON and TURN_OFF
+    entity_state = State('vacuum.demo', 'off')
     assert get_accessory(None, entity_state, 2, {}) is None
 
 
@@ -134,6 +142,9 @@ def test_type_sensors(type_name, entity_id, state, attrs):
     ('Switch', 'remote.test', 'on', {}),
     ('Switch', 'script.test', 'on', {}),
     ('Switch', 'switch.test', 'on', {}),
+    ('Switch', 'vacuum.test', 'on',
+     {ATTR_SUPPORTED_FEATURES: vacuum.SUPPORT_TURN_OFF |
+      vacuum.SUPPORT_TURN_ON}),
 ])
 def test_type_switches(type_name, entity_id, state, attrs):
     """Test if switch types are associated correctly."""
