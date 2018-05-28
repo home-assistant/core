@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.rainmachine/
 """
 
-from logging import getLogger
+import logging
 
 from homeassistant.components.rainmachine import (
     CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DEFAULT_ZONE_RUN,
@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import (
 
 DEPENDENCIES = ['rainmachine']
 
-_LOGGER = getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_AREA = 'area'
 ATTR_CS_ON = 'cs_on'
@@ -159,11 +159,6 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
     def is_enabled(self) -> bool:
         """Return whether the entity is enabled."""
         return self._obj.get('active')
-
-    @property
-    def should_poll(self):
-        """Enable polling."""
-        return True
 
     @property
     def unique_id(self) -> str:

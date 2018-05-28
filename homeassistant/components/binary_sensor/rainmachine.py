@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.rainmachine/
 """
 
-from logging import getLogger
+import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.rainmachine import (
@@ -18,7 +18,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['rainmachine']
 
-_LOGGER = getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -29,8 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rainmachine = hass.data[DATA_RAINMACHINE]
 
     binary_sensors = []
-    for sensor_type in discovery_info.get(CONF_MONITORED_CONDITIONS,
-                                          BINARY_SENSORS):
+    for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
         name, icon = BINARY_SENSORS[sensor_type]
         binary_sensors.append(
             RainMachineBinarySensor(rainmachine, sensor_type, name, icon))
@@ -75,6 +74,7 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
     @callback
     async def async_added_to_hass(self):
         """Register callbacks."""
+        @callback
         def update_data():
             """Update the state."""
             self.async_schedule_update_ha_state(True)

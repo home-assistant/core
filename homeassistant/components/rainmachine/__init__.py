@@ -68,12 +68,12 @@ SENSORS = {
 }
 
 BINARY_SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MONITORED_CONDITIONS):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSORS)):
         vol.All(cv.ensure_list, [vol.In(BINARY_SENSORS)])
 })
 
 SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MONITORED_CONDITIONS):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
         vol.All(cv.ensure_list, [vol.In(SENSORS)])
 })
 
@@ -95,20 +95,20 @@ SERVICE_STOP_ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONE_ID): cv.positive_int,
 })
 
-SWITCH_SCHEMA = vol.Schema({
-    vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int
-})
+SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int})
 
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema({
+        DOMAIN:
+        vol.Schema({
             vol.Required(CONF_IP_ADDRESS): cv.string,
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-            vol.Optional(CONF_BINARY_SENSORS): BINARY_SENSOR_SCHEMA,
-            vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
-            vol.Optional(CONF_SWITCHES): SWITCH_SCHEMA,
+            vol.Optional(CONF_BINARY_SENSORS, default={}):
+                BINARY_SENSOR_SCHEMA,
+            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+            vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
         })
     },
     extra=vol.ALLOW_EXTRA)
@@ -141,16 +141,12 @@ def setup(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    binary_sensor_config = conf.get(CONF_BINARY_SENSORS, {})
-    discovery.load_platform(
-        hass, 'binary_sensor', DOMAIN, binary_sensor_config, config)
-
-    sensor_config = conf.get(CONF_SENSORS, {})
-    discovery.load_platform(
-        hass, 'sensor', DOMAIN, sensor_config, config)
-
-    switch_config = conf.get(CONF_SWITCHES, {})
-    discovery.load_platform(hass, 'switch', DOMAIN, switch_config, config)
+    for component, schema in [
+            ('binary_sensor', conf[CONF_BINARY_SENSORS]),
+            ('sensor', conf[CONF_SENSORS]),
+            ('switch', conf[CONF_SWITCHES]),
+    ]:
+        discovery.load_platform(hass, component, DOMAIN, schema, config)
 
     def refresh(event_time):
         """Refresh RainMachine data."""
@@ -166,8 +162,8 @@ def setup(hass, config):
 
     def start_zone(service):
         """Start a particular zone for a certain amount of time."""
-        rainmachine.client.zones.start(
-            service.data[CONF_ZONE_ID], service.data[CONF_ZONE_RUN_TIME])
+        rainmachine.client.zones.start(service.data[CONF_ZONE_ID],
+                                       service.data[CONF_ZONE_RUN_TIME])
 
     def stop_all(service):
         """Stop all watering."""
@@ -181,24 +177,14 @@ def setup(hass, config):
         """Stop a zone."""
         rainmachine.client.zones.stop(service.data[CONF_ZONE_ID])
 
-    hass.services.register(
-        DOMAIN, 'start_program',
-        start_program,
-        schema=SERVICE_START_PROGRAM_SCHEMA)
-
-    hass.services.register(
-        DOMAIN, 'start_zone', start_zone, schema=SERVICE_START_ZONE_SCHEMA)
-
-    hass.services.register(DOMAIN, 'stop_all', stop_all)
-
-    hass.services.register(
-        DOMAIN,
-        'stop_program',
-        stop_program,
-        schema=SERVICE_STOP_PROGRAM_SCHEMA)
-
-    hass.services.register(
-        DOMAIN, 'stop_zone', stop_zone, schema=SERVICE_STOP_ZONE_SCHEMA)
+    for service, method, schema in [
+            ('start_program', start_program, SERVICE_START_PROGRAM_SCHEMA),
+            ('start_zone', start_zone, SERVICE_START_ZONE_SCHEMA),
+            ('stop_all', stop_all, {}),
+            ('stop_program', stop_program, SERVICE_STOP_PROGRAM_SCHEMA),
+            ('stop_zone', stop_zone, SERVICE_STOP_ZONE_SCHEMA)
+    ]:
+        hass.services.register(DOMAIN, service, method, schema=schema)
 
     return True
 
@@ -215,8 +201,10 @@ class RainMachine(object):
     def update(self):
         """Update sensor/binary sensor data."""
         self.restrictions.update({
-            'current': self.client.restrictions.current(),
-            'global': self.client.restrictions.universal()
+            'current':
+            self.client.restrictions.current(),
+            'global':
+            self.client.restrictions.universal()
         })
 
 

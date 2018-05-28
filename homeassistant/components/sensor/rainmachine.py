@@ -5,18 +5,17 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rainmachine/
 """
 
-from logging import getLogger
+import logging
 
 from homeassistant.components.rainmachine import (
-    DATA_RAINMACHINE, DATA_UPDATE_TOPIC, SENSORS, TYPE_FREEZE_TEMP,
-    RainMachineEntity)
+    DATA_RAINMACHINE, DATA_UPDATE_TOPIC, SENSORS, RainMachineEntity)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['rainmachine']
 
-_LOGGER = getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -27,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rainmachine = hass.data[DATA_RAINMACHINE]
 
     sensors = []
-    for sensor_type in discovery_info.get(CONF_MONITORED_CONDITIONS, SENSORS):
+    for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
         name, icon, unit = SENSORS[sensor_type]
         sensors.append(
             RainMachineSensor(rainmachine, sensor_type, name, icon, unit))
@@ -75,9 +74,9 @@ class RainMachineSensor(RainMachineEntity):
         """Return the unit the value is expressed in."""
         return self._unit
 
-    @callback
     async def async_added_to_hass(self):
         """Register callbacks."""
+        @callback
         def update_data():
             """Update the state."""
             self.async_schedule_update_ha_state(True)
@@ -86,6 +85,5 @@ class RainMachineSensor(RainMachineEntity):
 
     def update(self):
         """Update the sensor's state."""
-        if self._sensor_type == TYPE_FREEZE_TEMP:
-            self._state = self.rainmachine.restrictions['global'][
-                'freezeProtectTemp']
+        self._state = self.rainmachine.restrictions['global'][
+            'freezeProtectTemp']
