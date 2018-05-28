@@ -83,7 +83,7 @@ async def async_request_configuration(nest, hass, config):
             _CONFIGURING['nest'], "Failed to configure, please try again.")
         return
 
-    async def async_nest_configuration_call_back(data):
+    async def async_nest_config_callback(data):
         """Run when the configuration callback is called."""
         _LOGGER.debug("configurator callback")
         pin = data.get('pin')
@@ -92,7 +92,7 @@ async def async_request_configuration(nest, hass, config):
         hass.async_add_job(async_nest_update_event_broker, hass, nest)
 
     _CONFIGURING['nest'] = configurator.async_request_config(
-        "Nest", async_nest_configuration_call_back,
+        "Nest", async_nest_config_callback,
         description=('To configure Nest, click Request Authorization below, '
                      'log into your Nest account, '
                      'and then enter the resulting PIN'),
