@@ -105,10 +105,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                    activity_zone)]
     add_devices(sensors, True)
 
-    for sensor in sensors:
-        async_dispatcher_connect(hass, SIGNAL_NEST_UPDATE,
-                                 sensor.async_update_state)
-
 
 class NestBinarySensor(NestSensor, BinarySensorDevice):
     """Represents a Nest binary sensor."""
