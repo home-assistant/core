@@ -22,7 +22,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 
-REQUIREMENTS = ["kylin==0.4.0"]
+REQUIREMENTS = ["kylin==0.5.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
