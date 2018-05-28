@@ -11,15 +11,15 @@ def verify_client(method):
     @wraps(method)
     async def wrapper(view, request, *args, **kwargs):
         """Verify client id/secret before doing request."""
-        client_id = await _verify_client(request)
+        client = await _verify_client(request)
 
-        if client_id is None:
+        if client is None:
             return view.json({
                 'error': 'invalid_client',
             }, status_code=401)
 
         return await method(
-            view, request, *args, client_id=client_id, **kwargs)
+            view, request, *args, **kwargs, client=client)
 
     return wrapper
 
@@ -46,18 +46,34 @@ async def _verify_client(request):
         client_id, client_secret = decoded.split(':', 1)
     except ValueError:
         # If no ':' in decoded
-        return None
+        client_id, client_secret = decoded, None
 
-    client = await request.app['hass'].auth.async_get_client(client_id)
+    return await async_secure_get_client(
+        request.app['hass'], client_id, client_secret)
+
+
+async def async_secure_get_client(hass, client_id, client_secret):
+    """Get a client id/secret in consistent time."""
+    client = await hass.auth.async_get_client(client_id)
 
     if client is None:
-        # Still do a compare so we run same time as if a client was found.
-        hmac.compare_digest(client_secret.encode('utf-8'),
-                            client_secret.encode('utf-8'))
+        if client_secret is not None:
+            # Still do a compare so we run same time as if a client was found.
+            hmac.compare_digest(client_secret.encode('utf-8'),
+                                client_secret.encode('utf-8'))
         return None
 
-    if hmac.compare_digest(client_secret.encode('utf-8'),
-                           client.secret.encode('utf-8')):
-        return client_id
+    if client.secret is None:
+        return client
+
+    elif client_secret is None:
+        # Still do a compare so we run same time as if a secret was passed.
+        hmac.compare_digest(client.secret.encode('utf-8'),
+                            client.secret.encode('utf-8'))
+        return None
+
+    elif hmac.compare_digest(client_secret.encode('utf-8'),
+                             client.secret.encode('utf-8')):
+        return client
 
     return None

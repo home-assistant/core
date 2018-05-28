@@ -1,7 +1,7 @@
 """Tests for the login flow."""
 from aiohttp.helpers import BasicAuth
 
-from . import async_setup_auth, CLIENT_AUTH
+from . import async_setup_auth, CLIENT_AUTH, CLIENT_REDIRECT_URI
 
 
 async def test_fetch_auth_providers(hass, aiohttp_client):
@@ -34,7 +34,8 @@ async def test_invalid_username_password(hass, aiohttp_client):
     """Test we cannot get flows in progress."""
     client = await async_setup_auth(hass, aiohttp_client)
     resp = await client.post('/auth/login_flow', json={
-        'handler': ['insecure_example', None]
+        'handler': ['insecure_example', None],
+        'redirect_uri': CLIENT_REDIRECT_URI
     }, auth=CLIENT_AUTH)
     assert resp.status == 200
     step = await resp.json()

@@ -25,7 +25,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180509.0']
+REQUIREMENTS = ['home-assistant-frontend==20180526.4']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -147,21 +147,6 @@ class AbstractPanel:
             'get', '/{}/{{extra:.+}}'.format(self.frontend_url_path),
             index_view.get)
 
-    def to_response(self, hass, request):
-        """Panel as dictionary."""
-        result = {
-            'component_name': self.component_name,
-            'icon': self.sidebar_icon,
-            'title': self.sidebar_title,
-            'url_path': self.frontend_url_path,
-            'config': self.config,
-        }
-        if _is_latest(hass.data[DATA_JS_VERSION], request):
-            result['url'] = self.webcomponent_url_latest
-        else:
-            result['url'] = self.webcomponent_url_es5
-        return result
-
 
 class BuiltInPanel(AbstractPanel):
     """Panel that is part of hass_frontend."""
@@ -175,30 +160,15 @@ class BuiltInPanel(AbstractPanel):
         self.frontend_url_path = frontend_url_path or component_name
         self.config = config
 
-    @asyncio.coroutine
-    def async_finalize(self, hass, frontend_repository_path):
-        """Finalize this panel for usage.
-
-        If frontend_repository_path is set, will be prepended to path of
-        built-in components.
-        """
-        if frontend_repository_path is None:
-            import hass_frontend
-            import hass_frontend_es5
-
-            self.webcomponent_url_latest = \
-                '/frontend_latest/panels/ha-panel-{}-{}.html'.format(
-                    self.component_name,
-                    hass_frontend.FINGERPRINTS[self.component_name])
-            self.webcomponent_url_es5 = \
-                '/frontend_es5/panels/ha-panel-{}-{}.html'.format(
-                    self.component_name,
-                    hass_frontend_es5.FINGERPRINTS[self.component_name])
-        else:
-            # Dev mode
-            self.webcomponent_url_es5 = self.webcomponent_url_latest = \
-                '/home-assistant-polymer/panels/{}/ha-panel-{}.html'.format(
-                    self.component_name, self.component_name)
+    def to_response(self, hass, request):
+        """Panel as dictionary."""
+        return {
+            'component_name': self.component_name,
+            'icon': self.sidebar_icon,
+            'title': self.sidebar_title,
+            'config': self.config,
+            'url_path': self.frontend_url_path,
+        }
 
 
 class ExternalPanel(AbstractPanel):
@@ -243,6 +213,21 @@ class ExternalPanel(AbstractPanel):
                 # if path is None, we're in prod mode, so cache static assets
                 frontend_repository_path is None)
             self.REGISTERED_COMPONENTS.add(self.component_name)
+
+    def to_response(self, hass, request):
+        """Panel as dictionary."""
+        result = {
+            'component_name': self.component_name,
+            'icon': self.sidebar_icon,
+            'title': self.sidebar_title,
+            'url_path': self.frontend_url_path,
+            'config': self.config,
+        }
+        if _is_latest(hass.data[DATA_JS_VERSION], request):
+            result['url'] = self.webcomponent_url_latest
+        else:
+            result['url'] = self.webcomponent_url_es5
+        return result
 
 
 @bind_hass
@@ -296,6 +281,15 @@ def add_manifest_json_key(key, val):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the serving of the frontend."""
+    if list(hass.auth.async_auth_providers):
+        client = yield from hass.auth.async_create_client(
+            'Home Assistant Frontend',
+            redirect_uris=['/'],
+            no_secret=True,
+        )
+    else:
+        client = None
+
     hass.components.websocket_api.async_register_command(
         WS_TYPE_GET_PANELS, websocket_handle_get_panels, SCHEMA_GET_PANELS)
     hass.http.register_view(ManifestJSONView)
@@ -307,59 +301,40 @@ def async_setup(hass, config):
     hass.data[DATA_JS_VERSION] = js_version = conf.get(CONF_JS_VERSION)
 
     if is_dev:
-        for subpath in ["src", "build-translations", "build-temp", "build",
-                        "hass_frontend", "bower_components", "panels",
-                        "hassio"]:
-            hass.http.register_static_path(
-                "/home-assistant-polymer/{}".format(subpath),
-                os.path.join(repo_path, subpath),
-                False)
-
-        hass.http.register_static_path(
-            "/static/translations",
-            os.path.join(repo_path, "build-translations/output"), False)
-        sw_path_es5 = os.path.join(repo_path, "build-es5/service_worker.js")
-        sw_path_latest = os.path.join(repo_path, "build/service_worker.js")
-        static_path = os.path.join(repo_path, 'hass_frontend')
-        frontend_es5_path = os.path.join(repo_path, 'build-es5')
-        frontend_latest_path = os.path.join(repo_path, 'build')
+        hass_frontend_path = os.path.join(repo_path, 'hass_frontend')
+        hass_frontend_es5_path = os.path.join(repo_path, 'hass_frontend_es5')
     else:
         import hass_frontend
         import hass_frontend_es5
-        sw_path_es5 = os.path.join(hass_frontend_es5.where(),
-                                   "service_worker.js")
-        sw_path_latest = os.path.join(hass_frontend.where(),
-                                      "service_worker.js")
-        # /static points to dir with files that are JS-type agnostic.
-        # ES5 files are served from /frontend_es5.
-        # ES6 files are served from /frontend_latest.
-        static_path = hass_frontend.where()
-        frontend_es5_path = hass_frontend_es5.where()
-        frontend_latest_path = static_path
+        hass_frontend_path = hass_frontend.where()
+        hass_frontend_es5_path = hass_frontend_es5.where()
 
     hass.http.register_static_path(
-        "/service_worker_es5.js", sw_path_es5, False)
+        "/service_worker_es5.js",
+        os.path.join(hass_frontend_es5_path, "service_worker.js"), False)
     hass.http.register_static_path(
-        "/service_worker.js", sw_path_latest, False)
+        "/service_worker.js",
+        os.path.join(hass_frontend_path, "service_worker.js"), False)
     hass.http.register_static_path(
-        "/robots.txt", os.path.join(static_path, "robots.txt"), not is_dev)
-    hass.http.register_static_path("/static", static_path, not is_dev)
+        "/robots.txt",
+        os.path.join(hass_frontend_path, "robots.txt"), False)
+    hass.http.register_static_path("/static", hass_frontend_path, not is_dev)
     hass.http.register_static_path(
-        "/frontend_latest", frontend_latest_path, not is_dev)
+        "/frontend_latest", hass_frontend_path, not is_dev)
     hass.http.register_static_path(
-        "/frontend_es5", frontend_es5_path, not is_dev)
+        "/frontend_es5", hass_frontend_es5_path, not is_dev)
 
     local = hass.config.path('www')
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    index_view = IndexView(repo_path, js_version)
+    index_view = IndexView(repo_path, js_version, client)
     hass.http.register_view(index_view)
 
-    @asyncio.coroutine
-    def finalize_panel(panel):
+    async def finalize_panel(panel):
         """Finalize setup of a panel."""
-        yield from panel.async_finalize(hass, repo_path)
+        if hasattr(panel, 'async_finalize'):
+            await panel.async_finalize(hass, repo_path)
         panel.async_register_index_routes(hass.http.app.router, index_view)
 
     yield from asyncio.wait([
@@ -451,10 +426,11 @@ class IndexView(HomeAssistantView):
     requires_auth = False
     extra_urls = ['/states', '/states/{extra}']
 
-    def __init__(self, repo_path, js_option):
+    def __init__(self, repo_path, js_option, client):
         """Initialize the frontend view."""
         self.repo_path = repo_path
         self.js_option = js_option
+        self.client = client
         self._template_cache = {}
 
     def get_template(self, latest):
@@ -508,7 +484,7 @@ class IndexView(HomeAssistantView):
 
         extra_key = DATA_EXTRA_HTML_URL if latest else DATA_EXTRA_HTML_URL_ES5
 
-        resp = template.render(
+        template_params = dict(
             no_auth=no_auth,
             panel_url=panel_url,
             panels=hass.data[DATA_PANELS],
@@ -516,7 +492,11 @@ class IndexView(HomeAssistantView):
             extra_urls=hass.data[extra_key],
         )
 
-        return web.Response(text=resp, content_type='text/html')
+        if self.client is not None:
+            template_params['client_id'] = self.client.id
+
+        return web.Response(text=template.render(**template_params),
+                            content_type='text/html')
 
 
 class ManifestJSONView(HomeAssistantView):

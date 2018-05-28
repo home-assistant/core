@@ -93,6 +93,16 @@ class AuroraLight(Light):
         return self._effects_list
 
     @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        return 154
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        return 833
+
+    @property
     def name(self):
         """Return the display name of this light."""
         return self._name

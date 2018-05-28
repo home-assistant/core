@@ -8,7 +8,7 @@ import homeassistant.components.prometheus as prometheus
 
 @pytest.fixture
 def prometheus_client(loop, hass, aiohttp_client):
-    """Initialize a aiohttp_client with Prometheus component."""
+    """Initialize an aiohttp_client with Prometheus component."""
     assert loop.run_until_complete(async_setup_component(
         hass,
         prometheus.DOMAIN,

@@ -142,10 +142,9 @@ def state(new_state):
             from limitlessled.pipeline import Pipeline
             pipeline = Pipeline()
             transition_time = DEFAULT_TRANSITION
-            # Stop any repeating pipeline.
-            if self.repeating:
-                self.repeating = False
+            if self._effect == EFFECT_COLORLOOP:
                 self.group.stop()
+            self._effect = None
             # Set transition time.
             if ATTR_TRANSITION in kwargs:
                 transition_time = int(kwargs[ATTR_TRANSITION])
@@ -183,11 +182,11 @@ class LimitlessLEDGroup(Light):
 
         self.group = group
         self.config = config
-        self.repeating = False
         self._is_on = False
         self._brightness = None
         self._temperature = None
         self._color = None
+        self._effect = None
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -222,6 +221,9 @@ class LimitlessLEDGroup(Light):
     @property
     def brightness(self):
         """Return the brightness property."""
+        if self._effect == EFFECT_NIGHT:
+            return 1
+
         return self._brightness
 
     @property
@@ -242,12 +244,20 @@ class LimitlessLEDGroup(Light):
     @property
     def hs_color(self):
         """Return the color property."""
+        if self._effect == EFFECT_NIGHT:
+            return None
+
         return self._color
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return self._supported
+
+    @property
+    def effect(self):
+        """Return the current effect for this light."""
+        return self._effect
 
     @property
     def effect_list(self):
@@ -270,6 +280,7 @@ class LimitlessLEDGroup(Light):
         if kwargs.get(ATTR_EFFECT) == EFFECT_NIGHT:
             if EFFECT_NIGHT in self._effect_list:
                 pipeline.night_light()
+                self._effect = EFFECT_NIGHT
             return
 
         pipeline.on()
@@ -314,7 +325,7 @@ class LimitlessLEDGroup(Light):
         if ATTR_EFFECT in kwargs and self._effect_list:
             if kwargs[ATTR_EFFECT] == EFFECT_COLORLOOP:
                 from limitlessled.presets import COLORLOOP
-                self.repeating = True
+                self._effect = EFFECT_COLORLOOP
                 pipeline.append(COLORLOOP)
             if kwargs[ATTR_EFFECT] == EFFECT_WHITE:
                 pipeline.white()

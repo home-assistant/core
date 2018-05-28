@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor.zwave import get_device
 from homeassistant.components.zwave import (
     const, CONFIG_SCHEMA, CONF_DEVICE_CONFIG_GLOB, DATA_NETWORK)
 from homeassistant.setup import setup_component
+from tests.common import mock_registry
 
 import pytest
 
@@ -237,7 +238,7 @@ async def test_unparsed_node_discovery(hass, mock_openzwave):
 
     assert len(mock_receivers) == 1
 
-    node = MockNode(node_id=14, manufacturer_name=None)
+    node = MockNode(node_id=14, manufacturer_name=None, is_ready=False)
 
     sleeps = []
 
@@ -468,6 +469,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
         self.hass.start()
+        self.registry = mock_registry(self.hass)
 
         setup_component(self.hass, 'zwave', {'zwave': {}})
         self.hass.block_till_done()
@@ -487,7 +489,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
                     const.DISC_OPTIONAL: True,
                 }}}
         self.primary = MockValue(
-            command_class='mock_primary_class', node=self.node)
+            command_class='mock_primary_class', node=self.node, value_id=1000)
         self.secondary = MockValue(
             command_class='mock_secondary_class', node=self.node)
         self.duplicate_secondary = MockValue(
@@ -521,6 +523,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
 
         assert values.primary is self.primary
@@ -592,6 +595,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         self.hass.block_till_done()
 
@@ -630,6 +634,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         values._check_entity_ready()
         self.hass.block_till_done()
@@ -639,7 +644,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'get_platform')
     @patch.object(zwave, 'discovery')
     def test_entity_workaround_component(self, discovery, get_platform):
-        """Test ignore workaround."""
+        """Test component workaround."""
         discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
         get_platform.return_value = mock_platform
@@ -666,6 +671,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         values._check_entity_ready()
         self.hass.block_till_done()
@@ -697,6 +703,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         values._check_entity_ready()
         self.hass.block_till_done()
@@ -720,8 +727,38 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         values._check_entity_ready()
+        self.hass.block_till_done()
+
+        assert not discovery.async_load_platform.called
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_entity_config_ignore_with_registry(self, discovery, get_platform):
+        """Test ignore config.
+
+        The case when the device is in entity registry.
+        """
+        self.node.values = {
+            self.primary.value_id: self.primary,
+            self.secondary.value_id: self.secondary,
+        }
+        self.device_config = {'mock_component.registry_id': {
+            zwave.CONF_IGNORED: True
+        }}
+        self.registry.async_get_or_create(
+            'mock_component', zwave.DOMAIN, '567-1000',
+            suggested_object_id='registry_id')
+        zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+            registry=self.registry
+        )
         self.hass.block_till_done()
 
         assert not discovery.async_load_platform.called
@@ -743,6 +780,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         self.hass.block_till_done()
 
@@ -770,6 +808,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         values._check_entity_ready()
         self.hass.block_till_done()

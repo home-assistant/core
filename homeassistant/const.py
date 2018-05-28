@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 69
-PATCH_VERSION = '1'
+MINOR_VERSION = 70
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 5, 3)
@@ -220,6 +220,9 @@ ATTR_SERVICE_DATA = 'service_data'
 
 # IDs
 ATTR_ID = 'id'
+
+# Name
+ATTR_NAME = 'name'
 
 # Data for a SERVICE_EXECUTED event
 ATTR_SERVICE_CALL_ID = 'service_call_id'

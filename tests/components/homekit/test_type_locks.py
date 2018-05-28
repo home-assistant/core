@@ -1,77 +1,85 @@
 """Test different accessory types: Locks."""
-import unittest
+import pytest
 
-from homeassistant.core import callback
 from homeassistant.components.homekit.type_locks import Lock
+from homeassistant.components.lock import DOMAIN
 from homeassistant.const import (
-    STATE_UNKNOWN, STATE_UNLOCKED, STATE_LOCKED,
-    ATTR_SERVICE, EVENT_CALL_SERVICE)
+    ATTR_CODE, ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED)
 
-from tests.common import get_test_home_assistant
+from tests.common import async_mock_service
 
 
-class TestHomekitSensors(unittest.TestCase):
-    """Test class for all accessory types regarding covers."""
+async def test_lock_unlock(hass):
+    """Test if accessory and HA are updated accordingly."""
+    code = '1234'
+    config = {ATTR_CODE: code}
+    entity_id = 'lock.kitchen_door'
 
-    def setUp(self):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.events = []
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Lock(hass, 'Lock', entity_id, 2, config)
+    await hass.async_add_job(acc.run)
 
-        @callback
-        def record_event(event):
-            """Track called event."""
-            self.events.append(event)
+    assert acc.aid == 2
+    assert acc.category == 6  # DoorLock
 
-        self.hass.bus.listen(EVENT_CALL_SERVICE, record_event)
+    assert acc.char_current_state.value == 3
+    assert acc.char_target_state.value == 1
 
-    def tearDown(self):
-        """Stop down everything that was started."""
-        self.hass.stop()
+    hass.states.async_set(entity_id, STATE_LOCKED)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == 1
+    assert acc.char_target_state.value == 1
 
-    def test_lock_unlock(self):
-        """Test if accessory and HA are updated accordingly."""
-        kitchen_lock = 'lock.kitchen_door'
+    hass.states.async_set(entity_id, STATE_UNLOCKED)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == 0
+    assert acc.char_target_state.value == 0
 
-        acc = Lock(self.hass, 'Lock', kitchen_lock, 2, config=None)
-        acc.run()
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == 3
+    assert acc.char_target_state.value == 0
 
-        self.assertEqual(acc.aid, 2)
-        self.assertEqual(acc.category, 6)  # DoorLock
+    hass.states.async_remove(entity_id)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == 3
+    assert acc.char_target_state.value == 0
 
-        self.assertEqual(acc.char_current_state.value, 3)
-        self.assertEqual(acc.char_target_state.value, 1)
+    # Set from HomeKit
+    call_lock = async_mock_service(hass, DOMAIN, 'lock')
+    call_unlock = async_mock_service(hass, DOMAIN, 'unlock')
 
-        self.hass.states.set(kitchen_lock, STATE_LOCKED)
-        self.hass.block_till_done()
+    await hass.async_add_job(acc.char_target_state.client_update_value, 1)
+    await hass.async_block_till_done()
+    assert call_lock
+    assert call_lock[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_lock[0].data[ATTR_CODE] == code
+    assert acc.char_target_state.value == 1
 
-        self.assertEqual(acc.char_current_state.value, 1)
-        self.assertEqual(acc.char_target_state.value, 1)
+    await hass.async_add_job(acc.char_target_state.client_update_value, 0)
+    await hass.async_block_till_done()
+    assert call_unlock
+    assert call_unlock[0].data[ATTR_ENTITY_ID] == entity_id
+    assert call_unlock[0].data[ATTR_CODE] == code
+    assert acc.char_target_state.value == 0
 
-        self.hass.states.set(kitchen_lock, STATE_UNLOCKED)
-        self.hass.block_till_done()
 
-        self.assertEqual(acc.char_current_state.value, 0)
-        self.assertEqual(acc.char_target_state.value, 0)
+@pytest.mark.parametrize('config', [{}, {ATTR_CODE: None}])
+async def test_no_code(hass, config):
+    """Test accessory if lock doesn't require a code."""
+    entity_id = 'lock.kitchen_door'
 
-        self.hass.states.set(kitchen_lock, STATE_UNKNOWN)
-        self.hass.block_till_done()
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Lock(hass, 'Lock', entity_id, 2, config)
 
-        self.assertEqual(acc.char_current_state.value, 3)
-        self.assertEqual(acc.char_target_state.value, 0)
+    # Set from HomeKit
+    call_lock = async_mock_service(hass, DOMAIN, 'lock')
 
-        # Set from HomeKit
-        acc.char_target_state.client_update_value(1)
-        self.hass.block_till_done()
-        self.assertEqual(
-            self.events[0].data[ATTR_SERVICE], 'lock')
-        self.assertEqual(acc.char_target_state.value, 1)
-
-        acc.char_target_state.client_update_value(0)
-        self.hass.block_till_done()
-        self.assertEqual(
-            self.events[1].data[ATTR_SERVICE], 'unlock')
-        self.assertEqual(acc.char_target_state.value, 0)
-
-        self.hass.states.remove(kitchen_lock)
-        self.hass.block_till_done()
+    await hass.async_add_job(acc.char_target_state.client_update_value, 1)
+    await hass.async_block_till_done()
+    assert call_lock
+    assert call_lock[0].data[ATTR_ENTITY_ID] == entity_id
+    assert ATTR_CODE not in call_lock[0].data
+    assert acc.char_target_state.value == 1

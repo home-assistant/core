@@ -21,7 +21,8 @@ def manager():
         return handler()
 
     async def async_add_entry(result):
-        entries.append(result)
+        if (result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY):
+            entries.append(result)
 
     manager = data_entry_flow.FlowManager(
         None, async_create_flow, async_add_entry)

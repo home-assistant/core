@@ -269,7 +269,7 @@ class TestTemplateSensor:
         assert self.hass.states.all() == []
 
     def test_setup_invalid_device_class(self):
-        """"Test setup with invalid device_class."""
+        """Test setup with invalid device_class."""
         with assert_setup_component(0):
             assert setup_component(self.hass, 'sensor', {
                 'sensor': {
@@ -284,7 +284,7 @@ class TestTemplateSensor:
             })
 
     def test_setup_valid_device_class(self):
-        """"Test setup with valid device_class."""
+        """Test setup with valid device_class."""
         with assert_setup_component(1):
             assert setup_component(self.hass, 'sensor', {
                 'sensor': {

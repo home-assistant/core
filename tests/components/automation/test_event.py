@@ -26,7 +26,7 @@ class TestAutomationEvent(unittest.TestCase):
         self.hass.services.register('test', 'automation', record_call)
 
     def tearDown(self):
-        """"Stop everything that was started."""
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_if_fires_on_event(self):

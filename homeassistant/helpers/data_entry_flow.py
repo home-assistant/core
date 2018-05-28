@@ -44,7 +44,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 
     @RequestDataValidator(vol.Schema({
         vol.Required('handler'): vol.Any(str, list),
-    }))
+    }, extra=vol.ALLOW_EXTRA))
     async def post(self, request, data):
         """Handle a POST request."""
         if isinstance(data['handler'], list):

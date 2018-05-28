@@ -21,9 +21,9 @@ def mock_view(hass):
         name = 'bla'
 
         @verify_client
-        async def get(self, request, client_id):
+        async def get(self, request, client):
             """Handle GET request."""
-            clients.append(client_id)
+            clients.append(client)
 
     hass.http.register_view(ClientView)
     return clients
@@ -36,7 +36,7 @@ async def test_verify_client(hass, aiohttp_client, mock_view):
 
     resp = await http_client.get('/', auth=BasicAuth(client.id, client.secret))
     assert resp.status == 200
-    assert mock_view == [client.id]
+    assert mock_view[0] is client
 
 
 async def test_verify_client_no_auth_header(hass, aiohttp_client, mock_view):
