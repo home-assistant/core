@@ -123,20 +123,32 @@ async def async_setup_nest(hass, nest, config, pin=None):
     conf = config[DOMAIN]
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
 
-    _LOGGER.debug("proceeding with discovery -- climate")
-    await discovery.async_load_platform(hass, 'climate', DOMAIN, {}, config)
-    _LOGGER.debug("proceeding with discovery -- camera")
-    await discovery.async_load_platform(hass, 'camera', DOMAIN, {}, config)
+    for component, discovered in [
+            ('climate', {}),
+            ('camera', {}),
+            ('sensor', conf.get(CONF_SENSORS, {})),
+            ('binary_sensor', conf.get(CONF_BINARY_SENSORS, {}))]:
+        _LOGGER.debug("proceeding with discovery -- {}".format(component))
+        hass.async_add_job(discovery.async_load_platform,
+                           hass, component, DOMAIN, discovered, config)
 
-    _LOGGER.debug("proceeding with discovery -- sensor")
-    sensor_config = conf.get(CONF_SENSORS, {})
-    await discovery.async_load_platform(hass, 'sensor', DOMAIN, sensor_config,
-                                        config)
+    def set_mode(service):
+        """Set the home/away mode for a Nest structure."""
+        if ATTR_STRUCTURE in service.data:
+            structures = service.data[ATTR_STRUCTURE]
+        else:
+            structures = hass.data[DATA_NEST].local_structure
 
-    _LOGGER.debug("proceeding with discovery -- binary_sensor")
-    binary_sensor_config = conf.get(CONF_BINARY_SENSORS, {})
-    await discovery.async_load_platform(hass, 'binary_sensor', DOMAIN,
-                                        binary_sensor_config, config)
+        for structure in nest.structures:
+            if structure.name in structures:
+                _LOGGER.info("Setting mode for %s", structure.name)
+                structure.away = service.data[ATTR_HOME_MODE]
+            else:
+                _LOGGER.error("Invalid structure %s",
+                              service.data[ATTR_STRUCTURE])
+
+    hass.services.async_register(
+        DOMAIN, 'set_mode', set_mode, schema=AWAY_SCHEMA)
 
     def start_up(event):
         """Start Nest update event listener."""
@@ -151,7 +163,7 @@ async def async_setup_nest(hass, nest, config, pin=None):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
 
-    _LOGGER.debug("setup done")
+    _LOGGER.debug("async_setup_nest is done")
 
     return True
 
@@ -173,25 +185,8 @@ async def async_setup(hass, config):
     nest = nest.Nest(
         access_token_cache_file=access_token_cache_file,
         client_id=client_id, client_secret=client_secret)
+
     await async_setup_nest(hass, nest, config)
-
-    def set_mode(service):
-        """Set the home/away mode for a Nest structure."""
-        if ATTR_STRUCTURE in service.data:
-            structures = service.data[ATTR_STRUCTURE]
-        else:
-            structures = hass.data[DATA_NEST].local_structure
-
-        for structure in nest.structures:
-            if structure.name in structures:
-                _LOGGER.info("Setting mode for %s", structure.name)
-                structure.away = service.data[ATTR_HOME_MODE]
-            else:
-                _LOGGER.error("Invalid structure %s",
-                              service.data[ATTR_STRUCTURE])
-
-    hass.services.async_register(
-        DOMAIN, 'set_mode', set_mode, schema=AWAY_SCHEMA)
 
     return True
 
