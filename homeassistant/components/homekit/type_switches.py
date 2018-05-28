@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 class Switch(HomeAccessory):
     """Generate a Switch accessory."""
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a Switch accessory object to represent a remote."""
         super().__init__(*args, category=CATEGORY_SWITCH)
         self._domain = split_entity_id(self.entity_id)[0]
@@ -33,9 +33,9 @@ class Switch(HomeAccessory):
         _LOGGER.debug('%s: Set switch state to %s',
                       self.entity_id, value)
         self.flag_target_state = True
+        params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.hass.services.call(self._domain, service,
-                                {ATTR_ENTITY_ID: self.entity_id})
+        self.hass.services.call(self._domain, service, params)
 
     def update_state(self, new_state):
         """Update switch state after state changed."""

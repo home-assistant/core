@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                             'channel_1', hass, gateway))
                 devices.append(XiaomiButton(device, 'Wall Switch (Both)',
                                             'dual_channel', hass, gateway))
-            elif model in ['cube', 'sensor_cube']:
+            elif model in ['cube', 'sensor_cube', 'sensor_cube.aqgl01']:
                 devices.append(XiaomiCube(device, hass, gateway))
     add_devices(devices)
 

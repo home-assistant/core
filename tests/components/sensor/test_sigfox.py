@@ -38,7 +38,7 @@ class TestSigfoxSensor(unittest.TestCase):
         self.hass.stop()
 
     def test_invalid_credentials(self):
-        """Test for a invalid credentials."""
+        """Test for invalid credentials."""
         with requests_mock.Mocker() as mock_req:
             url = re.compile(API_URL + 'devicetypes')
             mock_req.get(url, text='{}', status_code=401)
@@ -47,7 +47,7 @@ class TestSigfoxSensor(unittest.TestCase):
         assert len(self.hass.states.entity_ids()) == 0
 
     def test_valid_credentials(self):
-        """Test for a valid credentials."""
+        """Test for valid credentials."""
         with requests_mock.Mocker() as mock_req:
             url1 = re.compile(API_URL + 'devicetypes')
             mock_req.get(url1, text='{"data":[{"id":"fake_type"}]}',

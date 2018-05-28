@@ -72,7 +72,8 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
             turn_on(hass, light,
                     xy_color=[x_val, y_val],
                     brightness=brightness,
-                    transition=transition)
+                    transition=transition,
+                    white_value=brightness)
 
 
 def set_lights_temp(hass, lights, mired, brightness, transition):

@@ -15,7 +15,6 @@ from voluptuous.humanize import humanize_error
 from homeassistant import data_entry_flow, requirements
 from homeassistant.core import callback
 from homeassistant.const import CONF_TYPE, CONF_NAME, CONF_ID
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.decorator import Registry
 from homeassistant.util import dt as dt_util
 
@@ -36,23 +35,7 @@ ACCESS_TOKEN_EXPIRATION = timedelta(minutes=30)
 DATA_REQS = 'auth_reqs_processed'
 
 
-class AuthError(HomeAssistantError):
-    """Generic authentication error."""
-
-
-class InvalidUser(AuthError):
-    """Raised when an invalid user has been specified."""
-
-
-class InvalidPassword(AuthError):
-    """Raised when an invalid password has been supplied."""
-
-
-class UnknownError(AuthError):
-    """When an unknown error occurs."""
-
-
-def generate_secret(entropy=32):
+def generate_secret(entropy: int = 32) -> str:
     """Generate a secret.
 
     Backport of secrets.token_hex from Python 3.6
@@ -69,8 +52,9 @@ class AuthProvider:
 
     initialized = False
 
-    def __init__(self, store, config):
+    def __init__(self, hass, store, config):
         """Initialize an auth provider."""
+        self.hass = hass
         self.store = store
         self.config = config
 
@@ -210,6 +194,7 @@ class Client:
     name = attr.ib(type=str)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
     secret = attr.ib(type=str, default=attr.Factory(generate_secret))
+    redirect_uris = attr.ib(type=list, default=attr.Factory(list))
 
 
 async def load_auth_provider_module(hass, provider):
@@ -283,7 +268,7 @@ async def _auth_provider_from_config(hass, store, config):
                       provider_name, humanize_error(config, err))
         return None
 
-    return AUTH_PROVIDERS[provider_name](store, config)
+    return AUTH_PROVIDERS[provider_name](hass, store, config)
 
 
 class AuthManager:
@@ -340,9 +325,11 @@ class AuthManager:
         """Get an access token."""
         return self.access_tokens.get(token)
 
-    async def async_create_client(self, name):
+    async def async_create_client(self, name, *, redirect_uris=None,
+                                  no_secret=False):
         """Create a new client."""
-        return await self._store.async_create_client(name)
+        return await self._store.async_create_client(
+            name, redirect_uris, no_secret)
 
     async def async_get_client(self, client_id):
         """Get a client."""
@@ -360,6 +347,9 @@ class AuthManager:
 
     async def _async_finish_login_flow(self, result):
         """Result of a credential login flow."""
+        if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            return None
+
         auth_provider = self._providers[result['handler']]
         return await auth_provider.async_get_or_create_credentials(
             result['data'])
@@ -477,12 +467,20 @@ class AuthStore:
 
         return None
 
-    async def async_create_client(self, name):
+    async def async_create_client(self, name, redirect_uris, no_secret):
         """Create a new client."""
         if self.clients is None:
             await self.async_load()
 
-        client = Client(name)
+        kwargs = {
+            'name': name,
+            'redirect_uris': redirect_uris
+        }
+
+        if no_secret:
+            kwargs['secret'] = None
+
+        client = Client(**kwargs)
         self.clients[client.id] = client
         await self.async_save()
         return client

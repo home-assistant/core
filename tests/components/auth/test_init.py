@@ -1,12 +1,13 @@
 """Integration tests for the auth component."""
-from . import async_setup_auth, CLIENT_AUTH
+from . import async_setup_auth, CLIENT_AUTH, CLIENT_REDIRECT_URI
 
 
 async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
     """Test logging in with new user and refreshing tokens."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     resp = await client.post('/auth/login_flow', json={
-        'handler': ['insecure_example', None]
+        'handler': ['insecure_example', None],
+        'redirect_uri': CLIENT_REDIRECT_URI,
     }, auth=CLIENT_AUTH)
     assert resp.status == 200
     step = await resp.json()

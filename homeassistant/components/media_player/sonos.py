@@ -682,11 +682,15 @@ class SonosDevice(MediaPlayerDevice):
             if group:
                 # New group information is pushed
                 coordinator_uid, *slave_uids = group.split(',')
-            else:
+            elif self.soco.group:
                 # Use SoCo cache for existing topology
                 coordinator_uid = self.soco.group.coordinator.uid
                 slave_uids = [p.uid for p in self.soco.group.members
                               if p.uid != coordinator_uid]
+            else:
+                # Not yet in the cache, this can happen when a speaker boots
+                coordinator_uid = self.unique_id
+                slave_uids = []
 
             if self.unique_id == coordinator_uid:
                 sonos_group = []

@@ -70,7 +70,7 @@ class HiveSensorEntity(Entity):
         return DEVICETYPE_ICONS.get(self.device_type)
 
     def update(self):
-        """Update all Node data frome Hive."""
+        """Update all Node data from Hive."""
         if self.session.core.update_data(self.node_id):
             for entity in self.session.entities:
                 entity.handle_update(self.data_updatesource)

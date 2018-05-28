@@ -1,5 +1,5 @@
 """
-Support for microsoft face recognition.
+Support for Microsoft face recognition.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/microsoft_face/
@@ -13,7 +13,7 @@ from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_TIMEOUT
+from homeassistant.const import CONF_API_KEY, CONF_TIMEOUT, ATTR_NAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -22,28 +22,25 @@ from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'microsoft_face'
-DEPENDENCIES = ['camera']
-
-FACE_API_URL = "api.cognitive.microsoft.com/face/v1.0/{0}"
-
-DATA_MICROSOFT_FACE = 'microsoft_face'
+ATTR_CAMERA_ENTITY = 'camera_entity'
+ATTR_GROUP = 'group'
+ATTR_PERSON = 'person'
 
 CONF_AZURE_REGION = 'azure_region'
 
+DATA_MICROSOFT_FACE = 'microsoft_face'
+DEFAULT_TIMEOUT = 10
+DEPENDENCIES = ['camera']
+DOMAIN = 'microsoft_face'
+
+FACE_API_URL = "api.cognitive.microsoft.com/face/v1.0/{0}"
+
 SERVICE_CREATE_GROUP = 'create_group'
-SERVICE_DELETE_GROUP = 'delete_group'
-SERVICE_TRAIN_GROUP = 'train_group'
 SERVICE_CREATE_PERSON = 'create_person'
+SERVICE_DELETE_GROUP = 'delete_group'
 SERVICE_DELETE_PERSON = 'delete_person'
 SERVICE_FACE_PERSON = 'face_person'
-
-ATTR_GROUP = 'group'
-ATTR_PERSON = 'person'
-ATTR_CAMERA_ENTITY = 'camera_entity'
-ATTR_NAME = 'name'
-
-DEFAULT_TIMEOUT = 10
+SERVICE_TRAIN_GROUP = 'train_group'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -111,7 +108,7 @@ def face_person(hass, group, person, camera_entity):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up microsoft face."""
+    """Set up Microsoft Face."""
     entities = {}
     face = MicrosoftFace(
         hass,

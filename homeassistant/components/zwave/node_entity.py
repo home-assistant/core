@@ -9,7 +9,7 @@ from .const import (
     ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_SCENE_DATA,
     ATTR_BASIC_LEVEL, EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED,
     COMMAND_CLASS_CENTRAL_SCENE)
-from .util import node_name
+from .util import node_name, is_node_parsed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +64,15 @@ class ZWaveBaseEntity(Entity):
 
         self._update_scheduled = True
         self.hass.loop.call_later(0.1, do_update)
+
+    def try_remove_and_add(self):
+        """Remove this entity and add it back."""
+        async def _async_remove_and_add():
+            await self.async_remove()
+            self.entity_id = None
+            await self.platform.async_add_entities([self])
+        if self.hass and self.platform:
+            self.hass.add_job(_async_remove_and_add)
 
 
 class ZWaveNodeEntity(ZWaveBaseEntity):
@@ -151,6 +160,9 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
         if not self._unique_id:
             self._unique_id = self._compute_unique_id()
+            if self._unique_id:
+                # Node info parsed. Remove and re-add
+                self.try_remove_and_add()
 
         self.maybe_schedule_update()
 
@@ -243,6 +255,6 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         return attrs
 
     def _compute_unique_id(self):
-        if self._manufacturer_name and self._product_name:
+        if is_node_parsed(self.node) or self.node.is_ready:
             return 'node-{}'.format(self.node_id)
         return None

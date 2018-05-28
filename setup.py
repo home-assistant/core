@@ -44,7 +44,7 @@ PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 REQUIRES = [
     'requests==2.18.4',
     'pyyaml>=3.11,<4',
-    'pytz>=2017.02',
+    'pytz>=2018.04',
     'pip>=8.0.3',
     'jinja2>=2.10',
     'voluptuous==0.11.1',
@@ -52,7 +52,7 @@ REQUIRES = [
     'aiohttp==3.1.3',
     'async_timeout==2.0.1',
     'astral==1.6.1',
-    'certifi>=2017.4.17',
+    'certifi>=2018.04.16',
     'attrs==18.1.0',
 ]
 

@@ -14,7 +14,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.event import track_utc_time_change
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['bimmer_connected==0.5.0']
+REQUIREMENTS = ['bimmer_connected==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -12,25 +12,25 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION)
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_DEVICE_CLASS, CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE)
+    ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
+    CONF_IP_ADDRESS, CONF_NAME, CONF_PORT,
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 from .const import (
-    DOMAIN, HOMEKIT_FILE, CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FILTER,
-    DEFAULT_PORT, DEFAULT_AUTO_START, SERVICE_HOMEKIT_START,
-    DEVICE_CLASS_CO2, DEVICE_CLASS_PM25)
-from .util import (
-    validate_entity_config, show_setup_message)
+    CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FILTER, DEFAULT_AUTO_START,
+    DEFAULT_PORT, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25, DOMAIN, HOMEKIT_FILE,
+    SERVICE_HOMEKIT_START)
+from .util import show_setup_message, validate_entity_config
 
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==2.0.0']
+REQUIREMENTS = ['HAP-python==2.1.0']
 
 # #### Driver Status ####
 STATUS_READY = 0
@@ -93,7 +93,7 @@ def get_accessory(hass, state, aid, config):
         return None
 
     a_type = None
-    config = config or {}
+    name = config.get(CONF_NAME, state.name)
 
     if state.domain == 'alarm_control_panel':
         a_type = 'SecuritySystem'
@@ -115,6 +115,9 @@ def get_accessory(hass, state, aid, config):
             a_type = 'WindowCovering'
         elif features & (SUPPORT_OPEN | SUPPORT_CLOSE):
             a_type = 'WindowCoveringBasic'
+
+    elif state.domain == 'fan':
+        a_type = 'Fan'
 
     elif state.domain == 'light':
         a_type = 'Light'
@@ -147,7 +150,7 @@ def get_accessory(hass, state, aid, config):
         return None
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
-    return TYPES[a_type](hass, state.name, state.entity_id, aid, config=config)
+    return TYPES[a_type](hass, name, state.entity_id, aid, config)
 
 
 def generate_aid(entity_id):
@@ -183,7 +186,8 @@ class HomeKit():
         ip_addr = self._ip_address or get_local_ip()
         path = self.hass.config.path(HOMEKIT_FILE)
         self.bridge = HomeBridge(self.hass)
-        self.driver = HomeDriver(self.bridge, self._port, ip_addr, path)
+        self.driver = HomeDriver(self.hass, self.bridge, port=self._port,
+                                 address=ip_addr, persist_file=path)
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
@@ -203,15 +207,16 @@ class HomeKit():
 
         # pylint: disable=unused-variable
         from . import (  # noqa F401
-            type_covers, type_lights, type_locks, type_security_systems,
-            type_sensors, type_switches, type_thermostats)
+            type_covers, type_fans, type_lights, type_locks,
+            type_security_systems, type_sensors, type_switches,
+            type_thermostats)
 
         for state in self.hass.states.all():
             self.add_bridge_accessory(state)
         self.bridge.set_driver(self.driver)
 
-        if not self.bridge.paired:
-            show_setup_message(self.hass, self.bridge)
+        if not self.driver.state.paired:
+            show_setup_message(self.hass, self.driver.state.pincode)
 
         _LOGGER.debug('Driver start')
         self.hass.add_job(self.driver.start)
