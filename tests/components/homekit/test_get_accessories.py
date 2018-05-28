@@ -2,20 +2,17 @@
 from unittest.mock import patch, Mock
 
 import pytest
-import voluptuous as vol
 
 from homeassistant.core import State
-from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN
-from homeassistant.components.climate import (
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
-from homeassistant.components.media_player import (
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+import homeassistant.components.cover as cover
+import homeassistant.components.climate as climate
+import homeassistant.components.media_player as media_player
 from homeassistant.components.homekit import get_accessory, TYPES
-from homeassistant.components.homekit.const import ON_OFF
+from homeassistant.components.homekit.const import (
+    CONF_FEATURE_LIST, FEATURE_ON_OFF)
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT, CONF_MODE, CONF_NAME, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT)
+    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 
 def test_not_supported(caplog):
@@ -32,9 +29,9 @@ def test_not_supported(caplog):
 def test_not_supported_media_player():
     """Test if mode isn't supported and if no supported modes."""
     # selected mode for entity not supported
-    with pytest.raises(vol.Invalid):
-        entity_state = State('media_player.demo', 'on')
-        get_accessory(None, entity_state, 2, {CONF_MODE: [ON_OFF]})
+    config = {CONF_FEATURE_LIST: {FEATURE_ON_OFF: None}}
+    entity_state = State('media_player.demo', 'on')
+    get_accessory(None, entity_state, 2, config) is None
 
     # no supported modes for entity
     entity_state = State('media_player.demo', 'on')
@@ -58,14 +55,15 @@ def test_customize_options(config, name):
     ('Light', 'light.test', 'on', {}, {}),
     ('Lock', 'lock.test', 'locked', {}, {ATTR_CODE: '1234'}),
     ('MediaPlayer', 'media_player.test', 'on',
-     {ATTR_SUPPORTED_FEATURES: SUPPORT_TURN_ON | SUPPORT_TURN_OFF},
-     {CONF_MODE: [ON_OFF]}),
+     {ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_TURN_ON |
+      media_player.SUPPORT_TURN_OFF}, {CONF_FEATURE_LIST:
+                                       {FEATURE_ON_OFF: None}}),
     ('SecuritySystem', 'alarm_control_panel.test', 'armed', {},
      {ATTR_CODE: '1234'}),
     ('Thermostat', 'climate.test', 'auto', {}, {}),
     ('Thermostat', 'climate.test', 'auto',
-     {ATTR_SUPPORTED_FEATURES: SUPPORT_TARGET_TEMPERATURE_LOW |
-      SUPPORT_TARGET_TEMPERATURE_HIGH}, {}),
+     {ATTR_SUPPORTED_FEATURES: climate.SUPPORT_TARGET_TEMPERATURE_LOW |
+      climate.SUPPORT_TARGET_TEMPERATURE_HIGH}, {}),
 ])
 def test_types(type_name, entity_id, state, attrs, config):
     """Test if types are associated correctly."""
@@ -82,7 +80,7 @@ def test_types(type_name, entity_id, state, attrs, config):
 @pytest.mark.parametrize('type_name, entity_id, state, attrs', [
     ('GarageDoorOpener', 'cover.garage_door', 'open',
      {ATTR_DEVICE_CLASS: 'garage',
-      ATTR_SUPPORTED_FEATURES: SUPPORT_OPEN | SUPPORT_CLOSE}),
+      ATTR_SUPPORTED_FEATURES: cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE}),
     ('WindowCovering', 'cover.set_position', 'open',
      {ATTR_SUPPORTED_FEATURES: 4}),
     ('WindowCoveringBasic', 'cover.open_window', 'open',
