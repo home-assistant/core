@@ -87,9 +87,9 @@ async def async_request_configuration(nest, hass, config):
         """Run when the configuration callback is called."""
         _LOGGER.debug("configurator callback")
         pin = data.get('pin')
-        await async_setup_nest(hass, nest, config, pin=pin)
-        # start nest update event listener since we missed startup hook
-        hass.async_add_job(async_nest_update_event_broker, hass, nest)
+        if await async_setup_nest(hass, nest, config, pin=pin):
+            # start nest update event listener as we missed startup hook
+            hass.async_add_job(async_nest_update_event_broker, hass, nest)
 
     _CONFIGURING['nest'] = configurator.async_request_config(
         "Nest", async_nest_config_callback,
@@ -107,12 +107,19 @@ async def async_setup_nest(hass, nest, config, pin=None):
     """Set up the Nest devices."""
     if pin is not None:
         _LOGGER.debug("pin acquired, requesting access token")
-        nest.request_token(pin)
+        try:
+            nest.request_token(pin)
+        except Exception as auth_error:
+            message = "Nest authorization failed: {}".format(auth_error)
+            _LOGGER.warning(message)
+            hass.components.configurator.async_notify_errors(
+                _CONFIGURING['nest'], message)
+            return False
 
     if nest.access_token is None:
         _LOGGER.debug("no access_token, requesting configuration")
         await async_request_configuration(nest, hass, config)
-        return
+        return False
 
     if 'nest' in _CONFIGURING:
         _LOGGER.debug("configuration done")
@@ -170,7 +177,7 @@ async def async_setup_nest(hass, nest, config, pin=None):
 
 async def async_setup(hass, config):
     """Set up Nest components."""
-    import nest
+    from nest import Nest
 
     if 'nest' in _CONFIGURING:
         return
@@ -182,7 +189,7 @@ async def async_setup(hass, config):
 
     access_token_cache_file = hass.config.path(filename)
 
-    nest = nest.Nest(
+    nest = Nest(
         access_token_cache_file=access_token_cache_file,
         client_id=client_id, client_secret=client_secret)
 
