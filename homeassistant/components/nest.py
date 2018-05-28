@@ -109,6 +109,7 @@ async def async_setup_nest(hass, nest, config, pin=None):
         _LOGGER.debug("pin acquired, requesting access token")
         try:
             nest.request_token(pin)
+        # pylint: disable=broad-except
         except Exception as auth_error:
             message = "Nest authorization failed: {}".format(auth_error)
             _LOGGER.warning(message)
@@ -135,7 +136,7 @@ async def async_setup_nest(hass, nest, config, pin=None):
             ('camera', {}),
             ('sensor', conf.get(CONF_SENSORS, {})),
             ('binary_sensor', conf.get(CONF_BINARY_SENSORS, {}))]:
-        _LOGGER.debug("proceeding with discovery -- {}".format(component))
+        _LOGGER.debug("proceeding with discovery -- %s", component)
         hass.async_add_job(discovery.async_load_platform,
                            hass, component, DOMAIN, discovered, config)
 
