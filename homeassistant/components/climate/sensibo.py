@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY, ClimateDevice, DOMAIN, PLATFORM_SCHEMA,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_ON_OFF)
+    SUPPORT_ON_OFF, ATTR_BATTERY)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -154,7 +154,8 @@ class SensiboClimate(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {ATTR_CURRENT_HUMIDITY: self.current_humidity}
+        return {ATTR_CURRENT_HUMIDITY: self.current_humidity,
+                ATTR_BATTERY: self.battery}
 
     @property
     def temperature_unit(self):
@@ -190,6 +191,11 @@ class SensiboClimate(ClimateDevice):
     def current_humidity(self):
         """Return the current humidity."""
         return self._measurements['humidity']
+
+    @property
+    def battery(self):
+        """Return the current battery state."""
+        return self._measurements['batteryVoltage']
 
     @property
     def current_temperature(self):

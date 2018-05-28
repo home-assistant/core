@@ -83,6 +83,7 @@ ATTR_OPERATION_MODE = 'operation_mode'
 ATTR_OPERATION_LIST = 'operation_list'
 ATTR_SWING_MODE = 'swing_mode'
 ATTR_SWING_LIST = 'swing_list'
+ATTR_BATTERY = 'battery'
 
 CONVERTIBLE_ATTRIBUTE = [
     ATTR_TEMPERATURE,
@@ -540,6 +541,9 @@ class ClimateDevice(Entity):
             is_aux_heat = self.is_aux_heat_on
             data[ATTR_AUX_HEAT] = STATE_ON if is_aux_heat else STATE_OFF
 
+        if self.battery:
+            data[ATTR_BATTERY] = self.battery
+
         return data
 
     @property
@@ -635,6 +639,11 @@ class ClimateDevice(Entity):
     @property
     def swing_list(self):
         """Return the list of available swing modes."""
+        return None
+
+    @property
+    def battery(self):
+        """Return the current battery state."""
         return None
 
     def set_temperature(self, **kwargs):
