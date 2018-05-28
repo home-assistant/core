@@ -43,10 +43,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(all_devices, True)
 
-    for device in all_devices:
-        async_dispatcher_connect(hass, SIGNAL_NEST_UPDATE,
-                                 device.async_update_state)
-
 
 class NestThermostat(ClimateDevice):
     """Representation of a Nest thermostat."""
@@ -109,6 +105,11 @@ class NestThermostat(ClimateDevice):
     async def async_update_state(self):
         """Update device state."""
         await self.async_update_ha_state(True)
+
+    async def async_added_to_hass(self):
+        """Register update signal handler."""
+        async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE,
+                                 self.async_update_state)
 
     @property
     def supported_features(self):

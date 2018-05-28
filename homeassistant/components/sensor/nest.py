@@ -98,10 +98,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(all_sensors, True)
 
-    for sensor in all_sensors:
-        async_dispatcher_connect(hass, SIGNAL_NEST_UPDATE,
-                                 sensor.async_update_state)
-
 
 class NestSensor(Entity):
     """Representation of a Nest sensor."""
@@ -144,6 +140,11 @@ class NestSensor(Entity):
     async def async_update_state(self):
         """Update sensor state."""
         await self.async_update_ha_state(True)
+
+    async def async_added_to_hass(self):
+        """Register update signal handler."""
+        async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE,
+                                 self.async_update_state)
 
 
 class NestBasicSensor(NestSensor):
