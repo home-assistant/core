@@ -105,16 +105,21 @@ async def async_request_configuration(nest, hass, config):
 
 async def async_setup_nest(hass, nest, config, pin=None):
     """Set up the Nest devices."""
+    from nest.nest import AuthorizationError, APIError
     if pin is not None:
         _LOGGER.debug("pin acquired, requesting access token")
+        error_message = None
         try:
             nest.request_token(pin)
-        # pylint: disable=broad-except
-        except Exception as auth_error:
-            message = "Nest authorization failed: {}".format(auth_error)
-            _LOGGER.warning(message)
+        except AuthorizationError as auth_error:
+            error_message = "Nest authorization failed: {}".format(auth_error)
+        except APIError as api_error:
+            error_message = "Failed to call Nest API: {}".format(api_error)
+
+        if error_message is not None:
+            _LOGGER.warning(error_message)
             hass.components.configurator.async_notify_errors(
-                _CONFIGURING['nest'], message)
+                _CONFIGURING['nest'], error_message)
             return False
 
     if nest.access_token is None:
