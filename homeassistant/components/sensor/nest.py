@@ -143,8 +143,7 @@ class NestSensor(Entity):
 
     async def async_nest_update_callback(self):
         """Update sensor state."""
-        await self.async_device_update()
-        await self.async_update_ha_state()
+        await self.async_update_ha_state(True)
 
 
 class NestBasicSensor(NestSensor):
