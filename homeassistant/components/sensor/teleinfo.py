@@ -72,7 +72,7 @@ class TeleinfoSensor(Entity):
         self._unit_of_measurement = None
         self._state = STATE_UNKNOWN
         self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,    
+            ATTR_ATTRIBUTION: ATTRIBUTION,
         }
         self._data = teleinfo_data
 
