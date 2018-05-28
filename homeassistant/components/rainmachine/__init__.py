@@ -201,10 +201,8 @@ class RainMachine(object):
     def update(self):
         """Update sensor/binary sensor data."""
         self.restrictions.update({
-            'current':
-            self.client.restrictions.current(),
-            'global':
-            self.client.restrictions.universal()
+            'current': self.client.restrictions.current(),
+            'global': self.client.restrictions.universal()
         })
 
 

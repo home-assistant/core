@@ -71,7 +71,6 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
             self.rainmachine.device_mac.replace(':', ''),
             self._sensor_type)
 
-    @callback
     async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
