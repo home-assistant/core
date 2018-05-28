@@ -107,7 +107,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for sensor in sensors:
         async_dispatcher_connect(hass, SIGNAL_NEST_UPDATE,
-                                 sensor.async_nest_update_callback)
+                                 sensor.async_update_state)
 
 
 class NestBinarySensor(NestSensor, BinarySensorDevice):

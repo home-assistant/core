@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for device in all_devices:
         async_dispatcher_connect(hass, SIGNAL_NEST_UPDATE,
-                                 device.async_nest_update_callback)
+                                 device.async_update_state)
 
 
 class NestThermostat(ClimateDevice):
@@ -106,7 +106,7 @@ class NestThermostat(ClimateDevice):
         """Do not need poll thanks using Nest streaming API."""
         return False
 
-    async def async_nest_update_callback(self):
+    async def async_update_state(self):
         """Update device state."""
         await self.async_update_ha_state(True)
 

@@ -100,7 +100,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for sensor in all_sensors:
         async_dispatcher_connect(hass, SIGNAL_NEST_UPDATE,
-                                 sensor.async_nest_update_callback)
+                                 sensor.async_update_state)
 
 
 class NestSensor(Entity):
@@ -141,7 +141,7 @@ class NestSensor(Entity):
         """Do not need poll thanks using Nest streaming API."""
         return False
 
-    async def async_nest_update_callback(self):
+    async def async_update_state(self):
         """Update sensor state."""
         await self.async_update_ha_state(True)
 
