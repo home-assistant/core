@@ -1,40 +1,43 @@
 """Test HomeKit util module."""
-import unittest
-
-import voluptuous as vol
 import pytest
+import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import HOMEKIT_NOTIFY_ID
 from homeassistant.components.homekit.util import (
-    show_setup_message, dismiss_setup_message, convert_to_float,
-    temperature_to_homekit, temperature_to_states, ATTR_CODE,
-    density_to_air_quality)
+    convert_to_float, density_to_air_quality, dismiss_setup_message,
+    show_setup_message, temperature_to_homekit, temperature_to_states)
 from homeassistant.components.homekit.util import validate_entity_config \
     as vec
 from homeassistant.components.persistent_notification import (
-    SERVICE_CREATE, SERVICE_DISMISS, ATTR_NOTIFICATION_ID)
+    ATTR_MESSAGE, ATTR_NOTIFICATION_ID, DOMAIN)
 from homeassistant.const import (
-    EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, ATTR_SERVICE_DATA,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_UNKNOWN)
+    ATTR_CODE, CONF_NAME, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
-from tests.common import get_test_home_assistant
+from tests.common import async_mock_service
 
 
 def test_validate_entity_config():
     """Test validate entities."""
     configs = [{'invalid_entity_id': {}}, {'demo.test': 1},
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
-               {'demo.test': None}]
+               {'demo.test': None}, {'demo.test': {CONF_NAME: None}}]
 
     for conf in configs:
         with pytest.raises(vol.Invalid):
             vec(conf)
 
     assert vec({}) == {}
+    assert vec({'demo.test': {CONF_NAME: 'Name'}}) == \
+        {'demo.test': {CONF_NAME: 'Name'}}
+
+    assert vec({'alarm_control_panel.demo': {}}) == \
+        {'alarm_control_panel.demo': {ATTR_CODE: None}}
     assert vec({'alarm_control_panel.demo': {ATTR_CODE: '1234'}}) == \
         {'alarm_control_panel.demo': {ATTR_CODE: '1234'}}
+
+    assert vec({'lock.demo': {}}) == {'lock.demo': {ATTR_CODE: None}}
+    assert vec({'lock.demo': {ATTR_CODE: '1234'}}) == \
+        {'lock.demo': {ATTR_CODE: '1234'}}
 
 
 def test_convert_to_float():
@@ -68,51 +71,28 @@ def test_density_to_air_quality():
     assert density_to_air_quality(300) == 5
 
 
-class TestUtil(unittest.TestCase):
-    """Test all HomeKit util methods."""
+async def test_show_setup_msg(hass):
+    """Test show setup message as persistence notification."""
+    pincode = b'123-45-678'
 
-    def setUp(self):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.events = []
+    call_create_notification = async_mock_service(hass, DOMAIN, 'create')
 
-        @callback
-        def record_event(event):
-            """Track called event."""
-            self.events.append(event)
+    await hass.async_add_job(show_setup_message, hass, pincode)
+    await hass.async_block_till_done()
 
-        self.hass.bus.listen(EVENT_CALL_SERVICE, record_event)
+    assert call_create_notification
+    assert call_create_notification[0].data[ATTR_NOTIFICATION_ID] == \
+        HOMEKIT_NOTIFY_ID
+    assert pincode.decode() in call_create_notification[0].data[ATTR_MESSAGE]
 
-    def tearDown(self):
-        """Stop down everything that was started."""
-        self.hass.stop()
 
-    def test_show_setup_msg(self):
-        """Test show setup message as persistence notification."""
-        bridge = HomeBridge(self.hass)
+async def test_dismiss_setup_msg(hass):
+    """Test dismiss setup message."""
+    call_dismiss_notification = async_mock_service(hass, DOMAIN, 'dismiss')
 
-        show_setup_message(self.hass, bridge)
-        self.hass.block_till_done()
+    await hass.async_add_job(dismiss_setup_message, hass)
+    await hass.async_block_till_done()
 
-        data = self.events[0].data
-        self.assertEqual(
-            data.get(ATTR_DOMAIN, None), 'persistent_notification')
-        self.assertEqual(data.get(ATTR_SERVICE, None), SERVICE_CREATE)
-        self.assertNotEqual(data.get(ATTR_SERVICE_DATA, None), None)
-        self.assertEqual(
-            data[ATTR_SERVICE_DATA].get(ATTR_NOTIFICATION_ID, None),
-            HOMEKIT_NOTIFY_ID)
-
-    def test_dismiss_setup_msg(self):
-        """Test dismiss setup message."""
-        dismiss_setup_message(self.hass)
-        self.hass.block_till_done()
-
-        data = self.events[0].data
-        self.assertEqual(
-            data.get(ATTR_DOMAIN, None), 'persistent_notification')
-        self.assertEqual(data.get(ATTR_SERVICE, None), SERVICE_DISMISS)
-        self.assertNotEqual(data.get(ATTR_SERVICE_DATA, None), None)
-        self.assertEqual(
-            data[ATTR_SERVICE_DATA].get(ATTR_NOTIFICATION_ID, None),
-            HOMEKIT_NOTIFY_ID)
+    assert call_dismiss_notification
+    assert call_dismiss_notification[0].data[ATTR_NOTIFICATION_ID] == \
+        HOMEKIT_NOTIFY_ID

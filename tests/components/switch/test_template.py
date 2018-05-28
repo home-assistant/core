@@ -32,7 +32,7 @@ class TestTemplateSwitch:
         self.hass.stop()
 
     def test_template_state_text(self):
-        """"Test the state text of a template."""
+        """Test the state text of a template."""
         with assert_setup_component(1, 'switch'):
             assert setup.setup_component(self.hass, 'switch', {
                 'switch': {

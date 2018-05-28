@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
+    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL, ATTR_NAME,
     CONF_VERIFY_SSL, CONF_TIMEOUT, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -29,7 +29,6 @@ ATTR_MASK = 'Mask'
 ATTR_MAX_SPEED = 'Max Speed'
 ATTR_MEMORY_SIZE = 'Memory Size'
 ATTR_MODEL = 'Model'
-ATTR_NAME = 'Name'
 ATTR_PACKETS_TX = 'Packets (TX)'
 ATTR_PACKETS_RX = 'Packets (RX)'
 ATTR_PACKETS_ERR = 'Packets (Err)'

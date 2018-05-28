@@ -1,104 +1,47 @@
 """Test different accessory types: Switches."""
-import unittest
+import pytest
 
-from homeassistant.core import callback, split_entity_id
+from homeassistant.core import split_entity_id
 from homeassistant.components.homekit.type_switches import Switch
-from homeassistant.const import (
-    ATTR_DOMAIN, ATTR_SERVICE, EVENT_CALL_SERVICE,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON, STATE_OFF)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 
-from tests.common import get_test_home_assistant
+from tests.common import async_mock_service
 
 
-class TestHomekitSwitches(unittest.TestCase):
-    """Test class for all accessory types regarding switches."""
+@pytest.mark.parametrize('entity_id', [
+    'switch.test', 'remote.test', 'input_boolean.test'])
+async def test_switch_set_state(hass, entity_id):
+    """Test if accessory and HA are updated accordingly."""
+    domain = split_entity_id(entity_id)[0]
 
-    def setUp(self):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.events = []
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = Switch(hass, 'Switch', entity_id, 2, None)
+    await hass.async_add_job(acc.run)
 
-        @callback
-        def record_event(event):
-            """Track called event."""
-            self.events.append(event)
+    assert acc.aid == 2
+    assert acc.category == 8  # Switch
 
-        self.hass.bus.listen(EVENT_CALL_SERVICE, record_event)
+    assert acc.char_on.value is False
 
-    def tearDown(self):
-        """Stop down everything that was started."""
-        self.hass.stop()
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert acc.char_on.value is True
 
-    def test_switch_set_state(self):
-        """Test if accessory and HA are updated accordingly."""
-        entity_id = 'switch.test'
-        domain = split_entity_id(entity_id)[0]
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert acc.char_on.value is False
 
-        acc = Switch(self.hass, 'Switch', entity_id, 2, config=None)
-        acc.run()
+    # Set from HomeKit
+    call_turn_on = async_mock_service(hass, domain, 'turn_on')
+    call_turn_off = async_mock_service(hass, domain, 'turn_off')
 
-        self.assertEqual(acc.aid, 2)
-        self.assertEqual(acc.category, 8)  # Switch
+    await hass.async_add_job(acc.char_on.client_update_value, True)
+    await hass.async_block_till_done()
+    assert call_turn_on
+    assert call_turn_on[0].data[ATTR_ENTITY_ID] == entity_id
 
-        self.assertEqual(acc.char_on.value, False)
-
-        self.hass.states.set(entity_id, STATE_ON)
-        self.hass.block_till_done()
-        self.assertEqual(acc.char_on.value, True)
-
-        self.hass.states.set(entity_id, STATE_OFF)
-        self.hass.block_till_done()
-        self.assertEqual(acc.char_on.value, False)
-
-        # Set from HomeKit
-        acc.char_on.client_update_value(True)
-        self.hass.block_till_done()
-        self.assertEqual(
-            self.events[0].data[ATTR_DOMAIN], domain)
-        self.assertEqual(
-            self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
-
-        acc.char_on.client_update_value(False)
-        self.hass.block_till_done()
-        self.assertEqual(
-            self.events[1].data[ATTR_DOMAIN], domain)
-        self.assertEqual(
-            self.events[1].data[ATTR_SERVICE], SERVICE_TURN_OFF)
-
-    def test_remote_set_state(self):
-        """Test service call for remote as domain."""
-        entity_id = 'remote.test'
-        domain = split_entity_id(entity_id)[0]
-
-        acc = Switch(self.hass, 'Switch', entity_id, 2, config=None)
-        acc.run()
-
-        self.assertEqual(acc.char_on.value, False)
-
-        # Set from HomeKit
-        acc.char_on.client_update_value(True)
-        self.hass.block_till_done()
-        self.assertEqual(
-            self.events[0].data[ATTR_DOMAIN], domain)
-        self.assertEqual(
-            self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
-        self.assertEqual(acc.char_on.value, True)
-
-    def test_input_boolean_set_state(self):
-        """Test service call for remote as domain."""
-        entity_id = 'input_boolean.test'
-        domain = split_entity_id(entity_id)[0]
-
-        acc = Switch(self.hass, 'Switch', entity_id, 2, config=None)
-        acc.run()
-
-        self.assertEqual(acc.char_on.value, False)
-
-        # Set from HomeKit
-        acc.char_on.client_update_value(True)
-        self.hass.block_till_done()
-        self.assertEqual(
-            self.events[0].data[ATTR_DOMAIN], domain)
-        self.assertEqual(
-            self.events[0].data[ATTR_SERVICE], SERVICE_TURN_ON)
-        self.assertEqual(acc.char_on.value, True)
+    await hass.async_add_job(acc.char_on.client_update_value, False)
+    await hass.async_block_till_done()
+    assert call_turn_off
+    assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id

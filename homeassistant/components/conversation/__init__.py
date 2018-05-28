@@ -96,6 +96,7 @@ async def async_setup(hass, config):
     async def process(service):
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
+        _LOGGER.debug('Processing: <%s>', text)
         try:
             await _process(hass, text)
         except intent.IntentHandleError as err:

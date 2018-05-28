@@ -1,5 +1,5 @@
 """Tests for the link user flow."""
-from . import async_setup_auth, CLIENT_AUTH, CLIENT_ID
+from . import async_setup_auth, CLIENT_AUTH, CLIENT_ID, CLIENT_REDIRECT_URI
 
 
 async def async_get_code(hass, aiohttp_client):
@@ -25,7 +25,8 @@ async def async_get_code(hass, aiohttp_client):
     client = await async_setup_auth(hass, aiohttp_client, config)
 
     resp = await client.post('/auth/login_flow', json={
-        'handler': ['insecure_example', None]
+        'handler': ['insecure_example', None],
+        'redirect_uri': CLIENT_REDIRECT_URI,
     }, auth=CLIENT_AUTH)
     assert resp.status == 200
     step = await resp.json()
@@ -56,7 +57,8 @@ async def async_get_code(hass, aiohttp_client):
 
     # Now authenticate with the 2nd flow
     resp = await client.post('/auth/login_flow', json={
-        'handler': ['insecure_example', '2nd auth']
+        'handler': ['insecure_example', '2nd auth'],
+        'redirect_uri': CLIENT_REDIRECT_URI,
     }, auth=CLIENT_AUTH)
     assert resp.status == 200
     step = await resp.json()

@@ -4,6 +4,7 @@ import hmac
 
 import voluptuous as vol
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant import auth, data_entry_flow
 from homeassistant.core import callback
 
@@ -18,6 +19,10 @@ USER_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = auth.AUTH_PROVIDER_SCHEMA.extend({
     vol.Required('users'): [USER_SCHEMA]
 }, extra=vol.PREVENT_EXTRA)
+
+
+class InvalidAuthError(HomeAssistantError):
+    """Raised when submitting invalid authentication."""
 
 
 @auth.AUTH_PROVIDERS.register('insecure_example')
@@ -43,18 +48,15 @@ class ExampleAuthProvider(auth.AuthProvider):
             # Do one more compare to make timing the same as if user was found.
             hmac.compare_digest(password.encode('utf-8'),
                                 password.encode('utf-8'))
-            raise auth.InvalidUser
+            raise InvalidAuthError
 
         if not hmac.compare_digest(user['password'].encode('utf-8'),
                                    password.encode('utf-8')):
-            raise auth.InvalidPassword
+            raise InvalidAuthError
 
     async def async_get_or_create_credentials(self, flow_result):
         """Get credentials based on the flow result."""
         username = flow_result['username']
-        password = flow_result['password']
-
-        self.async_validate_login(username, password)
 
         for credential in await self.async_credentials():
             if credential.data['username'] == username:
@@ -96,7 +98,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             try:
                 self._auth_provider.async_validate_login(
                     user_input['username'], user_input['password'])
-            except (auth.InvalidUser, auth.InvalidPassword):
+            except InvalidAuthError:
                 errors['base'] = 'invalid_auth'
 
             if not errors:

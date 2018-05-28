@@ -22,7 +22,7 @@ PACKAGES=(
   # homeassistant.components.device_tracker.bluetooth_tracker
   bluetooth libglib2.0-dev libbluetooth-dev
   # homeassistant.components.device_tracker.owntracks
-  libsodium13
+  libsodium18
   # homeassistant.components.zwave
   libudev-dev
   # homeassistant.components.homekit_controller

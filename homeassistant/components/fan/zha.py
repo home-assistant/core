@@ -10,7 +10,6 @@ from homeassistant.components import zha
 from homeassistant.components.fan import (
     DOMAIN, FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
     SUPPORT_SET_SPEED)
-from homeassistant.const import STATE_UNKNOWN
 
 DEPENDENCIES = ['zha']
 
@@ -72,7 +71,7 @@ class ZhaFan(zha.Entity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if entity is on."""
-        if self._state == STATE_UNKNOWN:
+        if self._state is None:
             return False
         return self._state != SPEED_OFF
 
@@ -103,7 +102,7 @@ class ZhaFan(zha.Entity, FanEntity):
         """Retrieve latest state."""
         result = yield from zha.safe_read(self._endpoint.fan, ['fan_mode'])
         new_value = result.get('fan_mode', None)
-        self._state = VALUE_TO_SPEED.get(new_value, STATE_UNKNOWN)
+        self._state = VALUE_TO_SPEED.get(new_value, None)
 
     @property
     def should_poll(self) -> bool:

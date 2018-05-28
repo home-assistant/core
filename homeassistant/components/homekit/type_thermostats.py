@@ -4,22 +4,23 @@ import logging
 from pyhap.const import CATEGORY_THERMOSTAT
 
 from homeassistant.components.climate import (
-    ATTR_CURRENT_TEMPERATURE, ATTR_TEMPERATURE,
-    ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
-    ATTR_OPERATION_MODE, ATTR_OPERATION_LIST,
-    STATE_HEAT, STATE_COOL, STATE_AUTO, SUPPORT_ON_OFF,
-    SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_TARGET_TEMPERATURE_LOW)
+    ATTR_CURRENT_TEMPERATURE, ATTR_OPERATION_LIST, ATTR_OPERATION_MODE,
+    ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    DOMAIN, SERVICE_SET_TEMPERATURE, SERVICE_SET_OPERATION_MODE, STATE_AUTO,
+    STATE_COOL, STATE_HEAT, SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE_HIGH,
+    SUPPORT_TARGET_TEMPERATURE_LOW)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from . import TYPES
-from .accessories import HomeAccessory, debounce
+from .accessories import debounce, HomeAccessory
 from .const import (
-    SERV_THERMOSTAT, CHAR_CURRENT_HEATING_COOLING,
-    CHAR_TARGET_HEATING_COOLING, CHAR_CURRENT_TEMPERATURE,
-    CHAR_TARGET_TEMPERATURE, CHAR_TEMP_DISPLAY_UNITS,
-    CHAR_COOLING_THRESHOLD_TEMPERATURE, CHAR_HEATING_THRESHOLD_TEMPERATURE)
+    CHAR_COOLING_THRESHOLD_TEMPERATURE, CHAR_CURRENT_HEATING_COOLING,
+    CHAR_CURRENT_TEMPERATURE, CHAR_TARGET_HEATING_COOLING,
+    CHAR_HEATING_THRESHOLD_TEMPERATURE, CHAR_TARGET_TEMPERATURE,
+    CHAR_TEMP_DISPLAY_UNITS, SERV_THERMOSTAT)
 from .util import temperature_to_homekit, temperature_to_states
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ SUPPORT_TEMP_RANGE = SUPPORT_TARGET_TEMPERATURE_LOW | \
 class Thermostat(HomeAccessory):
     """Generate a Thermostat accessory for a climate."""
 
-    def __init__(self, *args, config):
+    def __init__(self, *args):
         """Initialize a Thermostat accessory object."""
         super().__init__(*args, category=CATEGORY_THERMOSTAT)
         self._unit = TEMP_CELSIUS
@@ -99,12 +100,13 @@ class Thermostat(HomeAccessory):
             if self.support_power_state is True:
                 params = {ATTR_ENTITY_ID: self.entity_id}
                 if hass_value == STATE_OFF:
-                    self.hass.services.call('climate', 'turn_off', params)
+                    self.hass.services.call(DOMAIN, SERVICE_TURN_OFF, params)
                     return
                 else:
-                    self.hass.services.call('climate', 'turn_on', params)
-            self.hass.components.climate.set_operation_mode(
-                operation_mode=hass_value, entity_id=self.entity_id)
+                    self.hass.services.call(DOMAIN, SERVICE_TURN_ON, params)
+            params = {ATTR_ENTITY_ID: self.entity_id,
+                      ATTR_OPERATION_MODE: hass_value}
+            self.hass.services.call(DOMAIN, SERVICE_SET_OPERATION_MODE, params)
 
     @debounce
     def set_cooling_threshold(self, value):
@@ -113,11 +115,11 @@ class Thermostat(HomeAccessory):
                       self.entity_id, value)
         self.coolingthresh_flag_target_state = True
         low = self.char_heating_thresh_temp.value
-        low = temperature_to_states(low, self._unit)
-        value = temperature_to_states(value, self._unit)
-        self.hass.components.climate.set_temperature(
-            entity_id=self.entity_id, target_temp_high=value,
-            target_temp_low=low)
+        params = {
+            ATTR_ENTITY_ID: self.entity_id,
+            ATTR_TARGET_TEMP_HIGH: temperature_to_states(value, self._unit),
+            ATTR_TARGET_TEMP_LOW: temperature_to_states(low, self._unit)}
+        self.hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, params)
 
     @debounce
     def set_heating_threshold(self, value):
@@ -125,13 +127,12 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug('%s: Set heating threshold temperature to %.2f°C',
                       self.entity_id, value)
         self.heatingthresh_flag_target_state = True
-        # Home assistant always wants to set low and high at the same time
         high = self.char_cooling_thresh_temp.value
-        high = temperature_to_states(high, self._unit)
-        value = temperature_to_states(value, self._unit)
-        self.hass.components.climate.set_temperature(
-            entity_id=self.entity_id, target_temp_high=high,
-            target_temp_low=value)
+        params = {
+            ATTR_ENTITY_ID: self.entity_id,
+            ATTR_TARGET_TEMP_HIGH: temperature_to_states(high, self._unit),
+            ATTR_TARGET_TEMP_LOW: temperature_to_states(value, self._unit)}
+        self.hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, params)
 
     @debounce
     def set_target_temperature(self, value):
@@ -139,9 +140,10 @@ class Thermostat(HomeAccessory):
         _LOGGER.debug('%s: Set target temperature to %.2f°C',
                       self.entity_id, value)
         self.temperature_flag_target_state = True
-        value = temperature_to_states(value, self._unit)
-        self.hass.components.climate.set_temperature(
-            temperature=value, entity_id=self.entity_id)
+        params = {
+            ATTR_ENTITY_ID: self.entity_id,
+            ATTR_TEMPERATURE: temperature_to_states(value, self._unit)}
+        self.hass.services.call(DOMAIN, SERVICE_SET_TEMPERATURE, params)
 
     def update_state(self, new_state):
         """Update security state after state changed."""

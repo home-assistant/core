@@ -23,7 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_24H_VOLUME = '24h_volume'
 ATTR_AVAILABLE_SUPPLY = 'available_supply'
 ATTR_MARKET_CAP = 'market_cap'
-ATTR_NAME = 'name'
 ATTR_PERCENT_CHANGE_24H = 'percent_change_24h'
 ATTR_PERCENT_CHANGE_7D = 'percent_change_7d'
 ATTR_PERCENT_CHANGE_1H = 'percent_change_1h'
@@ -130,6 +129,4 @@ class CoinMarketCapData(object):
         """Get the latest data from blockchain.info."""
         from coinmarketcap import Market
         self.ticker = Market().ticker(
-            self.currency,
-            limit=1,
-            convert=self.display_currency)
+            self.currency, limit=1, convert=self.display_currency)
