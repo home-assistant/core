@@ -66,7 +66,7 @@ async def async_setup_platform(
     dev = []
     for entry, data in resources.items():
         sensor = entry
-        element = data.get(CONF_ELEMENT)
+        element = data[CONF_ELEMENT]
         sensor_name = icon = None
         try:
             resource_data = netdata.api.metrics[sensor]
