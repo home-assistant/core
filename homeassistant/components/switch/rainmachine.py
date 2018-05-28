@@ -4,7 +4,6 @@ This component provides support for RainMachine programs and zones.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.rainmachine/
 """
-
 import logging
 
 from homeassistant.components.rainmachine import (

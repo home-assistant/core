@@ -4,7 +4,6 @@ This platform provides support for sensor data from RainMachine.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rainmachine/
 """
-
 import logging
 
 from homeassistant.components.rainmachine import (
@@ -66,22 +65,22 @@ class RainMachineSensor(RainMachineEntity):
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
         return '{0}_{1}'.format(
-            self.rainmachine.device_mac.replace(':', ''),
-            self._sensor_type)
+            self.rainmachine.device_mac.replace(':', ''), self._sensor_type)
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit
 
+    @callback
+    def update_data(self):
+        """Update the state."""
+        self.async_schedule_update_ha_state(True)
+
     async def async_added_to_hass(self):
         """Register callbacks."""
-        @callback
-        def update_data():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        async_dispatcher_connect(self.hass, DATA_UPDATE_TOPIC, update_data)
+        async_dispatcher_connect(self.hass, DATA_UPDATE_TOPIC,
+                                 self.update_data)
 
     def update(self):
         """Update the sensor's state."""
