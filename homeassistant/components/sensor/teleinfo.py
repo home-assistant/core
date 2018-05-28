@@ -17,7 +17,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_DEVICE, STATE_UNKNOWN)
+    ATTR_ATTRIBUTION, CONF_DEVICE, CONF_NAME, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -71,7 +71,9 @@ class TeleinfoSensor(Entity):
         self._name = name
         self._unit_of_measurement = None
         self._state = STATE_UNKNOWN
-        self._attributes = {}
+        self._attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,    
+        }
         self._data = teleinfo_data
 
     @property
@@ -93,11 +95,6 @@ class TeleinfoSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
 
     def update(self):
         """Get the latest data from Teleinfo device and updates the state."""
