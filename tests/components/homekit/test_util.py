@@ -4,17 +4,18 @@ import voluptuous as vol
 
 from homeassistant.core import State
 from homeassistant.components.homekit.const import (
-    HOMEKIT_NOTIFY_ID, ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE)
+    CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
+    FEATURE_PLAY_PAUSE)
 from homeassistant.components.homekit.util import (
     convert_to_float, density_to_air_quality, dismiss_setup_message,
     show_setup_message, temperature_to_homekit, temperature_to_states,
-    validate_media_player_modes)
+    validate_media_player_features)
 from homeassistant.components.homekit.util import validate_entity_config \
     as vec
 from homeassistant.components.persistent_notification import (
     ATTR_MESSAGE, ATTR_NOTIFICATION_ID, DOMAIN)
 from homeassistant.const import (
-    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_MODE, CONF_NAME, STATE_UNKNOWN,
+    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, STATE_UNKNOWN,
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.common import async_mock_service
@@ -25,7 +26,11 @@ def test_validate_entity_config():
     configs = [{'invalid_entity_id': {}}, {'demo.test': 1},
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
                {'demo.test': None}, {'demo.test': {CONF_NAME: None}},
-               {'media_player.test': {CONF_MODE: 'invalid_mode'}}]
+               {'media_player.test': {CONF_FEATURE_LIST: [
+                    {CONF_FEATURE: 'invalid_feature'}]}},
+               {'media_player.test': {CONF_FEATURE_LIST: [
+                    {CONF_FEATURE: FEATURE_ON_OFF},
+                    {CONF_FEATURE: FEATURE_ON_OFF}]}}, ]
 
     for conf in configs:
         with pytest.raises(vol.Invalid):
@@ -45,23 +50,26 @@ def test_validate_entity_config():
         {'lock.demo': {ATTR_CODE: '1234'}}
 
     assert vec({'media_player.demo': {}}) == \
-        {'media_player.demo': {CONF_MODE: []}}
-    assert vec({'media_player.demo': {CONF_MODE: [ON_OFF]}}) == \
-        {'media_player.demo': {CONF_MODE: [ON_OFF]}}
+        {'media_player.demo': {CONF_FEATURE_LIST: {}}}
+    config = {CONF_FEATURE_LIST: [{CONF_FEATURE: FEATURE_ON_OFF},
+                                  {CONF_FEATURE: FEATURE_PLAY_PAUSE}]}
+    assert vec({'media_player.demo': config}) == \
+        {'media_player.demo': {CONF_FEATURE_LIST:
+                               {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}}}}
 
 
-def test_validate_media_player_modes():
+def test_validate_media_player_features():
     """Test validate modes for media players."""
     config = {}
     attrs = {ATTR_SUPPORTED_FEATURES: 20873}
     entity_state = State('media_player.demo', 'on', attrs)
-    validate_media_player_modes(entity_state, config)
-    assert config == {CONF_MODE: [ON_OFF, PLAY_PAUSE, PLAY_STOP, TOGGLE_MUTE]}
+    assert validate_media_player_features(entity_state, config) is True
+
+    config = {FEATURE_ON_OFF: None}
+    assert validate_media_player_features(entity_state, config) is True
 
     entity_state = State('media_player.demo', 'on')
-    config = {CONF_MODE: [ON_OFF]}
-    with pytest.raises(vol.Invalid):
-        validate_media_player_modes(entity_state, config)
+    assert validate_media_player_features(entity_state, config) is False
 
 
 def test_convert_to_float():
