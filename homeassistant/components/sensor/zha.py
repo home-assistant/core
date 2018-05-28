@@ -199,6 +199,11 @@ class ElectricalMeasurementSensor(Sensor):
         return 'W'
 
     @property
+    def force_update(self) -> bool:
+        """Force update this entity."""
+        return True
+
+    @property
     def state(self):
         """Return the state of the entity."""
         if self._state is None:
