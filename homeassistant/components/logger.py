@@ -4,7 +4,6 @@ Component that will help set the level of logging for components.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logger/
 """
-import asyncio
 import logging
 from collections import OrderedDict
 
@@ -73,8 +72,7 @@ class HomeAssistantLogFilter(logging.Filter):
         return record.levelno >= default
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the logger component."""
     logfilter = {}
 
@@ -116,8 +114,7 @@ def async_setup(hass, config):
     if LOGGER_LOGS in config.get(DOMAIN):
         set_log_levels(config.get(DOMAIN)[LOGGER_LOGS])
 
-    @asyncio.coroutine
-    def async_service_handler(service):
+    async def async_service_handler(service):
         """Handle logger services."""
         set_log_levels(service.data)
 

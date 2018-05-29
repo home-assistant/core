@@ -1,10 +1,10 @@
 """Module to coordinate user intentions."""
-import asyncio
 import logging
 import re
 
 import voluptuous as vol
 
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -34,6 +34,8 @@ def async_register(hass, handler):
     if intents is None:
         intents = hass.data[DATA_KEY] = {}
 
+    assert handler.intent_type is not None, 'intent_type cannot be None'
+
     if handler.intent_type in intents:
         _LOGGER.warning('Intent %s is being overwritten by %s.',
                         handler.intent_type, handler)
@@ -41,9 +43,9 @@ def async_register(hass, handler):
     intents[handler.intent_type] = handler
 
 
-@asyncio.coroutine
 @bind_hass
-def async_handle(hass, platform, intent_type, slots=None, text_input=None):
+async def async_handle(hass, platform, intent_type, slots=None,
+                       text_input=None):
     """Handle an intent."""
     handler = hass.data.get(DATA_KEY, {}).get(intent_type)
 
@@ -54,38 +56,63 @@ def async_handle(hass, platform, intent_type, slots=None, text_input=None):
 
     try:
         _LOGGER.info("Triggering intent handler %s", handler)
-        result = yield from handler.async_handle(intent)
+        result = await handler.async_handle(intent)
         return result
     except vol.Invalid as err:
+        _LOGGER.warning('Received invalid slot info for %s: %s',
+                        intent_type, err)
         raise InvalidSlotInfo(
             'Received invalid slot info for {}'.format(intent_type)) from err
+    except IntentHandleError:
+        raise
     except Exception as err:
-        raise IntentHandleError(
+        raise IntentUnexpectedError(
             'Error handling {}'.format(intent_type)) from err
 
 
 class IntentError(HomeAssistantError):
     """Base class for intent related errors."""
 
-    pass
-
 
 class UnknownIntent(IntentError):
     """When the intent is not registered."""
-
-    pass
 
 
 class InvalidSlotInfo(IntentError):
     """When the slot data is invalid."""
 
-    pass
-
 
 class IntentHandleError(IntentError):
     """Error while handling intent."""
 
-    pass
+
+class IntentUnexpectedError(IntentError):
+    """Unexpected error while handling intent."""
+
+
+@callback
+@bind_hass
+def async_match_state(hass, name, states=None):
+    """Find a state that matches the name."""
+    if states is None:
+        states = hass.states.async_all()
+
+    state = _fuzzymatch(name, states, lambda state: state.name)
+
+    if state is None:
+        raise IntentHandleError(
+            'Unable to find an entity called {}'.format(name))
+
+    return state
+
+
+@callback
+def async_test_feature(state, feature, feature_name):
+    """Test is state supports a feature."""
+    if state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & feature == 0:
+        raise IntentHandleError(
+            'Entity {} does not support {}'.format(
+                state.name, feature_name))
 
 
 class IntentHandler:
@@ -114,8 +141,7 @@ class IntentHandler:
 
         return self._slot_schema(slots)
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the intent."""
         raise NotImplementedError()
 
@@ -124,16 +150,18 @@ class IntentHandler:
         return '<{} - {}>'.format(self.__class__.__name__, self.intent_type)
 
 
-def fuzzymatch(name, entities):
+def _fuzzymatch(name, items, key):
     """Fuzzy matching function."""
     matches = []
     pattern = '.*?'.join(name)
     regex = re.compile(pattern, re.IGNORECASE)
-    for entity_id, entity_name in entities.items():
-        match = regex.search(entity_name)
+    for idx, item in enumerate(items):
+        match = regex.search(key(item))
         if match:
-            matches.append((len(match.group()), match.start(), entity_id))
-    return [x for _, _, x in sorted(matches)]
+            # Add index so we pick first match in case same group and start
+            matches.append((len(match.group()), match.start(), idx, item))
+
+    return sorted(matches)[0][3] if matches else None
 
 
 class ServiceIntentHandler(IntentHandler):
@@ -143,7 +171,7 @@ class ServiceIntentHandler(IntentHandler):
     """
 
     slot_schema = {
-        'name': cv.string,
+        vol.Required('name'): cv.string,
     }
 
     def __init__(self, intent_type, domain, service, speech):
@@ -153,35 +181,18 @@ class ServiceIntentHandler(IntentHandler):
         self.service = service
         self.speech = speech
 
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
+    async def async_handle(self, intent_obj):
         """Handle the hass intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        response = intent_obj.create_response()
+        state = async_match_state(hass, slots['name']['value'])
 
-        name = slots['name']['value']
-        entities = {state.entity_id: state.name for state
-                    in hass.states.async_all()}
-
-        matches = fuzzymatch(name, entities)
-        entity_id = matches[0] if matches else None
-        _LOGGER.debug("%s matched entity: %s", name, entity_id)
+        await hass.services.async_call(self.domain, self.service, {
+            ATTR_ENTITY_ID: state.entity_id
+        })
 
         response = intent_obj.create_response()
-        if not entity_id:
-            response.async_set_speech(
-                "Could not find entity id matching {}.".format(name))
-            _LOGGER.error("Could not find entity id matching %s", name)
-            return response
-
-        yield from hass.services.async_call(
-            self.domain, self.service, {
-                ATTR_ENTITY_ID: entity_id
-            })
-
-        response.async_set_speech(
-            self.speech.format(name))
+        response.async_set_speech(self.speech.format(state.name))
         return response
 
 

@@ -1,4 +1,5 @@
 """Helper methods for various modules."""
+import asyncio
 from collections.abc import MutableSet
 from itertools import chain
 import threading
@@ -12,7 +13,7 @@ from functools import wraps
 from types import MappingProxyType
 from unicodedata import normalize
 
-from typing import Any, Optional, TypeVar, Callable, Sequence, KeysView, Union
+from typing import Any, Optional, TypeVar, Callable, KeysView, Union, Iterable
 
 from .dt import as_local, utcnow
 
@@ -71,7 +72,7 @@ def convert(value: T, to_type: Callable[[T], U],
 
 
 def ensure_unique_string(preferred_string: str, current_strings:
-                         Union[Sequence[str], KeysView[str]]) -> str:
+                         Union[Iterable[str], KeysView[str]]) -> str:
     """Return a string that is not present in current_strings.
 
     If preferred string exists will append _2, _3, ..
@@ -260,6 +261,16 @@ class Throttle(object):
 
     def __call__(self, method):
         """Caller for the throttle."""
+        # Make sure we return a coroutine if the method is async.
+        if asyncio.iscoroutinefunction(method):
+            async def throttled_value():
+                """Stand-in function for when real func is being throttled."""
+                return None
+        else:
+            def throttled_value():
+                """Stand-in function for when real func is being throttled."""
+                return None
+
         if self.limit_no_throttle is not None:
             method = Throttle(self.limit_no_throttle)(method)
 
@@ -298,7 +309,7 @@ class Throttle(object):
             throttle = host._throttle[id(self)]
 
             if not throttle[0].acquire(False):
-                return None
+                return throttled_value()
 
             # Check if method is never called or no_throttle is given
             force = kwargs.pop('no_throttle', False) or not throttle[1]
@@ -309,7 +320,7 @@ class Throttle(object):
                     throttle[1] = utcnow()
                     return result
 
-                return None
+                return throttled_value()
             finally:
                 throttle[0].release()
 

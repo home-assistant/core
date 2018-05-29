@@ -6,6 +6,7 @@ https://home-assistant.io/components/upnp/
 """
 from ipaddress import ip_address
 import logging
+import asyncio
 
 import voluptuous as vol
 
@@ -14,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util import get_local_ip
 
-REQUIREMENTS = ['miniupnpc==2.0.2']
+REQUIREMENTS = ['pyupnp-async==0.1.0.2']
 DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['api']
 DOMAIN = 'upnp'
 
-DATA_UPNP = 'UPNP'
+DATA_UPNP = 'upnp_device'
 
 CONF_LOCAL_IP = 'local_ip'
 CONF_ENABLE_PORT_MAPPING = 'port_mapping'
@@ -32,6 +33,11 @@ CONF_HASS = 'hass'
 
 NOTIFICATION_ID = 'upnp_notification'
 NOTIFICATION_TITLE = 'UPnP Setup'
+
+IGD_DEVICE = 'urn:schemas-upnp-org:device:InternetGatewayDevice:1'
+PPP_SERVICE = 'urn:schemas-upnp-org:service:WANPPPConnection:1'
+IP_SERVICE = 'urn:schemas-upnp-org:service:WANIPConnection:1'
+CIC_SERVICE = 'urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1'
 
 UNITS = {
     "Bytes": 1,
@@ -44,22 +50,19 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_ENABLE_PORT_MAPPING, default=True): cv.boolean,
         vol.Optional(CONF_UNITS, default="MBytes"): vol.In(UNITS),
-        vol.Optional(CONF_LOCAL_IP): ip_address,
+        vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
         vol.Optional(CONF_PORTS):
             vol.Schema({vol.Any(CONF_HASS, cv.positive_int): cv.positive_int})
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=import-error, no-member, broad-except, c-extension-no-member
-def setup(hass, config):
+async def async_setup(hass, config):
     """Register a port mapping for Home Assistant via UPnP."""
     config = config[DOMAIN]
     host = config.get(CONF_LOCAL_IP)
 
-    if host is not None:
-        host = str(host)
-    else:
+    if host is None:
         host = get_local_ip()
 
     if host == '127.0.0.1':
@@ -67,21 +70,33 @@ def setup(hass, config):
             'Unable to determine local IP. Add it to your configuration.')
         return False
 
-    import miniupnpc
+    import pyupnp_async
+    from pyupnp_async.error import UpnpSoapError
 
-    upnp = miniupnpc.UPnP()
-    hass.data[DATA_UPNP] = upnp
-
-    upnp.discoverdelay = 200
-    upnp.discover()
-    try:
-        upnp.selectigd()
-    except Exception:
-        _LOGGER.exception("Error when attempting to discover an UPnP IGD")
+    service = None
+    resp = await pyupnp_async.msearch_first(search_target=IGD_DEVICE)
+    if not resp:
         return False
 
-    unit = config.get(CONF_UNITS)
-    discovery.load_platform(hass, 'sensor', DOMAIN, {'unit': unit}, config)
+    try:
+        device = await resp.get_device()
+        hass.data[DATA_UPNP] = device
+        for _service in device.services:
+            if _service['serviceType'] == PPP_SERVICE:
+                service = device.find_first_service(PPP_SERVICE)
+            if _service['serviceType'] == IP_SERVICE:
+                service = device.find_first_service(IP_SERVICE)
+            if _service['serviceType'] == CIC_SERVICE:
+                unit = config.get(CONF_UNITS)
+                hass.async_add_job(discovery.async_load_platform(
+                    hass, 'sensor', DOMAIN, {'unit': unit}, config))
+    except UpnpSoapError as error:
+        _LOGGER.error(error)
+        return False
+
+    if not service:
+        _LOGGER.warning("Could not find any UPnP IGD")
+        return False
 
     port_mapping = config.get(CONF_ENABLE_PORT_MAPPING)
     if not port_mapping:
@@ -98,12 +113,12 @@ def setup(hass, config):
         if internal == CONF_HASS:
             internal = internal_port
         try:
-            upnp.addportmapping(
-                external, 'TCP', host, internal, 'Home Assistant', '')
+            await service.add_port_mapping(internal, external, host, 'TCP',
+                                           desc='Home Assistant')
             registered.append(external)
-        except Exception:
-            _LOGGER.exception("UPnP failed to configure port mapping for %s",
-                              external)
+            _LOGGER.debug("external %s -> %s @ %s", external, internal, host)
+        except UpnpSoapError as error:
+            _LOGGER.error(error)
             hass.components.persistent_notification.create(
                 '<b>ERROR: tcp port {} is already mapped in your router.'
                 '</b><br />Please disable port_mapping in the <i>upnp</i> '
@@ -113,11 +128,13 @@ def setup(hass, config):
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
 
-    def deregister_port(event):
+    async def deregister_port(event):
         """De-register the UPnP port mapping."""
-        for external in registered:
-            upnp.deleteportmapping(external, 'TCP')
+        tasks = [service.delete_port_mapping(external, 'TCP')
+                 for external in registered]
+        if tasks:
+            await asyncio.wait(tasks)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
 
     return True

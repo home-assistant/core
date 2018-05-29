@@ -7,7 +7,7 @@ from unittest.mock import patch
 import homeassistant.core as ha
 import homeassistant.components as core_components
 from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TURN_OFF)
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.util import dt as dt_util
 from homeassistant.helpers import state
 from homeassistant.const import (

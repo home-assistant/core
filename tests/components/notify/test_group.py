@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from homeassistant.setup import setup_component
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import group, demo
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
@@ -53,7 +53,7 @@ class TestNotifyGroup(unittest.TestCase):
         assert self.service is not None
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """"Stop everything that was started."""
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_send_message_with_data(self):

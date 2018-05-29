@@ -27,7 +27,7 @@ class TestNotifySmtp(unittest.TestCase):
                                'HomeAssistant', 0)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """"Stop down everything that was started."""
+        """Stop down everything that was started."""
         self.hass.stop()
 
     @patch('email.utils.make_msgid', return_value='<mock@mock>')

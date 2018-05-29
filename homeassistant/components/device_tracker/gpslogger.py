@@ -4,7 +4,6 @@ Support for the GPSLogger platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.gpslogger/
 """
-import asyncio
 import logging
 from hmac import compare_digest
 
@@ -22,6 +21,7 @@ from homeassistant.components.http import (
 from homeassistant.components.device_tracker import (  # NOQA
     DOMAIN, PLATFORM_SCHEMA
 )
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +32,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_scanner(hass, config, async_see, discovery_info=None):
+async def async_setup_scanner(hass: HomeAssistantType, config: ConfigType,
+                              async_see, discovery_info=None):
     """Set up an endpoint for the GPSLogger application."""
     hass.http.register_view(GPSLoggerView(async_see, config))
 
@@ -54,8 +54,7 @@ class GPSLoggerView(HomeAssistantView):
         # password is set
         self.requires_auth = self._password is None
 
-    @asyncio.coroutine
-    def get(self, request: Request):
+    async def get(self, request: Request):
         """Handle for GPSLogger message received as GET."""
         hass = request.app['hass']
         data = request.query

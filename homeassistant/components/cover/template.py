@@ -234,7 +234,9 @@ class CoverTemplate(CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        return self._position
+        if self._position_template or self._position_script:
+            return self._position
+        return None
 
     @property
     def current_cover_tilt_position(self):

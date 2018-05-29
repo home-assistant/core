@@ -13,12 +13,12 @@ from homeassistant.const import (
     CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, CONF_CONDITION,
     WEEKDAYS, CONF_STATE, CONF_ZONE, CONF_BEFORE,
     CONF_AFTER, CONF_WEEKDAY, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
-    CONF_BELOW, CONF_ABOVE)
+    CONF_BELOW, CONF_ABOVE, STATE_UNAVAILABLE, STATE_UNKNOWN)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 FROM_CONFIG_FORMAT = '{}_from_config'
 ASYNC_FROM_CONFIG_FORMAT = 'async_{}_from_config'
@@ -159,6 +159,9 @@ def async_numeric_state(hass: HomeAssistant, entity, below=None, above=None,
         except TemplateError as ex:
             _LOGGER.error("Template error: %s", ex)
             return False
+
+    if value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        return False
 
     try:
         value = float(value)
@@ -390,8 +393,8 @@ def zone(hass, zone_ent, entity):
     if latitude is None or longitude is None:
         return False
 
-    return zone_cmp.in_zone(zone_ent, latitude, longitude,
-                            entity.attributes.get(ATTR_GPS_ACCURACY, 0))
+    return zone_cmp.zone.in_zone(zone_ent, latitude, longitude,
+                                 entity.attributes.get(ATTR_GPS_ACCURACY, 0))
 
 
 def zone_from_config(config, config_validation=True):

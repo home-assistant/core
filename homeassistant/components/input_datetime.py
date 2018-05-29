@@ -43,8 +43,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         cv.slug: vol.All({
             vol.Optional(CONF_NAME): cv.string,
-            vol.Required(CONF_HAS_DATE): cv.boolean,
-            vol.Required(CONF_HAS_TIME): cv.boolean,
+            vol.Optional(CONF_HAS_DATE, default=False): cv.boolean,
+            vol.Optional(CONF_HAS_TIME, default=False): cv.boolean,
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_INITIAL): cv.string,
         }, cv.has_at_least_one_key_value((CONF_HAS_DATE, True),

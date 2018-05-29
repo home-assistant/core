@@ -6,6 +6,7 @@ https://home-assistant.io/components/notify.lametric/
 """
 import logging
 
+from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -22,11 +23,16 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_LIFETIME = "lifetime"
 CONF_CYCLES = "cycles"
+CONF_PRIORITY = "priority"
+
+AVAILABLE_PRIORITIES = ["info", "warning", "critical"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ICON, default="i555"): cv.string,
     vol.Optional(CONF_LIFETIME, default=10): cv.positive_int,
     vol.Optional(CONF_CYCLES, default=1): cv.positive_int,
+    vol.Optional(CONF_PRIORITY, default="warning"):
+        vol.In(AVAILABLE_PRIORITIES)
 })
 
 
@@ -37,18 +43,21 @@ def get_service(hass, config, discovery_info=None):
     return LaMetricNotificationService(hlmn,
                                        config[CONF_ICON],
                                        config[CONF_LIFETIME] * 1000,
-                                       config[CONF_CYCLES])
+                                       config[CONF_CYCLES],
+                                       config[CONF_PRIORITY])
 
 
 class LaMetricNotificationService(BaseNotificationService):
     """Implement the notification service for LaMetric."""
 
-    def __init__(self, hasslametricmanager, icon, lifetime, cycles):
+    def __init__(self, hasslametricmanager, icon, lifetime, cycles, priority):
         """Initialize the service."""
         self.hasslametricmanager = hasslametricmanager
         self._icon = icon
         self._lifetime = lifetime
         self._cycles = cycles
+        self._priority = priority
+        self._devices = []
 
     # pylint: disable=broad-except
     def send_message(self, message="", **kwargs):
@@ -62,6 +71,7 @@ class LaMetricNotificationService(BaseNotificationService):
         icon = self._icon
         cycles = self._cycles
         sound = None
+        priority = self._priority
 
         # Additional data?
         if data is not None:
@@ -76,6 +86,14 @@ class LaMetricNotificationService(BaseNotificationService):
                 except AssertionError:
                     _LOGGER.error("Sound ID %s unknown, ignoring",
                                   data["sound"])
+            if "cycles" in data:
+                cycles = data['cycles']
+            if "priority" in data:
+                if data['priority'] in AVAILABLE_PRIORITIES:
+                    priority = data['priority']
+                else:
+                    _LOGGER.warning("Priority %s invalid, using default %s",
+                                    data['priority'], priority)
 
         text_frame = SimpleFrame(icon, message)
         _LOGGER.debug("Icon/Message/Cycles/Lifetime: %s, %s, %d, %d",
@@ -86,13 +104,22 @@ class LaMetricNotificationService(BaseNotificationService):
         model = Model(frames=frames, cycles=cycles, sound=sound)
         lmn = self.hasslametricmanager.manager
         try:
-            devices = lmn.get_devices()
+            self._devices = lmn.get_devices()
         except TokenExpiredError:
             _LOGGER.debug("Token expired, fetching new token")
             lmn.get_token()
-            devices = lmn.get_devices()
-        for dev in devices:
+            self._devices = lmn.get_devices()
+        except RequestsConnectionError:
+            _LOGGER.warning("Problem connecting to LaMetric, "
+                            "using cached devices instead")
+        for dev in self._devices:
             if targets is None or dev["name"] in targets:
-                lmn.set_device(dev)
-                lmn.send_notification(model, lifetime=self._lifetime)
-                _LOGGER.debug("Sent notification to LaMetric %s", dev["name"])
+                try:
+                    lmn.set_device(dev)
+                    lmn.send_notification(model, lifetime=self._lifetime,
+                                          priority=priority)
+                    _LOGGER.debug("Sent notification to LaMetric %s",
+                                  dev["name"])
+                except OSError:
+                    _LOGGER.warning("Cannot connect to LaMetric %s",
+                                    dev["name"])

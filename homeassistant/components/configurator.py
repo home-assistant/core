@@ -15,7 +15,7 @@ from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME, \
     ATTR_ENTITY_PICTURE
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_INSTANCE = 'configurator'

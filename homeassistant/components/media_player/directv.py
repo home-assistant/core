@@ -8,7 +8,7 @@ import voluptuous as vol
 import requests
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
+    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_STOP, PLATFORM_SCHEMA,
     SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY,
     MediaPlayerDevice)
@@ -154,7 +154,7 @@ class DirecTvDevice(MediaPlayerDevice):
         """Return the content type of current playing media."""
         if 'episodeTitle' in self._current:
             return MEDIA_TYPE_TVSHOW
-        return MEDIA_TYPE_VIDEO
+        return MEDIA_TYPE_MOVIE
 
     @property
     def media_channel(self):

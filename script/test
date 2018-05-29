@@ -3,4 +3,4 @@
 
 cd "$(dirname "$0")/.."
 
-tox -e py34
+tox -e py35

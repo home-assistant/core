@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import patch, Mock, MagicMock
 from datetime import timedelta
 
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.loader as loader
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import (
@@ -15,36 +16,11 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     get_test_home_assistant, MockPlatform, fire_time_changed, mock_registry,
-    MockEntity)
+    MockEntity, MockEntityPlatform, MockConfigEntry, mock_coro)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
-
-
-class MockEntityPlatform(entity_platform.EntityPlatform):
-    """Mock class with some mock defaults."""
-
-    def __init__(
-        self, *, hass,
-        logger=None,
-        domain='test',
-        platform_name='test_platform',
-        scan_interval=timedelta(seconds=15),
-        parallel_updates=0,
-        entity_namespace=None,
-        async_entities_added_callback=lambda: None
-    ):
-        """Initialize a mock entity platform."""
-        super().__init__(
-            hass=hass,
-            logger=logger,
-            domain=domain,
-            platform_name=platform_name,
-            scan_interval=scan_interval,
-            parallel_updates=parallel_updates,
-            entity_namespace=entity_namespace,
-            async_entities_added_callback=async_entities_added_callback,
-        )
+PLATFORM = 'test_platform'
 
 
 class TestHelpersEntityPlatform(unittest.TestCase):
@@ -171,7 +147,7 @@ class TestHelpersEntityPlatform(unittest.TestCase):
         platform = MockPlatform(platform_setup)
         platform.SCAN_INTERVAL = timedelta(seconds=30)
 
-        loader.set_component('test_domain.platform', platform)
+        loader.set_component(self.hass, 'test_domain.platform', platform)
 
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
@@ -208,7 +184,7 @@ def test_platform_warn_slow_setup(hass):
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
 
-    loader.set_component('test_domain.platform', platform)
+    loader.set_component(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -242,7 +218,7 @@ def test_platform_error_slow_setup(hass, caplog):
 
         platform = MockPlatform(async_setup_platform=setup_platform)
         component = EntityComponent(_LOGGER, DOMAIN, hass)
-        loader.set_component('test_domain.test_platform', platform)
+        loader.set_component(hass, 'test_domain.test_platform', platform)
         yield from component.async_setup({
             DOMAIN: {
                 'platform': 'test_platform',
@@ -284,7 +260,7 @@ def test_parallel_updates_async_platform(hass):
 
     platform.async_setup_platform = mock_update
 
-    loader.set_component('test_domain.platform', platform)
+    loader.set_component(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -312,7 +288,7 @@ def test_parallel_updates_async_platform_with_constant(hass):
     platform.async_setup_platform = mock_update
     platform.PARALLEL_UPDATES = 1
 
-    loader.set_component('test_domain.platform', platform)
+    loader.set_component(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -333,7 +309,7 @@ def test_parallel_updates_sync_platform(hass):
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform(setup_platform=lambda *args: None)
 
-    loader.set_component('test_domain.platform', platform)
+    loader.set_component(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -486,7 +462,122 @@ def test_overriding_name_from_registry(hass):
 def test_registry_respect_entity_namespace(hass):
     """Test that the registry respects entity namespace."""
     mock_registry(hass)
-    platform = MockEntityPlatform(hass=hass, entity_namespace='ns')
+    platform = MockEntityPlatform(hass, entity_namespace='ns')
     entity = MockEntity(unique_id='1234', name='Device Name')
     yield from platform.async_add_entities([entity])
-    assert entity.entity_id == 'test.ns_device_name'
+    assert entity.entity_id == 'test_domain.ns_device_name'
+
+
+@asyncio.coroutine
+def test_registry_respect_entity_disabled(hass):
+    """Test that the registry respects entity disabled."""
+    mock_registry(hass, {
+        'test_domain.world': entity_registry.RegistryEntry(
+            entity_id='test_domain.world',
+            unique_id='1234',
+            # Using component.async_add_entities is equal to platform "domain"
+            platform='test_platform',
+            disabled_by=entity_registry.DISABLED_USER
+        )
+    })
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(unique_id='1234')
+    yield from platform.async_add_entities([entity])
+    assert entity.entity_id is None
+    assert hass.states.async_entity_ids() == []
+
+
+async def test_entity_registry_updates(hass):
+    """Test that updates on the entity registry update platform entities."""
+    registry = mock_registry(hass, {
+        'test_domain.world': entity_registry.RegistryEntry(
+            entity_id='test_domain.world',
+            unique_id='1234',
+            # Using component.async_add_entities is equal to platform "domain"
+            platform='test_platform',
+            name='before update'
+        )
+    })
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(unique_id='1234')
+    await platform.async_add_entities([entity])
+
+    state = hass.states.get('test_domain.world')
+    assert state is not None
+    assert state.name == 'before update'
+
+    registry.async_update_entity('test_domain.world', name='after update')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('test_domain.world')
+    assert state.name == 'after update'
+
+
+async def test_setup_entry(hass):
+    """Test we can setup an entry."""
+    async_setup_entry = Mock(return_value=mock_coro(True))
+    platform = MockPlatform(
+        async_setup_entry=async_setup_entry
+    )
+    config_entry = MockConfigEntry()
+    entity_platform = MockEntityPlatform(
+        hass,
+        platform_name=config_entry.domain,
+        platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+
+    full_name = '{}.{}'.format(entity_platform.domain, config_entry.domain)
+    assert full_name in hass.config.components
+    assert len(async_setup_entry.mock_calls) == 1
+
+
+async def test_setup_entry_platform_not_ready(hass, caplog):
+    """Test when an entry is not ready yet."""
+    async_setup_entry = Mock(side_effect=PlatformNotReady)
+    platform = MockPlatform(
+        async_setup_entry=async_setup_entry
+    )
+    config_entry = MockConfigEntry()
+    ent_platform = MockEntityPlatform(
+        hass,
+        platform_name=config_entry.domain,
+        platform=platform
+    )
+
+    with patch.object(entity_platform, 'async_call_later') as mock_call_later:
+        assert not await ent_platform.async_setup_entry(config_entry)
+
+    full_name = '{}.{}'.format(ent_platform.domain, config_entry.domain)
+    assert full_name not in hass.config.components
+    assert len(async_setup_entry.mock_calls) == 1
+    assert 'Platform test not ready yet' in caplog.text
+    assert len(mock_call_later.mock_calls) == 1
+
+
+async def test_reset_cancels_retry_setup(hass):
+    """Test that resetting a platform will cancel scheduled a setup retry."""
+    async_setup_entry = Mock(side_effect=PlatformNotReady)
+    platform = MockPlatform(
+        async_setup_entry=async_setup_entry
+    )
+    config_entry = MockConfigEntry()
+    ent_platform = MockEntityPlatform(
+        hass,
+        platform_name=config_entry.domain,
+        platform=platform
+    )
+
+    with patch.object(entity_platform, 'async_call_later') as mock_call_later:
+        assert not await ent_platform.async_setup_entry(config_entry)
+
+    assert len(mock_call_later.mock_calls) == 1
+    assert len(mock_call_later.return_value.mock_calls) == 0
+    assert ent_platform._async_cancel_retry_setup is not None
+
+    await ent_platform.async_reset()
+
+    assert len(mock_call_later.return_value.mock_calls) == 1
+    assert ent_platform._async_cancel_retry_setup is None

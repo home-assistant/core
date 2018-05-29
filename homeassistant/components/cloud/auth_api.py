@@ -1,7 +1,4 @@
 """Package to communicate with the authentication API."""
-import logging
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CloudError(Exception):
@@ -18,14 +15,6 @@ class UserNotFound(CloudError):
 
 class UserNotConfirmed(CloudError):
     """Raised when a user has not confirmed email yet."""
-
-
-class ExpiredCode(CloudError):
-    """Raised when an expired code is encountered."""
-
-
-class InvalidCode(CloudError):
-    """Raised when an invalid code is submitted."""
 
 
 class PasswordChangeRequired(CloudError):
@@ -45,10 +34,8 @@ class UnknownError(CloudError):
 AWS_EXCEPTIONS = {
     'UserNotFoundException': UserNotFound,
     'NotAuthorizedException': Unauthenticated,
-    'ExpiredCodeException': ExpiredCode,
     'UserNotConfirmedException': UserNotConfirmed,
     'PasswordResetRequiredException': PasswordChangeRequired,
-    'CodeMismatchException': InvalidCode,
 }
 
 
@@ -68,17 +55,6 @@ def register(cloud, email, password):
     cognito.add_base_attributes()
     try:
         cognito.register(email, password)
-    except ClientError as err:
-        raise _map_aws_exception(err)
-
-
-def confirm_register(cloud, confirmation_code, email):
-    """Confirm confirmation code after registration."""
-    from botocore.exceptions import ClientError
-
-    cognito = _cognito(cloud)
-    try:
-        cognito.confirm_sign_up(confirmation_code, email)
     except ClientError as err:
         raise _map_aws_exception(err)
 
@@ -106,18 +82,6 @@ def forgot_password(cloud, email):
 
     try:
         cognito.initiate_forgot_password()
-    except ClientError as err:
-        raise _map_aws_exception(err)
-
-
-def confirm_forgot_password(cloud, confirmation_code, email, new_password):
-    """Confirm forgotten password code and change password."""
-    from botocore.exceptions import ClientError
-
-    cognito = _cognito(cloud, username=email)
-
-    try:
-        cognito.confirm_forgot_password(confirmation_code, new_password)
     except ClientError as err:
         raise _map_aws_exception(err)
 

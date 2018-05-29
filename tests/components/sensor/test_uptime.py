@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 from datetime import timedelta
 
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.setup import setup_component
 from homeassistant.components.sensor.uptime import UptimeSensor
 from tests.common import get_test_home_assistant

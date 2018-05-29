@@ -42,7 +42,7 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_WOEID, default=None): cv.string,
+    vol.Optional(CONF_WOEID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_FORECAST, default=0):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=5)),
@@ -131,9 +131,12 @@ class YahooWeatherSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-        }
+        attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
+
+        if self._code is not None and "weather" in self._type:
+            attrs['condition_code'] = self._code
+
+        return attrs
 
     def update(self):
         """Get the latest data from Yahoo! and updates the states."""

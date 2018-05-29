@@ -7,10 +7,11 @@ https://home-assistant.io/components/light.vera/
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, Light)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ENTITY_ID_FORMAT,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
 from homeassistant.components.vera import (
     VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ class VeraLight(VeraDevice, Light):
         return self._brightness
 
     @property
-    def rgb_color(self):
+    def hs_color(self):
         """Return the color of the light."""
         return self._color
 
@@ -50,13 +51,14 @@ class VeraLight(VeraDevice, Light):
     def supported_features(self):
         """Flag supported features."""
         if self._color:
-            return SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
         return SUPPORT_BRIGHTNESS
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_RGB_COLOR in kwargs and self._color:
-            self.vera_device.set_color(kwargs[ATTR_RGB_COLOR])
+        if ATTR_HS_COLOR in kwargs and self._color:
+            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+            self.vera_device.set_color(rgb)
         elif ATTR_BRIGHTNESS in kwargs and self.vera_device.is_dimmable:
             self.vera_device.set_brightness(kwargs[ATTR_BRIGHTNESS])
         else:
@@ -83,4 +85,5 @@ class VeraLight(VeraDevice, Light):
             # If it is dimmable, both functions exist. In case color
             # is not supported, it will return None
             self._brightness = self.vera_device.get_brightness()
-            self._color = self.vera_device.get_color()
+            rgb = self.vera_device.get_color()
+            self._color = color_util.color_RGB_to_hs(*rgb) if rgb else None

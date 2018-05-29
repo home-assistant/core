@@ -4,7 +4,6 @@ Combination of multiple media players into one for a universal controller.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.universal/
 """
-import asyncio
 import logging
 # pylint: disable=import-error
 from copy import copy
@@ -31,7 +30,8 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_VOLUME_UP,
-    SERVICE_SHUFFLE_SET, STATE_IDLE, STATE_OFF, STATE_ON, SERVICE_MEDIA_STOP)
+    SERVICE_SHUFFLE_SET, STATE_IDLE, STATE_OFF, STATE_ON, STATE_UNAVAILABLE,
+    SERVICE_MEDIA_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_call_from_config
 
@@ -46,7 +46,7 @@ CONF_SERVICE_DATA = 'service_data'
 ATTR_DATA = 'data'
 CONF_STATE = 'state'
 
-OFF_STATES = [STATE_IDLE, STATE_OFF]
+OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE]
 REQUIREMENTS = []
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,8 +63,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 }, extra=vol.REMOVE_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the universal media players."""
     player = UniversalMediaPlayer(
         hass,
@@ -99,8 +99,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         if state_template is not None:
             self._state_template.hass = hass
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe to children and template state changes.
 
         This method must be run in the event loop and returns a coroutine.
@@ -144,15 +143,14 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         active_child = self._child_state
         return active_child.attributes.get(attr_name) if active_child else None
 
-    @asyncio.coroutine
-    def _async_call_service(self, service_name, service_data=None,
-                            allow_override=False):
+    async def _async_call_service(self, service_name, service_data=None,
+                                  allow_override=False):
         """Call either a specified or active child's service."""
         if service_data is None:
             service_data = {}
 
         if allow_override and service_name in self._cmds:
-            yield from async_call_from_config(
+            await async_call_from_config(
                 self.hass, self._cmds[service_name],
                 variables=service_data, blocking=True,
                 validate_config=False)
@@ -165,7 +163,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
 
-        yield from self.hass.services.async_call(
+        await self.hass.services.async_call(
             DOMAIN, service_name, service_data, blocking=True)
 
     @property
@@ -506,8 +504,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         return self._async_call_service(
             SERVICE_SHUFFLE_SET, data, allow_override=True)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update state in HA."""
         for child_name in self._children:
             child_state = self.hass.states.get(child_name)

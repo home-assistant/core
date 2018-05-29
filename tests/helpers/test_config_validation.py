@@ -10,8 +10,6 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 
-from tests.common import get_test_home_assistant
-
 
 def test_boolean():
     """Test boolean validation."""
@@ -164,6 +162,55 @@ def test_entity_ids():
     ]
 
 
+def test_entity_domain():
+    """Test entity domain validation."""
+    schema = vol.Schema(cv.entity_domain('sensor'))
+
+    options = (
+        'invalid_entity',
+        'cover.demo',
+    )
+
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            print(value)
+            schema(value)
+
+    assert schema('sensor.LIGHT') == 'sensor.light'
+
+
+def test_entities_domain():
+    """Test entities domain validation."""
+    schema = vol.Schema(cv.entities_domain('sensor'))
+
+    options = (
+        None,
+        '',
+        'invalid_entity',
+        ['sensor.light', 'cover.demo'],
+        ['sensor.light', 'sensor_invalid'],
+    )
+
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    options = (
+        'sensor.light',
+        ['SENSOR.light'],
+        ['sensor.light', 'sensor.demo']
+    )
+    for value in options:
+        schema(value)
+
+    assert schema('sensor.LIGHT, sensor.demo ') == [
+        'sensor.light', 'sensor.demo'
+    ]
+    assert schema(['sensor.light', 'SENSOR.demo']) == [
+        'sensor.light', 'sensor.demo'
+    ]
+
+
 def test_ensure_list_csv():
     """Test ensure_list_csv."""
     schema = vol.Schema(cv.ensure_list_csv)
@@ -205,24 +252,6 @@ def test_event_schema():
     )
     for value in options:
         cv.EVENT_SCHEMA(value)
-
-
-def test_platform_validator():
-    """Test platform validation."""
-    hass = None
-
-    try:
-        hass = get_test_home_assistant()
-
-        schema = vol.Schema(cv.platform_validator('light'))
-
-        with pytest.raises(vol.MultipleInvalid):
-            schema('platform_that_does_not_exist')
-
-        schema('hue')
-    finally:
-        if hass is not None:
-            hass.stop()
 
 
 def test_icon():
@@ -453,6 +482,7 @@ def test_deprecated(caplog):
     )
 
     deprecated_schema({'venus': True})
+    # pylint: disable=len-as-condition
     assert len(caplog.records) == 0
 
     deprecated_schema({'mars': True})
@@ -524,18 +554,42 @@ def test_enum():
 
 def test_socket_timeout():  # pylint: disable=invalid-name
     """Test socket timeout validator."""
-    TEST_CONF_TIMEOUT = 'timeout'  # pylint: disable=invalid-name
-
-    schema = vol.Schema(
-        {vol.Required(TEST_CONF_TIMEOUT, default=None): cv.socket_timeout})
+    schema = vol.Schema(cv.socket_timeout)
 
     with pytest.raises(vol.Invalid):
-        schema({TEST_CONF_TIMEOUT: 0.0})
+        schema(0.0)
 
     with pytest.raises(vol.Invalid):
-        schema({TEST_CONF_TIMEOUT: -1})
+        schema(-1)
 
-    assert _GLOBAL_DEFAULT_TIMEOUT == schema({TEST_CONF_TIMEOUT:
-                                              None})[TEST_CONF_TIMEOUT]
+    assert _GLOBAL_DEFAULT_TIMEOUT == schema(None)
 
-    assert schema({TEST_CONF_TIMEOUT: 1})[TEST_CONF_TIMEOUT] == 1.0
+    assert schema(1) == 1.0
+
+
+def test_matches_regex():
+    """Test matches_regex validator."""
+    schema = vol.Schema(cv.matches_regex('.*uiae.*'))
+
+    with pytest.raises(vol.Invalid):
+        schema(1.0)
+
+    with pytest.raises(vol.Invalid):
+        schema("  nrtd   ")
+
+    test_str = "This is a test including uiae."
+    assert(schema(test_str) == test_str)
+
+
+def test_is_regex():
+    """Test the is_regex validator."""
+    schema = vol.Schema(cv.is_regex)
+
+    with pytest.raises(vol.Invalid):
+        schema("(")
+
+    with pytest.raises(vol.Invalid):
+        schema({"a dict": "is not a regex"})
+
+    valid_re = ".*"
+    schema(valid_re)

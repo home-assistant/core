@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "M\u00e1r minden Philips Hue bridge konfigur\u00e1lt",
+            "already_configured": "A bridge m\u00e1r konfigur\u00e1lt",
+            "cannot_connect": "Nem siker\u00fclt csatlakozni a bridge-hez.",
+            "discover_timeout": "Nem tal\u00e1ltam a Hue bridget",
+            "no_bridges": "Nem tal\u00e1ltam Philips Hue bridget",
+            "unknown": "Ismeretlen hiba t\u00f6rt\u00e9nt"
+        },
+        "error": {
+            "linking": "Ismeretlen \u00f6sszekapcsol\u00e1si hiba t\u00f6rt\u00e9nt.",
+            "register_failed": "Regisztr\u00e1ci\u00f3 nem siker\u00fclt, k\u00e9rem pr\u00f3b\u00e1lja \u00fajra"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "H\u00e1zigazda (Host)"
+                },
+                "title": "V\u00e1lassz Hue bridge-t"
+            },
+            "link": {
+                "title": "Kapcsol\u00f3d\u00e1s a hubhoz"
+            }
+        },
+        "title": "Philips Hue Bridge"
+    }
+}

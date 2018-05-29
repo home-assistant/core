@@ -17,7 +17,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant  # NOQA
 from typing import Dict, Any  # NOQA
 
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import bind_hass
@@ -27,11 +27,10 @@ from .const import (
     CONF_EXPOSE_BY_DEFAULT, DEFAULT_EXPOSE_BY_DEFAULT, CONF_EXPOSED_DOMAINS,
     DEFAULT_EXPOSED_DOMAINS, CONF_AGENT_USER_ID, CONF_API_KEY,
     SERVICE_REQUEST_SYNC, REQUEST_SYNC_BASE_URL, CONF_ENTITY_CONFIG,
-    CONF_EXPOSE, CONF_ALIASES
+    CONF_EXPOSE, CONF_ALIASES, CONF_ROOM_HINT
 )
 from .auth import GoogleAssistantAuthView
 from .http import async_register_http
-from .smart_home import MAPPING_COMPONENT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,9 +40,9 @@ DEFAULT_AGENT_USER_ID = 'home-assistant'
 
 ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_TYPE): vol.In(MAPPING_COMPONENT),
     vol.Optional(CONF_EXPOSE): cv.boolean,
-    vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string])
+    vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_ROOM_HINT): cv.string
 })
 
 CONFIG_SCHEMA = vol.Schema(
@@ -71,8 +70,7 @@ def request_sync(hass):
     hass.services.call(DOMAIN, SERVICE_REQUEST_SYNC)
 
 
-@asyncio.coroutine
-def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
+async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     """Activate Google Actions component."""
     config = yaml_config.get(DOMAIN, {})
     agent_user_id = config.get(CONF_AGENT_USER_ID)
@@ -80,20 +78,19 @@ def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     hass.http.register_view(GoogleAssistantAuthView(hass, config))
     async_register_http(hass, config)
 
-    @asyncio.coroutine
-    def request_sync_service_handler(call):
+    async def request_sync_service_handler(call):
         """Handle request sync service calls."""
         websession = async_get_clientsession(hass)
         try:
             with async_timeout.timeout(5, loop=hass.loop):
-                res = yield from websession.post(
+                res = await websession.post(
                     REQUEST_SYNC_BASE_URL,
                     params={'key': api_key},
                     json={'agent_user_id': agent_user_id})
                 _LOGGER.info("Submitted request_sync request to Google")
                 res.raise_for_status()
         except aiohttp.ClientResponseError:
-            body = yield from res.read()
+            body = await res.read()
             _LOGGER.error(
                 'request_sync request failed: %d %s', res.status, body)
         except (asyncio.TimeoutError, aiohttp.ClientError):

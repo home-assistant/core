@@ -13,15 +13,15 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_RGB_COLOR,
-    ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_RANDOM, PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION, SUPPORT_XY_COLOR, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR,
+    ATTR_TRANSITION, EFFECT_RANDOM, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_TRANSITION,
+    Light)
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired, color_temperature_mired_to_kelvin,
-    color_xy_brightness_to_RGB)
+    color_temperature_kelvin_to_mired, color_temperature_mired_to_kelvin)
+import homeassistant.util.color as color_util
 
 REQUIREMENTS = ['lightify==1.0.6.1']
 
@@ -35,8 +35,8 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 SUPPORT_OSRAMLIGHTIFY = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-                         SUPPORT_EFFECT | SUPPORT_RGB_COLOR |
-                         SUPPORT_TRANSITION | SUPPORT_XY_COLOR)
+                         SUPPORT_EFFECT | SUPPORT_COLOR |
+                         SUPPORT_TRANSITION)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -113,7 +113,7 @@ class Luminary(Light):
         self.update_lights = update_lights
         self._luminary = luminary
         self._brightness = None
-        self._rgb = [None]
+        self._hs = None
         self._name = None
         self._temperature = None
         self._state = False
@@ -125,9 +125,9 @@ class Luminary(Light):
         return self._name
 
     @property
-    def rgb_color(self):
-        """Last RGB color value set."""
-        return self._rgb
+    def hs_color(self):
+        """Last hs color value set."""
+        return self._hs
 
     @property
     def color_temp(self):
@@ -158,42 +158,24 @@ class Luminary(Light):
         """Turn the device on."""
         if ATTR_TRANSITION in kwargs:
             transition = int(kwargs[ATTR_TRANSITION] * 10)
-            _LOGGER.debug("turn_on requested transition time for light: "
-                          "%s is: %s", self._name, transition)
         else:
             transition = 0
-            _LOGGER.debug("turn_on requested transition time for light: "
-                          "%s is: %s", self._name, transition)
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
-            _LOGGER.debug("turn_on requested brightness for light: %s is: %s ",
-                          self._name, self._brightness)
             self._luminary.set_luminance(
                 int(self._brightness / 2.55), transition)
         else:
             self._luminary.set_onoff(1)
 
-        if ATTR_RGB_COLOR in kwargs:
-            red, green, blue = kwargs[ATTR_RGB_COLOR]
-            _LOGGER.debug("turn_on requested ATTR_RGB_COLOR for light:"
-                          " %s is: %s %s %s ",
-                          self._name, red, green, blue)
-            self._luminary.set_rgb(red, green, blue, transition)
-
-        if ATTR_XY_COLOR in kwargs:
-            x_mired, y_mired = kwargs[ATTR_XY_COLOR]
-            _LOGGER.debug("turn_on requested ATTR_XY_COLOR for light:"
-                          " %s is: %s,%s", self._name, x_mired, y_mired)
-            red, green, blue = color_xy_brightness_to_RGB(
-                x_mired, y_mired, self._brightness)
+        if ATTR_HS_COLOR in kwargs:
+            red, green, blue = \
+                color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             self._luminary.set_rgb(red, green, blue, transition)
 
         if ATTR_COLOR_TEMP in kwargs:
             color_t = kwargs[ATTR_COLOR_TEMP]
             kelvin = int(color_temperature_mired_to_kelvin(color_t))
-            _LOGGER.debug("turn_on requested set_temperature for light: "
-                          "%s: %s", self._name, kelvin)
             self._luminary.set_temperature(kelvin, transition)
 
         if ATTR_EFFECT in kwargs:
@@ -202,23 +184,16 @@ class Luminary(Light):
                 self._luminary.set_rgb(
                     random.randrange(0, 255), random.randrange(0, 255),
                     random.randrange(0, 255), transition)
-                _LOGGER.debug("turn_on requested random effect for light: "
-                              "%s with transition %s", self._name, transition)
 
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        _LOGGER.debug("Attempting to turn off light: %s", self._name)
         if ATTR_TRANSITION in kwargs:
             transition = int(kwargs[ATTR_TRANSITION] * 10)
-            _LOGGER.debug("turn_off requested transition time for light:"
-                          " %s is: %s ", self._name, transition)
             self._luminary.set_luminance(0, transition)
         else:
             transition = 0
-            _LOGGER.debug("turn_off requested transition time for light:"
-                          " %s is: %s ", self._name, transition)
         self._luminary.set_onoff(0)
         self.schedule_update_ha_state()
 
@@ -240,7 +215,8 @@ class OsramLightifyLight(Luminary):
         """Update status of a light."""
         super().update()
         self._state = self._luminary.on()
-        self._rgb = self._luminary.rgb()
+        rgb = self._luminary.rgb()
+        self._hs = color_util.color_RGB_to_hs(*rgb)
         o_temp = self._luminary.temp()
         if o_temp == 0:
             self._temperature = None
@@ -270,7 +246,8 @@ class OsramLightifyGroup(Luminary):
         self._light_ids = self._luminary.lights()
         light = self._bridge.lights()[self._light_ids[0]]
         self._brightness = int(light.lum() * 2.55)
-        self._rgb = light.rgb()
+        rgb = light.rgb()
+        self._hs = color_util.color_RGB_to_hs(*rgb)
         o_temp = light.temp()
         if o_temp == 0:
             self._temperature = None

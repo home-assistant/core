@@ -40,7 +40,7 @@ from homeassistant.const import (
     STATE_ON, STATE_OPEN, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN,
     STATE_UNLOCKED, SERVICE_SELECT_OPTION)
 from homeassistant.core import State
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,9 +130,8 @@ def reproduce_state(hass, states, blocking=False):
         async_reproduce_state(hass, states, blocking), hass.loop).result()
 
 
-@asyncio.coroutine
 @bind_hass
-def async_reproduce_state(hass, states, blocking=False):
+async def async_reproduce_state(hass, states, blocking=False):
     """Reproduce given state."""
     if isinstance(states, State):
         states = [states]
@@ -193,16 +192,15 @@ def async_reproduce_state(hass, states, blocking=False):
             hass.services.async_call(service_domain, service, data, blocking)
         )
 
-    @asyncio.coroutine
-    def async_handle_service_calls(coro_list):
+    async def async_handle_service_calls(coro_list):
         """Handle service calls by domain sequence."""
         for coro in coro_list:
-            yield from coro
+            await coro
 
     execute_tasks = [async_handle_service_calls(coro_list)
                      for coro_list in domain_tasks.values()]
     if execute_tasks:
-        yield from asyncio.wait(execute_tasks, loop=hass.loop)
+        await asyncio.wait(execute_tasks, loop=hass.loop)
 
 
 def state_as_number(state):

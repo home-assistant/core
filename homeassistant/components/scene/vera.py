@@ -53,8 +53,3 @@ class VeraScene(Scene):
     def device_state_attributes(self):
         """Return the state attributes of the scene."""
         return {'vera_scene_id': self.vera_scene.vera_scene_id}
-
-    @property
-    def should_poll(self):
-        """Return that polling is not necessary."""
-        return False

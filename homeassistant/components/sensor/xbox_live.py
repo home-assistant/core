@@ -69,7 +69,9 @@ class XboxSensor(Entity):
         if profile.get('success', True) and profile.get('code') is None:
             self.success_init = True
             self._gamertag = profile.get('gamertag')
+            self._gamerscore = profile.get('gamerscore')
             self._picture = profile.get('gamerpicSmallSslImagePath')
+            self._tier = profile.get('tier')
         else:
             _LOGGER.error("Can't get user profile %s. "
                           "Error Code: %s Description: %s",
@@ -92,6 +94,9 @@ class XboxSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attributes = {}
+        attributes['gamerscore'] = self._gamerscore
+        attributes['tier'] = self._tier
+
         for device in self._presence:
             for title in device.get('titles'):
                 attributes[

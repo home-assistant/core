@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PUB_KEY = 'pub_key'
 CONF_SSH_KEY = 'ssh_key'
+CONF_REQUIRE_IP = 'require_ip'
 DEFAULT_SSH_PORT = 22
 SECRET_GROUP = 'Password or SSH Key'
 
@@ -36,6 +37,7 @@ PLATFORM_SCHEMA = vol.All(
         vol.Optional(CONF_PROTOCOL, default='ssh'): vol.In(['ssh', 'telnet']),
         vol.Optional(CONF_MODE, default='router'): vol.In(['router', 'ap']),
         vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
+        vol.Optional(CONF_REQUIRE_IP, default=True): cv.boolean,
         vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
         vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
         vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile
@@ -115,6 +117,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
         self.protocol = config[CONF_PROTOCOL]
         self.mode = config[CONF_MODE]
         self.port = config[CONF_PORT]
+        self.require_ip = config[CONF_REQUIRE_IP]
 
         if self.protocol == 'ssh':
             self.connection = SshConnection(
@@ -172,7 +175,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
         ret_devices = {}
         for key in devices:
-            if devices[key].ip is not None:
+            if not self.require_ip or devices[key].ip is not None:
                 ret_devices[key] = devices[key]
         return ret_devices
 
@@ -283,15 +286,15 @@ class SshConnection(_Connection):
             lines = self._ssh.before.split(b'\n')[1:-1]
             return [line.decode('utf-8') for line in lines]
         except exceptions.EOF as err:
-            _LOGGER.error("Connection refused. SSH enabled?")
+            _LOGGER.error("Connection refused. %s", self._ssh.before)
             self.disconnect()
             return None
         except pxssh.ExceptionPxssh as err:
-            _LOGGER.error("Unexpected SSH error: %s", str(err))
+            _LOGGER.error("Unexpected SSH error: %s", err)
             self.disconnect()
             return None
         except AssertionError as err:
-            _LOGGER.error("Connection to router unavailable: %s", str(err))
+            _LOGGER.error("Connection to router unavailable: %s", err)
             self.disconnect()
             return None
 
@@ -301,10 +304,10 @@ class SshConnection(_Connection):
 
         self._ssh = pxssh.pxssh()
         if self._ssh_key:
-            self._ssh.login(self._host, self._username,
+            self._ssh.login(self._host, self._username, quiet=False,
                             ssh_key=self._ssh_key, port=self._port)
         else:
-            self._ssh.login(self._host, self._username,
+            self._ssh.login(self._host, self._username, quiet=False,
                             password=self._password, port=self._port)
 
         super().connect()

@@ -83,7 +83,7 @@ NODE_FILTERS = {
     },
     'fan': {
         'uom': [],
-        'states': ['on', 'off', 'low', 'medium', 'high'],
+        'states': ['off', 'low', 'med', 'high'],
         'node_def_id': ['FanLincMotor'],
         'insteon_type': ['1.46.']
     },
@@ -99,7 +99,7 @@ NODE_FILTERS = {
         'node_def_id': ['DimmerLampSwitch', 'DimmerLampSwitch_ADV',
                         'DimmerSwitchOnly', 'DimmerSwitchOnly_ADV',
                         'DimmerLampOnly', 'BallastRelayLampSwitch',
-                        'BallastRelayLampSwitch_ADV', 'RelayLampSwitch',
+                        'BallastRelayLampSwitch_ADV',
                         'RemoteLinc2', 'RemoteLinc2_ADV'],
         'insteon_type': ['1.']
     },
@@ -173,6 +173,14 @@ def _check_for_insteon_type(hass: HomeAssistant, node,
     for domain in domains:
         if any([device_type.startswith(t) for t in
                 set(NODE_FILTERS[domain]['insteon_type'])]):
+
+            # Hacky special-case just for FanLinc, which has a light module
+            # as one of its nodes. Note that this special-case is not necessary
+            # on ISY 5.x firmware as it uses the superior NodeDefs method
+            if domain == 'fan' and int(node.nid[-1]) == 1:
+                hass.data[ISY994_NODES]['light'].append(node)
+                return True
+
             hass.data[ISY994_NODES][domain].append(node)
             return True
 
@@ -194,7 +202,7 @@ def _check_for_uom_id(hass: HomeAssistant, node,
     node_uom = set(map(str.lower, node.uom))
 
     if uom_list:
-        if node_uom.intersection(NODE_FILTERS[single_domain]['uom']):
+        if node_uom.intersection(uom_list):
             hass.data[ISY994_NODES][single_domain].append(node)
             return True
     else:
@@ -433,7 +441,10 @@ class ISYDevice(Entity):
     def unique_id(self) -> str:
         """Get the unique identifier of the device."""
         # pylint: disable=protected-access
-        return self._node._id
+        if hasattr(self._node, '_id'):
+            return self._node._id
+
+        return None
 
     @property
     def name(self) -> str:

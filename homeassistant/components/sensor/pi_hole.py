@@ -59,8 +59,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS,
+                 default=list(MONITORED_CONDITIONS)):
+    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
 })
 
 
