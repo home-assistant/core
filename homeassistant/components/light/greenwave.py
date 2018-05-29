@@ -27,14 +27,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_VERSION): cv.positive_int,
 })
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Greenwave Reality Platform."""
     import greenwavereality as greenwave
     import os
-    host = config.get(CONF_HOST)
+    host = str(config.get(CONF_HOST))
     tokenfile = hass.config.path('.greenwave')
     if config.get(CONF_VERSION) == 3:
         if os.path.exists(tokenfile):
@@ -65,9 +65,9 @@ class GreenwaveLight(Light):
         self._name = light['name']
         self._state = int(light['state'])
         self._brightness = greenwave.hass_brightness(light)
-        self._host = host
+        self._host = str(host)
         self._online = greenwave.check_online(light)
-        self._token = token
+        self._token = str(token)
         self._gatewaydata = gatewaydata
 
     @property
@@ -100,14 +100,14 @@ class GreenwaveLight(Light):
         import greenwavereality as greenwave
         temp_brightness = int((kwargs.get(ATTR_BRIGHTNESS, 255)
                                / 255) * 100)
-        greenwave.set_brightness(self._host, self._did,
+        greenwave.set_brightness(self._host, str(self._did),
                                  temp_brightness, self._token)
-        greenwave.turn_on(self._host, self._did, self._token)
+        greenwave.turn_on(self._host, str(self._did), self._token)
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         import greenwavereality as greenwave
-        greenwave.turn_off(self._host, self._did, self._token)
+        greenwave.turn_off(self._host, str(self._did), self._token)
 
     def update(self):
         """Fetch new state data for this light."""
