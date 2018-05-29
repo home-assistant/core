@@ -33,6 +33,7 @@ DIGITS = {
 SENSOR_MODELS = [
     'Ubiquiti mFi-THS',
     'Ubiquiti mFi-CS',
+    'Ubiquiti mFi-DS',
     'Outlet',
     'Input Analog',
     'Input Digital',
