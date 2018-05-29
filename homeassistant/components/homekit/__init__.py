@@ -30,7 +30,7 @@ from .util import (
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==2.1.0']
+REQUIREMENTS = ['HAP-python==2.2.2']
 
 # #### Driver Status ####
 STATUS_READY = 0
@@ -84,7 +84,7 @@ async def async_setup(hass, config):
     return True
 
 
-def get_accessory(hass, state, aid, config):
+def get_accessory(hass, driver, state, aid, config):
     """Take state and return an accessory object if supported."""
     if not aid:
         _LOGGER.warning('The entitiy "%s" is not supported, since it '
@@ -157,7 +157,7 @@ def get_accessory(hass, state, aid, config):
         return None
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
-    return TYPES[a_type](hass, name, state.entity_id, aid, config)
+    return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
 
 
 def generate_aid(entity_id):
@@ -192,9 +192,9 @@ class HomeKit():
 
         ip_addr = self._ip_address or get_local_ip()
         path = self.hass.config.path(HOMEKIT_FILE)
-        self.bridge = HomeBridge(self.hass)
-        self.driver = HomeDriver(self.hass, self.bridge, port=self._port,
-                                 address=ip_addr, persist_file=path)
+        self.driver = HomeDriver(self.hass, address=ip_addr,
+                                 port=self._port, persist_file=path)
+        self.bridge = HomeBridge(self.hass, self.driver)
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
@@ -202,7 +202,7 @@ class HomeKit():
             return
         aid = generate_aid(state.entity_id)
         conf = self._config.pop(state.entity_id, {})
-        acc = get_accessory(self.hass, state, aid, conf)
+        acc = get_accessory(self.hass, self.driver, state, aid, conf)
         if acc is not None:
             self.bridge.add_accessory(acc)
 
@@ -220,7 +220,7 @@ class HomeKit():
 
         for state in self.hass.states.all():
             self.add_bridge_accessory(state)
-        self.bridge.set_driver(self.driver)
+        self.driver.add_accessory(self.bridge)
 
         if not self.driver.state.paired:
             show_setup_message(self.hass, self.driver.state.pincode)

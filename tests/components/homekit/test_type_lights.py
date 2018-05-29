@@ -26,14 +26,14 @@ def cls():
     patcher.stop()
 
 
-async def test_light_basic(hass, cls):
+async def test_light_basic(hass, hk_driver, cls):
     """Test light with char state."""
     entity_id = 'light.demo'
 
     hass.states.async_set(entity_id, STATE_ON,
                           {ATTR_SUPPORTED_FEATURES: 0})
     await hass.async_block_till_done()
-    acc = cls.light(hass, 'Light', entity_id, 2, None)
+    acc = cls.light(hass, hk_driver, 'Light', entity_id, 2, None)
 
     assert acc.aid == 2
     assert acc.category == 5  # Lightbulb
@@ -74,14 +74,14 @@ async def test_light_basic(hass, cls):
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
 
 
-async def test_light_brightness(hass, cls):
+async def test_light_brightness(hass, hk_driver, cls):
     """Test light with brightness."""
     entity_id = 'light.demo'
 
     hass.states.async_set(entity_id, STATE_ON, {
         ATTR_SUPPORTED_FEATURES: SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS: 255})
     await hass.async_block_till_done()
-    acc = cls.light(hass, 'Light', entity_id, 2, None)
+    acc = cls.light(hass, hk_driver, 'Light', entity_id, 2, None)
 
     assert acc.char_brightness.value == 0
 
@@ -118,7 +118,7 @@ async def test_light_brightness(hass, cls):
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
 
 
-async def test_light_color_temperature(hass, cls):
+async def test_light_color_temperature(hass, hk_driver, cls):
     """Test light with color temperature."""
     entity_id = 'light.demo'
 
@@ -126,7 +126,7 @@ async def test_light_color_temperature(hass, cls):
         ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR_TEMP,
         ATTR_COLOR_TEMP: 190})
     await hass.async_block_till_done()
-    acc = cls.light(hass, 'Light', entity_id, 2, None)
+    acc = cls.light(hass, hk_driver, 'Light', entity_id, 2, None)
 
     assert acc.char_color_temperature.value == 153
 
@@ -145,7 +145,7 @@ async def test_light_color_temperature(hass, cls):
     assert call_turn_on[0].data[ATTR_COLOR_TEMP] == 250
 
 
-async def test_light_rgb_color(hass, cls):
+async def test_light_rgb_color(hass, hk_driver, cls):
     """Test light with rgb_color."""
     entity_id = 'light.demo'
 
@@ -153,7 +153,7 @@ async def test_light_rgb_color(hass, cls):
         ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR,
         ATTR_HS_COLOR: (260, 90)})
     await hass.async_block_till_done()
-    acc = cls.light(hass, 'Light', entity_id, 2, None)
+    acc = cls.light(hass, hk_driver, 'Light', entity_id, 2, None)
 
     assert acc.char_hue.value == 0
     assert acc.char_saturation.value == 75
