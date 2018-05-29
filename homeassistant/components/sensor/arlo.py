@@ -106,19 +106,7 @@ class ArloSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        _LOGGER.debug("Updating Arlo sensor component")
-        try:
-            base_station = self._data.base_station
-        except (AttributeError, IndexError):
-            return
-
-        if not base_station:
-            return
-
-        #base_station.refresh_rate = SCAN_INTERVAL.total_seconds()
-
-        #self._data.update()
-
+        _LOGGER.debug("Updating Arlo sensor %s", self.name)
         if self._sensor_type == 'total_cameras':
             self._state = len(self._data.cameras)
 
@@ -127,7 +115,7 @@ class ArloSensor(Entity):
 
         elif self._sensor_type == 'last_capture':
             try:
-                video = self._data.videos()[0]
+                video = self._data.last_video
                 self._state = video.created_at_pretty("%m-%d-%Y %H:%M:%S")
             except (AttributeError, IndexError):
                 self._state = None

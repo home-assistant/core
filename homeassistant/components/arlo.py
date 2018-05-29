@@ -17,8 +17,9 @@ from homeassistant.const import (
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, dispatcher_send)
+from homeassistant.util.dt import now
 
-REQUIREMENTS = ['pyarlo==0.1.2']
+REQUIREMENTS = ['pyarlo==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,8 +32,7 @@ DOMAIN = 'arlo'
 NOTIFICATION_ID = 'arlo_notification'
 NOTIFICATION_TITLE = 'Arlo Component Setup'
 
-#SCAN_INTERVAL = timedelta(minutes=5)
-SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 SIGNAL_UPDATE_ARLO = "arlo_update"
 
@@ -59,6 +59,15 @@ def setup(hass, config):
         arlo = PyArlo(username, password, preload=False)
         if not arlo.is_connected:
             return False
+
+        # assign refresh period to base station thread
+        try:
+            if arlo.base_stations:
+                arlo_base_station = arlo.base_stations[0]
+                arlo_base_station.refresh_rate = scan_interval
+        except (AttributeError, IndexError):
+            return False
+
         hass.data[DATA_ARLO] = ArloHub(arlo)
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Netgear Arlo: %s", str(ex))
@@ -73,9 +82,13 @@ def setup(hass, config):
     def hub_refresh(event_time):
         """Call ArloHub to refresh information."""
         _LOGGER.debug("Updating Arlo Hub component")
-        hass.data[DATA_ARLO].hub.update()
+        hass.data[DATA_ARLO].hub.update(update_cameras=True)
         dispatcher_send(hass, SIGNAL_UPDATE_ARLO)
 
+    # register service
+    hass.services.register(DOMAIN, 'update', hub_refresh)
+
+    # register scan interval for ArloHub
     track_time_interval(hass, hub_refresh, scan_interval)
     return True
 
