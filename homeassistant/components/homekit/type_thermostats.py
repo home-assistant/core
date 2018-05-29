@@ -6,6 +6,7 @@ from pyhap.const import CATEGORY_THERMOSTAT
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE, ATTR_OPERATION_LIST, ATTR_OPERATION_MODE,
     ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
+    ATTR_MAX_TEMP, ATTR_MIN_TEMP,
     DOMAIN, SERVICE_SET_TEMPERATURE, SERVICE_SET_OPERATION_MODE, STATE_AUTO,
     STATE_COOL, STATE_HEAT, SUPPORT_ON_OFF, SUPPORT_TARGET_TEMPERATURE_HIGH,
     SUPPORT_TARGET_TEMPERATURE_LOW)
@@ -20,7 +21,8 @@ from .const import (
     CHAR_COOLING_THRESHOLD_TEMPERATURE, CHAR_CURRENT_HEATING_COOLING,
     CHAR_CURRENT_TEMPERATURE, CHAR_TARGET_HEATING_COOLING,
     CHAR_HEATING_THRESHOLD_TEMPERATURE, CHAR_TARGET_TEMPERATURE,
-    CHAR_TEMP_DISPLAY_UNITS, SERV_THERMOSTAT)
+    CHAR_TEMP_DISPLAY_UNITS, SERV_THERMOSTAT,
+    PROP_MIN_VALUE, PROP_MAX_VALUE)
 from .util import temperature_to_homekit, temperature_to_states
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,6 +51,12 @@ class Thermostat(HomeAccessory):
         self.coolingthresh_flag_target_state = False
         self.heatingthresh_flag_target_state = False
 
+        # Add Temperature range supported
+        _max_temp = self.hass.states.get(self.entity_id) \
+            .attributes.get(ATTR_MAX_TEMP)
+        _min_temp = self.hass.states.get(self.entity_id) \
+            .attributes.get(ATTR_MIN_TEMP)
+
         # Add additional characteristics if auto mode is supported
         self.chars = []
         features = self.hass.states.get(self.entity_id) \
@@ -73,6 +81,8 @@ class Thermostat(HomeAccessory):
             CHAR_CURRENT_TEMPERATURE, value=21.0)
         self.char_target_temp = serv_thermostat.configure_char(
             CHAR_TARGET_TEMPERATURE, value=21.0,
+            properties={PROP_MIN_VALUE: _min_temp,
+                        PROP_MAX_VALUE: _max_temp},
             setter_callback=self.set_target_temperature)
 
         # Display units characteristic
@@ -85,10 +95,14 @@ class Thermostat(HomeAccessory):
         if CHAR_COOLING_THRESHOLD_TEMPERATURE in self.chars:
             self.char_cooling_thresh_temp = serv_thermostat.configure_char(
                 CHAR_COOLING_THRESHOLD_TEMPERATURE, value=23.0,
+                properties={PROP_MIN_VALUE: _min_temp,
+                            PROP_MAX_VALUE: _max_temp},
                 setter_callback=self.set_cooling_threshold)
         if CHAR_HEATING_THRESHOLD_TEMPERATURE in self.chars:
             self.char_heating_thresh_temp = serv_thermostat.configure_char(
                 CHAR_HEATING_THRESHOLD_TEMPERATURE, value=19.0,
+                properties={PROP_MIN_VALUE: _min_temp,
+                            PROP_MAX_VALUE: _max_temp},
                 setter_callback=self.set_heating_threshold)
 
     def set_heat_cool(self, value):
