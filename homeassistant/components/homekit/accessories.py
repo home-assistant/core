@@ -77,10 +77,13 @@ class HomeAccessory(Accessory):
         self.entity_id = entity_id
         self.hass = hass
 
-    def run(self):
-        """Method called by accessory after driver is started."""
+    async def run(self):
+        """Method called by accessory after driver is started.
+
+        Run inside the HAP-python event loop.
+        """
         state = self.hass.states.get(self.entity_id)
-        self.update_state_callback(new_state=state)
+        self.hass.add_job(self.update_state_callback, None, None, state)
         async_track_state_change(
             self.hass, self.entity_id, self.update_state_callback)
 
