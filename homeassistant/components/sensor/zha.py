@@ -114,9 +114,11 @@ class TemperatureSensor(Sensor):
         """Return the state of the entity."""
         if self._state is None:
             return None
-        celsius = round(float(self._state) / 100, 1)
-        return convert_temperature(
-            celsius, TEMP_CELSIUS, self.unit_of_measurement)
+        celsius = self._state / 100
+        return round(convert_temperature(celsius,
+                                         TEMP_CELSIUS,
+                                         self.unit_of_measurement),
+                     1)
 
 
 class RelativeHumiditySensor(Sensor):
