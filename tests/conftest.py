@@ -13,7 +13,6 @@ from homeassistant.util import location
 
 from tests.common import (
     async_test_home_assistant, INSTANCES, async_mock_mqtt_component, mock_coro)
-from tests.components.homekit.common import hk_driver  # noqa: F401
 from tests.test_util.aiohttp import mock_aiohttp_client
 from tests.mock.zwave import MockNetwork, MockOption
 
