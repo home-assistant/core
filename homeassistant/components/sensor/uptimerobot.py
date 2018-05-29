@@ -1,16 +1,14 @@
 """A component to monitor Uptime Robot monitors.
 
 For more details about this component, please refer to the documentation at
-https://www.home-assistant.io/components/sensor.uptimerobot
+https://www.home-assistant.io/components/binary_sensor.uptimerobot
 """
 import logging
-
 import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyuptimerobot==0.0.4']
 
@@ -24,7 +22,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Uptime Robot sensors."""
+    """Set up the Uptime Robot binary_sensors."""
     from pyuptimerobot import UptimeRobot
 
     up_robot = UptimeRobot()
@@ -33,12 +31,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     devices = []
     if not monitors or monitors.get('stat') != 'ok':
-        error = monitors.get('error', {})
-        _LOGGER.error(error.get('message', 'Something terrible happend :('))
+        _LOGGER.error('Error connecting to uptime robot.')
         return False
 
     for monitor in monitors['monitors']:
-        devices.append(UptimeRobotSensor(
+        devices.append(UptimeRobotBinarySensor(
             apikey, up_robot, monitorid=monitor['id'],
             name=monitor['friendly_name'], target=monitor['url']))
 
@@ -46,11 +43,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-class UptimeRobotSensor(Entity):
-    """Representation of a Uptime Robot sensor."""
+class UptimeRobotBinarySensor(BinarySensorDevice):
+    """Representation of a Uptime Robot binary_sensor."""
 
     def __init__(self, apikey, up_robot, monitorid, name, target):
-        """Initialize the sensor."""
+        """Initialize the binary_sensor."""
         self._apikey = apikey
         self._monitorid = str(monitorid)
         self._name = name
@@ -60,32 +57,31 @@ class UptimeRobotSensor(Entity):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the binary_sensor."""
         return self._name
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
+    def is_on(self):
+        """Return the state of the binary sensor."""
         return self._state
 
     @property
-    def icon(self):
-        """Return the icon to use in the frontend."""
-        return 'mdi:server'
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'connectivity'
 
     @property
     def device_state_attributes(self):
-        """Return the state attributes of the sensor."""
+        """Return the state attributes of the binary_sensor."""
         return {
             ATTR_TARGET: self._target,
         }
 
     def update(self):
-        """Get the latest state of the sensor."""
+        """Get the latest state of the binary_sensor."""
         monitor = self._up_robot.getMonitors(self._apikey, self._monitorid)
         if not monitor or monitor.get('stat') != 'ok':
             _LOGGER.debug("Failed to get new state, trying again later.")
             return False
-
         status = monitor['monitors'][0]['status']
-        self._state = 'Online' if status == 2 else 'Offline'
+        self._state = 1 if status == 2 else 0

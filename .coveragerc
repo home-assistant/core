@@ -345,6 +345,7 @@ omit =
     homeassistant/components/binary_sensor/ping.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/binary_sensor/tapsaff.py
+    homeassistant/components/binary_sensor/uptimerobot.py
     homeassistant/components/browser.py
     homeassistant/components/calendar/caldav.py
     homeassistant/components/calendar/todoist.py
@@ -697,7 +698,6 @@ omit =
     homeassistant/components/sensor/uber.py
     homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/ups.py
-    homeassistant/components/sensor/uptimerobot.py
     homeassistant/components/sensor/uscis.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/viaggiatreno.py
