@@ -243,14 +243,18 @@ def async_setup(hass, config):
     plm.devices.add_device_callback(async_plm_new_device)
 
     for device in x10_devices:
+        housecode = device.get(CONF_HOUSECODE)
+        unitcode = device.get(CONF_UNITCODE)
         x10_type = 'onoff'
         steps = device.get(CONF_DIM_STEPS, 22)
         if device.get(CONF_PLATFORM) == 'light':
             x10_type = 'dimmable'
         elif device.get(CONF_PLATFORM) == 'binary_sensor':
             x10_type = 'sensor'
-        device = plm.add_x10_device(device.get(CONF_HOUSECODE),
-                                    device.get(CONF_UNITCODE),
+        _LOGGER.debug("Adding X10 device to insteonplm: %s %d %s",
+                      housecode, unitcode, x10_type)
+        device = plm.add_x10_device(housecode,
+                                    unitcode,
                                     x10_type)
         if device and hasattr(device.states[0x01], 'steps'):
             device.states[0x01].steps = steps
