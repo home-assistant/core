@@ -11,7 +11,8 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
 from .const import (
     CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
-    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, OUTLET)
+    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, TYPE_OUTLET,
+    TYPE_SWITCH)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +36,10 @@ MEDIA_PLAYER_SCHEMA = vol.Schema({
                            FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE))),
 })
 
-SWITCH_TYPES = (OUTLET)
+TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend({
+    vol.Optional(CONF_TYPE, default=None): vol.All(
+        cv.string, vol.In((TYPE_OUTLET, TYPE_SWITCH))),
+})
 
 
 def validate_entity_config(values):
@@ -64,14 +68,8 @@ def validate_entity_config(values):
                 feature_list[key] = params
             config[CONF_FEATURE_LIST] = feature_list
 
-        if domain == 'switch':
-            switch_type = config.get(CONF_TYPE)
-            if switch_type:
-                params[CONF_TYPE] = cv.string(switch_type)
-                if params[CONF_TYPE] not in SWITCH_TYPES:
-                    raise vol.Invalid(
-                        'Invalid type: "{}", valid types are: "{}".'
-                        .format(params[CONF_TYPE], SWITCH_TYPES))
+        elif domain == 'switch':
+            config = TYPE_SCHEMA(config)
 
         else:
             config = BASIC_INFO_SCHEMA(config)

@@ -23,7 +23,7 @@ from homeassistant.util.decorator import Registry
 from .const import (
     CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FEATURE_LIST, CONF_FILTER,
     DEFAULT_AUTO_START, DEFAULT_PORT, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25,
-    DOMAIN, HOMEKIT_FILE, OUTLET, SERVICE_HOMEKIT_START)
+    DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START, TYPE_OUTLET, TYPE_SWITCH)
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
 
@@ -38,8 +38,9 @@ STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
-SWITCH_TYPES = {OUTLET: 'Outlet',
-                'switch': 'Switch'}
+SWITCH_TYPES = {None: 'Switch',
+                TYPE_OUTLET: 'Outlet',
+                TYPE_SWITCH: 'Switch'}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
@@ -152,8 +153,7 @@ def get_accessory(hass, driver, state, aid, config):
             a_type = 'LightSensor'
 
     elif state.domain == 'switch':
-        switch_type = config.get(CONF_TYPE, 'switch')
-
+        switch_type = config.get(CONF_TYPE)
         a_type = SWITCH_TYPES[switch_type]
 
     elif state.domain in ('automation', 'input_boolean', 'remote', 'script'):

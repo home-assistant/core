@@ -5,7 +5,7 @@ import voluptuous as vol
 from homeassistant.core import State
 from homeassistant.components.homekit.const import (
     CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
-    FEATURE_PLAY_PAUSE, OUTLET)
+    FEATURE_PLAY_PAUSE, TYPE_OUTLET)
 from homeassistant.components.homekit.util import (
     convert_to_float, density_to_air_quality, dismiss_setup_message,
     show_setup_message, temperature_to_homekit, temperature_to_states,
@@ -30,7 +30,7 @@ def test_validate_entity_config():
                     {CONF_FEATURE: 'invalid_feature'}]}},
                {'media_player.test': {CONF_FEATURE_LIST: [
                     {CONF_FEATURE: FEATURE_ON_OFF},
-                    {CONF_FEATURE: FEATURE_ON_OFF}]}}, ]
+                    {CONF_FEATURE: FEATURE_ON_OFF}]}},
                {'switch.test': {CONF_TYPE: 'invalid_type'}}]
 
     for conf in configs:
@@ -57,9 +57,8 @@ def test_validate_entity_config():
     assert vec({'media_player.demo': config}) == \
         {'media_player.demo': {CONF_FEATURE_LIST:
                                {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}}}}
-
-    assert vec({'switch.demo': {CONF_TYPE: OUTLET}}) == \
-        {'switch.demo': {CONF_TYPE: OUTLET}}
+    assert vec({'switch.demo': {CONF_TYPE: TYPE_OUTLET}}) == \
+        {'switch.demo': {CONF_TYPE: TYPE_OUTLET}}
 
 
 def test_validate_media_player_features():

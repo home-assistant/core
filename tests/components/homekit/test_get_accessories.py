@@ -9,7 +9,7 @@ import homeassistant.components.climate as climate
 import homeassistant.components.media_player as media_player
 from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.components.homekit.const import (
-    CONF_FEATURE_LIST, FEATURE_ON_OFF, OUTLET)
+    CONF_FEATURE_LIST, FEATURE_ON_OFF, TYPE_OUTLET)
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_TYPE, TEMP_CELSIUS,
@@ -131,7 +131,7 @@ def test_type_sensors(type_name, entity_id, state, attrs):
 
 
 @pytest.mark.parametrize('type_name, entity_id, state, attrs, config', [
-    ('Outlet', 'switch.test', 'on', {}, {CONF_TYPE: OUTLET}),
+    ('Outlet', 'switch.test', 'on', {}, {CONF_TYPE: TYPE_OUTLET}),
     ('Switch', 'automation.test', 'on', {}, {}),
     ('Switch', 'input_boolean.test', 'on', {}, {}),
     ('Switch', 'remote.test', 'on', {}, {}),

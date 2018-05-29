@@ -32,7 +32,8 @@ BRIDGE_SERIAL_NUMBER = 'homekit.bridge'
 MANUFACTURER = 'Home Assistant'
 
 # #### Switch Types ####
-OUTLET = 'outlet'
+TYPE_OUTLET = 'outlet'
+TYPE_SWITCH = 'switch'
 
 # #### Services ####
 SERV_ACCESSORY_INFO = 'AccessoryInformation'
