@@ -4,12 +4,11 @@ This component provides support for RainMachine programs and zones.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.rainmachine/
 """
-
-from logging import getLogger
+import logging
 
 from homeassistant.components.rainmachine import (
-    CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, PROGRAM_UPDATE_TOPIC,
-    RainMachineEntity)
+    CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DEFAULT_ZONE_RUN,
+    PROGRAM_UPDATE_TOPIC, RainMachineEntity)
 from homeassistant.const import ATTR_ID
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
@@ -18,7 +17,7 @@ from homeassistant.helpers.dispatcher import (
 
 DEPENDENCIES = ['rainmachine']
 
-_LOGGER = getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_AREA = 'area'
 ATTR_CS_ON = 'cs_on'
@@ -38,8 +37,6 @@ ATTR_STATUS = 'status'
 ATTR_SUN_EXPOSURE = 'sun_exposure'
 ATTR_VEGETATION_TYPE = 'vegetation_type'
 ATTR_ZONES = 'zones'
-
-DEFAULT_ZONE_RUN = 60 * 10
 
 DAYS = [
     'Monday',
@@ -141,26 +138,41 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class RainMachineSwitch(RainMachineEntity, SwitchDevice):
-    """A class to represent a generic RainMachine entity."""
+    """A class to represent a generic RainMachine switch."""
 
-    def __init__(self, rainmachine, rainmachine_type, obj):
-        """Initialize a generic RainMachine entity."""
+    def __init__(self, rainmachine, switch_type, obj):
+        """Initialize a generic RainMachine switch."""
+        super().__init__(rainmachine)
+
+        self._name = obj['name']
         self._obj = obj
-        self._type = rainmachine_type
+        self._rainmachine_entity_id = obj['uid']
+        self._switch_type = switch_type
 
-        super().__init__(rainmachine, rainmachine_type, obj.get('uid'))
+    @property
+    def icon(self) -> str:
+        """Return the icon."""
+        return 'mdi:water'
 
     @property
     def is_enabled(self) -> bool:
         """Return whether the entity is enabled."""
         return self._obj.get('active')
 
+    @property
+    def unique_id(self) -> str:
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return '{0}_{1}_{2}'.format(
+            self.rainmachine.device_mac.replace(':', ''),
+            self._switch_type,
+            self._rainmachine_entity_id)
+
 
 class RainMachineProgram(RainMachineSwitch):
     """A RainMachine program."""
 
     def __init__(self, rainmachine, obj):
-        """Initialize."""
+        """Initialize a generic RainMachine switch."""
         super().__init__(rainmachine, 'program', obj)
 
     @property
@@ -169,40 +181,35 @@ class RainMachineProgram(RainMachineSwitch):
         return bool(self._obj.get('status'))
 
     @property
-    def name(self) -> str:
-        """Return the name of the program."""
-        return 'Program: {0}'.format(self._obj.get('name'))
-
-    @property
     def zones(self) -> list:
         """Return a list of active zones associated with this program."""
         return [z for z in self._obj['wateringTimes'] if z['active']]
 
     def turn_off(self, **kwargs) -> None:
         """Turn the program off."""
-        from regenmaschine.exceptions import HTTPError
+        from regenmaschine.exceptions import RainMachineError
 
         try:
             self.rainmachine.client.programs.stop(self._rainmachine_entity_id)
             dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
-        except HTTPError as exc_info:
+        except RainMachineError as exc_info:
             _LOGGER.error('Unable to turn off program "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the program on."""
-        from regenmaschine.exceptions import HTTPError
+        from regenmaschine.exceptions import RainMachineError
 
         try:
             self.rainmachine.client.programs.start(self._rainmachine_entity_id)
             dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
-        except HTTPError as exc_info:
+        except RainMachineError as exc_info:
             _LOGGER.error('Unable to turn on program "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def update(self) -> None:
         """Update info for the program."""
-        from regenmaschine.exceptions import HTTPError
+        from regenmaschine.exceptions import RainMachineError
 
         try:
             self._obj = self.rainmachine.client.programs.get(
@@ -210,16 +217,11 @@ class RainMachineProgram(RainMachineSwitch):
 
             self._attrs.update({
                 ATTR_ID: self._obj['uid'],
-                ATTR_CS_ON: self._obj.get('cs_on'),
-                ATTR_CYCLES: self._obj.get('cycles'),
-                ATTR_DELAY: self._obj.get('delay'),
-                ATTR_DELAY_ON: self._obj.get('delay_on'),
                 ATTR_SOAK: self._obj.get('soak'),
-                ATTR_STATUS:
-                    PROGRAM_STATUS_MAP[self._obj.get('status')],
+                ATTR_STATUS: PROGRAM_STATUS_MAP[self._obj.get('status')],
                 ATTR_ZONES: ', '.join(z['name'] for z in self.zones)
             })
-        except HTTPError as exc_info:
+        except RainMachineError as exc_info:
             _LOGGER.error('Unable to update info for program "%s"',
                           self.unique_id)
             _LOGGER.debug(exc_info)
@@ -240,11 +242,6 @@ class RainMachineZone(RainMachineSwitch):
         """Return whether the zone is running."""
         return bool(self._obj.get('state'))
 
-    @property
-    def name(self) -> str:
-        """Return the name of the zone."""
-        return 'Zone: {0}'.format(self._obj.get('name'))
-
     @callback
     def _program_updated(self):
         """Update state, trigger updates."""
@@ -257,28 +254,28 @@ class RainMachineZone(RainMachineSwitch):
 
     def turn_off(self, **kwargs) -> None:
         """Turn the zone off."""
-        from regenmaschine.exceptions import HTTPError
+        from regenmaschine.exceptions import RainMachineError
 
         try:
             self.rainmachine.client.zones.stop(self._rainmachine_entity_id)
-        except HTTPError as exc_info:
+        except RainMachineError as exc_info:
             _LOGGER.error('Unable to turn off zone "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the zone on."""
-        from regenmaschine.exceptions import HTTPError
+        from regenmaschine.exceptions import RainMachineError
 
         try:
             self.rainmachine.client.zones.start(self._rainmachine_entity_id,
                                                 self._run_time)
-        except HTTPError as exc_info:
+        except RainMachineError as exc_info:
             _LOGGER.error('Unable to turn on zone "%s"', self.unique_id)
             _LOGGER.debug(exc_info)
 
     def update(self) -> None:
         """Update info for the zone."""
-        from regenmaschine.exceptions import HTTPError
+        from regenmaschine.exceptions import RainMachineError
 
         try:
             self._obj = self.rainmachine.client.zones.get(
@@ -309,7 +306,7 @@ class RainMachineZone(RainMachineSwitch):
                 ATTR_VEGETATION_TYPE:
                     VEGETATION_MAP[self._obj.get('type')],
             })
-        except HTTPError as exc_info:
+        except RainMachineError as exc_info:
             _LOGGER.error('Unable to update info for zone "%s"',
                           self.unique_id)
             _LOGGER.debug(exc_info)
