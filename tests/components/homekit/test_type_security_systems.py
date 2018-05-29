@@ -12,7 +12,7 @@ from homeassistant.const import (
 from tests.common import async_mock_service
 
 
-async def test_switch_set_state(hass):
+async def test_switch_set_state(hass, hk_driver):
     """Test if accessory and HA are updated accordingly."""
     code = '1234'
     config = {ATTR_CODE: code}
@@ -20,7 +20,8 @@ async def test_switch_set_state(hass):
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = SecuritySystem(hass, 'SecuritySystem', entity_id, 2, config)
+    acc = SecuritySystem(hass, hk_driver, 'SecuritySystem',
+                         entity_id, 2, config)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -95,13 +96,14 @@ async def test_switch_set_state(hass):
 
 
 @pytest.mark.parametrize('config', [{}, {ATTR_CODE: None}])
-async def test_no_alarm_code(hass, config):
+async def test_no_alarm_code(hass, hk_driver, config):
     """Test accessory if security_system doesn't require an alarm_code."""
     entity_id = 'alarm_control_panel.test'
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = SecuritySystem(hass, 'SecuritySystem', entity_id, 2, config)
+    acc = SecuritySystem(hass, hk_driver, 'SecuritySystem',
+                         entity_id, 2, config)
 
     # Set from HomeKit
     call_arm_home = async_mock_service(hass, DOMAIN, 'alarm_arm_home')

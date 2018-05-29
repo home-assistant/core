@@ -15,7 +15,7 @@ from homeassistant.const import (
 from tests.common import async_mock_service
 
 
-async def test_media_player_set_state(hass):
+async def test_media_player_set_state(hass, hk_driver):
     """Test if accessory and HA are updated accordingly."""
     config = {CONF_FEATURE_LIST: {
         FEATURE_ON_OFF: None, FEATURE_PLAY_PAUSE: None,
@@ -25,7 +25,7 @@ async def test_media_player_set_state(hass):
     hass.states.async_set(entity_id, None, {ATTR_SUPPORTED_FEATURES: 20873,
                                             ATTR_MEDIA_VOLUME_MUTED: False})
     await hass.async_block_till_done()
-    acc = MediaPlayer(hass, 'MediaPlayer', entity_id, 2, config)
+    acc = MediaPlayer(hass, hk_driver, 'MediaPlayer', entity_id, 2, config)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2

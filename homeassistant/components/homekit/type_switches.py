@@ -19,7 +19,7 @@ class Switch(HomeAccessory):
     """Generate a Switch accessory."""
 
     def __init__(self, *args):
-        """Initialize a Switch accessory object to represent a remote."""
+        """Initialize a Switch accessory object."""
         super().__init__(*args, category=CATEGORY_SWITCH)
         self._domain = split_entity_id(self.entity_id)[0]
         self.flag_target_state = False

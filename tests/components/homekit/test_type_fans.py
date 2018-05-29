@@ -27,14 +27,14 @@ def cls():
     patcher.stop()
 
 
-async def test_fan_basic(hass, cls):
+async def test_fan_basic(hass, hk_driver, cls):
     """Test fan with char state."""
     entity_id = 'fan.demo'
 
     hass.states.async_set(entity_id, STATE_ON,
                           {ATTR_SUPPORTED_FEATURES: 0})
     await hass.async_block_till_done()
-    acc = cls.fan(hass, 'Fan', entity_id, 2, None)
+    acc = cls.fan(hass, hk_driver, 'Fan', entity_id, 2, None)
 
     assert acc.aid == 2
     assert acc.category == 3  # Fan
@@ -75,7 +75,7 @@ async def test_fan_basic(hass, cls):
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == entity_id
 
 
-async def test_fan_direction(hass, cls):
+async def test_fan_direction(hass, hk_driver, cls):
     """Test fan with direction."""
     entity_id = 'fan.demo'
 
@@ -83,7 +83,7 @@ async def test_fan_direction(hass, cls):
         ATTR_SUPPORTED_FEATURES: SUPPORT_DIRECTION,
         ATTR_DIRECTION: DIRECTION_FORWARD})
     await hass.async_block_till_done()
-    acc = cls.fan(hass, 'Fan', entity_id, 2, None)
+    acc = cls.fan(hass, hk_driver, 'Fan', entity_id, 2, None)
 
     assert acc.char_direction.value == 0
 
@@ -113,14 +113,14 @@ async def test_fan_direction(hass, cls):
     assert call_set_direction[1].data[ATTR_DIRECTION] == DIRECTION_REVERSE
 
 
-async def test_fan_oscillate(hass, cls):
+async def test_fan_oscillate(hass, hk_driver, cls):
     """Test fan with oscillate."""
     entity_id = 'fan.demo'
 
     hass.states.async_set(entity_id, STATE_ON, {
         ATTR_SUPPORTED_FEATURES: SUPPORT_OSCILLATE, ATTR_OSCILLATING: False})
     await hass.async_block_till_done()
-    acc = cls.fan(hass, 'Fan', entity_id, 2, None)
+    acc = cls.fan(hass, hk_driver, 'Fan', entity_id, 2, None)
 
     assert acc.char_swing.value == 0
 

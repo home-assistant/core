@@ -18,10 +18,12 @@ from homeassistant.const import (
 def test_not_supported(caplog):
     """Test if none is returned if entity isn't supported."""
     # not supported entity
-    assert get_accessory(None, State('demo.demo', 'on'), 2, {}) is None
+    assert get_accessory(None, None, State('demo.demo', 'on'), 2, {}) \
+        is None
 
     # invalid aid
-    assert get_accessory(None, State('light.demo', 'on'), None, None) is None
+    assert get_accessory(None, None, State('light.demo', 'on'), None, None) \
+        is None
     assert caplog.records[0].levelname == 'WARNING'
     assert 'invalid aid' in caplog.records[0].msg
 
@@ -31,11 +33,11 @@ def test_not_supported_media_player():
     # selected mode for entity not supported
     config = {CONF_FEATURE_LIST: {FEATURE_ON_OFF: None}}
     entity_state = State('media_player.demo', 'on')
-    get_accessory(None, entity_state, 2, config) is None
+    get_accessory(None, None, entity_state, 2, config) is None
 
     # no supported modes for entity
     entity_state = State('media_player.demo', 'on')
-    assert get_accessory(None, entity_state, 2, {}) is None
+    assert get_accessory(None, None, entity_state, 2, {}) is None
 
 
 @pytest.mark.parametrize('config, name', [
@@ -46,8 +48,9 @@ def test_customize_options(config, name):
     mock_type = Mock()
     with patch.dict(TYPES, {'Light': mock_type}):
         entity_state = State('light.demo', 'on')
-        get_accessory(None, entity_state, 2, config)
-    mock_type.assert_called_with(None, name, 'light.demo', 2, config)
+        get_accessory(None, None, entity_state, 2, config)
+    mock_type.assert_called_with(None, None, name,
+                                 'light.demo', 2, config)
 
 
 @pytest.mark.parametrize('type_name, entity_id, state, attrs, config', [
@@ -70,7 +73,7 @@ def test_types(type_name, entity_id, state, attrs, config):
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)
-        get_accessory(None, entity_state, 2, config)
+        get_accessory(None, None, entity_state, 2, config)
     assert mock_type.called
 
     if config:
@@ -91,7 +94,7 @@ def test_type_covers(type_name, entity_id, state, attrs):
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)
-        get_accessory(None, entity_state, 2, {})
+        get_accessory(None, None, entity_state, 2, {})
     assert mock_type.called
 
 
@@ -122,7 +125,7 @@ def test_type_sensors(type_name, entity_id, state, attrs):
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)
-        get_accessory(None, entity_state, 2, {})
+        get_accessory(None, None, entity_state, 2, {})
     assert mock_type.called
 
 
@@ -138,5 +141,5 @@ def test_type_switches(type_name, entity_id, state, attrs):
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)
-        get_accessory(None, entity_state, 2, {})
+        get_accessory(None, None, entity_state, 2, {})
     assert mock_type.called
