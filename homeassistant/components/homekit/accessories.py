@@ -64,10 +64,10 @@ def debounce(func):
 class HomeAccessory(Accessory):
     """Adapter class for Accessory."""
 
-    def __init__(self, hass, name, entity_id, aid, config,
+    def __init__(self, hass, driver, name, entity_id, aid, config,
                  category=CATEGORY_OTHER):
         """Initialize a Accessory object."""
-        super().__init__(name, aid=aid)
+        super().__init__(driver, name, aid=aid)
         model = split_entity_id(entity_id)[0].replace("_", " ").title()
         self.set_info_service(
             firmware_revision=__version__, manufacturer=MANUFACTURER,
@@ -104,9 +104,9 @@ class HomeAccessory(Accessory):
 class HomeBridge(Bridge):
     """Adapter class for Bridge."""
 
-    def __init__(self, hass, name=BRIDGE_NAME):
+    def __init__(self, hass, driver, name=BRIDGE_NAME):
         """Initialize a Bridge object."""
-        super().__init__(name)
+        super().__init__(driver, name)
         self.set_info_service(
             firmware_revision=__version__, manufacturer=MANUFACTURER,
             model=BRIDGE_MODEL, serial_number=BRIDGE_SERIAL_NUMBER)
@@ -120,9 +120,9 @@ class HomeBridge(Bridge):
 class HomeDriver(AccessoryDriver):
     """Adapter class for AccessoryDriver."""
 
-    def __init__(self, hass, *args, **kwargs):
+    def __init__(self, hass, **kwargs):
         """Initialize a AccessoryDriver object."""
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self.hass = hass
 
     def pair(self, client_uuid, client_public):
