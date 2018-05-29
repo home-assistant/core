@@ -204,13 +204,13 @@ def async_setup(hass, config):
                                schema=None)
         hass.services.register(DOMAIN, SRV_X10_ALL_UNITS_OFF,
                                x10_all_units_off,
-                               schema=SRV_HOUSECODE)
+                               schema=X10_HOUSECODE_SCHEMA)
         hass.services.register(DOMAIN, SRV_X10_ALL_LIGHTS_OFF,
                                x10_all_lights_off,
-                               schema=SRV_HOUSECODE)
+                               schema=X10_HOUSECODE_SCHEMA)
         hass.services.register(DOMAIN, SRV_X10_ALL_LIGHTS_ON,
                                x10_all_lights_on,
-                               schema=SRV_HOUSECODE)
+                               schema=X10_HOUSECODE_SCHEMA)
         _LOGGER.debug("Insteon_plm Services registered")
 
     _LOGGER.info("Looking for PLM on %s", port)
