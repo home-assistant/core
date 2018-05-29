@@ -219,7 +219,7 @@ omit =
     homeassistant/components/raincloud.py
     homeassistant/components/*/raincloud.py
 
-    homeassistant/components/rainmachine.py
+    homeassistant/components/rainmachine/*
     homeassistant/components/*/rainmachine.py
 
     homeassistant/components/raspihats.py
