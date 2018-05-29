@@ -26,7 +26,7 @@ async def test_debounce(hass):
 
     arguments = None
     counter = 0
-    mock = Mock(hass=hass)
+    mock = Mock(hass=hass, debounce={})
 
     debounce_demo = debounce(demo_func)
     assert debounce_demo.__name__ == 'demo_func'
