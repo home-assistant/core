@@ -39,11 +39,15 @@ SRV_DEL_ALL_LINK = 'delete_all_link'
 SRV_LOAD_ALDB = 'load_all_link_database'
 SRV_PRINT_ALDB = 'print_all_link_database'
 SRV_PRINT_IM_ALDB = 'print_im_all_link_database'
+SRV_X10_ALL_UNITS_OFF = 'x10_all_units_off'
+SRV_X10_ALL_LIGHTS_OFF = 'x10_all_lights_off'
+SRV_X10_ALL_LIGHTS_ON = 'x10_all_lights_on'
 SRV_ALL_LINK_GROUP = 'group'
 SRV_ALL_LINK_MODE = 'mode'
 SRV_LOAD_DB_RELOAD = 'reload'
 SRV_CONTROLLER = 'controller'
 SRV_RESPONDER = 'responder'
+SRV_HOUSECODE = 'housecode'
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
@@ -89,6 +93,12 @@ LOAD_ALDB_SCHEMA = vol.Schema({
 
 PRINT_ALDB_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    })
+
+X10_HOUSECODE_SCHEMA = vol.Schema({
+    vol.Required(SRV_HOUSECODE): vol.In(['a', 'b', 'c', 'd', 'e', 'f', 'g',
+                                         'h', 'i', 'j', 'k', 'l', 'm', 'n',
+                                         'o', 'p']),
     })
 
 
@@ -166,6 +176,21 @@ def async_setup(hass, config):
         # Furture direction is to create an INSTEON control panel.
         print_aldb_to_log(plm.aldb)
 
+    def x10_all_units_off(service):
+        """Send the X10 All Units Off command."""
+        housecode = service.data.get(SRV_HOUSECODE)
+        plm.x10_all_units_off(housecode)
+
+    def x10_all_lights_off(service):
+        """Send the X10 All Lights Off command."""
+        housecode = service.data.get(SRV_HOUSECODE)
+        plm.x10_all_lights_off(housecode)
+
+    def x10_all_lights_on(service):
+        """Send the X10 All Lights On command."""
+        housecode = service.data.get(SRV_HOUSECODE)
+        plm.x10_all_lights_on(housecode)
+
     def _register_services():
         hass.services.register(DOMAIN, SRV_ADD_ALL_LINK, add_all_link,
                                schema=ADD_ALL_LINK_SCHEMA)
@@ -177,6 +202,15 @@ def async_setup(hass, config):
                                schema=PRINT_ALDB_SCHEMA)
         hass.services.register(DOMAIN, SRV_PRINT_IM_ALDB, print_im_aldb,
                                schema=None)
+        hass.services.register(DOMAIN, SRV_X10_ALL_UNITS_OFF,
+                               x10_all_units_off,
+                               schema=SRV_HOUSECODE)
+        hass.services.register(DOMAIN, SRV_X10_ALL_LIGHTS_OFF,
+                               x10_all_lights_off,
+                               schema=SRV_HOUSECODE)
+        hass.services.register(DOMAIN, SRV_X10_ALL_LIGHTS_ON,
+                               x10_all_lights_on,
+                               schema=SRV_HOUSECODE)
         _LOGGER.debug("Insteon_plm Services registered")
 
     _LOGGER.info("Looking for PLM on %s", port)
@@ -209,10 +243,12 @@ def async_setup(hass, config):
     plm.devices.add_device_callback(async_plm_new_device)
 
     for device in x10_devices:
-        x10_type = 'OnOff'
+        x10_type = 'onoff'
         steps = device.get(CONF_DIM_STEPS, 22)
         if device.get(CONF_PLATFORM) == 'light':
-            x10_type = 'Dimmable'
+            x10_type = 'dimmable'
+        elif device.get(CONF_PLATFORM) == 'binary_sensor':
+            x10_type = 'sensor'
         device = plm.add_x10_device(device.get(CONF_HOUSECODE),
                                     device.get(CONF_UNITCODE),
                                     x10_type)
@@ -247,7 +283,8 @@ class IPDB(object):
                                               LeakSensorDryWet)
 
         from insteonplm.states.x10 import (X10DimmableSwitch,
-                                           X10OnOffSwitch)
+                                           X10OnOffSwitch,
+                                           X10OnOffSensor)
 
         self.states = [State(OnOffSwitch_OutletTop, 'switch'),
                        State(OnOffSwitch_OutletBottom, 'switch'),
@@ -264,7 +301,8 @@ class IPDB(object):
                        State(DimmableSwitch, 'light'),
 
                        State(X10DimmableSwitch, 'light'),
-                       State(X10OnOffSwitch, 'switch')]
+                       State(X10OnOffSwitch, 'switch'),
+                       State(X10OnOffSensor, 'binary_sensor')]
 
     def __len__(self):
         """Return the number of INSTEON state types mapped to HA platforms."""
