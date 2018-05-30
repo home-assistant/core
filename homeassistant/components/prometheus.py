@@ -29,10 +29,12 @@ DOMAIN = 'prometheus'
 DEPENDENCIES = ['http']
 
 CONF_FILTER = 'filter'
+CONF_PROM_NAMESPACE = 'namespace'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
         vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
+        vol.Optional(CONF_PROM_NAMESPACE): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -45,7 +47,8 @@ def setup(hass, config):
 
     conf = config[DOMAIN]
     entity_filter = conf[CONF_FILTER]
-    metrics = PrometheusMetrics(prometheus_client, entity_filter)
+    namespace = conf.get(CONF_PROM_NAMESPACE)
+    metrics = PrometheusMetrics(prometheus_client, entity_filter, namespace)
 
     hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_event)
     return True
@@ -54,10 +57,14 @@ def setup(hass, config):
 class PrometheusMetrics(object):
     """Model all of the metrics which should be exposed to Prometheus."""
 
-    def __init__(self, prometheus_client, entity_filter):
+    def __init__(self, prometheus_client, entity_filter, namespace):
         """Initialize Prometheus Metrics."""
         self.prometheus_client = prometheus_client
         self._filter = entity_filter
+        if namespace:
+            self.metrics_prefix = "{}_".format(namespace)
+        else:
+            self.metrics_prefix = ""
         self._metrics = {}
 
     def handle_event(self, event):
@@ -92,7 +99,9 @@ class PrometheusMetrics(object):
         try:
             return self._metrics[metric]
         except KeyError:
-            self._metrics[metric] = factory(metric, documentation, labels)
+            full_metric_name = "{}{}".format(self.metrics_prefix, metric)
+            self._metrics[metric] = factory(
+                full_metric_name, documentation, labels)
             return self._metrics[metric]
 
     @staticmethod
