@@ -26,7 +26,7 @@ async def test_debounce(hass):
 
     arguments = None
     counter = 0
-    mock = Mock(hass=hass)
+    mock = Mock(hass=hass, debounce={})
 
     debounce_demo = debounce(demo_func)
     assert debounce_demo.__name__ == 'demo_func'
@@ -76,6 +76,7 @@ async def test_home_accessory(hass, hk_driver):
     with patch('homeassistant.components.homekit.accessories.'
                'HomeAccessory.update_state') as mock_update_state:
         await hass.async_add_job(acc.run)
+        await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_update_state.assert_called_with(state)
 
