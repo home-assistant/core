@@ -121,10 +121,10 @@ class HomeDriver(AccessoryDriver):
 
     def pair(self, client_uuid, client_public):
         """Override super function to dismiss setup message if paired."""
-        value = super().pair(client_uuid, client_public)
-        if value:
+        success = super().pair(client_uuid, client_public)
+        if success:
             dismiss_setup_message(self.hass)
-        return value
+        return success
 
     def unpair(self, client_uuid):
         """Override super function to show setup message if unpaired."""
