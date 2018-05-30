@@ -557,4 +557,3 @@ class TestMQTTClimate(unittest.TestCase):
 
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(35, state.attributes.get('max_temp'))
-
