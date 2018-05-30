@@ -47,11 +47,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def set_default_level(hass, level):
-    """Set default log level for components."""
-    hass.services.call(DOMAIN, SERVICE_SET_DEFAULT_LEVEL, level)
-
-
 def set_level(hass, logs):
     """Set log level for components."""
     hass.services.call(DOMAIN, SERVICE_SET_LEVEL, logs)
@@ -110,9 +105,10 @@ async def async_setup(hass, config):
         )
 
     # Set default log severity
-    set_default_log_level('DEBUG')
     if LOGGER_DEFAULT in config.get(DOMAIN):
         set_default_log_level(config.get(DOMAIN)[LOGGER_DEFAULT])
+    else:
+        set_default_log_level('DEBUG')
 
     logger = logging.getLogger('')
     logger.setLevel(logging.NOTSET)
