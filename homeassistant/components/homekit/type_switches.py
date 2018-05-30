@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @TYPES.register('Outlet')
 class Outlet(HomeAccessory):
-    """Generate an Outlet accessory for a switch entity."""
+    """Generate an Outlet accessory."""
 
     def __init__(self, *args):
         """Initialize an Outlet accessory object."""
@@ -52,7 +52,7 @@ class Outlet(HomeAccessory):
 
 @TYPES.register('Switch')
 class Switch(HomeAccessory):
-    """Generate a Switch accessory for a switch entity."""
+    """Generate a Switch accessory."""
 
     def __init__(self, *args):
         """Initialize a Switch accessory object."""

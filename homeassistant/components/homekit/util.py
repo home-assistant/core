@@ -36,8 +36,8 @@ MEDIA_PLAYER_SCHEMA = vol.Schema({
                            FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE))),
 })
 
-TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend({
-    vol.Optional(CONF_TYPE, default=None): vol.All(
+SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend({
+    vol.Optional(CONF_TYPE, default=TYPE_SWITCH): vol.All(
         cv.string, vol.In((TYPE_OUTLET, TYPE_SWITCH))),
 })
 
@@ -69,7 +69,7 @@ def validate_entity_config(values):
             config[CONF_FEATURE_LIST] = feature_list
 
         elif domain == 'switch':
-            config = TYPE_SCHEMA(config)
+            config = SWITCH_TYPE_SCHEMA(config)
 
         else:
             config = BASIC_INFO_SCHEMA(config)

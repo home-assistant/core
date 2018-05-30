@@ -38,8 +38,7 @@ STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
-SWITCH_TYPES = {None: 'Switch',
-                TYPE_OUTLET: 'Outlet',
+SWITCH_TYPES = {TYPE_OUTLET: 'Outlet',
                 TYPE_SWITCH: 'Switch'}
 
 CONFIG_SCHEMA = vol.Schema({
@@ -153,7 +152,7 @@ def get_accessory(hass, driver, state, aid, config):
             a_type = 'LightSensor'
 
     elif state.domain == 'switch':
-        switch_type = config.get(CONF_TYPE)
+        switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
         a_type = SWITCH_TYPES[switch_type]
 
     elif state.domain in ('automation', 'input_boolean', 'remote', 'script'):

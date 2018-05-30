@@ -8,13 +8,13 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from tests.common import async_mock_service
 
 
-async def test_outlet_set_state(hass):
+async def test_outlet_set_state(hass, hk_driver):
     """Test if Outlet accessory and HA are updated accordingly."""
     entity_id = 'switch.outlet_test'
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = Outlet(hass, 'Outlet', entity_id, 2, None)
+    acc = Outlet(hass, hk_driver, 'Outlet', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
