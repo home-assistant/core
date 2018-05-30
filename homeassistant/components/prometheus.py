@@ -11,13 +11,12 @@ import voluptuous as vol
 from aiohttp import web
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components import recorder
 from homeassistant.const import (
-    CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE,
     EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN,
     ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant import core as hacore
-from homeassistant.helpers import state as state_helper
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import entityfilter, state as state_helper
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
 REQUIREMENTS = ['prometheus_client==0.2.0']
@@ -29,8 +28,12 @@ API_ENDPOINT = '/api/prometheus'
 DOMAIN = 'prometheus'
 DEPENDENCIES = ['http']
 
+CONF_FILTER = 'filter'
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: recorder.FILTER_SCHEMA,
+    DOMAIN: vol.All({
+        vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -40,25 +43,21 @@ def setup(hass, config):
 
     hass.http.register_view(PrometheusView(prometheus_client))
 
-    conf = config.get(DOMAIN, {})
-    exclude = conf.get(CONF_EXCLUDE, {})
-    include = conf.get(CONF_INCLUDE, {})
-    metrics = Metrics(prometheus_client, exclude, include)
+    conf = config[DOMAIN]
+    entity_filter = conf[CONF_FILTER]
+    metrics = PrometheusMetrics(prometheus_client, entity_filter)
 
     hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_event)
     return True
 
 
-class Metrics(object):
+class PrometheusMetrics(object):
     """Model all of the metrics which should be exposed to Prometheus."""
 
-    def __init__(self, prometheus_client, exclude, include):
+    def __init__(self, prometheus_client, entity_filter):
         """Initialize Prometheus Metrics."""
         self.prometheus_client = prometheus_client
-        self.exclude = exclude.get(CONF_ENTITIES, []) + \
-            exclude.get(CONF_DOMAINS, [])
-        self.include_domains = include.get(CONF_DOMAINS, [])
-        self.include_entities = include.get(CONF_ENTITIES, [])
+        self._filter = entity_filter
         self._metrics = {}
 
     def handle_event(self, event):
@@ -71,14 +70,7 @@ class Metrics(object):
         _LOGGER.debug("Handling state update for %s", entity_id)
         domain, _ = hacore.split_entity_id(entity_id)
 
-        if entity_id in self.exclude:
-            return
-        if domain in self.exclude and entity_id not in self.include_entities:
-            return
-        if self.include_domains and domain not in self.include_domains:
-            return
-        if not self.exclude and (self.include_entities and
-                                 entity_id not in self.include_entities):
+        if not self._filter(state.entity_id):
             return
 
         handler = '_handle_{}'.format(domain)
