@@ -10,7 +10,9 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
+from homeassistant.const import (
+    TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
+    STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -26,28 +28,29 @@ DEPENDENCIES = ['netatmo']
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
 
 SENSOR_TYPES = {
-    'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'co2': ['CO2', 'ppm', 'mdi:cloud'],
-    'pressure': ['Pressure', 'mbar', 'mdi:gauge'],
-    'noise': ['Noise', 'dB', 'mdi:volume-high'],
-    'humidity': ['Humidity', '%', 'mdi:water-percent'],
-    'rain': ['Rain', 'mm', 'mdi:weather-rainy'],
-    'sum_rain_1': ['sum_rain_1', 'mm', 'mdi:weather-rainy'],
-    'sum_rain_24': ['sum_rain_24', 'mm', 'mdi:weather-rainy'],
-    'battery_vp': ['Battery', '', 'mdi:battery'],
-    'battery_lvl': ['Battery_lvl', '', 'mdi:battery'],
-    'min_temp': ['Min Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
-    'max_temp': ['Max Temp.', TEMP_CELSIUS, 'mdi:thermometer'],
-    'windangle': ['Angle', '', 'mdi:compass'],
-    'windangle_value': ['Angle Value', 'º', 'mdi:compass'],
-    'windstrength': ['Strength', 'km/h', 'mdi:weather-windy'],
-    'gustangle': ['Gust Angle', '', 'mdi:compass'],
-    'gustangle_value': ['Gust Angle Value', 'º', 'mdi:compass'],
-    'guststrength': ['Gust Strength', 'km/h', 'mdi:weather-windy'],
-    'rf_status': ['Radio', '', 'mdi:signal'],
-    'rf_status_lvl': ['Radio_lvl', '', 'mdi:signal'],
-    'wifi_status': ['Wifi', '', 'mdi:wifi'],
-    'wifi_status_lvl': ['Wifi_lvl', 'dBm', 'mdi:wifi']
+    'temperature': ['Temperature', TEMP_CELSIUS, None,
+                    DEVICE_CLASS_TEMPERATURE],
+    'co2': ['CO2', 'ppm', 'mdi:cloud', None],
+    'pressure': ['Pressure', 'mbar', 'mdi:gauge', None],
+    'noise': ['Noise', 'dB', 'mdi:volume-high', None],
+    'humidity': ['Humidity', '%', None, DEVICE_CLASS_HUMIDITY],
+    'rain': ['Rain', 'mm', 'mdi:weather-rainy', None],
+    'sum_rain_1': ['sum_rain_1', 'mm', 'mdi:weather-rainy', None],
+    'sum_rain_24': ['sum_rain_24', 'mm', 'mdi:weather-rainy', None],
+    'battery_vp': ['Battery', '', 'mdi:battery', None],
+    'battery_lvl': ['Battery_lvl', '', 'mdi:battery', None],
+    'min_temp': ['Min Temp.', TEMP_CELSIUS, 'mdi:thermometer', None],
+    'max_temp': ['Max Temp.', TEMP_CELSIUS, 'mdi:thermometer', None],
+    'windangle': ['Angle', '', 'mdi:compass', None],
+    'windangle_value': ['Angle Value', 'º', 'mdi:compass', None],
+    'windstrength': ['Strength', 'km/h', 'mdi:weather-windy', None],
+    'gustangle': ['Gust Angle', '', 'mdi:compass', None],
+    'gustangle_value': ['Gust Angle Value', 'º', 'mdi:compass', None],
+    'guststrength': ['Gust Strength', 'km/h', 'mdi:weather-windy', None],
+    'rf_status': ['Radio', '', 'mdi:signal', None],
+    'rf_status_lvl': ['Radio_lvl', '', 'mdi:signal', None],
+    'wifi_status': ['Wifi', '', 'mdi:wifi', None],
+    'wifi_status_lvl': ['Wifi_lvl', 'dBm', 'mdi:wifi', None]
 }
 
 MODULE_SCHEMA = vol.Schema({
@@ -106,7 +109,9 @@ class NetAtmoSensor(Entity):
         self.module_name = module_name
         self.type = sensor_type
         self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._device_class = SENSOR_TYPES[self.type][3]
+        self._icon = SENSOR_TYPES[self.type][2]
+        self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         module_id = self.netatmo_data.\
             station_data.moduleByName(module=module_name)['_id']
         self.module_id = module_id[1]
@@ -119,7 +124,12 @@ class NetAtmoSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self.type][2]
+        return self._icon
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return self._device_class
 
     @property
     def state(self):
