@@ -63,6 +63,7 @@ class GoogleCalendarData(object):
         self.search = search
         self.ignore_availability = ignore_availability
         self.event = None
+        self._event_list = []
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -99,3 +100,8 @@ class GoogleCalendarData(object):
 
         self.event = new_event
         return True
+
+    @property
+    def event_list(self):
+        """Return calendar event list."""
+        return self._event_list

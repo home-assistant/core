@@ -26,6 +26,7 @@ CONF_CALENDARS = 'calendars'
 CONF_CUSTOM_CALENDARS = 'custom_calendars'
 CONF_CALENDAR = 'calendar'
 CONF_SEARCH = 'search'
+CONF_COLOR = 'color'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     # pylint: disable=no-value-for-parameter
@@ -36,12 +37,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         ])),
     vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
+    # TODO set default color
+    vol.Optional(CONF_COLOR): cv.string,
     vol.Optional(CONF_CUSTOM_CALENDARS, default=[]):
         vol.All(cv.ensure_list, vol.Schema([
             vol.Schema({
                 vol.Required(CONF_CALENDAR): cv.string,
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_SEARCH): cv.string,
+                # TODO set default color
+                vol.Optional(CONF_COLOR): cv.string,
             })
         ]))
 })
@@ -81,6 +86,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                 CONF_DEVICE_ID: "{} {}".format(
                     cust_calendar.get(CONF_CALENDAR),
                     cust_calendar.get(CONF_NAME)),
+                CONF_COLOR: cust_calendar.get(CONF_COLOR),
             }
 
             calendar_devices.append(
@@ -92,7 +98,8 @@ def setup_platform(hass, config, add_devices, disc_info=None):
         if not config.get(CONF_CUSTOM_CALENDARS):
             device_data = {
                 CONF_NAME: calendar.name,
-                CONF_DEVICE_ID: calendar.name
+                CONF_DEVICE_ID: calendar.name,
+                CONF_COLOR: config.get(CONF_COLOR),
             }
             calendar_devices.append(
                 WebDavCalendarEventDevice(hass, device_data, calendar)
@@ -107,15 +114,16 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
     def __init__(self, hass, device_data, calendar, all_day=False,
                  search=None):
         """Create the WebDav Calendar Event Device."""
-        self.data = WebDavCalendarData(calendar, all_day, search)
+        self.data = WebDavCalendarData(calendar, all_day, search,
+                                       device_data.get(CONF_COLOR))
         super().__init__(hass, device_data)
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         if self.data.event is None:
-            # No tasks, we don't REALLY need to show anything.
-            return {}
+            # No tasks, we show only calendar color
+            return {CONF_COLOR: self._color}
 
         attributes = super().device_state_attributes
         return attributes
@@ -124,12 +132,14 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
 class WebDavCalendarData(object):
     """Class to utilize the calendar dav client object to get next event."""
 
-    def __init__(self, calendar, include_all_day, search):
+    def __init__(self, calendar, include_all_day, search, color=None):
         """Set up how we are going to search the WebDav calendar."""
         self.calendar = calendar
         self.include_all_day = include_all_day
         self.search = search
         self.event = None
+        self._color = color
+        self._event_list = []
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -140,6 +150,36 @@ class WebDavCalendarData(object):
             dt.start_of_local_day(),
             dt.start_of_local_day() + timedelta(days=1)
         )
+
+        # Handle event list for local calendar
+        event_list = self.calendar.date_search(
+            dt.start_of_local_day() - timedelta(days=10),
+            dt.start_of_local_day() + timedelta(days=31)
+        )
+        self._event_list = []
+        for event in event_list:
+            vevent = event.instance.vevent
+            data = {
+                "uid": vevent.uid.value,
+                "title": vevent.summary.value,
+                "start": self.get_hass_date(vevent.dtstart.value),
+                "end": self.get_hass_date(self.get_end_date(vevent)),
+                "location": self.get_attr_value(vevent, "location"),
+                "description": self.get_attr_value(vevent, "description"),
+                "color": self._color,
+            }
+
+            def _get_date(date):
+                """Get the dateTime from date or dateTime as a local."""
+                if 'date' in date:
+                    return dt.start_of_local_day(dt.dt.datetime.combine(
+                        dt.parse_date(date['date']), dt.dt.time.min))
+                return dt.as_local(dt.parse_datetime(date['dateTime']))
+
+            data['start'] = _get_date(data['start']).isoformat()
+            data['end'] = _get_date(data['end']).isoformat()
+
+            self._event_list.append(data)
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it
@@ -233,3 +273,8 @@ class WebDavCalendarData(object):
             enddate = obj.dtstart.value + timedelta(days=1)
 
         return enddate
+
+    @property
+    def event_list(self):
+        """Return calendar event list."""
+        return self._event_list

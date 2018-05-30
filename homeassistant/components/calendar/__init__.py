@@ -18,6 +18,8 @@ from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt
+from homeassistant.components import http
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +28,7 @@ DOMAIN = 'calendar'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SCAN_INTERVAL = timedelta(seconds=60)
+CONF_COLOR = 'color'
 
 
 @asyncio.coroutine
@@ -56,8 +59,10 @@ class CalendarEventDevice(Entity):
         self._name = data.get(CONF_NAME)
         self.dev_id = data.get(CONF_DEVICE_ID)
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
+        self._color = data.get(CONF_COLOR)
         self.entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, self.dev_id, hass=hass)
+        self._event_list = []
 
         self._cal_data = {
             'all_day': False,
@@ -69,6 +74,18 @@ class CalendarEventDevice(Entity):
             'description': '',
         }
 
+        class CalendarEventView(http.HomeAssistantView):
+            """View to retrieve calendar content."""
+
+            url = '/api/calendar/' + self.entity_id.split(".")[-1]
+            name = "api:calendar"
+            device = self
+
+            async def get(self, request):
+                """Return calendar events."""
+                return self.json(self.device.event_list)
+
+        hass.http.register_view(CalendarEventView)
         self.update()
 
     def offset_reached(self):
@@ -86,6 +103,16 @@ class CalendarEventDevice(Entity):
         return self._name
 
     @property
+    def color(self):
+        """Return calendar color."""
+        return self._color
+
+    @property
+    def event_list(self):
+        """Return calendar events."""
+        return self._event_list
+
+    @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         start = self._cal_data.get('start', None)
@@ -101,6 +128,7 @@ class CalendarEventDevice(Entity):
             'end_time': end,
             'location': self._cal_data.get('location', None),
             'description': self._cal_data.get('description', None),
+            'color': self._color,
         }
 
     @property
@@ -135,6 +163,8 @@ class CalendarEventDevice(Entity):
 
     def update(self):
         """Search for the next event."""
+        self._event_list = self.data.event_list
+
         if not self.data or not self.data.update():
             # update cached, don't do anything
             return
