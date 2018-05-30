@@ -99,7 +99,8 @@ class TestComponentZone(unittest.TestCase):
             'latitude': 1.1,
             'longitude': -2.2,
         }
-        assert setup.setup_component(self.hass, zone.DOMAIN, {'zone': [info, info]})
+        assert setup.setup_component(
+            self.hass, zone.DOMAIN, {'zone': [info, info]})
         assert len(self.hass.states.entity_ids('zone')) == 3
 
     def test_setup_registered_zone_skips_home_zone(self):
