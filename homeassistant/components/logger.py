@@ -51,6 +51,7 @@ def set_default_level(hass, level):
     """Set default log level for components."""
     hass.services.call(DOMAIN, SERVICE_SET_DEFAULT_LEVEL, level)
 
+
 def set_level(hass, logs):
     """Set log level for components."""
     hass.services.call(DOMAIN, SERVICE_SET_LEVEL, logs)
