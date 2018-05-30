@@ -92,6 +92,16 @@ class TestComponentZone(unittest.TestCase):
         state = self.hass.states.get('zone.home')
         assert info['name'] == state.name
 
+    def test_setup_name_can_be_same_on_multiple_zones(self):
+        """Test that zone named Home should override hass home zone."""
+        info = {
+            'name': 'Test Zone',
+            'latitude': 1.1,
+            'longitude': -2.2,
+        }
+        assert setup.setup_component(self.hass, zone.DOMAIN, {'zone': [info, info]})
+        assert len(self.hass.states.entity_ids('zone')) == 3
+
     def test_setup_registered_zone_skips_home_zone(self):
         """Test that config entry named home should override hass home zone."""
         entry = MockConfigEntry(domain=zone.DOMAIN, data={
