@@ -1,6 +1,6 @@
 """Extend the basic Accessory and Bridge functions."""
 from datetime import timedelta
-from functools import wraps
+from functools import partial, wraps
 from inspect import getmodule
 import logging
 
@@ -27,35 +27,25 @@ _LOGGER = logging.getLogger(__name__)
 def debounce(func):
     """Decorator function. Debounce callbacks form HomeKit."""
     @ha_callback
-    def call_later_listener(*args):
+    def call_later_listener(self, *args):
         """Callback listener called from call_later."""
-        # pylint: disable=unsubscriptable-object
-        nonlocal lastargs, remove_listener
-        hass = lastargs['hass']
-        hass.async_add_job(func, *lastargs['args'])
-        lastargs = remove_listener = None
+        debounce_params = self.debounce.pop(func.__name__, None)
+        if debounce_params:
+            self.hass.async_add_job(func, self, *debounce_params[1:])
 
     @wraps(func)
-    def wrapper(*args):
-        """Wrapper starts async timer.
-
-        The accessory must have 'self.hass' and 'self.entity_id' as attributes.
-        """
-        # pylint: disable=not-callable
-        hass = args[0].hass
-        nonlocal lastargs, remove_listener
-        if remove_listener:
-            remove_listener()
-            lastargs = remove_listener = None
-        lastargs = {'hass': hass, 'args': [*args]}
+    def wrapper(self, *args):
+        """Wrapper starts async timer."""
+        debounce_params = self.debounce.pop(func.__name__, None)
+        if debounce_params:
+            debounce_params[0]()  # remove listener
         remove_listener = track_point_in_utc_time(
-            hass, call_later_listener,
+            self.hass, partial(call_later_listener, self),
             dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT))
-        logger.debug('%s: Start %s timeout', args[0].entity_id,
+        self.debounce[func.__name__] = (remove_listener, *args)
+        logger.debug('%s: Start %s timeout', self.entity_id,
                      func.__name__.replace('set_', ''))
 
-    remove_listener = None
-    lastargs = None
     name = getmodule(func).__name__
     logger = logging.getLogger(name)
     return wrapper
@@ -76,11 +66,15 @@ class HomeAccessory(Accessory):
         self.config = config
         self.entity_id = entity_id
         self.hass = hass
+        self.debounce = {}
 
-    def run(self):
-        """Method called by accessory after driver is started."""
+    async def run(self):
+        """Method called by accessory after driver is started.
+
+        Run inside the HAP-python event loop.
+        """
         state = self.hass.states.get(self.entity_id)
-        self.update_state_callback(new_state=state)
+        self.hass.add_job(self.update_state_callback, None, None, state)
         async_track_state_change(
             self.hass, self.entity_id, self.update_state_callback)
 
@@ -127,10 +121,10 @@ class HomeDriver(AccessoryDriver):
 
     def pair(self, client_uuid, client_public):
         """Override super function to dismiss setup message if paired."""
-        value = super().pair(client_uuid, client_public)
-        if value:
+        success = super().pair(client_uuid, client_public)
+        if success:
             dismiss_setup_message(self.hass)
-        return value
+        return success
 
     def unpair(self, client_uuid):
         """Override super function to show setup message if unpaired."""
