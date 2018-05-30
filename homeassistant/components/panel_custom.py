@@ -22,6 +22,7 @@ CONF_CONFIG = 'config'
 CONF_WEBCOMPONENT_PATH = 'webcomponent_path'
 CONF_JS_URL = 'js_url'
 CONF_EMBED_IFRAME = 'embed_iframe'
+CONF_TRUST_EXTERNAL_SCRIPT = 'trust_external_script'
 
 DEFAULT_ICON = 'mdi:bookmark'
 LEGACY_URL = '/api/panel_custom/{}'
@@ -38,6 +39,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_WEBCOMPONENT_PATH): cv.isfile,
         vol.Optional(CONF_JS_URL): cv.string,
         vol.Optional(CONF_EMBED_IFRAME, default=False): cv.boolean,
+        vol.Optional(CONF_TRUST_EXTERNAL_SCRIPT, default=False): cv.boolean,
     })])
 }, extra=vol.ALLOW_EXTRA)
 
@@ -58,6 +60,7 @@ async def async_setup(hass, config):
         config = {
             'name': name,
             'embed_iframe': panel[CONF_EMBED_IFRAME],
+            'trust_external': panel[CONF_TRUST_EXTERNAL_SCRIPT],
             'config': panel.get(CONF_CONFIG),
         }
 
