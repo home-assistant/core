@@ -53,6 +53,8 @@ class TestMQTTClimate(unittest.TestCase):
         self.assertEqual("low", state.attributes.get('fan_mode'))
         self.assertEqual("off", state.attributes.get('swing_mode'))
         self.assertEqual("off", state.attributes.get('operation_mode'))
+        self.assertEqual(7, state.attributes.get('min_temp'))
+        self.assertEqual(35, state.attributes.get('max_temp'))
 
     def test_supported_features(self):
         """Test the supported_features."""
@@ -541,3 +543,18 @@ class TestMQTTClimate(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(74656, state.attributes.get('current_temperature'))
+
+    def test_min_temp_default(self):
+        """Test the default min temp."""
+        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual(7, state.attributes.get('min_temp'))
+
+    def test_max_temp_default(self):
+        """Test the default max temp."""
+        assert setup_component(self.hass, climate.DOMAIN, DEFAULT_CONFIG)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        self.assertEqual(35, state.attributes.get('max_temp'))
+
