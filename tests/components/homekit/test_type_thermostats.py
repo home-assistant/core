@@ -35,6 +35,7 @@ async def test_default_thermostat(hass, hk_driver, cls):
     await hass.async_block_till_done()
     acc = cls.thermostat(hass, hk_driver, 'Climate', entity_id, 2, None)
     await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 9  # Thermostat
@@ -175,6 +176,7 @@ async def test_auto_thermostat(hass, hk_driver, cls):
     await hass.async_block_till_done()
     acc = cls.thermostat(hass, hk_driver, 'Climate', entity_id, 2, None)
     await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
 
     assert acc.char_cooling_thresh_temp.value == 23.0
     assert acc.char_heating_thresh_temp.value == 19.0
@@ -254,6 +256,7 @@ async def test_power_state(hass, hk_driver, cls):
     await hass.async_block_till_done()
     acc = cls.thermostat(hass, hk_driver, 'Climate', entity_id, 2, None)
     await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
     assert acc.support_power_state is True
 
     assert acc.char_current_heat_cool.value == 1
@@ -306,6 +309,7 @@ async def test_thermostat_fahrenheit(hass, hk_driver, cls):
     await hass.async_block_till_done()
     acc = cls.thermostat(hass, hk_driver, 'Climate', entity_id, 2, None)
     await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
 
     hass.states.async_set(entity_id, STATE_AUTO,
                           {ATTR_OPERATION_MODE: STATE_AUTO,
