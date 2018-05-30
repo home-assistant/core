@@ -660,7 +660,7 @@ postnl_api==1.0.1
 proliphix==0.4.1
 
 # homeassistant.components.prometheus
-prometheus_client==0.1.0
+prometheus_client==0.2.0
 
 # homeassistant.components.sensor.systemmonitor
 psutil==5.4.5

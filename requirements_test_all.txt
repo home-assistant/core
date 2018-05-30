@@ -120,7 +120,7 @@ pilight==0.1.1
 pmsensor==0.4
 
 # homeassistant.components.prometheus
-prometheus_client==0.1.0
+prometheus_client==0.2.0
 
 # homeassistant.components.notify.pushbullet
 # homeassistant.components.sensor.pushbullet
