@@ -4,7 +4,6 @@ Register a custom front end panel.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/panel_custom/
 """
-import asyncio
 import logging
 import os
 
@@ -22,6 +21,7 @@ CONF_URL_PATH = 'url_path'
 CONF_CONFIG = 'config'
 CONF_WEBCOMPONENT_PATH = 'webcomponent_path'
 CONF_JS_URL = 'js_url'
+CONF_EMBED_IFRAME = 'embed_iframe'
 
 DEFAULT_ICON = 'mdi:bookmark'
 LEGACY_URL = '/api/panel_custom/{}'
@@ -29,7 +29,7 @@ LEGACY_URL = '/api/panel_custom/{}'
 PANEL_DIR = 'panels'
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(cv.ensure_list, [{
+    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_COMPONENT_NAME): cv.string,
         vol.Optional(CONF_SIDEBAR_TITLE): cv.string,
         vol.Optional(CONF_SIDEBAR_ICON, default=DEFAULT_ICON): cv.icon,
@@ -37,7 +37,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_CONFIG): cv.match_all,
         vol.Optional(CONF_WEBCOMPONENT_PATH): cv.isfile,
         vol.Optional(CONF_JS_URL): cv.string,
-    }])
+        vol.Optional(CONF_EMBED_IFRAME, default=False): cv.boolean,
+    })])
 }, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,6 +57,7 @@ async def async_setup(hass, config):
 
         config = {
             'name': name,
+            'embed_iframe': panel[CONF_EMBED_IFRAME],
             'config': panel.get(CONF_CONFIG),
         }
 
