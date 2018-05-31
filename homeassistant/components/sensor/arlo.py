@@ -118,6 +118,10 @@ class ArloSensor(Entity):
                 video = self._data.last_video
                 self._state = video.created_at_pretty("%m-%d-%Y %H:%M:%S")
             except (AttributeError, IndexError):
+                error_msg = \
+                    'Video not found for {}. Is it older than 180 days?'.format(
+                        self.name)
+                _LOGGER.debug(error_msg)
                 self._state = None
 
         elif self._sensor_type == 'battery_level':

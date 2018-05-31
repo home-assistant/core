@@ -96,7 +96,10 @@ class ArloCam(Camera):
         from haffmpeg import CameraMjpeg
         video = self._camera.last_video
         if not video:
-            _LOGGER.error("Could not find video for Arlo %s" % self.name)
+            error_msg = \
+                'Video not found for {}. Is it older than 180 days?'.format(
+                    self.name)
+            _LOGGER.error(error_msg)
             return
 
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
