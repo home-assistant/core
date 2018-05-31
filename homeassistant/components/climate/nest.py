@@ -134,7 +134,9 @@ class NestThermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._mode != NEST_MODE_HEAT_COOL and not self.is_away_mode_on:
+        if self._mode != NEST_MODE_HEAT_COOL and \
+                self._mode != STATE_ECO and \
+                not self.is_away_mode_on:
             return self._target_temperature
         return None
 
