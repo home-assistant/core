@@ -120,6 +120,9 @@ def async_setup(hass, config):
     port = conf.get(CONF_PORT)
     overrides = conf.get(CONF_OVERRIDE, [])
     x10_devices = conf.get(CONF_X10, [])
+    x10_all_units_off = conf.get(CONF_ALL_UNITS_OFF)
+    x10_all_lights_on = conf.get(CONF_ALL_LIGHTS_ON)
+    x10_all_lights_off = conf.get(CONF_ALL_LIGHTS_OFF)
 
     @callback
     def async_plm_new_device(device):
@@ -248,6 +251,18 @@ def async_setup(hass, config):
 
     plm.devices.add_device_callback(async_plm_new_device)
 
+    if x10_all_units_off:
+        device = plm.add_x10_device('q',
+                                    0,
+                                    'allunitsoff')
+    if x10_all_lights_on:
+        device = plm.add_x10_device('q',
+                                    1,
+                                    'alllightson')
+    if x10_all_lights_off:
+        device = plm.add_x10_device('q',
+                                    1,
+                                    'alllightsoff')
     for device in x10_devices:
         housecode = device.get(CONF_HOUSECODE)
         unitcode = device.get(CONF_UNITCODE)
