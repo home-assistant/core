@@ -197,7 +197,7 @@ class BrSensor(Entity):
 
     def uid(self, coordinates):
         """Generate a unique id using coordinates and sensor type."""
-        # The combination of the location, name an sensor type is unique
+        # The combination of the location, name and sensor type is unique
         return "%2.6f%2.6f%s" % (coordinates[CONF_LATITUDE],
                                  coordinates[CONF_LONGITUDE],
                                  self.type)

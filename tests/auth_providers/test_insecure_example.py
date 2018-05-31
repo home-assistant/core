@@ -19,7 +19,7 @@ def store():
 @pytest.fixture
 def provider(store):
     """Mock provider."""
-    return insecure_example.ExampleAuthProvider(store, {
+    return insecure_example.ExampleAuthProvider(None, store, {
         'type': 'insecure_example',
         'users': [
             {
@@ -64,20 +64,16 @@ async def test_match_existing_credentials(store, provider):
 
 async def test_verify_username(provider):
     """Test we raise if incorrect user specified."""
-    with pytest.raises(auth.InvalidUser):
-        await provider.async_get_or_create_credentials({
-            'username': 'non-existing-user',
-            'password': 'password-test',
-        })
+    with pytest.raises(insecure_example.InvalidAuthError):
+        await provider.async_validate_login(
+            'non-existing-user', 'password-test')
 
 
 async def test_verify_password(provider):
     """Test we raise if incorrect user specified."""
-    with pytest.raises(auth.InvalidPassword):
-        await provider.async_get_or_create_credentials({
-            'username': 'user-test',
-            'password': 'incorrect-password',
-        })
+    with pytest.raises(insecure_example.InvalidAuthError):
+        await provider.async_validate_login(
+            'user-test', 'incorrect-password')
 
 
 async def test_utf_8_username_password(provider):

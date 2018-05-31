@@ -19,8 +19,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, STATE_UNKNOWN, CONF_NAME,
-    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE)
+    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, CONF_NAME, ATTR_ATTRIBUTION,
+    CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -145,21 +145,18 @@ class BOMCurrentSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.bom_data.data and self._condition in self.bom_data.data:
-            return self.bom_data.data[self._condition]
-
-        return STATE_UNKNOWN
+        return self.bom_data.get_reading(self._condition)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         attr = {}
         attr['Sensor Id'] = self._condition
-        attr['Zone Id'] = self.bom_data.data['history_product']
-        attr['Station Id'] = self.bom_data.data['wmo']
-        attr['Station Name'] = self.bom_data.data['name']
+        attr['Zone Id'] = self.bom_data.latest_data['history_product']
+        attr['Station Id'] = self.bom_data.latest_data['wmo']
+        attr['Station Name'] = self.bom_data.latest_data['name']
         attr['Last Update'] = datetime.datetime.strptime(str(
-            self.bom_data.data['local_date_time_full']), '%Y%m%d%H%M%S')
+            self.bom_data.latest_data['local_date_time_full']), '%Y%m%d%H%M%S')
         attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         return attr
 
@@ -180,22 +177,43 @@ class BOMCurrentData(object):
         """Initialize the data object."""
         self._hass = hass
         self._zone_id, self._wmo_id = station_id.split('.')
-        self.data = None
+        self._data = None
 
     def _build_url(self):
         url = _RESOURCE.format(self._zone_id, self._zone_id, self._wmo_id)
         _LOGGER.info("BOM URL %s", url)
         return url
 
+    @property
+    def latest_data(self):
+        """Return the latest data object."""
+        if self._data:
+            return self._data[0]
+        return None
+
+    def get_reading(self, condition):
+        """Return the value for the given condition.
+
+        BOM weather publishes condition readings for weather (and a few other
+        conditions) at intervals throughout the day. To avoid a `-` value in
+        the frontend for these conditions, we traverse the historical data
+        for the latest value that is not `-`.
+
+        Iterators are used in this method to avoid iterating needlessly
+        iterating through the entire BOM provided dataset
+        """
+        condition_readings = (entry[condition] for entry in self._data)
+        return next((x for x in condition_readings if x != '-'), None)
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from BOM."""
         try:
             result = requests.get(self._build_url(), timeout=10).json()
-            self.data = result['observations']['data'][0]
+            self._data = result['observations']['data']
         except ValueError as err:
             _LOGGER.error("Check BOM %s", err.args)
-            self.data = None
+            self._data = None
             raise
 
 

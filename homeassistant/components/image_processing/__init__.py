@@ -10,14 +10,14 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_NAME, CONF_ENTITY_ID)
+    ATTR_ENTITY_ID, ATTR_NAME, CONF_ENTITY_ID, CONF_NAME)
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import bind_hass
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +42,6 @@ ATTR_CONFIDENCE = 'confidence'
 ATTR_FACES = 'faces'
 ATTR_GENDER = 'gender'
 ATTR_GLASSES = 'glasses'
-ATTR_NAME = 'name'
 ATTR_MOTION = 'motion'
 ATTR_TOTAL_FACES = 'total_faces'
 
@@ -60,7 +59,7 @@ SOURCE_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SOURCE): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
     vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
-        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
+        vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
 })
 
 SERVICE_SCAN_SCHEMA = vol.Schema({
@@ -77,7 +76,7 @@ def scan(hass, entity_id=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up image processing."""
+    """Set up the image processing."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     yield from component.async_setup(config)

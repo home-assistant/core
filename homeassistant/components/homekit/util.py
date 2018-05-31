@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
-    ATTR_CODE, TEMP_CELSIUS)
+    ATTR_CODE, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
 from .const import HOMEKIT_NOTIFY_ID
@@ -16,16 +16,21 @@ _LOGGER = logging.getLogger(__name__)
 def validate_entity_config(values):
     """Validate config entry for CONF_ENTITY."""
     entities = {}
-    for key, config in values.items():
-        entity = cv.entity_id(key)
+    for entity_id, config in values.items():
+        entity = cv.entity_id(entity_id)
         params = {}
         if not isinstance(config, dict):
             raise vol.Invalid('The configuration for "{}" must be '
-                              ' an dictionary.'.format(entity))
+                              ' a dictionary.'.format(entity))
+
+        for key in (CONF_NAME, ):
+            value = config.get(key, -1)
+            if value != -1:
+                params[key] = cv.string(value)
 
         domain, _ = split_entity_id(entity)
 
-        if domain == 'alarm_control_panel':
+        if domain in ('alarm_control_panel', 'lock'):
             code = config.get(ATTR_CODE)
             params[ATTR_CODE] = cv.string(code) if code else None
 
@@ -33,9 +38,9 @@ def validate_entity_config(values):
     return entities
 
 
-def show_setup_message(hass, bridge):
+def show_setup_message(hass, pincode):
     """Display persistent notification with setup information."""
-    pin = bridge.pincode.decode()
+    pin = pincode.decode()
     _LOGGER.info('Pincode: %s', pin)
     message = 'To setup Home Assistant in the Home App, enter the ' \
               'following code:\n### {}'.format(pin)

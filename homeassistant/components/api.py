@@ -356,7 +356,8 @@ class APIErrorLog(HomeAssistantView):
 
     async def get(self, request):
         """Retrieve API error log."""
-        return await self.file(request, request.app['hass'].data[DATA_LOGGING])
+        return web.FileResponse(
+            request.app['hass'].data[DATA_LOGGING])
 
 
 async def async_services_json(hass):
