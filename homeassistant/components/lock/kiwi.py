@@ -50,20 +50,18 @@ class KiwiLock(LockDevice):
         self._state = None
 
         address = kiwi_lock.get('address')
-        lat = address.pop('lat', None)
-        lng = address.pop('lng', None)
+        address.update({
+            ATTR_LATITUDE: address.pop('lat', None),
+            ATTR_LONGITUDE: address.pop('lng', None)
+        })
 
         self._device_attrs = {
             ATTR_ID: self.lock_id,
             ATTR_TYPE: kiwi_lock.get('hardware_type'),
             ATTR_PERMISSION: kiwi_lock.get('highest_permission'),
-            ATTR_CAN_INVITE: kiwi_lock.get('can_invite')}
-
-        self._device_attrs.update(address)
-        self._device_attrs.update({
-            ATTR_LATITUDE: lat,
-            ATTR_LONGITUDE: lng
-        })
+            ATTR_CAN_INVITE: kiwi_lock.get('can_invite'),
+            **address
+        }
 
     @property
     def name(self):
