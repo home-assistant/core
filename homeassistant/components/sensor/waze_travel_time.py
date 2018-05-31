@@ -35,7 +35,7 @@ ICON = 'mdi:car'
 
 REGIONS = ['US', 'NA', 'EU', 'IL']
 
-TRACKABLE_DOMAINS = ['sensor','input_text']
+TRACKABLE_DOMAINS = ['sensor', 'input_text']
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -120,7 +120,8 @@ class WazeTravelTime(Entity):
 class WazeRouteData(object):
     """Get data from Waze."""
 
-    def __init__(self, hass, origin, destination, region, incl_filter, excl_filter):
+    def __init__(self, hass, origin, destination, region,
+                 incl_filter, excl_filter):
         """Initialize the data object."""
         self._hass = hass
         self._region = region
@@ -153,9 +154,9 @@ class WazeRouteData(object):
         self.data['origin'] = self._origin
         self.data['destination'] = self._destination
 
-        if self._origin is None or self._origin == "" \
-        or self._origin == "unknown" or self._destination is None \
-        or self._destination == "" or self._destination == "unknown":
+        if (self._origin is None or self._origin == "" or
+                self._origin == "unknown" or self._destination is None or
+                self._destination == "" or self._destination == "unknown"):
             _LOGGER.debug("Origin or destination are not locations.")
             self.data['duration'] = 0
             self.data['distance'] = 0
@@ -176,7 +177,8 @@ class WazeRouteData(object):
                                self._excl_filter.lower() not in k.lower()}
                 best_route = next(iter(results))
                 (duration, distance) = results[best_route]
-                best_route_str = bytes(best_route, 'ISO-8859-1').decode('UTF-8')
+                best_route_str = \
+                    bytes(best_route, 'ISO-8859-1').decode('UTF-8')
                 self.data['duration'] = duration
                 self.data['distance'] = distance
                 self.data['route'] = best_route_str
