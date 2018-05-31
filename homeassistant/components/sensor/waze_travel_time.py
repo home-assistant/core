@@ -142,7 +142,7 @@ class WazeRouteData(object):
 
     @Throttle(SCAN_INTERVAL)
     def update(self):
-        """If origin and/or destination are entities, get their states."""
+        """Check if origin/destination are entities, then get Travel Time"""
         # Get Sensors
         if hasattr(self, '_origin_entity_id'):
             self._origin = self._hass.states.get(self._origin_entity_id).state
@@ -155,14 +155,12 @@ class WazeRouteData(object):
         self.data['destination'] = self._destination
 
         if (self._origin is None or self._origin == "" or
-                self._origin == "unknown" or self._destination is None or
-                self._destination == "" or self._destination == "unknown"):
+                self._destination is None or self._destination == ""):
             _LOGGER.debug("Origin or destination are not locations.")
             self.data['duration'] = 0
             self.data['distance'] = 0
             self.data['route'] = "No route"
         else:
-            """Fetch latest data from Waze."""
             import WazeRouteCalculator
             _LOGGER.debug("Update in progress...")
             try:
