@@ -233,13 +233,13 @@ class TadoClimate(ClimateDevice):
     def min_temp(self):
         """Return the minimum temperature."""
         return convert_temperature(self._min_temp, self._unit,
-                                   hass.config.units.temperature_unit)
+                                   self.hass.config.units.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         return convert_temperature(self._max_temp, self._unit,
-                                   hass.config.units.temperature_unit)
+                                   self.hass.config.units.temperature_unit)
 
     def update(self):
         """Update the state of this climate device."""
