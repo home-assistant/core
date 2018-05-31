@@ -47,7 +47,7 @@ class KiwiLock(LockDevice):
         self._sensor = kiwi_lock
         self._client = client
         self.lock_id = kiwi_lock['sensor_id']
-        self._state = None
+        self._state = STATE_LOCKED
 
         address = kiwi_lock.get('address')
         address.update({
