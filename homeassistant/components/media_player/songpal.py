@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_SET,
-    SUPPORT_TURN_ON, MediaPlayerDevice, DOMAIN)
+    SUPPORT_TURN_ON, SUPPORT_SELECT_SOUND_MODE, MediaPlayerDevice, DOMAIN)
 from homeassistant.const import (
     CONF_NAME, STATE_ON, STATE_OFF, ATTR_ENTITY_ID)
 from homeassistant.exceptions import PlatformNotReady
@@ -21,7 +21,8 @@ REQUIREMENTS = ['python-songpal==0.0.7']
 
 SUPPORT_SONGPAL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | \
                   SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE | \
-                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
+                  SUPPORT_SELECT_SOUND_MODE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,6 +172,15 @@ class SongpalDevice(MediaPlayerDevice):
             _LOGGER.debug("Got ins: %s", inputs)
             self._sources = inputs
 
+
+            try:
+                soundfields = await self.dev.get_soundfield()
+                self._soundmodes = {x.value:x.title for x in soundfields.candidate}
+                self._active_soundmode = self._soundmodes[soundfields.currentValue]
+            except SongpalException:
+                self._soundmodes = None
+                self._active_soundmode = None
+
             self._available = True
         except SongpalException as ex:
             # if we were available, print out the exception
@@ -191,6 +201,22 @@ class SongpalDevice(MediaPlayerDevice):
     def source_list(self):
         """Return list of available sources."""
         return [x.title for x in self._sources]
+
+    async def async_select_sound_mode(self, sound_mode):
+        """Select sound mode."""
+        reversed = {v: k for k, v in self._soundmodes.items()}
+        return await self.dev.set_soundfield(reversed[sound_mode])
+
+    @property
+    def sound_mode(self):
+        """Return currently active sound mode."""
+        return self._active_soundmode
+
+    @property
+    def sound_mode_list(self):
+        """Return supported sound modes."""
+        if self._soundmodes is not None:
+            return list(self._soundmodes.keys())
 
     @property
     def state(self):
@@ -249,4 +275,7 @@ class SongpalDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Return supported features."""
-        return SUPPORT_SONGPAL
+        supported = SUPPORT_SONGPAL
+        supported |= (self._soundmodes is not None and
+                      SUPPORT_SELECT_SOUND_MODE)
+        return supported
