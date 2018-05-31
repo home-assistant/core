@@ -254,17 +254,20 @@ def async_setup(hass, config):
 
     if x10_all_units_off:
         _LOGGER.debug("Adding X10 All Units Off device")
-        device = plm.add_x10_device(x10_all_units_off,
+        device = plm.add_x10_device(plm,
+                                    x10_all_units_off,
                                     20,
                                     'allunitsoff')
     if x10_all_lights_on:
         _LOGGER.debug("Adding X10 All Lights On device")
-        device = plm.add_x10_device(x10_all_lights_on,
+        device = plm.add_x10_device(plm,
+                                    x10_all_lights_on,
                                     21,
                                     'alllightson')
     if x10_all_lights_off:
         _LOGGER.debug("Adding X10 All Lights Off device")
-        device = plm.add_x10_device(x10_all_lights_off,
+        device = plm.add_x10_device(plm,
+                                    x10_all_lights_off,
                                     22,
                                     'alllightsoff')
     for device in x10_devices:
