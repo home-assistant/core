@@ -252,14 +252,17 @@ def async_setup(hass, config):
     plm.devices.add_device_callback(async_plm_new_device)
 
     if x10_all_units_off:
+        _LOGGER.debug("Adding X10 All Units Off device")
         device = plm.add_x10_device('q',
                                     0,
                                     'allunitsoff')
     if x10_all_lights_on:
+        _LOGGER.debug("Adding X10 All Lights On device")
         device = plm.add_x10_device('q',
                                     1,
                                     'alllightson')
     if x10_all_lights_off:
+        _LOGGER.debug("Adding X10 All Lights Off device")
         device = plm.add_x10_device('q',
                                     1,
                                     'alllightsoff')
