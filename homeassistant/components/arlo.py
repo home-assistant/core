@@ -32,7 +32,7 @@ DOMAIN = 'arlo'
 NOTIFICATION_ID = 'arlo_notification'
 NOTIFICATION_TITLE = 'Arlo Component Setup'
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(seconds=60)
 
 SIGNAL_UPDATE_ARLO = "arlo_update"
 
@@ -82,7 +82,8 @@ def setup(hass, config):
     def hub_refresh(event_time):
         """Call ArloHub to refresh information."""
         _LOGGER.debug("Updating Arlo Hub component")
-        hass.data[DATA_ARLO].hub.update(update_cameras=True)
+        hass.data[DATA_ARLO].hub.update(update_cameras=True,
+                                        update_base_station=True)
         dispatcher_send(hass, SIGNAL_UPDATE_ARLO)
 
     # register service
