@@ -261,7 +261,7 @@ def async_setup(hass, config):
                                     21,
                                     'alllightson')
     if x10_all_lights_off_housecode:
-        device = plm.add_x10_device(x10_all_lights_housecode,
+        device = plm.add_x10_device(x10_all_lights_off_housecode,
                                     22,
                                     'alllightsoff')
     for device in x10_devices:
