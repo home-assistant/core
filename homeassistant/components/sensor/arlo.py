@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.arlo/
 """
 import asyncio
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -15,8 +14,7 @@ from homeassistant.components.arlo import (
     CONF_ATTRIBUTION, DEFAULT_BRAND, DATA_ARLO, SIGNAL_UPDATE_ARLO)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS)
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
@@ -119,7 +117,7 @@ class ArloSensor(Entity):
                 self._state = video.created_at_pretty("%m-%d-%Y %H:%M:%S")
             except (AttributeError, IndexError):
                 error_msg = \
-                    'Video not found for {}. Is it older than 180 days?'.format(
+                    'Video not found for {}. Older than 180 days?'.format(
                         self.name)
                 _LOGGER.debug(error_msg)
                 self._state = None

@@ -6,7 +6,6 @@ https://home-assistant.io/components/camera.arlo/
 """
 import asyncio
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -17,8 +16,7 @@ from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 

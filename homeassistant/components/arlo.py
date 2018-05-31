@@ -4,7 +4,6 @@ This component provides support for Netgear Arlo IP cameras.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/arlo/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -15,9 +14,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_SCAN_INTERVAL)
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
-from homeassistant.util.dt import now
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 REQUIREMENTS = ['pyarlo==0.1.3']
 
@@ -81,7 +78,7 @@ def setup(hass, config):
 
     def hub_refresh(event_time):
         """Call ArloHub to refresh information."""
-        _LOGGER.debug("Updating Arlo Hub component")
+        _LOGGER.info("Updating Arlo Hub component")
         hass.data[DATA_ARLO].hub.update(update_cameras=True,
                                         update_base_station=True)
         dispatcher_send(hass, SIGNAL_UPDATE_ARLO)

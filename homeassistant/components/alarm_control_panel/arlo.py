@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Arlo Alarm Control Panels."""
     arlo = hass.data[DATA_ARLO].hub
 
-    if not data.base_stations:
+    if not arlo.base_stations:
         return
 
     home_mode_name = config.get(CONF_HOME_MODE_NAME)
