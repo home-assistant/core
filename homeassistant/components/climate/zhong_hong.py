@@ -12,12 +12,11 @@ from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, PLATFORM_SCHEMA, STATE_COOL, STATE_DRY,
     STATE_FAN_ONLY, STATE_HEAT, SUPPORT_FAN_MODE, SUPPORT_ON_OFF,
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
-from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, CONF_PORT,
-                                 EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
+from homeassistant.const import (
+    ATTR_TEMPERATURE, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.temperature import convert as convert_temperature
 
 _LOGGER = logging.getLogger(__name__)
 
