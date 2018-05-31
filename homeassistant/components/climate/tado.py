@@ -233,7 +233,7 @@ class TadoClimate(ClimateDevice):
         """Return the minimum temperature."""
         if self._min_temp:
             return self._min_temp
-        # get default temp from super class
+
         return DEFAULT_MIN_TEMP
 
     @property
@@ -241,7 +241,7 @@ class TadoClimate(ClimateDevice):
         """Return the maximum temperature."""
         if self._max_temp:
             return self._max_temp
-        #  Get default temp from super class
+
         return DEFAULT_MAX_TEMP
 
     def update(self):
