@@ -58,8 +58,10 @@ class TestIPMA(unittest.TestCase):
         self.hass.stop()
 
     @patch("pyipma.api.IPMA_API.stations", return_value=mock_coro([mockStation]))
-    @patch("pyipma.api.IPMA_API.forecast", return_value=mock_coro([mockForecast]))
-    @patch("pyipma.api.IPMA_API.observations", return_value=mock_coro([mockObservationStation]))
+    @patch("pyipma.api.IPMA_API.forecast",
+        return_value=mock_coro([mockForecast]))
+    @patch("pyipma.api.IPMA_API.observations",
+        return_value=mock_coro([mockObservationStation]))
     def test_setup(self, mock_observation, mock_forecast, mock_stations):
         """Test for successfully setting up the IPMA platform."""
 
