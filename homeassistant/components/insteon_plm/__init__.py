@@ -52,6 +52,9 @@ SRV_CONTROLLER = 'controller'
 SRV_RESPONDER = 'responder'
 SRV_HOUSECODE = 'housecode'
 
+HOUSECODES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+              'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p']
+
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
         vol.Required(CONF_ADDRESS): cv.string,
@@ -75,9 +78,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PORT): cv.string,
         vol.Optional(CONF_OVERRIDE): vol.All(
             cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA]),
-        vol.Optional(CONF_X10_ALL_UNITS_OFF, default='false'): cv.boolean,
-        vol.Optional(CONF_X10_ALL_LIGHTS_ON, default='false'): cv.boolean,
-        vol.Optional(CONF_X10_ALL_LIGHTS_OFF, default='false'): cv.boolean,
+        vol.Optional(CONF_X10_ALL_UNITS_OFF): vol.In(HOUSECODES),
+        vol.Optional(CONF_X10_ALL_LIGHTS_ON): vol.In(HOUSECODES),
+        vol.Optional(CONF_X10_ALL_LIGHTS_OFF): vol.In(HOUSECODES),
         vol.Optional(CONF_X10): vol.All(
             cv.ensure_list_csv, [CONF_X10_SCHEMA])
         })
@@ -102,9 +105,7 @@ PRINT_ALDB_SCHEMA = vol.Schema({
     })
 
 X10_HOUSECODE_SCHEMA = vol.Schema({
-    vol.Required(SRV_HOUSECODE): vol.In(['a', 'b', 'c', 'd', 'e', 'f', 'g',
-                                         'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                                         'o', 'p']),
+    vol.Required(SRV_HOUSECODE): vol.In(HOUSECODES),
     })
 
 
@@ -253,18 +254,18 @@ def async_setup(hass, config):
 
     if x10_all_units_off:
         _LOGGER.debug("Adding X10 All Units Off device")
-        device = plm.add_x10_device('q',
-                                    0,
+        device = plm.add_x10_device(x10_all_units_off,
+                                    20,
                                     'allunitsoff')
     if x10_all_lights_on:
         _LOGGER.debug("Adding X10 All Lights On device")
-        device = plm.add_x10_device('q',
-                                    1,
+        device = plm.add_x10_device(x10_all_lights_on,
+                                    21,
                                     'alllightson')
     if x10_all_lights_off:
         _LOGGER.debug("Adding X10 All Lights Off device")
-        device = plm.add_x10_device('q',
-                                    1,
+        device = plm.add_x10_device(x10_all_lights_off,
+                                    22,
                                     'alllightsoff')
     for device in x10_devices:
         housecode = device.get(CONF_HOUSECODE)
