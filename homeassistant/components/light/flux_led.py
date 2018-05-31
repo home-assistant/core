@@ -191,7 +191,7 @@ class FluxLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._mode is MODE_RGBW:
+        if self._mode == MODE_RGBW:
             return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE
 
         return SUPPORT_FLUX_LED
@@ -247,10 +247,13 @@ class FluxLight(Light):
         if rgb is None:
             rgb = self._bulb.getRgb()
 
-        self._bulb.setRgb(*tuple(rgb), brightness=brightness)
+        if white is None and self._mode == MODE_RGBW:
+            white = self.white_value
 
-        if white is not None:
-            self._bulb.setWarmWhite255(white)
+        if self._mode == MODE_RGBW:
+            self._bulb.setRgbw(*tuple(rgb), w=white, brightness=brightness)
+        else:
+            self._bulb.setRgb(*tuple(rgb), brightness=brightness)
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
