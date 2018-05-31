@@ -143,7 +143,6 @@ class WazeRouteData(object):
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Check if origin/destination are entities, then get travel time."""
-
         if hasattr(self, '_origin_entity_id'):
             self._origin = self._hass.states.get(self._origin_entity_id).state
 
