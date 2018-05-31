@@ -36,10 +36,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Arlo Alarm Control Panels."""
-    data = hass.data[DATA_ARLO]
+    arlo = hass.data[DATA_ARLO].hub
 
     if not data.base_stations:
         return
@@ -47,10 +46,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     home_mode_name = config.get(CONF_HOME_MODE_NAME)
     away_mode_name = config.get(CONF_AWAY_MODE_NAME)
     base_stations = []
-    for base_station in data.base_stations:
+    for base_station in arlo.base_stations:
         base_stations.append(ArloBaseStation(base_station, home_mode_name,
                                              away_mode_name))
-    async_add_devices(base_stations, True)
+    add_devices(base_stations, True)
 
 
 class ArloBaseStation(AlarmControlPanel):
