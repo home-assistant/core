@@ -83,7 +83,7 @@ SPRINKLER_TYPE_MAP = {
     1: 'Popup Spray',
     2: 'Rotors',
     3: 'Surface Drip',
-    4: 'Bubblers',
+    4: 'Bubblers Drip',
     99: 'Other'
 }
 
@@ -96,14 +96,14 @@ SUN_EXPOSURE_MAP = {
 
 VEGETATION_MAP = {
     0: 'Not Set',
-    1: 'Not Set',
-    2: 'Grass',
+    2: 'Cool Season Grass',
     3: 'Fruit Trees',
     4: 'Flowers',
     5: 'Vegetables',
     6: 'Citrus',
-    7: 'Bushes',
-    8: 'Xeriscape',
+    7: 'Trees and Bushes',
+    9: 'Drought Tolerant Plants',
+    10: 'Warm Season Grass',
     99: 'Other'
 }
 
@@ -296,15 +296,17 @@ class RainMachineZone(RainMachineSwitch):
                     self._properties_json.get(
                         'waterSense').get('precipitationRate'),
                 ATTR_RESTRICTIONS: self._obj.get('restriction'),
-                ATTR_SLOPE: SLOPE_TYPE_MAP[self._properties_json.get('slope')],
+                ATTR_SLOPE: SLOPE_TYPE_MAP.get(
+                    self._properties_json.get('slope')),
                 ATTR_SOIL_TYPE:
-                    SOIL_TYPE_MAP[self._properties_json.get('sun')],
+                    SOIL_TYPE_MAP.get(self._properties_json.get('sun')),
                 ATTR_SPRINKLER_TYPE:
-                    SPRINKLER_TYPE_MAP[self._properties_json.get('group_id')],
+                    SPRINKLER_TYPE_MAP.get(
+                        self._properties_json.get('group_id')),
                 ATTR_SUN_EXPOSURE:
-                    SUN_EXPOSURE_MAP[self._properties_json.get('sun')],
+                    SUN_EXPOSURE_MAP.get(self._properties_json.get('sun')),
                 ATTR_VEGETATION_TYPE:
-                    VEGETATION_MAP[self._obj.get('type')],
+                    VEGETATION_MAP.get(self._obj.get('type')),
             })
         except RainMachineError as exc_info:
             _LOGGER.error('Unable to update info for zone "%s"',
