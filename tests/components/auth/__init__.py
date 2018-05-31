@@ -19,6 +19,7 @@ BASE_CONFIG = [{
 CLIENT_ID = 'test-id'
 CLIENT_SECRET = 'test-secret'
 CLIENT_AUTH = BasicAuth(CLIENT_ID, CLIENT_SECRET)
+CLIENT_REDIRECT_URI = 'http://example.com/callback'
 
 
 async def async_setup_auth(hass, aiohttp_client, provider_configs=BASE_CONFIG,
@@ -31,7 +32,8 @@ async def async_setup_auth(hass, aiohttp_client, provider_configs=BASE_CONFIG,
             'api_password': 'bla'
         }
     })
-    client = auth.Client('Test Client', CLIENT_ID, CLIENT_SECRET)
+    client = auth.Client('Test Client', CLIENT_ID, CLIENT_SECRET,
+                         redirect_uris=[CLIENT_REDIRECT_URI])
     hass.auth._store.clients[client.id] = client
     if setup_api:
         await async_setup_component(hass, 'api', {})

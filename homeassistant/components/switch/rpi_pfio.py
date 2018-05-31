@@ -10,7 +10,7 @@ import voluptuous as vol
 
 import homeassistant.components.rpi_pfio as rpi_pfio
 from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.const import ATTR_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 
@@ -19,7 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['rpi_pfio']
 
 ATTR_INVERT_LOGIC = 'invert_logic'
-ATTR_NAME = 'name'
 
 CONF_PORTS = 'ports'
 

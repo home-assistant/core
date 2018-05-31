@@ -256,6 +256,11 @@ class Camera(Entity):
         """Return the camera model."""
         return None
 
+    @property
+    def frame_interval(self):
+        """Return the interval between frames of the mjpeg stream."""
+        return 0.5
+
     def camera_image(self):
         """Return bytes of camera image."""
         raise NotImplementedError()
@@ -272,10 +277,6 @@ class Camera(Entity):
 
         This method must be run in the event loop.
         """
-        if interval < MIN_STREAM_INTERVAL:
-            raise ValueError("Stream interval must be be > {}"
-                             .format(MIN_STREAM_INTERVAL))
-
         response = web.StreamResponse()
         response.content_type = ('multipart/x-mixed-replace; '
                                  'boundary=--frameboundary')
@@ -325,8 +326,7 @@ class Camera(Entity):
         a direct stream from the camera.
         This method must be run in the event loop.
         """
-        await self.handle_async_still_stream(request,
-                                             FALLBACK_STREAM_INTERVAL)
+        await self.handle_async_still_stream(request, self.frame_interval)
 
     @property
     def state(self):
@@ -448,6 +448,9 @@ class CameraMjpegStream(CameraView):
         try:
             # Compose camera stream from stills
             interval = float(request.query.get('interval'))
+            if interval < MIN_STREAM_INTERVAL:
+                raise ValueError("Stream interval must be be > {}"
+                                 .format(MIN_STREAM_INTERVAL))
             await camera.handle_async_still_stream(request, interval)
             return
         except ValueError:

@@ -42,7 +42,7 @@ class MySensorsNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.devices = mysensors.get_mysensors_devices(hass, DOMAIN)
 
-    def send_message(self, message="", **kwargs):
+    async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""
         target_devices = kwargs.get(ATTR_TARGET)
         devices = [device for device in self.devices.values()
