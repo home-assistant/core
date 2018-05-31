@@ -122,8 +122,8 @@ class MqttAlarm(MqttAvailability, alarm.AlarmControlPanel):
         if self._code is None:
             return None
         elif isinstance(self._code, str) and re.search('^\\d+$', self._code):
-            return '^\\d+$'
-        return '.+'
+            return 'Number'
+        return 'Any'
 
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):
