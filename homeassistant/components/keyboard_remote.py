@@ -4,6 +4,7 @@ Receive signals from a keyboard and use it as a remote control.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/keyboard_remote/
 """
+# pylint: disable=import-error
 import threading
 import logging
 import os
