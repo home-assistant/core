@@ -33,6 +33,9 @@ CONF_X10 = 'x10_devices'
 CONF_HOUSECODE = 'housecode'
 CONF_UNITCODE = 'unitcode'
 CONF_DIM_STEPS = 'dim_steps'
+CONF_X10_ALL_UNITS_OFF = 'x10_all_units_off'
+CONF_X10_ALL_LIGHTS_ON = 'x10_all_lights_on'
+CONF_X10_ALL_LIGHTS_OFF = 'x10_all_lights_off'
 
 SRV_ADD_ALL_LINK = 'add_all_link'
 SRV_DEL_ALL_LINK = 'delete_all_link'
@@ -72,6 +75,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PORT): cv.string,
         vol.Optional(CONF_OVERRIDE): vol.All(
             cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA]),
+        vol.Optional(CONF_X10_ALL_UNITS_OFF, default='false'): cv.boolean,
+        vol.Optional(CONF_X10_ALL_LIGHTS_ON, default='false'): cv.boolean,
+        vol.Optional(CONF_X10_ALL_LIGHTS_OFF, default='false'): cv.boolean,
         vol.Optional(CONF_X10): vol.All(
             cv.ensure_list_csv, [CONF_X10_SCHEMA])
         })
@@ -288,7 +294,10 @@ class IPDB(object):
 
         from insteonplm.states.x10 import (X10DimmableSwitch,
                                            X10OnOffSwitch,
-                                           X10OnOffSensor)
+                                           X10OnOffSensor,
+                                           X10AllUnitsOff,
+                                           X10AllLightsOn,
+                                           X10AllLightsOff)
 
         self.states = [State(OnOffSwitch_OutletTop, 'switch'),
                        State(OnOffSwitch_OutletBottom, 'switch'),
@@ -306,7 +315,10 @@ class IPDB(object):
 
                        State(X10DimmableSwitch, 'light'),
                        State(X10OnOffSwitch, 'switch'),
-                       State(X10OnOffSensor, 'binary_sensor')]
+                       State(X10OnOffSensor, 'binary_sensor'),
+                       State(X10AllUnitsOff, 'binary_sensor'),
+                       State(X10AllLightsOn, 'binary_sensor'),
+                       State(X10AllLightsOff, 'binary_sensor')]
 
     def __len__(self):
         """Return the number of INSTEON state types mapped to HA platforms."""
