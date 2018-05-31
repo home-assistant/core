@@ -10,8 +10,9 @@ import logging
 from homeassistant.components.homematicip_cloud import (
     HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
     ATTR_HOME_ID)
-from homeassistant.const import (TEMP_CELSIUS,
-    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE)
+from homeassistant.const import (
+    TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE)
 
 _LOGGER = logging.getLogger(__name__)
 
