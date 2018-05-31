@@ -67,7 +67,7 @@ async def async_setup(hass, config):
         if CONF_JS_URL in panel:
             config['js_url'] = panel[CONF_JS_URL]
 
-        elif not os.path.isfile(panel_path):
+        elif not await hass.async_add_job(os.path.isfile, panel_path):
             _LOGGER.error('Unable to find webcomponent for %s: %s',
                           name, panel_path)
             continue
