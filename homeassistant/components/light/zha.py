@@ -182,4 +182,4 @@ class Light(zha.Entity, light.Light):
 
         False if entity pushes its state to HA.
         """
-        return False
+        return True
