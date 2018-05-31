@@ -295,9 +295,9 @@ class IPDB(object):
         from insteonplm.states.x10 import (X10DimmableSwitch,
                                            X10OnOffSwitch,
                                            X10OnOffSensor,
-                                           X10AllUnitsOff,
-                                           X10AllLightsOn,
-                                           X10AllLightsOff)
+                                           X10AllUnitsOffSensor,
+                                           X10AllLightsOnSensor,
+                                           X10AllLightsOffSensor)
 
         self.states = [State(OnOffSwitch_OutletTop, 'switch'),
                        State(OnOffSwitch_OutletBottom, 'switch'),
@@ -316,9 +316,9 @@ class IPDB(object):
                        State(X10DimmableSwitch, 'light'),
                        State(X10OnOffSwitch, 'switch'),
                        State(X10OnOffSensor, 'binary_sensor'),
-                       State(X10AllUnitsOff, 'binary_sensor'),
-                       State(X10AllLightsOn, 'binary_sensor'),
-                       State(X10AllLightsOff, 'binary_sensor')]
+                       State(X10AllUnitsOffSensor, 'binary_sensor'),
+                       State(X10AllLightsOnSensor, 'binary_sensor'),
+                       State(X10AllLightsOffSensor, 'binary_sensor')]
 
     def __len__(self):
         """Return the number of INSTEON state types mapped to HA platforms."""
