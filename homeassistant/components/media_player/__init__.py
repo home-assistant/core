@@ -368,8 +368,8 @@ def select_sound_mode(hass, sound_mode, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_SELECT_SOUND_MODE, data)
-    
-    
+
+
 @bind_hass
 def clear_playlist(hass, entity_id=None):
     """Send the media player the command for clear playlist."""
