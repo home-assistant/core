@@ -268,7 +268,6 @@ class GenericThermostat(ClimateDevice):
         if self._min_temp:
             return self._min_temp
 
-        # get default temp from super class
         return DEFAULT_MIN_TEMP
 
     @property
@@ -278,7 +277,6 @@ class GenericThermostat(ClimateDevice):
         if self._max_temp:
             return self._max_temp
 
-        # Get default temp from super class
         return DEFAULT_MAX_TEMP
 
     @asyncio.coroutine
