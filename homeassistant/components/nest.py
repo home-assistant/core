@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['python-nest==4.0.0']
+REQUIREMENTS = ['python-nest==4.0.1']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
