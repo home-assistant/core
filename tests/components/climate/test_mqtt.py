@@ -9,9 +9,9 @@ from homeassistant.setup import setup_component
 from homeassistant.components import climate
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.components.climate import (
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
-    SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP)
+               SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+               SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
+               SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT)
 from tests.common import (get_test_home_assistant, mock_mqtt_component,
                           fire_mqtt_message, mock_component)
 
