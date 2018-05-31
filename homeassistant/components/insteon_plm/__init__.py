@@ -120,9 +120,9 @@ def async_setup(hass, config):
     port = conf.get(CONF_PORT)
     overrides = conf.get(CONF_OVERRIDE, [])
     x10_devices = conf.get(CONF_X10, [])
-    x10_all_units_off = conf.get(CONF_ALL_UNITS_OFF)
-    x10_all_lights_on = conf.get(CONF_ALL_LIGHTS_ON)
-    x10_all_lights_off = conf.get(CONF_ALL_LIGHTS_OFF)
+    x10_all_units_off = conf.get(CONF_X10_ALL_UNITS_OFF)
+    x10_all_lights_on = conf.get(CONF_X10_ALL_LIGHTS_ON)
+    x10_all_lights_off = conf.get(CONF_X10_ALL_LIGHTS_OFF)
 
     @callback
     def async_plm_new_device(device):
