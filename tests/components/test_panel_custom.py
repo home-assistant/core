@@ -62,6 +62,7 @@ async def test_webcomponent_custom_path(hass):
                 'html_url': '/api/panel_custom/todo-mvc',
                 'name': 'todo-mvc',
                 'embed_iframe': False,
+                'trust_external': False,
             }
             assert panel.frontend_url_path == 'nice_url'
             assert panel.sidebar_icon == 'mdi:iconicon'
@@ -79,6 +80,7 @@ async def test_js_webcomponent(hass):
             'url_path': 'nice_url',
             'config': 5,
             'embed_iframe': True,
+            'trust_external_script': True,
         }
     }
 
@@ -99,6 +101,7 @@ async def test_js_webcomponent(hass):
         'js_url': '/local/bla.js',
         'name': 'todo-mvc',
         'embed_iframe': True,
+        'trust_external': True,
     }
     assert panel.frontend_url_path == 'nice_url'
     assert panel.sidebar_icon == 'mdi:iconicon'
