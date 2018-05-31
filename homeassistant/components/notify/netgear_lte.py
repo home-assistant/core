@@ -9,6 +9,7 @@ import attr
 
 from homeassistant.components.notify import (
     BaseNotificationService, ATTR_TARGET, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
 from ..netgear_lte import DATA_KEY
@@ -17,6 +18,7 @@ from ..netgear_lte import DATA_KEY
 DEPENDENCIES = ['netgear_lte']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(ATTR_TARGET): cv.string,
 })
 

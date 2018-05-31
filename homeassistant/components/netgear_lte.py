@@ -58,6 +58,8 @@ class LTEHostData:
         elif len(self.hostdata) == 1:
             return next(iter(self.hostdata.values()))
 
+        return None
+
 
 async def async_setup(hass, config):
     """Set up Netgear LTE component."""
