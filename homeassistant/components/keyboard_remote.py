@@ -4,7 +4,6 @@ Receive signals from a keyboard and use it as a remote control.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/keyboard_remote/
 """
-# pylint: disable=import-error
 import threading
 import logging
 import os
@@ -50,10 +49,7 @@ def setup(hass, config):
     """Set up the keyboard_remote."""
     config = config.get(DOMAIN)
 
-    keyboard_remote = KeyboardRemote(
-        hass,
-        config
-    )
+    keyboard_remote = KeyboardRemote(hass, config)
 
     def _start_keyboard_remote(_event):
         keyboard_remote.run()
@@ -61,14 +57,8 @@ def setup(hass, config):
     def _stop_keyboard_remote(_event):
         keyboard_remote.stop()
 
-    hass.bus.listen_once(
-        EVENT_HOMEASSISTANT_START,
-        _start_keyboard_remote
-    )
-    hass.bus.listen_once(
-        EVENT_HOMEASSISTANT_STOP,
-        _stop_keyboard_remote
-    )
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, _start_keyboard_remote)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_keyboard_remote)
 
     return True
 
@@ -93,10 +83,8 @@ class KeyboardRemoteThread(threading.Thread):
             _LOGGER.debug("Keyboard connected, %s", self.device_id)
         else:
             _LOGGER.debug(
-                'Keyboard not connected, %s.\n\
-                Check /dev/input/event* permissions.',
-                self.device_id
-                )
+                "Keyboard not connected, %s. "
+                "Check /dev/input/event* permissions", self.device_id)
 
             id_folder = '/dev/input/by-id/'
 
@@ -105,12 +93,9 @@ class KeyboardRemoteThread(threading.Thread):
                 device_names = [InputDevice(file_name).name
                                 for file_name in list_devices()]
                 _LOGGER.debug(
-                    'Possible device names are:\n %s.\n \
-                    Possible device descriptors are %s:\n %s',
-                    device_names,
-                    id_folder,
-                    os.listdir(id_folder)
-                    )
+                    "Possible device names are: %s. "
+                    "Possible device descriptors are %s: %s",
+                    device_names, id_folder, os.listdir(id_folder))
 
         threading.Thread.__init__(self)
         self.stopped = threading.Event()
@@ -149,9 +134,7 @@ class KeyboardRemoteThread(threading.Thread):
                 self.dev = self._get_keyboard_device()
                 if self.dev is not None:
                     self.dev.grab()
-                    self.hass.bus.fire(
-                        KEYBOARD_REMOTE_CONNECTED
-                    )
+                    self.hass.bus.fire(KEYBOARD_REMOTE_CONNECTED)
                     _LOGGER.debug("Keyboard re-connected, %s", self.device_id)
                 else:
                     continue
@@ -160,9 +143,7 @@ class KeyboardRemoteThread(threading.Thread):
                 event = self.dev.read_one()
             except IOError:  # Keyboard Disconnected
                 self.dev = None
-                self.hass.bus.fire(
-                    KEYBOARD_REMOTE_DISCONNECTED
-                )
+                self.hass.bus.fire(KEYBOARD_REMOTE_DISCONNECTED)
                 _LOGGER.debug("Keyboard disconnected, %s", self.device_id)
                 continue
 
@@ -195,9 +176,8 @@ class KeyboardRemote(object):
 
             if device_descriptor is not None\
                     or device_name is not None:
-                thread = KeyboardRemoteThread(hass, device_name,
-                                              device_descriptor,
-                                              key_value)
+                thread = KeyboardRemoteThread(
+                    hass, device_name, device_descriptor, key_value)
                 self.threads.append(thread)
 
     def run(self):
