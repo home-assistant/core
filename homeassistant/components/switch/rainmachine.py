@@ -102,7 +102,7 @@ VEGETATION_MAP = {
     5: 'Vegetables',
     6: 'Citrus',
     7: 'Trees and Bushes',
-    9: 'Dought Tolerant Plants',
+    9: 'Drought Tolerant Plants',
     10: 'Warm Season Grass',
     99: 'Other'
 }
