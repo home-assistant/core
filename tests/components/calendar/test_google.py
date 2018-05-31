@@ -99,7 +99,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'start_time': '{} 00:00:00'.format(event['start']['date']),
             'end_time': '{} 00:00:00'.format(event['end']['date']),
             'location': event['location'],
-            'description': event['description']
+            'description': event['description'],
+            'url': ''
         })
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
@@ -160,7 +161,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 (one_hour_from_now + dt_util.dt.timedelta(minutes=60))
                 .strftime(DATE_STR_FORMAT),
             'location': '',
-            'description': ''
+            'description': '',
+            'url': ''
         })
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
@@ -222,7 +224,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 (middle_of_event + dt_util.dt.timedelta(minutes=60))
                 .strftime(DATE_STR_FORMAT),
             'location': '',
-            'description': ''
+            'description': '',
+            'url': ''
         })
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
@@ -285,7 +288,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 (middle_of_event + dt_util.dt.timedelta(minutes=60))
                 .strftime(DATE_STR_FORMAT),
             'location': '',
-            'description': ''
+            'description': '',
+            'url': ''
         })
 
     @pytest.mark.skip
@@ -352,7 +356,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'start_time': '{} 06:00:00'.format(event['start']['date']),
             'end_time': '{} 06:00:00'.format(event['end']['date']),
             'location': event['location'],
-            'description': event['description']
+            'description': event['description'],
+            'url': ''
         })
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
@@ -419,7 +424,8 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'start_time': '{} 00:00:00'.format(event['start']['date']),
             'end_time': '{} 00:00:00'.format(event['end']['date']),
             'location': event['location'],
-            'description': event['description']
+            'description': event['description'],
+            'url': ''
         })
 
     @MockDependency("httplib2")

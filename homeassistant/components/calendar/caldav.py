@@ -11,7 +11,8 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
-    PLATFORM_SCHEMA, CalendarEventDevice)
+    PLATFORM_SCHEMA, CalendarEventDevice, EventData, DOMAIN)
+
 from homeassistant.const import (
     CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
@@ -26,6 +27,7 @@ CONF_CALENDARS = 'calendars'
 CONF_CUSTOM_CALENDARS = 'custom_calendars'
 CONF_CALENDAR = 'calendar'
 CONF_SEARCH = 'search'
+CONF_COLOR = 'color'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     # pylint: disable=no-value-for-parameter
@@ -36,17 +38,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         ])),
     vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
+    vol.Optional(CONF_COLOR): cv.string,
     vol.Optional(CONF_CUSTOM_CALENDARS, default=[]):
         vol.All(cv.ensure_list, vol.Schema([
             vol.Schema({
                 vol.Required(CONF_CALENDAR): cv.string,
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_SEARCH): cv.string,
+                vol.Optional(CONF_COLOR): cv.string,
             })
         ]))
 })
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
+PERSISTENCE = '.caldav.calendar.json'
 
 
 def setup_platform(hass, config, add_devices, disc_info=None):
@@ -56,6 +61,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
     url = config.get(CONF_URL)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    color = config.get(CONF_COLOR)
 
     client = caldav.DAVClient(url, None, username, password)
 
@@ -81,6 +87,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                 CONF_DEVICE_ID: "{} {}".format(
                     cust_calendar.get(CONF_CALENDAR),
                     cust_calendar.get(CONF_NAME)),
+                CONF_COLOR: cust_calendar.get(CONF_COLOR),
             }
 
             calendar_devices.append(
@@ -92,7 +99,8 @@ def setup_platform(hass, config, add_devices, disc_info=None):
         if not config.get(CONF_CUSTOM_CALENDARS):
             device_data = {
                 CONF_NAME: calendar.name,
-                CONF_DEVICE_ID: calendar.name
+                CONF_DEVICE_ID: calendar.name,
+                CONF_COLOR: color,
             }
             calendar_devices.append(
                 WebDavCalendarEventDevice(hass, device_data, calendar)
@@ -107,7 +115,16 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
     def __init__(self, hass, device_data, calendar, all_day=False,
                  search=None):
         """Create the WebDav Calendar Event Device."""
-        self.data = WebDavCalendarData(calendar, all_day, search)
+        persistence_file = ".{}{}".format(device_data[CONF_NAME], PERSISTENCE)
+        hass.data[DOMAIN][device_data[CONF_NAME]] = \
+            EventData(hass, persistence_file)
+
+        self.data = WebDavCalendarData(calendar,
+                                       all_day,
+                                       search,
+                                       device_data[CONF_NAME],
+                                       hass,
+                                       device_data.get(CONF_COLOR))
         super().__init__(hass, device_data)
 
     @property
@@ -124,11 +141,15 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
 class WebDavCalendarData(object):
     """Class to utilize the calendar dav client object to get next event."""
 
-    def __init__(self, calendar, include_all_day, search):
+    def __init__(self, calendar, include_all_day, search, name,
+                 hass, color=None):
         """Set up how we are going to search the WebDav calendar."""
         self.calendar = calendar
         self.include_all_day = include_all_day
         self.search = search
+        self.hass = hass
+        self._name = name
+        self.color = color
         self.event = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -140,6 +161,23 @@ class WebDavCalendarData(object):
             dt.start_of_local_day(),
             dt.start_of_local_day() + timedelta(days=1)
         )
+
+        cal_results = self.calendar.date_search(
+            dt.start_of_local_day() - timedelta(days=31),
+            dt.start_of_local_day() + timedelta(days=62)
+        )
+
+        for event in cal_results:
+            vevent = event.instance.vevent
+            self.hass.data[DOMAIN][self._name].async_add(
+                uid=vevent.uid.value,
+                title=vevent.summary.value,
+                start=self.get_hass_date(vevent.dtstart.value),
+                end=self.get_hass_date(self.get_end_date(vevent)),
+                location=self.get_attr_value(vevent, "location"),
+                color=self.color,
+                description=self.get_attr_value(vevent, "description"),
+                url=None)
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it
