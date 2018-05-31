@@ -154,8 +154,8 @@ class Light(zha.Entity, light.Light):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await zha.safe_read(self._endpoint.on_off, ['on_off'])
-        self._state = result.get('on_off', self._state)
+        result = await zha.safe_read(self._endpoint.on_off, ['on_off'], False)
+        self._state = result.get('on_off', None)
 
         if self._supported_features & light.SUPPORT_BRIGHTNESS:
             result = await zha.safe_read(self._endpoint.level,
