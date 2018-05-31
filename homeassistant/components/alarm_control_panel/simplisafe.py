@@ -88,8 +88,8 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         if self._code is None:
             return None
         elif isinstance(self._code, str) and re.search('^\\d+$', self._code):
-            return '^\\d+$'
-        return '.+'
+            return 'Number'
+        return 'Any'
 
     @property
     def state(self):
