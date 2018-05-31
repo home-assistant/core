@@ -121,9 +121,9 @@ def async_setup(hass, config):
     port = conf.get(CONF_PORT)
     overrides = conf.get(CONF_OVERRIDE, [])
     x10_devices = conf.get(CONF_X10, [])
-    x10_all_units_off = conf.get(CONF_X10_ALL_UNITS_OFF)
-    x10_all_lights_on = conf.get(CONF_X10_ALL_LIGHTS_ON)
-    x10_all_lights_off = conf.get(CONF_X10_ALL_LIGHTS_OFF)
+    x10_all_units_off_housecode = conf.get(CONF_X10_ALL_UNITS_OFF)
+    x10_all_lights_on_housecode = conf.get(CONF_X10_ALL_LIGHTS_ON)
+    x10_all_lights_off_housecode = conf.get(CONF_X10_ALL_LIGHTS_OFF)
 
     @callback
     def async_plm_new_device(device):
@@ -252,19 +252,16 @@ def async_setup(hass, config):
 
     plm.devices.add_device_callback(async_plm_new_device)
 
-    if x10_all_units_off:
-        _LOGGER.debug("Adding X10 All Units Off device")
-        device = plm.add_x10_device(x10_all_units_off,
+    if x10_all_units_off_housecode:
+        device = plm.add_x10_device(x10_all_units_off_housecode,
                                     20,
                                     'allunitsoff')
-    if x10_all_lights_on:
-        _LOGGER.debug("Adding X10 All Lights On device")
-        device = plm.add_x10_device(x10_all_lights_on,
+    if x10_all_lights_on_housecode:
+        device = plm.add_x10_device(x10_all_lights_on_housecode,
                                     21,
                                     'alllightson')
-    if x10_all_lights_off:
-        _LOGGER.debug("Adding X10 All Lights Off device")
-        device = plm.add_x10_device(x10_all_lights_off,
+    if x10_all_lights_off_housecode:
+        device = plm.add_x10_device(x10_all_lights_housecode,
                                     22,
                                     'alllightsoff')
     for device in x10_devices:
