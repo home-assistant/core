@@ -86,7 +86,7 @@ aiodns==1.1.1
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.3.0
+aiohue==1.5.0
 
 # homeassistant.components.sensor.imap
 aioimaplib==0.7.13
@@ -389,7 +389,7 @@ hipnotify==1.0.8
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180526.4
+home-assistant-frontend==20180531.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.6
@@ -1185,6 +1185,9 @@ sharp_aquos_rc==0.3.2
 
 # homeassistant.components.sensor.shodan
 shodan==1.7.7
+
+# homeassistant.components.notify.simplepush
+simplepush==1.1.4
 
 # homeassistant.components.alarm_control_panel.simplisafe
 simplisafe-python==1.0.5

@@ -427,15 +427,18 @@ class SonosDevice(MediaPlayerDevice):
         self.update_volume()
 
         self._favorites = []
-        for fav in self.soco.music_library.get_sonos_favorites():
-            # SoCo 0.14 raises a generic Exception on invalid xml in favorites.
-            # Filter those out now so our list is safe to use.
-            try:
-                if fav.reference.get_uri():
-                    self._favorites.append(fav)
-            # pylint: disable=broad-except
-            except Exception:
-                _LOGGER.debug("Ignoring invalid favorite '%s'", fav.title)
+        # SoCo 0.14 raises a generic Exception on invalid xml in favorites.
+        # Filter those out now so our list is safe to use.
+        # pylint: disable=broad-except
+        try:
+            for fav in self.soco.music_library.get_sonos_favorites():
+                try:
+                    if fav.reference.get_uri():
+                        self._favorites.append(fav)
+                except Exception:
+                    _LOGGER.debug("Ignoring invalid favorite '%s'", fav.title)
+        except Exception:
+            _LOGGER.debug("Ignoring invalid favorite list")
 
     def _radio_artwork(self, url):
         """Return the private URL with artwork for a radio stream."""
