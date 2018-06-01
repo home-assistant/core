@@ -1033,7 +1033,7 @@ python-mpd2==1.0.0
 python-mystrom==0.4.2
 
 # homeassistant.components.nest
-python-nest==4.0.0
+python-nest==4.0.1
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.6.1
