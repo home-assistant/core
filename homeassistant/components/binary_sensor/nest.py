@@ -8,9 +8,9 @@ from itertools import chain
 import logging
 
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
+from homeassistant.components.nest import DATA_NEST
 from homeassistant.components.sensor.nest import NestSensor
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.components.nest import DATA_NEST
 
 DEPENDENCIES = ['nest']
 

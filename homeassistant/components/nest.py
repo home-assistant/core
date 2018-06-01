@@ -4,18 +4,20 @@ Support for Nest devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/nest/
 """
+from concurrent.futures import ThreadPoolExecutor
 import logging
 import socket
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
 from homeassistant.const import (
     CONF_STRUCTURE, CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
-    CONF_MONITORED_CONDITIONS)
+    CONF_MONITORED_CONDITIONS,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers import discovery, config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['python-nest==4.0.0']
+REQUIREMENTS = ['python-nest==4.0.1']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'nest'
 
 DATA_NEST = 'nest'
+
+SIGNAL_NEST_UPDATE = 'nest_update'
 
 NEST_CONFIG_FILE = 'nest.conf'
 CONF_CLIENT_ID = 'client_id'
@@ -51,23 +55,44 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def request_configuration(nest, hass, config):
+async def async_nest_update_event_broker(hass, nest):
+    """
+    Dispatch SIGNAL_NEST_UPDATE to devices when nest stream API received data.
+
+    nest.update_event.wait will block the thread in most of time,
+    so specific an executor to save default thread pool.
+    """
+    _LOGGER.debug("listening nest.update_event")
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        while True:
+            await hass.loop.run_in_executor(executor, nest.update_event.wait)
+            if hass.is_running:
+                nest.update_event.clear()
+                _LOGGER.debug("dispatching nest data update")
+                async_dispatcher_send(hass, SIGNAL_NEST_UPDATE)
+            else:
+                return
+
+
+async def async_request_configuration(nest, hass, config):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
     if 'nest' in _CONFIGURING:
         _LOGGER.debug("configurator failed")
-        configurator.notify_errors(
+        configurator.async_notify_errors(
             _CONFIGURING['nest'], "Failed to configure, please try again.")
         return
 
-    def nest_configuration_callback(data):
+    async def async_nest_config_callback(data):
         """Run when the configuration callback is called."""
         _LOGGER.debug("configurator callback")
         pin = data.get('pin')
-        setup_nest(hass, nest, config, pin=pin)
+        if await async_setup_nest(hass, nest, config, pin=pin):
+            # start nest update event listener as we missed startup hook
+            hass.async_add_job(async_nest_update_event_broker, hass, nest)
 
-    _CONFIGURING['nest'] = configurator.request_config(
-        "Nest", nest_configuration_callback,
+    _CONFIGURING['nest'] = configurator.async_request_config(
+        "Nest", async_nest_config_callback,
         description=('To configure Nest, click Request Authorization below, '
                      'log into your Nest account, '
                      'and then enter the resulting PIN'),
@@ -78,60 +103,47 @@ def request_configuration(nest, hass, config):
     )
 
 
-def setup_nest(hass, nest, config, pin=None):
+async def async_setup_nest(hass, nest, config, pin=None):
     """Set up the Nest devices."""
+    from nest.nest import AuthorizationError, APIError
     if pin is not None:
         _LOGGER.debug("pin acquired, requesting access token")
-        nest.request_token(pin)
+        error_message = None
+        try:
+            nest.request_token(pin)
+        except AuthorizationError as auth_error:
+            error_message = "Nest authorization failed: {}".format(auth_error)
+        except APIError as api_error:
+            error_message = "Failed to call Nest API: {}".format(api_error)
+
+        if error_message is not None:
+            _LOGGER.warning(error_message)
+            hass.components.configurator.async_notify_errors(
+                _CONFIGURING['nest'], error_message)
+            return False
 
     if nest.access_token is None:
         _LOGGER.debug("no access_token, requesting configuration")
-        request_configuration(nest, hass, config)
-        return
+        await async_request_configuration(nest, hass, config)
+        return False
 
     if 'nest' in _CONFIGURING:
         _LOGGER.debug("configuration done")
         configurator = hass.components.configurator
-        configurator.request_done(_CONFIGURING.pop('nest'))
+        configurator.async_request_done(_CONFIGURING.pop('nest'))
 
     _LOGGER.debug("proceeding with setup")
     conf = config[DOMAIN]
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
 
-    _LOGGER.debug("proceeding with discovery")
-    discovery.load_platform(hass, 'climate', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
-
-    sensor_config = conf.get(CONF_SENSORS, {})
-    discovery.load_platform(hass, 'sensor', DOMAIN, sensor_config, config)
-
-    binary_sensor_config = conf.get(CONF_BINARY_SENSORS, {})
-    discovery.load_platform(hass, 'binary_sensor', DOMAIN,
-                            binary_sensor_config, config)
-
-    _LOGGER.debug("setup done")
-
-    return True
-
-
-def setup(hass, config):
-    """Set up the Nest thermostat component."""
-    import nest
-
-    if 'nest' in _CONFIGURING:
-        return
-
-    conf = config[DOMAIN]
-    client_id = conf[CONF_CLIENT_ID]
-    client_secret = conf[CONF_CLIENT_SECRET]
-    filename = config.get(CONF_FILENAME, NEST_CONFIG_FILE)
-
-    access_token_cache_file = hass.config.path(filename)
-
-    nest = nest.Nest(
-        access_token_cache_file=access_token_cache_file,
-        client_id=client_id, client_secret=client_secret)
-    setup_nest(hass, nest, config)
+    for component, discovered in [
+            ('climate', {}),
+            ('camera', {}),
+            ('sensor', conf.get(CONF_SENSORS, {})),
+            ('binary_sensor', conf.get(CONF_BINARY_SENSORS, {}))]:
+        _LOGGER.debug("proceeding with discovery -- %s", component)
+        hass.async_add_job(discovery.async_load_platform,
+                           hass, component, DOMAIN, discovered, config)
 
     def set_mode(service):
         """Set the home/away mode for a Nest structure."""
@@ -148,8 +160,46 @@ def setup(hass, config):
                 _LOGGER.error("Invalid structure %s",
                               service.data[ATTR_STRUCTURE])
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, 'set_mode', set_mode, schema=AWAY_SCHEMA)
+
+    def start_up(event):
+        """Start Nest update event listener."""
+        hass.async_add_job(async_nest_update_event_broker, hass, nest)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_up)
+
+    def shut_down(event):
+        """Stop Nest update event listener."""
+        if nest:
+            nest.update_event.set()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
+
+    _LOGGER.debug("async_setup_nest is done")
+
+    return True
+
+
+async def async_setup(hass, config):
+    """Set up Nest components."""
+    from nest import Nest
+
+    if 'nest' in _CONFIGURING:
+        return
+
+    conf = config[DOMAIN]
+    client_id = conf[CONF_CLIENT_ID]
+    client_secret = conf[CONF_CLIENT_SECRET]
+    filename = config.get(CONF_FILENAME, NEST_CONFIG_FILE)
+
+    access_token_cache_file = hass.config.path(filename)
+
+    nest = Nest(
+        access_token_cache_file=access_token_cache_file,
+        client_id=client_id, client_secret=client_secret)
+
+    await async_setup_nest(hass, nest, config)
 
     return True
 
