@@ -52,7 +52,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the SNMP switch."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -66,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     payload_on = config.get(CONF_PAYLOAD_ON)
     payload_off = config.get(CONF_PAYLOAD_OFF)
 
-    add_devices(
+    async_add_devices(
         [SnmpSwitch(name, host, port, community, baseoid, command_oid, version,
                     payload_on, payload_off,
                     command_payload_on, command_payload_off)], True)
@@ -79,10 +80,11 @@ class SnmpSwitch(SwitchDevice):
                  baseoid, commandoid, version, payload_on, payload_off,
                  command_payload_on, command_payload_off):
         """Initialize the switch."""
+        from pysnmp.hlapi.asyncio import (
+            CommunityData, ContextData, SnmpEngine,
+            UdpTransportTarget)
+
         self._name = name
-        self._host = host
-        self._port = port
-        self._community = community
         self._baseoid = baseoid
 
         """Set the command OID to the base OID if command OID is unset"""
@@ -90,40 +92,38 @@ class SnmpSwitch(SwitchDevice):
         self._command_payload_on = command_payload_on or payload_on
         self._command_payload_off = command_payload_off or payload_off
 
-        self._version = SNMP_VERSIONS[version]
         self._state = None
         self._payload_on = payload_on
         self._payload_off = payload_off
 
-    def turn_on(self, **kwargs):
+        self._request_args = [
+            SnmpEngine(),
+            CommunityData(community, mpModel=SNMP_VERSIONS[version]),
+            UdpTransportTarget((host, port)),
+            ContextData()
+        ]
+
+    async def async_turn_on(self, **kwargs):
         """Turn on the switch."""
         from pyasn1.type.univ import (Integer)
 
-        self._set(Integer(self._command_payload_on))
+        await self._set(Integer(self._command_payload_on))
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn off the switch."""
         from pyasn1.type.univ import (Integer)
 
-        self._set(Integer(self._command_payload_off))
+        await self._set(Integer(self._command_payload_off))
 
-    def update(self):
+    async def async_update(self):
         """Update the state."""
-        from pysnmp.hlapi import (
-            getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
-            ObjectType, ObjectIdentity)
-
+        from pysnmp.hlapi.asyncio import (getCmd, ObjectType, ObjectIdentity)
         from pyasn1.type.univ import (Integer)
 
-        request = getCmd(
-            SnmpEngine(),
-            CommunityData(self._community, mpModel=self._version),
-            UdpTransportTarget((self._host, self._port)),
-            ContextData(),
+        errindication, errstatus, errindex, restable = await getCmd(
+            *self._request_args,
             ObjectType(ObjectIdentity(self._baseoid))
         )
-
-        errindication, errstatus, errindex, restable = next(request)
 
         if errindication:
             _LOGGER.error("SNMP error: %s", errindication)
@@ -149,17 +149,10 @@ class SnmpSwitch(SwitchDevice):
         """Return true if switch is on; False if off. None if unknown."""
         return self._state
 
-    def _set(self, value):
-        from pysnmp.hlapi import (
-            setCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
-            ObjectType, ObjectIdentity)
+    async def _set(self, value):
+        from pysnmp.hlapi.asyncio import (setCmd, ObjectType, ObjectIdentity)
 
-        request = setCmd(
-            SnmpEngine(),
-            CommunityData(self._community, mpModel=self._version),
-            UdpTransportTarget((self._host, self._port)),
-            ContextData(),
+        await setCmd(
+            *self._request_args,
             ObjectType(ObjectIdentity(self._commandoid), value)
         )
-
-        next(request)
