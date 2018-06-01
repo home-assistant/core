@@ -102,14 +102,14 @@ class NestThermostat(ClimateDevice):
         """Do not need poll thanks using Nest streaming API."""
         return False
 
-    async def async_update_state(self):
-        """Update device state."""
-        await self.async_update_ha_state(True)
-
     async def async_added_to_hass(self):
         """Register update signal handler."""
+        async def async_update_state():
+            """Update device state."""
+            await self.async_update_ha_state(True)
+
         async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE,
-                                 self.async_update_state)
+                                 async_update_state)
 
     @property
     def supported_features(self):
@@ -199,7 +199,7 @@ class NestThermostat(ClimateDevice):
             _LOGGER.error("An error occurred while setting temperature: %s",
                           api_error)
             # restore target temperature
-            self.hass.add_job(self.async_update_state)
+            self.schedule_update_ha_state(True)
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
