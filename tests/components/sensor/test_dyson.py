@@ -83,8 +83,7 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_filter_life_sensor(self):
         """Test filter life sensor with no value."""
-        sensor = dyson.DysonFilterLifeSensor(self.hass,
-                                             _get_device_without_state())
+        sensor = dyson.DysonFilterLifeSensor(_get_device_without_state())
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
         self.assertIsNone(sensor.state)
@@ -95,7 +94,7 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_filter_life_sensor_with_values(self):
         """Test filter sensor with values."""
-        sensor = dyson.DysonFilterLifeSensor(self.hass, _get_with_state())
+        sensor = dyson.DysonFilterLifeSensor(_get_with_state())
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
         self.assertEqual(sensor.state, 100)
@@ -106,8 +105,7 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_dust_sensor(self):
         """Test dust sensor with no value."""
-        sensor = dyson.DysonDustSensor(self.hass,
-                                       _get_device_without_state())
+        sensor = dyson.DysonDustSensor(_get_device_without_state())
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
         self.assertIsNone(sensor.state)
@@ -117,7 +115,7 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_dust_sensor_with_values(self):
         """Test dust sensor with values."""
-        sensor = dyson.DysonDustSensor(self.hass, _get_with_state())
+        sensor = dyson.DysonDustSensor(_get_with_state())
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
         self.assertEqual(sensor.state, 5)
@@ -127,8 +125,7 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_humidity_sensor(self):
         """Test humidity sensor with no value."""
-        sensor = dyson.DysonHumiditySensor(self.hass,
-                                           _get_device_without_state())
+        sensor = dyson.DysonHumiditySensor(_get_device_without_state())
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
         self.assertIsNone(sensor.state)
@@ -138,7 +135,7 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_humidity_sensor_with_values(self):
         """Test humidity sensor with values."""
-        sensor = dyson.DysonHumiditySensor(self.hass, _get_with_state())
+        sensor = dyson.DysonHumiditySensor(_get_with_state())
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
         self.assertEqual(sensor.state, 45)
@@ -148,8 +145,7 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_humidity_standby_monitoring(self):
         """Test humidity sensor while device is in standby monitoring."""
-        sensor = dyson.DysonHumiditySensor(self.hass,
-                                           _get_with_standby_monitoring())
+        sensor = dyson.DysonHumiditySensor(_get_with_standby_monitoring())
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
         self.assertEqual(sensor.state, STATE_OFF)
@@ -159,8 +155,7 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_temperature_sensor(self):
         """Test temperature sensor with no value."""
-        sensor = dyson.DysonTemperatureSensor(self.hass,
-                                              _get_device_without_state(),
+        sensor = dyson.DysonTemperatureSensor(_get_device_without_state(),
                                               TEMP_CELSIUS)
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
@@ -171,8 +166,7 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_temperature_sensor_with_values(self):
         """Test temperature sensor with values."""
-        sensor = dyson.DysonTemperatureSensor(self.hass,
-                                              _get_with_state(),
+        sensor = dyson.DysonTemperatureSensor(_get_with_state(),
                                               TEMP_CELSIUS)
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
@@ -181,8 +175,7 @@ class DysonTest(unittest.TestCase):
         self.assertEqual(sensor.name, "Device_name Temperature")
         self.assertEqual(sensor.entity_id, "sensor.dyson_1")
 
-        sensor = dyson.DysonTemperatureSensor(self.hass,
-                                              _get_with_state(),
+        sensor = dyson.DysonTemperatureSensor(_get_with_state(),
                                               TEMP_FAHRENHEIT)
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
@@ -193,8 +186,7 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_temperature_standby_monitoring(self):
         """Test temperature sensor while device is in standby monitoring."""
-        sensor = dyson.DysonTemperatureSensor(self.hass,
-                                              _get_with_standby_monitoring(),
+        sensor = dyson.DysonTemperatureSensor(_get_with_standby_monitoring(),
                                               TEMP_CELSIUS)
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
@@ -205,8 +197,7 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_air_quality_sensor(self):
         """Test air quality sensor with no value."""
-        sensor = dyson.DysonAirQualitySensor(self.hass,
-                                             _get_device_without_state())
+        sensor = dyson.DysonAirQualitySensor(_get_device_without_state())
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
         self.assertIsNone(sensor.state)
@@ -216,7 +207,7 @@ class DysonTest(unittest.TestCase):
 
     def test_dyson_air_quality_sensor_with_values(self):
         """Test air quality sensor with values."""
-        sensor = dyson.DysonAirQualitySensor(self.hass, _get_with_state())
+        sensor = dyson.DysonAirQualitySensor(_get_with_state())
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
         self.assertEqual(sensor.state, 2)
