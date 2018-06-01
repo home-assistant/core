@@ -33,6 +33,10 @@ SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
 MODE_RGB = 'rgb'
 MODE_RGBW = 'rgbw'
 
+# This mode enables white value to be controlled by brightness.
+# RGB value is ignored when this mode is specified.
+MODE_WHITE = 'w'
+
 # List of supported effects which aren't already declared in LIGHT
 EFFECT_RED_FADE = 'red_fade'
 EFFECT_GREEN_FADE = 'green_fade'
@@ -84,7 +88,7 @@ FLUX_EFFECT_LIST = [
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(ATTR_MODE, default=MODE_RGBW):
-        vol.All(cv.string, vol.In([MODE_RGBW, MODE_RGB])),
+        vol.All(cv.string, vol.In([MODE_RGBW, MODE_RGB, MODE_WHITE])),
     vol.Optional(CONF_PROTOCOL):
         vol.All(cv.string, vol.In(['ledenet'])),
 })
@@ -181,6 +185,9 @@ class FluxLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
+        if self._mode == MODE_WHITE:
+            return self.white_value
+
         return self._bulb.brightness
 
     @property
@@ -193,6 +200,9 @@ class FluxLight(Light):
         """Flag supported features."""
         if self._mode == MODE_RGBW:
             return SUPPORT_FLUX_LED | SUPPORT_WHITE_VALUE
+
+        if self._mode == MODE_WHITE:
+            return SUPPORT_BRIGHTNESS
 
         return SUPPORT_FLUX_LED
 
@@ -250,8 +260,15 @@ class FluxLight(Light):
         if white is None and self._mode == MODE_RGBW:
             white = self.white_value
 
-        if self._mode == MODE_RGBW:
+        # handle W only mode (use brightness instead of white value)
+        if self._mode == MODE_WHITE:
+            self._bulb.setRgbw(0, 0, 0, w=brightness)
+
+        # handle RGBW mode
+        elif self._mode == MODE_RGBW:
             self._bulb.setRgbw(*tuple(rgb), w=white, brightness=brightness)
+
+        # handle RGB mode
         else:
             self._bulb.setRgb(*tuple(rgb), brightness=brightness)
 
