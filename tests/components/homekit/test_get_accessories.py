@@ -9,10 +9,11 @@ import homeassistant.components.climate as climate
 import homeassistant.components.media_player as media_player
 from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.components.homekit.const import (
-    CONF_FEATURE_LIST, FEATURE_ON_OFF)
+    CONF_FEATURE_LIST, FEATURE_ON_OFF, TYPE_OUTLET, TYPE_SWITCH)
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_TYPE, TEMP_CELSIUS,
+    TEMP_FAHRENHEIT)
 
 
 def test_not_supported(caplog):
@@ -129,17 +130,19 @@ def test_type_sensors(type_name, entity_id, state, attrs):
     assert mock_type.called
 
 
-@pytest.mark.parametrize('type_name, entity_id, state, attrs', [
-    ('Switch', 'automation.test', 'on', {}),
-    ('Switch', 'input_boolean.test', 'on', {}),
-    ('Switch', 'remote.test', 'on', {}),
-    ('Switch', 'script.test', 'on', {}),
-    ('Switch', 'switch.test', 'on', {}),
+@pytest.mark.parametrize('type_name, entity_id, state, attrs, config', [
+    ('Outlet', 'switch.test', 'on', {}, {CONF_TYPE: TYPE_OUTLET}),
+    ('Switch', 'automation.test', 'on', {}, {}),
+    ('Switch', 'input_boolean.test', 'on', {}, {}),
+    ('Switch', 'remote.test', 'on', {}, {}),
+    ('Switch', 'script.test', 'on', {}, {}),
+    ('Switch', 'switch.test', 'on', {}, {}),
+    ('Switch', 'switch.test', 'on', {}, {CONF_TYPE: TYPE_SWITCH}),
 ])
-def test_type_switches(type_name, entity_id, state, attrs):
+def test_type_switches(type_name, entity_id, state, attrs, config):
     """Test if switch types are associated correctly."""
     mock_type = Mock()
     with patch.dict(TYPES, {type_name: mock_type}):
         entity_state = State(entity_id, state, attrs)
-        get_accessory(None, None, entity_state, 2, {})
+        get_accessory(None, None, entity_state, 2, config)
     assert mock_type.called
