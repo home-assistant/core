@@ -53,9 +53,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the SNMP sensor."""
-    from pysnmp.hlapi import (
+    from pysnmp.hlapi.asyncio import (
         getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
         ObjectType, ObjectIdentity)
 
@@ -73,20 +74,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if value_template is not None:
         value_template.hass = hass
 
-    errindication, _, _, _ = next(
-        getCmd(SnmpEngine(),
-               CommunityData(community, mpModel=SNMP_VERSIONS[version]),
-               UdpTransportTarget((host, port)),
-               ContextData(),
-               ObjectType(ObjectIdentity(baseoid))))
+    request_args = [
+        SnmpEngine(),
+        CommunityData(community, mpModel=SNMP_VERSIONS[version]),
+        UdpTransportTarget((host, port)),
+        ContextData()
+    ]
+
+    errindication, _, _, _ = await getCmd(
+        *request_args,
+        ObjectType(ObjectIdentity(baseoid))
+    )
 
     if errindication and not accept_errors:
         _LOGGER.error("Please check the details in the configuration file")
         return False
-    data = SnmpData(
-        host, port, community, baseoid, version, accept_errors,
-        default_value)
-    add_devices([SnmpSensor(data, name, unit, value_template)], True)
+    data = SnmpData(request_args, baseoid, accept_errors, default_value)
+    async_add_devices([SnmpSensor(data, name, unit, value_template)], True)
 
 
 class SnmpSensor(Entity):
@@ -116,9 +120,9 @@ class SnmpSensor(Entity):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data and updates the states."""
-        self.data.update()
+        await self.data.async_update()
         value = self.data.value
 
         if value is None:
@@ -133,30 +137,22 @@ class SnmpSensor(Entity):
 class SnmpData:
     """Get the latest data and update the states."""
 
-    def __init__(self, host, port, community, baseoid, version, accept_errors,
-                 default_value):
+    def __init__(self, request_args, baseoid, accept_errors, default_value):
         """Initialize the data object."""
-        self._host = host
-        self._port = port
-        self._community = community
+        self._request_args = request_args
         self._baseoid = baseoid
-        self._version = SNMP_VERSIONS[version]
         self._accept_errors = accept_errors
         self._default_value = default_value
         self.value = None
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from the remote SNMP capable host."""
-        from pysnmp.hlapi import (
-            getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
-            ObjectType, ObjectIdentity)
-        errindication, errstatus, errindex, restable = next(
-            getCmd(SnmpEngine(),
-                   CommunityData(self._community, mpModel=self._version),
-                   UdpTransportTarget((self._host, self._port)),
-                   ContextData(),
-                   ObjectType(ObjectIdentity(self._baseoid)))
-            )
+        from pysnmp.hlapi.asyncio import (getCmd, ObjectType, ObjectIdentity)
+
+        errindication, errstatus, errindex, restable = await getCmd(
+            *self._request_args,
+            ObjectType(ObjectIdentity(self._baseoid))
+        )
 
         if errindication and not self._accept_errors:
             _LOGGER.error("SNMP error: %s", errindication)
