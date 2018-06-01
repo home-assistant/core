@@ -35,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SIDEBAR_TITLE): cv.string,
         vol.Optional(CONF_SIDEBAR_ICON, default=DEFAULT_ICON): cv.icon,
         vol.Optional(CONF_URL_PATH): cv.string,
-        vol.Optional(CONF_CONFIG): cv.match_all,
+        vol.Optional(CONF_CONFIG): dict,
         vol.Optional(CONF_WEBCOMPONENT_PATH): cv.isfile,
         vol.Optional(CONF_JS_URL): cv.string,
         vol.Optional(CONF_EMBED_IFRAME, default=False): cv.boolean,
@@ -57,15 +57,14 @@ async def async_setup(hass, config):
         if panel_path is None:
             panel_path = hass.config.path(PANEL_DIR, '{}.html'.format(name))
 
-        config = {
+        custom_panel_config = {
             'name': name,
             'embed_iframe': panel[CONF_EMBED_IFRAME],
             'trust_external': panel[CONF_TRUST_EXTERNAL_SCRIPT],
-            'config': panel.get(CONF_CONFIG),
         }
 
         if CONF_JS_URL in panel:
-            config['js_url'] = panel[CONF_JS_URL]
+            custom_panel_config['js_url'] = panel[CONF_JS_URL]
 
         elif not await hass.async_add_job(os.path.isfile, panel_path):
             _LOGGER.error('Unable to find webcomponent for %s: %s',
@@ -75,7 +74,15 @@ async def async_setup(hass, config):
         else:
             url = LEGACY_URL.format(name)
             hass.http.register_static_path(url, panel_path)
-            config['html_url'] = LEGACY_URL.format(name)
+            custom_panel_config['html_url'] = LEGACY_URL.format(name)
+
+        if CONF_CONFIG in panel:
+            # Make copy because we're mutating it
+            config = dict(panel[CONF_CONFIG])
+        else:
+            config = {}
+
+        config['_panel_custom'] = custom_panel_config
 
         await hass.components.frontend.async_register_built_in_panel(
             component_name='custom',

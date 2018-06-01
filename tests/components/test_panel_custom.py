@@ -39,7 +39,9 @@ async def test_webcomponent_custom_path(hass):
             'sidebar_title': 'Sidebar Title',
             'sidebar_icon': 'mdi:iconicon',
             'url_path': 'nice_url',
-            'config': 5,
+            'config': {
+                'hello': 'world',
+            }
         }
     }
 
@@ -58,11 +60,13 @@ async def test_webcomponent_custom_path(hass):
             panel = panels['nice_url']
 
             assert panel.config == {
-                'config': 5,
-                'html_url': '/api/panel_custom/todo-mvc',
-                'name': 'todo-mvc',
-                'embed_iframe': False,
-                'trust_external': False,
+                'hello': 'world',
+                '_panel_custom': {
+                    'html_url': '/api/panel_custom/todo-mvc',
+                    'name': 'todo-mvc',
+                    'embed_iframe': False,
+                    'trust_external': False,
+                },
             }
             assert panel.frontend_url_path == 'nice_url'
             assert panel.sidebar_icon == 'mdi:iconicon'
@@ -78,7 +82,9 @@ async def test_js_webcomponent(hass):
             'sidebar_title': 'Sidebar Title',
             'sidebar_icon': 'mdi:iconicon',
             'url_path': 'nice_url',
-            'config': 5,
+            'config': {
+                'hello': 'world',
+            },
             'embed_iframe': True,
             'trust_external_script': True,
         }
@@ -97,11 +103,13 @@ async def test_js_webcomponent(hass):
     panel = panels['nice_url']
 
     assert panel.config == {
-        'config': 5,
-        'js_url': '/local/bla.js',
-        'name': 'todo-mvc',
-        'embed_iframe': True,
-        'trust_external': True,
+        'hello': 'world',
+        '_panel_custom': {
+            'js_url': '/local/bla.js',
+            'name': 'todo-mvc',
+            'embed_iframe': True,
+            'trust_external': True,
+        }
     }
     assert panel.frontend_url_path == 'nice_url'
     assert panel.sidebar_icon == 'mdi:iconicon'
