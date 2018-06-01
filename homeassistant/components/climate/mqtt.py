@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO,
     ATTR_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_SWING_MODE, SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE,
-    SUPPORT_AUX_HEAT)
+    SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME, CONF_VALUE_TEMPLATE)
 from homeassistant.components.mqtt import (
@@ -26,6 +26,7 @@ from homeassistant.components.mqtt import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH)
+from homeassistant.util.temperature import convert as convert_temperature
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,8 +121,8 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
 
-    vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
-    vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): vol.Coerce(float)
 
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
@@ -636,18 +637,10 @@ class MqttClimate(MqttAvailability, ClimateDevice):
     def min_temp(self):
         """Return the minimum temperature."""
         # pylint: disable=no-member
-        if self._min_temp:
-            return self._min_temp
-
-        # get default temp from super class
-        return ClimateDevice.min_temp.fget(self)
+        return self._min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         # pylint: disable=no-member
-        if self._max_temp:
-            return self._max_temp
-
-        # Get default temp from super class
-        return ClimateDevice.max_temp.fget(self)
+        return self._max_temp
