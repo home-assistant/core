@@ -190,7 +190,7 @@ class dGarageCover(CoverDevice):
                 door_state_indicator = settings['doorStateIndicator']
                 state = STATES_MAP[int(door_state_indicator)]
 
-            _LOGGER.error("New state is: %(new_state)s", dict(new_state=state))
+            # _LOGGER.error("New state is: %(new_state)s", dict(new_state=state))
 
             self._socket.close()
             self._socket = None
