@@ -9,7 +9,7 @@ import homeassistant.components.climate as climate
 import homeassistant.components.media_player as media_player
 from homeassistant.components.homekit import get_accessory, TYPES
 from homeassistant.components.homekit.const import (
-    CONF_FEATURE_LIST, FEATURE_ON_OFF, TYPE_OUTLET)
+    CONF_FEATURE_LIST, FEATURE_ON_OFF, TYPE_OUTLET, TYPE_SWITCH)
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_TYPE, TEMP_CELSIUS,
