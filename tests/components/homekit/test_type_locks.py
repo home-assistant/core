@@ -9,7 +9,7 @@ from homeassistant.const import (
 from tests.common import async_mock_service
 
 
-async def test_lock_unlock(hass):
+async def test_lock_unlock(hass, hk_driver):
     """Test if accessory and HA are updated accordingly."""
     code = '1234'
     config = {ATTR_CODE: code}
@@ -17,7 +17,7 @@ async def test_lock_unlock(hass):
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = Lock(hass, 'Lock', entity_id, 2, config)
+    acc = Lock(hass, hk_driver, 'Lock', entity_id, 2, config)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -66,13 +66,13 @@ async def test_lock_unlock(hass):
 
 
 @pytest.mark.parametrize('config', [{}, {ATTR_CODE: None}])
-async def test_no_code(hass, config):
+async def test_no_code(hass, hk_driver, config):
     """Test accessory if lock doesn't require a code."""
     entity_id = 'lock.kitchen_door'
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = Lock(hass, 'Lock', entity_id, 2, config)
+    acc = Lock(hass, hk_driver, 'Lock', entity_id, 2, config)
 
     # Set from HomeKit
     call_lock = async_mock_service(hass, DOMAIN, 'lock')
