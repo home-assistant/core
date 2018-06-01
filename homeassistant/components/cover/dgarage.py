@@ -173,16 +173,17 @@ class dGarageCover(CoverDevice):
 
         response = ""
         while True:
-            r = self._socket.recv(1024)
-            r = r.decode("utf-8")
+            r = self._socket.recv(1)
             if not r:
                 break
+            r = r.decode("utf-8")
             response = response + r
-            if r.find("}") != -1:  # we have reach end of message
+            if response.find("}}") != -1:  # we have reach end of message
                 break
 
         try:
-            data = response
+            pos = response.find('{"ard_settings')
+            data = response[pos:]
             if data:
                 parsed = json.loads(data)
                 settings = parsed['ard_settings']
