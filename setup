@@ -1,0 +1,330 @@
+Script started on Sri 21 Ožu 2018 14:34:18
+]0;dadeky@dadeky-VirtualBox: ~/home-assistant[01;32mdadeky@dadeky-VirtualBox[00m:[01;34m~/home-assistant[00m$ clear[1Phassclear[1Phassclear[1Phassclear[Kscript/setup
+Installing test dependencies...
+Requirement already satisfied: tox in ./lib/python3.6/site-packages
+Requirement already satisfied: colorlog in ./lib/python3.6/site-packages
+Requirement already satisfied: py>=1.4.17 in ./lib/python3.6/site-packages (from tox)
+Requirement already satisfied: virtualenv>=1.11.2; python_version != "3.2" in ./lib/python3.6/site-packages (from tox)
+Requirement already satisfied: six in ./lib/python3.6/site-packages (from tox)
+Requirement already satisfied: pluggy<1.0,>=0.3.0 in ./lib/python3.6/site-packages (from tox)
+Obtaining file:///home/dadeky/home-assistant
+Requirement already satisfied: requests==2.18.4 in ./lib/python3.6/site-packages (from homeassistant==0.65.5)
+Requirement already satisfied: pyyaml<4,>=3.11 in ./lib/python3.6/site-packages (from homeassistant==0.65.5)
+Requirement already satisfied: pytz>=2017.02 in ./lib/python3.6/site-packages (from homeassistant==0.65.5)
+Requirement already satisfied: pip>=8.0.3 in ./lib/python3.6/site-packages (from homeassistant==0.65.5)
+Requirement already satisfied: jinja2>=2.10 in ./lib/python3.6/site-packages (from homeassistant==0.65.5)
+Requirement already satisfied: voluptuous==0.11.1 in ./lib/python3.6/site-packages (from homeassistant==0.65.5)
+Requirement already satisfied: typing<4,>=3 in ./lib/python3.6/site-packages (from homeassistant==0.65.5)
+Requirement already satisfied: aiohttp==3.0.6 in ./lib/python3.6/site-packages (from homeassistant==0.65.5)
+Requirement already satisfied: async_timeout==2.0.0 in ./lib/python3.6/site-packages (from homeassistant==0.65.5)
+Requirement already satisfied: astral==1.5 in ./lib/python3.6/site-packages (from homeassistant==0.65.5)
+Requirement already satisfied: certifi>=2017.4.17 in ./lib/python3.6/site-packages (from homeassistant==0.65.5)
+Requirement already satisfied: attrs==17.4.0 in ./lib/python3.6/site-packages (from homeassistant==0.65.5)
+Requirement already satisfied: urllib3<1.23,>=1.21.1 in ./lib/python3.6/site-packages (from requests==2.18.4->homeassistant==0.65.5)
+Requirement already satisfied: chardet<3.1.0,>=3.0.2 in ./lib/python3.6/site-packages (from requests==2.18.4->homeassistant==0.65.5)
+Requirement already satisfied: idna<2.7,>=2.5 in ./lib/python3.6/site-packages (from requests==2.18.4->homeassistant==0.65.5)
+Requirement already satisfied: MarkupSafe>=0.23 in ./lib/python3.6/site-packages (from jinja2>=2.10->homeassistant==0.65.5)
+Requirement already satisfied: multidict<5.0,>=4.0 in ./lib/python3.6/site-packages (from aiohttp==3.0.6->homeassistant==0.65.5)
+Requirement already satisfied: idna-ssl>=1.0 in ./lib/python3.6/site-packages (from aiohttp==3.0.6->homeassistant==0.65.5)
+Requirement already satisfied: yarl<2.0,>=1.0 in ./lib/python3.6/site-packages (from aiohttp==3.0.6->homeassistant==0.65.5)
+Installing collected packages: homeassistant
+  Found existing installation: homeassistant 0.65.5
+    Uninstalling homeassistant-0.65.5:
+      Successfully uninstalled homeassistant-0.65.5
+  Running setup.py develop for homeassistant
+Successfully installed homeassistant
+]0;dadeky@dadeky-VirtualBox: ~/home-assistant[01;32mdadeky@dadeky-VirtualBox[00m:[01;34m~/home-assistant[00m$ HASS_NO_MONKEY=1 hass
+Config directory: /home/dadeky/.homeassistant
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=homeassistant, service=turn_off>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=homeassistant, service=turn_on>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=homeassistant, service=toggle>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=homeassistant, service=stop>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=homeassistant, service=restart>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=homeassistant, service=check_config>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=homeassistant, service=reload_core_config>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=persistent_notification, service=create>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=persistent_notification, service=dismiss>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.bootstrap] Home Assistant core initialized[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.loader] Loaded history from homeassistant.components.history[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.loader] Loaded recorder from homeassistant.components.recorder[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.loader] Loaded http from homeassistant.components.http[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.loader] Loaded frontend from homeassistant.components.frontend[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.loader] Loaded api from homeassistant.components.api[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.loader] Loaded websocket_api from homeassistant.components.websocket_api[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.loader] Loaded system_log from homeassistant.components.system_log[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.loader] Loaded mqtt from homeassistant.components.mqtt[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.setup] Setting up mqtt[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.setup] Setting up http[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.setup] Setup of domain http took 0.0 seconds.[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=http>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.setup] Setting up api[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.setup] Setting up system_log[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=system_log, service=clear>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=system_log, service=write>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.setup] Setup of domain system_log took 0.0 seconds.[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=system_log>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.setup] Setting up websocket_api[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.setup] Setup of domain websocket_api took 0.0 seconds.[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=websocket_api>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.setup] Setup of domain api took 0.0 seconds.[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=api>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.setup] Setting up recorder[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=recorder, service=purge>[0m
+[32m2018-03-21 14:34:40 INFO (MainThread) [homeassistant.setup] Setting up frontend[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=mqtt, service=publish>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain mqtt took 0.7 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=mqtt>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain recorder took 0.5 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=recorder>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up history[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain history took 0.0 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=history>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain frontend took 0.3 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=frontend>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded group from homeassistant.components.group[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up group[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=group, service=reload>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=group, service=set>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=group, service=remove>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=group, service=set_visibility>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain group took 0.0 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=group>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded zone from homeassistant.components.zone[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up zone[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded discovery from homeassistant.components.discovery[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded sun from homeassistant.components.sun[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up sun[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain sun took 0.0 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=sun>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded switch from homeassistant.components.switch[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded switch.homebound from homeassistant.components.switch.homebound[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded script from homeassistant.components.script[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded automation from homeassistant.components.automation[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded automation.zone from homeassistant.components.automation.zone[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded updater from homeassistant.components.updater[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded device_tracker from homeassistant.components.device_tracker[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded device_tracker.mqtt_json from homeassistant.components.device_tracker.mqtt_json[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded sensor from homeassistant.components.sensor[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded sensor.yr from homeassistant.components.sensor.yr[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up sensor[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded tts from homeassistant.components.tts[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded tts.google from homeassistant.components.tts.google[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded cover from homeassistant.components.cover[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded cover.dgarage from homeassistant.components.cover.dgarage[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded cloud from homeassistant.components.cloud[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded config from homeassistant.components.config[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded logbook from homeassistant.components.logbook[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded map from homeassistant.components.map[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up map[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain map took 0.0 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=map>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded conversation from homeassistant.components.conversation[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=zone.otvaranje, old_state=None, new_state=<state zone.otvaranje=zoning; hidden=True, latitude=46.170397, longitude=16.390998, radius=200.0, friendly_name=Otvaranje @ 2018-03-21T14:34:41.565621+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=zone.home, old_state=None, new_state=<state zone.home=zoning; hidden=True, latitude=46.170443, longitude=16.390585, radius=50.0, friendly_name=Home @ 2018-03-21T14:34:41.566912+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=zone.boxmark, old_state=None, new_state=<state zone.boxmark=zoning; hidden=True, latitude=46.3048519, longitude=16.4104943, radius=250.0, friendly_name=Boxmark @ 2018-03-21T14:34:41.568105+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=zone.skola, old_state=None, new_state=<state zone.skola=zoning; hidden=True, latitude=46.17139, longitude=16.3864, radius=100.0, friendly_name=Škola @ 2018-03-21T14:34:41.568700+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=zone.bolnica, old_state=None, new_state=<state zone.bolnica=zoning; hidden=True, latitude=46.210708, longitude=16.41968, radius=150.0, friendly_name=Bolnica @ 2018-03-21T14:34:41.569056+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=sun.sun, old_state=None, new_state=<state sun.sun=above_horizon; next_dawn=2018-03-22T04:24:30+00:00, next_dusk=2018-03-21T17:37:00+00:00, next_midnight=2018-03-21T23:01:19+00:00, next_noon=2018-03-22T11:01:26+00:00, next_rising=2018-03-22T04:54:27+00:00, next_setting=2018-03-21T17:07:05+00:00, elevation=33.43, azimuth=227.96, friendly_name=Sun @ 2018-03-21T14:34:41.569398+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up discovery[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain discovery took 0.0 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=discovery>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain zone took 0.3 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=zone>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up switch[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up script[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=script, service=reload>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=script, service=turn_on>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=script, service=turn_off>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=script, service=toggle>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain script took 0.0 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=script>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up automation[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up cover[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up config[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up logbook[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up conversation[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=conversation, service=process>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain conversation took 0.0 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=conversation>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.components.switch] Setting up switch.homebound[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.components.cover] Setting up cover.dgarage[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded config.group from homeassistant.components.config.group[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=config.group>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded config.script from homeassistant.components.config.script[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=config.script>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded config.entity_registry from homeassistant.components.config.entity_registry[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=config.entity_registry>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded config.hassbian from homeassistant.components.config.hassbian[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded config.customize from homeassistant.components.config.customize[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=config.customize>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded config.core from homeassistant.components.config.core[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=config.core>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.loader] Loaded config.automation from homeassistant.components.config.automation[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=config.automation>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=logbook, service=log>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain logbook took 0.0 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=logbook>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up device_tracker[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain config took 0.1 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=config>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=switch.darko_ide_doma, old_state=None, new_state=<state switch.darko_ide_doma=off; friendly_name=Darko ide doma @ 2018-03-21T14:34:41.672992+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=cover.garazna_vrata, old_state=None, new_state=<state cover.garazna_vrata=unknown; friendly_name=Garažna vrata, supported_features=11, device_class=garage @ 2018-03-21T14:34:41.688400+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event call_service[L]: domain=group, service=set, service_data=object_id=all_switches, name=all switches, entities=['switch.darko_ide_doma'], visible=False, service_call_id=139773676593672-1>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event call_service[L]: domain=group, service=set, service_data=object_id=all_covers, name=all covers, entities=['cover.garazna_vrata'], visible=False, service_call_id=139773676593672-2>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=group.all_switches, old_state=None, new_state=<state group.all_switches=off; entity_id=('switch.darko_ide_doma',), order=0, auto=True, friendly_name=all switches, hidden=True @ 2018-03-21T14:34:41.719654+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.components.device_tracker] Setting up device_tracker.mqtt_json[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=switch, service=turn_off>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=switch, service=turn_on>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=switch, service=toggle>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain switch took 0.1 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=switch>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=group.all_covers, old_state=None, new_state=<state group.all_covers=unknown; entity_id=('cover.garazna_vrata',), order=1, auto=True, friendly_name=all covers, hidden=True @ 2018-03-21T14:34:41.723889+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_executed[L]: service_call_id=139773676593672-1>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=cover, service=open_cover>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=cover, service=close_cover>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=cover, service=set_cover_position>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=cover, service=stop_cover>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=cover, service=open_cover_tilt>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=cover, service=close_cover_tilt>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=cover, service=stop_cover_tilt>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=cover, service=set_cover_tilt_position>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain cover took 0.1 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=cover>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_executed[L]: service_call_id=139773676593672-2>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=device_tracker, service=see>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event call_service[L]: domain=group, service=set, service_data=object_id=all_devices, name=all devices, entities=['device_tracker.darko', 'device_tracker.marija'], visible=False, service_call_id=139773676593672-3>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=group.all_devices, old_state=None, new_state=<state group.all_devices=unknown; entity_id=('device_tracker.darko', 'device_tracker.marija'), order=2, auto=True, friendly_name=all devices, hidden=True @ 2018-03-21T14:34:41.735305+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_executed[L]: service_call_id=139773676593672-3>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=automation.otvori_garazna_vrata, old_state=None, new_state=<state automation.otvori_garazna_vrata=off; last_triggered=2018-03-20T15:02:29.518747+00:00, friendly_name=Otvori garažna vrata @ 2018-03-21T14:34:41.766029+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=device_tracker.darko, old_state=None, new_state=<state device_tracker.darko=home; source_type=gps, latitude=46.1704579, longitude=16.3905909, gps_accuracy=19, friendly_name=darko, entity_picture=/local/darko.jpg @ 2018-03-21T14:34:41.767249+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=device_tracker.marija, old_state=None, new_state=<state device_tracker.marija=not_home; source_type=None, friendly_name=marija, entity_picture=/local/marija.jpg @ 2018-03-21T14:34:41.768937+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=automation, service=trigger>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=automation, service=reload>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=automation, service=toggle>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=automation, service=turn_on>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=automation, service=turn_off>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain automation took 0.2 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=automation>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=group.all_devices, old_state=<state group.all_devices=unknown; entity_id=('device_tracker.darko', 'device_tracker.marija'), order=2, auto=True, friendly_name=all devices, hidden=True @ 2018-03-21T14:34:41.735305+01:00>, new_state=<state group.all_devices=home; entity_id=('device_tracker.darko', 'device_tracker.marija'), order=2, auto=True, friendly_name=all devices, hidden=True @ 2018-03-21T14:34:41.775803+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event call_service[L]: domain=group, service=set, service_data=object_id=all_automations, name=all automations, entities=['automation.otvori_garazna_vrata'], visible=False, service_call_id=139773676593672-4>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain device_tracker took 0.1 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=device_tracker>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=group.all_automations, old_state=None, new_state=<state group.all_automations=off; entity_id=('automation.otvori_garazna_vrata',), order=3, auto=True, friendly_name=all automations, hidden=True @ 2018-03-21T14:34:41.785815+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_executed[L]: service_call_id=139773676593672-4>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up updater[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain updater took 0.0 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=updater>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.components.sensor] Setting up sensor.yr[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=sensor.yr_symbol, old_state=None, new_state=<state sensor.yr_symbol=unknown; attribution=Weather forecast from met.no, delivered by the Norwegian Meteorological Institute., friendly_name=yr Symbol, entity_picture=https://api.met.no/weatherapi/weathericon/1.1/?symbol=None;content_type=image/png @ 2018-03-21T14:34:41.904279+01:00>>[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up tts[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setting up cloud[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.setup] Setup of domain cloud took 0.0 seconds.[0m
+[32m2018-03-21 14:34:41 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=cloud>[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=tts, service=google_say>[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.core] Bus:Handling <Event service_registered[L]: domain=tts, service=clear_cache>[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.setup] Setup of domain tts took 0.1 seconds.[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=tts>[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=sensor.yr_symbol, old_state=<state sensor.yr_symbol=unknown; attribution=Weather forecast from met.no, delivered by the Norwegian Meteorological Institute., friendly_name=yr Symbol, entity_picture=https://api.met.no/weatherapi/weathericon/1.1/?symbol=None;content_type=image/png @ 2018-03-21T14:34:41.904279+01:00>, new_state=<state sensor.yr_symbol=4; attribution=Weather forecast from met.no, delivered by the Norwegian Meteorological Institute., friendly_name=yr Symbol, entity_picture=https://api.met.no/weatherapi/weathericon/1.1/?symbol=4;content_type=image/png @ 2018-03-21T14:34:42.358755+01:00>>[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.setup] Setup of domain sensor took 0.9 seconds.[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.core] Bus:Handling <Event component_loaded[L]: component=sensor>[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.bootstrap] Home Assistant initialized in 2.06s[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.core] Starting Home Assistant core loop[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.core] Starting Home Assistant[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.core] Bus:Handling <Event homeassistant_start[L]>[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.components.automation] Initialized trigger Otvori garažna vrata[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=automation.otvori_garazna_vrata, old_state=<state automation.otvori_garazna_vrata=off; last_triggered=2018-03-20T15:02:29.518747+00:00, friendly_name=Otvori garažna vrata @ 2018-03-21T14:34:41.766029+01:00>, new_state=<state automation.otvori_garazna_vrata=on; last_triggered=2018-03-20T15:02:29.518747+00:00, friendly_name=Otvori garažna vrata @ 2018-03-21T14:34:42.365556+01:00>>[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.core] Timer:starting[0m
+[32m2018-03-21 14:34:42 INFO (MainThread) [homeassistant.core] Bus:Handling <Event state_changed[L]: entity_id=group.all_automations, old_state=<state group.all_automations=off; entity_id=('automation.otvori_garazna_vrata',), order=3, auto=True, friendly_name=all automations, hidden=True @ 2018-03-21T14:34:41.785815+01:00>, new_state=<state group.all_automations=on; entity_id=('automation.otvori_garazna_vrata',), order=3, auto=True, friendly_name=all automations, hidden=True @ 2018-03-21T14:34:42.368285+01:00>>[0m
+^C[32m2018-03-21 14:34:49 INFO (MainThread) [homeassistant.core] Bus:Handling <Event homeassistant_stop[L]>[0m
+[32m2018-03-21 14:34:49 INFO (MainThread) [homeassistant.core] Bus:Handling <Event homeassistant_close[L]>[0m
+^CTraceback (most recent call last):
+  File "/home/dadeky/home-assistant/homeassistant/core.py", line 158, in start
+    self.loop.run_forever()
+  File "/usr/lib/python3.6/asyncio/base_events.py", line 421, in run_forever
+    self._run_once()
+  File "/usr/lib/python3.6/asyncio/base_events.py", line 1395, in _run_once
+    event_list = self._selector.select(timeout)
+  File "/usr/lib/python3.6/selectors.py", line 445, in select
+    fd_event_list = self._epoll.poll(timeout, max_ev)
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dadeky/home-assistant/bin/hass", line 11, in <module>
+    load_entry_point('homeassistant', 'console_scripts', 'hass')()
+  File "/home/dadeky/home-assistant/homeassistant/__main__.py", line 362, in main
+    exit_code = setup_and_run_hass(config_dir, args)
+  File "/home/dadeky/home-assistant/homeassistant/__main__.py", line 289, in setup_and_run_hass
+    return hass.start()
+  File "/home/dadeky/home-assistant/homeassistant/core.py", line 163, in start
+    self.loop.run_forever()
+  File "/usr/lib/python3.6/asyncio/base_events.py", line 421, in run_forever
+    self._run_once()
+  File "/usr/lib/python3.6/asyncio/base_events.py", line 1431, in _run_once
+    handle._run()
+  File "/usr/lib/python3.6/asyncio/events.py", line 145, in _run
+    self._callback(*self._args)
+  File "/home/dadeky/home-assistant/homeassistant/core.py", line 294, in async_stop
+    self.executor.shutdown()
+  File "/usr/lib/python3.6/concurrent/futures/thread.py", line 152, in shutdown
+    t.join()
+  File "/usr/lib/python3.6/threading.py", line 1056, in join
+    self._wait_for_tstate_lock()
+  File "/usr/lib/python3.6/threading.py", line 1072, in _wait_for_tstate_lock
+    elif lock.acquire(block, timeout):
+KeyboardInterrupt
+[31m2018-03-21 14:34:54 ERROR (SyncWorker_6) [concurrent.futures] exception calling callback for <Future at 0x7f1f60bbbd30 state=finished returned list>[0m
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/concurrent/futures/_base.py", line 324, in _invoke_callbacks
+    callback(self)
+  File "/usr/lib/python3.6/asyncio/futures.py", line 414, in _call_set_state
+    dest_loop.call_soon_threadsafe(_set_state, destination, source)
+  File "/usr/lib/python3.6/asyncio/base_events.py", line 620, in call_soon_threadsafe
+    self._check_closed()
+  File "/usr/lib/python3.6/asyncio/base_events.py", line 357, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed[0m
+[31m2018-03-21 14:34:54 ERROR (MainThread) [homeassistant.core] Error doing job: Task was destroyed but it is pending![0m
+[31m2018-03-21 14:34:55 ERROR (MainThread) [homeassistant.core] Error doing job: Task exception was never retrieved[0m
+Traceback (most recent call last):
+  File "/home/dadeky/home-assistant/homeassistant/core.py", line 158, in start
+    self.loop.run_forever()
+  File "/usr/lib/python3.6/asyncio/base_events.py", line 421, in run_forever
+    self._run_once()
+  File "/usr/lib/python3.6/asyncio/base_events.py", line 1395, in _run_once
+    event_list = self._selector.select(timeout)
+  File "/usr/lib/python3.6/selectors.py", line 445, in select
+    fd_event_list = self._epoll.poll(timeout, max_ev)
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/dadeky/home-assistant/bin/hass", line 11, in <module>
+    load_entry_point('homeassistant', 'console_scripts', 'hass')()
+  File "/home/dadeky/home-assistant/homeassistant/__main__.py", line 362, in main
+    exit_code = setup_and_run_hass(config_dir, args)
+  File "/home/dadeky/home-assistant/homeassistant/__main__.py", line 289, in setup_and_run_hass
+    return hass.start()
+  File "/home/dadeky/home-assistant/homeassistant/core.py", line 163, in start
+    self.loop.run_forever()
+  File "/usr/lib/python3.6/asyncio/base_events.py", line 421, in run_forever
+    self._run_once()
+  File "/usr/lib/python3.6/asyncio/base_events.py", line 1431, in _run_once
+    handle._run()
+  File "/usr/lib/python3.6/asyncio/events.py", line 145, in _run
+    self._callback(*self._args)
+  File "/home/dadeky/home-assistant/homeassistant/core.py", line 294, in async_stop
+    self.executor.shutdown()
+  File "/usr/lib/python3.6/concurrent/futures/thread.py", line 152, in shutdown
+    t.join()
+  File "/usr/lib/python3.6/threading.py", line 1056, in join
+    self._wait_for_tstate_lock()
+  File "/usr/lib/python3.6/threading.py", line 1072, in _wait_for_tstate_lock
+    elif lock.acquire(block, timeout):
+KeyboardInterrupt[0m
+]0;dadeky@dadeky-VirtualBox: ~/home-assistant[01;32mdadeky@dadeky-VirtualBox[00m:[01;34m~/home-assistant[00m$ exit
+exit
+
+Script done on Sri 21 Ožu 2018 14:35:02
