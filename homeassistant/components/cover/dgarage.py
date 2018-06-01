@@ -21,12 +21,12 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'dGarage'
-STATE_IN_BETWEEN = "in_between"
+STATE_STOPPED = "stopped"
 CONF_HOST_MAC = "host_mac"
 
 STATES_MAP = {
     0: STATE_CLOSED,
-    1: STATE_IN_BETWEEN,
+    1: STATE_STOPPED,
     2: STATE_OPEN,
     3: STATE_UNKNOWN
 }
@@ -46,6 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+# def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up dGarage covers."""
 
     covers = []
@@ -60,6 +61,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         }
         covers.append(dGarageCover(hass, args))
 
+    # add_devices(covers, True)
     async_add_devices(covers, True)
 
 
@@ -74,7 +76,7 @@ class dGarageCover(CoverDevice):
         self._mac = args[CONF_MAC]
         self._state = STATE_UNKNOWN
         self._port = args[CONF_PORT]
-        self._socket = BluetoothSocket(bluetooth.RFCOMM)
+        self._socket = None
         self._device_class = args[CONF_DEVICE_CLASS]
         self._host_mac = args[CONF_HOST_MAC]
 
@@ -102,61 +104,74 @@ class dGarageCover(CoverDevice):
             return None
         return self._state == STATE_CLOSED
 
-    # @asyncio.coroutine
-    # def async_update(self):
-    #     """Retrieve latest state."""
-    #     self._state = yield from self._update_state()
+    @asyncio.coroutine
+    def async_update(self):
+        """Retrieve latest state."""
+        self._state = yield from self.async_fetch_state()
 
     @asyncio.coroutine
     def async_open_cover(self, **kwargs):
         """Open the cover."""
-        if self._state not in [STATE_OPEN]:
-            self._state = STATE_OPEN
         try:
+            # self._send("{c:ope}")
             yield from self._send("{c:ope}")
+            if self._state not in [STATE_OPEN]:
+                self._state = STATE_OPEN
         except bluetooth.BluetoothError as ex:
             self._do_except(ex)
 
     @asyncio.coroutine
     def async_close_cover(self, **kwargs):
         """Close the cover."""
-        if self._state not in [STATE_CLOSED]:
-            self._state = STATE_CLOSED
         try:
+            # self._send("{c:clo}")
             yield from self._send("{c:clo}")
+            if self._state not in [STATE_CLOSED]:
+                self._state = STATE_CLOSED
         except bluetooth.BluetoothError as ex:
             self._do_except(ex)
 
     @asyncio.coroutine
     def async_stop_cover(self, **kwargs):
+        # def stop_cover(self, **kwargs):
         """Stop the cover."""
-        if self._state not in [STATE_IN_BETWEEN]:
-            self._state = STATE_IN_BETWEEN
         try:
+            # self._send("{c:sto}")
             yield from self._send("{c:sto}")
+            if self._state not in [STATE_STOPPED]:
+                self._state = STATE_STOPPED
         except bluetooth.BluetoothError as ex:
             self._do_except(ex)
 
+    # def _send(self, message):
     async def _send(self, message):
+        self._socket = BluetoothSocket(bluetooth.RFCOMM)
         self._socket.connect((self._mac, self._port))
         self._socket.send(message)
         self._socket.close()
-        self._socket = BluetoothSocket(bluetooth.RFCOMM)
+        self._socket = None
 
     def _do_except(self, reason):
         _LOGGER.error("Unable to connect to dGarage device: %(reason)s",
                       dict(reason=reason))
 
     @asyncio.coroutine
-    def _update_state(self):
-        self._socket.connect((self._mac, self._port));
-        self._socket.send("{g}")
+    # def _update_state(self):
+    async def async_fetch_state(self):
+        try:
+            self._socket = BluetoothSocket(bluetooth.RFCOMM)
+            self._socket.connect((self._mac, self._port))
+            self._socket.send("{g}")
+        except bluetooth.BluetoothError as ex:
+            self._socket.close()
+            self._socket = None
+            return self._state
 
-        s = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+        s = BluetoothSocket(bluetooth.RFCOMM)
         s.bind((self._host_mac, self._port))
         s.listen(1)
+
         try:
-            # client, clientInfo = s.accept()
             while 1:
                 data = self._socket.recv(1024)
                 data = data.decode("utf-8")
@@ -164,13 +179,14 @@ class dGarageCover(CoverDevice):
                     parsed = json.loads(data)
                     settings = parsed['ard_settings']
                     door_state_indicator = settings['doorStateIndicator']
-                    self._state = STATES_MAP[int(door_state_indicator)]
-                break
+                    state = STATES_MAP[int(door_state_indicator)]
+                    break
 
             self._socket.close()
-            self._socket = BluetoothSocket(bluetooth.RFCOMM)
+            self._socket = None
+            s.close()
+            return state
         except:
             self._socket.close()
-            self._socket = BluetoothSocket(bluetooth.RFCOMM)
+            self._socket = None
             s.close()
-
