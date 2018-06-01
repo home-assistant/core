@@ -128,6 +128,8 @@ class OnkyoDevice(MediaPlayerDevice):
     def __init__(self, receiver, sources, name=None,
                  max_volume=SUPPORTED_MAX_VOLUME):
         """Initialize the Onkyo Receiver."""
+        from concurrent.futures import ThreadPoolExecutor
+
         self._receiver = receiver
         self._muted = False
         self._volume = 0
@@ -140,7 +142,9 @@ class OnkyoDevice(MediaPlayerDevice):
         self._source_mapping = sources
         self._reverse_mapping = {value: key for key, value in sources.items()}
 
-    def command(self, command):
+        self._executor = ThreadPoolExecutor(max_workers=1)
+
+    def execute_command(self, command):
         """Run an eiscp command and catch connection errors."""
         try:
             result = self._receiver.command(command)
@@ -153,6 +157,11 @@ class OnkyoDevice(MediaPlayerDevice):
                              self._name)
             return False
         return result
+
+    def command(self, command):
+        """Add a command to the execution queue and wait for a result."""
+        future = self._executor.submit(self.execute_command, command)
+        return future.result()
 
     def update(self):
         """Get the latest state from the device."""
@@ -246,6 +255,14 @@ class OnkyoDevice(MediaPlayerDevice):
         """Decrease volume by 1 step."""
         self.command('volume level-down')
 
+    def volume_up(self):
+        """Increase volume by 1 step."""
+        self.command('volume level-up')
+
+    def volume_down(self):
+        """Decrease volume by 1 step."""
+        self.command('volume level-down')
+
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         if mute:
@@ -324,6 +341,14 @@ class OnkyoDeviceZone(OnkyoDevice):
     def volume_down(self):
         """Decrease volume by 1 step."""
         self.command('zone{}.volume=level-down'.format(self._zone))
+
+    def volume_up(self):
+        """Increase volume by 1 step."""
+        self.command('zone2.volume=level-up')
+
+    def volume_down(self):
+        """Decrease volume by 1 step."""
+        self.command('zone2.volume=level-down')
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
