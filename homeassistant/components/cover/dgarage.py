@@ -173,7 +173,7 @@ class dGarageCover(CoverDevice):
 
         response = ""
         while True:
-            r = self._socket.recv(255)
+            r = self._socket.recv(1024)
             r = r.decode("utf-8")
             if not r:
                 break
@@ -182,15 +182,12 @@ class dGarageCover(CoverDevice):
                 break
 
         try:
-            # _LOGGER.error("Data is: %(inp)s", dict(inp=data))
             data = response
             if data:
                 parsed = json.loads(data)
                 settings = parsed['ard_settings']
                 door_state_indicator = settings['doorStateIndicator']
                 state = STATES_MAP[int(door_state_indicator)]
-
-            # _LOGGER.error("New state is: %(new_state)s", dict(new_state=state))
 
             self._socket.close()
             self._socket = None
