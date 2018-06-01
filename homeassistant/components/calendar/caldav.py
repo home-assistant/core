@@ -37,16 +37,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         ])),
     vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-    # TODO set default color
-    vol.Optional(CONF_COLOR): cv.string,
+    vol.Optional(CONF_COLOR, default="#3174ad"): cv.string,
     vol.Optional(CONF_CUSTOM_CALENDARS, default=[]):
         vol.All(cv.ensure_list, vol.Schema([
             vol.Schema({
                 vol.Required(CONF_CALENDAR): cv.string,
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_SEARCH): cv.string,
-                # TODO set default color
-                vol.Optional(CONF_COLOR): cv.string,
+                vol.Optional(CONF_COLOR, default="#3174ad"): cv.string,
             })
         ]))
 })
