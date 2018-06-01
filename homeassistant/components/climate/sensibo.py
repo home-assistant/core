@@ -154,7 +154,8 @@ class SensiboClimate(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {ATTR_CURRENT_HUMIDITY: self.current_humidity}
+        return {ATTR_CURRENT_HUMIDITY: self.current_humidity,
+                'battery': self.current_battery}
 
     @property
     def temperature_unit(self):
@@ -190,6 +191,14 @@ class SensiboClimate(ClimateDevice):
     def current_humidity(self):
         """Return the current humidity."""
         return self._measurements['humidity']
+
+    @property
+    def current_battery(self):
+        """Return the current battery voltage."""
+        if 'batteryVoltage' in self._measurements:
+            return self._measurements['batteryVoltage']
+        else:
+            return None
 
     @property
     def current_temperature(self):
