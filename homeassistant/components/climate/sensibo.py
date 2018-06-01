@@ -195,10 +195,7 @@ class SensiboClimate(ClimateDevice):
     @property
     def current_battery(self):
         """Return the current battery voltage."""
-        if 'batteryVoltage' in self._measurements:
-            return self._measurements['batteryVoltage']
-        else:
-            return None
+        return self._measurements.get('batteryVoltage')
 
     @property
     def current_temperature(self):
