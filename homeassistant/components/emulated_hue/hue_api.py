@@ -20,6 +20,12 @@ from homeassistant.components.fan import (
     ATTR_SPEED, SUPPORT_SET_SPEED, SPEED_OFF, SPEED_LOW,
     SPEED_MEDIUM, SPEED_HIGH
 )
+
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION, ATTR_POSITION, SERVICE_SET_COVER_POSITION,
+    SUPPORT_SET_POSITION
+)
+
 from homeassistant.components.http import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
@@ -226,8 +232,13 @@ class HueOneLightChangeView(HomeAssistantView):
             domain = entity.domain
             if service == SERVICE_TURN_ON:
                 service = SERVICE_OPEN_COVER
-            else:
+            elif service == SERVICE_TURN_OFF:
                 service = SERVICE_CLOSE_COVER
+            if entity_features & SUPPORT_SET_POSITION:
+                if brightness is not None:
+                    service = SERVICE_SET_COVER_POSITION
+                    data[ATTR_POSITION] = brightness
+
 
         # If the requested entity is a fan, convert to speed
         elif entity.domain == "fan":
@@ -314,7 +325,8 @@ def parse_hue_api_put_light_body(request_json, entity):
 
         elif (entity.domain == "script" or
               entity.domain == "media_player" or
-              entity.domain == "fan"):
+              entity.domain == "fan" or
+              entity.domain == "cover"):
             # Convert 0-255 to 0-100
             level = brightness / 255 * 100
             brightness = round(level)
@@ -355,6 +367,9 @@ def get_entity_state(config, entity):
                 final_brightness = 170
             elif speed == SPEED_HIGH:
                 final_brightness = 255
+        elif entity.domain == "cover":
+            current_position = entity.attributes.get(ATTR_CURRENT_POSITION, 0)
+            final_brightness = round(current_position / 100 * 255)
     else:
         final_state, final_brightness = cached_state
         # Make sure brightness is valid
