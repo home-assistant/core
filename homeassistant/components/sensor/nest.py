@@ -137,14 +137,14 @@ class NestSensor(Entity):
         """Do not need poll thanks using Nest streaming API."""
         return False
 
-    async def async_update_state(self):
-        """Update sensor state."""
-        await self.async_update_ha_state(True)
-
     async def async_added_to_hass(self):
         """Register update signal handler."""
+        async def async_update_state():
+            """Update sensor state."""
+            await self.async_update_ha_state(True)
+
         async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE,
-                                 self.async_update_state)
+                                 async_update_state)
 
 
 class NestBasicSensor(NestSensor):
