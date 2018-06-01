@@ -20,7 +20,6 @@ DEPENDENCIES = ['ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_BRAND = 'Xiaomi Home Camera'
-DEFAULT_PASSWORD = ''
 DEFAULT_PATH = '/media/mmcblk0p1/record'
 DEFAULT_PORT = 21
 DEFAULT_USERNAME = 'root'
@@ -49,7 +48,7 @@ async def async_setup_platform(hass,
                                async_add_devices,
                                discovery_info=None):
     """Set up a Xiaomi Camera."""
-    _LOGGER.debug('Received configuration: %s', config)
+    _LOGGER.debug('Received configuration for model %s', config[CONF_MODEL])
     async_add_devices([XiaomiCamera(hass, config)], True)
 
 
@@ -94,7 +93,7 @@ class XiaomiCamera(Camera):
         try:
             ftp.login(self.user, self.passwd)
         except error_perm as exc:
-            _LOGGER.error('There was an error while logging: %s', exc)
+            _LOGGER.error('Camera login failed: %s', exc)
             return False
 
         try:
@@ -103,15 +102,13 @@ class XiaomiCamera(Camera):
             _LOGGER.error('Unable to find path: %s - %s', self.path, exc)
             return False
 
-        if self._model == MODEL_YI:
-            dirs = [d for d in ftp.nlst() if '.' not in d]
-            if not dirs:
+        
+        dirs = [d for d in ftp.nlst() if '.' not in d]
+          if not dirs:
+            if self._model == MODEL_YI:
                 _LOGGER.warning("There don't appear to be any uploaded videos")
                 return False
-
-        if self._model == MODEL_XIAOFANG:
-            dirs = [d for d in ftp.nlst() if '.' not in d]
-            if not dirs:
+            elif self._model == MODEL_XIAOFANG:
                 _LOGGER.warning("There don't appear to be any folders")
                 return False
 
