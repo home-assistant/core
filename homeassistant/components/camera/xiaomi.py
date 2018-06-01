@@ -102,9 +102,8 @@ class XiaomiCamera(Camera):
             _LOGGER.error('Unable to find path: %s - %s', self.path, exc)
             return False
 
-        
         dirs = [d for d in ftp.nlst() if '.' not in d]
-          if not dirs:
+        if not dirs:
             if self._model == MODEL_YI:
                 _LOGGER.warning("There don't appear to be any uploaded videos")
                 return False
