@@ -26,7 +26,6 @@ from homeassistant.components.mqtt import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH)
-from homeassistant.util.temperature import convert as convert_temperature
 
 _LOGGER = logging.getLogger(__name__)
 
