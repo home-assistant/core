@@ -22,17 +22,15 @@ async def test_outlet_set_state(hass, hk_driver):
     assert acc.category == 7  # Outlet
 
     assert acc.char_on.value is False
-    assert acc.char_outlet_in_use.value is False
+    assert acc.char_outlet_in_use.value is True
 
     hass.states.async_set(entity_id, STATE_ON)
     await hass.async_block_till_done()
     assert acc.char_on.value is True
-    assert acc.char_outlet_in_use.value is True
 
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
     assert acc.char_on.value is False
-    assert acc.char_outlet_in_use.value is False
 
     # Set from HomeKit
     call_turn_on = async_mock_service(hass, 'switch', 'turn_on')
