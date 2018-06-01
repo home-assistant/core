@@ -16,6 +16,7 @@ async def test_outlet_set_state(hass, hk_driver):
     await hass.async_block_till_done()
     acc = Outlet(hass, hk_driver, 'Outlet', entity_id, 2, None)
     await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 7  # Outlet
@@ -63,6 +64,7 @@ async def test_switch_set_state(hass, hk_driver, entity_id):
     await hass.async_block_till_done()
     acc = Switch(hass, hk_driver, 'Switch', entity_id, 2, None)
     await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
 
     assert acc.aid == 2
     assert acc.category == 8  # Switch

@@ -28,7 +28,7 @@ class Outlet(HomeAccessory):
         self.char_on = serv_outlet.configure_char(
             CHAR_ON, value=False, setter_callback=self.set_state)
         self.char_outlet_in_use = serv_outlet.configure_char(
-            CHAR_OUTLET_IN_USE, value=False)
+            CHAR_OUTLET_IN_USE, value=True)
 
     def set_state(self, value):
         """Move switch state to value if call came from HomeKit."""
@@ -46,7 +46,6 @@ class Outlet(HomeAccessory):
             _LOGGER.debug('%s: Set current state to %s',
                           self.entity_id, current_state)
             self.char_on.set_value(current_state)
-            self.char_outlet_in_use.set_value(current_state)
         self.flag_target_state = False
 
 

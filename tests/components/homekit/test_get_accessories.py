@@ -137,6 +137,7 @@ def test_type_sensors(type_name, entity_id, state, attrs):
     ('Switch', 'remote.test', 'on', {}, {}),
     ('Switch', 'script.test', 'on', {}, {}),
     ('Switch', 'switch.test', 'on', {}, {}),
+    ('Switch', 'switch.test', 'on', {}, {CONF_TYPE: TYPE_SWITCH}),
 ])
 def test_type_switches(type_name, entity_id, state, attrs, config):
     """Test if switch types are associated correctly."""
