@@ -731,7 +731,7 @@ pyasn1-modules==0.1.5
 pyasn1==0.3.7
 
 # homeassistant.components.apple_tv
-pyatv==0.3.9
+pyatv==0.3.10
 
 # homeassistant.components.device_tracker.bbox
 # homeassistant.components.sensor.bbox
