@@ -10,9 +10,11 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanel, PLATFORM_SCHEMA)
-from homeassistant.components.arlo import (DATA_ARLO, CONF_ATTRIBUTION)
+from homeassistant.components.arlo import (
+    DATA_ARLO, CONF_ATTRIBUTION, SIGNAL_UPDATE_ARLO)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED)
@@ -67,6 +69,16 @@ class ArloBaseStation(AlarmControlPanel):
         """Return icon."""
         return ICON
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
+
+    def _update_callback(self):
+        """Call update method."""
+        self.schedule_update_ha_state(True)
+
     @property
     def state(self):
         """Return the state of the device."""
@@ -74,6 +86,7 @@ class ArloBaseStation(AlarmControlPanel):
 
     def update(self):
         """Update the state of the device."""
+        _LOGGER.info("Updating Arlo Alarm Control Panel %s" % self.name)
         # PyArlo sometimes returns None for mode. So retry 3 times before
         # returning None.
         num_retries = 3
