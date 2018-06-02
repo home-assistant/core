@@ -654,7 +654,7 @@ pmsensor==0.4
 pocketcasts==0.1
 
 # homeassistant.components.sensor.postnl
-postnl_api==1.0.1
+postnl_api==1.0.2
 
 # homeassistant.components.climate.proliphix
 proliphix==0.4.1
