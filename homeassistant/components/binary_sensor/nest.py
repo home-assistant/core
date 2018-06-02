@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Add all available binary sensors if no Nest binary sensor config is set
     if discovery_info == {}:
-        conditions = _VALID_BINARY_SENSOR_TYPES.keys()
+        conditions = _VALID_BINARY_SENSOR_TYPES
     else:
         conditions = discovery_info.get(CONF_MONITORED_CONDITIONS, {})
 
