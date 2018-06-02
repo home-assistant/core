@@ -8,6 +8,8 @@ import logging
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
 from homeassistant.components import zha
+from homeassistant.const import STATE_ON
+from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -203,8 +205,8 @@ class Switch(zha.Entity, BinarySensorDevice):
     def __init__(self, **kwargs):
         """Initialize Switch."""
         super().__init__(**kwargs)
-        self._state = False
-        self._level = 0
+        self._state = None
+        self._level = None
         from zigpy.zcl.clusters import general
         self._out_listeners = {
             general.OnOff.cluster_id: self.OnOffListener(self),
@@ -246,9 +248,22 @@ class Switch(zha.Entity, BinarySensorDevice):
     def set_state(self, state):
         """Set the state."""
         self._state = state
-        if self._level == 0:
+        if state and (self._level == 0 or self._level is None):
             self._level = 255
         self.async_schedule_update_ha_state()
+
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass"""
+        await super().async_added_to_hass()
+        # get the old state if we have one
+        old_state = await async_get_last_state(self.hass, self.entity_id)
+        if old_state is not None:
+            if self._level is None:
+                self._level = old_state.attributes.get('level', self._level)
+            if self._state is None and old_state.state == STATE_ON:
+                self.set_state(True)
+            else:
+                self.set_state(False)
 
     async def async_update(self):
         """Retrieve latest state."""
