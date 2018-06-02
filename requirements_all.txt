@@ -249,7 +249,7 @@ deluge-client==1.4.0
 denonavr==0.7.2
 
 # homeassistant.components.media_player.directv
-directpy==0.2
+directpy==0.5
 
 # homeassistant.components.sensor.discogs
 discogs_client==2.2.1
