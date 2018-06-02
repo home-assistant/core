@@ -48,7 +48,7 @@ def setup(hass, config):
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
-    scan_interval = conf.get(CONF_SCAN_INTERVAL)
+    scan_interval = conf.get(CONF_SCAN_INTERVAL).total_seconds()
 
     try:
         from pyarlo import PyArlo
