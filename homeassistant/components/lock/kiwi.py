@@ -73,8 +73,7 @@ class KiwiLock(LockDevice):
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        if self._state is not None:
-            return self._state == STATE_LOCKED
+        return self._state == STATE_LOCKED
 
     @property
     def device_state_attributes(self):
