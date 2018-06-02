@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['nsw-fuel-api-client==1.0.6']
+REQUIREMENTS = ['nsw-fuel-api-client==1.0.7']
 
 CONF_STATION_ID = 'station_id'
 CONF_STATION_NAME = 'station_name'

@@ -98,7 +98,7 @@ libsoundtouch==0.7.2
 mficlient==0.3.0
 
 # homeassistant.components.sensor.nsw_fuel_station
-nsw-fuel-api-client==1.0.6
+nsw-fuel-api-client==1.0.7
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
