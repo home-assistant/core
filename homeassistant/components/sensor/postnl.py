@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['postnl_api==1.0.1']
+REQUIREMENTS = ['postnl_api==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
