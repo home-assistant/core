@@ -61,6 +61,7 @@ TEST_REQUIREMENTS = (
     'libsoundtouch',
     'mficlient',
     'numpy',
+    'nsw-fuel-api-client',
     'paho-mqtt',
     'pexpect',
     'pilight',
