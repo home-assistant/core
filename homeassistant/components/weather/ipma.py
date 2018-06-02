@@ -110,7 +110,7 @@ class IPMAWeather(WeatherEntity):
     def condition(self):
         """Return the current condition."""
         return next([k for k, v in CONDITION_CLASSES.items()
-                if self._forecast[0].idWeatherType in v], None)
+                    if self._forecast[0].idWeatherType in v], None)
 
     @property
     def temperature(self):
@@ -152,7 +152,7 @@ class IPMAWeather(WeatherEntity):
                 data_out[ATTR_FORECAST_TIME] = data_in.forecastDate
                 data_out[ATTR_FORECAST_CONDITION] =\
                     next([k for k, v in CONDITION_CLASSES.items()
-                     if int(data_in.idWeatherType) in v], None)
+                         if int(data_in.idWeatherType) in v], None)
                 data_out[ATTR_FORECAST_TEMP_LOW] = data_in.tMin
                 data_out[ATTR_FORECAST_TEMP] = data_in.tMax
                 data_out[ATTR_FORECAST_PRECIPITATION] = data_in.precipitaProb
@@ -164,7 +164,7 @@ class IPMAWeather(WeatherEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        data = dict() 
+        data = dict()
 
         if self._description:
             data[ATTR_WEATHER_DESCRIPTION] = self._description
