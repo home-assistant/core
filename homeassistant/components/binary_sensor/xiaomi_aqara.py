@@ -28,7 +28,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if model in ['motion', 'sensor_motion', 'sensor_motion.aq2']:
                 devices.append(XiaomiMotionSensor(device, hass, gateway))
             elif model in ['magnet', 'sensor_magnet', 'sensor_magnet.aq2']:
-                devices.append(XiaomiDoorSensor(device, gateway))
+                if 'proto' not in device or int(device['proto'][0:1]) == 1:
+                    data_key = 'status'
+                else:
+                    data_key = 'window_status'
+                devices.append(XiaomiDoorSensor(device, data_key, gateway))
             elif model == 'sensor_wleak.aq1':
                 devices.append(XiaomiWaterLeakSensor(device, gateway))
             elif model in ['smoke', 'sensor_smoke']:
@@ -190,11 +194,11 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
 class XiaomiDoorSensor(XiaomiBinarySensor):
     """Representation of a XiaomiDoorSensor."""
 
-    def __init__(self, device, xiaomi_hub):
+    def __init__(self, device, data_key, xiaomi_hub):
         """Initialize the XiaomiDoorSensor."""
         self._open_since = 0
         XiaomiBinarySensor.__init__(self, device, 'Door Window Sensor',
-                                    xiaomi_hub, 'status', 'opening')
+                                    xiaomi_hub, data_key, 'opening')
 
     @property
     def device_state_attributes(self):
