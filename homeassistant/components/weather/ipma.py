@@ -6,8 +6,8 @@ https://home-assistant.io/components/weather.ipma/
 """
 import logging
 from datetime import timedelta
-import async_timeout
 
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -82,7 +82,7 @@ class IPMAWeather(WeatherEntity):
 
     def __init__(self, station, config):
         """Initialise the platform with a data instance and station name."""
-        self._stationname = config.get(CONF_NAME, station.local)
+        self._station_name = config.get(CONF_NAME, station.local)
         self._station = station
         self._condition = None
         self._forecast = None
@@ -104,13 +104,13 @@ class IPMAWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the station."""
-        return self._stationname
+        return self._station_name
 
     @property
     def condition(self):
         """Return the current condition."""
-        return [k for k, v in CONDITION_CLASSES.items()
-                if self._forecast[0].idWeatherType in v][0]
+        return next([k for k, v in CONDITION_CLASSES.items()
+                if self._forecast[0].idWeatherType in v], None)
 
     @property
     def temperature(self):
@@ -126,11 +126,6 @@ class IPMAWeather(WeatherEntity):
     def humidity(self):
         """Return the name of the sensor."""
         return self._condition.humidity
-
-    @property
-    def visibility(self):
-        """Return the current visibility."""
-        return None
 
     @property
     def wind_speed(self):
@@ -156,8 +151,8 @@ class IPMAWeather(WeatherEntity):
                 data_out = {}
                 data_out[ATTR_FORECAST_TIME] = data_in.forecastDate
                 data_out[ATTR_FORECAST_CONDITION] =\
-                    [k for k, v in CONDITION_CLASSES.items()
-                     if int(data_in.idWeatherType) in v][0]
+                    next([k for k, v in CONDITION_CLASSES.items()
+                     if int(data_in.idWeatherType) in v], None)
                 data_out[ATTR_FORECAST_TEMP_LOW] = data_in.tMin
                 data_out[ATTR_FORECAST_TEMP] = data_in.tMax
                 data_out[ATTR_FORECAST_PRECIPITATION] = data_in.precipitaProb
@@ -167,9 +162,9 @@ class IPMAWeather(WeatherEntity):
             return fcdata_out
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
-        data = super().state_attributes
+        data = dict() 
 
         if self._description:
             data[ATTR_WEATHER_DESCRIPTION] = self._description
