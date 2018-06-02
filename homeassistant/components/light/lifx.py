@@ -201,7 +201,7 @@ def merge_hsbk(base, change):
     """Copy change on top of base, except when None."""
     if change is None:
         return None
-    return list(map(lambda x, y: y if y is not None else x, base, change))
+    return [b if c is None else c for b, c in zip(base, change)]
 
 
 class LIFXManager(object):
@@ -256,7 +256,7 @@ class LIFXManager(object):
 
     async def start_effect(self, entities, service, **kwargs):
         """Start a light effect on entities."""
-        devices = list(map(lambda l: l.device, entities))
+        devices = [light.device for light in entities]
 
         if service == SERVICE_EFFECT_PULSE:
             effect = aiolifx_effects().EffectPulse(
@@ -622,7 +622,7 @@ class LIFXStrip(LIFXColor):
 
             zones = list(range(0, num_zones))
         else:
-            zones = list(filter(lambda x: x < num_zones, set(zones)))
+            zones = [x for x in set(zones) if x < num_zones]
 
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[2] is None:
