@@ -4,7 +4,6 @@ Support for ZhongHong HVAC Controller.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.zhong_hong/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -17,14 +16,16 @@ from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, CONF_PORT,
                                  EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
+                                              async_dispatcher_send)
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_GATEWAY_ADDRRESS = 'gateway_address'
 
 REQUIREMENTS = ['zhong_hong_hvac==1.0.9']
-EVENT_DEVICE_SETTED_UP = 'zhong_hong_device_setted_up'
-EVENT_ZHONG_HONG_HUB_START = 'zhong_hong_hub_start'
+SIGNAL_DEVICE_SETTED_UP = 'zhong_hong_device_setted_up'
+SIGNAL_ZHONG_HONG_HUB_START = 'zhong_hong_hub_start'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST):
@@ -53,33 +54,28 @@ async def async_setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("ZhongHong controller is not ready", exc_info=exc)
         raise PlatformNotReady
 
-    device_num = len(devices)
-    _LOGGER.debug("We got %s zhong_hong climate devices", device_num)
-    device_ready_num = 0
-    semaphore_lock = asyncio.Semaphore()
+    _LOGGER.debug("We got %s zhong_hong climate devices", len(devices))
 
-    async def device_count(event):
-        """Count ready device and fire hub start event."""
-        nonlocal device_ready_num
-        with (await semaphore_lock):
-            device_ready_num += 1
-            _LOGGER.debug("%s zhong_hong device setted up", device_ready_num)
-            if device_ready_num >= device_num:
-                hass.bus.fire(EVENT_ZHONG_HONG_HUB_START)
+    hub_is_initialized = False
 
-    async_remove_listener = hass.bus.async_listen(EVENT_DEVICE_SETTED_UP,
-                                                  device_count)
-    # add devices after EVENT_DEVICE_SETTED_UP event is listend
-    add_devices(devices)
-
-    def startup(event):
+    async def startup():
         """Start hub socket after all climate entity is setted up."""
+        nonlocal hub_is_initialized
+        if not all([device.is_initialized for device in devices]):
+            return
+
+        if hub_is_initialized:
+            return
+
         _LOGGER.debug("zhong_hong hub start listen event")
-        async_remove_listener()
         hub.start_listen()
         hub.query_all_status()
+        hub_is_initialized = True
 
-    hass.bus.async_listen_once(EVENT_ZHONG_HONG_HUB_START, startup)
+    async_dispatcher_connect(hass, SIGNAL_DEVICE_SETTED_UP, startup)
+
+    # add devices after SIGNAL_DEVICE_SETTED_UP event is listend
+    add_devices(devices)
 
     def stop_listen(event):
         """Stop ZhongHongHub socket."""
@@ -101,11 +97,13 @@ class ZhongHongClimate(ClimateDevice):
         self._target_temperature = None
         self._current_fan_mode = None
         self._is_on = None
+        self.is_initialized = False
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         self._device.register_update_callback(self._after_update)
-        self.hass.bus.fire(EVENT_DEVICE_SETTED_UP)
+        self.is_initialized = True
+        async_dispatcher_send(self.hass, SIGNAL_DEVICE_SETTED_UP)
 
     def update(self):
         """Update device status from hub."""
