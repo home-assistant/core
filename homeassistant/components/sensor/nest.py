@@ -106,11 +106,11 @@ class NestBasicSensor(NestSensorDevice):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return SENSOR_DEVICE_CLASSES.get(self.variable, None)
+        return SENSOR_DEVICE_CLASSES.get(self.variable)
 
     def update(self):
         """Retrieve latest state."""
-        self._unit = SENSOR_UNITS.get(self.variable, None)
+        self._unit = SENSOR_UNITS.get(self.variable)
 
         if self.variable in VARIABLE_NAME_MAPPING:
             self._state = getattr(self.device,

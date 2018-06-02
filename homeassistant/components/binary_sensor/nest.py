@@ -115,7 +115,7 @@ class NestBinarySensor(NestSensorDevice, BinarySensorDevice):
     @property
     def device_class(self):
         """Return the device class of the binary sensor."""
-        return _VALID_BINARY_SENSOR_TYPES.get(self.variable, None)
+        return _VALID_BINARY_SENSOR_TYPES.get(self.variable)
 
     def update(self):
         """Retrieve latest state."""
