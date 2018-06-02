@@ -40,7 +40,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except KiwiException as e:
         _LOGGER.error(e.msg)
         return False
-    add_devices([KiwiLock(lock, kiwi) for lock in kiwi.get_locks()], True)
+    available_locks = kiwi.get_locks()
+    if not available_locks:
+        # No locks found; abort setup routine.
+        _LOGGER.info("No KIWI locks found in your account.")
+        return False
+    add_devices([KiwiLock(lock, kiwi) for lock in available_locks], True)
 
 
 class KiwiLock(LockDevice):
