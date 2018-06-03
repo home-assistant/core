@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_GATEWAY_ADDRRESS = 'gateway_address'
 
 REQUIREMENTS = ['zhong_hong_hvac==1.0.9']
-SIGNAL_DEVICE_SETTED_UP = 'zhong_hong_device_setted_up'
+SIGNAL_DEVICE_ADDED = 'zhong_hong_device_added'
 SIGNAL_ZHONG_HONG_HUB_START = 'zhong_hong_hub_start'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -72,7 +72,7 @@ async def async_setup_platform(hass, config, add_devices, discovery_info=None):
         hub.query_all_status()
         hub_is_initialized = True
 
-    async_dispatcher_connect(hass, SIGNAL_DEVICE_SETTED_UP, startup)
+    async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, startup)
 
     # add devices after SIGNAL_DEVICE_SETTED_UP event is listend
     add_devices(devices)
@@ -103,7 +103,7 @@ class ZhongHongClimate(ClimateDevice):
         """Register callbacks."""
         self._device.register_update_callback(self._after_update)
         self.is_initialized = True
-        async_dispatcher_send(self.hass, SIGNAL_DEVICE_SETTED_UP)
+        async_dispatcher_send(self.hass, SIGNAL_DEVICE_ADDED)
 
     def update(self):
         """Update device status from hub."""
