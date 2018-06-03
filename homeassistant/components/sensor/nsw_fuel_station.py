@@ -77,6 +77,7 @@ class StationPriceData(object):
                      in self._data if price.fuel_type == fuel_type), None)
 
     def get_available_fuel_types(self):
+        """Return the available fuel types for the station."""
         return [price.fuel_type for price in self._data]
 
 
