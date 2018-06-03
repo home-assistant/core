@@ -18,12 +18,14 @@ REQUIREMENTS = ['nsw-fuel-api-client==1.0.7']
 CONF_STATION_ID = 'station_id'
 CONF_STATION_NAME = 'station_name'
 CONF_FUEL_TYPES = 'fuel_types'
+CONF_DEFAULT_FUEL_TYPES = ["E10", "U91", "E85", "P95", "P98", "DL",
+                           "PDL", "B20", "LPG", "CNG", "EV"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_ID): cv.positive_int,
     vol.Required(CONF_STATION_NAME): cv.string,
-    vol.Required(CONF_FUEL_TYPES, default=[]): vol.All(
-        cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_FUEL_TYPES, default=CONF_DEFAULT_FUEL_TYPES):
+        vol.All(cv.ensure_list, [cv.string]),
 })
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(hours=1)
@@ -41,9 +43,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     station_data = StationPriceData(client, station_id, station_name)
     station_data.update()
 
+    available_fuel_types = station_data.get_available_fuel_types()
+
     add_devices([
         StationPriceSensor(station_data, fuel_type)
         for fuel_type in fuel_types
+        if fuel_type in available_fuel_types
     ])
     return True
 
@@ -68,7 +73,11 @@ class StationPriceData(object):
         """Return the price of the given fuel type."""
         if self._data is None:
             return None
-        return next((x for x in self._data if x.fuel_type == fuel_type), None)
+        return next((price for price
+                     in self._data if price.fuel_type == fuel_type), None)
+
+    def get_available_fuel_types(self):
+        return [price.fuel_type for price in self._data]
 
 
 class StationPriceSensor(Entity):
