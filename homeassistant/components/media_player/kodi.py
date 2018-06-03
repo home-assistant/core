@@ -542,8 +542,8 @@ class KodiDevice(MediaPlayerDevice):
     def media_title(self):
         """Title of current playing media."""
         # find a string we can use as a title
-        return self._item.get(
-            'title', self._item.get('label', self._item.get('file')))
+        item = self._item
+        return item.get('title') or item.get('label') or item.get('file')
 
     @property
     def media_series_title(self):
