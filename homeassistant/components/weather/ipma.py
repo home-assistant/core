@@ -62,7 +62,7 @@ async def async_setup_platform(hass, config, async_add_devices,
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
+        return
 
     from pyipma import Station
 
