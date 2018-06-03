@@ -294,6 +294,7 @@ class KodiDevice(MediaPlayerDevice):
             # Register notification listeners
             self._ws_server.Player.OnPause = self.async_on_speed_event
             self._ws_server.Player.OnPlay = self.async_on_speed_event
+            self._ws_server.Player.OnResume = self.async_on_speed_event
             self._ws_server.Player.OnSpeedChanged = self.async_on_speed_event
             self._ws_server.Player.OnStop = self.async_on_stop
             self._ws_server.Application.OnVolumeChanged = \
