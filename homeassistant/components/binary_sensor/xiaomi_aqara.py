@@ -43,10 +43,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     data_key = 'channel_0'
                 devices.append(XiaomiButton(device, 'Switch', data_key,
                                             hass, gateway))
-            elif model in ['86sw1', 'sensor_86sw1.aq1']:
+            elif model in ['86sw1', 'sensor_86sw1', 'sensor_86sw1.aq1']:
                 devices.append(XiaomiButton(device, 'Wall Switch', 'channel_0',
                                             hass, gateway))
-            elif model in ['86sw2', 'sensor_86sw2.aq1']:
+            elif model in ['86sw2', 'sensor_86sw2', 'sensor_86sw2.aq1']:
                 devices.append(XiaomiButton(device, 'Wall Switch (Left)',
                                             'channel_0', hass, gateway))
                 devices.append(XiaomiButton(device, 'Wall Switch (Right)',
