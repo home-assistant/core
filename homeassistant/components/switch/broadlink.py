@@ -10,7 +10,7 @@ import binascii
 from datetime import timedelta
 import logging
 import socket
-
+from timeit import default_timer as timer
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -193,7 +193,12 @@ class BroadlinkRMSwitch(SwitchDevice):
         self._command_on = b64decode(command_on) if command_on else None
         self._command_off = b64decode(command_off) if command_off else None
         self._device = device
-
+        self._last_click_time = timer()
+    
+    @property
+    def last_click_time(self):
+        return self._last_click_time
+    
     @property
     def name(self):
         """Return the name of the switch."""
@@ -217,12 +222,14 @@ class BroadlinkRMSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         if self._sendpacket(self._command_on):
+            self._last_click_time = timer()
             self._state = True
             self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if self._sendpacket(self._command_off):
+            self._last_click_time = timer()
             self._state = False
             self.schedule_update_ha_state()
 
@@ -344,6 +351,8 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
 
     def update(self):
         """Trigger update for all switches on the parent device."""
+        if timer()-self.last_click_time < 3:
+            return
         self._parent_device.update()
         self._state = self._parent_device.get_outlet_status(self._slot)
 
