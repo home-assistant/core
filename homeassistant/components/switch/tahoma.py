@@ -33,8 +33,8 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
 
     def __init__(self, tahoma_device, controller):
         """Initialize the switch."""
-        self._state = STATE_OFF
         super().__init__(tahoma_device, controller)
+        self._state = STATE_OFF
 
     def update(self):
         """Update method."""
@@ -85,3 +85,33 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
             return False
         _LOGGER.debug("Is on (%s): %s", self._name, self._state)
         return bool(self._state == STATE_ON)
+
+    @property
+    def state_attributes(self):
+        """Return the state attributes of the switch."""
+        attr = {}
+        super_attr = super().state_attributes
+        if super_attr is not None:
+            attr.update(super_attr)
+
+        if 'core:OnOffState' in self.tahoma_device.active_states:
+            attr['On Off'] = self.tahoma_device.active_states[
+                'core:OnOffState']
+        if 'core:PriorityLockTimerState' in self.tahoma_device.active_states:
+            attr['Priority Lock Timer'] = \
+                self.tahoma_device.active_states['core:PriorityLockTimerState']
+        if 'core:RSSILevelState' in self.tahoma_device.active_states:
+            attr['RSSI Level'] = self.tahoma_device.active_states[
+                'core:RSSILevelState']
+        if 'core:StatusState' in self.tahoma_device.active_states:
+            attr['Status'] = self.tahoma_device.active_states[
+                'core:StatusState']
+        if 'io:PriorityLockLevelState' in self.tahoma_device.active_states:
+            attr['Priority Lock Level'] = \
+                self.tahoma_device.active_states['io:PriorityLockLevelState']
+        if 'io:PriorityLockOriginatorState' in \
+                self.tahoma_device.active_states:
+            attr['Priority Lock Originator'] = \
+                self.tahoma_device.active_states[
+                    'io:PriorityLockOriginatorState']
+        return attr
