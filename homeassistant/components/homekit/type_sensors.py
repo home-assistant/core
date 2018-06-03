@@ -10,6 +10,8 @@ from homeassistant.const import (
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
+    ACC_AIR_QUALITY_SENSOR, ACC_BINARY_SENSOR, ACC_CARBON_DIOXIDE_SENSOR,
+    ACC_HUMIDITY_SENSOR, ACC_LIGHT_SENSOR, ACC_TEMPERATURE_SENSOR,
     CHAR_AIR_PARTICULATE_DENSITY, CHAR_AIR_QUALITY,
     CHAR_CARBON_DIOXIDE_DETECTED, CHAR_CARBON_DIOXIDE_LEVEL,
     CHAR_CARBON_DIOXIDE_PEAK_LEVEL, CHAR_CARBON_MONOXIDE_DETECTED,
@@ -44,53 +46,7 @@ BINARY_SENSOR_SERVICE_MAP = {
     DEVICE_CLASS_WINDOW: (SERV_CONTACT_SENSOR, CHAR_CONTACT_SENSOR_STATE)}
 
 
-@TYPES.register('TemperatureSensor')
-class TemperatureSensor(HomeAccessory):
-    """Generate a TemperatureSensor accessory for a temperature sensor.
-
-    Sensor entity must return temperature in °C, °F.
-    """
-
-    def __init__(self, *args):
-        """Initialize a TemperatureSensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
-        serv_temp = self.add_preload_service(SERV_TEMPERATURE_SENSOR)
-        self.char_temp = serv_temp.configure_char(
-            CHAR_CURRENT_TEMPERATURE, value=0, properties=PROP_CELSIUS)
-        self.unit = None
-
-    def update_state(self, new_state):
-        """Update temperature after state changed."""
-        unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
-        temperature = convert_to_float(new_state.state)
-        if temperature:
-            temperature = temperature_to_homekit(temperature, unit)
-            self.char_temp.set_value(temperature)
-            _LOGGER.debug('%s: Current temperature set to %d°C',
-                          self.entity_id, temperature)
-
-
-@TYPES.register('HumiditySensor')
-class HumiditySensor(HomeAccessory):
-    """Generate a HumiditySensor accessory as humidity sensor."""
-
-    def __init__(self, *args):
-        """Initialize a HumiditySensor accessory object."""
-        super().__init__(*args, category=CATEGORY_SENSOR)
-        serv_humidity = self.add_preload_service(SERV_HUMIDITY_SENSOR)
-        self.char_humidity = serv_humidity.configure_char(
-            CHAR_CURRENT_HUMIDITY, value=0)
-
-    def update_state(self, new_state):
-        """Update accessory after state change."""
-        humidity = convert_to_float(new_state.state)
-        if humidity:
-            self.char_humidity.set_value(humidity)
-            _LOGGER.debug('%s: Percent set to %d%%',
-                          self.entity_id, humidity)
-
-
-@TYPES.register('AirQualitySensor')
+@TYPES.register(ACC_AIR_QUALITY_SENSOR)
 class AirQualitySensor(HomeAccessory):
     """Generate a AirQualitySensor accessory as air quality sensor."""
 
@@ -114,7 +70,31 @@ class AirQualitySensor(HomeAccessory):
             _LOGGER.debug('%s: Set to %d', self.entity_id, density)
 
 
-@TYPES.register('CarbonDioxideSensor')
+@TYPES.register(ACC_BINARY_SENSOR)
+class BinarySensor(HomeAccessory):
+    """Generate a BinarySensor accessory as binary sensor."""
+
+    def __init__(self, *args):
+        """Initialize a BinarySensor accessory object."""
+        super().__init__(*args, category=CATEGORY_SENSOR)
+        device_class = self.hass.states.get(self.entity_id).attributes \
+            .get(ATTR_DEVICE_CLASS)
+        service_char = BINARY_SENSOR_SERVICE_MAP[device_class] \
+            if device_class in BINARY_SENSOR_SERVICE_MAP \
+            else BINARY_SENSOR_SERVICE_MAP[DEVICE_CLASS_OCCUPANCY]
+
+        service = self.add_preload_service(service_char[0])
+        self.char_detected = service.configure_char(service_char[1], value=0)
+
+    def update_state(self, new_state):
+        """Update accessory after state change."""
+        state = new_state.state
+        detected = (state == STATE_ON) or (state == STATE_HOME)
+        self.char_detected.set_value(detected)
+        _LOGGER.debug('%s: Set to %d', self.entity_id, detected)
+
+
+@TYPES.register(ACC_CARBON_DIOXIDE_SENSOR)
 class CarbonDioxideSensor(HomeAccessory):
     """Generate a CarbonDioxideSensor accessory as CO2 sensor."""
 
@@ -142,7 +122,27 @@ class CarbonDioxideSensor(HomeAccessory):
             _LOGGER.debug('%s: Set to %d', self.entity_id, co2)
 
 
-@TYPES.register('LightSensor')
+@TYPES.register(ACC_HUMIDITY_SENSOR)
+class HumiditySensor(HomeAccessory):
+    """Generate a HumiditySensor accessory as humidity sensor."""
+
+    def __init__(self, *args):
+        """Initialize a HumiditySensor accessory object."""
+        super().__init__(*args, category=CATEGORY_SENSOR)
+        serv_humidity = self.add_preload_service(SERV_HUMIDITY_SENSOR)
+        self.char_humidity = serv_humidity.configure_char(
+            CHAR_CURRENT_HUMIDITY, value=0)
+
+    def update_state(self, new_state):
+        """Update accessory after state change."""
+        humidity = convert_to_float(new_state.state)
+        if humidity:
+            self.char_humidity.set_value(humidity)
+            _LOGGER.debug('%s: Percent set to %d%%',
+                          self.entity_id, humidity)
+
+
+@TYPES.register(ACC_LIGHT_SENSOR)
 class LightSensor(HomeAccessory):
     """Generate a LightSensor accessory as light sensor."""
 
@@ -162,25 +162,27 @@ class LightSensor(HomeAccessory):
             _LOGGER.debug('%s: Set to %d', self.entity_id, luminance)
 
 
-@TYPES.register('BinarySensor')
-class BinarySensor(HomeAccessory):
-    """Generate a BinarySensor accessory as binary sensor."""
+@TYPES.register(ACC_TEMPERATURE_SENSOR)
+class TemperatureSensor(HomeAccessory):
+    """Generate a TemperatureSensor accessory for a temperature sensor.
+
+    Sensor entity must return temperature in °C, °F.
+    """
 
     def __init__(self, *args):
-        """Initialize a BinarySensor accessory object."""
+        """Initialize a TemperatureSensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
-        device_class = self.hass.states.get(self.entity_id).attributes \
-            .get(ATTR_DEVICE_CLASS)
-        service_char = BINARY_SENSOR_SERVICE_MAP[device_class] \
-            if device_class in BINARY_SENSOR_SERVICE_MAP \
-            else BINARY_SENSOR_SERVICE_MAP[DEVICE_CLASS_OCCUPANCY]
-
-        service = self.add_preload_service(service_char[0])
-        self.char_detected = service.configure_char(service_char[1], value=0)
+        serv_temp = self.add_preload_service(SERV_TEMPERATURE_SENSOR)
+        self.char_temp = serv_temp.configure_char(
+            CHAR_CURRENT_TEMPERATURE, value=0, properties=PROP_CELSIUS)
+        self.unit = None
 
     def update_state(self, new_state):
-        """Update accessory after state change."""
-        state = new_state.state
-        detected = (state == STATE_ON) or (state == STATE_HOME)
-        self.char_detected.set_value(detected)
-        _LOGGER.debug('%s: Set to %d', self.entity_id, detected)
+        """Update temperature after state changed."""
+        unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS)
+        temperature = convert_to_float(new_state.state)
+        if temperature:
+            temperature = temperature_to_homekit(temperature, unit)
+            self.char_temp.set_value(temperature)
+            _LOGGER.debug('%s: Current temperature set to %d°C',
+                          self.entity_id, temperature)

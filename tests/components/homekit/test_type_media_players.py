@@ -1,11 +1,11 @@
 """Test different accessory types: Media Players."""
 
-from homeassistant.components.media_player import (
-    ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
-from homeassistant.components.homekit.type_media_players import MediaPlayer
 from homeassistant.components.homekit.const import (
     CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE)
+from homeassistant.components.homekit.type_media_players import MediaPlayer
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_STOP, SERVICE_TURN_OFF, SERVICE_TURN_ON,
@@ -25,7 +25,7 @@ async def test_media_player_set_state(hass, hk_driver):
     hass.states.async_set(entity_id, None, {ATTR_SUPPORTED_FEATURES: 20873,
                                             ATTR_MEDIA_VOLUME_MUTED: False})
     await hass.async_block_till_done()
-    acc = MediaPlayer(hass, hk_driver, 'MediaPlayer', entity_id, 2, config)
+    acc = MediaPlayer(hass, hk_driver, 'Media Player', entity_id, 2, config)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2

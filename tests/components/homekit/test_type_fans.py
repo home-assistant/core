@@ -7,6 +7,7 @@ from homeassistant.components.fan import (
     ATTR_DIRECTION, ATTR_OSCILLATING, DIRECTION_FORWARD, DIRECTION_REVERSE,
     DOMAIN, SERVICE_OSCILLATE, SERVICE_SET_DIRECTION,
     SUPPORT_DIRECTION, SUPPORT_OSCILLATE)
+from homeassistant.components.homekit.const import ACC_FAN
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_OFF,
     STATE_UNKNOWN, SERVICE_TURN_ON, SERVICE_TURN_OFF)
@@ -21,7 +22,7 @@ def cls():
     patcher = patch_debounce()
     patcher.start()
     _import = __import__('homeassistant.components.homekit.type_fans',
-                         fromlist=['Fan'])
+                         fromlist=[ACC_FAN])
     patcher_tuple = namedtuple('Cls', ['fan'])
     yield patcher_tuple(fan=_import.Fan)
     patcher.stop()

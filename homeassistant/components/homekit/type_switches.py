@@ -3,19 +3,21 @@ import logging
 
 from pyhap.const import CATEGORY_OUTLET, CATEGORY_SWITCH
 
-from homeassistant.components.switch import DOMAIN as SWITCH
+from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON)
 from homeassistant.core import split_entity_id
 
 from . import TYPES
 from .accessories import HomeAccessory
-from .const import CHAR_ON, CHAR_OUTLET_IN_USE, SERV_OUTLET, SERV_SWITCH
+from .const import (
+    ACC_OUTLET, ACC_SWITCH, CHAR_ON, CHAR_OUTLET_IN_USE, SERV_OUTLET,
+    SERV_SWITCH)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@TYPES.register('Outlet')
+@TYPES.register(ACC_OUTLET)
 class Outlet(HomeAccessory):
     """Generate an Outlet accessory."""
 
@@ -37,7 +39,7 @@ class Outlet(HomeAccessory):
         self.flag_target_state = True
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.hass.services.call(SWITCH, service, params)
+        self.hass.services.call(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update switch state after state changed."""
@@ -49,7 +51,7 @@ class Outlet(HomeAccessory):
         self.flag_target_state = False
 
 
-@TYPES.register('Switch')
+@TYPES.register(ACC_SWITCH)
 class Switch(HomeAccessory):
     """Generate a Switch accessory."""
 

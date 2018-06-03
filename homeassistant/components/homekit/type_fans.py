@@ -14,12 +14,13 @@ from homeassistant.const import (
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
-    CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_SWING_MODE, SERV_FANV2)
+    ACC_FAN, CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_SWING_MODE,
+    SERV_FANV2)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@TYPES.register('Fan')
+@TYPES.register(ACC_FAN)
 class Fan(HomeAccessory):
     """Generate a Fan accessory for a fan entity.
 
@@ -57,9 +58,6 @@ class Fan(HomeAccessory):
 
     def set_state(self, value):
         """Set state if call came from HomeKit."""
-        if self._state == value:
-            return
-
         _LOGGER.debug('%s: Set state to %d', self.entity_id, value)
         self._flag[CHAR_ACTIVE] = True
         service = SERVICE_TURN_ON if value == 1 else SERVICE_TURN_OFF

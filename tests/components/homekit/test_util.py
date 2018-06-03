@@ -2,7 +2,6 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.core import State
 from homeassistant.components.homekit.const import (
     CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE, TYPE_OUTLET)
@@ -13,10 +12,12 @@ from homeassistant.components.homekit.util import (
 from homeassistant.components.homekit.util import validate_entity_config \
     as vec
 from homeassistant.components.persistent_notification import (
-    ATTR_MESSAGE, ATTR_NOTIFICATION_ID, DOMAIN)
+    ATTR_MESSAGE, ATTR_NOTIFICATION_ID, DOMAIN, SERVICE_CREATE,
+    SERVICE_DISMISS)
 from homeassistant.const import (
-    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, STATE_UNKNOWN,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, STATE_ON,
+    STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.core import State
 
 from tests.common import async_mock_service
 
@@ -65,13 +66,13 @@ def test_validate_media_player_features():
     """Test validate modes for media players."""
     config = {}
     attrs = {ATTR_SUPPORTED_FEATURES: 20873}
-    entity_state = State('media_player.demo', 'on', attrs)
+    entity_state = State('media_player.demo', STATE_ON, attrs)
     assert validate_media_player_features(entity_state, config) is True
 
     config = {FEATURE_ON_OFF: None}
     assert validate_media_player_features(entity_state, config) is True
 
-    entity_state = State('media_player.demo', 'on')
+    entity_state = State('media_player.demo', STATE_ON)
     assert validate_media_player_features(entity_state, config) is False
 
 
@@ -110,7 +111,7 @@ async def test_show_setup_msg(hass):
     """Test show setup message as persistence notification."""
     pincode = b'123-45-678'
 
-    call_create_notification = async_mock_service(hass, DOMAIN, 'create')
+    call_create_notification = async_mock_service(hass, DOMAIN, SERVICE_CREATE)
 
     await hass.async_add_job(show_setup_message, hass, pincode)
     await hass.async_block_till_done()
@@ -123,7 +124,8 @@ async def test_show_setup_msg(hass):
 
 async def test_dismiss_setup_msg(hass):
     """Test dismiss setup message."""
-    call_dismiss_notification = async_mock_service(hass, DOMAIN, 'dismiss')
+    call_dismiss_notification = async_mock_service(hass, DOMAIN,
+                                                   SERVICE_DISMISS)
 
     await hass.async_add_job(dismiss_setup_message, hass)
     await hass.async_block_till_done()

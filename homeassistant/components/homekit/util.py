@@ -3,7 +3,8 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.media_player as media_player
+from homeassistant.components import (
+    alarm_control_panel, lock, media_player, switch)
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
     ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, TEMP_CELSIUS)
@@ -53,7 +54,7 @@ def validate_entity_config(values):
             raise vol.Invalid('The configuration for {} must be '
                               ' a dictionary.'.format(entity))
 
-        if domain in ('alarm_control_panel', 'lock'):
+        if domain in (alarm_control_panel.DOMAIN, lock.DOMAIN):
             config = CODE_SCHEMA(config)
 
         elif domain == media_player.DOMAIN:
@@ -68,7 +69,7 @@ def validate_entity_config(values):
                 feature_list[key] = params
             config[CONF_FEATURE_LIST] = feature_list
 
-        elif domain == 'switch':
+        elif domain == switch.DOMAIN:
             config = SWITCH_TYPE_SCHEMA(config)
 
         else:

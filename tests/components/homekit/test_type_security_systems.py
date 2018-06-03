@@ -5,9 +5,10 @@ from homeassistant.components.alarm_control_panel import DOMAIN
 from homeassistant.components.homekit.type_security_systems import \
     SecuritySystem
 from homeassistant.const import (
-    ATTR_CODE, ATTR_ENTITY_ID, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED,
-    STATE_UNKNOWN)
+    ATTR_CODE, ATTR_ENTITY_ID, SERVICE_ALARM_ARM_AWAY, SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT, SERVICE_ALARM_DISARM, STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
 
 from tests.common import async_mock_service
 
@@ -20,7 +21,7 @@ async def test_switch_set_state(hass, hk_driver):
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = SecuritySystem(hass, hk_driver, 'SecuritySystem',
+    acc = SecuritySystem(hass, hk_driver, 'Security System',
                          entity_id, 2, config)
     await hass.async_add_job(acc.run)
 
@@ -61,10 +62,10 @@ async def test_switch_set_state(hass, hk_driver):
     assert acc.char_current_state.value == 4
 
     # Set from HomeKit
-    call_arm_home = async_mock_service(hass, DOMAIN, 'alarm_arm_home')
-    call_arm_away = async_mock_service(hass, DOMAIN, 'alarm_arm_away')
-    call_arm_night = async_mock_service(hass, DOMAIN, 'alarm_arm_night')
-    call_disarm = async_mock_service(hass, DOMAIN, 'alarm_disarm')
+    call_arm_home = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_HOME)
+    call_arm_away = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_AWAY)
+    call_arm_night = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_NIGHT)
+    call_disarm = async_mock_service(hass, DOMAIN, SERVICE_ALARM_DISARM)
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 0)
     await hass.async_block_till_done()
@@ -102,11 +103,11 @@ async def test_no_alarm_code(hass, hk_driver, config):
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = SecuritySystem(hass, hk_driver, 'SecuritySystem',
+    acc = SecuritySystem(hass, hk_driver, 'Security System',
                          entity_id, 2, config)
 
     # Set from HomeKit
-    call_arm_home = async_mock_service(hass, DOMAIN, 'alarm_arm_home')
+    call_arm_home = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_HOME)
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 0)
     await hass.async_block_till_done()

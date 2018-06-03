@@ -13,8 +13,8 @@ from homeassistant.components.media_player import (
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
-    CHAR_NAME, CHAR_ON, CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE,
-    FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, SERV_SWITCH)
+    ACC_MEDIA_PLAYER, CHAR_NAME, CHAR_ON, CONF_FEATURE_LIST, FEATURE_ON_OFF,
+    FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP, FEATURE_TOGGLE_MUTE, SERV_SWITCH)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ MODE_FRIENDLY_NAME = {FEATURE_ON_OFF: 'Power',
                       FEATURE_TOGGLE_MUTE: 'Mute'}
 
 
-@TYPES.register('MediaPlayer')
+@TYPES.register(ACC_MEDIA_PLAYER)
 class MediaPlayer(HomeAccessory):
     """Generate a Media Player accessory."""
 

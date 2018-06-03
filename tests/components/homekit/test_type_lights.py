@@ -3,11 +3,12 @@ from collections import namedtuple
 
 import pytest
 
+from homeassistant.components.homekit.const import ACC_LIGHT
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP, ATTR_HS_COLOR,
     DOMAIN, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES,
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     STATE_ON, STATE_OFF, STATE_UNKNOWN)
 
 from tests.common import async_mock_service
@@ -20,7 +21,7 @@ def cls():
     patcher = patch_debounce()
     patcher.start()
     _import = __import__('homeassistant.components.homekit.type_lights',
-                         fromlist=['Light'])
+                         fromlist=[ACC_LIGHT])
     patcher_tuple = namedtuple('Cls', ['light'])
     yield patcher_tuple(light=_import.Light)
     patcher.stop()
@@ -57,8 +58,8 @@ async def test_light_basic(hass, hk_driver, cls):
     assert acc.char_on.value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, 'turn_on')
-    call_turn_off = async_mock_service(hass, DOMAIN, 'turn_off')
+    call_turn_on = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
+    call_turn_off = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
 
     await hass.async_add_job(acc.char_on.client_update_value, 1)
     await hass.async_block_till_done()
@@ -94,8 +95,8 @@ async def test_light_brightness(hass, hk_driver, cls):
     assert acc.char_brightness.value == 40
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, 'turn_on')
-    call_turn_off = async_mock_service(hass, DOMAIN, 'turn_off')
+    call_turn_on = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
+    call_turn_off = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
 
     await hass.async_add_job(acc.char_brightness.client_update_value, 20)
     await hass.async_add_job(acc.char_on.client_update_value, 1)
@@ -135,7 +136,7 @@ async def test_light_color_temperature(hass, hk_driver, cls):
     assert acc.char_color_temperature.value == 190
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, 'turn_on')
+    call_turn_on = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
 
     await hass.async_add_job(
         acc.char_color_temperature.client_update_value, 250)
@@ -164,7 +165,7 @@ async def test_light_rgb_color(hass, hk_driver, cls):
     assert acc.char_saturation.value == 90
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, 'turn_on')
+    call_turn_on = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
 
     await hass.async_add_job(acc.char_hue.client_update_value, 145)
     await hass.async_add_job(acc.char_saturation.client_update_value, 75)

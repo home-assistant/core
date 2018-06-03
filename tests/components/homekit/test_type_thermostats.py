@@ -8,12 +8,14 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE, ATTR_MAX_TEMP, ATTR_MIN_TEMP, ATTR_TEMPERATURE,
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, ATTR_OPERATION_MODE,
     ATTR_OPERATION_LIST, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP, DOMAIN,
+    SERVICE_SET_OPERATION_MODE, SERVICE_SET_TEMPERATURE,
     STATE_AUTO, STATE_COOL, STATE_HEAT)
 from homeassistant.components.homekit.const import (
-    PROP_MAX_VALUE, PROP_MIN_VALUE)
+    ACC_THERMOSTAT, PROP_MAX_VALUE, PROP_MIN_VALUE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    CONF_TEMPERATURE_UNIT, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.common import async_mock_service
 from tests.components.homekit.common import patch_debounce
@@ -25,7 +27,7 @@ def cls():
     patcher = patch_debounce()
     patcher.start()
     _import = __import__('homeassistant.components.homekit.type_thermostats',
-                         fromlist=['Thermostat'])
+                         fromlist=[ACC_THERMOSTAT])
     patcher_tuple = namedtuple('Cls', ['thermostat'])
     yield patcher_tuple(thermostat=_import.Thermostat)
     patcher.stop()
@@ -37,7 +39,7 @@ async def test_default_thermostat(hass, hk_driver, cls):
 
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    acc = cls.thermostat(hass, hk_driver, 'Climate', entity_id, 2, None)
+    acc = cls.thermostat(hass, hk_driver, 'Thermostat', entity_id, 2, None)
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
 
@@ -155,9 +157,10 @@ async def test_default_thermostat(hass, hk_driver, cls):
     assert acc.char_display_units.value == 0
 
     # Set from HomeKit
-    call_set_temperature = async_mock_service(hass, DOMAIN, 'set_temperature')
+    call_set_temperature = async_mock_service(hass, DOMAIN,
+                                              SERVICE_SET_TEMPERATURE)
     call_set_operation_mode = async_mock_service(hass, DOMAIN,
-                                                 'set_operation_mode')
+                                                 SERVICE_SET_OPERATION_MODE)
 
     await hass.async_add_job(acc.char_target_temp.client_update_value, 19.0)
     await hass.async_block_till_done()
@@ -181,7 +184,7 @@ async def test_auto_thermostat(hass, hk_driver, cls):
     # support_auto = True
     hass.states.async_set(entity_id, STATE_OFF, {ATTR_SUPPORTED_FEATURES: 6})
     await hass.async_block_till_done()
-    acc = cls.thermostat(hass, hk_driver, 'Climate', entity_id, 2, None)
+    acc = cls.thermostat(hass, hk_driver, 'Thermostat', entity_id, 2, None)
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
 
@@ -240,7 +243,8 @@ async def test_auto_thermostat(hass, hk_driver, cls):
     assert acc.char_display_units.value == 0
 
     # Set from HomeKit
-    call_set_temperature = async_mock_service(hass, DOMAIN, 'set_temperature')
+    call_set_temperature = async_mock_service(hass, DOMAIN,
+                                              SERVICE_SET_TEMPERATURE)
 
     await hass.async_add_job(
         acc.char_heating_thresh_temp.client_update_value, 20.0)
@@ -270,7 +274,7 @@ async def test_power_state(hass, hk_driver, cls):
                            ATTR_TEMPERATURE: 23.0,
                            ATTR_CURRENT_TEMPERATURE: 18.0})
     await hass.async_block_till_done()
-    acc = cls.thermostat(hass, hk_driver, 'Climate', entity_id, 2, None)
+    acc = cls.thermostat(hass, hk_driver, 'Thermostat', entity_id, 2, None)
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
     assert acc.support_power_state is True
@@ -295,10 +299,10 @@ async def test_power_state(hass, hk_driver, cls):
     assert acc.char_target_heat_cool.value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, 'turn_on')
-    call_turn_off = async_mock_service(hass, DOMAIN, 'turn_off')
+    call_turn_on = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
+    call_turn_off = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
     call_set_operation_mode = async_mock_service(hass, DOMAIN,
-                                                 'set_operation_mode')
+                                                 SERVICE_SET_OPERATION_MODE)
 
     await hass.async_add_job(acc.char_target_heat_cool.client_update_value, 1)
     await hass.async_block_till_done()
@@ -323,9 +327,9 @@ async def test_thermostat_fahrenheit(hass, hk_driver, cls):
     # support_auto = True
     hass.states.async_set(entity_id, STATE_OFF, {ATTR_SUPPORTED_FEATURES: 6})
     await hass.async_block_till_done()
-    with patch.object(hass.config.units, 'temperature_unit',
+    with patch.object(hass.config.units, CONF_TEMPERATURE_UNIT,
                       new=TEMP_FAHRENHEIT):
-        acc = cls.thermostat(hass, hk_driver, 'Climate', entity_id, 2, None)
+        acc = cls.thermostat(hass, hk_driver, 'Thermostat', entity_id, 2, None)
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
 
@@ -344,7 +348,8 @@ async def test_thermostat_fahrenheit(hass, hk_driver, cls):
     assert acc.char_display_units.value == 1
 
     # Set from HomeKit
-    call_set_temperature = async_mock_service(hass, DOMAIN, 'set_temperature')
+    call_set_temperature = async_mock_service(hass, DOMAIN,
+                                              SERVICE_SET_TEMPERATURE)
 
     await hass.async_add_job(
         acc.char_cooling_thresh_temp.client_update_value, 23)
@@ -375,7 +380,7 @@ async def test_get_temperature_range(hass, hk_driver, cls):
 
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
-    acc = cls.thermostat(hass, hk_driver, 'Climate', entity_id, 2, None)
+    acc = cls.thermostat(hass, hk_driver, 'Thermostat', entity_id, 2, None)
 
     hass.states.async_set(entity_id, STATE_OFF,
                           {ATTR_MIN_TEMP: 20, ATTR_MAX_TEMP: 25})
