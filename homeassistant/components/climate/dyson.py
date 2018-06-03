@@ -214,7 +214,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
     @staticmethod
     def kelvin_to_celsius(kelvin):
         """Convert temperature unit kelvin to celsius."""
-        return kelvin - 273.15
+        return kelvin - 273
 
     @staticmethod
     def kelvin_to_fahrenheit(kelvin):
