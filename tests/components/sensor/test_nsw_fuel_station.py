@@ -1,6 +1,5 @@
 """The tests for the NSW Fuel Station sensor platform."""
 import unittest
-from nsw_fuel import Price
 from unittest.mock import patch
 
 from homeassistant.components import sensor
@@ -15,20 +14,33 @@ VALID_CONFIG = {
 }
 
 
+class MockPrice():
+    """Mock Price implementation."""
+
+    def __init__(self, price, fuel_type, last_updated,
+                 price_unit, station_code):
+        """Initialize a mock price instance."""
+        self.price = price
+        self.fuel_type = fuel_type
+        self.last_updated = last_updated
+        self.price_unit = price_unit
+        self.station_code = station_code
+
+
 class FuelCheckClientMock():
     """Mock FuelCheckClient implementation."""
 
     def get_fuel_prices_for_station(self, station):
         """Return a fake fuel prices response."""
         return [
-            Price(
+            MockPrice(
                 price=150.0,
                 fuel_type='P95',
                 last_updated=None,
                 price_unit=None,
                 station_code=350
             ),
-            Price(
+            MockPrice(
                 price=140.0,
                 fuel_type='E10',
                 last_updated=None,
