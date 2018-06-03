@@ -194,11 +194,11 @@ class BroadlinkRMSwitch(SwitchDevice):
         self._command_off = b64decode(command_off) if command_off else None
         self._device = device
         self._last_click_time = timer()
-    
+
     @property
     def last_click_time(self):
         return self._last_click_time
-    
+
     @property
     def name(self):
         """Return the name of the switch."""
