@@ -351,7 +351,7 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
 
     def update(self):
         """Trigger update for all switches on the parent device."""
-        if timer()-self.last_click_time <3:
+        if timer()-self.last_click_time < 3:
             return
         self._parent_device.update()
         self._state = self._parent_device.get_outlet_status(self._slot)
