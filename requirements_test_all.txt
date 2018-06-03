@@ -138,9 +138,6 @@ pydeconz==38
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 
-# homeassistant.components.weather.ipma
-pyipma==1.1.3
-
 # homeassistant.components.litejet
 pylitejet==0.1
 
