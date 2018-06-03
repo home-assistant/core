@@ -12,7 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice)
 from homeassistant.components.tahoma import (
     DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
-from homeassistant.const import (STATE_OFF, STATE_ON)
+from homeassistant.const import (STATE_OFF, STATE_ON, ATTR_BATTERY_LEVEL)
 
 DEPENDENCIES = ['tahoma']
 
@@ -67,6 +67,12 @@ class TahomaBinarySensor(TahomaDevice, BinarySensorDevice):
             else:
                 self._state = STATE_ON
 
-        # FIXME: Check for low battery state.
-        # self.tahoma_device.active_states['core:SensorDefectState'] ==
-        #     'lowBattery' """
+    @property
+    def state_attributes(self):
+        """Return the state attributes of the sensor."""
+        attr = {}
+        if 'core:SensorDefectState' in self.tahoma_device.active_states:
+            # Set to 'lowBattery' for low battery warning.
+            attr[ATTR_BATTERY_LEVEL] = self.tahoma_device.active_states[
+                'core:SensorDefectState']
+        return attr

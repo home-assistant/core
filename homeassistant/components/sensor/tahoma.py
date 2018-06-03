@@ -11,6 +11,7 @@ from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.tahoma import (
     DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
+from homeassistant.const import (ATTR_BATTERY_LEVEL)
 
 DEPENDENCIES = ['tahoma']
 
@@ -62,3 +63,18 @@ class TahomaSensor(TahomaDevice, Entity):
         if self.tahoma_device.type == 'io:SomfyContactIOSystemSensor':
             self.current_value = self.tahoma_device.active_states[
                 'core:ContactState']
+
+    @property
+    def state_attributes(self):
+        """Return the state attributes of the sensor."""
+        attr = {}
+        if 'core:RSSILevelState' in self.tahoma_device.active_states:
+            attr['RSSI Level'] = self.tahoma_device.active_states[
+                'core:RSSILevelState']
+        if 'core:SensorDefectState' in self.tahoma_device.active_states:
+            attr[ATTR_BATTERY_LEVEL] = self.tahoma_device.active_states[
+                'core:SensorDefectState']
+        if 'core:StatusState' in self.tahoma_device.active_states:
+            attr['Status'] = self.tahoma_device.active_states[
+                'core:StatusState']
+        return attr
