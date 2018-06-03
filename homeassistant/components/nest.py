@@ -15,7 +15,9 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery, config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send, \
+    async_dispatcher_connect
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['python-nest==4.0.1']
 
@@ -272,3 +274,54 @@ class NestDevice(object):
         except socket.error:
             _LOGGER.error(
                 "Connection error logging into the nest web service.")
+
+
+class NestSensorDevice(Entity):
+    """Representation of a Nest sensor."""
+
+    def __init__(self, structure, device, variable):
+        """Initialize the sensor."""
+        self.structure = structure
+        self.variable = variable
+
+        if device is not None:
+            # device specific
+            self.device = device
+            self._name = "{} {}".format(self.device.name_long,
+                                        self.variable.replace('_', ' '))
+        else:
+            # structure only
+            self.device = structure
+            self._name = "{} {}".format(self.structure.name,
+                                        self.variable.replace('_', ' '))
+
+        self._state = None
+        self._unit = None
+
+    @property
+    def name(self):
+        """Return the name of the nest, if any."""
+        return self._name
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._unit
+
+    @property
+    def should_poll(self):
+        """Do not need poll thanks using Nest streaming API."""
+        return False
+
+    def update(self):
+        """Do not use NestSensorDevice directly."""
+        raise NotImplementedError
+
+    async def async_added_to_hass(self):
+        """Register update signal handler."""
+        async def async_update_state():
+            """Update sensor state."""
+            await self.async_update_ha_state(True)
+
+        async_dispatcher_connect(self.hass, SIGNAL_NEST_UPDATE,
+                                 async_update_state)
