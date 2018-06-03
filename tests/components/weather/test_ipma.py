@@ -10,37 +10,42 @@ from homeassistant.components.weather import (
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, mock_coro
+from tests.common import get_test_home_assistant, MockDependency
 
-MockStation = namedtuple('Station', ['latitude', 'longitude',
-                                     'idAreaAviso', 'idConselho',
-                                     'idDistrito', 'idRegiao',
-                                     'globalIdLocal', 'local'])
 
-MOCK_STATION = MockStation(40.61, -8.64, 'AAA', 1, 1, 1, 100000, 'HomeTown')
+class MockStation():
+    """Mock Station from pyipma."""
 
-Forecast = namedtuple('Forecast', ['precipitaProb', 'tMin', 'tMax',
-                                   'predWindDir', 'idWeatherType',
-                                   'classWindSpeed', 'longitude',
-                                   'forecastDate', 'classPrecInt',
-                                   'latitude', 'description'])
+    @classmethod
+    async def get(cls, websession, lat, lon):
+        """Mock Factory."""
+        return MockStation()
 
-MOCK_FORECAST = Forecast(73.0, 13.7, 18.7, 'NW', 6, 2, -8.64,
+    async def observation(self):
+        """Mock Observation."""
+        Observation = namedtuple('Observation', ['temperature', 'humidity',
+                                                 'windspeed', 'winddirection',
+                                                 'precipitation', 'pressure',
+                                                 'description'])
+
+        return Observation(18, 71.0, 3.94, 'NW', 0, 1000.0, '---')
+
+    async def forecast(self):
+        """Mock Forecast."""
+        Forecast = namedtuple('Forecast', ['precipitaProb', 'tMin', 'tMax',
+                                           'predWindDir', 'idWeatherType',
+                                           'classWindSpeed', 'longitude',
+                                           'forecastDate', 'classPrecInt',
+                                           'latitude', 'description'])
+
+        return [Forecast(73.0, 13.7, 18.7, 'NW', 6, 2, -8.64,
                          '2018-05-31', 2, 40.61,
-                         'Aguaceiros, com vento Moderado de Noroeste')
+                         'Aguaceiros, com vento Moderado de Noroeste')]
 
-Observation = namedtuple('Observation', ['temperature', 'humidity',
-                                         'windspeed', 'winddirection',
-                                         'precipitation', 'pressure',
-                                         'description'])
-
-Station = namedtuple('ObservationStation', ['latitude', 'longitude',
-                                            'stationID', 'stationName',
-                                            'currentObs'])
-
-MOCK_OBSERVATION = Observation(18, 71.0, 3.94, 'NW', 0, 1000.0, '---')
-MOCK_OBSERVATION_STATION = Station(40.61, -8.64, 1, 'HomeTown',
-                                   MOCK_OBSERVATION)
+    @property
+    def local(self):
+        """Mock location."""
+        return "HomeTown"
 
 
 class TestIPMA(unittest.TestCase):
@@ -57,13 +62,9 @@ class TestIPMA(unittest.TestCase):
         """Stop down everything that was started."""
         self.hass.stop()
 
-    @patch("pyipma.api.IPMA_API.stations",
-           return_value=mock_coro([MOCK_STATION]))
-    @patch("pyipma.api.IPMA_API.forecast",
-           return_value=mock_coro([MOCK_FORECAST]))
-    @patch("pyipma.api.IPMA_API.observations",
-           return_value=mock_coro([MOCK_OBSERVATION_STATION]))
-    def test_setup(self, mock_observation, mock_forecast, mock_stations):
+    @MockDependency("pyipma")
+    @patch("pyipma.Station", new=MockStation)
+    def test_setup(self, mock_pyipma):
         """Test for successfully setting up the IPMA platform."""
         self.assertTrue(setup_component(self.hass, weather.DOMAIN, {
             'weather': {
