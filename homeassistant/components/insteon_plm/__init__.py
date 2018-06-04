@@ -234,13 +234,18 @@ def async_setup(hass, config):
 
     _LOGGER.info("Looking for PLM on %s", port)
     if host:
-        conn = yield from insteonplm.Connection.create(
-            host=host,
-            port=port,
-            username=username,
-            password=password,
-            loop=hass.loop,
-            workdir=hass.config.config_dir)
+        try:
+            ip_port = int(port)
+            conn = yield from insteonplm.Connection.create(
+                host=host,
+                port=ip_port,
+                username=username,
+                password=password,
+                loop=hass.loop,
+                workdir=hass.config.config_dir)
+        except ValueError:
+            raise ValueError('If the hub host is defined the port must be '
+                             'the hub IP port number')
     else:
         conn = yield from insteonplm.Connection.create(
             device=port,
