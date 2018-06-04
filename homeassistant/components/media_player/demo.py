@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/hqdefault.jpg'
-SOUND_MODE_LIST = ['Dummy Music','Dummy Movie']
+SOUND_MODE_LIST = ['Dummy Music', 'Dummy Movie']
 DEFAULT_SOUND_MODE = 'Dummy Music'
 
 YOUTUBE_PLAYER_SUPPORT = \
