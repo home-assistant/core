@@ -8,7 +8,7 @@ import pytest
 from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import (
     DOMAIN, CONF_JS_VERSION, CONF_THEMES, CONF_EXTRA_HTML_URL,
-    CONF_EXTRA_HTML_URL_ES5, DATA_PANELS)
+    CONF_EXTRA_HTML_URL_ES5)
 from homeassistant.components import websocket_api as wapi
 
 
@@ -181,15 +181,6 @@ def test_extra_urls_es5(mock_http_client_with_urls):
     assert resp.status == 200
     text = yield from resp.text()
     assert text.find('href="https://domain.com/my_extra_url_es5.html"') >= 0
-
-
-@asyncio.coroutine
-def test_panel_without_path(hass):
-    """Test panel registration without file path."""
-    yield from hass.components.frontend.async_register_panel(
-        'test_component', 'nonexistant_file')
-    yield from async_setup_component(hass, 'frontend', {})
-    assert 'test_component' not in hass.data[DATA_PANELS]
 
 
 async def test_get_panels(hass, hass_ws_client):
