@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the ZhongHong HVAC platform."""
     from zhong_hong_hvac.hub import ZhongHongGateway
     host = config.get(CONF_HOST)
@@ -68,8 +68,8 @@ async def async_setup_platform(hass, config, add_devices, discovery_info=None):
             return
 
         _LOGGER.debug("zhong_hong hub start listen event")
-        hub.start_listen()
-        hub.query_all_status()
+        await hass.async_add_job(hub.start_listen)
+        await hass.async_add_job(hub.query_all_status)
         hub_is_initialized = True
 
     async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, startup)
@@ -81,7 +81,7 @@ async def async_setup_platform(hass, config, add_devices, discovery_info=None):
         """Stop ZhongHongHub socket."""
         hub.stop_listen()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_listen)
 
 
 class ZhongHongClimate(ClimateDevice):
