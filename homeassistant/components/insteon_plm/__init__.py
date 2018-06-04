@@ -12,7 +12,8 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.const import (CONF_PORT, EVENT_HOMEASSISTANT_STOP,
                                  CONF_PLATFORM,
-                                 CONF_ENTITY_ID)
+                                 CONF_ENTITY_ID,
+                                 CONF_HOST)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
@@ -76,6 +77,7 @@ CONF_X10_SCHEMA = vol.All(
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): cv.string,
+        vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_OVERRIDE): vol.All(
             cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA]),
         vol.Optional(CONF_X10_ALL_UNITS_OFF): vol.In(HOUSECODES),
@@ -119,6 +121,7 @@ def async_setup(hass, config):
 
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
+    host = conf.get(CONF_HOST)
     overrides = conf.get(CONF_OVERRIDE, [])
     x10_devices = conf.get(CONF_X10, [])
     x10_all_units_off_housecode = conf.get(CONF_X10_ALL_UNITS_OFF)
@@ -224,10 +227,17 @@ def async_setup(hass, config):
         _LOGGER.debug("Insteon_plm Services registered")
 
     _LOGGER.info("Looking for PLM on %s", port)
-    conn = yield from insteonplm.Connection.create(
-        device=port,
-        loop=hass.loop,
-        workdir=hass.config.config_dir)
+    if host:
+        conn = yield from insteonplm.Connection.create(
+            host=host,
+            port=port,
+            loop=hass.loop,
+            workdir=hass.config.config_dir)
+    else:
+        conn = yield from insteonplm.Connection.create(
+            device=port,
+            loop=hass.loop,
+            workdir=hass.config.config_dir)
 
     plm = conn.protocol
 
