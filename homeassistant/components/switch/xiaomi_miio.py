@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'chuangmi.plug.v3']),
 })
 
-REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.0', 'construct==2.9.41']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
@@ -142,7 +142,7 @@ async def async_setup_platform(hass, config, async_add_devices,
 
     elif model in ['qmi.powerstrip.v1', 'zimi.powerstrip.v2']:
         from miio import PowerStrip
-        plug = PowerStrip(host, token)
+        plug = PowerStrip(host, token, model=model)
         device = XiaomiPowerStripSwitch(name, plug, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
