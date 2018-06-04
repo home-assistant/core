@@ -213,6 +213,7 @@ class Switch(zha.Entity, BinarySensorDevice):
 
     @property
     def force_update(self) -> bool:
+        """Force state updates."""
         return True
 
     @property
