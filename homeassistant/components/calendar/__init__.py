@@ -28,7 +28,6 @@ DOMAIN = 'calendar'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SCAN_INTERVAL = timedelta(seconds=60)
-CONF_COLOR = 'color'
 
 
 @asyncio.coroutine
@@ -59,7 +58,6 @@ class CalendarEventDevice(Entity):
         self._name = data.get(CONF_NAME)
         self.dev_id = data.get(CONF_DEVICE_ID)
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
-        self._color = data.get(CONF_COLOR)
         self.entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, self.dev_id, hass=hass)
         self._event_list = []
@@ -74,18 +72,7 @@ class CalendarEventDevice(Entity):
             'description': '',
         }
 
-        class CalendarEventView(http.HomeAssistantView):
-            """View to retrieve calendar content."""
-
-            url = '/api/calendar/' + self.entity_id.split(".")[-1]
-            name = "api:calendar"
-            device = self
-
-            async def get(self, request):
-                """Return calendar events."""
-                return self.json(self.device.event_list)
-
-        hass.http.register_view(CalendarEventView)
+        hass.http.register_view(CalendarEventView(self))
         self.update()
 
     def offset_reached(self):
@@ -101,11 +88,6 @@ class CalendarEventDevice(Entity):
     def name(self):
         """Return the name of the entity."""
         return self._name
-
-    @property
-    def color(self):
-        """Return calendar color."""
-        return self._color
 
     @property
     def event_list(self):
@@ -128,7 +110,6 @@ class CalendarEventDevice(Entity):
             'end_time': end,
             'location': self._cal_data.get('location', None),
             'description': self._cal_data.get('description', None),
-            'color': self._color,
         }
 
     @property
@@ -163,8 +144,6 @@ class CalendarEventDevice(Entity):
 
     def update(self):
         """Search for the next event."""
-        self._event_list = self.data.event_list
-
         if not self.data or not self.data.update():
             # update cached, don't do anything
             return
@@ -206,10 +185,29 @@ class CalendarEventDevice(Entity):
 
         # cleanup the string so we don't have a bunch of double+ spaces
         self._cal_data['message'] = re.sub('  +', '', summary).strip()
-
         self._cal_data['offset_time'] = offset_time
         self._cal_data['location'] = self.data.event.get('location', '')
         self._cal_data['description'] = self.data.event.get('description', '')
         self._cal_data['start'] = start
         self._cal_data['end'] = end
         self._cal_data['all_day'] = 'date' in self.data.event['start']
+
+
+class CalendarEventView(http.HomeAssistantView):
+    """View to retrieve calendar content."""
+
+    name = "api:calendar"
+
+    def __init__(self, device):
+        """Initialize calendar view."""
+        self.device = device
+        self.url = '/api/calendar/' + device.entity_id.split(".")[-1]
+
+    async def get(self, request):
+        """Return calendar events."""
+        if hasattr(self.device, "update"):
+            self.device.update()
+        elif hasattr(self.device, "async_update"):
+            await self.device.async_update()
+        _event_list = getattr(self.device.data, "event_list", [])
+        return self.json(_event_list)

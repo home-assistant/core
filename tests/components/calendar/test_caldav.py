@@ -20,7 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 DEVICE_DATA = {
     "name": "Private Calendar",
     "device_id": "Private Calendar",
-    "color": "green",
 }
 
 EVENTS = [
@@ -258,7 +257,6 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-27 18:00:00",
             "location": "Hamburg",
             "description": "Surprisingly rainy",
-            "color": "green",
         })
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 30))
@@ -278,7 +276,6 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-27 18:00:00",
             "location": "Hamburg",
             "description": "Surprisingly rainy",
-            "color": "green",
         })
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 00))
@@ -298,7 +295,6 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "description": "Sunny day",
             "end_time": "2017-11-27 17:30:00",
             "location": "San Francisco",
-            "color": "green",
         })
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(8, 30))
@@ -317,7 +313,6 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-27 11:00:00",
             "location": "Hamburg",
             "description": "Surprisingly shiny",
-            "color": "green",
         })
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
@@ -339,7 +334,6 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-27 18:00:00",
             "location": "Hamburg",
             "description": "Surprisingly rainy",
-            "color": "green",
         })
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
@@ -361,7 +355,6 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-27 18:00:00",
             "location": "Hamburg",
             "description": "Surprisingly rainy",
-            "color": "green",
         })
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(20, 00))
@@ -404,5 +397,4 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-28 00:00:00",
             "location": "Hamburg",
             "description": "What a beautiful day",
-            "color": "green",
         })

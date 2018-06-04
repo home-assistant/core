@@ -101,7 +101,6 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'end_time': '{} 00:00:00'.format(event['end']['date']),
             'location': event['location'],
             'description': event['description'],
-            'color': None,
         })
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
@@ -163,7 +162,6 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 .strftime(DATE_STR_FORMAT),
             'location': '',
             'description': '',
-            'color': None,
         })
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
@@ -226,7 +224,6 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 .strftime(DATE_STR_FORMAT),
             'location': '',
             'description': '',
-            'color': None,
         })
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
@@ -290,7 +287,6 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 .strftime(DATE_STR_FORMAT),
             'location': '',
             'description': '',
-            'color': None,
         })
 
     @pytest.mark.skip
@@ -358,7 +354,6 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'end_time': '{} 06:00:00'.format(event['end']['date']),
             'location': event['location'],
             'description': event['description'],
-            'color': None,
         })
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
@@ -426,7 +421,6 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'end_time': '{} 00:00:00'.format(event['end']['date']),
             'location': event['location'],
             'description': event['description'],
-            'color': None,
         })
 
     @MockDependency("httplib2")

@@ -92,11 +92,13 @@ class GoogleCalendarData(object):
             if (not self.ignore_availability
                     and 'transparency' in item.keys()):
                 if item['transparency'] == 'opaque':
-                    new_event = item
-                    break
+                    self._event_list.append(item)
+                    if new_event is None:
+                        new_event = item
             else:
-                new_event = item
-                break
+                self._event_list.append(item)
+                if new_event is None:
+                    new_event = item
 
         self.event = new_event
         return True

@@ -26,7 +26,6 @@ CONF_CALENDARS = 'calendars'
 CONF_CUSTOM_CALENDARS = 'custom_calendars'
 CONF_CALENDAR = 'calendar'
 CONF_SEARCH = 'search'
-CONF_COLOR = 'color'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     # pylint: disable=no-value-for-parameter
@@ -37,14 +36,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         ])),
     vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-    vol.Optional(CONF_COLOR, default="#3174ad"): cv.string,
     vol.Optional(CONF_CUSTOM_CALENDARS, default=[]):
         vol.All(cv.ensure_list, vol.Schema([
             vol.Schema({
                 vol.Required(CONF_CALENDAR): cv.string,
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_SEARCH): cv.string,
-                vol.Optional(CONF_COLOR, default="#3174ad"): cv.string,
             })
         ]))
 })
@@ -84,7 +81,6 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                 CONF_DEVICE_ID: "{} {}".format(
                     cust_calendar.get(CONF_CALENDAR),
                     cust_calendar.get(CONF_NAME)),
-                CONF_COLOR: cust_calendar.get(CONF_COLOR),
             }
 
             calendar_devices.append(
@@ -97,7 +93,6 @@ def setup_platform(hass, config, add_devices, disc_info=None):
             device_data = {
                 CONF_NAME: calendar.name,
                 CONF_DEVICE_ID: calendar.name,
-                CONF_COLOR: config.get(CONF_COLOR),
             }
             calendar_devices.append(
                 WebDavCalendarEventDevice(hass, device_data, calendar)
@@ -112,16 +107,15 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
     def __init__(self, hass, device_data, calendar, all_day=False,
                  search=None):
         """Create the WebDav Calendar Event Device."""
-        self.data = WebDavCalendarData(calendar, all_day, search,
-                                       device_data.get(CONF_COLOR))
+        self.data = WebDavCalendarData(calendar, all_day, search)
         super().__init__(hass, device_data)
 
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         if self.data.event is None:
-            # No tasks, we show only calendar color
-            return {CONF_COLOR: self._color}
+            # No tasks, we don't REALLY need to show anything.
+            return {}
 
         attributes = super().device_state_attributes
         return attributes
@@ -130,13 +124,12 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
 class WebDavCalendarData(object):
     """Class to utilize the calendar dav client object to get next event."""
 
-    def __init__(self, calendar, include_all_day, search, color=None):
+    def __init__(self, calendar, include_all_day, search):
         """Set up how we are going to search the WebDav calendar."""
         self.calendar = calendar
         self.include_all_day = include_all_day
         self.search = search
         self.event = None
-        self._color = color
         self._event_list = []
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -149,7 +142,8 @@ class WebDavCalendarData(object):
             dt.start_of_local_day() + timedelta(days=1)
         )
 
-        # Handle event list for local calendar
+        # Get event list from the current calendar
+        # Should we let users chose nb day before/after today ?
         event_list = self.calendar.date_search(
             dt.start_of_local_day() - timedelta(days=10),
             dt.start_of_local_day() + timedelta(days=31)
@@ -164,7 +158,6 @@ class WebDavCalendarData(object):
                 "end": self.get_hass_date(self.get_end_date(vevent)),
                 "location": self.get_attr_value(vevent, "location"),
                 "description": self.get_attr_value(vevent, "description"),
-                "color": self._color,
             }
 
             def _get_date(date):
