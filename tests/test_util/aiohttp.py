@@ -82,7 +82,8 @@ class AiohttpClientMocker:
     def create_session(self, loop):
         """Create a ClientSession that is bound to this mocker."""
         session = ClientSession(loop=loop)
-        session._request = self.match_request
+        # Setting directly on `session` will raise deprecation warning
+        object.__setattr__(session, '_request', self.match_request)
         return session
 
     async def match_request(self, method, url, *, data=None, auth=None,

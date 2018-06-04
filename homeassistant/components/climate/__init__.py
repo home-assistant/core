@@ -22,6 +22,12 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS, PRECISION_WHOLE,
     PRECISION_TENTHS, )
+
+DEFAULT_MIN_TEMP = 7
+DEFAULT_MAX_TEMP = 35
+DEFAULT_MIN_HUMITIDY = 30
+DEFAULT_MAX_HUMIDITY = 99
+
 DOMAIN = 'climate'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -40,6 +46,7 @@ STATE_HEAT = 'heat'
 STATE_COOL = 'cool'
 STATE_IDLE = 'idle'
 STATE_AUTO = 'auto'
+STATE_MANUAL = 'manual'
 STATE_DRY = 'dry'
 STATE_FAN_ONLY = 'fan_only'
 STATE_ECO = 'eco'
@@ -777,19 +784,21 @@ class ClimateDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(7, TEMP_CELSIUS, self.temperature_unit)
+        return convert_temperature(DEFAULT_MIN_TEMP, TEMP_CELSIUS,
+                                   self.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(35, TEMP_CELSIUS, self.temperature_unit)
+        return convert_temperature(DEFAULT_MAX_TEMP, TEMP_CELSIUS,
+                                   self.temperature_unit)
 
     @property
     def min_humidity(self):
         """Return the minimum humidity."""
-        return 30
+        return DEFAULT_MIN_HUMITIDY
 
     @property
     def max_humidity(self):
         """Return the maximum humidity."""
-        return 99
+        return DEFAULT_MAX_HUMIDITY

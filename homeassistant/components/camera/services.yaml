@@ -24,6 +24,16 @@ snapshot:
       description: Template of a Filename. Variable is entity_id.
       example: '/tmp/snapshot_{{ entity_id }}'
 
+local_file_update_file_path:
+  description: Update the file_path for a local_file camera.
+  fields:
+    entity_id:
+      description: Name(s) of entities to update.
+      example: 'camera.local_file'
+    file_path:
+      description: Path to the new image file.
+      example: '/images/newimage.jpg'
+
 onvif_ptz:
   description: Pan/Tilt/Zoom service for ONVIF camera.
   fields:
@@ -39,4 +49,3 @@ onvif_ptz:
     zoom:
       description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT"
       example: "ZOOM_IN"
-

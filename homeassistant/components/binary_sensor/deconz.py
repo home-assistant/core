@@ -6,28 +6,39 @@ https://home-assistant.io/components/binary_sensor.deconz/
 """
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.deconz import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
+    CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ, DATA_DECONZ_ID,
+    DATA_DECONZ_UNSUB)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['deconz']
 
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
+    """Old way of setting up deCONZ binary sensors."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the deCONZ binary sensor."""
-    if discovery_info is None:
-        return
+    @callback
+    def async_add_sensor(sensors):
+        """Add binary sensor from deCONZ."""
+        from pydeconz.sensor import DECONZ_BINARY_SENSOR
+        entities = []
+        allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
+        for sensor in sensors:
+            if sensor.type in DECONZ_BINARY_SENSOR and \
+               not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
+                entities.append(DeconzBinarySensor(sensor))
+        async_add_devices(entities, True)
 
-    from pydeconz.sensor import DECONZ_BINARY_SENSOR
-    sensors = hass.data[DATA_DECONZ].sensors
-    entities = []
+    hass.data[DATA_DECONZ_UNSUB].append(
+        async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
 
-    for key in sorted(sensors.keys(), key=int):
-        sensor = sensors[key]
-        if sensor and sensor.type in DECONZ_BINARY_SENSOR:
-            entities.append(DeconzBinarySensor(sensor))
-    async_add_devices(entities, True)
+    async_add_sensor(hass.data[DATA_DECONZ].sensors.values())
 
 
 class DeconzBinarySensor(BinarySensorDevice):
@@ -93,9 +104,9 @@ class DeconzBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         from pydeconz.sensor import PRESENCE
-        attr = {
-            ATTR_BATTERY_LEVEL: self._sensor.battery,
-        }
-        if self._sensor.type in PRESENCE:
+        attr = {}
+        if self._sensor.battery:
+            attr[ATTR_BATTERY_LEVEL] = self._sensor.battery
+        if self._sensor.type in PRESENCE and self._sensor.dark is not None:
             attr['dark'] = self._sensor.dark
         return attr

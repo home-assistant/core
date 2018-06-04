@@ -17,7 +17,7 @@ from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.restore_state import async_get_last_state
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['speedtest-cli==2.0.0']
+REQUIREMENTS = ['speedtest-cli==2.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 

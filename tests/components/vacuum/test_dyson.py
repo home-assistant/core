@@ -118,7 +118,6 @@ class DysonTest(unittest.TestCase):
         component3 = Dyson360EyeDevice(device3)
         self.assertEqual(component.name, "Device_Vacuum")
         self.assertTrue(component.is_on)
-        self.assertEqual(component.icon, "mdi:roomba")
         self.assertEqual(component.status, "Cleaning")
         self.assertEqual(component2.status, "Unknown")
         self.assertEqual(component.battery_level, 85)

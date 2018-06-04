@@ -17,7 +17,7 @@ import threading
 from time import monotonic
 
 from types import MappingProxyType
-from typing import Optional, Any, Callable, List  # NOQA
+from typing import Optional, Any, Callable, List, TypeVar, Dict  # NOQA
 
 from async_timeout import timeout
 import voluptuous as vol
@@ -40,6 +40,8 @@ import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
 from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
+
+T = TypeVar('T')
 
 DOMAIN = 'homeassistant'
 
@@ -70,16 +72,15 @@ def valid_state(state: str) -> bool:
     return len(state) < 256
 
 
-def callback(func: Callable[..., None]) -> Callable[..., None]:
+def callback(func: Callable[..., T]) -> Callable[..., T]:
     """Annotation to mark method as safe to call from within the event loop."""
-    # pylint: disable=protected-access
-    func._hass_callback = True
+    setattr(func, '_hass_callback', True)
     return func
 
 
 def is_callback(func: Callable[..., Any]) -> bool:
     """Check if function is safe to be called in the event loop."""
-    return '_hass_callback' in func.__dict__
+    return getattr(func, '_hass_callback', False) is True
 
 
 @callback
@@ -117,11 +118,7 @@ class HomeAssistant(object):
         else:
             self.loop = loop or asyncio.get_event_loop()
 
-        executor_opts = {'max_workers': 10}
-        if sys.version_info[:2] >= (3, 5):
-            # It will default set to the number of processors on the machine,
-            # multiplied by 5. That is better for overlap I/O workers.
-            executor_opts['max_workers'] = None
+        executor_opts = {'max_workers': None}
         if sys.version_info[:2] >= (3, 6):
             executor_opts['thread_name_prefix'] = 'SyncWorker'
 
@@ -140,13 +137,14 @@ class HomeAssistant(object):
         self.data = {}
         self.state = CoreState.not_running
         self.exit_code = None
+        self.config_entries = None
 
     @property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
         return self.state in (CoreState.starting, CoreState.running)
 
-    def start(self) -> None:
+    def start(self) -> int:
         """Start home assistant."""
         # Register the async start
         fire_coroutine_threadsafe(self.async_start(), self.loop)
@@ -156,13 +154,13 @@ class HomeAssistant(object):
             # Block until stopped
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
-            return self.exit_code
         except KeyboardInterrupt:
             self.loop.call_soon_threadsafe(
                 self.loop.create_task, self.async_stop())
             self.loop.run_forever()
         finally:
             self.loop.close()
+        return self.exit_code
 
     async def async_start(self):
         """Finalize startup from inside the event loop.
@@ -204,7 +202,10 @@ class HomeAssistant(object):
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     @callback
-    def async_add_job(self, target: Callable[..., None], *args: Any) -> None:
+    def async_add_job(
+            self,
+            target: Callable[..., Any],
+            *args: Any) -> Optional[asyncio.tasks.Task]:
         """Add a job from within the eventloop.
 
         This method must be run in the event loop.
@@ -358,7 +359,7 @@ class EventBus(object):
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
-        self._listeners = {}
+        self._listeners = {}  # type: Dict[str, List[Callable]]
         self._hass = hass
 
     @callback
@@ -1043,7 +1044,7 @@ class Config(object):
         # List of allowed external dirs to access
         self.whitelist_external_dirs = set()
 
-    def distance(self: object, lat: float, lon: float) -> float:
+    def distance(self, lat: float, lon: float) -> float:
         """Calculate distance from Home Assistant.
 
         Async friendly.
@@ -1064,15 +1065,19 @@ class Config(object):
         """Check if the path is valid for access from outside."""
         assert path is not None
 
-        parent = pathlib.Path(path)
+        thepath = pathlib.Path(path)
         try:
-            parent = parent.resolve()  # pylint: disable=no-member
+            # The file path does not have to exist (it's parent should)
+            if thepath.exists():
+                thepath = thepath.resolve()
+            else:
+                thepath = thepath.parent.resolve()
         except (FileNotFoundError, RuntimeError, PermissionError):
             return False
 
         for whitelisted_path in self.whitelist_external_dirs:
             try:
-                parent.relative_to(whitelisted_path)
+                thepath.relative_to(whitelisted_path)
                 return True
             except ValueError:
                 pass

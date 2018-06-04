@@ -4,7 +4,6 @@ This module provides WSGI application to serve the Home Assistant API.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/http/
 """
-
 from ipaddress import ip_network
 import logging
 import os
@@ -32,7 +31,7 @@ from .static import (
 from .const import KEY_AUTHENTICATED, KEY_REAL_IP  # noqa
 from .view import HomeAssistantView  # noqa
 
-REQUIREMENTS = ['aiohttp_cors==0.6.0']
+REQUIREMENTS = ['aiohttp_cors==0.7.0']
 
 DOMAIN = 'http'
 

@@ -190,7 +190,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
     @property
     def cool_on(self):
         """Return whether or not the heat is actually heating."""
-        return self.wink.heat_on()
+        return self.wink.cool_on()
 
     @property
     def current_operation(self):

@@ -119,6 +119,9 @@ set_wakeup:
     value:
       description: Value of the interval to set. (integer)
 
+update_config:
+  description: Attempt to update ozw configuration files from git to support newer devices.
+
 start_network:
   description: Start the Z-Wave network. This might take a while, depending on how big your Z-Wave network is.
 

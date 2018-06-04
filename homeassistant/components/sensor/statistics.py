@@ -156,7 +156,7 @@ class StatisticsSensor(Entity):
                 ATTR_CHANGE: self.change,
                 ATTR_AVERAGE_CHANGE: self.average_change,
             }
-            # Only return min/max age if we have a age span
+            # Only return min/max age if we have an age span
             if self._max_age:
                 state.update({
                     ATTR_MAX_AGE: self.max_age,

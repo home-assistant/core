@@ -49,6 +49,3 @@ class TestDarkSky(unittest.TestCase):
 
         state = self.hass.states.get('weather.test')
         self.assertEqual(state.state, 'Clear')
-        self.assertEqual(state.attributes['daily_forecast_summary'],
-                         'No precipitation throughout the week, with '
-                         'temperatures falling to 66°F on Thursday.')

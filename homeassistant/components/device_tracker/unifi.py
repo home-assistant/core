@@ -98,7 +98,8 @@ class UnifiScanner(DeviceScanner):
         # Filter clients to provided SSID list
         if self._ssid_filter:
             clients = [client for client in clients
-                       if client['essid'] in self._ssid_filter]
+                       if 'essid' in client and
+                       client['essid'] in self._ssid_filter]
 
         self._clients = {
             client['mac']: client
@@ -121,3 +122,9 @@ class UnifiScanner(DeviceScanner):
         name = client.get('name') or client.get('hostname')
         _LOGGER.debug("Device mac %s name %s", device, name)
         return name
+
+    def get_extra_attributes(self, device):
+        """Return the extra attributes of the device."""
+        client = self._clients.get(device, {})
+        _LOGGER.debug("Device mac %s attributes %s", device, client)
+        return client

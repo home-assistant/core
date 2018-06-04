@@ -291,3 +291,11 @@ async def test_throttle_async():
 
     assert (await test_method()) is True
     assert (await test_method()) is None
+
+    @util.Throttle(timedelta(seconds=2), timedelta(seconds=0.1))
+    async def test_method2():
+        """Only first call should return a value."""
+        return True
+
+    assert (await test_method2()) is True
+    assert (await test_method2()) is None

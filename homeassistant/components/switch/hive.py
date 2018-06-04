@@ -28,6 +28,7 @@ class HiveDevicePlug(SwitchDevice):
         self.node_name = hivedevice["Hive_NodeName"]
         self.device_type = hivedevice["HA_DeviceType"]
         self.session = hivesession
+        self.attributes = {}
         self.data_updatesource = '{}.{}'.format(self.device_type,
                                                 self.node_id)
         self.session.entities.append(self)
@@ -41,6 +42,11 @@ class HiveDevicePlug(SwitchDevice):
     def name(self):
         """Return the name of this Switch device if any."""
         return self.node_name
+
+    @property
+    def device_state_attributes(self):
+        """Show Device Attributes."""
+        return self.attributes
 
     @property
     def current_power_w(self):
@@ -67,3 +73,5 @@ class HiveDevicePlug(SwitchDevice):
     def update(self):
         """Update all Node data from Hive."""
         self.session.core.update_data(self.node_id)
+        self.attributes = self.session.attributes.state_attributes(
+            self.node_id)

@@ -12,7 +12,6 @@ from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
 import voluptuous as vol
 
-from homeassistant.loader import get_platform
 from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
@@ -95,6 +94,36 @@ def isdevice(value):
         return str(value)
     except OSError:
         raise vol.Invalid('No device at {} found'.format(value))
+
+
+def matches_regex(regex):
+    """Validate that the value is a string that matches a regex."""
+    regex = re.compile(regex)
+
+    def validator(value: Any) -> str:
+        """Validate that value matches the given regex."""
+        if not isinstance(value, str):
+            raise vol.Invalid('not a string value: {}'.format(value))
+
+        if not regex.match(value):
+            raise vol.Invalid('value {} does not match regular expression {}'
+                              .format(regex.pattern, value))
+
+        return value
+    return validator
+
+
+def is_regex(value):
+    """Validate that a string is a valid regular expression."""
+    try:
+        r = re.compile(value)
+        return r
+    except TypeError:
+        raise vol.Invalid("value {} is of the wrong type for a regular "
+                          "expression".format(value))
+    except re.error:
+        raise vol.Invalid("value {} is not a valid regular expression".format(
+            value))
 
 
 def isfile(value: Any) -> str:
@@ -281,19 +310,6 @@ time_period = vol.Any(time_period_str, time_period_seconds, timedelta,
 def match_all(value):
     """Validate that matches all values."""
     return value
-
-
-def platform_validator(domain):
-    """Validate if platform exists for given domain."""
-    def validator(value):
-        """Test if platform exists."""
-        if value is None:
-            raise vol.Invalid('platform cannot be None')
-        if get_platform(domain, str(value)):
-            return value
-        raise vol.Invalid(
-            'platform {} does not exist for {}'.format(value, domain))
-    return validator
 
 
 def positive_timedelta(value: timedelta) -> timedelta:

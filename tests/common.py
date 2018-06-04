@@ -10,7 +10,7 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from homeassistant import core as ha, loader, config_entries
+from homeassistant import auth, core as ha, data_entry_flow, config_entries
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
@@ -113,6 +113,9 @@ def async_test_home_assistant(loop):
     hass.config_entries = config_entries.ConfigEntries(hass, {})
     hass.config_entries._entries = []
     hass.config.async_load = Mock()
+    store = auth.AuthStore(hass)
+    hass.auth = auth.AuthManager(hass, store, {})
+    ensure_auth_manager_loaded(hass.auth)
     INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
@@ -133,9 +136,6 @@ def async_test_home_assistant(loop):
     hass.config.time_zone = date_util.get_time_zone('US/Pacific')
     hass.config.units = METRIC_SYSTEM
     hass.config.skip_pip = True
-
-    if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
-        yield from loop.run_in_executor(None, loader.prepare, hass)
 
     hass.state = ha.CoreState.running
 
@@ -303,6 +303,34 @@ def mock_registry(hass, mock_entries=None):
     return registry
 
 
+class MockUser(auth.User):
+    """Mock a user in Home Assistant."""
+
+    def __init__(self, id='mock-id', is_owner=True, is_active=True,
+                 name='Mock User'):
+        """Initialize mock user."""
+        super().__init__(id, is_owner, is_active, name)
+
+    def add_to_hass(self, hass):
+        """Test helper to add entry to hass."""
+        return self.add_to_auth_manager(hass.auth)
+
+    def add_to_auth_manager(self, auth_mgr):
+        """Test helper to add entry to hass."""
+        auth_mgr._store.users[self.id] = self
+        return self
+
+
+@ha.callback
+def ensure_auth_manager_loaded(auth_mgr):
+    """Ensure an auth manager is considered loaded."""
+    store = auth_mgr._store
+    if store.clients is None:
+        store.clients = {}
+    if store.users is None:
+        store.users = {}
+
+
 class MockModule(object):
     """Representation of a fake module."""
 
@@ -344,7 +372,8 @@ class MockPlatform(object):
 
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
-                 platform_schema=None, async_setup_platform=None):
+                 platform_schema=None, async_setup_platform=None,
+                 async_setup_entry=None):
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
 
@@ -358,6 +387,9 @@ class MockPlatform(object):
         if async_setup_platform is not None:
             self.async_setup_platform = async_setup_platform
 
+        if async_setup_entry is not None:
+            self.async_setup_entry = async_setup_entry
+
         if setup_platform is None and async_setup_platform is None:
             self.async_setup_platform = mock_coro_func()
 
@@ -370,19 +402,27 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         logger=None,
         domain='test_domain',
         platform_name='test_platform',
+        platform=None,
         scan_interval=timedelta(seconds=15),
-        parallel_updates=0,
         entity_namespace=None,
         async_entities_added_callback=lambda: None
     ):
         """Initialize a mock entity platform."""
+        if logger is None:
+            logger = logging.getLogger('homeassistant.helpers.entity_platform')
+
+        # Otherwise the constructor will blow up.
+        if (isinstance(platform, Mock) and
+                isinstance(platform.PARALLEL_UPDATES, Mock)):
+            platform.PARALLEL_UPDATES = 0
+
         super().__init__(
             hass=hass,
             logger=logger,
             domain=domain,
             platform_name=platform_name,
+            platform=platform,
             scan_interval=scan_interval,
-            parallel_updates=parallel_updates,
             entity_namespace=entity_namespace,
             async_entities_added_callback=async_entities_added_callback,
         )
@@ -443,7 +483,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
     """Helper for creating config entries that adds some defaults."""
 
     def __init__(self, *, domain='test', data=None, version=0, entry_id=None,
-                 source=config_entries.SOURCE_USER, title='Mock Title',
+                 source=data_entry_flow.SOURCE_USER, title='Mock Title',
                  state=None):
         """Initialize a mock config entry."""
         kwargs = {

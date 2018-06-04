@@ -10,15 +10,16 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PASSWORD
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR,
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR,
     Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
 REQUIREMENTS = ['tikteck==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_TIKTECK_LED = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
+SUPPORT_TIKTECK_LED = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR)
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
@@ -57,7 +58,7 @@ class TikteckLight(Light):
         self._address = device['address']
         self._password = device['password']
         self._brightness = 255
-        self._rgb = [255, 255, 255]
+        self._hs = [0, 0]
         self._state = False
         self.is_valid = True
         self._bulb = tikteck.tikteck(
@@ -88,9 +89,9 @@ class TikteckLight(Light):
         return self._brightness
 
     @property
-    def rgb_color(self):
+    def hs_color(self):
         """Return the color property."""
-        return self._rgb
+        return self._hs
 
     @property
     def supported_features(self):
@@ -115,16 +116,17 @@ class TikteckLight(Light):
         """Turn the specified light on."""
         self._state = True
 
-        rgb = kwargs.get(ATTR_RGB_COLOR)
+        hs_color = kwargs.get(ATTR_HS_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
 
-        if rgb is not None:
-            self._rgb = rgb
+        if hs_color is not None:
+            self._hs = hs_color
         if brightness is not None:
             self._brightness = brightness
 
-        self.set_state(self._rgb[0], self._rgb[1], self._rgb[2],
-                       self.brightness)
+        rgb = color_util.color_hs_to_RGB(*self._hs)
+
+        self.set_state(rgb[0], rgb[1], rgb[2], self.brightness)
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):

@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_PUB_KEY = 'pub_key'
 CONF_SSH_KEY = 'ssh_key'
+CONF_REQUIRE_IP = 'require_ip'
 DEFAULT_SSH_PORT = 22
 SECRET_GROUP = 'Password or SSH Key'
 
@@ -36,6 +37,7 @@ PLATFORM_SCHEMA = vol.All(
         vol.Optional(CONF_PROTOCOL, default='ssh'): vol.In(['ssh', 'telnet']),
         vol.Optional(CONF_MODE, default='router'): vol.In(['router', 'ap']),
         vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
+        vol.Optional(CONF_REQUIRE_IP, default=True): cv.boolean,
         vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
         vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
         vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile
@@ -115,6 +117,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
         self.protocol = config[CONF_PROTOCOL]
         self.mode = config[CONF_MODE]
         self.port = config[CONF_PORT]
+        self.require_ip = config[CONF_REQUIRE_IP]
 
         if self.protocol == 'ssh':
             self.connection = SshConnection(
@@ -172,7 +175,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
         ret_devices = {}
         for key in devices:
-            if devices[key].ip is not None:
+            if not self.require_ip or devices[key].ip is not None:
                 ret_devices[key] = devices[key]
         return ret_devices
 

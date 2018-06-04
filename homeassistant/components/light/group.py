@@ -19,12 +19,11 @@ from homeassistant.const import (STATE_ON, ATTR_ENTITY_ID, CONF_NAME,
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.components.light import (
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_COLOR_TEMP,
-    SUPPORT_TRANSITION, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_XY_COLOR,
-    SUPPORT_WHITE_VALUE, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, ATTR_XY_COLOR,
-    ATTR_RGB_COLOR, ATTR_WHITE_VALUE, ATTR_COLOR_TEMP, ATTR_MIN_MIREDS,
-    ATTR_MAX_MIREDS, ATTR_EFFECT_LIST, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_TRANSITION)
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_TRANSITION,
+    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_WHITE_VALUE, PLATFORM_SCHEMA,
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ATTR_WHITE_VALUE, ATTR_COLOR_TEMP,
+    ATTR_MIN_MIREDS, ATTR_MAX_MIREDS, ATTR_EFFECT_LIST, ATTR_EFFECT,
+    ATTR_FLASH, ATTR_TRANSITION)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,8 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SUPPORT_GROUP_LIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
-                       | SUPPORT_FLASH | SUPPORT_RGB_COLOR | SUPPORT_TRANSITION
-                       | SUPPORT_XY_COLOR | SUPPORT_WHITE_VALUE)
+                       | SUPPORT_FLASH | SUPPORT_COLOR | SUPPORT_TRANSITION
+                       | SUPPORT_WHITE_VALUE)
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
@@ -58,8 +57,7 @@ class LightGroup(light.Light):
         self._is_on = False  # type: bool
         self._available = False  # type: bool
         self._brightness = None  # type: Optional[int]
-        self._xy_color = None  # type: Optional[Tuple[float, float]]
-        self._rgb_color = None  # type: Optional[Tuple[int, int, int]]
+        self._hs_color = None  # type: Optional[Tuple[float, float]]
         self._color_temp = None  # type: Optional[int]
         self._min_mireds = 154  # type: Optional[int]
         self._max_mireds = 500  # type: Optional[int]
@@ -108,14 +106,9 @@ class LightGroup(light.Light):
         return self._brightness
 
     @property
-    def xy_color(self) -> Optional[Tuple[float, float]]:
-        """Return the XY color value [float, float]."""
-        return self._xy_color
-
-    @property
-    def rgb_color(self) -> Optional[Tuple[int, int, int]]:
-        """Return the RGB color value [int, int, int]."""
-        return self._rgb_color
+    def hs_color(self) -> Optional[Tuple[float, float]]:
+        """Return the HS color value [float, float]."""
+        return self._hs_color
 
     @property
     def color_temp(self) -> Optional[int]:
@@ -164,11 +157,8 @@ class LightGroup(light.Light):
         if ATTR_BRIGHTNESS in kwargs:
             data[ATTR_BRIGHTNESS] = kwargs[ATTR_BRIGHTNESS]
 
-        if ATTR_XY_COLOR in kwargs:
-            data[ATTR_XY_COLOR] = kwargs[ATTR_XY_COLOR]
-
-        if ATTR_RGB_COLOR in kwargs:
-            data[ATTR_RGB_COLOR] = kwargs[ATTR_RGB_COLOR]
+        if ATTR_HS_COLOR in kwargs:
+            data[ATTR_HS_COLOR] = kwargs[ATTR_HS_COLOR]
 
         if ATTR_COLOR_TEMP in kwargs:
             data[ATTR_COLOR_TEMP] = kwargs[ATTR_COLOR_TEMP]
@@ -210,13 +200,8 @@ class LightGroup(light.Light):
 
         self._brightness = _reduce_attribute(on_states, ATTR_BRIGHTNESS)
 
-        self._xy_color = _reduce_attribute(
-            on_states, ATTR_XY_COLOR, reduce=_mean_tuple)
-
-        self._rgb_color = _reduce_attribute(
-            on_states, ATTR_RGB_COLOR, reduce=_mean_tuple)
-        if self._rgb_color is not None:
-            self._rgb_color = tuple(map(int, self._rgb_color))
+        self._hs_color = _reduce_attribute(
+            on_states, ATTR_HS_COLOR, reduce=_mean_tuple)
 
         self._white_value = _reduce_attribute(on_states, ATTR_WHITE_VALUE)
 

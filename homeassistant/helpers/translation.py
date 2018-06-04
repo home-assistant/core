@@ -4,6 +4,7 @@ import logging
 from typing import Optional  # NOQA
 from os import path
 
+from homeassistant import config_entries
 from homeassistant.loader import get_component, bind_hass
 from homeassistant.util.json import load_json
 
@@ -29,14 +30,14 @@ def flatten(data):
     return recursive_flatten('', data)
 
 
-def component_translation_file(component, language):
+def component_translation_file(hass, component, language):
     """Return the translation json file location for a component."""
     if '.' in component:
         name = component.split('.', 1)[1]
     else:
         name = component
 
-    module = get_component(component)
+    module = get_component(hass, component)
     component_path = path.dirname(module.__file__)
 
     # If loading translations for the package root, (__init__.py), the
@@ -89,14 +90,14 @@ async def async_get_component_resources(hass, language):
     translation_cache = hass.data[TRANSLATION_STRING_CACHE][language]
 
     # Get the set of components
-    components = hass.config.components
+    components = hass.config.components | set(config_entries.FLOWS)
 
     # Calculate the missing components
     missing_components = components - set(translation_cache)
     missing_files = {}
     for component in missing_components:
         missing_files[component] = component_translation_file(
-            component, language)
+            hass, component, language)
 
     # Load missing files
     if missing_files:

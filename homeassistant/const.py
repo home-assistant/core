@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 66
+MINOR_VERSION = 72
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -30,6 +30,7 @@ CONF_API_KEY = 'api_key'
 CONF_API_VERSION = 'api_version'
 CONF_AT = 'at'
 CONF_AUTHENTICATION = 'authentication'
+CONF_AUTH_PROVIDERS = 'auth_providers'
 CONF_BASE = 'base'
 CONF_BEFORE = 'before'
 CONF_BELOW = 'below'
@@ -165,6 +166,12 @@ EVENT_SERVICE_REMOVED = 'service_removed'
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 EVENT_THEMES_UPDATED = 'themes_updated'
 
+# #### DEVICE CLASSES ####
+DEVICE_CLASS_BATTERY = 'battery'
+DEVICE_CLASS_HUMIDITY = 'humidity'
+DEVICE_CLASS_ILLUMINANCE = 'illuminance'
+DEVICE_CLASS_TEMPERATURE = 'temperature'
+
 # #### STATES ####
 STATE_ON = 'on'
 STATE_OFF = 'off'
@@ -213,6 +220,9 @@ ATTR_SERVICE_DATA = 'service_data'
 
 # IDs
 ATTR_ID = 'id'
+
+# Name
+ATTR_NAME = 'name'
 
 # Data for a SERVICE_EXECUTED event
 ATTR_SERVICE_CALL_ID = 'service_call_id'

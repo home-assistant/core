@@ -71,7 +71,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
 
     @patch('pexpect.pxssh.pxssh')
     def test_get_device_name(self, mock_ssh):
-        """"Testing MAC matching."""
+        """Testing MAC matching."""
         conf_dict = {
             DOMAIN: {
                 CONF_PLATFORM: 'unifi_direct',
@@ -95,7 +95,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
     @patch('pexpect.pxssh.pxssh.logout')
     @patch('pexpect.pxssh.pxssh.login')
     def test_failed_to_log_in(self, mock_login, mock_logout):
-        """"Testing exception at login results in False."""
+        """Testing exception at login results in False."""
         from pexpect import exceptions
 
         conf_dict = {
@@ -120,7 +120,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
     @patch('pexpect.pxssh.pxssh.sendline')
     def test_to_get_update(self, mock_sendline, mock_prompt, mock_login,
                            mock_logout):
-        """"Testing exception in get_update matching."""
+        """Testing exception in get_update matching."""
         conf_dict = {
             DOMAIN: {
                 CONF_PLATFORM: 'unifi_direct',
