@@ -34,7 +34,7 @@ DEFAULT_SOUND_MODE = 'Dummy Music'
 YOUTUBE_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | \
-    SUPPORT_SHUFFLE_SET
+    SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOUND_MODE
 
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -261,8 +261,6 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         """Initialize the demo device."""
         super().__init__('Walkman')
         self._cur_track = 0
-        self._sound_mode_list = SOUND_MODE_LIST
-        self._sound_mode = DEFAULT_SOUND_MODE
 
     @property
     def media_content_id(self):
@@ -307,16 +305,6 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         return self._cur_track + 1
 
     @property
-    def sound_mode(self):
-        """Return the current sound mode."""
-        return self._sound_mode
-
-    @property
-    def sound_mode_list(self):
-        """Return a list of available sound modes."""
-        return self._sound_mode_list
-
-    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return MUSIC_PLAYER_SUPPORT
@@ -340,11 +328,6 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         self._player_state = STATE_OFF
         self.schedule_update_ha_state()
 
-    def select_sound_mode(self, sound_mode):
-        """Select sound mode."""
-        self._sound_mode = sound_mode
-        self.schedule_update_ha_state()
-
 
 class DemoTVShowPlayer(AbstractDemoPlayer):
     """A Demo media player that only supports YouTube."""
@@ -357,8 +340,6 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         self._cur_episode = 1
         self._episode_count = 13
         self._source = 'dvd'
-        self._sound_mode_list = SOUND_MODE_LIST
-        self._sound_mode = DEFAULT_SOUND_MODE
 
     @property
     def media_content_id(self):
@@ -411,16 +392,6 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         return self._source
 
     @property
-    def sound_mode(self):
-        """Return the current sound mode."""
-        return self._sound_mode
-
-    @property
-    def sound_mode_list(self):
-        """Return a list of available sound modes."""
-        return self._sound_mode_list
-
-    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return NETFLIX_PLAYER_SUPPORT
@@ -440,9 +411,4 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
     def select_source(self, source):
         """Set the input source."""
         self._source = source
-        self.schedule_update_ha_state()
-
-    def select_sound_mode(self, sound_mode):
-        """Select sound mode."""
-        self._sound_mode = sound_mode
         self.schedule_update_ha_state()
