@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         kiwi = KiwiClient(config[CONF_USERNAME], config[CONF_PASSWORD])
     except KiwiException as e:
-        _LOGGER.error(e.msg)
+        _LOGGER.error(e)
         return
     available_locks = kiwi.get_locks()
     if not available_locks:
