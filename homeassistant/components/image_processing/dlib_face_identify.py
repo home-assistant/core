@@ -11,9 +11,8 @@ import voluptuous as vol
 
 from homeassistant.core import split_entity_id
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)
-from homeassistant.components.image_processing.microsoft_face_identify import (
-    ImageProcessingFaceEntity)
+    ImageProcessingFaceEntity, PLATFORM_SCHEMA, CONF_SOURCE, CONF_ENTITY_ID,
+    CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['face_recognition==1.0.0']

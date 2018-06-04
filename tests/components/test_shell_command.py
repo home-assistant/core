@@ -19,8 +19,7 @@ def mock_process_creator(error: bool = False) -> asyncio.coroutine:
     def communicate() -> Tuple[bytes, bytes]:
         """Mock a coroutine that runs a process when yielded.
 
-        Returns:
-            a tuple of (stdout, stderr).
+        Returns a tuple of (stdout, stderr).
         """
         return b"I am stdout", b"I am stderr"
 
@@ -149,3 +148,41 @@ class TestShellCommand(unittest.TestCase):
             self.assertEqual(1, mock_call.call_count)
             self.assertEqual(1, mock_error.call_count)
             self.assertFalse(os.path.isfile(path))
+
+    @patch('homeassistant.components.shell_command._LOGGER.debug')
+    def test_stdout_captured(self, mock_output):
+        """Test subprocess that has stdout."""
+        test_phrase = "I have output"
+        self.assertTrue(
+                setup_component(self.hass, shell_command.DOMAIN, {
+                    shell_command.DOMAIN: {
+                        'test_service': "echo {}".format(test_phrase)
+                        }
+                    }))
+
+        self.hass.services.call('shell_command', 'test_service',
+                                blocking=True)
+
+        self.hass.block_till_done()
+        self.assertEqual(1, mock_output.call_count)
+        self.assertEqual(test_phrase.encode() + b'\n',
+                         mock_output.call_args_list[0][0][-1])
+
+    @patch('homeassistant.components.shell_command._LOGGER.debug')
+    def test_stderr_captured(self, mock_output):
+        """Test subprocess that has stderr."""
+        test_phrase = "I have error"
+        self.assertTrue(
+                setup_component(self.hass, shell_command.DOMAIN, {
+                    shell_command.DOMAIN: {
+                        'test_service': ">&2 echo {}".format(test_phrase)
+                        }
+                    }))
+
+        self.hass.services.call('shell_command', 'test_service',
+                                blocking=True)
+
+        self.hass.block_till_done()
+        self.assertEqual(1, mock_output.call_count)
+        self.assertEqual(test_phrase.encode() + b'\n',
+                         mock_output.call_args_list[0][0][-1])

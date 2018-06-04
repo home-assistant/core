@@ -16,9 +16,9 @@ from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
 
 REQUIREMENTS = [
-    'bellows==0.5.1',
-    'zigpy==0.0.3',
-    'zigpy-xbee==0.0.2',
+    'bellows==0.6.0',
+    'zigpy==0.1.0',
+    'zigpy-xbee==0.1.1',
 ]
 
 DOMAIN = 'zha'
@@ -151,6 +151,11 @@ class ApplicationListener:
         # Wait for device_initialized, instead
         pass
 
+    def raw_device_initialized(self, device):
+        """Handle a device initialization without quirks loaded."""
+        # Wait for device_initialized, instead
+        pass
+
     def device_initialized(self, device):
         """Handle device joined and basic information discovered."""
         self._hass.async_add_job(self.async_device_initialized(device, True))
@@ -221,38 +226,72 @@ class ApplicationListener:
                     self._config,
                 )
 
-            for cluster_id, cluster in endpoint.in_clusters.items():
-                cluster_type = type(cluster)
-                if cluster_id in profile_clusters[0]:
-                    continue
-                if cluster_type not in zha_const.SINGLE_CLUSTER_DEVICE_CLASS:
-                    continue
+            for cluster in endpoint.in_clusters.values():
+                await self._attempt_single_cluster_device(
+                    endpoint,
+                    cluster,
+                    profile_clusters[0],
+                    device_key,
+                    zha_const.SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
+                    'in_clusters',
+                    discovered_info,
+                    join,
+                )
 
-                component = zha_const.SINGLE_CLUSTER_DEVICE_CLASS[cluster_type]
-                cluster_key = "{}-{}".format(device_key, cluster_id)
-                discovery_info = {
-                    'application_listener': self,
-                    'endpoint': endpoint,
-                    'in_clusters': {cluster.cluster_id: cluster},
-                    'out_clusters': {},
-                    'new_join': join,
-                    'unique_id': cluster_key,
-                    'entity_suffix': '_{}'.format(cluster_id),
-                }
-                discovery_info.update(discovered_info)
-                self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
-
-                await discovery.async_load_platform(
-                    self._hass,
-                    component,
-                    DOMAIN,
-                    {'discovery_key': cluster_key},
-                    self._config,
+            for cluster in endpoint.out_clusters.values():
+                await self._attempt_single_cluster_device(
+                    endpoint,
+                    cluster,
+                    profile_clusters[1],
+                    device_key,
+                    zha_const.SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
+                    'out_clusters',
+                    discovered_info,
+                    join,
                 )
 
     def register_entity(self, ieee, entity_obj):
         """Record the creation of a hass entity associated with ieee."""
         self._device_registry[ieee].append(entity_obj)
+
+    async def _attempt_single_cluster_device(self, endpoint, cluster,
+                                             profile_clusters, device_key,
+                                             device_classes, discovery_attr,
+                                             entity_info, is_new_join):
+        """Try to set up an entity from a "bare" cluster."""
+        if cluster.cluster_id in profile_clusters:
+            return
+
+        component = None
+        for cluster_type, candidate_component in device_classes.items():
+            if isinstance(cluster, cluster_type):
+                component = candidate_component
+                break
+
+        if component is None:
+            return
+
+        cluster_key = "{}-{}".format(device_key, cluster.cluster_id)
+        discovery_info = {
+            'application_listener': self,
+            'endpoint': endpoint,
+            'in_clusters': {},
+            'out_clusters': {},
+            'new_join': is_new_join,
+            'unique_id': cluster_key,
+            'entity_suffix': '_{}'.format(cluster.cluster_id),
+        }
+        discovery_info[discovery_attr] = {cluster.cluster_id: cluster}
+        discovery_info.update(entity_info)
+        self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
+
+        await discovery.async_load_platform(
+            self._hass,
+            component,
+            DOMAIN,
+            {'discovery_key': cluster_key},
+            self._config,
+        )
 
 
 class Entity(entity.Entity):
@@ -287,17 +326,29 @@ class Entity(entity.Entity):
                 kwargs.get('entity_suffix', ''),
             )
 
-        for cluster in in_clusters.values():
-            cluster.add_listener(self)
-        for cluster in out_clusters.values():
-            cluster.add_listener(self)
         self._endpoint = endpoint
         self._in_clusters = in_clusters
         self._out_clusters = out_clusters
-        self._state = ha_const.STATE_UNKNOWN
+        self._state = None
         self._unique_id = unique_id
 
+        # Normally the entity itself is the listener. Sub-classes may set this
+        # to a dict of cluster ID -> listener to receive messages for specific
+        # clusters separately
+        self._in_listeners = {}
+        self._out_listeners = {}
+
         application_listener.register_entity(ieee, self)
+
+    async def async_added_to_hass(self):
+        """Callback once the entity is added to hass.
+
+        It is now safe to update the entity state
+        """
+        for cluster_id, cluster in self._in_clusters.items():
+            cluster.add_listener(self._in_listeners.get(cluster_id, self))
+        for cluster_id, cluster in self._out_clusters.items():
+            cluster.add_listener(self._out_listeners.get(cluster_id, self))
 
     @property
     def unique_id(self) -> str:
@@ -369,7 +420,7 @@ def get_discovery_info(hass, discovery_info):
     return all_discovery_info.get(discovery_key, None)
 
 
-async def safe_read(cluster, attributes):
+async def safe_read(cluster, attributes, allow_cache=True):
     """Swallow all exceptions from network read.
 
     If we throw during initialization, setup fails. Rather have an entity that
@@ -379,7 +430,7 @@ async def safe_read(cluster, attributes):
     try:
         result, _ = await cluster.read_attributes(
             attributes,
-            allow_cache=False,
+            allow_cache=allow_cache,
         )
         return result
     except Exception:  # pylint: disable=broad-except

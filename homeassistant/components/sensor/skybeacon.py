@@ -10,38 +10,38 @@ from uuid import UUID
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_MAC, TEMP_CELSIUS, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP)
+    CONF_MAC, CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN, TEMP_CELSIUS)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
-# REQUIREMENTS = ['pygatt==3.1.1']
+REQUIREMENTS = ['pygatt==3.2.0']
 
 _LOGGER = logging.getLogger(__name__)
-
-CONNECT_LOCK = threading.Lock()
 
 ATTR_DEVICE = 'device'
 ATTR_MODEL = 'model'
 
+BLE_TEMP_HANDLE = 0x24
+BLE_TEMP_UUID = '0000ff92-0000-1000-8000-00805f9b34fb'
+
+CONNECT_LOCK = threading.Lock()
+CONNECT_TIMEOUT = 30
+
+DEFAULT_NAME = 'Skybeacon'
+
+SKIP_HANDLE_LOOKUP = True
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_NAME, default=""): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
-
-BLE_TEMP_UUID = '0000ff92-0000-1000-8000-00805f9b34fb'
-BLE_TEMP_HANDLE = 0x24
-SKIP_HANDLE_LOOKUP = True
-CONNECT_TIMEOUT = 30
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Skybeacon sensor."""
-    _LOGGER.warning("This platform has been disabled due to having a "
-                    "requirement depending on enum34.")
-    return
     # pylint: disable=unreachable
     name = config.get(CONF_NAME)
     mac = config.get(CONF_MAC)
@@ -150,7 +150,7 @@ class Monitor(threading.Thread):
         adapter = pygatt.backends.GATTToolBackend()
         while True:
             try:
-                _LOGGER.info("Connecting to %s", self.name)
+                _LOGGER.debug("Connecting to %s", self.name)
                 # We need concurrent connect, so lets not reset the device
                 adapter.start(reset_on_start=False)
                 # Seems only one connection can be initiated at a time

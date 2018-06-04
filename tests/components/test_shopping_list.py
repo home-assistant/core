@@ -54,7 +54,7 @@ def test_recent_items_intent(hass):
 
 
 @asyncio.coroutine
-def test_api_get_all(hass, test_client):
+def test_api_get_all(hass, aiohttp_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
@@ -65,7 +65,7 @@ def test_api_get_all(hass, test_client):
         hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'wine'}}
     )
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
     resp = yield from client.get('/api/shopping_list')
 
     assert resp.status == 200
@@ -78,7 +78,7 @@ def test_api_get_all(hass, test_client):
 
 
 @asyncio.coroutine
-def test_api_update(hass, test_client):
+def test_api_update(hass, aiohttp_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
@@ -92,7 +92,7 @@ def test_api_update(hass, test_client):
     beer_id = hass.data['shopping_list'].items[0]['id']
     wine_id = hass.data['shopping_list'].items[1]['id']
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
     resp = yield from client.post(
         '/api/shopping_list/item/{}'.format(beer_id), json={
             'name': 'soda'
@@ -133,7 +133,7 @@ def test_api_update(hass, test_client):
 
 
 @asyncio.coroutine
-def test_api_update_fails(hass, test_client):
+def test_api_update_fails(hass, aiohttp_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
@@ -141,7 +141,7 @@ def test_api_update_fails(hass, test_client):
         hass, 'test', 'HassShoppingListAddItem', {'item': {'value': 'beer'}}
     )
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
     resp = yield from client.post(
         '/api/shopping_list/non_existing', json={
             'name': 'soda'
@@ -159,7 +159,7 @@ def test_api_update_fails(hass, test_client):
 
 
 @asyncio.coroutine
-def test_api_clear_completed(hass, test_client):
+def test_api_clear_completed(hass, aiohttp_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
@@ -173,7 +173,7 @@ def test_api_clear_completed(hass, test_client):
     beer_id = hass.data['shopping_list'].items[0]['id']
     wine_id = hass.data['shopping_list'].items[1]['id']
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
 
     # Mark beer as completed
     resp = yield from client.post(
@@ -196,11 +196,11 @@ def test_api_clear_completed(hass, test_client):
 
 
 @asyncio.coroutine
-def test_api_create(hass, test_client):
+def test_api_create(hass, aiohttp_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
     resp = yield from client.post('/api/shopping_list/item', json={
         'name': 'soda'
     })
@@ -217,11 +217,11 @@ def test_api_create(hass, test_client):
 
 
 @asyncio.coroutine
-def test_api_create_fail(hass, test_client):
+def test_api_create_fail(hass, aiohttp_client):
     """Test the API."""
     yield from async_setup_component(hass, 'shopping_list', {})
 
-    client = yield from test_client(hass.http.app)
+    client = yield from aiohttp_client(hass.http.app)
     resp = yield from client.post('/api/shopping_list/item', json={
         'name': 1234
     })

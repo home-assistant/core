@@ -69,3 +69,13 @@ alarmdecoder_alarm_toggle_chime:
     code:
       description: A required code to toggle the alarm control panel chime with.
       example: 1234
+
+ifttt_push_alarm_state:
+  description: Update the alarm state to the specified value.
+  fields:
+    entity_id:
+      description: Name of the alarm control panel which state has to be updated.
+      example: 'alarm_control_panel.downstairs'
+    state:
+      description: The state to which the alarm control panel has to be set.
+      example: 'armed_night'

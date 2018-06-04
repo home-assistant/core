@@ -58,6 +58,7 @@ class TestGoogle(unittest.TestCase):
                 'device_id': 'we_are_we_are_a_test_calendar',
                 'name': 'We are, we are, a... Test Calendar',
                 'track': True,
+                'ignore_availability': True,
             }]
         })
 

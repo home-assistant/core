@@ -10,14 +10,15 @@ from datetime import timedelta
 import aiohttp
 import voluptuous as vol
 from requests.exceptions import HTTPError, ConnectTimeout
+from requests.exceptions import ConnectionError as ConnectError
 
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
-    CONF_SENSORS, CONF_SCAN_INTERVAL, HTTP_BASIC_AUTHENTICATION)
+    CONF_SENSORS, CONF_SWITCHES, CONF_SCAN_INTERVAL, HTTP_BASIC_AUTHENTICATION)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['amcrest==1.2.1']
+REQUIREMENTS = ['amcrest==1.2.2']
 DEPENDENCIES = ['ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,6 +64,12 @@ SENSORS = {
     'ptz_preset': ['PTZ Preset', None, 'mdi:camera-iris'],
 }
 
+# Switch types are defined like: Name, icon
+SWITCHES = {
+    'motion_detection': ['Motion Detection', 'mdi:run-fast'],
+    'motion_recording': ['Motion Recording', 'mdi:record-rec']
+}
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_HOST): cv.string,
@@ -81,6 +88,8 @@ CONFIG_SCHEMA = vol.Schema({
             cv.time_period,
         vol.Optional(CONF_SENSORS):
             vol.All(cv.ensure_list, [vol.In(SENSORS)]),
+        vol.Optional(CONF_SWITCHES):
+            vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
     })])
 }, extra=vol.ALLOW_EXTRA)
 
@@ -93,14 +102,15 @@ def setup(hass, config):
     amcrest_cams = config[DOMAIN]
 
     for device in amcrest_cams:
-        camera = AmcrestCamera(device.get(CONF_HOST),
-                               device.get(CONF_PORT),
-                               device.get(CONF_USERNAME),
-                               device.get(CONF_PASSWORD)).camera
         try:
+            camera = AmcrestCamera(device.get(CONF_HOST),
+                                   device.get(CONF_PORT),
+                                   device.get(CONF_USERNAME),
+                                   device.get(CONF_PASSWORD)).camera
+            # pylint: disable=pointless-statement
             camera.current_time
 
-        except (ConnectTimeout, HTTPError) as ex:
+        except (ConnectError, ConnectTimeout, HTTPError) as ex:
             _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
             hass.components.persistent_notification.create(
                 'Error: {}<br />'
@@ -108,12 +118,13 @@ def setup(hass, config):
                 ''.format(ex),
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
-            return False
+            continue
 
         ffmpeg_arguments = device.get(CONF_FFMPEG_ARGUMENTS)
         name = device.get(CONF_NAME)
         resolution = RESOLUTION_LIST[device.get(CONF_RESOLUTION)]
         sensors = device.get(CONF_SENSORS)
+        switches = device.get(CONF_SWITCHES)
         stream_source = STREAM_SOURCE_LIST[device.get(CONF_STREAM_SOURCE)]
 
         username = device.get(CONF_USERNAME)
@@ -141,6 +152,13 @@ def setup(hass, config):
                 hass, 'sensor', DOMAIN, {
                     CONF_NAME: name,
                     CONF_SENSORS: sensors,
+                }, config)
+
+        if switches:
+            discovery.load_platform(
+                hass, 'switch', DOMAIN, {
+                    CONF_NAME: name,
+                    CONF_SWITCHES: switches
                 }, config)
 
     return True

@@ -33,6 +33,7 @@ COMMENT_REQUIREMENTS = (
     'i2csense',
     'credstash',
     'bme680',
+    'homekit',
 )
 
 TEST_REQUIREMENTS = (
@@ -47,6 +48,7 @@ TEST_REQUIREMENTS = (
     'ephem',
     'evohomeclient',
     'feedparser',
+    'foobot_async',
     'gTTS-token',
     'HAP-python',
     'ha-ffmpeg',
@@ -66,13 +68,17 @@ TEST_REQUIREMENTS = (
     'prometheus_client',
     'pushbullet.py',
     'py-canary',
+    'pyblackbird',
+    'pydeconz',
     'pydispatcher',
     'PyJWT',
     'pylitejet',
     'pymonoprice',
     'pynx584',
+    'pyqwikswitch',
     'python-forecastio',
     'pyunifi',
+    'pyupnp-async',
     'pywebpush',
     'restrictedpython',
     'rflink',

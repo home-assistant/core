@@ -8,7 +8,8 @@ import subprocess
 import sys
 import threading
 
-from typing import Optional, List
+from typing import Optional, List, Dict, Any  # noqa #pylint: disable=unused-import
+
 
 from homeassistant import monkey_patch
 from homeassistant.const import (
@@ -126,6 +127,10 @@ def get_arguments() -> argparse.Namespace:
         default=None,
         help='Log file to write to.  If not set, CONFIG/home-assistant.log '
              'is used')
+    parser.add_argument(
+        '--log-no-color',
+        action='store_true',
+        help="Disable color logs")
     parser.add_argument(
         '--runner',
         action='store_true',
@@ -255,17 +260,18 @@ def setup_and_run_hass(config_dir: str,
         config = {
             'frontend': {},
             'demo': {}
-        }
+        }  # type: Dict[str, Any]
         hass = bootstrap.from_config_dict(
             config, config_dir=config_dir, verbose=args.verbose,
             skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days,
-            log_file=args.log_file)
+            log_file=args.log_file, log_no_color=args.log_no_color)
     else:
         config_file = ensure_config_file(config_dir)
         print('Config directory:', config_dir)
         hass = bootstrap.from_config_file(
             config_file, verbose=args.verbose, skip_pip=args.skip_pip,
-            log_rotate_days=args.log_rotate_days, log_file=args.log_file)
+            log_rotate_days=args.log_rotate_days, log_file=args.log_file,
+            log_no_color=args.log_no_color)
 
     if hass is None:
         return None

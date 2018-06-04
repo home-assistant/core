@@ -13,12 +13,13 @@ import voluptuous as vol
 
 from homeassistant.components import SERVICE_CHECK_CONFIG
 from homeassistant.const import (
-    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP)
+    ATTR_NAME, SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP)
 from homeassistant.core import DOMAIN as HASS_DOMAIN
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
+
 from .handler import HassIO
 from .http import HassIOView
 
@@ -26,6 +27,15 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'hassio'
 DEPENDENCIES = ['http']
+
+CONF_FRONTEND_REPO = 'development_repo'
+
+CONFIG_SCHEMA = vol.Schema({
+    vol.Optional(DOMAIN): vol.Schema({
+        vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
 
 DATA_HOMEASSISTANT_VERSION = 'hassio_hass_version'
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=55)
@@ -47,7 +57,6 @@ ATTR_SNAPSHOT = 'snapshot'
 ATTR_ADDONS = 'addons'
 ATTR_FOLDERS = 'folders'
 ATTR_HOMEASSISTANT = 'homeassistant'
-ATTR_NAME = 'name'
 ATTR_PASSWORD = 'password'
 
 SCHEMA_NO_DATA = vol.Schema({})
@@ -142,7 +151,13 @@ def async_setup(hass, config):
     try:
         host = os.environ['HASSIO']
     except KeyError:
-        _LOGGER.error("No Hass.io supervisor detect")
+        _LOGGER.error("Missing HASSIO environment variable.")
+        return False
+
+    try:
+        os.environ['HASSIO_TOKEN']
+    except KeyError:
+        _LOGGER.error("Missing HASSIO_TOKEN environment variable.")
         return False
 
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
@@ -152,11 +167,18 @@ def async_setup(hass, config):
         _LOGGER.error("Not connected with Hass.io")
         return False
 
+    # This overrides the normal API call that would be forwarded
+    development_repo = config.get(DOMAIN, {}).get(CONF_FRONTEND_REPO)
+    if development_repo is not None:
+        hass.http.register_static_path(
+            '/api/hassio/app-es5',
+            os.path.join(development_repo, 'hassio/build-es5'), False)
+
     hass.http.register_view(HassIOView(host, websession))
 
     if 'frontend' in hass.config.components:
         yield from hass.components.frontend.async_register_built_in_panel(
-            'hassio', 'Hass.io', 'mdi:access-point-network')
+            'hassio', 'Hass.io', 'mdi:home-assistant')
 
     if 'http' in config:
         yield from hassio.update_hass_api(config['http'])

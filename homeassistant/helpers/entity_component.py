@@ -40,16 +40,7 @@ class EntityComponent(object):
         self.config = None
 
         self._platforms = {
-            domain: EntityPlatform(
-                hass=hass,
-                logger=logger,
-                domain=domain,
-                platform_name=domain,
-                scan_interval=self.scan_interval,
-                parallel_updates=0,
-                entity_namespace=None,
-                async_entities_added_callback=self._async_update_group,
-            )
+            domain: self._async_init_entity_platform(domain, None)
         }
         self.async_add_entities = self._platforms[domain].async_add_entities
         self.add_entities = self._platforms[domain].add_entities
@@ -102,6 +93,38 @@ class EntityComponent(object):
         discovery.async_listen_platform(
             self.hass, self.domain, component_platform_discovered)
 
+    async def async_setup_entry(self, config_entry):
+        """Setup a config entry."""
+        platform_type = config_entry.domain
+        platform = await async_prepare_setup_platform(
+            self.hass, self.config, self.domain, platform_type)
+
+        if platform is None:
+            return False
+
+        key = config_entry.entry_id
+
+        if key in self._platforms:
+            raise ValueError('Config entry has already been setup!')
+
+        self._platforms[key] = self._async_init_entity_platform(
+            platform_type, platform
+        )
+
+        return await self._platforms[key].async_setup_entry(config_entry)
+
+    async def async_unload_entry(self, config_entry):
+        """Unload a config entry."""
+        key = config_entry.entry_id
+
+        platform = self._platforms.pop(key, None)
+
+        if platform is None:
+            raise ValueError('Config entry was never loaded!')
+
+        await platform.async_reset()
+        return True
+
     @callback
     def async_extract_from_service(self, service, expand_group=True):
         """Extract all known and available entities from a service call.
@@ -127,34 +150,19 @@ class EntityComponent(object):
         if platform is None:
             return
 
-        # Config > Platform > Component
-        scan_interval = (
-            platform_config.get(CONF_SCAN_INTERVAL) or
-            getattr(platform, 'SCAN_INTERVAL', None) or self.scan_interval)
-        parallel_updates = getattr(
-            platform, 'PARALLEL_UPDATES',
-            int(not hasattr(platform, 'async_setup_platform')))
-
+        # Use config scan interval, fallback to platform if none set
+        scan_interval = platform_config.get(
+            CONF_SCAN_INTERVAL, getattr(platform, 'SCAN_INTERVAL', None))
         entity_namespace = platform_config.get(CONF_ENTITY_NAMESPACE)
 
         key = (platform_type, scan_interval, entity_namespace)
 
         if key not in self._platforms:
-            entity_platform = self._platforms[key] = EntityPlatform(
-                hass=self.hass,
-                logger=self.logger,
-                domain=self.domain,
-                platform_name=platform_type,
-                scan_interval=scan_interval,
-                parallel_updates=parallel_updates,
-                entity_namespace=entity_namespace,
-                async_entities_added_callback=self._async_update_group,
+            self._platforms[key] = self._async_init_entity_platform(
+                platform_type, platform, scan_interval, entity_namespace
             )
-        else:
-            entity_platform = self._platforms[key]
 
-        await entity_platform.async_setup(
-            platform, platform_config, discovery_info)
+        await self._platforms[key].async_setup(platform_config, discovery_info)
 
     @callback
     def _async_update_group(self):
@@ -219,3 +227,20 @@ class EntityComponent(object):
 
         await self._async_reset()
         return conf
+
+    def _async_init_entity_platform(self, platform_type, platform,
+                                    scan_interval=None, entity_namespace=None):
+        """Helper to initialize an entity platform."""
+        if scan_interval is None:
+            scan_interval = self.scan_interval
+
+        return EntityPlatform(
+            hass=self.hass,
+            logger=self.logger,
+            domain=self.domain,
+            platform_name=platform_type,
+            platform=platform,
+            scan_interval=scan_interval,
+            entity_namespace=entity_namespace,
+            async_entities_added_callback=self._async_update_group,
+        )

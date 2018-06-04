@@ -12,7 +12,7 @@ from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.egardia import (
     EGARDIA_DEVICE, ATTR_DISCOVER_DEVICES)
 _LOGGER = logging.getLogger(__name__)
-
+DEPENDENCIES = ['egardia']
 EGARDIA_TYPE_TO_DEVICE_CLASS = {'IR Sensor': 'motion',
                                 'Door Contact': 'opening',
                                 'IR': 'motion'}

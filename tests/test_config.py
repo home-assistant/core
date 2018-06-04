@@ -12,6 +12,7 @@ from voluptuous import MultipleInvalid
 from homeassistant.core import DOMAIN, HomeAssistantError, Config
 import homeassistant.config as config_util
 from homeassistant.const import (
+    ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_UNIT_SYSTEM, CONF_NAME,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
     CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT)
@@ -27,9 +28,9 @@ from homeassistant.components.config.script import (
     CONFIG_PATH as SCRIPTS_CONFIG_PATH)
 from homeassistant.components.config.customize import (
     CONFIG_PATH as CUSTOMIZE_CONFIG_PATH)
+import homeassistant.scripts.check_config as check_config
 
-from tests.common import (
-    get_test_config_dir, get_test_home_assistant, mock_coro)
+from tests.common import get_test_config_dir, get_test_home_assistant
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -234,6 +235,29 @@ class TestConfig(unittest.TestCase):
                 },
             },
         })
+
+    def test_customize_dict_schema(self):
+        """Test basic customize config validation."""
+        values = (
+            {ATTR_FRIENDLY_NAME: None},
+            {ATTR_HIDDEN: '2'},
+            {ATTR_ASSUMED_STATE: '2'},
+        )
+
+        for val in values:
+            print(val)
+            with pytest.raises(MultipleInvalid):
+                config_util.CUSTOMIZE_DICT_SCHEMA(val)
+
+        assert config_util.CUSTOMIZE_DICT_SCHEMA({
+            ATTR_FRIENDLY_NAME: 2,
+            ATTR_HIDDEN: '1',
+            ATTR_ASSUMED_STATE: '0',
+        }) == {
+            ATTR_FRIENDLY_NAME: '2',
+            ATTR_HIDDEN: True,
+            ATTR_ASSUMED_STATE: False
+        }
 
     def test_customize_glob_is_ordered(self):
         """Test that customize_glob preserves order."""
@@ -514,35 +538,25 @@ class TestConfig(unittest.TestCase):
         assert len(self.hass.config.whitelist_external_dirs) == 1
         assert "/test/config/www" in self.hass.config.whitelist_external_dirs
 
-    @mock.patch('asyncio.create_subprocess_exec')
-    def test_check_ha_config_file_correct(self, mock_create):
+    @mock.patch('homeassistant.scripts.check_config.check_ha_config_file')
+    def test_check_ha_config_file_correct(self, mock_check):
         """Check that restart propagates to stop."""
-        process_mock = mock.MagicMock()
-        attrs = {
-            'communicate.return_value': mock_coro((b'output', None)),
-            'wait.return_value': mock_coro(0)}
-        process_mock.configure_mock(**attrs)
-        mock_create.return_value = mock_coro(process_mock)
-
+        mock_check.return_value = check_config.HomeAssistantConfig()
         assert run_coroutine_threadsafe(
-            config_util.async_check_ha_config_file(self.hass), self.hass.loop
+            config_util.async_check_ha_config_file(self.hass),
+            self.hass.loop
         ).result() is None
 
-    @mock.patch('asyncio.create_subprocess_exec')
-    def test_check_ha_config_file_wrong(self, mock_create):
+    @mock.patch('homeassistant.scripts.check_config.check_ha_config_file')
+    def test_check_ha_config_file_wrong(self, mock_check):
         """Check that restart with a bad config doesn't propagate to stop."""
-        process_mock = mock.MagicMock()
-        attrs = {
-            'communicate.return_value':
-                mock_coro(('\033[34mhello'.encode('utf-8'), None)),
-            'wait.return_value': mock_coro(1)}
-        process_mock.configure_mock(**attrs)
-        mock_create.return_value = mock_coro(process_mock)
+        mock_check.return_value = check_config.HomeAssistantConfig()
+        mock_check.return_value.add_error("bad")
 
         assert run_coroutine_threadsafe(
             config_util.async_check_ha_config_file(self.hass),
             self.hass.loop
-        ).result() == 'hello'
+        ).result() == 'bad'
 
 
 # pylint: disable=redefined-outer-name
@@ -554,7 +568,7 @@ def merge_log_err(hass):
         yield logerr
 
 
-def test_merge(merge_log_err):
+def test_merge(merge_log_err, hass):
     """Test if we can merge packages."""
     packages = {
         'pack_dict': {'input_boolean': {'ib1': None}},
@@ -568,7 +582,7 @@ def test_merge(merge_log_err):
         'input_boolean': {'ib2': None},
         'light': {'platform': 'test'}
     }
-    config_util.merge_packages_config(config, packages)
+    config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 0
     assert len(config) == 5
@@ -578,7 +592,26 @@ def test_merge(merge_log_err):
     assert config['wake_on_lan'] is None
 
 
-def test_merge_new(merge_log_err):
+def test_merge_try_falsy(merge_log_err, hass):
+    """Ensure we dont add falsy items like empty OrderedDict() to list."""
+    packages = {
+        'pack_falsy_to_lst': {'automation': OrderedDict()},
+        'pack_list2': {'light': OrderedDict()},
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'automation': {'do': 'something'},
+        'light': {'some': 'light'},
+    }
+    config_util.merge_packages_config(hass, config, packages)
+
+    assert merge_log_err.call_count == 0
+    assert len(config) == 3
+    assert len(config['automation']) == 1
+    assert len(config['light']) == 1
+
+
+def test_merge_new(merge_log_err, hass):
     """Test adding new components to outer scope."""
     packages = {
         'pack_1': {'light': [{'platform': 'one'}]},
@@ -591,7 +624,7 @@ def test_merge_new(merge_log_err):
     config = {
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
     }
-    config_util.merge_packages_config(config, packages)
+    config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 0
     assert 'api' in config
@@ -600,7 +633,7 @@ def test_merge_new(merge_log_err):
     assert len(config['panel_custom']) == 1
 
 
-def test_merge_type_mismatch(merge_log_err):
+def test_merge_type_mismatch(merge_log_err, hass):
     """Test if we have a type mismatch for packages."""
     packages = {
         'pack_1': {'input_boolean': [{'ib1': None}]},
@@ -613,7 +646,7 @@ def test_merge_type_mismatch(merge_log_err):
         'input_select': [{'ib2': None}],
         'light': [{'platform': 'two'}]
     }
-    config_util.merge_packages_config(config, packages)
+    config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 2
     assert len(config) == 4
@@ -621,21 +654,81 @@ def test_merge_type_mismatch(merge_log_err):
     assert len(config['light']) == 2
 
 
-def test_merge_once_only(merge_log_err):
-    """Test if we have a merge for a comp that may occur only once."""
-    packages = {
-        'pack_2': {
-            'mqtt': {},
-            'api': {},  # No config schema
-        },
-    }
+def test_merge_once_only_keys(merge_log_err, hass):
+    """Test if we have a merge for a comp that may occur only once. Keys."""
+    packages = {'pack_2': {'api': {
+        'key_3': 3,
+    }}}
     config = {
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
-        'mqtt': {}, 'api': {}
+        'api': {
+            'key_1': 1,
+            'key_2': 2,
+        }
     }
-    config_util.merge_packages_config(config, packages)
+    config_util.merge_packages_config(hass, config, packages)
+    assert config['api'] == {'key_1': 1, 'key_2': 2, 'key_3': 3, }
+
+    # Duplicate keys error
+    packages = {'pack_2': {'api': {
+        'key': 2,
+    }}}
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'api': {'key': 1, }
+    }
+    config_util.merge_packages_config(hass, config, packages)
     assert merge_log_err.call_count == 1
-    assert len(config) == 3
+
+
+def test_merge_once_only_lists(hass):
+    """Test if we have a merge for a comp that may occur only once. Lists."""
+    packages = {'pack_2': {'api': {
+        'list_1': ['item_2', 'item_3'],
+        'list_2': ['item_1'],
+        'list_3': [],
+    }}}
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'api': {
+            'list_1': ['item_1'],
+        }
+    }
+    config_util.merge_packages_config(hass, config, packages)
+    assert config['api'] == {
+        'list_1': ['item_1', 'item_2', 'item_3'],
+        'list_2': ['item_1'],
+    }
+
+
+def test_merge_once_only_dictionaries(hass):
+    """Test if we have a merge for a comp that may occur only once. Dicts."""
+    packages = {'pack_2': {'api': {
+        'dict_1': {
+            'key_2': 2,
+            'dict_1.1': {'key_1.2': 1.2, },
+        },
+        'dict_2': {'key_1': 1, },
+        'dict_3': {},
+    }}}
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'api': {
+            'dict_1': {
+                'key_1': 1,
+                'dict_1.1': {'key_1.1': 1.1, }
+            },
+        }
+    }
+    config_util.merge_packages_config(hass, config, packages)
+    assert config['api'] == {
+        'dict_1': {
+            'key_1': 1,
+            'key_2': 2,
+            'dict_1.1': {'key_1.1': 1.1, 'key_1.2': 1.2, },
+        },
+        'dict_2': {'key_1': 1, },
+    }
 
 
 def test_merge_id_schema(hass):
@@ -649,13 +742,13 @@ def test_merge_id_schema(hass):
         'qwikswitch': 'dict',
     }
     for name, expected_type in types.items():
-        module = config_util.get_component(name)
+        module = config_util.get_component(hass, name)
         typ, _ = config_util._identify_config_schema(module)
         assert typ == expected_type, "{} expected {}, got {}".format(
             name, expected_type, typ)
 
 
-def test_merge_duplicate_keys(merge_log_err):
+def test_merge_duplicate_keys(merge_log_err, hass):
     """Test if keys in dicts are duplicates."""
     packages = {
         'pack_1': {'input_select': {'ib1': None}},
@@ -664,7 +757,7 @@ def test_merge_duplicate_keys(merge_log_err):
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
         'input_select': {'ib1': None},
     }
-    config_util.merge_packages_config(config, packages)
+    config_util.merge_packages_config(hass, config, packages)
 
     assert merge_log_err.call_count == 1
     assert len(config) == 2

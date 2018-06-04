@@ -5,10 +5,8 @@ For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/light.zha/
 """
 import logging
-
 from homeassistant.components import light, zha
-from homeassistant.util.color import color_RGB_to_xy
-from homeassistant.const import STATE_UNKNOWN
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +55,7 @@ class Light(zha.Entity, light.Light):
         super().__init__(**kwargs)
         self._supported_features = 0
         self._color_temp = None
-        self._xy_color = None
+        self._hs_color = None
         self._brightness = None
 
         import zigpy.zcl.clusters as zcl_clusters
@@ -71,14 +69,13 @@ class Light(zha.Entity, light.Light):
                 self._supported_features |= light.SUPPORT_COLOR_TEMP
 
             if color_capabilities & CAPABILITIES_COLOR_XY:
-                self._supported_features |= light.SUPPORT_XY_COLOR
-                self._supported_features |= light.SUPPORT_RGB_COLOR
-                self._xy_color = (1.0, 1.0)
+                self._supported_features |= light.SUPPORT_COLOR
+                self._hs_color = (0, 0)
 
     @property
     def is_on(self) -> bool:
         """Return true if entity is on."""
-        if self._state == STATE_UNKNOWN:
+        if self._state is None:
             return False
         return bool(self._state)
 
@@ -92,17 +89,12 @@ class Light(zha.Entity, light.Light):
                 temperature, duration)
             self._color_temp = temperature
 
-        if light.ATTR_XY_COLOR in kwargs:
-            self._xy_color = kwargs[light.ATTR_XY_COLOR]
-        elif light.ATTR_RGB_COLOR in kwargs:
-            xyb = color_RGB_to_xy(
-                *(int(val) for val in kwargs[light.ATTR_RGB_COLOR]))
-            self._xy_color = (xyb[0], xyb[1])
-            self._brightness = xyb[2]
-        if light.ATTR_XY_COLOR in kwargs or light.ATTR_RGB_COLOR in kwargs:
+        if light.ATTR_HS_COLOR in kwargs:
+            self._hs_color = kwargs[light.ATTR_HS_COLOR]
+            xy_color = color_util.color_hs_to_xy(*self._hs_color)
             await self._endpoint.light_color.move_to_color(
-                int(self._xy_color[0] * 65535),
-                int(self._xy_color[1] * 65535),
+                int(xy_color[0] * 65535),
+                int(xy_color[1] * 65535),
                 duration,
             )
 
@@ -118,14 +110,25 @@ class Light(zha.Entity, light.Light):
             self._state = 1
             self.async_schedule_update_ha_state()
             return
+        from zigpy.exceptions import DeliveryError
+        try:
+            await self._endpoint.on_off.on()
+        except DeliveryError as ex:
+            _LOGGER.error("Unable to turn the light on: %s", ex)
+            return
 
-        await self._endpoint.on_off.on()
         self._state = 1
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        await self._endpoint.on_off.off()
+        from zigpy.exceptions import DeliveryError
+        try:
+            await self._endpoint.on_off.off()
+        except DeliveryError as ex:
+            _LOGGER.error("Unable to turn the light off: %s", ex)
+            return
+
         self._state = 0
         self.async_schedule_update_ha_state()
 
@@ -135,9 +138,9 @@ class Light(zha.Entity, light.Light):
         return self._brightness
 
     @property
-    def xy_color(self):
-        """Return the XY color value [float, float]."""
-        return self._xy_color
+    def hs_color(self):
+        """Return the hs color value [int, int]."""
+        return self._hs_color
 
     @property
     def color_temp(self):
@@ -165,11 +168,13 @@ class Light(zha.Entity, light.Light):
             self._color_temp = result.get('color_temperature',
                                           self._color_temp)
 
-        if self._supported_features & light.SUPPORT_XY_COLOR:
+        if self._supported_features & light.SUPPORT_COLOR:
             result = await zha.safe_read(self._endpoint.light_color,
                                          ['current_x', 'current_y'])
             if 'current_x' in result and 'current_y' in result:
-                self._xy_color = (result['current_x'], result['current_y'])
+                xy_color = (round(result['current_x']/65535, 3),
+                            round(result['current_y']/65535, 3))
+                self._hs_color = color_util.color_xy_to_hs(*xy_color)
 
     @property
     def should_poll(self) -> bool:

@@ -4,7 +4,7 @@ Everybody is invited and welcome to contribute to Home Assistant. There is a lot
 
 The process is straight-forward.
 
- - Read [How to get faster PR reviews](https://github.com/kubernetes/community/blob/master/contributors/devel/pull-requests.md#best-practices-for-faster-reviews) by Kubernetes (but skip step 0)
+ - Read [How to get faster PR reviews](https://github.com/kubernetes/community/blob/master/contributors/guide/pull-requests.md#best-practices-for-faster-reviews) by Kubernetes (but skip step 0)
  - Fork the Home Assistant [git repository](https://github.com/home-assistant/home-assistant).
  - Write the code for your device, notification service, sensor, or IoT thing.
  - Ensure tests work.
