@@ -20,7 +20,10 @@
     "abort": {
       "discover_timeout": "Unable to discover Hue bridges",
       "no_bridges": "No Philips Hue bridges discovered",
-      "all_configured": "All Philips Hue bridges are already configured"
+      "all_configured": "All Philips Hue bridges are already configured",
+      "unknown": "Unknown error occurred",
+      "cannot_connect": "Unable to connect to the bridge",
+      "already_configured": "Bridge is already configured"
     }
   }
 }

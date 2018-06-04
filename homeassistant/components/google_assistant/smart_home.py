@@ -17,7 +17,16 @@ from homeassistant.core import callback
 from homeassistant.const import (
     CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES)
 from homeassistant.components import (
-    switch, light, cover, media_player, group, fan, scene, script, climate,
+    climate,
+    cover,
+    fan,
+    group,
+    input_boolean,
+    light,
+    media_player,
+    scene,
+    script,
+    switch,
 )
 
 from . import trait
@@ -33,15 +42,16 @@ HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN_TO_GOOGLE_TYPES = {
+    climate.DOMAIN: TYPE_THERMOSTAT,
+    cover.DOMAIN: TYPE_SWITCH,
+    fan.DOMAIN: TYPE_SWITCH,
     group.DOMAIN: TYPE_SWITCH,
+    input_boolean.DOMAIN: TYPE_SWITCH,
+    light.DOMAIN: TYPE_LIGHT,
+    media_player.DOMAIN: TYPE_SWITCH,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
     switch.DOMAIN: TYPE_SWITCH,
-    fan.DOMAIN: TYPE_SWITCH,
-    light.DOMAIN: TYPE_LIGHT,
-    cover.DOMAIN: TYPE_SWITCH,
-    media_player.DOMAIN: TYPE_SWITCH,
-    climate.DOMAIN: TYPE_THERMOSTAT,
 }
 
 
@@ -84,19 +94,31 @@ class _GoogleEntity:
 
         https://developers.google.com/actions/smarthome/create-app#actiondevicessync
         """
-        traits = self.traits()
         state = self.state
+
+        # When a state is unavailable, the attributes that describe
+        # capabilities will be stripped. For example, a light entity will miss
+        # the min/max mireds. Therefore they will be excluded from a sync.
+        if state.state == STATE_UNAVAILABLE:
+            return None
+
+        entity_config = self.config.entity_config.get(state.entity_id, {})
+        name = (entity_config.get(CONF_NAME) or state.name).strip()
+
+        # If an empty string
+        if not name:
+            return None
+
+        traits = self.traits()
 
         # Found no supported traits for this entity
         if not traits:
             return None
 
-        entity_config = self.config.entity_config.get(state.entity_id, {})
-
         device = {
             'id': state.entity_id,
             'name': {
-                'name': entity_config.get(CONF_NAME) or state.name
+                'name': name
             },
             'attributes': {},
             'traits': [trait.name for trait in traits],

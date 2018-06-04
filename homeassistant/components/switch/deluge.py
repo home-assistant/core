@@ -9,15 +9,16 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_PASSWORD, CONF_USERNAME, STATE_OFF,
     STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['deluge-client==1.0.5']
+REQUIREMENTS = ['deluge-client==1.4.0']
 
-_LOGGING = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Deluge Switch'
 DEFAULT_PORT = 58846
@@ -46,8 +47,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         deluge_api.connect()
     except ConnectionRefusedError:
-        _LOGGING.error("Connection to Deluge Daemon failed")
-        return
+        _LOGGER.error("Connection to Deluge Daemon failed")
+        raise PlatformNotReady
 
     add_devices([DelugeSwitch(deluge_api, name)])
 
@@ -60,6 +61,7 @@ class DelugeSwitch(ToggleEntity):
         self._name = name
         self.deluge_client = deluge_client
         self._state = STATE_OFF
+        self._available = False
 
     @property
     def name(self):
@@ -76,18 +78,32 @@ class DelugeSwitch(ToggleEntity):
         """Return true if device is on."""
         return self._state == STATE_ON
 
+    @property
+    def available(self):
+        """Return true if device is available."""
+        return self._available
+
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        self.deluge_client.call('core.resume_all_torrents')
+        torrent_ids = self.deluge_client.call('core.get_session_state')
+        self.deluge_client.call('core.resume_torrent', torrent_ids)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        self.deluge_client.call('core.pause_all_torrents')
+        torrent_ids = self.deluge_client.call('core.get_session_state')
+        self.deluge_client.call('core.pause_torrent', torrent_ids)
 
     def update(self):
         """Get the latest data from deluge and updates the state."""
-        torrent_list = self.deluge_client.call('core.get_torrents_status', {},
-                                               ['paused'])
+        from deluge_client import FailedToReconnectException
+        try:
+            torrent_list = self.deluge_client.call('core.get_torrents_status',
+                                                   {}, ['paused'])
+            self._available = True
+        except FailedToReconnectException:
+            _LOGGER.error("Connection to Deluge Daemon Lost")
+            self._available = False
+            return
         for torrent in torrent_list.values():
             item = torrent.popitem()
             if not item[1]:

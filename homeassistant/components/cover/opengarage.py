@@ -18,30 +18,31 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DISTANCE_SENSOR = "distance_sensor"
-ATTR_DOOR_STATE = "door_state"
-ATTR_SIGNAL_STRENGTH = "wifi_signal"
+ATTR_DISTANCE_SENSOR = 'distance_sensor'
+ATTR_DOOR_STATE = 'door_state'
+ATTR_SIGNAL_STRENGTH = 'wifi_signal'
 
-CONF_DEVICEKEY = "device_key"
+CONF_DEVICE_ID = 'device_id'
+CONF_DEVICE_KEY = 'device_key'
 
 DEFAULT_NAME = 'OpenGarage'
 DEFAULT_PORT = 80
 
-STATE_CLOSING = "closing"
-STATE_OFFLINE = "offline"
-STATE_OPENING = "opening"
-STATE_STOPPED = "stopped"
+STATE_CLOSING = 'closing'
+STATE_OFFLINE = 'offline'
+STATE_OPENING = 'opening'
+STATE_STOPPED = 'stopped'
 
 STATES_MAP = {
     0: STATE_CLOSED,
-    1: STATE_OPEN
+    1: STATE_OPEN,
 }
 
 COVER_SCHEMA = vol.Schema({
-    vol.Required(CONF_DEVICEKEY): cv.string,
+    vol.Required(CONF_DEVICE_KEY): cv.string,
     vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_NAME): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -50,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up OpenGarage covers."""
+    """Set up the OpenGarage covers."""
     covers = []
     devices = config.get(CONF_COVERS)
 
@@ -59,8 +60,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             CONF_NAME: device_config.get(CONF_NAME),
             CONF_HOST: device_config.get(CONF_HOST),
             CONF_PORT: device_config.get(CONF_PORT),
-            "device_id": device_config.get(CONF_DEVICE, device_id),
-            CONF_DEVICEKEY: device_config.get(CONF_DEVICEKEY)
+            CONF_DEVICE_ID: device_config.get(CONF_DEVICE, device_id),
+            CONF_DEVICE_KEY: device_config.get(CONF_DEVICE_KEY)
         }
 
         covers.append(OpenGarageCover(hass, args))
@@ -79,8 +80,8 @@ class OpenGarageCover(CoverDevice):
         self.hass = hass
         self._name = args[CONF_NAME]
         self.device_id = args['device_id']
-        self._devicekey = args[CONF_DEVICEKEY]
-        self._state = STATE_UNKNOWN
+        self._device_key = args[CONF_DEVICE_KEY]
+        self._state = None
         self._state_before_move = None
         self.dist = None
         self.signal = None
@@ -138,8 +139,8 @@ class OpenGarageCover(CoverDevice):
         try:
             status = self._get_status()
             if self._name is None:
-                if status["name"] is not None:
-                    self._name = status["name"]
+                if status['name'] is not None:
+                    self._name = status['name']
             state = STATES_MAP.get(status.get('door'), STATE_UNKNOWN)
             if self._state_before_move is not None:
                 if self._state_before_move != state:
@@ -152,7 +153,7 @@ class OpenGarageCover(CoverDevice):
             self.signal = status.get('rssi')
             self.dist = status.get('dist')
             self._available = True
-        except (requests.exceptions.RequestException) as ex:
+        except requests.exceptions.RequestException as ex:
             _LOGGER.error("Unable to connect to OpenGarage device: %(reason)s",
                           dict(reason=ex))
             self._state = STATE_OFFLINE
@@ -166,15 +167,15 @@ class OpenGarageCover(CoverDevice):
     def _push_button(self):
         """Send commands to API."""
         url = '{}/cc?dkey={}&click=1'.format(
-            self.opengarage_url, self._devicekey)
+            self.opengarage_url, self._device_key)
         try:
             response = requests.get(url, timeout=10).json()
-            if response["result"] == 2:
-                _LOGGER.error("Unable to control %s: device_key is incorrect.",
+            if response['result'] == 2:
+                _LOGGER.error("Unable to control %s: Device key is incorrect",
                               self._name)
                 self._state = self._state_before_move
                 self._state_before_move = None
-        except (requests.exceptions.RequestException) as ex:
+        except requests.exceptions.RequestException as ex:
             _LOGGER.error("Unable to connect to OpenGarage device: %(reason)s",
                           dict(reason=ex))
             self._state = self._state_before_move

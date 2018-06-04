@@ -52,7 +52,7 @@ class TestMHZ19Sensor(unittest.TestCase):
 
     @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
            side_effect=OSError('test error'))
-    def test_client_update_oserror(self, mock_function):
+    def aiohttp_client_update_oserror(self, mock_function):
         """Test MHZClient when library throws OSError."""
         from pmsensor import co2sensor
         client = mhz19.MHZClient(co2sensor, 'test.serial')
@@ -61,7 +61,7 @@ class TestMHZ19Sensor(unittest.TestCase):
 
     @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
            return_value=(5001, 24))
-    def test_client_update_ppm_overflow(self, mock_function):
+    def aiohttp_client_update_ppm_overflow(self, mock_function):
         """Test MHZClient when ppm is too high."""
         from pmsensor import co2sensor
         client = mhz19.MHZClient(co2sensor, 'test.serial')
@@ -70,7 +70,7 @@ class TestMHZ19Sensor(unittest.TestCase):
 
     @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
            return_value=(1000, 24))
-    def test_client_update_good_read(self, mock_function):
+    def aiohttp_client_update_good_read(self, mock_function):
         """Test MHZClient when ppm is too high."""
         from pmsensor import co2sensor
         client = mhz19.MHZClient(co2sensor, 'test.serial')

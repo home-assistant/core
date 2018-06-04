@@ -7,7 +7,6 @@ from unittest.mock import patch
 
 import homeassistant.scripts.check_config as check_config
 from homeassistant.config import YAML_CONFIG_FILE
-from homeassistant.loader import set_component
 from tests.common import patch_yaml_files, get_test_config_dir
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,9 +40,7 @@ class TestCheckConfig(unittest.TestCase):
         # this ensures we have one.
         try:
             asyncio.get_event_loop()
-        except (RuntimeError, AssertionError):
-            # Py35: RuntimeError
-            # Py34: AssertionError
+        except RuntimeError:
             asyncio.set_event_loop(asyncio.new_event_loop())
 
         # Will allow seeing full diff
@@ -108,7 +105,6 @@ class TestCheckConfig(unittest.TestCase):
     def test_component_platform_not_found(self, isfile_patch):
         """Test errors if component or platform not found."""
         # Make sure they don't exist
-        set_component('beer', None)
         files = {
             YAML_CONFIG_FILE: BASE_CONFIG + 'beer:',
         }
@@ -121,7 +117,6 @@ class TestCheckConfig(unittest.TestCase):
             assert res['secrets'] == {}
             assert len(res['yaml_files']) == 1
 
-        set_component('light.beer', None)
         files = {
             YAML_CONFIG_FILE: BASE_CONFIG + 'light:\n  platform: beer',
         }

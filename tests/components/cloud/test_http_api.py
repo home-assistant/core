@@ -11,8 +11,11 @@ from homeassistant.components.cloud import DOMAIN, auth_api, iot
 from tests.common import mock_coro
 
 
+GOOGLE_ACTIONS_SYNC_URL = 'https://api-test.hass.io/google_actions_sync'
+
+
 @pytest.fixture
-def cloud_client(hass, test_client):
+def cloud_client(hass, aiohttp_client):
     """Fixture that can fetch from the cloud client."""
     with patch('homeassistant.components.cloud.Cloud.async_start',
                return_value=mock_coro()):
@@ -23,12 +26,13 @@ def cloud_client(hass, test_client):
                 'user_pool_id': 'user_pool_id',
                 'region': 'region',
                 'relayer': 'relayer',
+                'google_actions_sync_url': GOOGLE_ACTIONS_SYNC_URL,
             }
         }))
     hass.data['cloud']._decode_claims = \
         lambda token: jwt.get_unverified_claims(token)
     with patch('homeassistant.components.cloud.Cloud.write_user_info'):
-        yield hass.loop.run_until_complete(test_client(hass.http.app))
+        yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
@@ -36,6 +40,21 @@ def mock_cognito():
     """Mock warrant."""
     with patch('homeassistant.components.cloud.auth_api._cognito') as mock_cog:
         yield mock_cog()
+
+
+async def test_google_actions_sync(mock_cognito, cloud_client, aioclient_mock):
+    """Test syncing Google Actions."""
+    aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL)
+    req = await cloud_client.post('/api/cloud/google_actions/sync')
+    assert req.status == 200
+
+
+async def test_google_actions_sync_fails(mock_cognito, cloud_client,
+                                         aioclient_mock):
+    """Test syncing Google Actions gone bad."""
+    aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL, status=403)
+    req = await cloud_client.post('/api/cloud/google_actions/sync')
+    assert req.status == 403
 
 
 @asyncio.coroutine

@@ -266,6 +266,8 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         if response is False:
             return
 
+        last_media_position = self.media_position
+
         self._status = {}
 
         try:
@@ -278,7 +280,11 @@ class SqueezeBoxDevice(MediaPlayerDevice):
             pass
 
         self._status.update(response)
-        self._last_update = utcnow()
+
+        if self.media_position != last_media_position:
+            _LOGGER.debug('Media position updated for %s: %s',
+                          self, self.media_position)
+            self._last_update = utcnow()
 
     @property
     def volume_level(self):

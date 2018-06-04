@@ -1,70 +1,132 @@
 """Extend the basic Accessory and Bridge functions."""
+from datetime import timedelta
+from functools import partial, wraps
+from inspect import getmodule
 import logging
 
-from pyhap.accessory import Accessory, Bridge, Category
+from pyhap.accessory import Accessory, Bridge
+from pyhap.accessory_driver import AccessoryDriver
+from pyhap.const import CATEGORY_OTHER
+
+from homeassistant.const import __version__
+from homeassistant.core import callback as ha_callback
+from homeassistant.core import split_entity_id
+from homeassistant.helpers.event import (
+    async_track_state_change, track_point_in_utc_time)
+from homeassistant.util import dt as dt_util
 
 from .const import (
-    SERV_ACCESSORY_INFO, SERV_BRIDGING_STATE, MANUFACTURER,
-    CHAR_MODEL, CHAR_MANUFACTURER, CHAR_NAME, CHAR_SERIAL_NUMBER)
-
+    BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER,
+    DEBOUNCE_TIMEOUT, MANUFACTURER)
+from .util import (
+    show_setup_message, dismiss_setup_message)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def set_accessory_info(acc, name, model, manufacturer=MANUFACTURER,
-                       serial_number='0000'):
-    """Set the default accessory information."""
-    service = acc.get_service(SERV_ACCESSORY_INFO)
-    service.get_characteristic(CHAR_NAME).set_value(name)
-    service.get_characteristic(CHAR_MODEL).set_value(model)
-    service.get_characteristic(CHAR_MANUFACTURER).set_value(manufacturer)
-    service.get_characteristic(CHAR_SERIAL_NUMBER).set_value(serial_number)
+def debounce(func):
+    """Decorator function. Debounce callbacks form HomeKit."""
+    @ha_callback
+    def call_later_listener(self, *args):
+        """Callback listener called from call_later."""
+        debounce_params = self.debounce.pop(func.__name__, None)
+        if debounce_params:
+            self.hass.async_add_job(func, self, *debounce_params[1:])
 
+    @wraps(func)
+    def wrapper(self, *args):
+        """Wrapper starts async timer."""
+        debounce_params = self.debounce.pop(func.__name__, None)
+        if debounce_params:
+            debounce_params[0]()  # remove listener
+        remove_listener = track_point_in_utc_time(
+            self.hass, partial(call_later_listener, self),
+            dt_util.utcnow() + timedelta(seconds=DEBOUNCE_TIMEOUT))
+        self.debounce[func.__name__] = (remove_listener, *args)
+        logger.debug('%s: Start %s timeout', self.entity_id,
+                     func.__name__.replace('set_', ''))
 
-def add_preload_service(acc, service, chars=None, opt_chars=None):
-    """Define and return a service to be available for the accessory."""
-    from pyhap.loader import get_serv_loader, get_char_loader
-    service = get_serv_loader().get(service)
-    if chars:
-        chars = chars if isinstance(chars, list) else [chars]
-        for char_name in chars:
-            char = get_char_loader().get(char_name)
-            service.add_characteristic(char)
-    if opt_chars:
-        opt_chars = opt_chars if isinstance(opt_chars, list) else [opt_chars]
-        for opt_char_name in opt_chars:
-            opt_char = get_char_loader().get(opt_char_name)
-            service.add_opt_characteristic(opt_char)
-    acc.add_service(service)
-    return service
-
-
-def override_properties(char, new_properties):
-    """Override characteristic property values."""
-    char.properties.update(new_properties)
+    name = getmodule(func).__name__
+    logger = logging.getLogger(name)
+    return wrapper
 
 
 class HomeAccessory(Accessory):
-    """Class to extend the Accessory class."""
+    """Adapter class for Accessory."""
 
-    def __init__(self, display_name, model, category='OTHER', **kwargs):
+    def __init__(self, hass, driver, name, entity_id, aid, config,
+                 category=CATEGORY_OTHER):
         """Initialize a Accessory object."""
-        super().__init__(display_name, **kwargs)
-        set_accessory_info(self, display_name, model)
-        self.category = getattr(Category, category, Category.OTHER)
+        super().__init__(driver, name, aid=aid)
+        model = split_entity_id(entity_id)[0].replace("_", " ").title()
+        self.set_info_service(
+            firmware_revision=__version__, manufacturer=MANUFACTURER,
+            model=model, serial_number=entity_id)
+        self.category = category
+        self.config = config
+        self.entity_id = entity_id
+        self.hass = hass
+        self.debounce = {}
 
-    def _set_services(self):
-        add_preload_service(self, SERV_ACCESSORY_INFO)
+    async def run(self):
+        """Method called by accessory after driver is started.
+
+        Run inside the HAP-python event loop.
+        """
+        state = self.hass.states.get(self.entity_id)
+        self.hass.add_job(self.update_state_callback, None, None, state)
+        async_track_state_change(
+            self.hass, self.entity_id, self.update_state_callback)
+
+    @ha_callback
+    def update_state_callback(self, entity_id=None, old_state=None,
+                              new_state=None):
+        """Callback from state change listener."""
+        _LOGGER.debug('New_state: %s', new_state)
+        if new_state is None:
+            return
+        self.hass.async_add_job(self.update_state, new_state)
+
+    def update_state(self, new_state):
+        """Method called on state change to update HomeKit value.
+
+        Overridden by accessory types.
+        """
+        raise NotImplementedError()
 
 
 class HomeBridge(Bridge):
-    """Class to extend the Bridge class."""
+    """Adapter class for Bridge."""
 
-    def __init__(self, display_name, model, pincode, **kwargs):
+    def __init__(self, hass, driver, name=BRIDGE_NAME):
         """Initialize a Bridge object."""
-        super().__init__(display_name, pincode=pincode, **kwargs)
-        set_accessory_info(self, display_name, model)
+        super().__init__(driver, name)
+        self.set_info_service(
+            firmware_revision=__version__, manufacturer=MANUFACTURER,
+            model=BRIDGE_MODEL, serial_number=BRIDGE_SERIAL_NUMBER)
+        self.hass = hass
 
-    def _set_services(self):
-        add_preload_service(self, SERV_ACCESSORY_INFO)
-        add_preload_service(self, SERV_BRIDGING_STATE)
+    def setup_message(self):
+        """Prevent print of pyhap setup message to terminal."""
+        pass
+
+
+class HomeDriver(AccessoryDriver):
+    """Adapter class for AccessoryDriver."""
+
+    def __init__(self, hass, **kwargs):
+        """Initialize a AccessoryDriver object."""
+        super().__init__(**kwargs)
+        self.hass = hass
+
+    def pair(self, client_uuid, client_public):
+        """Override super function to dismiss setup message if paired."""
+        success = super().pair(client_uuid, client_public)
+        if success:
+            dismiss_setup_message(self.hass)
+        return success
+
+    def unpair(self, client_uuid):
+        """Override super function to show setup message if unpaired."""
+        super().unpair(client_uuid)
+        show_setup_message(self.hass, self.state.pincode)

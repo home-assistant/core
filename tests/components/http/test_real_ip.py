@@ -11,13 +11,13 @@ async def mock_handler(request):
     return web.Response(text=str(request[KEY_REAL_IP]))
 
 
-async def test_ignore_x_forwarded_for(test_client):
+async def test_ignore_x_forwarded_for(aiohttp_client):
     """Test that we get the IP from the transport."""
     app = web.Application()
     app.router.add_get('/', mock_handler)
     setup_real_ip(app, False)
 
-    mock_api_client = await test_client(app)
+    mock_api_client = await aiohttp_client(app)
 
     resp = await mock_api_client.get('/', headers={
         X_FORWARDED_FOR: '255.255.255.255'
@@ -27,13 +27,13 @@ async def test_ignore_x_forwarded_for(test_client):
     assert text != '255.255.255.255'
 
 
-async def test_use_x_forwarded_for(test_client):
+async def test_use_x_forwarded_for(aiohttp_client):
     """Test that we get the IP from the transport."""
     app = web.Application()
     app.router.add_get('/', mock_handler)
     setup_real_ip(app, True)
 
-    mock_api_client = await test_client(app)
+    mock_api_client = await aiohttp_client(app)
 
     resp = await mock_api_client.get('/', headers={
         X_FORWARDED_FOR: '255.255.255.255'

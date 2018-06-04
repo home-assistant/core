@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, slugify
 
-REQUIREMENTS = ['pypollencom==1.1.1']
+REQUIREMENTS = ['pypollencom==1.1.2']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ALLERGEN_GENUS = 'primary_allergen_genus'
@@ -160,7 +160,7 @@ class BaseSensor(Entity):
 
     def __init__(self, data, data_params, name, icon, unique_id):
         """Initialize the sensor."""
-        self._attrs = {}
+        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
         self._icon = icon
         self._name = name
         self._data_params = data_params
@@ -172,7 +172,6 @@ class BaseSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        self._attrs.update({ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION})
         return self._attrs
 
     @property
@@ -254,10 +253,25 @@ class AllergyIndexSensor(BaseSensor):
                 i['label'] for i in RATING_MAPPING
                 if i['minimum'] <= period['Index'] <= i['maximum']
             ]
-            self._attrs[ATTR_ALLERGEN_GENUS] = period['Triggers'][0]['Genus']
-            self._attrs[ATTR_ALLERGEN_NAME] = period['Triggers'][0]['Name']
-            self._attrs[ATTR_ALLERGEN_TYPE] = period['Triggers'][0][
-                'PlantType']
+
+            for i in range(3):
+                index = i + 1
+                try:
+                    data = period['Triggers'][i]
+                    self._attrs['{0}_{1}'.format(
+                        ATTR_ALLERGEN_GENUS, index)] = data['Genus']
+                    self._attrs['{0}_{1}'.format(
+                        ATTR_ALLERGEN_NAME, index)] = data['Name']
+                    self._attrs['{0}_{1}'.format(
+                        ATTR_ALLERGEN_TYPE, index)] = data['PlantType']
+                except IndexError:
+                    self._attrs['{0}_{1}'.format(
+                        ATTR_ALLERGEN_GENUS, index)] = None
+                    self._attrs['{0}_{1}'.format(
+                        ATTR_ALLERGEN_NAME, index)] = None
+                    self._attrs['{0}_{1}'.format(
+                        ATTR_ALLERGEN_TYPE, index)] = None
+
             self._attrs[ATTR_RATING] = rating
 
         except KeyError:

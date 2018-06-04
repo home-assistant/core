@@ -43,7 +43,7 @@ HM_UNIT_HA_CAST = {
     'ENERGY_COUNTER': 'Wh',
     'GAS_POWER': 'm3',
     'GAS_ENERGY_COUNTER': 'm3',
-    'LUX': 'lux',
+    'LUX': 'lx',
     'RAIN_COUNTER': 'mm',
     'WIND_SPEED': 'km/h',
     'WIND_DIRECTION': '°',

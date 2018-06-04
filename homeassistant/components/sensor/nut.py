@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
     TEMP_CELSIUS, CONF_RESOURCES, CONF_ALIAS, ATTR_STATE, STATE_UNKNOWN)
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -26,10 +27,12 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 3493
 
 KEY_STATUS = 'ups.status'
+KEY_STATUS_DISPLAY = 'ups.status.display'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
+    'ups.status.display': ['Status', '', 'mdi:information-outline'],
     'ups.status': ['Status Data', '', 'mdi:information-outline'],
     'ups.alarm': ['Alarms', '', 'mdi:alarm'],
     'ups.time': ['Internal Time', '', 'mdi:calendar-clock'],
@@ -113,6 +116,7 @@ STATE_TYPES = {
     'HB': 'High Battery',
     'RB': 'Battery Needs Replaced',
     'CHRG': 'Battery Charging',
+    'DISCHRG': 'Battery Discharging',
     'BYPASS': 'Bypass Active',
     'CAL': 'Runtime Calibration',
     'OFF': 'Offline',
@@ -129,7 +133,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ALIAS): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_RESOURCES, default=[]):
+    vol.Required(CONF_RESOURCES):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
@@ -147,7 +151,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if data.status is None:
         _LOGGER.error("NUT Sensor has no data, unable to setup")
-        return False
+        raise PlatformNotReady
 
     _LOGGER.debug('NUT Sensors Available: %s', data.status)
 
@@ -156,7 +160,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for resource in config[CONF_RESOURCES]:
         sensor_type = resource.lower()
 
-        if sensor_type in data.status:
+        # Display status is a special case that falls back to the status value
+        # of the UPS instead.
+        if sensor_type in data.status or (sensor_type == KEY_STATUS_DISPLAY
+                                          and KEY_STATUS in data.status):
             entities.append(NUTSensor(name, data, sensor_type))
         else:
             _LOGGER.warning(
@@ -168,7 +175,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except data.pynuterror as err:
         _LOGGER.error("Failure while testing NUT status retrieval. "
                       "Cannot continue setup: %s", err)
-        return False
+        raise PlatformNotReady
 
     add_entities(entities, True)
 
@@ -208,11 +215,11 @@ class NUTSensor(Entity):
     def device_state_attributes(self):
         """Return the sensor attributes."""
         attr = dict()
-        attr[ATTR_STATE] = self.opp_state()
+        attr[ATTR_STATE] = self.display_state()
         return attr
 
-    def opp_state(self):
-        """Return UPS operating state."""
+    def display_state(self):
+        """Return UPS display state."""
         if self._data.status is None:
             return STATE_TYPES['OFF']
         else:
@@ -229,7 +236,11 @@ class NUTSensor(Entity):
             self._state = None
             return
 
-        if self.type not in self._data.status:
+        # In case of the display status sensor, keep a human-readable form
+        # as the sensor state.
+        if self.type == KEY_STATUS_DISPLAY:
+            self._state = self.display_state()
+        elif self.type not in self._data.status:
             self._state = None
         else:
             self._state = self._data.status[self.type]
@@ -287,5 +298,5 @@ class PyNUTData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, **kwargs):
-        """Fetch the latest status from APCUPSd."""
+        """Fetch the latest status from NUT."""
         self._status = self._get_status()

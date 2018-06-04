@@ -100,8 +100,8 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """Return the regex for code format or None if no code is required."""
-        return '^\\d{4,6}$'
+        """Return one or more digits/characters."""
+        return 'Number'
 
     @property
     def state(self):

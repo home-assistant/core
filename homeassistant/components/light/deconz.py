@@ -5,35 +5,50 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.deconz/
 """
 from homeassistant.components.deconz import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
+    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
-    ATTR_TRANSITION, ATTR_XY_COLOR, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, SUPPORT_XY_COLOR, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
+    ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
+    SUPPORT_FLASH, SUPPORT_TRANSITION, Light)
 from homeassistant.core import callback
-from homeassistant.util.color import color_RGB_to_xy
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['deconz']
 
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Set up the deCONZ light."""
-    if discovery_info is None:
-        return
+    """Old way of setting up deCONZ lights and group."""
+    pass
 
-    lights = hass.data[DATA_DECONZ].lights
-    groups = hass.data[DATA_DECONZ].groups
-    entities = []
 
-    for light in lights.values():
-        entities.append(DeconzLight(light))
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the deCONZ lights and groups from a config entry."""
+    @callback
+    def async_add_light(lights):
+        """Add light from deCONZ."""
+        entities = []
+        for light in lights:
+            entities.append(DeconzLight(light))
+        async_add_devices(entities, True)
+    hass.data[DATA_DECONZ_UNSUB].append(
+        async_dispatcher_connect(hass, 'deconz_new_light', async_add_light))
 
-    for group in groups.values():
-        if group.lights:  # Don't create entity for group not containing light
-            entities.append(DeconzLight(group))
-    async_add_devices(entities, True)
+    @callback
+    def async_add_group(groups):
+        """Add group from deCONZ."""
+        entities = []
+        for group in groups:
+            if group.lights:
+                entities.append(DeconzLight(group))
+        async_add_devices(entities, True)
+    hass.data[DATA_DECONZ_UNSUB].append(
+        async_dispatcher_connect(hass, 'deconz_new_group', async_add_group))
+
+    async_add_light(hass.data[DATA_DECONZ].lights.values())
+    async_add_group(hass.data[DATA_DECONZ].groups.values())
 
 
 class DeconzLight(Light):
@@ -51,8 +66,7 @@ class DeconzLight(Light):
             self._features |= SUPPORT_COLOR_TEMP
 
         if self._light.xy is not None:
-            self._features |= SUPPORT_RGB_COLOR
-            self._features |= SUPPORT_XY_COLOR
+            self._features |= SUPPORT_COLOR
 
         if self._light.effect is not None:
             self._features |= SUPPORT_EFFECT
@@ -124,14 +138,8 @@ class DeconzLight(Light):
         if ATTR_COLOR_TEMP in kwargs:
             data['ct'] = kwargs[ATTR_COLOR_TEMP]
 
-        if ATTR_RGB_COLOR in kwargs:
-            xyb = color_RGB_to_xy(
-                *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-            data['xy'] = xyb[0], xyb[1]
-            data['bri'] = xyb[2]
-
-        if ATTR_XY_COLOR in kwargs:
-            data['xy'] = kwargs[ATTR_XY_COLOR]
+        if ATTR_HS_COLOR in kwargs:
+            data['xy'] = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
 
         if ATTR_BRIGHTNESS in kwargs:
             data['bri'] = kwargs[ATTR_BRIGHTNESS]

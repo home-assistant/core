@@ -4,7 +4,6 @@ Support for Xeoma Cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.xeoma/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -14,7 +13,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['pyxeoma==1.3']
+REQUIREMENTS = ['pyxeoma==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +40,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Discover and setup Xeoma Cameras."""
     from pyxeoma.xeoma import Xeoma, XeomaError
 
@@ -53,8 +52,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     xeoma = Xeoma(host, login, password)
 
     try:
-        yield from xeoma.async_test_connection()
-        discovered_image_names = yield from xeoma.async_get_image_names()
+        await xeoma.async_test_connection()
+        discovered_image_names = await xeoma.async_get_image_names()
         discovered_cameras = [
             {
                 CONF_IMAGE_NAME: image_name,
@@ -103,12 +102,11 @@ class XeomaCamera(Camera):
         self._password = password
         self._last_image = None
 
-    @asyncio.coroutine
-    def async_camera_image(self):
+    async def async_camera_image(self):
         """Return a still image response from the camera."""
         from pyxeoma.xeoma import XeomaError
         try:
-            image = yield from self._xeoma.async_get_camera_image(
+            image = await self._xeoma.async_get_camera_image(
                 self._image, self._username, self._password)
             self._last_image = image
         except XeomaError as err:

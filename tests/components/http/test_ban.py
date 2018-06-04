@@ -15,7 +15,7 @@ from . import mock_real_ip
 BANNED_IPS = ['200.201.202.203', '100.64.0.2']
 
 
-async def test_access_from_banned_ip(hass, test_client):
+async def test_access_from_banned_ip(hass, aiohttp_client):
     """Test accessing to server from banned IP. Both trusted and not."""
     app = web.Application()
     setup_bans(hass, app, 5)
@@ -24,7 +24,7 @@ async def test_access_from_banned_ip(hass, test_client):
     with patch('homeassistant.components.http.ban.load_ip_bans_config',
                return_value=[IpBan(banned_ip) for banned_ip
                              in BANNED_IPS]):
-        client = await test_client(app)
+        client = await aiohttp_client(app)
 
     for remote_addr in BANNED_IPS:
         set_real_ip(remote_addr)
@@ -54,7 +54,7 @@ async def test_ban_middleware_loaded_by_default(hass):
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_ip_bans_file_creation(hass, test_client):
+async def test_ip_bans_file_creation(hass, aiohttp_client):
     """Testing if banned IP file created."""
     app = web.Application()
     app['hass'] = hass
@@ -70,7 +70,7 @@ async def test_ip_bans_file_creation(hass, test_client):
     with patch('homeassistant.components.http.ban.load_ip_bans_config',
                return_value=[IpBan(banned_ip) for banned_ip
                              in BANNED_IPS]):
-        client = await test_client(app)
+        client = await aiohttp_client(app)
 
     m = mock_open()
 

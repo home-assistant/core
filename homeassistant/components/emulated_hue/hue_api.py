@@ -51,6 +51,29 @@ class HueUsernameView(HomeAssistantView):
         return self.json([{'success': {'username': '12345678901234567890'}}])
 
 
+class HueGroupView(HomeAssistantView):
+    """Group handler to get Logitech Pop working."""
+
+    url = '/api/{username}/groups/0/action'
+    name = 'emulated_hue:groups:state'
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def put(self, request, username):
+        """Process a request to make the Logitech Pop working."""
+        return self.json([{
+            'error': {
+                'address': '/groups/0/action/scene',
+                'type': 7,
+                'description': 'invalid value, dummy for parameter, scene'
+            }
+        }])
+
+
 class HueAllLightsStateView(HomeAssistantView):
     """Handle requests for getting and setting info about entities."""
 

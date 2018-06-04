@@ -14,7 +14,7 @@ from homeassistant.const import (CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['eliqonline==1.0.13']
+REQUIREMENTS = ['eliqonline==1.0.14']
 
 _LOGGER = logging.getLogger(__name__)
 

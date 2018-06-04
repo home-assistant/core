@@ -243,7 +243,7 @@ class ColorSpectrumTrait(_Trait):
         if domain != light.DOMAIN:
             return False
 
-        return features & (light.SUPPORT_RGB_COLOR | light.SUPPORT_XY_COLOR)
+        return features & light.SUPPORT_COLOR
 
     def sync_attributes(self):
         """Return color spectrum attributes for a sync request."""
@@ -254,13 +254,11 @@ class ColorSpectrumTrait(_Trait):
         """Return color spectrum query attributes."""
         response = {}
 
-        # No need to handle XY color because light component will always
-        # convert XY to RGB if possible (which is when brightness is available)
-        color_rgb = self.state.attributes.get(light.ATTR_RGB_COLOR)
-        if color_rgb is not None:
+        color_hs = self.state.attributes.get(light.ATTR_HS_COLOR)
+        if color_hs is not None:
             response['color'] = {
                 'spectrumRGB': int(color_util.color_rgb_to_hex(
-                    color_rgb[0], color_rgb[1], color_rgb[2]), 16),
+                    *color_util.color_hs_to_RGB(*color_hs)), 16),
             }
 
         return response
@@ -274,11 +272,12 @@ class ColorSpectrumTrait(_Trait):
         """Execute a color spectrum command."""
         # Convert integer to hex format and left pad with 0's till length 6
         hex_value = "{0:06x}".format(params['color']['spectrumRGB'])
-        color = color_util.rgb_hex_to_rgb_list(hex_value)
+        color = color_util.color_RGB_to_hs(
+            *color_util.rgb_hex_to_rgb_list(hex_value))
 
         await hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id,
-            light.ATTR_RGB_COLOR: color
+            light.ATTR_HS_COLOR: color
         }, blocking=True)
 
 
