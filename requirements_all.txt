@@ -633,6 +633,9 @@ pifacedigitalio==3.0.5
 # homeassistant.components.light.piglow
 piglow==1.2.4
 
+# homeassistant.components.sensor.pi_hole
+pihole==0.1.2
+
 # homeassistant.components.pilight
 pilight==0.1.1
 
