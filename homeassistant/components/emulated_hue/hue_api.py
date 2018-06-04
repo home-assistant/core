@@ -33,8 +33,13 @@ class HueUsernameView(HomeAssistantView):
 
     url = '/api'
     name = 'emulated_hue:api:create_username'
-    extra_urls = ['/api/']
+    extra_urls = ['/api/', '/api/(null)', '/api/(null)/']
     requires_auth = False
+
+    @asyncio.coroutine
+    def get(self, request):
+        """Handle a GET request."""
+        return self.json([{'success': {'username': '12345678901234567890'}}])
 
     @asyncio.coroutine
     def post(self, request):
@@ -79,6 +84,7 @@ class HueAllLightsStateView(HomeAssistantView):
 
     url = '/api/{username}/lights'
     name = 'emulated_hue:lights:state'
+    extra_urls = ['/api/{username}']
     requires_auth = False
 
     def __init__(self, config):
@@ -99,7 +105,7 @@ class HueAllLightsStateView(HomeAssistantView):
                 json_response[number] = entity_to_json(
                     self.config, entity, state, brightness)
 
-        return self.json(json_response)
+        return self.json(self.config.entities_response_wrapper(json_response))
 
 
 class HueOneLightStateView(HomeAssistantView):
