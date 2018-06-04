@@ -147,9 +147,9 @@ class Panel:
 
 
 @bind_hass
-async def async_register_built_in_panel(
-    hass, component_name, sidebar_title=None, sidebar_icon=None,
-        frontend_url_path=None, config=None):
+async def async_register_built_in_panel(hass, component_name,
+                                        sidebar_title=None, sidebar_icon=None,
+                                        frontend_url_path=None, config=None):
     """Register a built-in panel."""
     panel = Panel(component_name, sidebar_title, sidebar_icon,
                   frontend_url_path, config)
