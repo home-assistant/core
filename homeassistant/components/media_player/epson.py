@@ -8,7 +8,6 @@ import asyncio
 import logging
 
 import aiohttp
-import epson_projector as epson
 from epson_projector.const import (
     BACK, BUSY, CMODE, CMODE_LIST, CMODE_LIST_SET, DEFAULT_SOURCES,
     EPSON_CODES, FAST, INV_SOURCES, MUTE, PAUSE, PLAY, POWER, SOURCE,
@@ -103,6 +102,7 @@ class EpsonProjector(MediaPlayerDevice):
         """Initialize entity to control Epson projector."""
         self._hass = hass
         self._name = name
+        import epson_projector as epson
         self._projector = epson.Projector(
             host,
             websession=self._websession(False),
