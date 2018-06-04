@@ -80,6 +80,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): cv.string,
         vol.Optional(CONF_HOST): cv.string,
+        vol.Optional(CONF_HUB_USERNAME): cv.string,
+        vol.Optional(CONF_HUB_PASSWORD): cv.string,
         vol.Optional(CONF_OVERRIDE): vol.All(
             cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA]),
         vol.Optional(CONF_X10_ALL_UNITS_OFF): vol.In(HOUSECODES),
